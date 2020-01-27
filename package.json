@@ -2776,7 +2776,9 @@
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
-        "compile-webviews-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watch-ui": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webview-dependencies": "gulp compile-webiview-dependencies",
+        "compile-webviews-watch": "npm run compile-webview-dependencies && npm run compile-webviews-watch-ui",
         "checkDependencies": "gulp checkDependencies",
         "dump-datascience-webpack-stats": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "postinstall": "node ./build/ci/postInstall.js",
@@ -3011,6 +3013,7 @@
         "redux": "^4.0.4",
         "redux-logger": "^3.0.6",
         "relative": "^3.0.2",
+        "requirejs": "^2.3.6",
         "rewiremock": "^3.13.0",
         "sass-loader": "^7.1.0",
         "serialize-javascript": "^2.1.2",

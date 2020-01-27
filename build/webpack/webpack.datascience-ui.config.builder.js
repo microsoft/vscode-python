@@ -6,6 +6,7 @@
 // Note to editors, if you change this file you have to restart compile-webviews.
 // It doesn't reload the config otherwise.
 
+const common = require('./common');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
@@ -21,6 +22,20 @@ function getPlugins(folderName) {
         return [
             new MonacoWebpackPlugin({
                 languages: [] // force to empty so onigasm will be used
+            }),
+            new HtmlWebpackPlugin({
+                template: `src/datascience-ui/notebook.html`,
+                imageBaseUrl: `${constants.ExtensionRootDir.replace(/\\/g, '/')}/out/datascience-ui/notebook`,
+                indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                filename: `./datascience-ui/notebook/native_index.html`,
+                isNativeEditor: true
+            }),
+            new HtmlWebpackPlugin({
+                template: `src/datascience-ui/notebook.html`,
+                imageBaseUrl: `${constants.ExtensionRootDir.replace(/\\/g, '/')}/out/datascience-ui/notebook`,
+                indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                filename: `./datascience-ui/notebook/interactive_index.html`,
+                isNativeEditor: false
             })
         ];
     }
@@ -30,69 +45,135 @@ function getPlugins(folderName) {
             'process.env': {
                 NODE_ENV: JSON.stringify('production')
             }
+        }),
+        new HtmlWebpackPlugin({
+            template: `src/datascience-ui/viewer.html`,
+            imageBaseUrl: `${constants.ExtensionRootDir.replace(/\\/g, '/')}/out/datascience-ui/viewer`,
+            indexUrl: `${constants.ExtensionRootDir}/out/1`,
+            filename: `./datascience-ui/viewer/plotViewer_index.html`,
+            isPlotViewer: true
+        }),
+        new HtmlWebpackPlugin({
+            template: `src/datascience-ui/viewer.html`,
+            imageBaseUrl: `${constants.ExtensionRootDir.replace(/\\/g, '/')}/out/datascience-ui/viewer`,
+            indexUrl: `${constants.ExtensionRootDir}/out/1`,
+            filename: `./datascience-ui/viewer/dataExplorer_index.html`,
+            isPlotViewer: false
         })
     ];
 }
 
-function buildConfiguration(folderName, supportsChunks) {
-    const output = supportsChunks
-        ? {
-              path: path.join(constants.ExtensionRootDir, 'out'),
-              filename: `datascience-ui/${folderName}/index_chunked_bundle.js`,
-              chunkFilename: `datascience-ui/${folderName}/[name]_chunk_bundle.js`,
-              publicPath: './'
-          }
-        : {
-              path: path.join(constants.ExtensionRootDir, 'out'),
-              filename: `datascience-ui/${folderName}/index_bundle.js`,
-              publicPath: './'
-          };
-    const maxChunks = supportsChunks ? 1000 : 1; // Could do this a different way but this is simpler
+/**
+ * Gets files that need to be copied into specific locations as part of build.
+ *
+ * @param {*} folderName
+ * @returns
+ */
+function getItemsToCopy(folderName) {
+    if (folderName === 'history-react' || folderName === 'native-editor') {
+        return [
+            {
+                from: path.join(constants.ExtensionRootDir, 'build', 'webpack', 'nativeEditor.js'),
+                to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'notebook', 'nativeEditor.js')
+            },
+            {
+                from: path.join(constants.ExtensionRootDir, 'build', 'webpack', 'interactiveWindow.js'),
+                to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'notebook', 'interactiveWindow.js')
+            },
+            {
+                from: path.join(constants.ExtensionRootDir, 'node_modules', 'requirejs', 'require.js'),
+                to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'notebook', 'require.js')
+            }
+        ];
+    }
+    return [
+        {
+            from: path.join(constants.ExtensionRootDir, 'build', 'webpack', 'plotViewer.js'),
+            to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'viewer', 'plotViewer.js')
+        },
+        {
+            from: path.join(constants.ExtensionRootDir, 'build', 'webpack', 'dataExplorer.js'),
+            to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'viewer', 'dataExplorer.js')
+        },
+        {
+            from: path.join(constants.ExtensionRootDir, 'node_modules', 'requirejs', 'require.js'),
+            to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'viewer', 'require.js')
+        }
+    ];
+}
+
+function getOutput(folderName) {
+    if (folderName === 'history-react' || folderName === 'native-editor') {
+        return {
+            path: path.join(constants.ExtensionRootDir, 'out'),
+            filename: `datascience-ui/notebook/index_bundle.js`,
+            publicPath: './'
+        };
+    } else {
+        return {
+            path: path.join(constants.ExtensionRootDir, 'out'),
+            filename: `datascience-ui/viewer/index_bundle.js`,
+            publicPath: './'
+        };
+    }
+}
+
+function getEntry(folderName) {
+    if (folderName === 'history-react' || folderName === 'native-editor') {
+        return ['babel-polyfill', `./src/datascience-ui/notebook.tsx`];
+    } else {
+        return ['babel-polyfill', `./src/datascience-ui/viewer.tsx`];
+    }
+}
+
+function buildConfiguration(folderName) {
     return {
         context: constants.ExtensionRootDir,
-        entry: ['babel-polyfill', `./src/datascience-ui/${folderName}/index.tsx`],
-        output,
+        entry: getEntry(folderName),
+        output: getOutput(folderName),
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
         // Use 'eval' for release and `eval-source-map` for development.
         // We need to use one where source is embedded, due to webviews (they restrict resources to specific schemes,
         //  this seems to prevent chrome from downloading the source maps)
+        // devtool: 'none',
         devtool: 'eval-source-map',
         optimization: {
+            // minimize: false
+            minimize: true,
             minimizer: [new TerserPlugin({ sourceMap: true })]
         },
         node: {
             fs: 'empty'
         },
         plugins: [
-            new HtmlWebpackPlugin({
-                template: `src/datascience-ui/${folderName}/index.html`,
-                imageBaseUrl: `${constants.ExtensionRootDir.replace(/\\/g, '/')}/out/datascience-ui/${folderName}`,
-                indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                filename: `./datascience-ui/${folderName}/index.html`
-            }),
+            ...common.getDefaultPlugins(folderName),
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin(
                 [
                     { from: './**/*.png', to: '.' },
                     { from: './**/*.svg', to: '.' },
                     { from: './**/*.css', to: '.' },
-                    { from: './**/*theme*.json', to: '.' }
+                    { from: './**/*theme*.json', to: '.' },
+                    ...getItemsToCopy(folderName)
                 ],
                 { context: 'src' }
             ),
-            new webpack.optimize.LimitChunkCountPlugin({
-                maxChunks
-            }),
             ...getPlugins(folderName)
         ],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
             extensions: ['.ts', '.tsx', '.js', '.json', '.svg']
         },
-
         module: {
             rules: [
-                // All files with a '.ts' or '.tsx' extension will be handled by 'awesome-typescript-loader'.
+                {
+                    test: /\.tsx?$/,
+                    use: [
+                        {
+                            loader: path.join(__dirname, 'loaders', 'externalizeUIDependencies.js')
+                        }
+                    ]
+                },
                 {
                     test: /\.tsx?$/,
                     use: {
@@ -142,12 +223,5 @@ function buildConfiguration(folderName, supportsChunks) {
     };
 }
 
-exports.interactiveWindowConfigChunked = buildConfiguration('history-react', true);
-exports.nativeEditorConfigChunked = buildConfiguration('native-editor', true);
-exports.dataExplorerConfigChunked = buildConfiguration('data-explorer', true);
-exports.plotViewerConfigChunked = buildConfiguration('plot', true);
-
-exports.interactiveWindowConfig = buildConfiguration('history-react', false);
 exports.nativeEditorConfig = buildConfiguration('native-editor', false);
-exports.dataExplorerConfig = buildConfiguration('data-explorer', false);
 exports.plotViewerConfig = buildConfiguration('plot', false);

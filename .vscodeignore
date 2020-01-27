@@ -1,5 +1,7 @@
 !out/client/**/*.map
+out/client/node_modules/*.map
 **/*.map
+**/*.analyzer.html
 !out/datascience-ui/**/*.map
 *.vsix
 .appveyor.yml

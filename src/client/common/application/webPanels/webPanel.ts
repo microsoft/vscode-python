@@ -3,9 +3,9 @@
 'use strict';
 import '../../extensions';
 
+import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Uri, Webview, WebviewPanel, window } from 'vscode';
-
 import { Identifiers } from '../../../datascience/constants';
 import { InteractiveWindowMessages } from '../../../datascience/interactive-common/interactiveWindowTypes';
 import { SharedMessages } from '../../../datascience/messages';
@@ -93,7 +93,7 @@ export class WebPanel implements IWebPanel {
             if (localFilesExist.every(exists => exists === true)) {
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
-                this.panel.webview.html = this.options.startHttpServer ? this.generateServerReactHtml(this.panel.webview) : this.generateLocalReactHtml(this.panel.webview);
+                this.panel.webview.html = this.options.startHttpServer ? this.generateServerReactHtml(this.panel.webview) : await this.generateLocalReactHtml(this.panel.webview);
 
                 // Reset when the current panel is closed
                 this.disposableRegistry.push(
@@ -128,9 +128,21 @@ export class WebPanel implements IWebPanel {
     }
 
     // tslint:disable-next-line:no-any
-    private generateLocalReactHtml(webView: Webview) {
+    private async generateLocalReactHtml(webView: Webview) {
         const uriBase = webView.asWebviewUri(Uri.file(this.options.cwd)).toString();
         const uris = this.options.scripts.map(script => webView.asWebviewUri(Uri.file(script)));
+        // If require.js exists in the scripts directory, then add requirejs with ability to dynamically load scripts.
+        let requireScripts = '';
+        if (await this.fs.fileExists(path.join(this.options.rootPath, 'require.js'))) {
+            requireScripts = `
+                <script type="text/javascript" src="${webView.asWebviewUri(Uri.file(path.join(this.options.rootPath, 'require.js')))}"></script>
+                <script type="text/javascript">
+                    require.config({
+                        baseUrl: '${webView.asWebviewUri(Uri.file(this.options.rootPath))}'
+                    });
+                </script>
+            `;
+        }
 
         return `<!doctype html>
         <html lang="en">
@@ -157,7 +169,11 @@ export class WebPanel implements IWebPanel {
                         return "${uriBase}" + relativePath;
                     }
                 </script>
-                ${uris.map(uri => `<script type="text/javascript" src="${uri}"></script>`).join('\n')}
+                ${requireScripts}
+                ${uris
+                    .slice(1)
+                    .map(uri => `<script type="text/javascript" src="${uri}"></script>`)
+                    .join('\n')}
             </body>
         </html>`;
     }

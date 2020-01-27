@@ -236,6 +236,8 @@ export class WebViewHost<IMapping> implements IDisposable {
                 startHttpServer = this.useWebViewServer || insiders !== 'off';
             }
 
+            console.warn(`startHttpServer=${startHttpServer} has been temporarily turned off.`);
+
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
             this.webPanel = await this.provider.create({
@@ -245,7 +247,7 @@ export class WebViewHost<IMapping> implements IDisposable {
                 rootPath: this.rootPath,
                 scripts: this.scripts,
                 settings,
-                startHttpServer,
+                startHttpServer: false,
                 cwd
             });
 

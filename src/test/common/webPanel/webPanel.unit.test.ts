@@ -21,7 +21,7 @@ suite('WebPanelServer', () => {
     let host: WebPanelServer | undefined;
     let server: http.Server | undefined;
     const token = uuid();
-    const historyBundle = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js');
+    const historyBundle = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook', 'index_bundle.js');
     setup(async () => {
         // So these are effectively functional tests rather than unit tests...
         const fs = new FileSystem(new PlatformService());

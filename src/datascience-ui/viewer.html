@@ -254,7 +254,7 @@
 --vscode-titleBar-activeForeground: #333333;
 --vscode-titleBar-inactiveBackground: rgba(221, 221, 221, 0.6);
 --vscode-titleBar-inactiveForeground: rgba(51, 51, 51, 0.6);
---code-comment-color: green;
+--code-comment-color: black;
 --vscode-widget-shadow: #a8a8a8; }
 
 			body {
@@ -337,6 +337,7 @@
     <body>
         <div id="root"></div>
                 <script type="text/javascript">
+                    window.__PVSC_isPlotViewer = "<%= htmlWebpackPlugin.options.isPlotViewer %>" === "true";
                     function resolvePath(relativePath) {
                         if (relativePath && relativePath[0] == '.' && relativePath[1] != '.') {
                             return "<%= htmlWebpackPlugin.options.imageBaseUrl %>" + relativePath.substring(1);
