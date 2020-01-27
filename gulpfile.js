@@ -139,12 +139,12 @@ gulp.task('webpack', async () => {
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
     if (isCI) {
-        const buildExtension = buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], { NODE_OPTIONS: '--max_old_space_size=9096' });
-        const buildDebugAdapter = buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], { NODE_OPTIONS: '--max_old_space_size=9096' });
+        const buildExtension = buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], webpackEnv);
+        const buildDebugAdapter = buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], webpackEnv);
         await Promise.all([buildExtension, buildDebugAdapter]);
     } else {
-        await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], { NODE_OPTIONS: '--max_old_space_size=9096' });
-        await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], { NODE_OPTIONS: '--max_old_space_size=9096' });
+        await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], webpackEnv);
+        await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], webpackEnv);
     }
 });
 

@@ -1,11 +1,7 @@
-!out/client/**/*.map
-out/client/node_modules/*.map
 **/*.map
 **/*.analyzer.html
-!out/datascience-ui/**/*.map
-out/datascience-ui/@nteract/*.map
-out/datascience-ui/data-explorer/**
-out/datascience-ui/plot/**
+!out/datascience-ui/notebook/*.map
+!out/datascience-ui/viewer/*.map
 *.vsix
 .appveyor.yml
 .editorconfig
@@ -30,7 +26,9 @@ package.datascience-ui.dependencies.json
 package-lock.json
 packageExtension.cmd
 pvsc-dev-ext.py
+pvsc.code-workspace
 PYTHON_INTERACTIVE_TROUBLESHOOTING.md
+requirements.in
 test.ipynb
 travis*.log
 tsconfig*.json
@@ -47,6 +45,8 @@ webpack.datascience-*.config.js
 .mocha-reporter/**
 .nvm/**
 .nyc_output
+.prettierrc.js
+.sonarcloud.properties
 .venv/**
 .vscode/**
 .vscode-test/**
@@ -66,6 +66,8 @@ node_modules/**
 obj/**
 out/client/**/*analyzer.html
 out/coverconfig.json
+out/datascience-ui/data-explorer/**
+out/datascience-ui/plot/**
 out/pythonFiles/**
 out/src/**
 out/test/**
