@@ -4,14 +4,7 @@ import { ActiveResourceService } from '../common/application/activeResource';
 import { IActiveResourceService } from '../common/application/types';
 import { registerTypes as registerDotNetTypes } from '../common/dotnet/serviceRegistry';
 import { INugetRepository } from '../common/nuget/types';
-import {
-    BANNER_NAME_DS_SURVEY,
-    BANNER_NAME_INTERACTIVE_SHIFTENTER,
-    BANNER_NAME_LS_SURVEY,
-    BANNER_NAME_PROPOSE_LS,
-    IConfigurationService,
-    IPythonExtensionBanner
-} from '../common/types';
+import { BANNER_NAME_DS_SURVEY, BANNER_NAME_INTERACTIVE_SHIFTENTER, BANNER_NAME_LS_SURVEY, BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../common/types';
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
@@ -69,11 +62,7 @@ import {
     LanguageServerType
 } from './types';
 
-export function registerTypes(serviceManager: IServiceManager) {
-    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-    const pythonSettings = configuration.getSettings();
-    const languageServerType = pythonSettings.languageServer;
-
+export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType) {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);

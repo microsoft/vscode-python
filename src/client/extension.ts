@@ -250,7 +250,9 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     debugConfigurationRegisterTypes(serviceManager);
     appRegisterTypes(serviceManager);
     providersRegisterTypes(serviceManager);
-    activationRegisterTypes(serviceManager);
+
+    const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
+    activationRegisterTypes(serviceManager, configuration.getSettings().languageServer);
 }
 
 async function initializeServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {

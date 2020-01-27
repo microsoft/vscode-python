@@ -7,13 +7,7 @@ import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
 import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, StableLanguageServerPackageRepository } from '../common/packageRepository';
 
-const languageServerPackageName = 'pyrx';
-
-export enum NodeLanguageServerPackageStorageContainers {
-    'stable' = 'pyrx-stable',
-    'beta' = 'pyrx-beta',
-    'daily' = 'pyrx-daily'
-}
+export const languageServerPackageName = 'pyrx';
 
 @injectable()
 export class StableNodeLanguageServerPackageRepository extends StableLanguageServerPackageRepository {

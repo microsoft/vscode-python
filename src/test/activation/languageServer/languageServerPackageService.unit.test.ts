@@ -9,7 +9,6 @@ import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
 import { azureCDNBlobStorageAccount, LanguageServerDownloadChannel } from '../../../client/activation/common/packageRepository';
-import { DotNetLanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { DotNetLanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { PlatformName } from '../../../client/activation/types';
 import { IApplicationEnvironment } from '../../../client/common/application/types';
@@ -151,7 +150,7 @@ suite('Language Server - Package Service', () => {
         const expectedPackage: NugetPackage = {
             version: new SemVer(minimumVersion),
             package: LanguageServerDownloadChannel.stable,
-            uri: `${azureCDNBlobStorageAccount}/${DotNetLanguageServerPackageStorageContainers.stable}/${packageName}.${minimumVersion}.nupkg`
+            uri: `${azureCDNBlobStorageAccount}/${LanguageServerDownloadChannel.stable}/${packageName}.${minimumVersion}.nupkg`
         };
         expect(info).to.deep.equal(expectedPackage);
     });

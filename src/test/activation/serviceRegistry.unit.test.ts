@@ -65,7 +65,7 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
     });
 
     test('Ensure services are registered', async () => {
-        registerTypes(instance(serviceManager));
+        registerTypes(instance(serviceManager), LanguageServerType.Microsoft);
 
         verify(serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService)).once();
         verify(serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension)).once();
