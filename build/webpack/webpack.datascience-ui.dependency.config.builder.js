@@ -4,6 +4,7 @@
 'use strict';
 
 const common = require('./common');
+const modulesToExternalize = require('./loaders/externalizeUIDependencies').modulesToExternalize;
 const webpack = require('webpack');
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const path = require('path');
@@ -111,12 +112,4 @@ function buildConfiguration(moduleName, outputFileNameWithoutJsExtension) {
     };
 }
 
-module.exports = [
-    buildConfiguration('./node_modules/@nteract/transforms/lib/index.js', '@nteract/transforms'),
-    buildConfiguration('./node_modules/@nteract/transform-plotly/lib/index.js', '@nteract/transform-plotly'),
-    buildConfiguration('./node_modules/@nteract/transform-vega/lib/index.js', '@nteract/transform-vega'),
-    buildConfiguration('./node_modules/@nteract/transform-geojson/lib/index.js', '@nteract/transform-geojson'),
-    buildConfiguration('./node_modules/@nteract/transform-dataresource/lib/index.js', '@nteract/transform-dataresource'),
-    buildConfiguration('./node_modules/@nteract/transform-model-debug/lib/index.js', '@nteract/transform-model-debug'),
-    buildConfiguration('./node_modules/@nteract/transform-vdom/lib/index.js', '@nteract/transform-vdom')
-];
+module.exports = modulesToExternalize.forEach(moduleName => buildConfiguration(require.resolve(moduleName), moduleName));

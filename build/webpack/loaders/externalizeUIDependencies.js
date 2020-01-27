@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-const modulesToExternalize = [
+export const modulesToExternalize = [
     '@nteract/transform-vega',
     '@nteract/transform-geojson',
     '@nteract/transform-dataresource',
