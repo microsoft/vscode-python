@@ -19,7 +19,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
     constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer, @unmanaged() protected readonly languageServerFolder: string) {}
 
     @traceDecorators.verbose('Get language server folder name')
-    public async getLanguageServerFolderName(resource: Resource, minimumVersion?: string): Promise<string> {
+    public async getLanguageServerFolderName(resource: Resource): Promise<string> {
         const currentFolder = await this.getCurrentLanguageServerDirectory();
         let serverVersion: NugetPackage | undefined;
 
@@ -28,7 +28,11 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
             return path.basename(currentFolder.path);
         }
 
-        serverVersion = await this.getLatestLanguageServerVersion(resource, minimumVersion).catch(() => undefined);
+        try {
+            serverVersion = await this.getLatestLanguageServerVersion(resource);
+        } catch {
+            serverVersion = undefined;
+        }
 
         if (currentFolder && (!serverVersion || serverVersion.version.compare(currentFolder.version) <= 0)) {
             return path.basename(currentFolder.path);
@@ -38,7 +42,8 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
     }
 
     @traceDecorators.verbose('Get latest version of Language Server')
-    public getLatestLanguageServerVersion(resource: Resource, minVersion?: string): Promise<NugetPackage | undefined> {
+    public getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined> {
+        const minVersion = this.getMinimalLanguageServerVersion();
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
         return lsPackageService.getLatestNugetPackageVersion(resource, minVersion);
     }
@@ -67,6 +72,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
         dirs.sort((a, b) => a.version.compare(b.version));
         return dirs[dirs.length - 1];
     }
+
     public async getExistingLanguageServerDirectories(): Promise<FolderVersionPair[]> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         const subDirs = await fs.getSubDirectories(EXTENSION_ROOT_DIR);
