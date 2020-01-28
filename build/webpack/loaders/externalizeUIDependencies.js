@@ -1,15 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-export const modulesToExternalize = [
-    '@nteract/transform-vega',
-    '@nteract/transform-geojson',
-    '@nteract/transform-dataresource',
-    '@nteract/transform-model-debug',
-    '@nteract/transform-plotly',
-    '@nteract/transforms',
-    '@nteract/transform-vdom'
-];
+const modulesToExternalize = require('../common').uiModulesToExternalize;
 
 function replaceModule(contents, moduleName, quotes) {
     const regExToSearch = `import\\(${quotes}${moduleName}${quotes}\\)`;

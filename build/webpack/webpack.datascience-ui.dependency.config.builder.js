@@ -4,7 +4,7 @@
 'use strict';
 
 const common = require('./common');
-const modulesToExternalize = require('./loaders/externalizeUIDependencies').modulesToExternalize;
+const modulesToExternalize = require('./common').uiModulesToExternalize;
 const webpack = require('webpack');
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
 const path = require('path');

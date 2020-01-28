@@ -6,6 +6,18 @@ const glob = require('glob');
 const path = require('path');
 const webpack_bundle_analyzer = require('webpack-bundle-analyzer');
 const constants = require('../constants');
+
+// List of Modules used in react code that are to be externalized.
+exports.uiModulesToExternalize = [
+    '@nteract/transform-vega',
+    '@nteract/transform-geojson',
+    '@nteract/transform-dataresource',
+    '@nteract/transform-model-debug',
+    '@nteract/transform-plotly',
+    '@nteract/transforms',
+    '@nteract/transform-vdom'
+];
+
 exports.nodeModulesToExternalize = [
     'unicode/category/Lu',
     'unicode/category/Ll',
