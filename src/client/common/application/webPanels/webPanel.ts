@@ -133,7 +133,10 @@ export class WebPanel implements IWebPanel {
         const uris = this.options.scripts.map(script => webView.asWebviewUri(Uri.file(script)));
         const testFiles = await this.fs.getFiles(this.options.rootPath);
 
-        console.warn(testFiles.map(f => webView.asWebviewUri(Uri.file(f))));
+        // This method must be called so VSC is aware of files that can be pulled.
+        // Allow js and js.map files to be loaded by webpack in the webview.
+        testFiles.filter(f => f.toLowerCase().endsWith('.js') || f.toLowerCase().endsWith('.js.map')).forEach(f => webView.asWebviewUri(Uri.file(f)));
+
         const rootPath = webView.asWebviewUri(Uri.file(this.options.rootPath)).toString();
         return `<!doctype html>
         <html lang="en">
