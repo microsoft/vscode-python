@@ -87,7 +87,7 @@ suite('Language Server Folder Service', () => {
                 version: new semver.SemVer('1.3.2'),
                 uri: 'nugetUri'
             };
-            languageServerPackageService.setup(l => l.getLatestNugetPackageVersion(resource)).returns(() => Promise.resolve(nugetPackage));
+            languageServerPackageService.setup(l => l.getLatestNugetPackageVersion(resource, '0.0.0')).returns(() => Promise.resolve(nugetPackage));
             getCurrentLanguageServerDirectory = sinon.stub(DotNetLanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
             getCurrentLanguageServerDirectory.resolves(currentLSDirectory);
             languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);

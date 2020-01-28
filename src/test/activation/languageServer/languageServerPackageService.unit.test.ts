@@ -144,7 +144,7 @@ suite('Language Server - Package Service', () => {
             .returns(() => Promise.resolve(packages))
             .verifiable(typeMoq.Times.once());
 
-        const info = await lsPackageService.getLatestNugetPackageVersion(undefined);
+        const info = await lsPackageService.getLatestNugetPackageVersion(undefined, minimumVersion);
 
         repo.verifyAll();
         const expectedPackage: NugetPackage = {
