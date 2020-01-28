@@ -37,8 +37,8 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         this.output = this.lsOutputChannel.channel;
     }
 
-    public async getDownloadInfo(resource: Resource, minimumVersion?: string) {
-        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource, minimumVersion).then(item => item!);
+    public async getDownloadInfo(resource: Resource) {
+        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource).then(item => item!);
 
         let uri = info.uri;
         if (uri.startsWith('https:')) {

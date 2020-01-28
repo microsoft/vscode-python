@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { IApplicationEnvironment } from '../../common/application/types';
 import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerFolderService } from '../common/languageServerFolderService';
 
@@ -11,5 +12,10 @@ import { LanguageServerFolderService } from '../common/languageServerFolderServi
 export class DotNetLanguageServerFolderService extends LanguageServerFolderService {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer, 'languageServer');
+    }
+
+    protected getMinimalLanguageServerVersion(): string {
+        const appEnv = this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
+        return appEnv.packageJson.languageServerVersion as string;
     }
 }

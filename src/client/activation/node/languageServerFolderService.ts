@@ -12,4 +12,8 @@ export class NodeLanguageServerFolderService extends LanguageServerFolderService
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer, 'nodeLanguageServer');
     }
+
+    protected getMinimalLanguageServerVersion(): string {
+        return '0.0.0';
+    }
 }

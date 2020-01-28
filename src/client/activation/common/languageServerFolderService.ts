@@ -42,6 +42,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
         return lsPackageService.getLatestNugetPackageVersion(resource, minVersion);
     }
+
     public async shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean> {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const autoUpdateLanguageServer = configService.getSettings().autoUpdateLanguageServer;
@@ -53,6 +54,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
         const rule = this.serviceContainer.get<IDownloadChannelRule>(IDownloadChannelRule, downloadChannel);
         return rule.shouldLookForNewLanguageServer(currentFolder);
     }
+
     public async getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined> {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         if (!configService.getSettings().downloadLanguageServer) {
@@ -79,6 +81,9 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
         const suffix = dirName.substring(this.languageServerFolder.length + 1);
         return suffix.length === 0 ? new semver.SemVer('0.0.0') : semver.parse(suffix, true) || new semver.SemVer('0.0.0');
     }
+
+    protected abstract getMinimalLanguageServerVersion(): string;
+
     private getDownloadChannel() {
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
         return lsPackageService.getLanguageServerDownloadChannel();
