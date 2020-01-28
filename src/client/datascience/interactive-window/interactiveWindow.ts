@@ -37,7 +37,7 @@ import {
     IThemeFinder
 } from '../types';
 
-const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react');
+const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
 @injectable()
 export class InteractiveWindow extends InteractiveBase implements IInteractiveWindow {
@@ -109,7 +109,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             commandManager,
             globalStorage,
             historyReactDir,
-            [path.join(historyReactDir, 'index_bundle.js')],
+            [path.join(historyReactDir, 'monaco.bundle.js'), path.join(historyReactDir, 'commons.initial.bundle.js'), path.join(historyReactDir, 'interactiveWindow.js')],
             localize.DataScience.historyTitle(),
             ViewColumn.Two,
             experimentsManager

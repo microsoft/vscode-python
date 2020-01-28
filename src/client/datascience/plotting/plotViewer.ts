@@ -21,7 +21,7 @@ import { WebViewHost } from '../webViewHost';
 import { PlotViewerMessageListener } from './plotViewerMessageListener';
 import { IExportPlotRequest, IPlotViewerMapping, PlotViewerMessages } from './types';
 
-const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'plot');
+const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'viewers');
 @injectable()
 export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
     private closedEvent: EventEmitter<IPlotViewer> = new EventEmitter<IPlotViewer>();
@@ -45,7 +45,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             workspaceService,
             (c, v, d) => new PlotViewerMessageListener(c, v, d),
             plotDir,
-            [path.join(plotDir, 'index_bundle.js')],
+            [path.join(plotDir, 'commons.initial.bundle.js'), path.join(plotDir, 'plotViewer.js')],
             localize.DataScience.plotViewerTitle(),
             ViewColumn.One,
             experimentsManager.inExperiment(WebHostNotebook.experiment)

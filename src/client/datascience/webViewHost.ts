@@ -7,7 +7,7 @@ import { injectable, unmanaged } from 'inversify';
 import { ConfigurationChangeEvent, ViewColumn, WorkspaceConfiguration } from 'vscode';
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
-import { traceInfo } from '../common/logger';
+import { traceInfo, traceWarning } from '../common/logger';
 import { IConfigurationService, IDisposable } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
@@ -236,6 +236,8 @@ export class WebViewHost<IMapping> implements IDisposable {
                 startHttpServer = this.useWebViewServer || insiders !== 'off';
             }
 
+            traceWarning(`startHttpServer=${startHttpServer}, will not be used. Temporarily turned off`);
+
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
             this.webPanel = await this.provider.create({
@@ -245,7 +247,7 @@ export class WebViewHost<IMapping> implements IDisposable {
                 rootPath: this.rootPath,
                 scripts: this.scripts,
                 settings,
-                startHttpServer,
+                startHttpServer: false,
                 cwd
             });
 

@@ -6,6 +6,7 @@
 // Note to editors, if you change this file you have to restart compile-webviews.
 // It doesn't reload the config otherwise.
 
+const common = require('./common');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const FixDefaultImportPlugin = require('webpack-fix-default-import-plugin');
@@ -16,60 +17,113 @@ const TerserPlugin = require('terser-webpack-plugin');
 const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
 
-function getPlugins(folderName) {
-    if (folderName === 'history-react' || folderName === 'native-editor') {
-        return [
+// Any build on the CI is considered production mode.
+const isProdBuild = constants.isCI || process.argv.includes('--mode');
+
+function getEntry(isNotebook) {
+    if (isNotebook) {
+        return {
+            nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
+            interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`]
+        };
+    }
+
+    return {
+        plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
+        dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
+    };
+}
+
+function getPlugins(isNotebook) {
+    const plugins = [];
+    if (isNotebook) {
+        plugins.push(
             new MonacoWebpackPlugin({
                 languages: [] // force to empty so onigasm will be used
             })
-        ];
+        );
+    } else {
+        plugins.push(
+            new webpack.DefinePlugin({
+                'process.env': {
+                    NODE_ENV: JSON.stringify('production')
+                }
+            })
+        );
     }
 
-    return [
-        new webpack.DefinePlugin({
-            'process.env': {
-                NODE_ENV: JSON.stringify('production')
-            }
-        })
-    ];
+    if (isProdBuild) {
+        plugins.push(...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers'));
+    }
+
+    return plugins;
 }
 
-function buildConfiguration(folderName, supportsChunks) {
-    const output = supportsChunks
-        ? {
-              path: path.join(constants.ExtensionRootDir, 'out'),
-              filename: `datascience-ui/${folderName}/index_chunked_bundle.js`,
-              chunkFilename: `datascience-ui/${folderName}/[name]_chunk_bundle.js`,
-              publicPath: './'
-          }
-        : {
-              path: path.join(constants.ExtensionRootDir, 'out'),
-              filename: `datascience-ui/${folderName}/index_bundle.js`,
-              publicPath: './'
-          };
-    const maxChunks = supportsChunks ? 1000 : 1; // Could do this a different way but this is simpler
+function buildConfiguration(isNotebook) {
+    const bundleFolder = isNotebook ? 'notebook' : 'viewers';
     return {
         context: constants.ExtensionRootDir,
-        entry: ['babel-polyfill', `./src/datascience-ui/${folderName}/index.tsx`],
-        output,
+        entry: getEntry(isNotebook),
+        output: {
+            path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
+            filename: '[name].js',
+            chunkFilename: `[name].bundle.js`
+        },
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
-        // Use 'eval' for release and `eval-source-map` for development.
-        // We need to use one where source is embedded, due to webviews (they restrict resources to specific schemes,
-        //  this seems to prevent chrome from downloading the source maps)
-        devtool: 'eval-source-map',
+        devtool: 'source-map',
         optimization: {
-            minimizer: [new TerserPlugin({ sourceMap: true })]
+            minimize: true,
+            minimizer: [new TerserPlugin({ sourceMap: true })],
+            splitChunks: {
+                chunks: 'all',
+                cacheGroups: {
+                    commons: {
+                        name: 'commons',
+                        chunks: 'initial',
+                        minChunks: isNotebook ? 2 : 1, // We want at least one shared bundle (2 for notebooks, as we want monago split into another).
+                        filename: '[name].initial.bundle.js'
+                    },
+                    nteract: {
+                        name: 'nteract',
+                        chunks: 'all',
+                        minChunks: 2,
+                        test(module, _chunks) {
+                            // `module.resource` contains the absolute path of the file on disk.
+                            // Look for `node_modules/monaco...`.
+                            const path = require('path');
+                            return module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}@nteract`);
+                        }
+                    },
+                    plotly: {
+                        name: 'plotly',
+                        chunks: 'all',
+                        minChunks: 1,
+                        test(module, _chunks) {
+                            // `module.resource` contains the absolute path of the file on disk.
+                            // Look for `node_modules/monaco...`.
+                            const path = require('path');
+                            return module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}plotly`);
+                        }
+                    },
+                    monaco: {
+                        name: 'monaco',
+                        chunks: 'all',
+                        minChunks: 1,
+                        test(module, _chunks) {
+                            // `module.resource` contains the absolute path of the file on disk.
+                            // Look for `node_modules/monaco...`.
+                            const path = require('path');
+                            return module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}monaco`);
+                        }
+                    }
+                }
+            },
+            chunkIds: 'named'
         },
         node: {
             fs: 'empty'
         },
         plugins: [
-            new HtmlWebpackPlugin({
-                template: `src/datascience-ui/${folderName}/index.html`,
-                imageBaseUrl: `${constants.ExtensionRootDir.replace(/\\/g, '/')}/out/datascience-ui/${folderName}`,
-                indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                filename: `./datascience-ui/${folderName}/index.html`
-            }),
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin(
                 [
@@ -81,9 +135,14 @@ function buildConfiguration(folderName, supportsChunks) {
                 { context: 'src' }
             ),
             new webpack.optimize.LimitChunkCountPlugin({
-                maxChunks
+                maxChunks: 100
             }),
-            ...getPlugins(folderName)
+            ...getPlugins(isNotebook),
+            new HtmlWebpackPlugin({
+                template: `src/datascience-ui/${isNotebook ? 'native-editor' : 'plot'}/index.html`,
+                indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                filename: 'index.html'
+            })
         ],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
@@ -142,12 +201,5 @@ function buildConfiguration(folderName, supportsChunks) {
     };
 }
 
-exports.interactiveWindowConfigChunked = buildConfiguration('history-react', true);
-exports.nativeEditorConfigChunked = buildConfiguration('native-editor', true);
-exports.dataExplorerConfigChunked = buildConfiguration('data-explorer', true);
-exports.plotViewerConfigChunked = buildConfiguration('plot', true);
-
-exports.interactiveWindowConfig = buildConfiguration('history-react', false);
-exports.nativeEditorConfig = buildConfiguration('native-editor', false);
-exports.dataExplorerConfig = buildConfiguration('data-explorer', false);
-exports.plotViewerConfig = buildConfiguration('plot', false);
+exports.notebooks = buildConfiguration(true);
+exports.viewers = buildConfiguration(false);

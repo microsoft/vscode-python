@@ -62,7 +62,7 @@ import {
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
-const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'native-editor');
+const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 enum AskForSaveResult {
     Yes,
     No,
@@ -149,7 +149,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             commandManager,
             globalStorage,
             nativeEditorDir,
-            [path.join(nativeEditorDir, 'index_bundle.js')],
+            [path.join(nativeEditorDir, 'monaco.bundle.js'), path.join(nativeEditorDir, 'commons.initial.bundle.js'), path.join(nativeEditorDir, 'nativeEditor.js')],
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active,
             experimentsManager

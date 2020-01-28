@@ -93,7 +93,7 @@ export class WebPanel implements IWebPanel {
             if (localFilesExist.every(exists => exists === true)) {
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
-                this.panel.webview.html = this.options.startHttpServer ? this.generateServerReactHtml(this.panel.webview) : this.generateLocalReactHtml(this.panel.webview);
+                this.panel.webview.html = this.options.startHttpServer ? this.generateServerReactHtml(this.panel.webview) : await this.generateLocalReactHtml(this.panel.webview);
 
                 // Reset when the current panel is closed
                 this.disposableRegistry.push(
@@ -128,10 +128,13 @@ export class WebPanel implements IWebPanel {
     }
 
     // tslint:disable-next-line:no-any
-    private generateLocalReactHtml(webView: Webview) {
+    private async generateLocalReactHtml(webView: Webview) {
         const uriBase = webView.asWebviewUri(Uri.file(this.options.cwd)).toString();
         const uris = this.options.scripts.map(script => webView.asWebviewUri(Uri.file(script)));
+        const testFiles = await this.fs.getFiles(this.options.rootPath);
 
+        console.warn(testFiles.map(f => webView.asWebviewUri(Uri.file(f))));
+        const rootPath = webView.asWebviewUri(Uri.file(this.options.rootPath)).toString();
         return `<!doctype html>
         <html lang="en">
             <head>
@@ -149,6 +152,8 @@ export class WebPanel implements IWebPanel {
                 <noscript>You need to enable JavaScript to run this app.</noscript>
                 <div id="root"></div>
                 <script type="text/javascript">
+                    // Public path that will be used by webpack.
+                    window.__PVSC_Public_Path = "${rootPath}/";
                     function resolvePath(relativePath) {
                         if (relativePath && relativePath[0] == '.' && relativePath[1] != '.') {
                             return "${uriBase}" + relativePath.substring(1);
