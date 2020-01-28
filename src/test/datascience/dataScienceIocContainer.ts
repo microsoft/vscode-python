@@ -463,9 +463,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
 
-        const configuration = this.serviceManager.get<IConfigurationService>(IConfigurationService);
-        const pythonSettings = configuration.getSettings();
-        const languageServerType = pythonSettings.languageServer;
+        //const configuration = this.serviceManager.get<IConfigurationService>(IConfigurationService);
+        //const pythonSettings = configuration.getSettings();
+        const languageServerType = LanguageServerType.Microsoft; // pythonSettings.languageServer;
 
         this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy);
         this.serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
