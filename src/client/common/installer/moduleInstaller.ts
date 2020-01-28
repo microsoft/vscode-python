@@ -45,7 +45,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                     await terminalService.sendCommand(pythonPath, args, token);
                 } else if (settings.globalModuleInstallation) {
                     const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-                    if (await fs.isDirReadonly(path.dirname(pythonPath))) {
+                    if (await fs.isDirReadonly(path.dirname(pythonPath)).catch(_err => true)) {
                         this.elevatedInstall(pythonPath, args);
                     } else {
                         await terminalService.sendCommand(pythonPath, args, token);

@@ -1279,7 +1279,7 @@ suite('FileSystem', () => {
 
                     const isReadonly = await fileSystem.isDirReadonly(dirname);
 
-                    expect(isReadonly).to.equal(false);
+                    expect(isReadonly).to.equal(true);
                 });
             });
 
@@ -1288,15 +1288,13 @@ suite('FileSystem', () => {
 
                 const isReadonly = await fileSystem.isDirReadonly(dirname);
 
-                expect(isReadonly).to.equal(true);
+                expect(isReadonly).to.equal(false);
             });
 
-            // Failing may be more sensible, but for now we are sticking
-            // with the existing behavior.
-            test('false if the directory does not exist', async () => {
-                const isReadonly = await fileSystem.isDirReadonly(DOES_NOT_EXIST);
+            test('fail if the directory does not exist', async () => {
+                const promise = fileSystem.isDirReadonly(DOES_NOT_EXIST);
 
-                expect(isReadonly).to.equal(false);
+                await expect(promise).to.eventually.be.rejected;
             });
         });
 

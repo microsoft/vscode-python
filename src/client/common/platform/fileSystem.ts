@@ -9,8 +9,7 @@ import { injectable } from 'inversify';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
-import { noop } from '../utils/misc';
-import { isFileNotFoundError } from './errors';
+import { isFileNotFoundError, isNoPermissionsError } from './errors';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
 import { TemporaryFileSystem } from './fs-temp';
 // prettier-ignore
@@ -457,16 +456,19 @@ export class FileSystem implements IFileSystem {
 
     public async isDirReadonly(dirname: string): Promise<boolean> {
         const filePath = `${dirname}${this.paths.sep}___vscpTest___`;
-        return new Promise<boolean>(resolve => {
-            fs.open(filePath, fs.constants.O_CREAT | fs.constants.O_RDWR, (error, fd) => {
-                if (!error) {
-                    fs.close(fd, () => {
-                        fs.unlink(filePath, noop);
-                    });
-                }
-                return resolve(!error);
-            });
-        });
+        const flags = fs.constants.O_CREAT | fs.constants.O_RDWR;
+        let fd: number;
+        try {
+            fd = await fs.open(filePath, flags);
+        } catch (err) {
+            if (isNoPermissionsError(err)) {
+                return true;
+            }
+            throw err; // re-throw
+        }
+        await fs.close(fd);
+        await fs.unlink(filePath);
+        return false;
     }
 }
 
