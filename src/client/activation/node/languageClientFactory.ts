@@ -23,7 +23,7 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
 
     public async createLanguageClient(resource: Resource, _interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
         const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
-        const bundlePath = path.join(EXTENSION_ROOT_DIR, languageServerFolder, 'server.bundle.js');
+        const bundlePath = path.join(EXTENSION_ROOT_DIR, languageServerFolder, 'dist', 'server.bundle.js');
         const nonBundlePath = path.join(EXTENSION_ROOT_DIR, languageServerFolder, 'server.js');
         const modulePath = (await this.fs.fileExists(nonBundlePath)) ? nonBundlePath : bundlePath;
         const debugOptions = { execArgv: ['--nolazy', '--inspect=6600'] };
