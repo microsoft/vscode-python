@@ -52,7 +52,8 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             [path.join(dataExplorereDir, 'dataExplorer.js'), path.join(dataExplorereDir, 'index_bundle.js')],
             localize.DataScience.dataExplorerTitle(),
             ViewColumn.One,
-            experimentsManager.inExperiment(WebHostNotebook.experiment)
+            experimentsManager.inExperiment(WebHostNotebook.experiment),
+            { __PVSC_isDataViewer: true } // This tells the `index.tsx` to render the data frame viewer.
         );
 
         // Load the web panel using our current directory as we don't expect to load any other files

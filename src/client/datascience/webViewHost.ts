@@ -42,7 +42,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() private scripts: string[],
         @unmanaged() private title: string,
         @unmanaged() private viewColumn: ViewColumn,
-        @unmanaged() private readonly useWebViewServer: boolean
+        @unmanaged() private readonly useWebViewServer: boolean,
+        @unmanaged() private readonly globalVariables?: Record<string, string | number | boolean>
     ) {
         // Create our message listener for our web panel.
         this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.webPanelViewStateChanged.bind(this), this.dispose.bind(this));
@@ -248,7 +249,8 @@ export class WebViewHost<IMapping> implements IDisposable {
                 scripts: this.scripts,
                 settings,
                 startHttpServer: false,
-                cwd
+                cwd,
+                globalVariables: this.globalVariables
             });
 
             traceInfo('Web view created.');

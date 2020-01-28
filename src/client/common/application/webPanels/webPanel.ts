@@ -131,6 +131,9 @@ export class WebPanel implements IWebPanel {
     private async generateLocalReactHtml(webView: Webview) {
         const uriBase = webView.asWebviewUri(Uri.file(this.options.cwd)).toString();
         const uris = this.options.scripts.map(script => webView.asWebviewUri(Uri.file(script)));
+        // Register scripts to declare any global variables.
+        const globalVars = this.options.globalVariables || {};
+        const globalVarsScript = Object.keys(globalVars).length > 0 ? `Object.assign(window, ${JSON.stringify(globalVars)};` : '';
         // If require.js exists in the scripts directory, then add requirejs with ability to dynamically load scripts.
         let requireScripts = '';
         if (await this.fs.fileExists(path.join(this.options.rootPath, 'require.js'))) {
@@ -161,6 +164,7 @@ export class WebPanel implements IWebPanel {
                 <noscript>You need to enable JavaScript to run this app.</noscript>
                 <div id="root"></div>
                 <script type="text/javascript">
+                    ${globalVarsScript}
                     function resolvePath(relativePath) {
                         if (relativePath && relativePath[0] == '.' && relativePath[1] != '.') {
                             return "${uriBase}" + relativePath.substring(1);

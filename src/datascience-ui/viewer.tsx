@@ -12,6 +12,7 @@ export declare function acquireVsCodeApi(): IVsCodeApi;
 // tslint:disable-next-line: no-any
 if ((window as any).__PVSC_isPlotViewer) {
     renderPlotViewer(acquireVsCodeApi);
-} else {
+    // tslint:disable-next-line: no-any
+} else if ((window as any).__PVSC_isDataViewer) {
     renderDataExplorer(acquireVsCodeApi);
 }

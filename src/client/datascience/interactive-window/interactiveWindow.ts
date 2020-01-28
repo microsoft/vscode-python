@@ -112,7 +112,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             [path.join(historyReactDir, 'require.js'), path.join(historyReactDir, 'interactiveWindow.js'), path.join(historyReactDir, 'index_bundle.js')],
             localize.DataScience.historyTitle(),
             ViewColumn.Two,
-            experimentsManager
+            experimentsManager,
+            { __PVSC_isInteractiveWindow: true } // Tells index.tsx to render the interactive window.
         );
 
         // Send a telemetry event to indicate window is opening

@@ -48,7 +48,8 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             [path.join(plotDir, 'plotViewer.js'), path.join(plotDir, 'index_bundle.js')],
             localize.DataScience.plotViewerTitle(),
             ViewColumn.One,
-            experimentsManager.inExperiment(WebHostNotebook.experiment)
+            experimentsManager.inExperiment(WebHostNotebook.experiment),
+            { __PVSC_isPlotViewer: true } // This tells the `index.tsx` to render the plotviewer.
         );
         // Load the web panel using our current directory as we don't expect to load any other files
         super.loadWebPanel(process.cwd()).catch(traceError);

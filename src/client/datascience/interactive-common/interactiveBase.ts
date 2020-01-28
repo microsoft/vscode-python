@@ -117,7 +117,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() scripts: string[],
         @unmanaged() title: string,
         @unmanaged() viewColumn: ViewColumn,
-        @unmanaged() experimentsManager: IExperimentsManager
+        @unmanaged() experimentsManager: IExperimentsManager,
+        @unmanaged() globalVariables: Record<string, string | number | boolean>
     ) {
         super(
             configuration,
@@ -130,7 +131,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             scripts,
             title,
             viewColumn,
-            experimentsManager.inExperiment(WebHostNotebook.experiment)
+            experimentsManager.inExperiment(WebHostNotebook.experiment),
+            globalVariables
         );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows

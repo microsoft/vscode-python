@@ -983,6 +983,13 @@ export interface IWebPanelOptions {
     cwd: string;
     // tslint:disable-next-line: no-any
     settings?: any;
+    /**
+     * Global JS variables set in the HTML view.
+     *
+     * @type {string}
+     * @memberof IWebPanelOptions
+     */
+    globalVariables?: Record<string, string | number | boolean>;
 }
 
 // Wraps the VS Code api for creating a web panel
