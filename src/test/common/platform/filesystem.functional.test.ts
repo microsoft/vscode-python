@@ -886,12 +886,10 @@ suite('FileSystem - utils', () => {
             expect(isReadonly).to.equal(false);
         });
 
-        // Failing may be more sensible, but for now we are sticking
-        // with the existing behavior.
-        test('false if the directory does not exist', async () => {
-            const isReadonly = await utils.isDirReadonly(DOES_NOT_EXIST);
+        test('fail if the directory does not exist', async () => {
+            const promise = utils.isDirReadonly(DOES_NOT_EXIST);
 
-            expect(isReadonly).to.equal(false);
+            await expect(promise).to.eventually.be.rejected;
         });
     });
 
