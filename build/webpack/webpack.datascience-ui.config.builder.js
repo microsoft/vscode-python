@@ -35,25 +35,47 @@ function getEntry(isNotebook) {
 }
 
 function getPlugins(isNotebook) {
-    const plugins = [];
+    const plugins = [...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers')];
     if (isNotebook) {
         plugins.push(
             new MonacoWebpackPlugin({
                 languages: [] // force to empty so onigasm will be used
+            }),
+            new HtmlWebpackPlugin({
+                template: 'src/datascience-ui/native-editor/index.html',
+                indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                chunks: ['monaco', 'commons', 'nativeEditor'],
+                filename: 'index.nativeEditor.html'
+            }),
+            new HtmlWebpackPlugin({
+                template: 'src/datascience-ui/history-react/index.html',
+                indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                chunks: ['monaco', 'commons', 'interactiveWindow'],
+                filename: 'index.interactiveWindow.html'
             })
         );
     } else {
         plugins.push(
-            new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
-            })
+            ...[
+                new webpack.DefinePlugin({
+                    'process.env': {
+                        NODE_ENV: JSON.stringify('production')
+                    }
+                }),
+                new HtmlWebpackPlugin({
+                    template: 'src/datascience-ui/plot/index.html',
+                    indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                    chunks: ['commons', 'plotViewer'],
+                    filename: 'index.plotViewer.html'
+                }),
+                new HtmlWebpackPlugin({
+                    template: 'src/datascience-ui/data-explorer/index.html',
+                    indexUrl: `${constants.ExtensionRootDir}/out/1`,
+                    chunks: ['commons', 'dataExplorer'],
+                    filename: 'index.dataExplorer.html'
+                })
+            ]
         );
-    }
-
-    if (isProdBuild) {
-        plugins.push(...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers'));
     }
 
     return plugins;
@@ -150,12 +172,7 @@ function buildConfiguration(isNotebook) {
             new webpack.optimize.LimitChunkCountPlugin({
                 maxChunks: 100
             }),
-            ...getPlugins(isNotebook),
-            new HtmlWebpackPlugin({
-                template: `src/datascience-ui/${isNotebook ? 'native-editor' : 'plot'}/index.html`,
-                indexUrl: `${constants.ExtensionRootDir}/out/1`,
-                filename: 'index.html'
-            })
+            ...getPlugins(isNotebook)
         ],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
