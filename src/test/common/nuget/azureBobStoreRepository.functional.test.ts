@@ -38,7 +38,7 @@ suite('Nuget Azure Storage Repository', () => {
         const nugetService = typeMoq.Mock.ofType<INugetService>();
         nugetService.setup(n => n.getVersionFromPackageFileName(typeMoq.It.isAny())).returns(() => new SemVer('1.1.1'));
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService.object);
-        const defaultStorageChannel = LanguageServerDownloadChannel.stable;
+        const defaultStorageChannel = 'python-language-server-stable';
 
         repo = new AzureBlobStoreNugetRepository(serviceContainer.object, azureBlobStorageAccount, defaultStorageChannel, azureCDNBlobStorageAccount);
     });
@@ -47,7 +47,7 @@ suite('Nuget Azure Storage Repository', () => {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const platformService = new PlatformService();
-        const packageJson = { languageServerVersion: '0.1.0' };
+        const packageJson = { languageServerVersion: '0.0.1' };
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
         appEnv.setup(e => e.packageJson).returns(() => packageJson);
         const lsPackageService = new DotNetLanguageServerPackageService(serviceContainer.object, appEnv.object, platformService);
