@@ -383,6 +383,25 @@ suite('Module Installer', () => {
                                         interpreterService.verifyAll();
                                         terminalService.verifyAll();
                                     });
+                                    test(`ignores failures in IFileSystem.isDirReadonly()`, async () => {
+                                        const info = TypeMoq.Mock.ofType<PythonInterpreter>();
+                                        info.setup((t: any) => t.then).returns(() => undefined);
+                                        info.setup(t => t.type).returns(() => InterpreterType.Unknown);
+                                        info.setup(t => t.version).returns(() => new SemVer('3.5.0-final'));
+                                        setActiveInterpreter(info.object);
+                                        pythonSettings.setup(p => p.globalModuleInstallation).returns(() => true);
+                                        const elevatedInstall = sinon.stub(TestModuleInstaller.prototype, 'elevatedInstall');
+                                        elevatedInstall.returns();
+                                        const err = new Error('oops!');
+                                        fs.setup(f => f.isDirReadonly(path.dirname(pythonPath))).returns(() => Promise.reject(err));
+                                        try {
+                                            await installer.installModule(product.name, resource);
+                                        } catch (ex) {
+                                            noop();
+                                        }
+                                        assert.ok(elevatedInstall.calledOnceWith(pythonPath, ['-m', 'executionInfo']));
+                                        interpreterService.verifyAll();
+                                    });
                                     test('If cancellation token is provided, install while showing progress', async () => {
                                         const options = {
                                             location: ProgressLocation.Notification,
