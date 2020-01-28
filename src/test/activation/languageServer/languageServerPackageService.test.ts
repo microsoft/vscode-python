@@ -36,11 +36,11 @@ suite('Language Server Package Service', () => {
         cfg.setup(c => c.get('proxyStrictSSL', true)).returns(() => true);
         workspace.setup(w => w.getConfiguration('http', undefined)).returns(() => cfg.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
-        const defaultStorageChannel = LanguageServerDownloadChannel.stable;
+        const defaultStorageChannel = 'python-language-server-daily';
         const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, azureBlobStorageAccount, defaultStorageChannel, azureCDNBlobStorageAccount);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
-        const packageJson = { languageServerVersion: '0.1.0' };
+        const packageJson = { languageServerVersion: '0.0.1' };
         appEnv.setup(e => e.packageJson).returns(() => packageJson);
         const platform = typeMoq.Mock.ofType<IPlatformService>();
         const lsPackageService = new DotNetLanguageServerPackageService(serviceContainer.object, appEnv.object, platform.object);
