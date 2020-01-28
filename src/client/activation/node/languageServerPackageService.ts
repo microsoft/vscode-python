@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IApplicationEnvironment } from '../../common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerPackageService } from '../common/languageServerPackageService';
@@ -20,6 +20,7 @@ export class NodeLanguageServerPackageService extends LanguageServerPackageServi
     }
 
     public getNugetPackageName(): string {
-        return 'PyRx-Language-Server';
+        const config = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getConfiguration('python');
+        return config.get<string>('packageName') || '';
     }
 }

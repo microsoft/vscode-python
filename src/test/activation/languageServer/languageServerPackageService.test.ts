@@ -8,7 +8,6 @@
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
-import { LanguageServerDownloadChannel } from '../../../client/activation/common/packageRepository';
 import { DotNetLanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';

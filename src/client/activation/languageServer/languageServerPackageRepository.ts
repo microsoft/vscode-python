@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
 import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, StableLanguageServerPackageRepository } from '../common/packageRepository';
 
-export const languageServerPackageName = 'python-language-server';
+const languageServerPackageName = 'python-language-server';
 
 @injectable()
 export class StableDotNetLanguageServerPackageRepository extends StableLanguageServerPackageRepository {

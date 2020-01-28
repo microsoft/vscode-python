@@ -4,28 +4,33 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+import { IWorkspaceService } from '../../common/application/types';
 import { IServiceContainer } from '../../ioc/types';
 import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, StableLanguageServerPackageRepository } from '../common/packageRepository';
-
-export const languageServerPackageName = 'pyrx';
 
 @injectable()
 export class StableNodeLanguageServerPackageRepository extends StableLanguageServerPackageRepository {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer, languageServerPackageName);
+        const config = serviceContainer.get<IWorkspaceService>(IWorkspaceService).getConfiguration('python');
+        const packageName = config.get<string>('blobName') || '';
+        super(serviceContainer, packageName);
     }
 }
 
 @injectable()
 export class BetaNodeLanguageServerPackageRepository extends BetaLanguageServerPackageRepository {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer, languageServerPackageName);
+        const config = serviceContainer.get<IWorkspaceService>(IWorkspaceService).getConfiguration('python');
+        const packageName = config.get<string>('blobName') || '';
+        super(serviceContainer, packageName);
     }
 }
 
 @injectable()
 export class DailyNodeLanguageServerPackageRepository extends DailyLanguageServerPackageRepository {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer, languageServerPackageName);
+        const config = serviceContainer.get<IWorkspaceService>(IWorkspaceService).getConfiguration('python');
+        const packageName = config.get<string>('blobName') || '';
+        super(serviceContainer, packageName);
     }
 }

@@ -15,11 +15,14 @@ export class DotNetLanguageServerFolderService extends LanguageServerFolderServi
     }
 
     protected getMinimalLanguageServerVersion(): string {
+        let minVersion = '0.0.0';
         try {
             const appEnv = this.serviceContainer.get<IApplicationEnvironment>(IApplicationEnvironment);
-            return appEnv ? (appEnv.packageJson.languageServerVersion as string) : '0.0.0';
+            if (appEnv) {
+                minVersion = appEnv.packageJson.languageServerVersion as string;
+            }
             // tslint:disable-next-line: no-empty
         } catch {}
-        return '0.0.0';
+        return minVersion;
     }
 }
