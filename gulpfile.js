@@ -122,7 +122,7 @@ gulp.task('compile-webviews', async () => {
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js', '--mode', 'production'], webpackEnv);
 });
 
-gulp.task('compile-webiview-dependencies', async () => {
+gulp.task('compile-webview-dependencies', async () => {
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui.dependency.config.builder.js', '--mode', 'production'], webpackEnv);
 });
 
@@ -134,7 +134,6 @@ gulp.task('webpack', async () => {
     await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui.dependency.config.builder.js'], webpackEnv);
     await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js'], webpackEnv);
     await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js'], webpackEnv);
-    // await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-nativeEditorChunked.config.js'], webpackEnv);
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
