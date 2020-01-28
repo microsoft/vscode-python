@@ -279,6 +279,14 @@ export class RawFileSystem implements IRawFileSystem {
 //==========================================
 // filesystem "utils"
 
+// This is the parts of the 'fs-extra' module that we use in RawFileSystem.
+interface IFSExtraForUtils {
+    open(path: string, flags: string | number, mode?: string | number | null): Promise<number>;
+    close(fd: number): Promise<void>;
+    unlink(path: string): Promise<void>;
+    existsSync(path: string): boolean;
+}
+
 // High-level filesystem operations used by the extension.
 export class FileSystemUtils implements IFileSystemUtils {
     constructor(
@@ -286,14 +294,17 @@ export class FileSystemUtils implements IFileSystemUtils {
         public readonly pathUtils: IFileSystemPathUtils,
         public readonly paths: IFileSystemPaths,
         public readonly tmp: ITempFileSystem,
-        protected readonly getHash: (data: string) => string,
-        protected readonly globFile: (pat: string, options?: { cwd: string }) => Promise<string[]>
+        // tslint:disable-next-line:no-shadowed-variable
+        private readonly fs: IFSExtraForUtils,
+        private readonly getHash: (data: string) => string,
+        private readonly globFile: (pat: string, options?: { cwd: string }) => Promise<string[]>
     ) {}
     // Create a new object using common-case default values.
     public static withDefaults(
         raw?: IRawFileSystem,
         pathUtils?: IFileSystemPathUtils,
         tmp?: ITempFileSystem,
+        fsDeps?: IFSExtraForUtils,
         getHash?: (data: string) => string,
         globFile?: (pat: string, options?: { cwd: string }) => Promise<string[]>
     ): FileSystemUtils {
@@ -303,6 +314,7 @@ export class FileSystemUtils implements IFileSystemUtils {
             pathUtils,
             pathUtils.paths,
             tmp || TemporaryFileSystem.withDefaults(),
+            fsDeps || fs,
             getHash || getHashString,
             globFile || promisify(glob)
         );
@@ -390,7 +402,7 @@ export class FileSystemUtils implements IFileSystemUtils {
         const flags = fs.constants.O_CREAT | fs.constants.O_RDWR;
         let fd: number;
         try {
-            fd = await fs.open(filePath, flags);
+            fd = await this.fs.open(filePath, flags);
         } catch (err) {
             if (isNoPermissionsError(err)) {
                 return true;
@@ -398,8 +410,8 @@ export class FileSystemUtils implements IFileSystemUtils {
             throw err; // re-throw
         }
         // Clean resources in the background.
-        fs.close(fd)
-            .finally(() => fs.unlink(filePath))
+        this.fs.close(fd)
+            .finally(() => this.fs.unlink(filePath))
             .ignoreErrors();
         return false;
     }
@@ -428,7 +440,7 @@ export class FileSystemUtils implements IFileSystemUtils {
     // helpers (non-async)
 
     public fileExistsSync(filePath: string): boolean {
-        return fs.existsSync(filePath);
+        return this.fs.existsSync(filePath);
     }
 }
 

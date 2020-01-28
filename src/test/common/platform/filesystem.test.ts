@@ -172,9 +172,9 @@ suite('FileSystem - utils', () => {
         });
 
         test('mismatch (type: symlink)', async () => {
-            const dirname = await fix.createFile('x/y/z/spam.py');
+            const filename = await fix.createFile('x/y/z/spam.py');
 
-            const exists = await utils.pathExists(dirname, FileType.SymbolicLink);
+            const exists = await utils.pathExists(filename, FileType.SymbolicLink);
 
             expect(exists).to.equal(false);
         });
@@ -192,9 +192,9 @@ suite('FileSystem - utils', () => {
         });
 
         test('mismatch (type: unknown)', async () => {
-            const dirname = await fix.createFile('x/y/z/spam.py');
+            const filename = await fix.createFile('x/y/z/spam.py');
 
-            const exists = await utils.pathExists(dirname, FileType.Unknown);
+            const exists = await utils.pathExists(filename, FileType.Unknown);
 
             expect(exists).to.equal(false);
         });

@@ -874,7 +874,7 @@ suite('FileSystem - utils', () => {
 
                 const isReadonly = await utils.isDirReadonly(dirname);
 
-                expect(isReadonly).to.equal(false);
+                expect(isReadonly).to.equal(true);
             });
         });
 
@@ -883,7 +883,7 @@ suite('FileSystem - utils', () => {
 
             const isReadonly = await utils.isDirReadonly(dirname);
 
-            expect(isReadonly).to.equal(true);
+            expect(isReadonly).to.equal(false);
         });
 
         // Failing may be more sensible, but for now we are sticking
