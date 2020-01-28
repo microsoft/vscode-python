@@ -112,4 +112,4 @@ function buildConfiguration(moduleName, outputFileNameWithoutJsExtension) {
     };
 }
 
-module.exports = modulesToExternalize.forEach(moduleName => buildConfiguration(require.resolve(moduleName), moduleName));
+module.exports = modulesToExternalize.map(moduleName => buildConfiguration(require.resolve(moduleName), moduleName));
