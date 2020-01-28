@@ -74,28 +74,12 @@ function getItemsToCopy(folderName) {
     if (folderName === 'history-react' || folderName === 'native-editor') {
         return [
             {
-                from: path.join(constants.ExtensionRootDir, 'build', 'webpack', 'nativeEditor.js'),
-                to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'notebook', 'nativeEditor.js')
-            },
-            {
-                from: path.join(constants.ExtensionRootDir, 'build', 'webpack', 'interactiveWindow.js'),
-                to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'notebook', 'interactiveWindow.js')
-            },
-            {
                 from: path.join(constants.ExtensionRootDir, 'node_modules', 'requirejs', 'require.js'),
                 to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'notebook', 'require.js')
             }
         ];
     }
     return [
-        {
-            from: path.join(constants.ExtensionRootDir, 'build', 'webpack', 'plotViewer.js'),
-            to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'viewer', 'plotViewer.js')
-        },
-        {
-            from: path.join(constants.ExtensionRootDir, 'build', 'webpack', 'dataExplorer.js'),
-            to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'viewer', 'dataExplorer.js')
-        },
         {
             from: path.join(constants.ExtensionRootDir, 'node_modules', 'requirejs', 'require.js'),
             to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', 'viewer', 'require.js')

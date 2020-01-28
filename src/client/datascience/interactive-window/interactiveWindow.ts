@@ -109,7 +109,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             commandManager,
             globalStorage,
             historyReactDir,
-            [path.join(historyReactDir, 'require.js'), path.join(historyReactDir, 'interactiveWindow.js'), path.join(historyReactDir, 'index_bundle.js')],
+            [path.join(historyReactDir, 'index_bundle.js')],
             localize.DataScience.historyTitle(),
             ViewColumn.Two,
             experimentsManager,

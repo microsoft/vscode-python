@@ -49,7 +49,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             workspaceService,
             (c, v, d) => new DataViewerMessageListener(c, v, d),
             dataExplorereDir,
-            [path.join(dataExplorereDir, 'dataExplorer.js'), path.join(dataExplorereDir, 'index_bundle.js')],
+            [path.join(dataExplorereDir, 'index_bundle.js')],
             localize.DataScience.dataExplorerTitle(),
             ViewColumn.One,
             experimentsManager.inExperiment(WebHostNotebook.experiment),
