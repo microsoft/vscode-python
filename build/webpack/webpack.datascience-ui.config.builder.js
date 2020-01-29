@@ -88,8 +88,9 @@ function getPlugins(isNotebook) {
 }
 
 function buildConfiguration(isNotebook) {
+    // Folder inside `datascience-ui` that will be created and where the files will be dumped.
     const bundleFolder = isNotebook ? 'notebook' : 'viewers';
-    const minimizer = isProdBuild ? [new TerserPlugin({ sourceMap: true })] : [];
+
     return {
         context: constants.ExtensionRootDir,
         entry: getEntry(isNotebook),
@@ -102,7 +103,7 @@ function buildConfiguration(isNotebook) {
         devtool: 'source-map',
         optimization: {
             minimize: isProdBuild,
-            minimizer,
+            minimizer: isProdBuild ? [new TerserPlugin({ sourceMap: true })] : [],
             moduleIds: 'hashed', // (doesn't re-generate bundles unnecessarily) https://webpack.js.org/configuration/optimization/#optimizationmoduleids.
             splitChunks: {
                 chunks: 'all',
