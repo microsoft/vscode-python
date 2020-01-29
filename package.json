@@ -2778,7 +2778,6 @@
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
         "checkDependencies": "gulp checkDependencies",
-        "dump-datascience-webpack-stats": "gulp dump-webview-stats",
         "postinstall": "node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --opts ./build/.mocha.unittests.js.opts",

@@ -36,10 +36,7 @@ function getEntry(isNotebook) {
 
 function getPlugins(isNotebook) {
     const plugins = [];
-
-    if (isProdBuild) {
-        plugins.push(...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers'));
-    }
+    plugins.push(...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers'));
 
     if (isNotebook) {
         plugins.push(

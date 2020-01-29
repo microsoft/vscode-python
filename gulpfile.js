@@ -116,22 +116,13 @@ gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies()
 
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
-gulp.task('compile-webviews', async () => {
+async function buildDataScienceUI() {
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-notebooks.config.js', '--mode', 'production'], webpackEnv);
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-viewers.config.js', '--mode', 'production'], webpackEnv);
-});
+}
 
-gulp.task('dump-webview-stats', async () => {
-    await spawnAsync(
-        'npm',
-        ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-notebooks.config.js', '--mode', 'production', '--profile', '--json'],
-        webpackEnv
-    );
-    await spawnAsync(
-        'npm',
-        ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-viewers.config.js', '--mode', 'production', '--profile', '--json'],
-        webpackEnv
-    );
+gulp.task('compile-webviews', async () => {
+    buildDataScienceUI();
 });
 
 gulp.task('webpack', async () => {
@@ -416,10 +407,6 @@ function spawnAsync(command, args, env) {
         proc.on('error', error => reject(error));
     });
 }
-function buildDatascienceDependencies() {
-    fsExtra.ensureDirSync(path.join(__dirname, 'tmp'));
-    spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);
-}
 
 /**
  * Analyzes the dependencies pulled in by WebPack.
@@ -432,7 +419,7 @@ function buildDatascienceDependencies() {
  *
  */
 async function checkDatascienceDependencies() {
-    buildDatascienceDependencies();
+    await buildDataScienceUI();
 
     const existingModulesFileName = 'package.datascience-ui.dependencies.json';
     const existingModulesFile = path.join(__dirname, existingModulesFileName);
