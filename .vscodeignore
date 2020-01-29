@@ -3,6 +3,9 @@
 !out/datascience-ui/notebook/commons.initial.bundle.js.map
 !out/datascience-ui/notebook/interactiveWindow.js.map
 !out/datascience-ui/notebook/nativeEditor.js.map
+!out/datascience-ui/viewers/commons.initial.bundle.js.map
+!out/datascience-ui/viewers/dataExplorer.js.map
+!out/datascience-ui/viewers/plotViewer.js.map
 *.vsix
 .appveyor.yml
 .editorconfig
