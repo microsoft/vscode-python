@@ -89,7 +89,8 @@ function getPlugins(isNotebook) {
 
 function buildConfiguration(isNotebook) {
     const bundleFolder = isNotebook ? 'notebook' : 'viewers';
-    const config = {
+    const minimizer = isProdBuild ? [new TerserPlugin({ sourceMap: true })] : [];
+    return {
         context: constants.ExtensionRootDir,
         entry: getEntry(isNotebook),
         output: {
@@ -100,8 +101,9 @@ function buildConfiguration(isNotebook) {
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
         devtool: 'source-map',
         optimization: {
-            minimize: true,
-            minimizer: [new TerserPlugin({ sourceMap: true })],
+            minimize: isProdBuild,
+            minimizer,
+            moduleIds: 'hashed', // (doesn't re-generate bundles unnecessarily) https://webpack.js.org/configuration/optimization/#optimizationmoduleids.
             splitChunks: {
                 chunks: 'all',
                 cacheGroups: {
@@ -176,7 +178,7 @@ function buildConfiguration(isNotebook) {
                 { context: 'src' }
             ),
             new webpack.optimize.LimitChunkCountPlugin({
-                maxChunks: isProdBuild ? 100 : 1
+                maxChunks: 100
             }),
             ...getPlugins(isNotebook)
         ],
@@ -235,12 +237,6 @@ function buildConfiguration(isNotebook) {
             ]
         }
     };
-
-    // During development, we don't want any bundles or optmizations.
-    if (!isProdBuild) {
-        delete config.optimization;
-    }
-    return config;
 }
 
 exports.notebooks = buildConfiguration(true);
