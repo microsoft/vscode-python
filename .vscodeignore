@@ -65,11 +65,12 @@ images/**/*.png
 news/**
 node_modules/**
 obj/**
+out/**/*.stats.json
 out/client/**/*.analyzer.html
 out/coverconfig.json
 out/datascience-ui/**/*.analyzer.html
-out/datascience-ui/**/*.stats.json
 out/datascience-ui/common/**
+out/datascience-ui/**/*.js.LICENSE
 out/datascience-ui/data-explorer/**
 out/datascience-ui/datascience-ui/**
 out/datascience-ui/history-react/**
@@ -78,10 +79,12 @@ out/datascience-ui/ipywidgets/**
 out/datascience-ui/native-editor/**
 out/datascience-ui/notebook/datascience-ui/**
 out/datascience-ui/notebook/ipywidgets/**
+out/datascience-ui/notebook/index.*.html
 out/datascience-ui/plot/**
 out/datascience-ui/react-common/**
 out/datascience-ui/viewers/datascience-ui/**
 out/datascience-ui/viewers/ipywidgets/**
+out/datascience-ui/viewers/index.*.html
 out/pythonFiles/**
 out/src/**
 out/test/**
