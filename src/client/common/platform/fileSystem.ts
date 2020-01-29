@@ -8,6 +8,7 @@ import * as glob from 'glob';
 import { injectable } from 'inversify';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
+import '../../common/extensions';
 import { createDeferred } from '../utils/async';
 import { isFileNotFoundError, isNoPermissionsError } from './errors';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
@@ -460,14 +461,16 @@ export class FileSystem implements IFileSystem {
         let fd: number;
         try {
             fd = await fs.open(filePath, flags);
+            // Clean resources in the background.
+            fs.close(fd)
+                .finally(() => fs.unlink(filePath))
+                .ignoreErrors();
         } catch (err) {
             if (isNoPermissionsError(err)) {
                 return true;
             }
             throw err; // re-throw
         }
-        await fs.close(fd);
-        await fs.unlink(filePath);
         return false;
     }
 }
