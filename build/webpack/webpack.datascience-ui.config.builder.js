@@ -36,7 +36,9 @@ function getEntry(isNotebook) {
 
 function getPlugins(isNotebook) {
     const plugins = [];
-    plugins.push(...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers'));
+    if (isProdBuild) {
+        plugins.push(...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers'));
+    }
 
     if (isNotebook) {
         plugins.push(
@@ -57,13 +59,15 @@ function getPlugins(isNotebook) {
             })
         );
     } else {
+        const definePlugin = new webpack.DefinePlugin({
+            'process.env': {
+                NODE_ENV: JSON.stringify('production')
+            }
+        });
+
         plugins.push(
+            ...(isProdBuild ? [definePlugin] : []),
             ...[
-                new webpack.DefinePlugin({
-                    'process.env': {
-                        NODE_ENV: JSON.stringify('production')
-                    }
-                }),
                 new HtmlWebpackPlugin({
                     template: 'src/datascience-ui/plot/index.html',
                     indexUrl: `${constants.ExtensionRootDir}/out/1`,
@@ -85,7 +89,7 @@ function getPlugins(isNotebook) {
 
 function buildConfiguration(isNotebook) {
     const bundleFolder = isNotebook ? 'notebook' : 'viewers';
-    return {
+    const config = {
         context: constants.ExtensionRootDir,
         entry: getEntry(isNotebook),
         output: {
@@ -172,7 +176,7 @@ function buildConfiguration(isNotebook) {
                 { context: 'src' }
             ),
             new webpack.optimize.LimitChunkCountPlugin({
-                maxChunks: 100
+                maxChunks: isProdBuild ? 100 : 1
             }),
             ...getPlugins(isNotebook)
         ],
@@ -231,6 +235,12 @@ function buildConfiguration(isNotebook) {
             ]
         }
     };
+
+    // During development, we don't want any bundles or optmizations.
+    if (!isProdBuild) {
+        delete config.optimization;
+    }
+    return config;
 }
 
 exports.notebooks = buildConfiguration(true);
