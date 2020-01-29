@@ -13,7 +13,7 @@ import { EXTENSION_ROOT_DIR } from '../../../constants';
 
 class DebugSessionLoggingTracker implements DebugAdapterTracker {
     private readonly enabled: boolean = false;
-    private stream: WriteStream | undefined;
+    private stream?: WriteStream;
     private timer = new StopWatch();
 
     constructor(private readonly session: DebugSession, fileSystem: IFileSystem) {
@@ -47,6 +47,7 @@ class DebugSessionLoggingTracker implements DebugAdapterTracker {
 
     public onExit(code: number | undefined, signal: string | undefined) {
         this.log(`Exit:\nExit-Code: ${code ? code : 0}\nSignal: ${signal ? signal : 'none'}\n`);
+        this.stream?.close();
     }
 
     private log(message: string) {
