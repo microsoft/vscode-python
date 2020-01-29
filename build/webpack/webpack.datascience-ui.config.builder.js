@@ -35,7 +35,12 @@ function getEntry(isNotebook) {
 }
 
 function getPlugins(isNotebook) {
-    const plugins = [...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers')];
+    const plugins = [];
+
+    if (isProdBuild) {
+        plugins.push(...common.getDefaultPlugins(isNotebook ? 'notebook' : 'viewers'));
+    }
+
     if (isNotebook) {
         plugins.push(
             new MonacoWebpackPlugin({

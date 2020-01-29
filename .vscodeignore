@@ -65,8 +65,10 @@ images/**/*.png
 news/**
 node_modules/**
 obj/**
-out/client/**/*analyzer.html
+out/client/**/*.analyzer.html
 out/coverconfig.json
+out/datascience-ui/**/*.analyzer.html
+out/datascience-ui/**/*.stats.json
 out/datascience-ui/common/**
 out/datascience-ui/data-explorer/**
 out/datascience-ui/datascience-ui/**

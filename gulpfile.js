@@ -121,6 +121,19 @@ gulp.task('compile-webviews', async () => {
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-viewers.config.js', '--mode', 'production'], webpackEnv);
 });
 
+gulp.task('dump-webview-stats', async () => {
+    await spawnAsync(
+        'npm',
+        ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-notebooks.config.js', '--mode', 'production', '--profile', '--json'],
+        webpackEnv
+    );
+    await spawnAsync(
+        'npm',
+        ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-viewers.config.js', '--mode', 'production', '--profile', '--json'],
+        webpackEnv
+    );
+});
+
 gulp.task('webpack', async () => {
     // Build node_modules.
     await buildWebPack('production', ['--config', './build/webpack/webpack.extension.dependencies.config.js'], webpackEnv);
@@ -408,6 +421,16 @@ function buildDatascienceDependencies() {
     spawn.sync('npm', ['run', 'dump-datascience-webpack-stats']);
 }
 
+/**
+ * Analyzes the dependencies pulled in by WebPack.
+ * Details on the structure of the stats json file can be found here https://webpack.js.org/api/stats/
+ *
+ * We go through the stats file and check all node modules that are part of the bundle(s).
+ * If they are in the bundle, they are used, hence they need to be registered in the `package.datascience-ui.dependencies.json` file.
+ * If not found, this will throw an error with the list of those dependencies.
+ * If a dependency is no longer use, this will throw an error with the details of the module to be removed from the `package.datascience-ui.dependencies.json` file.
+ *
+ */
 async function checkDatascienceDependencies() {
     buildDatascienceDependencies();
 
@@ -417,11 +440,6 @@ async function checkDatascienceDependencies() {
     const existingModules = new Set(existingModulesList);
     const existingModulesCopy = new Set(existingModulesList);
 
-    const statsOutput = path.join(__dirname, 'tmp', 'ds-stats.json');
-    const contents = await fsExtra.readFile(statsOutput).then(data => data.toString());
-    const startIndex = contents.toString().indexOf('{') - 1;
-
-    const json = JSON.parse(contents.substring(startIndex));
     const newModules = new Set();
     const packageLock = JSON.parse(await fsExtra.readFile('package-lock.json').then(data => data.toString()));
     const modulesInPackageLock = Object.keys(packageLock.dependencies);
@@ -431,45 +449,144 @@ async function checkDatascienceDependencies() {
     if (modulesInPackageLock.some(dependency => dependency.indexOf('/') !== dependency.lastIndexOf('/'))) {
         throwAndLogError("Dependencies detected with more than one '/', please update this script.");
     }
-    json.children.forEach(c => {
-        c.chunks[0].modules.forEach(m => {
-            const name = m.name;
-            if (!name.startsWith('./node_modules')) {
-                return;
-            }
 
-            let nameWithoutNodeModules = name.substring('./node_modules'.length);
-            // Special case expose-loader.
-            if (nameWithoutNodeModules.startsWith('/expose-loader')) {
-                nameWithoutNodeModules = nameWithoutNodeModules.substring(nameWithoutNodeModules.indexOf('./node_modules') + './node_modules'.length);
-            }
-
-            let moduleName1 = nameWithoutNodeModules.split('/')[1];
-            moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
-            const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
-
-            const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1);
-            switch (matchedModules.length) {
-                case 0:
-                    throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
-                    break;
-                case 1:
-                    break;
-                default: {
-                    throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
-                }
-            }
-
-            const moduleName = matchedModules[0];
-            if (existingModulesCopy.has(moduleName)) {
-                existingModulesCopy.delete(moduleName);
-            }
-            if (existingModules.has(moduleName) || newModules.has(moduleName)) {
-                return;
-            }
-            newModules.add(moduleName);
+    /**
+     * Processes the output in a webpack stat file.
+     *
+     * @param {string} statFile
+     */
+    async function processWebpackStatFile(statFile) {
+        /** @type{import("webpack").Stats.ToJsonOutput} */
+        const json = await fsExtra.readFile(statFile).then(data => JSON.parse(data.toString()));
+        json.children.forEach(child => {
+            child.chunks.forEach(chunk => {
+                processModules(chunk.modules);
+                (chunk.origins || []).forEach(origin => processOriginOrReason(origin));
+            });
         });
-    });
+        json.chunks.forEach(chunk => {
+            processModules(chunk.modules);
+            (chunk.origins || []).forEach(origin => processOriginOrReason(origin));
+        });
+    }
+
+    /**
+     * @param {string} name Name of module to find.
+     * @param {string} moduleName1 Another name of module to find.
+     * @param {string} moduleName2 Yet another name of module to find.
+     * @returns
+     */
+    function findModule(name, moduleName1, moduleName2) {
+        // If the module name contains `?`, then its a webpack loader that can be ignored.
+        if (name.includes('loader') && (name.includes('?') || name.includes('!'))) {
+            return;
+        }
+        const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1 || dependency === name);
+        switch (matchedModules.length) {
+            case 0:
+                throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
+                break;
+            case 1:
+                break;
+            default: {
+                throwAndLogError(`Exact Dependency not found in package-lock.json, Dependency = '${name}'`);
+            }
+        }
+
+        const moduleName = matchedModules[0];
+        if (existingModulesCopy.has(moduleName)) {
+            existingModulesCopy.delete(moduleName);
+        }
+        if (existingModules.has(moduleName) || newModules.has(moduleName)) {
+            return;
+        }
+        newModules.add(moduleName);
+    }
+
+    /**
+     * Processes webpack stat Modules.
+     *
+     * @param modules { Array.<import("webpack").Stats.FnModules> }
+     * @returns
+     */
+    function processModules(modules) {
+        (modules || []).forEach(processModule);
+    }
+
+    /**
+     * Processes a webpack stat Module.
+     *
+     * @param module { import("webpack").Stats.FnModules }
+     * @returns
+     */
+    function processModule(module) {
+        const name = module.name;
+
+        if (!name.includes('/node_modules')) {
+            processReasons(module.reasons);
+            processModules(module.modules);
+            return;
+        }
+
+        let nameWithoutNodeModules = name.substring('/node_modules'.length);
+        // Special case expose-loader.
+        if (nameWithoutNodeModules.startsWith('/expose-loader')) {
+            nameWithoutNodeModules = nameWithoutNodeModules.substring(nameWithoutNodeModules.indexOf('/node_modules') + '/node_modules'.length);
+        }
+
+        let moduleName1 = nameWithoutNodeModules.split('/')[1];
+        moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
+        const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
+
+        findModule(name, moduleName1, moduleName2);
+
+        processModules(module.modules);
+        processReasons(module.reasons);
+    }
+
+    /**
+     * Processes a origin or a reason object from a webpack stat.
+     *
+     * @param {*} origin
+     * @returns
+     */
+    function processOriginOrReason(origin) {
+        if (!origin || !origin.name) {
+            return;
+        }
+        const name = origin.name;
+        if (!name.includes('/node_modules')) {
+            processReasons(origin.reasons);
+            return;
+        }
+
+        let nameWithoutNodeModules = name.substring('/node_modules'.length);
+        // Special case expose-loader.
+        if (nameWithoutNodeModules.startsWith('/expose-loader')) {
+            nameWithoutNodeModules = nameWithoutNodeModules.substring(nameWithoutNodeModules.indexOf('/node_modules') + '/node_modules'.length);
+        }
+
+        let moduleName1 = nameWithoutNodeModules.split('/')[1];
+        moduleName1 = moduleName1.endsWith('!.') ? moduleName1.substring(0, moduleName1.length - 2) : moduleName1;
+        const moduleName2 = `${nameWithoutNodeModules.split('/')[1]}/${nameWithoutNodeModules.split('/')[2]}`;
+
+        findModule(name, moduleName1, moduleName2);
+
+        processReasons(origin.reasons);
+    }
+
+    /**
+     * Processes the `reasons` property of a webpack stat module object.
+     *
+     * @param {*} reasons
+     */
+    function processReasons(reasons) {
+        reasons = (reasons || []).map(reason => reason.userRequest).filter(item => typeof item === 'string' && !item.startsWith('.'));
+        reasons.forEach(item => processOriginOrReason(item));
+    }
+
+    await processWebpackStatFile(path.join(__dirname, 'out', 'datascience-ui', 'notebook', 'notebook.stats.json'));
+    await processWebpackStatFile(path.join(__dirname, 'out', 'datascience-ui', 'viewers', 'viewers.stats.json'));
 
     const errorMessages = [];
     if (newModules.size > 0) {

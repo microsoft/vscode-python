@@ -40,14 +40,18 @@ exports.nodeModulesToExternalize = [
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
     const plugins = [];
-    if (!constants.isCI) {
-        plugins.push(
-            new webpack_bundle_analyzer.BundleAnalyzerPlugin({
-                analyzerMode: 'static',
-                reportFilename: `${name}.analyzer.html`
-            })
-        );
-    }
+    // If we're in watch mode, then don't display the analyzer output html file.
+    // Similarly if generating webpack stats file, then no need of displaying the analyzer results.
+    const doNotOpenAnalyzer = process.argv.includes('--watch') || process.argv.includes('--profile');
+    plugins.push(
+        new webpack_bundle_analyzer.BundleAnalyzerPlugin({
+            analyzerMode: 'static',
+            reportFilename: `${name}.analyzer.html`,
+            generateStatsFile: true,
+            statsFilename: `${name}.stats.json`,
+            openAnalyzer: !constants.isCI && !doNotOpenAnalyzer
+        })
+    );
     return plugins;
 }
 exports.getDefaultPlugins = getDefaultPlugins;
