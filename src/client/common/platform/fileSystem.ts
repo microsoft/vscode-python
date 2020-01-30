@@ -556,7 +556,6 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
     private readonly paths: IFileSystemPaths;
     private readonly pathUtils: FileSystemPathUtils;
     private readonly tmp: TemporaryFileSystem;
-    private readonly getHash: (data: string) => string;
     private readonly globFiles: (pat: string, options?: { cwd: string }) => Promise<string[]>;
     constructor() {
         super();
@@ -564,7 +563,6 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
         this.pathUtils = FileSystemPathUtils.withDefaults(this.paths);
         this.tmp = TemporaryFileSystem.withDefaults();
         this.raw = RawFileSystem.withDefaults(this.paths);
-        this.getHash = getHashString;
         this.globFiles = promisify(glob);
     }
 
@@ -708,13 +706,6 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
             (await this.listdir(dirname)),
             FileType.File
         ).map(([filename, _fileType]) => filename);
-    }
-
-    public async getFileHash(filename: string): Promise<string> {
-        // The reason for lstat rather than stat is not clear...
-        const stat = await this.raw.lstat(filename);
-        const data = `${stat.ctime}-${stat.mtime}`;
-        return this.getHash(data);
     }
 
     public async search(globPattern: string, cwd?: string): Promise<string[]> {
