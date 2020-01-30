@@ -84,6 +84,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private _id: string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
     private serverAndNotebookPromise: Promise<void> | undefined;
+    private notebookPromise: Promise<void> | undefined;
     private setDarkPromise: Deferred<boolean> | undefined;
     public get notebook(): INotebook | undefined {
         return this._notebook;
@@ -947,7 +948,22 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
+    // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
+    // the same protection to not be called twice
     private async ensureNotebook(server: INotebookServer): Promise<void> {
+        if (!this.notebookPromise) {
+            this.notebookPromise = this.ensureNotebookImpl(server);
+        }
+        try {
+            await this.notebookPromise;
+        } catch (e) {
+            // Reset the load promise. Don't want to keep hitting the same error
+            this.notebookPromise = undefined;
+            throw e;
+        }
+    }
+
+    private async ensureNotebookImpl(server: INotebookServer): Promise<void> {
         // Create a new notebook if we need to.
         if (!this._notebook) {
             this._notebook = await server.createNotebook(await this.getNotebookIdentity());
