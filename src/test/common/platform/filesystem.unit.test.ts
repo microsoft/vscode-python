@@ -21,6 +21,10 @@ import {
 
 // tslint:disable:max-func-body-length chai-vague-errors
 
+function Uri(filename: string): vscode.Uri {
+    return vscode.Uri.file(filename);
+}
+
 function createDummyStat(filetype: FileType): FileStat {
     //tslint:disable-next-line:no-any
     return { type: filetype } as any;
@@ -29,26 +33,25 @@ function createDummyStat(filetype: FileType): FileStat {
 interface IPaths {
     // fs paths (IFileSystemPaths)
     sep: string;
-    join(...filenames: string[]): string;
+    dirname(filename: string): string;
+    join(...paths: string[]): string;
 }
 
 interface IRawFS extends IPaths {
     // vscode.workspace.fs
+    copy(source: vscode.Uri, target: vscode.Uri, options?: { overwrite: boolean }): Thenable<void>;
+    createDirectory(uri: vscode.Uri): Thenable<void>;
+    delete(uri: vscode.Uri, options?: { recursive: boolean; useTrash: boolean }): Thenable<void>;
+    readDirectory(uri: vscode.Uri): Thenable<[string, FileType][]>;
+    readFile(uri: vscode.Uri): Thenable<Uint8Array>;
+    rename(source: vscode.Uri, target: vscode.Uri, options?: { overwrite: boolean }): Thenable<void>;
     stat(uri: vscode.Uri): Thenable<FileStat>;
+    writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void>;
 
     // "fs-extra"
-    stat(filename: string): Promise<fs.Stats>;
     lstat(filename: string): Promise<fs.Stats>;
-    readdir(dirname: string): Promise<string[]>;
-    readFile(filename: string): Promise<Buffer>;
-    readFile(filename: string, encoding: string): Promise<string>;
-    mkdirp(dirname: string): Promise<void>;
     chmod(filePath: string, mode: string | number): Promise<void>;
-    rename(src: string, tgt: string): Promise<void>;
-    writeFile(filename: string, data: {}, options: {}): Promise<void>;
     appendFile(filename: string, data: {}): Promise<void>;
-    unlink(filename: string): Promise<void>;
-    rmdir(dirname: string): Promise<void>;
     readFileSync(path: string, encoding: string): string;
     createReadStream(filename: string): ReadStream;
     createWriteStream(filename: string): WriteStream;
@@ -127,7 +130,7 @@ suite('Raw FileSystem', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
             const expected = createDummyStat(FileType.File);
-            raw.setup(r => r.stat(vscode.Uri.file(filename))) // expect the specific filename
+            raw.setup(r => r.stat(Uri(filename))) // expect the specific filename
                 .returns(() => Promise.resolve(expected));
 
             const stat = await filesystem.stat(filename);
@@ -231,10 +234,14 @@ suite('Raw FileSystem', () => {
     });
 
     suite('move', () => {
-        test('wraps the low-level function', async () => {
+        test('move a file (target does not exist)', async () => {
             const src = 'x/y/z/spam.py';
             const tgt = 'x/y/spam.py';
-            raw.setup(r => r.rename(src, tgt)) // expect the specific filename
+            raw.setup(r => r.dirname(tgt)) // Provide the target's parent.
+                .returns(() => 'x/y');
+            raw.setup(r => r.stat(Uri('x/y'))) // The parent dir exists.
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            raw.setup(r => r.rename(Uri(src), Uri(tgt), { overwrite: false })) // expect the specific filename
                 .returns(() => Promise.resolve());
 
             await filesystem.move(src, tgt);
@@ -242,9 +249,101 @@ suite('Raw FileSystem', () => {
             verifyAll();
         });
 
+        test('move a file (target exists)', async () => {
+            const src = 'x/y/z/spam.py';
+            const tgt = 'x/y/spam.py';
+            raw.setup(r => r.dirname(tgt)) // Provide the target's parent.
+                .returns(() => 'x/y');
+            raw.setup(r => r.stat(Uri('x/y'))) // The parent dir exists.
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            const err = vscode.FileSystemError.FileExists('...');
+            raw.setup(r => r.rename(Uri(src), Uri(tgt), { overwrite: false })) // expect the specific filename
+                .returns(() => Promise.reject(err));
+            raw.setup(r => r.stat(Uri(tgt))) // It's a file.
+                .returns(() => Promise.resolve(({ type: FileType.File } as unknown) as FileStat));
+            raw.setup(r => r.rename(Uri(src), Uri(tgt), { overwrite: true })) // expect the specific filename
+                .returns(() => Promise.resolve());
+
+            await filesystem.move(src, tgt);
+
+            verifyAll();
+        });
+
+        test('move a directory (target does not exist)', async () => {
+            const src = 'x/y/z/spam';
+            const tgt = 'x/y/spam';
+            raw.setup(r => r.dirname(tgt)) // Provide the target's parent.
+                .returns(() => 'x/y');
+            raw.setup(r => r.stat(Uri('x/y'))) // The parent dir exists.
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            raw.setup(r => r.rename(Uri(src), Uri(tgt), { overwrite: false })) // expect the specific filename
+                .returns(() => Promise.resolve());
+
+            await filesystem.move(src, tgt);
+
+            verifyAll();
+        });
+
+        test('moving a directory fails if target exists', async () => {
+            const src = 'x/y/z/spam.py';
+            const tgt = 'x/y/spam.py';
+            raw.setup(r => r.dirname(tgt)) // Provide the target's parent.
+                .returns(() => 'x/y');
+            raw.setup(r => r.stat(Uri('x/y'))) // The parent dir exists.
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            const err = vscode.FileSystemError.FileExists('...');
+            raw.setup(r => r.rename(Uri(src), Uri(tgt), { overwrite: false })) // expect the specific filename
+                .returns(() => Promise.reject(err));
+            raw.setup(r => r.stat(Uri(tgt))) // It's a directory.
+                .returns(() => Promise.resolve(({ type: FileType.Directory } as unknown) as FileStat));
+
+            const promise = filesystem.move(src, tgt);
+
+            await expect(promise).to.eventually.be.rejected;
+            verifyAll();
+        });
+
+        test('move a symlink to a directory (target exists)', async () => {
+            const src = 'x/y/z/spam';
+            const tgt = 'x/y/spam.lnk';
+            raw.setup(r => r.dirname(tgt)) // Provide the target's parent.
+                .returns(() => 'x/y');
+            raw.setup(r => r.stat(Uri('x/y'))) // The parent dir exists.
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            const err = vscode.FileSystemError.FileExists('...');
+            raw.setup(r => r.rename(Uri(src), Uri(tgt), { overwrite: false })) // expect the specific filename
+                .returns(() => Promise.reject(err));
+            raw.setup(r => r.stat(Uri(tgt))) // It's a symlink.
+                .returns(() => Promise.resolve(({ type: FileType.SymbolicLink | FileType.Directory } as unknown) as FileStat));
+            raw.setup(r => r.rename(Uri(src), Uri(tgt), { overwrite: true })) // expect the specific filename
+                .returns(() => Promise.resolve());
+
+            await filesystem.move(src, tgt);
+
+            verifyAll();
+        });
+
+        test('fails if the target parent dir does not exist', async () => {
+            raw.setup(r => r.dirname(TypeMoq.It.isAny())) // Provide the target's parent.
+                .returns(() => '');
+            const err = vscode.FileSystemError.FileNotFound('...');
+            raw.setup(r => r.stat(TypeMoq.It.isAny())) // The parent dir does not exist.
+                .returns(() => Promise.reject(err));
+
+            const promise = filesystem.move('spam', 'eggs');
+
+            await expect(promise).to.eventually.be.rejected;
+            verifyAll();
+        });
+
         test('fails if the low-level call fails', async () => {
-            raw.setup(r => r.rename(TypeMoq.It.isAny(), TypeMoq.It.isAny())) // We don't care about the filename.
-                .throws(new Error('file not found'));
+            raw.setup(r => r.dirname(TypeMoq.It.isAny())) // Provide the target's parent.
+                .returns(() => '');
+            raw.setup(r => r.stat(TypeMoq.It.isAny())) // The parent dir exists.
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            const err = new Error('oops!');
+            raw.setup(r => r.rename(TypeMoq.It.isAny(), TypeMoq.It.isAny(), { overwrite: false })) // We don't care about the filename.
+                .throws(err);
 
             const promise = filesystem.move('spam', 'eggs');
 
@@ -257,12 +356,12 @@ suite('Raw FileSystem', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
             const expected = Buffer.from('<data>');
-            raw.setup(r => r.readFile(filename)) // expect the specific filename
+            raw.setup(r => r.readFile(Uri(filename))) // expect the specific filename
                 .returns(() => Promise.resolve(expected));
 
             const data = await filesystem.readData(filename);
 
-            expect(data).to.equal(expected);
+            expect(data).to.deep.equal(expected);
             verifyAll();
         });
 
@@ -281,8 +380,9 @@ suite('Raw FileSystem', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
             const expected = '<text>';
-            raw.setup(r => r.readFile(filename, 'utf8')) // expect the specific filename
-                .returns(() => Promise.resolve(expected));
+            const data = Buffer.from(expected);
+            raw.setup(r => r.readFile(Uri(filename))) // expect the specific filename
+                .returns(() => Promise.resolve(data));
 
             const text = await filesystem.readText(filename);
 
@@ -291,7 +391,7 @@ suite('Raw FileSystem', () => {
         });
 
         test('fails if the low-level call fails', async () => {
-            raw.setup(r => r.readFile(TypeMoq.It.isAny(), TypeMoq.It.isAny())) // We don't care about the filename.
+            raw.setup(r => r.readFile(TypeMoq.It.isAny())) // We don't care about the filename.
                 .throws(new Error('file not found'));
 
             const promise = filesystem.readText('spam.py');
@@ -305,7 +405,8 @@ suite('Raw FileSystem', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
             const text = '<text>';
-            raw.setup(r => r.writeFile(filename, text, { encoding: 'utf8' })) // expect the specific filename
+            const data = Buffer.from(text);
+            raw.setup(r => r.writeFile(Uri(filename), data)) // expect the specific filename
                 .returns(() => Promise.resolve());
 
             await filesystem.writeText(filename, text);
@@ -314,7 +415,7 @@ suite('Raw FileSystem', () => {
         });
 
         test('fails if the low-level call fails', async () => {
-            raw.setup(r => r.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())) // We don't care about the filename.
+            raw.setup(r => r.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny())) // We don't care about the filename.
                 .throws(new Error('file not found'));
 
             const promise = filesystem.writeText('spam.py', '<text>');
@@ -348,70 +449,27 @@ suite('Raw FileSystem', () => {
     });
 
     suite('copyFile', () => {
-        type StreamCallbacks = {
-            err(err: Error): void;
-            close(): void;
-        };
-        function setupMocks(src: string, tgt: string): { r: StreamCallbacks; w: StreamCallbacks } {
-            const callbacks = {
-                //tslint:disable-next-line:no-any
-                r: ({} as any) as StreamCallbacks,
-                //tslint:disable-next-line:no-any
-                w: ({} as any) as StreamCallbacks
-            };
-
-            const wstream = TypeMoq.Mock.ofType<fs.WriteStream>(undefined, TypeMoq.MockBehavior.Strict);
-            wstream
-                .setup(s => s.on('error', TypeMoq.It.isAny()))
-                .callback((_e, cb) => {
-                    callbacks.w.err = cb;
-                })
-                .returns(() => wstream.object);
-            wstream
-                .setup(s => s.on('close', TypeMoq.It.isAny()))
-                .callback((_e, cb) => {
-                    callbacks.w.close = cb;
-                })
-                .returns(() => wstream.object);
-            wstream
-                //tslint:disable-next-line:no-any
-                .setup((s: any) => s.___matches) // typemoq sometimes outsmarts itself
-                .returns(() => undefined);
-            raw.setup(r => r.createWriteStream(tgt)) // expect the specific filename
-                .returns(() => wstream.object);
-
-            const rstream = TypeMoq.Mock.ofType<fs.ReadStream>(undefined, TypeMoq.MockBehavior.Strict);
-            rstream
-                .setup(s => s.on('error', TypeMoq.It.isAny()))
-                .callback((_e, cb) => {
-                    callbacks.r.err = cb;
-                })
-                .returns(() => rstream.object);
-            rstream.setup(s => s.pipe(wstream.object));
-            raw.setup(r => r.createReadStream(src)) // expect the specific filename
-                .returns(() => rstream.object);
-
-            return callbacks;
-        }
-
         test('wraps the low-level function', async () => {
-            const src = 'spam.py';
-            const tgt = 'eggs.py';
-            const cb = setupMocks(src, tgt);
+            const src = 'x/y/z/spam.py';
+            const tgt = 'x/y/z/eggs.py';
+            raw.setup(r => r.dirname(tgt)) // Provide the target's parent.
+                .returns(() => 'x/y/z');
+            raw.setup(r => r.stat(Uri('x/y/z'))) // The parent dir exists.
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            raw.setup(r => r.copy(Uri(src), Uri(tgt), { overwrite: true })) // Expect the specific args.
+                .returns(() => Promise.resolve());
 
-            // Due to the use of deferred, we must call the handler
-            // registered on the stream in order to make the promise
-            // resolve.
-            const promise = filesystem.copyFile(src, tgt);
-            cb.w.close();
-            await promise;
+            await filesystem.copyFile(src, tgt);
 
             verifyAll();
         });
 
-        test('fails if createReadStream fails', async () => {
-            raw.setup(r => r.createReadStream(TypeMoq.It.isAny())) // We don't care about the filename.
-                .throws(new Error('file not found'));
+        test('fails if target parent does not exist', async () => {
+            raw.setup(r => r.dirname(TypeMoq.It.isAny())) // Provide the target's parent.
+                .returns(() => '');
+            const err = vscode.FileSystemError.FileNotFound('...');
+            raw.setup(r => r.stat(TypeMoq.It.isAny())) // The parent dir exists.
+                .returns(() => Promise.reject(err));
 
             const promise = filesystem.copyFile('spam', 'eggs');
 
@@ -419,37 +477,15 @@ suite('Raw FileSystem', () => {
             verifyAll();
         });
 
-        test('fails if createWriteStream fails', async () => {
-            const rstream = TypeMoq.Mock.ofType<fs.ReadStream>(undefined, TypeMoq.MockBehavior.Strict);
-            rstream.setup(s => s.on('error', TypeMoq.It.isAny()));
-            raw.setup(r => r.createReadStream(TypeMoq.It.isAny())) // We don't care about the filename.
+        test('fails if the low-level call fails', async () => {
+            raw.setup(r => r.dirname(TypeMoq.It.isAny())) // Provide the target's parent.
+                .returns(() => '');
+            raw.setup(r => r.stat(TypeMoq.It.isAny())) // The parent dir exists.
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            raw.setup(r => r.copy(TypeMoq.It.isAny(), TypeMoq.It.isAny(), { overwrite: true })) // We don't care about the filename.
                 .throws(new Error('file not found'));
 
             const promise = filesystem.copyFile('spam', 'eggs');
-
-            await expect(promise).to.eventually.be.rejected;
-            verifyAll();
-        });
-
-        test('fails if read stream errors out', async () => {
-            const src = 'spam.py';
-            const tgt = 'eggs.py';
-            const cb = setupMocks(src, tgt);
-
-            const promise = filesystem.copyFile(src, tgt);
-            cb.r.err(new Error('oops!'));
-
-            await expect(promise).to.eventually.be.rejected;
-            verifyAll();
-        });
-
-        test('fails if write stream errors out', async () => {
-            const src = 'spam.py';
-            const tgt = 'eggs.py';
-            const cb = setupMocks(src, tgt);
-
-            const promise = filesystem.copyFile(src, tgt);
-            cb.w.err(new Error('oops!'));
 
             await expect(promise).to.eventually.be.rejected;
             verifyAll();
@@ -457,9 +493,14 @@ suite('Raw FileSystem', () => {
     });
 
     suite('rmFile', () => {
+        const opts = {
+            recursive: false,
+            useTrash: false
+        };
+
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
-            raw.setup(r => r.unlink(filename)) // expect the specific filename
+            raw.setup(r => r.delete(Uri(filename), opts)) // expect the specific filename
                 .returns(() => Promise.resolve());
 
             await filesystem.rmfile(filename);
@@ -468,7 +509,7 @@ suite('Raw FileSystem', () => {
         });
 
         test('fails if the low-level call fails', async () => {
-            raw.setup(r => r.unlink(TypeMoq.It.isAny())) // We don't care about the filename.
+            raw.setup(r => r.delete(TypeMoq.It.isAny(), opts)) // We don't care about the filename.
                 .throws(new Error('file not found'));
 
             const promise = filesystem.rmfile('spam.py');
@@ -481,7 +522,7 @@ suite('Raw FileSystem', () => {
     suite('mkdirp', () => {
         test('wraps the low-level function', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.mkdirp(dirname)) // expect the specific filename
+            raw.setup(r => r.createDirectory(Uri(dirname))) // expect the specific filename
                 .returns(() => Promise.resolve());
 
             await filesystem.mkdirp(dirname);
@@ -490,7 +531,7 @@ suite('Raw FileSystem', () => {
         });
 
         test('fails if the low-level call fails', async () => {
-            raw.setup(r => r.mkdirp(TypeMoq.It.isAny())) // We don't care about the filename.
+            raw.setup(r => r.createDirectory(TypeMoq.It.isAny())) // We don't care about the filename.
                 .throws(new Error('file not found'));
 
             const promise = filesystem.mkdirp('spam');
@@ -500,10 +541,74 @@ suite('Raw FileSystem', () => {
         });
     });
 
+    suite('rmdir', () => {
+        const opts = {
+            recursive: true,
+            useTrash: false
+        };
+
+        test('directory is empty', async () => {
+            const dirname = 'x/y/z/spam';
+            raw.setup(r => r.readDirectory(Uri(dirname))) // The dir is empty.
+                .returns(() => Promise.resolve([]));
+            raw.setup(r => r.delete(Uri(dirname), opts)) // Expect the specific args.
+                .returns(() => Promise.resolve());
+
+            await filesystem.rmdir(dirname);
+
+            verifyAll();
+        });
+
+        test('fails if readDirectory() fails (e.g. is a file)', async () => {
+            raw.setup(r => r.readDirectory(TypeMoq.It.isAny())) // It's not a directory.
+                .throws(new Error('is a file'));
+
+            const promise = filesystem.rmdir('spam');
+
+            await expect(promise).to.eventually.be.rejected;
+            verifyAll();
+        });
+
+        test('fails if not empty', async () => {
+            const entries: [string, FileType][] = [
+                ['dev1', FileType.Unknown],
+                ['w', FileType.Directory],
+                ['spam.py', FileType.File],
+                ['other', FileType.SymbolicLink | FileType.File]
+            ];
+            raw.setup(r => r.readDirectory(TypeMoq.It.isAny())) // The dir is not empty.
+                .returns(() => Promise.resolve(entries));
+
+            const promise = filesystem.rmdir('spam');
+
+            await expect(promise).to.eventually.be.rejected;
+            verifyAll();
+        });
+
+        test('fails if the low-level call fails', async () => {
+            raw.setup(r => r.readDirectory(TypeMoq.It.isAny())) // The "file" exists.
+                .returns(() => Promise.resolve([]));
+            raw.setup(r => r.delete(TypeMoq.It.isAny(), opts)) // We don't care about the filename.
+                .throws(new Error('oops!'));
+
+            const promise = filesystem.rmdir('spam');
+
+            await expect(promise).to.eventually.be.rejected;
+            verifyAll();
+        });
+    });
+
     suite('rmtree', () => {
+        const opts = {
+            recursive: true,
+            useTrash: false
+        };
+
         test('wraps the low-level function', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.rmdir(dirname)) // expect the specific filename
+            raw.setup(r => r.stat(Uri(dirname))) // The dir exists.
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            raw.setup(r => r.delete(Uri(dirname), opts)) // Expect the specific dirname.
                 .returns(() => Promise.resolve());
 
             await filesystem.rmtree(dirname);
@@ -512,7 +617,9 @@ suite('Raw FileSystem', () => {
         });
 
         test('fails if the low-level call fails', async () => {
-            raw.setup(r => r.rmdir(TypeMoq.It.isAny())) // We don't care about the filename.
+            raw.setup(r => r.stat(TypeMoq.It.isAny())) // The "file" exists.
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            raw.setup(r => r.delete(TypeMoq.It.isAny(), opts)) // We don't care about the filename.
                 .throws(new Error('file not found'));
 
             const promise = filesystem.rmtree('spam');
@@ -523,52 +630,22 @@ suite('Raw FileSystem', () => {
     });
 
     suite('listdir', () => {
-        function setupForFileType(filename: string, filetype: FileType) {
-            const lstat = createMockLegacyStat();
-            if ((filetype & FileType.SymbolicLink) > 0) {
-                lstat
-                    .setup(s => s.isSymbolicLink()) // we don't care about any other type here
-                    .returns(() => true);
-
-                const stat = createMockLegacyStat();
-                // filetype won't be Unknown here.
-                setupStatFileType(stat, filetype - FileType.SymbolicLink);
-                raw.setup(r => r.stat(filename)) // expect the specific filename
-                    .returns(() => Promise.resolve(stat.object));
-            } else {
-                lstat
-                    .setup(s => s.isSymbolicLink())
-                    .returns(() => false)
-                    .verifiable(TypeMoq.Times.atLeastOnce());
-                setupStatFileType(lstat, filetype);
-            }
-            raw.setup(r => r.lstat(filename)) // expect the specific filename
-                .returns(() => Promise.resolve(lstat.object));
-        }
-
         test('mixed', async () => {
             const dirname = 'x/y/z/spam';
-            const names = [
-                // These match the items in "expected".
-                'dev1',
-                'w',
-                'spam.py',
-                'other'
+            const actual: [string, FileType][] = [
+                ['dev1', FileType.Unknown],
+                ['w', FileType.Directory],
+                ['spam.py', FileType.File],
+                ['other', FileType.SymbolicLink | FileType.File]
             ];
-            const expected: [string, FileType][] = [
-                ['x/y/z/spam/dev1', FileType.Unknown],
-                ['x/y/z/spam/w', FileType.Directory],
-                ['x/y/z/spam/spam.py', FileType.File],
-                ['x/y/z/spam/other', FileType.SymbolicLink | FileType.File]
-            ];
-            raw.setup(r => r.readdir(dirname)) // expect the specific filename
-                .returns(() => Promise.resolve(names));
-            names.forEach((name, i) => {
-                const [filename, filetype] = expected[i];
-                raw.setup(r => r.join(dirname, name)) // expect the specific filename
+            const expected = actual.map(([basename, filetype]) => {
+                const filename = `x/y/z/spam/${basename}`;
+                raw.setup(r => r.join(dirname, basename)) // Expect the specific basename.
                     .returns(() => filename);
-                setupForFileType(filename, filetype);
+                return [filename, filetype] as [string, FileType];
             });
+            raw.setup(r => r.readDirectory(Uri(dirname))) // Expect the specific filename.
+                .returns(() => Promise.resolve(actual));
 
             const entries = await filesystem.listdir(dirname);
 
@@ -579,7 +656,7 @@ suite('Raw FileSystem', () => {
         test('empty', async () => {
             const dirname = 'x/y/z/spam';
             const expected: [string, FileType][] = [];
-            raw.setup(r => r.readdir(dirname)) // expect the specific filename
+            raw.setup(r => r.readDirectory(Uri(dirname))) // expect the specific filename
                 .returns(() => Promise.resolve([]));
 
             const entries = await filesystem.listdir(dirname);
@@ -589,45 +666,13 @@ suite('Raw FileSystem', () => {
         });
 
         test('fails if the low-level call fails', async () => {
-            raw.setup(r => r.readdir(TypeMoq.It.isAny())) // We don't care about the filename.
+            raw.setup(r => r.readDirectory(TypeMoq.It.isAny())) // We don't care about the filename.
                 .throws(new Error('file not found'));
 
             const promise = filesystem.listdir('spam');
 
             await expect(promise).to.eventually.be.rejected;
             verifyAll();
-        });
-
-        test('ignores errors from getFileType()', async () => {
-            const dirname = 'x/y/z';
-            const names = [
-                // These match the items in "expected".
-                '__init__.py',
-                'spam.py',
-                'eggs.py'
-            ];
-            const expected: [string, FileType][] = [
-                ['x/y/z/__init__.py', FileType.File],
-                ['x/y/z/spam.py', FileType.File],
-                ['x/y/z/eggs.py', FileType.Unknown]
-            ];
-            raw.setup(r => r.readdir(dirname)) // expect the specific filename
-                .returns(() => Promise.resolve(names));
-            names.forEach((name, i) => {
-                const [filename, filetype] = expected[i];
-                raw.setup(r => r.join(dirname, name)) // expect the specific filename
-                    .returns(() => filename);
-                if (filetype === FileType.Unknown) {
-                    raw.setup(r => r.lstat(filename)) // expect the specific filename
-                        .throws(new Error('oops!'));
-                } else {
-                    setupForFileType(filename, filetype);
-                }
-            });
-
-            const entries = await filesystem.listdir(dirname);
-
-            expect(entries.sort()).to.deep.equal(expected.sort());
         });
     });
 
@@ -767,7 +812,7 @@ suite('FileSystemUtils', () => {
     suite('deleteDirectory', () => {
         test('wraps the low-level function', async () => {
             const dirname = 'x/y/z/spam';
-            deps.setup(d => d.rmtree(dirname)) // expect the specific filename
+            deps.setup(d => d.rmdir(dirname)) // expect the specific filename
                 .returns(() => Promise.resolve());
 
             await utils.deleteDirectory(dirname);

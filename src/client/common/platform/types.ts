@@ -126,6 +126,8 @@ export interface IRawFileSystem {
 
     // Create the directory and any missing parent directories.
     mkdirp(dirname: string): Promise<void>;
+    // Delete the directory if empty.
+    rmdir(dirname: string): Promise<void>;
     // Delete the directory and everything in it.
     rmtree(dirname: string): Promise<void>;
     // Return the contents of the directory.
