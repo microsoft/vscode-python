@@ -550,15 +550,9 @@ class FileSystemBase {
 
 @injectable()
 export class FileSystem extends FileSystemBase implements IFileSystem {
-    // We expose this for the sake of functional tests that do not have
-    // access to the actual "vscode" namespace.
-    protected raw: RawFileSystem;
-    private readonly paths: IFileSystemPaths;
     private readonly globFiles: (pat: string, options?: { cwd: string }) => Promise<string[]>;
     constructor() {
         super();
-        this.paths = FileSystemPaths.withDefaults();
-        this.raw = RawFileSystem.withDefaults(this.paths);
         this.globFiles = promisify(glob);
     }
 
