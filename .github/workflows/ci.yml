@@ -6,17 +6,11 @@ on:
             - gh-action-ci # !!!! replace with master before the PR
 
 env:
-    # PVSC_WORKDIR: vscode-python
     PYTHON_VERSION: 3.8
-    # Key for the cache created at the end of the "Checkout" job to be reused in other jobs
-    CACHE_CHECKOUT: cache-pvsc-checkout
-    # Key for the pip cache
-    CACHE_PIP_DEPS: cache-pip
-    # Key for the npm cache
     CACHE_NPM_DEPS: cache-npm
-    # Key for the cache created at the end of the the "python-deps" job to be reused in other jobs
+    CACHE_PIP_DEPS: cache-pip
+    # Key for the cache created at the end of the the "Cache ./pythonFiles/lib/python" step.
     CACHE_PYTHONFILES: cache-pvsc-pythonFiles
-    # Name of the VSIX artifact
     ARTIFACT_NAME_VSIX: pvsc-vsix
 
 jobs:
@@ -84,38 +78,48 @@ jobs:
               uses: actions/cache@v1
               with:
                   path: ~/.npm
-                  key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{ hashFiles('**/package-lock.json') }}
-    ### Hygiene + VSIX upload
-    # compile:
-    #     name: Compile and check for errors
-    #     runs-on: ubuntu-latest
-    #     needs: [checkout]
-    #     steps:
-    #         - uses: actions/download-artifact@v1
-    #           with:
-    #               name: ${{env.ARTIFACT_NAME_CHECKOUT}}
-    #               path: ${{env.PVSC_WORKDIR}}
-    #         - name: Install dependencies (npm ci)
-    #           run: npm ci
-    #           working-directory: ${{env.PVSC_WORKDIR}}
-    #         - name: Run gulp prePublishNonBundle
-    #           working-directory: ${{env.PVSC_WORKDIR}}
-    #           run: npx gulp prePublishNonBundle
-    # check-dependencies:
-    #     name: Check dependencies
-    #     runs-on: ubuntu-latest
-    #     needs: [checkout]
-    #     steps:
-    #         - uses: actions/download-artifact@v1
-    #           with:
-    #               name: ${{env.ARTIFACT_NAME_CHECKOUT}}
-    #               path: ${{env.PVSC_WORKDIR}}
-    #         - name: Install dependencies (npm ci)
-    #           run: npm ci
-    #           working-directory: ${{env.PVSC_WORKDIR}}
-    #         - name: Check dependencies
-    #           run: npm run checkDependencies
-    #           working-directory: ${{env.PVSC_WORKDIR}}
+                  key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{ hashFiles('package-lock.json') }}
+
+    # Hygiene + VSIX upload
+    compile:
+        name: Compile and check for errors
+        runs-on: ubuntu-latest
+        needs: [js-ts-deps]
+        steps:
+            - name: Checkout
+                uses: actions/checkout@v2
+
+            - name: Retrieve cached npm files
+              uses: actions/cache@v1
+              with:
+                  path: ~/.npm
+                  key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{ hashFiles('package-lock.json') }}
+
+            - name: Install dependencies (npm ci)
+              run: npm ci
+
+            - name: Run gulp prePublishNonBundle
+              run: npx gulp prePublishNonBundle
+
+    check-dependencies:
+        name: Check dependencies
+        runs-on: ubuntu-latest
+        needs: [js-ts-deps]
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
+
+            - name: Retrieve cached npm files
+              uses: actions/cache@v1
+              with:
+                  path: ~/.npm
+                  key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{ hashFiles('package-lock.json') }}
+
+            - name: Install dependencies (npm ci)
+              run: npm ci
+
+            - name: Check dependencies
+              run: npm run checkDependencies
     # lint-format-js-ts:
     #     name: Hygiene (JS/TS)
     #     runs-on: ubuntu-latest
