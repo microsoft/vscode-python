@@ -565,39 +565,6 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
     //=================================
     // utils
 
-    // prettier-ignore
-    public async pathExists(
-        filename: string,
-        fileType?: FileType
-    ): Promise<boolean> {
-        let stat: FileStat;
-        try {
-            // Note that we are using stat() rather than lstat().  This
-            // means that any symlinks are getting resolved.
-            stat = await this.raw.stat(filename);
-        } catch (err) {
-            if (isFileNotFoundError(err)) {
-                return false;
-            }
-            throw err;
-        }
-
-        if (fileType === undefined) {
-            return true;
-        }
-        if (fileType === FileType.Unknown) {
-            // FileType.Unknown == 0, hence do not use bitwise operations.
-            return stat.type === FileType.Unknown;
-        }
-        return (stat.type & fileType) === fileType;
-    }
-    public async fileExists(filename: string): Promise<boolean> {
-        return this.pathExists(filename, FileType.File);
-    }
-    public async directoryExists(dirname: string): Promise<boolean> {
-        return this.pathExists(dirname, FileType.Directory);
-    }
-
     public async search(globPattern: string, cwd?: string): Promise<string[]> {
         let found: string[];
         if (cwd) {
