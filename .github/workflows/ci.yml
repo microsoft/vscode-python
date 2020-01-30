@@ -80,7 +80,7 @@ jobs:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
-  # Hygiene + VSIX upload
+  ### Hygiene + VSIX upload
   compile:
     name: Compile and check for errors
     runs-on: ubuntu-latest
