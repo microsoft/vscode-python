@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { FileSystem } from '../../client/common/platform/fileSystem';
+import { LegacyFileSystem } from '../serviceRegistry';
 
-export class MockFileSystem extends FileSystem {
+export class MockFileSystem extends LegacyFileSystem {
     private contentOverloads = new Map<string, string>();
 
     constructor() {

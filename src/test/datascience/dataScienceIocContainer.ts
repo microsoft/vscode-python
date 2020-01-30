@@ -92,7 +92,7 @@ import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { RegistryImplementation } from '../../client/common/platform/registry';
-import { IRegistry } from '../../client/common/platform/types';
+import { IFileSystem, IRegistry } from '../../client/common/platform/types';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessLogger } from '../../client/common/process/logger';
@@ -289,6 +289,7 @@ import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockExtensions } from './mockExtensions';
+import { MockFileSystem } from './mockFileSystem';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
@@ -408,6 +409,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
 
         this.registerFileSystemTypes();
+        this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
         this.serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, TestInteractiveWindowProvider);
         this.serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
@@ -762,6 +764,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.addInterpreter(this.workingPython2, SupportedCommands.all);
         this.addInterpreter(this.workingPython, SupportedCommands.all);
+    }
+    public setFileContents(uri: Uri, contents: string) {
+        const fileSystem = this.serviceManager.get<IFileSystem>(IFileSystem) as MockFileSystem;
+        fileSystem.addFileContents(uri.fsPath, contents);
     }
 
     public async activate(): Promise<void> {

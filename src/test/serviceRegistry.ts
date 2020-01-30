@@ -67,7 +67,6 @@ import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { registerTypes as lintersRegisterTypes } from '../client/linters/serviceRegistry';
 import { TEST_OUTPUT_CHANNEL } from '../client/testing/common/constants';
 import { registerTypes as unittestsRegisterTypes } from '../client/testing/serviceRegistry';
-import { MockFileSystem } from './datascience/mockFileSystem';
 import { MockOutputChannel } from './mockClasses';
 import { MockAutoSelectionService } from './mocks/autoSelector';
 import { MockMemento } from './mocks/mementos';
@@ -95,7 +94,7 @@ class FakeVSCodeFileSystemAPI {
         return convertStat(stat, filetype);
     }
 }
-class LegacyFileSystem extends FileSystem {
+export class LegacyFileSystem extends FileSystem {
     constructor() {
         super();
         const vscfs = new FakeVSCodeFileSystemAPI();
@@ -153,10 +152,6 @@ export class IocContainer {
         if (registerFileSystem) {
             this.registerFileSystemTypes();
         }
-    }
-    public setFileContents(uri: Uri, contents: string) {
-        const fileSystem = this.serviceManager.get<IFileSystem>(IFileSystem) as MockFileSystem;
-        fileSystem.addFileContents(uri.fsPath, contents);
     }
     public registerFileSystemTypes() {
         this.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
