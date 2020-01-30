@@ -98,9 +98,6 @@ export interface IAddCellAction {
     /**
      * Id of the new cell that is to be added.
      * If none provided, then generate a new id.
-     *
-     * @type {(string | undefined)}
-     * @memberof ICellAction
      */
     newCellId: string;
 }
