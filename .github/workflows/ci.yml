@@ -205,7 +205,7 @@ jobs:
     name: Tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
-    needs: [python-reqs]
+    needs: [python-deps, , js-ts-deps]
     strategy:
       matrix:
         # os: [ubuntu-latest, macos-latest, windows-latest]
