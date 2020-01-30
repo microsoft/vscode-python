@@ -610,21 +610,4 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
         }
         return Array.isArray(found) ? found : [];
     }
-
-    public async isDirReadonly(dirname: string): Promise<boolean> {
-        const filePath = `${dirname}${this.utils.paths.sep}___vscpTest___`;
-        const flags = fs.constants.O_CREAT | fs.constants.O_RDWR;
-        let fd: number;
-        try {
-            fd = await fs.open(filePath, flags);
-        } catch (err) {
-            if (isNoPermissionsError(err)) {
-                return true;
-            }
-            throw err; // re-throw
-        }
-        await fs.close(fd);
-        await fs.unlink(filePath);
-        return false;
-    }
 }
