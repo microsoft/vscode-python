@@ -26,13 +26,14 @@ import { defaultDataScienceSettings } from './helpers';
 import { addCode, getInteractiveCellResults, getOrCreateInteractiveWindow, runMountedTest } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
-import { waitForUpdate } from './reactHelpers';
+import { createMessageEvent, waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
     addInputMockData,
     addMockData,
     CellInputState,
     CellPosition,
+    enterEditorKey,
     enterInput,
     escapePath,
     findButton,
@@ -137,6 +138,26 @@ suite('DataScience Interactive Window output tests', () => {
             await addCode(ioc, wrapper, 'a=1\na');
 
             verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Expanded);
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
+        'Ctrl + 1/Ctrl + 2',
+        async wrapper => {
+            await addCode(ioc, wrapper, 'a=1');
+
+            if (ioc) {
+                const message = createMessageEvent({ type: InteractiveWindowMessages.Activate });
+                ioc.postMessageToWebPanel(message);
+            }
+
+            enterEditorKey(wrapper, { code: 'a', editorInfo: undefined });
+            enterEditorKey(wrapper, { code: 'Enter', shiftKey: true, editorInfo: undefined });
+
+            verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.First);
         },
         () => {
             return ioc;
