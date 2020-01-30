@@ -1,8 +1,9 @@
 import * as path from 'path';
 import { OutputChannel, QuickPickItem, Uri } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
+import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IInstaller, ILogger, IOutputChannel } from '../../../common/types';
+import { IInstaller, IOutputChannel } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { IServiceContainer } from '../../../ioc/types';
 import { ITestConfigSettingsService, ITestConfigurationManager } from '../../types';
@@ -110,8 +111,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
     }
 
     private handleCancelled() {
-        const logger = this.serviceContainer.get<ILogger>(ILogger);
-        logger.logInformation('testing configuration (in UI) cancelled');
+        traceInfo('testing configuration (in UI) cancelled');
         throw Error('cancelled');
     }
 }
