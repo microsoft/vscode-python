@@ -8,10 +8,14 @@ on:
 env:
     # PVSC_WORKDIR: vscode-python
     PYTHON_VERSION: 3.8
-    # Name of the cached  after the "Checkout" job to be reused in other jobs
-    CACHE_NAME_CHECKOUT: pvsc-checkout
-    # Name of the temporary artifact uploaded after the "python-reqs" job to be reused in other jobs
-    CACHE_NAME_PYTHON_REQS: pvsc-python-reqs
+    # Key for the cache created at the end of the "Checkout" job to be reused in other jobs
+    CACHE_CHECKOUT: cache-pvsc-checkout
+    # Key for the pip cache
+    CACHE_PIP_DEPS: cache-pip
+    # Key for the npm cache
+    CACHE_NPM_DEPS: cache-npm
+    # Key for the cache created at the end of the the "python-deps" job to be reused in other jobs
+    CACHE_PYTHONFILES: cache-pvsc-pythonFiles
     # Name of the VSIX artifact
     ARTIFACT_NAME_VSIX: pvsc-vsix
 
@@ -38,10 +42,10 @@ jobs:
             - name: Cache repo
               uses: actions/cache@v1
               with:
-                  path: ${{github.workspace}}
-                  key: ${{runner.os}}-${{env.CACHE_NAME_CHECKOUT}}
+                  path: .
+                  key: ${{runner.os}}-${{env.CACHE_CHECKOUT}}
 
-    python-reqs:
+    python-deps:
         name: Install Python Requirements
         runs-on: ubuntu-latest
         needs: [checkout]
@@ -49,8 +53,8 @@ jobs:
             - name: Retrieve cached repo
               uses: actions/cache@v1
               with:
-                  path: ${{github.workspace}}
-                  key: ${{runner.os}}-${{env.CACHE_NAME_CHECKOUT}}
+                  path: .
+                  key: ${{runner.os}}-${{env.CACHE_CHECKOUT}}
 
             - name: Use Python ${{env.PYTHON_VERSION}}
               uses: actions/setup-python@v1
@@ -59,20 +63,49 @@ jobs:
 
             - name: Upgrade pip
               run: python -m pip install -U pip
-              working-directory: ${{env.PVSC_WORKDIR}}
 
             - name: Install Python requirements
               run: |
                   python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
                   python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
                   python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
-              working-directory: ${{env.PVSC_WORKDIR}}
 
-            - name: Install PTVSD wheels
+            - name: Install ptvsd wheels
               run: |
                   python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
                   python ./pythonFiles/install_ptvsd.py
-              working-directory: ${{env.PVSC_WORKDIR}}
+
+            - name: Cache ./pythonFiles/lib/python
+              uses: actions/cache@v1
+              with:
+                  path: ./pythonFiles/lib/python
+                  key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-${{hashFiles('pythonFiles/**')}}
+
+            - name: Cache pip files
+              uses: actions/cache@v1
+              with:
+                  path: ~/.cache/pip
+                  key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{hashFiles('**/requirements.txt')}}
+
+    js-ts-deps:
+        name: Install NPM dependencies
+        runs-on: ubuntu-latest
+        needs: [checkout]
+        steps:
+            - name: Retrieve cached repo
+              uses: actions/cache@v1
+              with:
+                  path: .
+                  key: ${{runner.os}}-${{env.CACHE_CHECKOUT}}
+
+            - name: Install dependencies (npm ci)
+              run: npm ci
+
+            - name: Cache npm files
+              uses: actions/cache@v1
+              with:
+                  path: ~/.npm
+                  key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{ hashFiles('**/package-lock.json') }}
     ### Hygiene + VSIX upload
     # compile:
     #     name: Compile and check for errors
