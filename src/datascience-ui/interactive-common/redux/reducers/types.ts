@@ -4,6 +4,7 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { IShowDataViewer, NativeCommandType } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import { ActionWithPayload, ReducerArg } from '../../../react-common/reduxUtils';
 import { CursorPos, IMainState } from '../../mainState';
 
@@ -88,7 +89,14 @@ export interface IShowPlotAction {
 export interface IScrollAction {
     isAtBottom: boolean;
 }
-export type CommonReducerArg<AT, T = never | undefined> = ReducerArg<IMainState, AT, T>;
+
+// tslint:disable-next-line: no-any
+export type PrimitiveTypeInReduxActionPayload = string | number | boolean | Buffer | any[];
+export type CommonReducerArg<AT, T = never | undefined> = T extends never | undefined
+    ? ReducerArg<IMainState, AT, BaseReduxActionPayload>
+    : T extends PrimitiveTypeInReduxActionPayload
+    ? ReducerArg<IMainState, AT, { data: T } & BaseReduxActionPayload>
+    : ReducerArg<IMainState, AT, T & BaseReduxActionPayload>;
 
 export interface ICellAction {
     cellId: string | undefined;

@@ -12,6 +12,7 @@ import {
     IProvideSignatureHelpResponse,
     IResolveCompletionItemResponse
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
 import { logMessage } from '../../../react-common/logger';
 import { PostOffice } from '../../../react-common/postOffice';
@@ -19,7 +20,7 @@ import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../
 import { IntellisenseProvider } from '../../intellisenseProvider';
 import { initializeTokenizer, registerMonacoLanguage } from '../../tokenizer';
 import { IncomingMessageActions } from '../postOffice';
-import { CommonActionType, ICodeCreatedAction, IEditCellAction } from './types';
+import { CommonActionType, ICodeCreatedAction, IEditCellAction, PrimitiveTypeInReduxActionPayload } from './types';
 
 export interface IMonacoState {
     onigasmData: ArrayBuffer | undefined;
@@ -29,9 +30,17 @@ export interface IMonacoState {
     postOffice: PostOffice;
 }
 
-type MonacoReducerFunc<T> = ReducerFunc<IMonacoState, IncomingMessageActions, T>;
+type MonacoReducerFunc<T = never | undefined> = T extends never | undefined
+    ? ReducerFunc<IMonacoState, IncomingMessageActions, BaseReduxActionPayload>
+    : T extends PrimitiveTypeInReduxActionPayload
+    ? ReducerFunc<IMonacoState, IncomingMessageActions, { data: T } & BaseReduxActionPayload>
+    : ReducerFunc<IMonacoState, IncomingMessageActions, T & BaseReduxActionPayload>;
 
-type MonacoReducerArg<T = never | undefined> = ReducerArg<IMonacoState, IncomingMessageActions, T>;
+type MonacoReducerArg<T = never | undefined> = T extends never | undefined
+    ? ReducerArg<IMonacoState, IncomingMessageActions, BaseReduxActionPayload>
+    : T extends PrimitiveTypeInReduxActionPayload
+    ? ReducerArg<IMonacoState, IncomingMessageActions, { data: T } & BaseReduxActionPayload>
+    : ReducerArg<IMonacoState, IncomingMessageActions, T & BaseReduxActionPayload>;
 
 function handleStarted(arg: MonacoReducerArg): IMonacoState {
     // If in test mode, register the monaco provider
@@ -68,7 +77,7 @@ function finishTokenizer<T>(buffer: ArrayBuffer, tmJson: string, arg: MonacoRedu
 function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState {
     // Have to convert the buffer into an ArrayBuffer for the tokenizer to load it.
     // tslint:disable-next-line: no-any
-    const typedArray = new Uint8Array((arg.payload as any).data);
+    const typedArray = new Uint8Array((arg.payload.data as any).data);
 
     if (arg.prevState.tmLanguageData && !arg.prevState.onigasmData && typedArray.length > 0) {
         // Monaco is ready. Initialize the tokenizer
@@ -85,12 +94,12 @@ function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState 
 function handleLoadTmLanguageResponse(arg: MonacoReducerArg<string>): IMonacoState {
     if (arg.prevState.onigasmData && !arg.prevState.tmLanguageData) {
         // Monaco is ready. Initialize the tokenizer
-        finishTokenizer(arg.prevState.onigasmData, arg.payload, arg);
+        finishTokenizer(arg.prevState.onigasmData, arg.payload.data, arg);
     }
 
     return {
         ...arg.prevState,
-        tmLanguageData: arg.payload
+        tmLanguageData: arg.payload.data
     };
 }
 
@@ -154,7 +163,7 @@ function handleUnmount(arg: MonacoReducerArg): IMonacoState {
 
 // Create a mapping between message and reducer type
 class IMonacoActionMapping {
-    public [InteractiveWindowMessages.Started]: MonacoReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.Started]: MonacoReducerFunc;
     public [IncomingMessageActions.LOADONIGASMASSEMBLYRESPONSE]: MonacoReducerFunc<Buffer>;
     public [IncomingMessageActions.LOADTMLANGUAGERESPONSE]: MonacoReducerFunc<string>;
     public [IncomingMessageActions.GETMONACOTHEMERESPONSE]: MonacoReducerFunc<IGetMonacoThemeResponse>;
@@ -164,7 +173,7 @@ class IMonacoActionMapping {
     public [IncomingMessageActions.RESOLVECOMPLETIONITEMRESPONSE]: MonacoReducerFunc<IResolveCompletionItemResponse>;
     public [CommonActionType.CODE_CREATED]: MonacoReducerFunc<ICodeCreatedAction>;
     public [CommonActionType.EDIT_CELL]: MonacoReducerFunc<IEditCellAction>;
-    public [CommonActionType.UNMOUNT]: MonacoReducerFunc<never | undefined>;
+    public [CommonActionType.UNMOUNT]: MonacoReducerFunc;
 }
 
 // Create the map between message type and the actual function to call to update state

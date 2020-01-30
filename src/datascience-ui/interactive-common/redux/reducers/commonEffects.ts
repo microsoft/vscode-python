@@ -47,7 +47,7 @@ export namespace CommonEffects {
 
     export function handleLocInit<T>(arg: CommonReducerArg<T, string>): IMainState {
         // Read in the loc strings
-        const locJSON = JSON.parse(arg.payload);
+        const locJSON = JSON.parse(arg.payload.data);
         storeLocStrings(locJSON);
         return arg.prevState;
     }

@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { Action, AnyAction, Middleware, Reducer } from 'redux';
+import { BaseReduxActionPayload } from '../../client/datascience/interactive-common/types';
+import { PrimitiveTypeInReduxActionPayload } from '../interactive-common/redux/reducers/types';
 
 // tslint:disable-next-line: interface-name
 interface TypedAnyAction<T> extends Action<T> {
@@ -11,10 +13,11 @@ interface TypedAnyAction<T> extends Action<T> {
 }
 export type QueueAnotherFunc<T> = (nextAction: Action<T>) => void;
 export type QueuableAction<M> = TypedAnyAction<keyof M> & { queueAction: QueueAnotherFunc<keyof M> };
-export type ReducerArg<S, AT, T> = T extends null | undefined
+export type ReducerArg<S, AT, T> = T extends never | undefined
     ? {
           prevState: S;
           queueAction: QueueAnotherFunc<AT>;
+          payload: BaseReduxActionPayload;
       }
     : {
           prevState: S;
@@ -23,8 +26,11 @@ export type ReducerArg<S, AT, T> = T extends null | undefined
       };
 
 export type ReducerFunc<S, AT, T> = (args: ReducerArg<S, AT, T>) => S;
-
-export type ActionWithPayload<T, K> = T extends null | undefined ? TypedAnyAction<K> : TypedAnyAction<K> & { payload: T };
+export type ActionWithPayload<T, K> = T extends never | undefined
+    ? TypedAnyAction<K> & { payload?: BaseReduxActionPayload }
+    : T extends PrimitiveTypeInReduxActionPayload
+    ? TypedAnyAction<K> & { payload: { data: T } & BaseReduxActionPayload }
+    : TypedAnyAction<K> & { payload: T & BaseReduxActionPayload };
 
 /**
  * CombineReducers takes in a map of action.type to func and creates a reducer that will call the appropriate function for

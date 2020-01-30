@@ -27,7 +27,7 @@ import {
 // See https://react-redux.js.org/using-react-redux/connect-mapdispatch#defining-mapdispatchtoprops-as-an-object
 export const actionCreators = {
     insertAbove: (cellId: string | undefined): CommonAction<ICellAction & IAddCellAction> => ({ type: CommonActionType.INSERT_ABOVE, payload: { cellId, newCellId: uuid() } }),
-    insertAboveFirst: (): CommonAction<never | undefined> => ({ type: CommonActionType.INSERT_ABOVE_FIRST, payload: { newCellId: uuid() } }),
+    insertAboveFirst: (): CommonAction<IAddCellAction> => ({ type: CommonActionType.INSERT_ABOVE_FIRST, payload: { newCellId: uuid() } }),
     insertBelow: (cellId: string | undefined): CommonAction<ICellAction & IAddCellAction> => ({ type: CommonActionType.INSERT_BELOW, payload: { cellId, newCellId: uuid() } }),
     focusCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> => ({
         type: CommonActionType.FOCUS_CELL,
@@ -38,7 +38,7 @@ export const actionCreators = {
         type: CommonActionType.SELECT_CELL,
         payload: { cellId, cursorPos }
     }),
-    addCell: (): CommonAction<never | undefined> => ({ type: CommonActionType.ADD_NEW_CELL, payload: { newCellId: uuid() } }),
+    addCell: (): CommonAction<IAddCellAction> => ({ type: CommonActionType.ADD_NEW_CELL, payload: { newCellId: uuid() } }),
     executeCell: (cellId: string, code: string, moveOp: 'add' | 'select' | 'none'): CommonAction<IExecuteAction> => {
         if (moveOp === 'add') {
             return {

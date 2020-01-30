@@ -52,7 +52,7 @@ export namespace Effects {
 
     export function updateSettings(arg: InteractiveReducerArg<string>): IMainState {
         // String arg should be the IDataScienceExtraSettings
-        const newSettingsJSON = JSON.parse(arg.payload);
+        const newSettingsJSON = JSON.parse(arg.payload.data);
         const newSettings = <IDataScienceExtraSettings>newSettingsJSON;
         const newEditorOptions = computeEditorOptions(newSettings);
         const newFontFamily = newSettings.extraSettings ? newSettings.extraSettings.fontFamily : arg.prevState.font.family;

@@ -3,10 +3,11 @@
 'use strict';
 import { Reducer } from 'redux';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import { ICell, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../../client/datascience/types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { createPostableAction, IncomingMessageActions } from '../postOffice';
-import { CommonActionType } from './types';
+import { CommonActionType, PrimitiveTypeInReduxActionPayload } from './types';
 
 export type IVariableState = {
     currentExecutionCount: number;
@@ -17,9 +18,17 @@ export type IVariableState = {
     pageSize: number;
 };
 
-type VariableReducerFunc<T> = ReducerFunc<IVariableState, IncomingMessageActions, T>;
+type VariableReducerFunc<T = never | undefined> = T extends never | undefined
+    ? ReducerFunc<IVariableState, IncomingMessageActions, BaseReduxActionPayload>
+    : T extends PrimitiveTypeInReduxActionPayload
+    ? ReducerFunc<IVariableState, IncomingMessageActions, { data: T } & BaseReduxActionPayload>
+    : ReducerFunc<IVariableState, IncomingMessageActions, T & BaseReduxActionPayload>;
 
-type VariableReducerArg<T = never | undefined> = ReducerArg<IVariableState, IncomingMessageActions, T>;
+type VariableReducerArg<T = never | undefined> = T extends never | undefined
+    ? ReducerArg<IVariableState, IncomingMessageActions, BaseReduxActionPayload>
+    : T extends PrimitiveTypeInReduxActionPayload
+    ? ReducerArg<IVariableState, IncomingMessageActions, { data: T } & BaseReduxActionPayload>
+    : ReducerArg<IVariableState, IncomingMessageActions, T & BaseReduxActionPayload>;
 
 function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVariableState {
     const newExecutionCount = arg.payload.executionCount ? arg.payload.executionCount : arg.prevState.currentExecutionCount;
@@ -128,9 +137,9 @@ function handleFinishCell(arg: VariableReducerArg<ICell>): IVariableState {
 
 // Create a mapping between message and reducer type
 class IVariableActionMapping {
-    public [IncomingMessageActions.RESTARTKERNEL]: VariableReducerFunc<never | undefined>;
+    public [IncomingMessageActions.RESTARTKERNEL]: VariableReducerFunc;
     public [IncomingMessageActions.FINISHCELL]: VariableReducerFunc<ICell>;
-    public [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: VariableReducerFunc<never | undefined>;
+    public [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: VariableReducerFunc;
     public [CommonActionType.GET_VARIABLE_DATA]: VariableReducerFunc<IJupyterVariablesRequest>;
     public [IncomingMessageActions.GETVARIABLESRESPONSE]: VariableReducerFunc<IJupyterVariablesResponse>;
 }
