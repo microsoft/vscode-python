@@ -207,12 +207,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [python-reqs]
     strategy:
-        matrix:
-            # os: [ubuntu-latest, macos-latest, windows-latest]
-            # python: [3.6, 3.7]
-            python: [3.7]
-            os: [ubuntu-latest]
-            tests: [unit, python-unit]
+      matrix:
+        # os: [ubuntu-latest, macos-latest, windows-latest]
+        # python: [3.6, 3.7]
+        python: [3.7]
+        os: [ubuntu-latest]
+        tests: [unit, python-unit]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -224,7 +224,7 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Install dependencies (npm ci)
-          run: npm ci
+        run: npm ci
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v1
@@ -240,21 +240,20 @@ jobs:
 
       - name: Install Python requirements if not cached
         run: |
-            python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-            python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-            python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
         if: python-cache.outputs.cache-hit == false
-  
+
       - name: Install ptvsd wheels if not cached
         run: |
-            python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-            python ./pythonFiles/install_ptvsd.py
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_ptvsd.py
         if: python-cache.outputs.cache-hit == false
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
         working-directory: ${{env.PVSC_WORKDIR}}
-
         # - name: Install IPython test requirements
         #   run: |
         #     python -m pip install numpy
