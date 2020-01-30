@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      - gh-action-ci # !!!! replace with master before the PR
+      - master
 
 env:
   PYTHON_VERSION: 3.8
