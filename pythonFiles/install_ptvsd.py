@@ -18,6 +18,15 @@ def _contains(s, parts=()):
     return any(p for p in parts if p in s)
 
 
+
+
+
+
+
+
+
+
+
 def _get_package_data():
     json_uri = "https://pypi.org/pypi/{0}/json".format(DEBUGGER_PACKAGE)
     # Response format: https://warehouse.readthedocs.io/api-reference/json/#project
@@ -26,12 +35,27 @@ def _get_package_data():
         return json.loads(response.read())
 
 
+
+
+
+
+
+
+
 def _get_debugger_wheel_urls(data, version):
     return list(
         r["url"]
         for r in data["releases"][version]
         if _contains(r["url"], DEBUGGER_PYTHON_VERSIONS)
     )
+
+
+
+
+
+
+
+
 
 
 def _download_and_extract(root, url, version):
