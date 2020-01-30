@@ -594,9 +594,6 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
     public async fileExists(filename: string): Promise<boolean> {
         return this.pathExists(filename, FileType.File);
     }
-    public fileExistsSync(filePath: string): boolean {
-        return fs.existsSync(filePath);
-    }
     public async directoryExists(dirname: string): Promise<boolean> {
         return this.pathExists(dirname, FileType.Directory);
     }
