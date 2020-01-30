@@ -846,12 +846,6 @@ suite('Raw FileSystem', () => {
 });
 
 interface IUtilsDeps extends IRawFileSystem, IFileSystemPaths, IFileSystemPathUtils, ITempFileSystem {
-    // fs
-    open(path: string, flags: string | number, mode?: string | number | null): Promise<number>;
-    close(fd: number): Promise<void>;
-    unlink(path: string): Promise<void>;
-    existsSync(path: string): boolean;
-
     // helpers
     getHash(data: string): string;
     globFile(pat: string, options?: { cwd: string }): Promise<string[]>;
@@ -871,7 +865,6 @@ suite('FileSystemUtils', () => {
             deps.object, // pathUtils
             deps.object, // paths
             deps.object, // tempFS
-            deps.object, // fs
             (data: string) => deps.object.getHash(data),
             (pat: string, options?: { cwd: string }) => deps.object.globFile(pat, options)
         );
@@ -1497,8 +1490,8 @@ suite('FileSystemUtils', () => {
     suite('fileExistsSync', () => {
         test('file exists', async () => {
             const filename = 'x/y/z/spam.py';
-            deps.setup(d => d.existsSync(filename)) // The file exists.
-                .returns(() => true);
+            deps.setup(d => d.statSync(filename)) // The file exists.
+                .returns(() => (undefined as unknown) as FileStat);
 
             const exists = utils.fileExistsSync(filename);
 
@@ -1508,8 +1501,9 @@ suite('FileSystemUtils', () => {
 
         test('file does not exist', async () => {
             const filename = 'x/y/z/spam.py';
-            deps.setup(d => d.existsSync(filename)) // The file does not exist.
-                .returns(() => false);
+            const err = vscode.FileSystemError.FileNotFound('...');
+            deps.setup(d => d.statSync(filename)) // The file does not exist.
+                .throws(err);
 
             const exists = utils.fileExistsSync(filename);
 
@@ -1520,7 +1514,7 @@ suite('FileSystemUtils', () => {
         test('fails if low-level call fails', async () => {
             const filename = 'x/y/z/spam.py';
             const err = new Error('oops!');
-            deps.setup(d => d.existsSync(filename)) // big badda boom
+            deps.setup(d => d.statSync(filename)) // big badda boom
                 .throws(err);
 
             expect(() => utils.fileExistsSync(filename)).to.throw(err);

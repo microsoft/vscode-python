@@ -351,14 +351,6 @@ export class RawFileSystem implements IRawFileSystem {
 //==========================================
 // filesystem "utils"
 
-// This is the parts of the 'fs-extra' module that we use in RawFileSystem.
-interface IFSExtraForUtils {
-    open(path: string, flags: string | number, mode?: string | number | null): Promise<number>;
-    close(fd: number): Promise<void>;
-    unlink(path: string): Promise<void>;
-    existsSync(path: string): boolean;
-}
-
 // High-level filesystem operations used by the extension.
 export class FileSystemUtils implements IFileSystemUtils {
     constructor(
@@ -366,8 +358,6 @@ export class FileSystemUtils implements IFileSystemUtils {
         public readonly pathUtils: IFileSystemPathUtils,
         public readonly paths: IFileSystemPaths,
         public readonly tmp: ITempFileSystem,
-        // tslint:disable-next-line:no-shadowed-variable
-        private readonly fs: IFSExtraForUtils,
         private readonly getHash: (data: string) => string,
         private readonly globFiles: (pat: string, options?: { cwd: string }) => Promise<string[]>
     ) {}
@@ -376,7 +366,6 @@ export class FileSystemUtils implements IFileSystemUtils {
         raw?: IRawFileSystem,
         pathUtils?: IFileSystemPathUtils,
         tmp?: ITempFileSystem,
-        fsDeps?: IFSExtraForUtils,
         getHash?: (data: string) => string,
         globFiles?: (pat: string, options?: { cwd: string }) => Promise<string[]>
     ): FileSystemUtils {
@@ -386,7 +375,6 @@ export class FileSystemUtils implements IFileSystemUtils {
             pathUtils,
             pathUtils.paths,
             tmp || TemporaryFileSystem.withDefaults(),
-            fsDeps || fs,
             getHash || getHashString,
             globFiles || promisify(glob)
         );
@@ -512,7 +500,15 @@ export class FileSystemUtils implements IFileSystemUtils {
     // helpers (non-async)
 
     public fileExistsSync(filePath: string): boolean {
-        return this.fs.existsSync(filePath);
+        try {
+            this.raw.statSync(filePath);
+        } catch (err) {
+            if (isFileNotFoundError(err)) {
+                return false;
+            }
+            throw err; // re-throw
+        }
+        return true;
     }
 }
 
