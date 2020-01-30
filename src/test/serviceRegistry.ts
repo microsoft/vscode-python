@@ -100,6 +100,7 @@ class LegacyFileSystem extends FileSystem {
         const vscfs = new FakeVSCodeFileSystemAPI();
         const raw = RawFileSystem.withDefaults(undefined, vscfs);
         this.utils = FileSystemUtils.withDefaults(raw);
+        this.raw = raw;
     }
 }
 

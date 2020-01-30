@@ -297,7 +297,7 @@ export class FileSystemUtils implements IFileSystemUtils {
         // tslint:disable-next-line:no-shadowed-variable
         private readonly fs: IFSExtraForUtils,
         private readonly getHash: (data: string) => string,
-        private readonly globFile: (pat: string, options?: { cwd: string }) => Promise<string[]>
+        private readonly globFiles: (pat: string, options?: { cwd: string }) => Promise<string[]>
     ) {}
     // Create a new object using common-case default values.
     public static withDefaults(
@@ -306,7 +306,7 @@ export class FileSystemUtils implements IFileSystemUtils {
         tmp?: ITempFileSystem,
         fsDeps?: IFSExtraForUtils,
         getHash?: (data: string) => string,
-        globFile?: (pat: string, options?: { cwd: string }) => Promise<string[]>
+        globFiles?: (pat: string, options?: { cwd: string }) => Promise<string[]>
     ): FileSystemUtils {
         pathUtils = pathUtils || FileSystemPathUtils.withDefaults();
         return new FileSystemUtils(
@@ -316,7 +316,7 @@ export class FileSystemUtils implements IFileSystemUtils {
             tmp || TemporaryFileSystem.withDefaults(),
             fsDeps || fs,
             getHash || getHashString,
-            globFile || promisify(glob)
+            globFiles || promisify(glob)
         );
     }
 
@@ -429,9 +429,9 @@ export class FileSystemUtils implements IFileSystemUtils {
             const options = {
                 cwd: cwd
             };
-            found = await this.globFile(globPattern, options);
+            found = await this.globFiles(globPattern, options);
         } else {
-            found = await this.globFile(globPattern);
+            found = await this.globFiles(globPattern);
         }
         return Array.isArray(found) ? found : [];
     }
@@ -457,7 +457,8 @@ function getHashString(data: string): string {
 
 // more aliases (to cause less churn)
 @injectable()
-export class FileSystem implements IFileSystem {
+//export class FileSystem implements IFileSystem {
+class FileSystemBase {
     // We expose this for the sake of functional tests that do not have
     // access to the actual "vscode" namespace.
     protected utils: FileSystemUtils;
@@ -542,5 +543,211 @@ export class FileSystem implements IFileSystem {
     }
     public async isDirReadonly(dirname: string): Promise<boolean> {
         return this.utils.isDirReadonly(dirname);
+    }
+}
+
+// tslint:disable:max-classes-per-file
+
+@injectable()
+export class FileSystem extends FileSystemBase implements IFileSystem {
+    // We expose this for the sake of functional tests that do not have
+    // access to the actual "vscode" namespace.
+    protected raw: RawFileSystem;
+    private readonly paths: IFileSystemPaths;
+    private readonly pathUtils: FileSystemPathUtils;
+    private readonly tmp: TemporaryFileSystem;
+    private readonly getHash: (data: string) => string;
+    private readonly globFiles: (pat: string, options?: { cwd: string }) => Promise<string[]>;
+    constructor() {
+        super();
+        this.paths = FileSystemPaths.withDefaults();
+        this.pathUtils = FileSystemPathUtils.withDefaults(this.paths);
+        this.tmp = TemporaryFileSystem.withDefaults();
+        this.raw = RawFileSystem.withDefaults(this.paths);
+        this.getHash = getHashString;
+        this.globFiles = promisify(glob);
+    }
+
+    //=================================
+    // path-related
+
+    public get directorySeparatorChar(): string {
+        return this.paths.sep;
+    }
+
+    public arePathsSame(path1: string, path2: string): boolean {
+        return this.pathUtils.arePathsSame(path1, path2);
+    }
+
+    //=================================
+    // "raw" operations
+
+    public async stat(filename: string): Promise<FileStat> {
+        return this.raw.stat(filename);
+    }
+
+    public async lstat(filename: string): Promise<FileStat> {
+        return this.raw.lstat(filename);
+    }
+
+    public async readFile(filePath: string): Promise<string> {
+        return this.raw.readText(filePath);
+    }
+    public readFileSync(filePath: string): string {
+        return this.raw.readTextSync(filePath);
+    }
+    public async readData(filePath: string): Promise<Buffer> {
+        return this.raw.readData(filePath);
+    }
+
+    public async writeFile(filePath: string, text: string, _options: string | fs.WriteFileOptions = { encoding: 'utf8' }): Promise<void> {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO (GH-8542) For now we ignore the options, since all call
+        // sites already match the defaults.  Later we will fix the call
+        // sites.
+        return this.raw.writeText(filePath, text);
+    }
+
+    public async createDirectory(directoryPath: string): Promise<void> {
+        return this.raw.mkdirp(directoryPath);
+    }
+
+    public async deleteDirectory(directoryPath: string): Promise<void> {
+        return this.raw.rmtree(directoryPath);
+    }
+
+    public async listdir(dirname: string): Promise<[string, FileType][]> {
+        // prettier-ignore
+        return this.raw.listdir(dirname)
+            .catch(async err => {
+                // We're only preserving pre-existng behavior here...
+                if (!(await this.pathExists(dirname))) {
+                    return [];
+                }
+                throw err; // re-throw
+            });
+    }
+
+    public async appendFile(filename: string, text: string): Promise<void> {
+        return this.raw.appendText(filename, text);
+    }
+
+    public async copyFile(src: string, dest: string): Promise<void> {
+        return this.raw.copyFile(src, dest);
+    }
+
+    public async deleteFile(filename: string): Promise<void> {
+        return this.raw.rmfile(filename);
+    }
+
+    public async chmod(filePath: string, mode: string | number): Promise<void> {
+        return this.raw.chmod(filePath, mode);
+    }
+
+    public async move(src: string, tgt: string) {
+        await this.raw.move(src, tgt);
+    }
+
+    public createReadStream(filePath: string): ReadStream {
+        return this.raw.createReadStream(filePath);
+    }
+
+    public createWriteStream(filePath: string): WriteStream {
+        return this.raw.createWriteStream(filePath);
+    }
+
+    //=================================
+    // utils
+
+    // prettier-ignore
+    public async pathExists(
+        filename: string,
+        fileType?: FileType
+    ): Promise<boolean> {
+        let stat: FileStat;
+        try {
+            // Note that we are using stat() rather than lstat().  This
+            // means that any symlinks are getting resolved.
+            stat = await this.raw.stat(filename);
+        } catch (err) {
+            if (isFileNotFoundError(err)) {
+                return false;
+            }
+            throw err;
+        }
+
+        if (fileType === undefined) {
+            return true;
+        }
+        if (fileType === FileType.Unknown) {
+            // FileType.Unknown == 0, hence do not use bitwise operations.
+            return stat.type === FileType.Unknown;
+        }
+        return (stat.type & fileType) === fileType;
+    }
+    public async fileExists(filename: string): Promise<boolean> {
+        return this.pathExists(filename, FileType.File);
+    }
+    public fileExistsSync(filePath: string): boolean {
+        return fs.existsSync(filePath);
+    }
+    public async directoryExists(dirname: string): Promise<boolean> {
+        return this.pathExists(dirname, FileType.Directory);
+    }
+
+    public async getSubDirectories(dirname: string): Promise<string[]> {
+        // prettier-ignore
+        return filterByFileType(
+            (await this.listdir(dirname)),
+            FileType.Directory
+        ).map(([filename, _fileType]) => filename);
+    }
+    public async getFiles(dirname: string): Promise<string[]> {
+        // prettier-ignore
+        return filterByFileType(
+            (await this.listdir(dirname)),
+            FileType.File
+        ).map(([filename, _fileType]) => filename);
+    }
+
+    public async getFileHash(filename: string): Promise<string> {
+        // The reason for lstat rather than stat is not clear...
+        const stat = await this.raw.lstat(filename);
+        const data = `${stat.ctime}-${stat.mtime}`;
+        return this.getHash(data);
+    }
+
+    public async search(globPattern: string, cwd?: string): Promise<string[]> {
+        let found: string[];
+        if (cwd) {
+            const options = {
+                cwd: cwd
+            };
+            found = await this.globFiles(globPattern, options);
+        } else {
+            found = await this.globFiles(globPattern);
+        }
+        return Array.isArray(found) ? found : [];
+    }
+
+    public createTemporaryFile(extension: string): Promise<TemporaryFile> {
+        return this.tmp.createFile(extension);
+    }
+
+    public async isDirReadonly(dirname: string): Promise<boolean> {
+        const filePath = `${dirname}${this.paths.sep}___vscpTest___`;
+        const flags = fs.constants.O_CREAT | fs.constants.O_RDWR;
+        let fd: number;
+        try {
+            fd = await fs.open(filePath, flags);
+        } catch (err) {
+            if (isNoPermissionsError(err)) {
+                return true;
+            }
+            throw err; // re-throw
+        }
+        await fs.close(fd);
+        await fs.unlink(filePath);
+        return false;
     }
 }
