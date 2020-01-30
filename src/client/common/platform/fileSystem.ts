@@ -410,7 +410,8 @@ export class FileSystemUtils implements IFileSystemUtils {
             throw err; // re-throw
         }
         // Clean resources in the background.
-        this.fs.close(fd)
+        this.fs
+            .close(fd)
             .finally(() => this.fs.unlink(filePath))
             .ignoreErrors();
         return false;
