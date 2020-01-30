@@ -554,25 +554,12 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
     // access to the actual "vscode" namespace.
     protected raw: RawFileSystem;
     private readonly paths: IFileSystemPaths;
-    private readonly pathUtils: FileSystemPathUtils;
     private readonly globFiles: (pat: string, options?: { cwd: string }) => Promise<string[]>;
     constructor() {
         super();
         this.paths = FileSystemPaths.withDefaults();
-        this.pathUtils = FileSystemPathUtils.withDefaults(this.paths);
         this.raw = RawFileSystem.withDefaults(this.paths);
         this.globFiles = promisify(glob);
-    }
-
-    //=================================
-    // path-related
-
-    public get directorySeparatorChar(): string {
-        return this.paths.sep;
-    }
-
-    public arePathsSame(path1: string, path2: string): boolean {
-        return this.pathUtils.arePathsSame(path1, path2);
     }
 
     //=================================
@@ -658,7 +645,7 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
     }
 
     public async isDirReadonly(dirname: string): Promise<boolean> {
-        const filePath = `${dirname}${this.paths.sep}___vscpTest___`;
+        const filePath = `${dirname}${this.utils.paths.sep}___vscpTest___`;
         const flags = fs.constants.O_CREAT | fs.constants.O_RDWR;
         let fd: number;
         try {
