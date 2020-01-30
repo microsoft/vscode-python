@@ -42,7 +42,7 @@ function logToFile(logLevel: LogLevel, ...args: any[]) {
  * Initialize the logger for console.
  * We do two things here:
  * - Anything written to the logger will be displayed in the console window as well
- *   This is the behavior of the extension when runnning it.
+ *   This is the behavior of the extension when running it.
  *   When running tests on CI, we might not want this behavior, as it'll pollute the
  *      test output with logging (as mentioned this is optional).
  *   Messages logged using our logger will be prefixed with `Python Extension: ....` for console window.
