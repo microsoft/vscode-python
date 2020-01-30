@@ -563,21 +563,6 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
     }
 
     //=================================
-    // "raw" operations
-
-    public async listdir(dirname: string): Promise<[string, FileType][]> {
-        // prettier-ignore
-        return this.raw.listdir(dirname)
-            .catch(async err => {
-                // We're only preserving pre-existng behavior here...
-                if (!(await this.pathExists(dirname))) {
-                    return [];
-                }
-                throw err; // re-throw
-            });
-    }
-
-    //=================================
     // utils
 
     // prettier-ignore
@@ -619,14 +604,14 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
     public async getSubDirectories(dirname: string): Promise<string[]> {
         // prettier-ignore
         return filterByFileType(
-            (await this.listdir(dirname)),
+            (await this.utils.listdir(dirname)),
             FileType.Directory
         ).map(([filename, _fileType]) => filename);
     }
     public async getFiles(dirname: string): Promise<string[]> {
         // prettier-ignore
         return filterByFileType(
-            (await this.listdir(dirname)),
+            (await this.utils.listdir(dirname)),
             FileType.File
         ).map(([filename, _fileType]) => filename);
     }
