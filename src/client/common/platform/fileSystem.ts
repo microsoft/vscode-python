@@ -580,40 +580,6 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
     //=================================
     // "raw" operations
 
-    public async stat(filename: string): Promise<FileStat> {
-        return this.raw.stat(filename);
-    }
-
-    public async lstat(filename: string): Promise<FileStat> {
-        return this.raw.lstat(filename);
-    }
-
-    public async readFile(filePath: string): Promise<string> {
-        return this.raw.readText(filePath);
-    }
-    public readFileSync(filePath: string): string {
-        return this.raw.readTextSync(filePath);
-    }
-    public async readData(filePath: string): Promise<Buffer> {
-        return this.raw.readData(filePath);
-    }
-
-    public async writeFile(filePath: string, text: string, _options: string | fs.WriteFileOptions = { encoding: 'utf8' }): Promise<void> {
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO (GH-8542) For now we ignore the options, since all call
-        // sites already match the defaults.  Later we will fix the call
-        // sites.
-        return this.raw.writeText(filePath, text);
-    }
-
-    public async createDirectory(directoryPath: string): Promise<void> {
-        return this.raw.mkdirp(directoryPath);
-    }
-
-    public async deleteDirectory(directoryPath: string): Promise<void> {
-        return this.raw.rmtree(directoryPath);
-    }
-
     public async listdir(dirname: string): Promise<[string, FileType][]> {
         // prettier-ignore
         return this.raw.listdir(dirname)
@@ -624,34 +590,6 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
                 }
                 throw err; // re-throw
             });
-    }
-
-    public async appendFile(filename: string, text: string): Promise<void> {
-        return this.raw.appendText(filename, text);
-    }
-
-    public async copyFile(src: string, dest: string): Promise<void> {
-        return this.raw.copyFile(src, dest);
-    }
-
-    public async deleteFile(filename: string): Promise<void> {
-        return this.raw.rmfile(filename);
-    }
-
-    public async chmod(filePath: string, mode: string | number): Promise<void> {
-        return this.raw.chmod(filePath, mode);
-    }
-
-    public async move(src: string, tgt: string) {
-        await this.raw.move(src, tgt);
-    }
-
-    public createReadStream(filePath: string): ReadStream {
-        return this.raw.createReadStream(filePath);
-    }
-
-    public createWriteStream(filePath: string): WriteStream {
-        return this.raw.createWriteStream(filePath);
     }
 
     //=================================
