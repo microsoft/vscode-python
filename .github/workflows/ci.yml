@@ -189,6 +189,9 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci
 
+      - name: Clean directory
+        run: npm run clean
+
       - name: Package the VSIX
         run: npm run package
 
