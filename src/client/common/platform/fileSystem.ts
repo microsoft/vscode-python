@@ -598,21 +598,6 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
         return this.pathExists(dirname, FileType.Directory);
     }
 
-    public async getSubDirectories(dirname: string): Promise<string[]> {
-        // prettier-ignore
-        return filterByFileType(
-            (await this.utils.listdir(dirname)),
-            FileType.Directory
-        ).map(([filename, _fileType]) => filename);
-    }
-    public async getFiles(dirname: string): Promise<string[]> {
-        // prettier-ignore
-        return filterByFileType(
-            (await this.utils.listdir(dirname)),
-            FileType.File
-        ).map(([filename, _fileType]) => filename);
-    }
-
     public async search(globPattern: string, cwd?: string): Promise<string[]> {
         let found: string[];
         if (cwd) {
