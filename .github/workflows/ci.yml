@@ -31,30 +31,13 @@ jobs:
             - name: npm
               run: npm --version
 
-    ### Initialization
-    checkout:
-        name: Checkout and cache
+    ### Initialization: retrieve, install and cache dependencies
+    python-deps:
+        name: Install Python Requirements
         runs-on: ubuntu-latest
         steps:
             - name: Checkout
               uses: actions/checkout@v2
-
-            - name: Cache repo
-              uses: actions/cache@v1
-              with:
-                  path: .
-                  key: ${{runner.os}}-${{env.CACHE_CHECKOUT}}
-
-    python-deps:
-        name: Install Python Requirements
-        runs-on: ubuntu-latest
-        needs: [checkout]
-        steps:
-            - name: Retrieve cached repo
-              uses: actions/cache@v1
-              with:
-                  path: .
-                  key: ${{runner.os}}-${{env.CACHE_CHECKOUT}}
 
             - name: Use Python ${{env.PYTHON_VERSION}}
               uses: actions/setup-python@v1
@@ -79,18 +62,17 @@ jobs:
               uses: actions/cache@v1
               with:
                   path: ./pythonFiles/lib/python
-                  key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-${{hashFiles('pythonFiles/**')}}
+                  key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-${{hashFiles('pythonFiles/lib/python/**')}}
 
             - name: Cache pip files
               uses: actions/cache@v1
               with:
                   path: ~/.cache/pip
-                  key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{hashFiles('**/requirements.txt')}}
+                  key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{hashFiles('**/**-requirements.txt')}}
 
     js-ts-deps:
-        name: Install NPM dependencies
+        name: Install npm dependencies
         runs-on: ubuntu-latest
-        needs: [checkout]
         steps:
             - name: Checkout
               uses: actions/checkout@v2
