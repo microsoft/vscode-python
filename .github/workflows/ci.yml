@@ -56,7 +56,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-${{hashFiles('pythonFiles/lib/python/**')}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-${{hashFiles('**/**-requirements.txt')}}
 
       - name: Cache pip files
         uses: actions/cache@v1
@@ -180,11 +180,11 @@ jobs:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
-      - name: Retrieve cached pythonFiles files
+      - name: Retrieve cached pythonFiles/ directory
         uses: actions/cache@v1
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-${{hashFiles('pythonFiles/lib/python/**')}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-${{hashFiles('**/**-requirements.txt')}}
 
       - name: Install dependencies (npm ci)
         run: npm ci
