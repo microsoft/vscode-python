@@ -114,6 +114,11 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
             sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId });
         }
+        // Special case for unfocusing a cell
+        if (prevState.main.focusedCellId !== afterState.main.focusedCellId && !afterState.main.focusedCellId) {
+            // Send async so happens after render state changes (so our enzyme wrapper is up to date)
+            sendMessage(InteractiveWindowMessages.UnfocusedCellEditor);
+        }
 
         // Indicate settings updates
         if (!fastDeepEqual(prevState.main.settings, afterState.main.settings)) {

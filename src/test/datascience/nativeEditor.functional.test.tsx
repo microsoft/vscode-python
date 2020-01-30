@@ -1144,8 +1144,8 @@ for _ in range(50):
                 await update;
 
                 // Monaco editor should be rendered and the cell should be markdown
-                assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
-                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1));
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused');
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
                 assert.equal(
                     wrapper
                         .find(NativeCell)
@@ -1160,13 +1160,13 @@ for _ in range(50):
 
                 // Switch back to code mode.
                 // First lose focus
-                update = waitForUpdate(wrapper, NativeEditor, 1);
+                update = waitForMessage(ioc, InteractiveWindowMessages.UnfocusedCellEditor);
                 simulateKeyPressOnCell(1, { code: 'Escape' });
                 await update;
 
                 // Confirm markdown output is rendered
-                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1));
-                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1));
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is focused');
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
                 assert.equal(
                     wrapper
                         .find(NativeCell)
@@ -1186,8 +1186,8 @@ for _ in range(50):
                 wrapperElement.simulate('keyDown', { key: 'y' });
                 await update;
 
-                assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
-                assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1));
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused 2nd time');
+                assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is markdown second time');
 
                 // Confirm editor still has the same text
                 editor = getNativeFocusedEditor(wrapper);
