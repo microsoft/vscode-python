@@ -927,6 +927,41 @@ suite('FileSystem - utils', () => {
             expect(entries).to.deep.equal([]);
         });
     });
+
+    suite('isDirReadonly', () => {
+        suite('non-Windows', () => {
+            suiteSetup(function() {
+                if (WINDOWS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+            });
+
+            // On Windows, chmod won't have any effect on the file itself.
+            test('is readonly', async () => {
+                const dirname = await fix.createDirectory('x/y/z/spam');
+                await fsextra.chmod(dirname, 0o444);
+
+                const isReadonly = await utils.isDirReadonly(dirname);
+
+                expect(isReadonly).to.equal(true);
+            });
+        });
+
+        test('is not readonly', async () => {
+            const dirname = await fix.createDirectory('x/y/z/spam');
+
+            const isReadonly = await utils.isDirReadonly(dirname);
+
+            expect(isReadonly).to.equal(false);
+        });
+
+        test('fail if the directory does not exist', async () => {
+            const promise = utils.isDirReadonly(DOES_NOT_EXIST);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
 });
 
 suite('FileSystem', () => {
@@ -1321,6 +1356,41 @@ suite('FileSystem', () => {
                 const entries = await filesystem.getFiles(DOES_NOT_EXIST);
 
                 expect(entries).to.deep.equal([]);
+            });
+        });
+
+        suite('isDirReadonly', () => {
+            suite('non-Windows', () => {
+                suiteSetup(function() {
+                    if (WINDOWS) {
+                        // tslint:disable-next-line:no-invalid-this
+                        this.skip();
+                    }
+                });
+
+                // On Windows, chmod won't have any effect on the file itself.
+                test('is readonly', async () => {
+                    const dirname = await fix.createDirectory('x/y/z/spam');
+                    await fsextra.chmod(dirname, 0o444);
+
+                    const isReadonly = await filesystem.isDirReadonly(dirname);
+
+                    expect(isReadonly).to.equal(true);
+                });
+            });
+
+            test('is not readonly', async () => {
+                const dirname = await fix.createDirectory('x/y/z/spam');
+
+                const isReadonly = await filesystem.isDirReadonly(dirname);
+
+                expect(isReadonly).to.equal(false);
+            });
+
+            test('fail if the directory does not exist', async () => {
+                const promise = filesystem.isDirReadonly(DOES_NOT_EXIST);
+
+                await expect(promise).to.eventually.be.rejected;
             });
         });
     });

@@ -299,41 +299,6 @@ suite('FileSystem - utils', () => {
         await fix.ensureDeleted(DOES_NOT_EXIST);
     });
 
-    suite('isDirReadonly', () => {
-        suite('non-Windows', () => {
-            suiteSetup(function() {
-                if (WINDOWS) {
-                    // tslint:disable-next-line:no-invalid-this
-                    this.skip();
-                }
-            });
-
-            // On Windows, chmod won't have any effect on the file itself.
-            test('is readonly', async () => {
-                const dirname = await fix.createDirectory('x/y/z/spam');
-                await fs.chmod(dirname, 0o444);
-
-                const isReadonly = await utils.isDirReadonly(dirname);
-
-                expect(isReadonly).to.equal(true);
-            });
-        });
-
-        test('is not readonly', async () => {
-            const dirname = await fix.createDirectory('x/y/z/spam');
-
-            const isReadonly = await utils.isDirReadonly(dirname);
-
-            expect(isReadonly).to.equal(false);
-        });
-
-        test('fail if the directory does not exist', async () => {
-            const promise = utils.isDirReadonly(DOES_NOT_EXIST);
-
-            await expect(promise).to.eventually.be.rejected;
-        });
-    });
-
     suite('getFileHash', () => {
         // Since getFileHash() relies on timestamps, we have to take
         // into account filesystem timestamp resolution.  For instance
@@ -704,41 +669,6 @@ suite('FileSystem', () => {
                 const files = await fileSystem.search(pattern);
 
                 expect(files).to.deep.equal([]);
-            });
-        });
-
-        suite('isDirReadonly', () => {
-            suite('non-Windows', () => {
-                suiteSetup(function() {
-                    if (WINDOWS) {
-                        // tslint:disable-next-line:no-invalid-this
-                        this.skip();
-                    }
-                });
-
-                // On Windows, chmod won't have any effect on the file itself.
-                test('is readonly', async () => {
-                    const dirname = await fix.createDirectory('x/y/z/spam');
-                    await fs.chmod(dirname, 0o444);
-
-                    const isReadonly = await fileSystem.isDirReadonly(dirname);
-
-                    expect(isReadonly).to.equal(true);
-                });
-            });
-
-            test('is not readonly', async () => {
-                const dirname = await fix.createDirectory('x/y/z/spam');
-
-                const isReadonly = await fileSystem.isDirReadonly(dirname);
-
-                expect(isReadonly).to.equal(false);
-            });
-
-            test('fail if the directory does not exist', async () => {
-                const promise = fileSystem.isDirReadonly(DOES_NOT_EXIST);
-
-                await expect(promise).to.eventually.be.rejected;
             });
         });
 

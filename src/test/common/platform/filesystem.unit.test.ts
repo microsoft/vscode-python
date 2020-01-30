@@ -1249,21 +1249,19 @@ suite('FileSystemUtils', () => {
     });
 
     suite('isDirReadonly', () => {
-        const flags = fs.constants.O_CREAT | fs.constants.O_RDWR;
         setup(() => {
             deps.setup(d => d.sep) // The value really doesn't matter.
                 .returns(() => '/');
         });
 
-        test('is readonly', async () => {
+        test('is not readonly', async () => {
             const dirname = 'x/y/z/spam';
-            const fd = 10;
             const filename = `${dirname}/___vscpTest___`;
-            deps.setup(d => d.open(filename, flags)) // Success!
-                .returns(() => Promise.resolve(fd));
-            deps.setup(d => d.close(fd)) // Success!
+            deps.setup(d => d.stat(dirname)) // Success!
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            deps.setup(d => d.writeText(filename, '')) // Success!
                 .returns(() => Promise.resolve());
-            deps.setup(d => d.unlink(filename)) // Success!
+            deps.setup(d => d.rmfile(filename)) // Success!
                 .returns(() => Promise.resolve());
 
             const isReadonly = await utils.isDirReadonly(dirname);
@@ -1272,13 +1270,15 @@ suite('FileSystemUtils', () => {
             verifyAll();
         });
 
-        test('is not readonly', async () => {
+        test('is readonly', async () => {
             const dirname = 'x/y/z/spam';
             const filename = `${dirname}/___vscpTest___`;
             const err = new Error('not permitted');
             // tslint:disable-next-line:no-any
             (err as any).code = 'EACCES'; // errno
-            deps.setup(d => d.open(filename, flags)) // not permitted
+            deps.setup(d => d.stat(dirname)) // Success!
+                .returns(() => Promise.resolve((undefined as unknown) as FileStat));
+            deps.setup(d => d.writeText(filename, '')) // not permitted
                 .returns(() => Promise.reject(err));
 
             const isReadonly = await utils.isDirReadonly(dirname);
@@ -1289,11 +1289,10 @@ suite('FileSystemUtils', () => {
 
         test('fails if the directory does not exist', async () => {
             const dirname = 'x/y/z/spam';
-            const filename = `${dirname}/___vscpTest___`;
             const err = new Error('not found');
             // tslint:disable-next-line:no-any
             (err as any).code = 'ENOENT'; // errno
-            deps.setup(d => d.open(filename, flags)) // file-not-found
+            deps.setup(d => d.stat(dirname)) // file-not-found
                 .returns(() => Promise.reject(err));
 
             const promise = utils.isDirReadonly(dirname);

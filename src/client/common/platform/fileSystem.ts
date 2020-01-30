@@ -457,20 +457,18 @@ export class FileSystemUtils implements IFileSystemUtils {
 
     public async isDirReadonly(dirname: string): Promise<boolean> {
         const filePath = `${dirname}${this.paths.sep}___vscpTest___`;
-        const flags = fs.constants.O_CREAT | fs.constants.O_RDWR;
-        let fd: number;
         try {
-            fd = await this.fs.open(filePath, flags);
+            await this.raw.stat(dirname);
+            await this.raw.writeText(filePath, '');
         } catch (err) {
             if (isNoPermissionsError(err)) {
                 return true;
             }
             throw err; // re-throw
         }
-        // Clean resources in the background.
-        this.fs
-            .close(fd)
-            .finally(() => this.fs.unlink(filePath))
+        this.raw
+            .rmfile(filePath)
+            // Clean resources in the background.
             .ignoreErrors();
         return false;
     }
