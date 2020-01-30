@@ -937,14 +937,20 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     };
 
     private async stopServer(): Promise<void> {
+        // Finish either of our notebook promises
         if (this.serverAndNotebookPromise) {
             await this.serverAndNotebookPromise;
             this.serverAndNotebookPromise = undefined;
-            if (this._notebook) {
-                const server = this._notebook;
-                this._notebook = undefined;
-                await server.dispose();
-            }
+        }
+        if (this.notebookPromise) {
+            await this.notebookPromise;
+            this.notebookPromise = undefined;
+        }
+        // If we have a notebook dispose of it
+        if (this._notebook) {
+            const server = this._notebook;
+            this._notebook = undefined;
+            await server.dispose();
         }
     }
 
@@ -1035,6 +1041,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             this._notebook = undefined;
         } finally {
             this.serverAndNotebookPromise = undefined;
+            this.notebookPromise = undefined;
         }
         await this.ensureServerAndNotebook();
     }
