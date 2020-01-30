@@ -9,7 +9,7 @@ env:
   PYTHON_VERSION: 3.8
   CACHE_NPM_DEPS: cache-npm
   CACHE_PIP_DEPS: cache-pip
-  # Key for the cache created at the end of the the "Cache ./pythonFiles/lib/python" step.
+  # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   ARTIFACT_NAME_VSIX: pvsc-vsix
 
@@ -78,7 +78,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{ hashFiles('package-lock.json') }}
+          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
   # Hygiene + VSIX upload
   compile:
@@ -93,7 +93,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{ hashFiles('package-lock.json') }}
+          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Install dependencies (npm ci)
         run: npm ci
@@ -113,7 +113,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{ hashFiles('package-lock.json') }}
+          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Install dependencies (npm ci)
         run: npm ci
