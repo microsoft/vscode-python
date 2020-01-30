@@ -69,30 +69,27 @@ export namespace Execution {
             const executeResult = executeRange(arg.prevState, index, index, [arg.payload.code], arg.queueAction);
 
             // Modify the execute result if moving
-            switch (arg.payload.moveOp) {
-                case 'add':
-                    // Add a new cell below
-                    return Creation.insertBelow({ ...arg, prevState: executeResult });
-
-                case 'select':
-                    // Select the cell below this one, but don't focus it
-                    if (index < arg.prevState.cellVMs.length - 1) {
-                        return Effects.selectCell({
-                            ...arg,
-                            prevState: {
-                                ...executeResult
-                            },
-                            payload: {
-                                ...arg.payload,
-                                cellId: arg.prevState.cellVMs[index + 1].cell.id,
-                                cursorPos: CursorPos.Current
-                            }
-                        });
-                    }
-                    return executeResult;
-
-                default:
-                    return executeResult;
+            if (arg.payload.moveOp === 'add') {
+                // Add a new cell below
+                return Creation.insertBelow({ ...arg, prevState: executeResult, payload: { ...arg.payload } });
+            } else if (arg.payload.moveOp === 'select') {
+                // Select the cell below this one, but don't focus it
+                if (index < arg.prevState.cellVMs.length - 1) {
+                    return Effects.selectCell({
+                        ...arg,
+                        prevState: {
+                            ...executeResult
+                        },
+                        payload: {
+                            ...arg.payload,
+                            cellId: arg.prevState.cellVMs[index + 1].cell.id,
+                            cursorPos: CursorPos.Current
+                        }
+                    });
+                }
+                return executeResult;
+            } else {
+                return executeResult;
             }
         }
         return arg.prevState;

@@ -3,6 +3,7 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
+import { IAddCellAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest } from '../messages';
 import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../types';
 
@@ -307,7 +308,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.GetAllCells]: ICell;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
     public [InteractiveWindowMessages.DeleteCell]: never | undefined;
-    public [InteractiveWindowMessages.DeleteAllCells]: never | undefined;
+    public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;
     public [InteractiveWindowMessages.Undo]: never | undefined;
     public [InteractiveWindowMessages.Redo]: never | undefined;
     public [InteractiveWindowMessages.ExpandAll]: never | undefined;

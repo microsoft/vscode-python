@@ -8,7 +8,7 @@ import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience
 import { createCellVM, createEmptyCell, CursorPos, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { ICellAction } from '../../../interactive-common/redux/reducers/types';
+import { IAddCellAction, ICellAction } from '../../../interactive-common/redux/reducers/types';
 import { actionCreators } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 
@@ -37,8 +37,8 @@ export namespace Creation {
         }
     }
 
-    export function insertAbove(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const newVM = prepareCellVM(createEmptyCell(uuid(), null), false, arg.prevState.settings);
+    export function insertAbove(arg: NativeEditorReducerArg<ICellAction & IAddCellAction>): IMainState {
+        const newVM = prepareCellVM(createEmptyCell(arg.payload.newCellId || uuid(), null), false, arg.prevState.settings);
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
@@ -69,8 +69,8 @@ export namespace Creation {
         return result;
     }
 
-    export function insertBelow(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const newVM = prepareCellVM(createEmptyCell(uuid(), null), false, arg.prevState.settings);
+    export function insertBelow(arg: NativeEditorReducerArg<ICellAction & IAddCellAction>): IMainState {
+        const newVM = prepareCellVM(createEmptyCell(arg.payload.newCellId || uuid(), null), false, arg.prevState.settings);
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
@@ -104,17 +104,17 @@ export namespace Creation {
         return result;
     }
 
-    export function insertAboveFirst(arg: NativeEditorReducerArg): IMainState {
+    export function insertAboveFirst(arg: NativeEditorReducerArg<IAddCellAction>): IMainState {
         // Get the first cell id
         const firstCellId = arg.prevState.cellVMs.length > 0 ? arg.prevState.cellVMs[0].cell.id : undefined;
 
         // Do what an insertAbove does
-        return insertAbove({ ...arg, payload: { cellId: firstCellId } });
+        return insertAbove({ ...arg, payload: { cellId: firstCellId, newCellId: arg.payload.newCellId } });
     }
 
-    export function addNewCell(arg: NativeEditorReducerArg): IMainState {
+    export function addNewCell(arg: NativeEditorReducerArg<IAddCellAction>): IMainState {
         // Do the same thing that an insertBelow does using the currently selected cell.
-        return insertBelow({ ...arg, payload: { cellId: arg.prevState.selectedCellId } });
+        return insertBelow({ ...arg, payload: { cellId: arg.prevState.selectedCellId, newCellId: arg.payload.newCellId } });
     }
 
     export function startCell(arg: NativeEditorReducerArg<ICell>): IMainState {
@@ -129,13 +129,13 @@ export namespace Creation {
         return Helpers.updateOrAdd(arg, (c: ICell, s: IMainState) => prepareCellVM(c, true, s.settings));
     }
 
-    export function deleteAllCells(arg: NativeEditorReducerArg): IMainState {
+    export function deleteAllCells(arg: NativeEditorReducerArg<IAddCellAction>): IMainState {
         // Send messages to other side to indicate the deletes
         arg.queueAction(createPostableAction(InteractiveWindowMessages.DeleteAllCells));
 
         // Just leave one single blank empty cell
         const newVM: ICellViewModel = {
-            cell: createEmptyCell(uuid(), null),
+            cell: createEmptyCell(arg.payload.newCellId, null),
             editable: true,
             inputBlockOpen: true,
             inputBlockShow: true,

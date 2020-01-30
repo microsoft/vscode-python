@@ -9,6 +9,7 @@ import { IMainState, IServerState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
 import {
     CommonActionType,
+    IAddCellAction,
     ICellAction,
     ICellAndCursorAction,
     IChangeCellTypeAction,
@@ -27,12 +28,12 @@ type NativeEditorReducerFunc<T> = ReducerFunc<IMainState, CommonActionType, T>;
 export type NativeEditorReducerArg<T = never | undefined> = ReducerArg<IMainState, CommonActionType, T>;
 
 export class INativeEditorActionMapping {
-    public [CommonActionType.INSERT_ABOVE]: NativeEditorReducerFunc<ICellAction>;
-    public [CommonActionType.INSERT_BELOW]: NativeEditorReducerFunc<ICellAction>;
-    public [CommonActionType.INSERT_ABOVE_FIRST]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.INSERT_ABOVE]: NativeEditorReducerFunc<ICellAction & IAddCellAction>;
+    public [CommonActionType.INSERT_BELOW]: NativeEditorReducerFunc<ICellAction & IAddCellAction>;
+    public [CommonActionType.INSERT_ABOVE_FIRST]: NativeEditorReducerFunc<IAddCellAction>;
     public [CommonActionType.FOCUS_CELL]: NativeEditorReducerFunc<ICellAndCursorAction>;
     public [CommonActionType.UNFOCUS_CELL]: NativeEditorReducerFunc<ICodeAction>;
-    public [CommonActionType.ADD_NEW_CELL]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.ADD_NEW_CELL]: NativeEditorReducerFunc<IAddCellAction>;
     public [CommonActionType.EXECUTE_CELL]: NativeEditorReducerFunc<IExecuteAction>;
     public [CommonActionType.EXECUTE_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.EXECUTE_ABOVE]: NativeEditorReducerFunc<ICellAction>;
@@ -74,9 +75,9 @@ export class INativeEditorActionMapping {
     public [IncomingMessageActions.LOADALLCELLS]: NativeEditorReducerFunc<ILoadAllCells>;
     public [IncomingMessageActions.NOTEBOOKRUNALLCELLS]: NativeEditorReducerFunc<never | undefined>;
     public [IncomingMessageActions.NOTEBOOKRUNSELECTEDCELL]: NativeEditorReducerFunc<never | undefined>;
-    public [IncomingMessageActions.NOTEBOOKADDCELLBELOW]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.NOTEBOOKADDCELLBELOW]: NativeEditorReducerFunc<IAddCellAction>;
     public [IncomingMessageActions.DOSAVE]: NativeEditorReducerFunc<never | undefined>;
-    public [IncomingMessageActions.DELETEALLCELLS]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.DELETEALLCELLS]: NativeEditorReducerFunc<IAddCellAction>;
     public [IncomingMessageActions.UNDO]: NativeEditorReducerFunc<never | undefined>;
     public [IncomingMessageActions.REDO]: NativeEditorReducerFunc<never | undefined>;
     public [IncomingMessageActions.STARTPROGRESS]: NativeEditorReducerFunc<never | undefined>;

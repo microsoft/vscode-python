@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-
+import * as uuid from 'uuid/v4';
 import { NativeCommandType } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
 import { CursorPos } from '../../interactive-common/mainState';
 import {
     CommonAction,
     CommonActionType,
+    IAddCellAction,
     ICellAction,
     ICellAndCursorAction,
     IChangeCellTypeAction,
@@ -25,9 +26,9 @@ import {
 
 // See https://react-redux.js.org/using-react-redux/connect-mapdispatch#defining-mapdispatchtoprops-as-an-object
 export const actionCreators = {
-    insertAbove: (cellId: string | undefined): CommonAction<ICellAction> => ({ type: CommonActionType.INSERT_ABOVE, payload: { cellId } }),
-    insertAboveFirst: (): CommonAction<never | undefined> => ({ type: CommonActionType.INSERT_ABOVE_FIRST }),
-    insertBelow: (cellId: string | undefined): CommonAction<ICellAction> => ({ type: CommonActionType.INSERT_BELOW, payload: { cellId } }),
+    insertAbove: (cellId: string | undefined): CommonAction<ICellAction & IAddCellAction> => ({ type: CommonActionType.INSERT_ABOVE, payload: { cellId, newCellId: uuid() } }),
+    insertAboveFirst: (): CommonAction<never | undefined> => ({ type: CommonActionType.INSERT_ABOVE_FIRST, payload: { newCellId: uuid() } }),
+    insertBelow: (cellId: string | undefined): CommonAction<ICellAction & IAddCellAction> => ({ type: CommonActionType.INSERT_BELOW, payload: { cellId, newCellId: uuid() } }),
     focusCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> => ({
         type: CommonActionType.FOCUS_CELL,
         payload: { cellId, cursorPos }
@@ -37,11 +38,20 @@ export const actionCreators = {
         type: CommonActionType.SELECT_CELL,
         payload: { cellId, cursorPos }
     }),
-    addCell: (): CommonAction<never | undefined> => ({ type: CommonActionType.ADD_NEW_CELL }),
-    executeCell: (cellId: string, code: string, moveOp: 'add' | 'select' | 'none'): CommonAction<IExecuteAction> => ({
-        type: CommonActionType.EXECUTE_CELL,
-        payload: { cellId, code, moveOp }
-    }),
+    addCell: (): CommonAction<never | undefined> => ({ type: CommonActionType.ADD_NEW_CELL, payload: { newCellId: uuid() } }),
+    executeCell: (cellId: string, code: string, moveOp: 'add' | 'select' | 'none'): CommonAction<IExecuteAction> => {
+        if (moveOp === 'add') {
+            return {
+                type: CommonActionType.EXECUTE_CELL,
+                payload: { cellId, code, moveOp, newCellId: uuid() }
+            };
+        } else {
+            return {
+                type: CommonActionType.EXECUTE_CELL,
+                payload: { cellId, code, moveOp }
+            };
+        }
+    },
     executeAllCells: (): CommonAction<never | undefined> => ({ type: CommonActionType.EXECUTE_ALL_CELLS }),
     executeAbove: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.EXECUTE_ABOVE, payload: { cellId } }),
     executeCellAndBelow: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.EXECUTE_CELL_AND_BELOW, payload: { cellId, code } }),

@@ -94,6 +94,17 @@ export interface ICellAction {
     cellId: string | undefined;
 }
 
+export interface IAddCellAction {
+    /**
+     * Id of the new cell that is to be added.
+     * If none provided, then generate a new id.
+     *
+     * @type {(string | undefined)}
+     * @memberof ICellAction
+     */
+    newCellId: string;
+}
+
 export interface ICodeAction extends ICellAction {
     code: string;
 }
@@ -103,9 +114,16 @@ export interface IEditCellAction extends ICodeAction {
     modelId: string;
 }
 
-export interface IExecuteAction extends ICodeAction {
-    moveOp: 'add' | 'select' | 'none';
-}
+// I.e. when using the operation `add`, we need the corresponding `IAddCellAction`.
+// They are mutually exclusive, if not `add`, then there's no `newCellId`.
+export type IExecuteAction =
+    | (ICodeAction & {
+          moveOp: 'select' | 'none';
+      })
+    | (ICodeAction &
+          IAddCellAction & {
+              moveOp: 'add';
+          });
 
 export interface ICodeCreatedAction extends ICellAction {
     modelId: string;

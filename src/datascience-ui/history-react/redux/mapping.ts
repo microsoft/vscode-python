@@ -9,6 +9,7 @@ import { IMainState, IServerState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
 import {
     CommonActionType,
+    IAddCellAction,
     ICellAction,
     ICodeAction,
     IEditCellAction,
@@ -42,7 +43,7 @@ export class IInteractiveActionMapping {
     public [CommonActionType.GATHER_CELL]: InteractiveReducerFunc<ICellAction>;
     public [CommonActionType.EDIT_CELL]: InteractiveReducerFunc<IEditCellAction>;
     public [CommonActionType.SUBMIT_INPUT]: InteractiveReducerFunc<ICodeAction>;
-    public [CommonActionType.DELETE_ALL_CELLS]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.DELETE_ALL_CELLS]: InteractiveReducerFunc<IAddCellAction>;
     public [CommonActionType.EXPAND_ALL]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.COLLAPSE_ALL]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.EDITOR_LOADED]: InteractiveReducerFunc<never | undefined>;
@@ -63,7 +64,7 @@ export class IInteractiveActionMapping {
     public [IncomingMessageActions.GETALLCELLS]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.EXPANDALL]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.COLLAPSEALL]: InteractiveReducerFunc<never | undefined>;
-    public [IncomingMessageActions.DELETEALLCELLS]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.DELETEALLCELLS]: InteractiveReducerFunc<IAddCellAction>;
     public [IncomingMessageActions.STARTPROGRESS]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.STOPPROGRESS]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.UPDATESETTINGS]: InteractiveReducerFunc<string>;
