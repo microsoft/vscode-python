@@ -30,6 +30,15 @@ function createDummyStat(filetype: FileType): FileStat {
     return { type: filetype } as any;
 }
 
+function copyStat(stat: FileStat, old: TypeMoq.IMock<fsextra.Stats>) {
+    old.setup(s => s.size) // plug in the original value
+        .returns(() => stat.size);
+    old.setup(s => s.ctimeMs) // plug in the original value
+        .returns(() => stat.ctime);
+    old.setup(s => s.mtimeMs) // plug in the original value
+        .returns(() => stat.mtime);
+}
+
 interface IPaths {
     // fs paths (IFileSystemPaths)
     sep: string;
@@ -52,6 +61,8 @@ interface IRawFS extends IPaths {
     lstat(filename: string): Promise<fs.Stats>;
     chmod(filePath: string, mode: string | number): Promise<void>;
     appendFile(filename: string, data: {}): Promise<void>;
+    lstatSync(filename: string): fs.Stats;
+    statSync(filename: string): fs.Stats;
     readFileSync(path: string, encoding: string): string;
     createReadStream(filename: string): ReadStream;
     createWriteStream(filename: string): WriteStream;
@@ -151,15 +162,6 @@ suite('Raw FileSystem', () => {
     });
 
     suite('lstat', () => {
-        function copyStat(stat: FileStat, old: TypeMoq.IMock<fsextra.Stats>) {
-            old.setup(s => s.size) // plug in the original value
-                .returns(() => stat.size);
-            old.setup(s => s.ctimeMs) // plug in the original value
-                .returns(() => stat.ctime);
-            old.setup(s => s.mtimeMs) // plug in the original value
-                .returns(() => stat.mtime);
-        }
-
         [
             { kind: 'file', filetype: FileType.File },
             { kind: 'dir', filetype: FileType.Directory },
@@ -672,6 +674,101 @@ suite('Raw FileSystem', () => {
             const promise = filesystem.listdir('spam');
 
             await expect(promise).to.eventually.be.rejected;
+            verifyAll();
+        });
+    });
+
+    suite('statSync', () => {
+        test('wraps the low-level function (filetype: unknown)', async () => {
+            const filename = 'x/y/z/spam.py';
+            const expected: FileStat = {
+                type: FileType.Unknown,
+                size: 10,
+                ctime: 101,
+                mtime: 102
+                //tslint:disable-next-line:no-any
+            } as any;
+            const lstat = createMockLegacyStat();
+            setupStatFileType(lstat, FileType.Unknown);
+            copyStat(expected, lstat);
+            raw.setup(r => r.lstatSync(filename)) // expect the specific filename
+                .returns(() => lstat.object);
+
+            const stat = filesystem.statSync(filename);
+
+            expect(stat).to.deep.equal(expected);
+            verifyAll();
+        });
+
+        [
+            { kind: 'file', filetype: FileType.File },
+            { kind: 'dir', filetype: FileType.Directory }
+        ].forEach(testData => {
+            test(`wraps the low-level function (filetype: ${testData.kind})`, async () => {
+                const filename = 'x/y/z/spam.py';
+                const expected: FileStat = {
+                    type: testData.filetype,
+                    size: 10,
+                    ctime: 101,
+                    mtime: 102
+                    //tslint:disable-next-line:no-any
+                } as any;
+                const lstat = createMockLegacyStat();
+                lstat
+                    .setup(s => s.isSymbolicLink()) // not a symlink
+                    .returns(() => false);
+                setupStatFileType(lstat, testData.filetype);
+                copyStat(expected, lstat);
+                raw.setup(r => r.lstatSync(filename)) // expect the specific filename
+                    .returns(() => lstat.object);
+
+                const stat = filesystem.statSync(filename);
+
+                expect(stat).to.deep.equal(expected);
+                verifyAll();
+            });
+        });
+
+        [
+            { kind: 'file', filetype: FileType.File },
+            { kind: 'dir', filetype: FileType.Directory },
+            { kind: 'unknown', filetype: FileType.Unknown }
+        ].forEach(testData => {
+            test(`wraps the low-level function (filetype: ${testData.kind} symlink)`, async () => {
+                const filename = 'x/y/z/spam.py';
+                const expected: FileStat = {
+                    type: testData.filetype | FileType.SymbolicLink,
+                    size: 10,
+                    ctime: 101,
+                    mtime: 102
+                    //tslint:disable-next-line:no-any
+                } as any;
+                const lstat = createMockLegacyStat();
+                lstat
+                    .setup(s => s.isSymbolicLink()) // not a symlink
+                    .returns(() => true);
+                raw.setup(r => r.lstatSync(filename)) // expect the specific filename
+                    .returns(() => lstat.object);
+                const old = createMockLegacyStat();
+                setupStatFileType(old, testData.filetype);
+                copyStat(expected, old);
+                raw.setup(r => r.statSync(filename)) // expect the specific filename
+                    .returns(() => old.object);
+
+                const stat = filesystem.statSync(filename);
+
+                expect(stat).to.deep.equal(expected);
+                verifyAll();
+            });
+        });
+
+        test('fails if the low-level call fails', async () => {
+            raw.setup(r => r.lstatSync(TypeMoq.It.isAny())) // We don't care about the filename.
+                .throws(new Error('file not found'));
+
+            expect(() => {
+                filesystem.statSync('spam.py');
+            }).to.throw();
             verifyAll();
         });
     });

@@ -102,6 +102,8 @@ interface IRawFSExtra {
     appendFile(filename: string, data: {}): Promise<void>;
 
     // non-async
+    lstatSync(filename: string): fs.Stats;
+    statSync(filename: string): fs.Stats;
     readFileSync(path: string, encoding: string): string;
     createReadStream(filename: string): ReadStream;
     createWriteStream(filename: string): WriteStream;
@@ -313,6 +315,19 @@ export class RawFileSystem implements IRawFileSystem {
 
     //****************************
     // non-async
+
+    public statSync(filename: string): FileStat {
+        // We follow the filetype behavior of the VS Code API, by
+        // acknowledging symlinks.
+        let stat = this.fsExtra.lstatSync(filename);
+        let filetype = FileType.Unknown;
+        if (stat.isSymbolicLink()) {
+            filetype = FileType.SymbolicLink;
+            stat = this.fsExtra.statSync(filename);
+        }
+        filetype |= convertFileType(stat);
+        return convertStat(stat, filetype);
+    }
 
     public readTextSync(filename: string): string {
         // TODO https://github.com/microsoft/vscode/issues/84175

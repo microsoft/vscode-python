@@ -136,6 +136,8 @@ export interface IRawFileSystem {
     //***********************
     // not async
 
+    // Get information about a file (resolve symlinks).
+    statSync(filename: string): FileStat;
     // Return the text of the given file (decoded from UTF-8).
     readTextSync(filename: string): string;
     // Create a streaming wrappr around an open file (for reading).

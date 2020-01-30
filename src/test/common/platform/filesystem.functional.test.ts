@@ -176,6 +176,48 @@ suite('FileSystem - raw', () => {
 
     // non-async
 
+    suite('statSync', () => {
+        test('for normal files, gives the file info', async () => {
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            // Ideally we would compare to the result of
+            // fileSystem.stat().  However, we do not have access
+            // to the VS Code API here.
+            // prettier-ignore
+            const expected = convertStat(
+                await fs.stat(filename),
+                FileType.File
+            );
+
+            const stat = fileSystem.statSync(filename);
+
+            expect(stat).to.deep.equal(expected);
+        });
+
+        test('for symlinks, gives the linked info', async function() {
+            if (!SUPPORTS_SYMLINKS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
+            // prettier-ignore
+            const expected = convertStat(
+                await fs.stat(filename),
+                FileType.SymbolicLink | FileType.File
+            );
+
+            const stat = fileSystem.statSync(symlink);
+
+            expect(stat).to.deep.equal(expected);
+        });
+
+        test('fails if the file does not exist', async () => {
+            expect(() => {
+                fileSystem.statSync(DOES_NOT_EXIST);
+            }).to.throw();
+        });
+    });
+
     suite('readTextSync', () => {
         test('returns contents of a file', async () => {
             const expected = '<some text>';
