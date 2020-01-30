@@ -39,7 +39,7 @@ suite('ArgsService: Common', () => {
 
                 serviceContainer.setup(s => s.get(typeMoq.It.isValue(ILogger), typeMoq.It.isAny())).returns(() => logger.object);
 
-                const argsHelper = new ArgumentsHelper(serviceContainer.object);
+                const argsHelper = new ArgumentsHelper();
 
                 serviceContainer.setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny())).returns(() => argsHelper);
 

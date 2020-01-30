@@ -6,7 +6,6 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as typeMoq from 'typemoq';
-import { ILogger } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ArgumentsHelper } from '../../../client/testing/common/argumentsHelper';
 import { IArgumentsHelper } from '../../../client/testing/types';
@@ -17,11 +16,8 @@ suite('ArgsService: unittest', () => {
 
     suiteSetup(() => {
         const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
-        const logger = typeMoq.Mock.ofType<ILogger>();
 
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ILogger), typeMoq.It.isAny())).returns(() => logger.object);
-
-        const argsHelper = new ArgumentsHelper(serviceContainer.object);
+        const argsHelper = new ArgumentsHelper();
 
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny())).returns(() => argsHelper);
 
