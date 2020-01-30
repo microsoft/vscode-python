@@ -457,8 +457,7 @@ function getHashString(data: string): string {
 
 // more aliases (to cause less churn)
 @injectable()
-//export class FileSystem implements IFileSystem {
-class FileSystemBase {
+export class FileSystem implements IFileSystem {
     // We expose this for the sake of functional tests that do not have
     // access to the actual "vscode" namespace.
     protected utils: FileSystemUtils;
@@ -543,32 +542,5 @@ class FileSystemBase {
     }
     public async isDirReadonly(dirname: string): Promise<boolean> {
         return this.utils.isDirReadonly(dirname);
-    }
-}
-
-// tslint:disable:max-classes-per-file
-
-@injectable()
-export class FileSystem extends FileSystemBase implements IFileSystem {
-    private readonly globFiles: (pat: string, options?: { cwd: string }) => Promise<string[]>;
-    constructor() {
-        super();
-        this.globFiles = promisify(glob);
-    }
-
-    //=================================
-    // utils
-
-    public async search(globPattern: string, cwd?: string): Promise<string[]> {
-        let found: string[];
-        if (cwd) {
-            const options = {
-                cwd: cwd
-            };
-            found = await this.globFiles(globPattern, options);
-        } else {
-            found = await this.globFiles(globPattern);
-        }
-        return Array.isArray(found) ? found : [];
     }
 }
