@@ -534,8 +534,8 @@ export class FileSystem implements IFileSystem {
     public async getFileHash(filename: string): Promise<string> {
         return this.utils.getFileHash(filename);
     }
-    public async search(globPattern: string): Promise<string[]> {
-        return this.utils.search(globPattern);
+    public async search(globPattern: string, cwd?: string): Promise<string[]> {
+        return this.utils.search(globPattern, cwd);
     }
     public async createTemporaryFile(suffix: string): Promise<TemporaryFile> {
         return this.utils.tmp.createFile(suffix);
