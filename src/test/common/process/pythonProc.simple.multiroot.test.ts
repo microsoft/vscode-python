@@ -16,7 +16,6 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
-import { Logger } from '../../../client/common/logger';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
@@ -32,7 +31,6 @@ import {
     IConfigurationService,
     ICurrentProcess,
     IDisposableRegistry,
-    ILogger,
     IMemento,
     IOutputChannel,
     IPathUtils,
@@ -111,7 +109,6 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingleton<Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
 
         serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-        serviceManager.addSingleton<ILogger>(ILogger, Logger);
 
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);

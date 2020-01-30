@@ -9,7 +9,7 @@ import { fail } from 'assert';
 import { expect } from 'chai';
 import { spawnSync } from 'child_process';
 import * as typeMoq from 'typemoq';
-import { ILogger, Product } from '../../client/common/types';
+import { Product } from '../../client/common/types';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ArgumentsHelper } from '../../client/testing/common/argumentsHelper';
@@ -35,9 +35,6 @@ suite('ArgsService: Common', () => {
                 // tslint:disable-next-line:no-invalid-this
                 this.timeout(5000);
                 const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
-                const logger = typeMoq.Mock.ofType<ILogger>();
-
-                serviceContainer.setup(s => s.get(typeMoq.It.isValue(ILogger), typeMoq.It.isAny())).returns(() => logger.object);
 
                 const argsHelper = new ArgumentsHelper();
 

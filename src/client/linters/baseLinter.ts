@@ -9,7 +9,7 @@ import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { traceError } from '../common/logger';
 import { IPythonToolExecutionService } from '../common/process/types';
-import { ExecutionInfo, IConfigurationService, ILogger, IPythonSettings, Product } from '../common/types';
+import { ExecutionInfo, IConfigurationService, IPythonSettings, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/errorHandler';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from './types';
@@ -96,9 +96,6 @@ export abstract class BaseLinter implements ILinter {
         const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
         const workspaceRootPath = workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string' ? workspaceFolder.uri.fsPath : undefined;
         return typeof workspaceRootPath === 'string' ? workspaceRootPath : path.dirname(document.uri.fsPath);
-    }
-    protected get logger(): ILogger {
-        return this.serviceContainer.get<ILogger>(ILogger);
     }
     protected abstract runLinter(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]>;
 

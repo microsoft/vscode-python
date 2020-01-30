@@ -1,12 +1,11 @@
 // tslint:disable:no-console no-any
-import { injectable } from 'inversify';
 import * as path from 'path';
 import * as util from 'util';
 import { createLogger, format, transports } from 'winston';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { sendTelemetryEvent } from '../telemetry';
 import { isTestExecution } from './constants';
-import { ILogger, LogLevel } from './types';
+import { LogLevel } from './types';
 import { StopWatch } from './utils/stopWatch';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -181,39 +180,6 @@ function initializeFileLogger() {
         handleExceptions: true
     });
     fileLogger.add(logFileSink);
-}
-
-const enableLogging = !isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING || process.env.VSC_PYTHON_LOG_FILE;
-
-@injectable()
-export class Logger implements ILogger {
-    // tslint:disable-next-line:no-any
-    public static error(...args: any[]) {
-        if (enableLogging) {
-            log(LogLevel.Error, ...args);
-        }
-    }
-    // tslint:disable-next-line:no-any
-    public static warn(...args: any[]) {
-        if (enableLogging) {
-            log(LogLevel.Warning, ...args);
-        }
-    }
-    // tslint:disable-next-line:no-any
-    public static verbose(...args: any[]) {
-        if (enableLogging) {
-            log(LogLevel.Information, ...args);
-        }
-    }
-    public logError(...args: any[]) {
-        traceError(...args);
-    }
-    public logWarning(...args: any[]) {
-        traceWarning(...args);
-    }
-    public logInformation(...args: any[]) {
-        traceVerbose(...args);
-    }
 }
 
 /**

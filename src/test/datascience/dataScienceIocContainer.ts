@@ -86,7 +86,6 @@ import {
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
-import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -117,7 +116,6 @@ import {
     IExtensionContext,
     IExtensions,
     IInstaller,
-    ILogger,
     IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
@@ -409,7 +407,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, TestInteractiveWindowProvider);
         this.serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
         this.serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
-        this.serviceManager.addSingleton<ILogger>(ILogger, Logger);
         this.serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
         this.serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
         this.serviceManager.add<IPlotViewer>(IPlotViewer, PlotViewer);

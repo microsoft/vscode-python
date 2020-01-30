@@ -14,7 +14,6 @@ import { PipEnvInstaller } from '../../client/common/installer/pipEnvInstaller';
 import { PipInstaller } from '../../client/common/installer/pipInstaller';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { IModuleInstaller } from '../../client/common/installer/types';
-import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -25,7 +24,7 @@ import { ProcessLogger } from '../../client/common/process/logger';
 import { IProcessLogger, IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { TerminalHelper } from '../../client/common/terminal/helper';
 import { ITerminalHelper, ITerminalService, ITerminalServiceFactory } from '../../client/common/terminal/types';
-import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IPythonSettings, IsWindows } from '../../client/common/types';
+import { IConfigurationService, ICurrentProcess, IInstaller, IPathUtils, IPersistentStateFactory, IPythonSettings, IsWindows } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     ICondaService,
@@ -94,7 +93,6 @@ suite('Module Installer', () => {
             ioc.registerFormatterTypes();
 
             ioc.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
-            ioc.serviceManager.addSingleton<ILogger>(ILogger, Logger);
             ioc.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
             ioc.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
 
