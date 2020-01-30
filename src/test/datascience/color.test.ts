@@ -8,7 +8,6 @@ import { WorkspaceConfiguration } from 'vscode';
 import { Extensions } from '../../client/common/application/extensions';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
-import { Logger } from '../../client/common/logger';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IConfigurationService } from '../../client/common/types';
@@ -22,7 +21,6 @@ suite('Theme colors', () => {
     let themeFinder: ThemeFinder;
     let extensions: Extensions;
     let currentProcess: CurrentProcess;
-    let logger: Logger;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
     let cssGenerator: CodeCssGenerator;
@@ -32,9 +30,8 @@ suite('Theme colors', () => {
     setup(() => {
         extensions = new Extensions();
         currentProcess = new CurrentProcess();
-        logger = new Logger();
         const fs = new FileSystem();
-        themeFinder = new ThemeFinder(extensions, currentProcess, logger, fs);
+        themeFinder = new ThemeFinder(extensions, currentProcess, fs);
 
         workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         workspaceConfig
@@ -85,7 +82,7 @@ suite('Theme colors', () => {
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
 
-        cssGenerator = new CodeCssGenerator(workspaceService.object, themeFinder, configService.object, logger, fs);
+        cssGenerator = new CodeCssGenerator(workspaceService.object, themeFinder, configService.object, fs);
     });
 
     function runTest(themeName: string, isDark: boolean, shouldExist: boolean) {
@@ -158,7 +155,7 @@ suite('Theme colors', () => {
         mockThemeFinder.setup(m => m.findThemeRootJson(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(undefined));
 
         const fs = new FileSystem();
-        cssGenerator = new CodeCssGenerator(workspaceService.object, mockThemeFinder.object, configService.object, logger, fs);
+        cssGenerator = new CodeCssGenerator(workspaceService.object, mockThemeFinder.object, configService.object, fs);
 
         const colors = await cssGenerator.generateThemeCss(false, 'Kimbie Dark');
         assert.ok(colors, 'Cannot find theme colors for Kimbie Dark');

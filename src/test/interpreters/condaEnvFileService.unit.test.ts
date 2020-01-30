@@ -3,7 +3,7 @@ import { EOL } from 'os';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../client/common/platform/types';
-import { ILogger, IPersistentStateFactory } from '../../client/common/types';
+import { IPersistentStateFactory } from '../../client/common/types';
 import { ICondaService, IInterpreterHelper, IInterpreterLocatorService, InterpreterType } from '../../client/interpreter/contracts';
 import { AnacondaCompanyName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
@@ -15,7 +15,6 @@ const environmentsFilePath = path.join(environmentsPath, 'environments.txt');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters from Conda Environments Text File', () => {
-    let logger: TypeMoq.IMock<ILogger>;
     let condaService: TypeMoq.IMock<ICondaService>;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let condaFileProvider: IInterpreterLocatorService;
@@ -30,8 +29,7 @@ suite('Interpreters from Conda Environments Text File', () => {
         condaService = TypeMoq.Mock.ofType<ICondaService>();
         interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        logger = TypeMoq.Mock.ofType<ILogger>();
-        condaFileProvider = new CondaEnvFileService(interpreterHelper.object, condaService.object, fileSystem.object, serviceContainer.object, logger.object);
+        condaFileProvider = new CondaEnvFileService(interpreterHelper.object, condaService.object, fileSystem.object, serviceContainer.object);
     });
     test('Must return an empty list if environment file cannot be found', async () => {
         condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);

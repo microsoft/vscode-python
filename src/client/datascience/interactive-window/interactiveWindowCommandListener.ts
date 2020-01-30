@@ -11,8 +11,9 @@ import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
@@ -42,7 +43,6 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(ILogger) private logger: ILogger,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
@@ -122,14 +122,14 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         } catch (err) {
             if (!(err instanceof CancellationError)) {
                 if (err.message) {
-                    this.logger.logError(err.message);
+                    traceError(err.message);
                     this.applicationShell.showErrorMessage(err.message);
                 } else {
-                    this.logger.logError(err.toString());
+                    traceError(err.toString());
                     this.applicationShell.showErrorMessage(err.toString());
                 }
             } else {
-                this.logger.logInformation('Canceled');
+                traceInfo('Canceled');
             }
         }
         return result;

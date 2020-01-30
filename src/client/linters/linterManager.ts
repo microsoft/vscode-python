@@ -6,7 +6,8 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
-import { IConfigurationService, ILogger, Product } from '../common/types';
+import { traceError } from '../common/logger';
+import { IConfigurationService, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Bandit } from './bandit';
 import { Flake8 } from './flake8';
@@ -126,7 +127,7 @@ export class LinterManager implements ILinterManager {
             case Product.pycodestyle:
                 return new Pycodestyle(outputChannel, serviceContainer);
             default:
-                serviceContainer.get<ILogger>(ILogger).logError(error);
+                traceError(error);
                 break;
         }
         throw new Error(error);

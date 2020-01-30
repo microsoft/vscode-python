@@ -26,7 +26,8 @@ import {
 } from 'vscode';
 
 import { PYTHON } from '../common/constants';
-import { IConfigurationService, IDisposable, IExtensionContext, ILogger, Resource } from '../common/types';
+import { traceError } from '../common/logger';
+import { IConfigurationService, IDisposable, IExtensionContext, Resource } from '../common/types';
 import { IShebangCodeLensProvider, PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
@@ -93,7 +94,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         }
 
         const testManagementService = this.serviceManager.get<ITestManagementService>(ITestManagementService);
-        testManagementService.activate(this.symbolProvider).catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
+        testManagementService.activate(this.symbolProvider).catch(ex => traceError('Failed to activate Unit Tests', ex));
     }
 
     public deactivate() {

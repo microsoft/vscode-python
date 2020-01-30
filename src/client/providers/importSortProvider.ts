@@ -4,9 +4,10 @@ import * as path from 'path';
 import { CancellationToken, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { Commands, EXTENSION_ROOT_DIR, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
-import { IConfigurationService, IDisposableRegistry, IEditorUtils, ILogger, IOutputChannel } from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IEditorUtils, IOutputChannel } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
@@ -114,8 +115,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             const message = typeof error === 'string' ? error : error.message ? error.message : error;
             const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
             outputChannel.appendLine(error);
-            const logger = this.serviceContainer.get<ILogger>(ILogger);
-            logger.logError(`Failed to format imports for '${uri.fsPath}'.`, error);
+            traceError(`Failed to format imports for '${uri.fsPath}'.`, error);
             this.shell.showErrorMessage(message).then(noop, noop);
         }
     }

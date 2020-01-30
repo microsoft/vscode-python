@@ -26,7 +26,6 @@ import { ITerminalService, ITerminalServiceFactory } from '../../../client/commo
 import {
     IConfigurationService,
     IDisposableRegistry,
-    ILogger,
     InstallerResponse,
     IOutputChannel,
     IPersistentState,
@@ -417,9 +416,6 @@ suite('Module Installer only', () => {
 
                         test(`Ensure resource info is passed into the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                             const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
-                            const logger = TypeMoq.Mock.ofType<ILogger>();
-                            logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
-                            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
 
                             moduleInstaller
                                 .setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)))
@@ -438,9 +434,6 @@ suite('Module Installer only', () => {
                             resource ? 'With a resource' : 'without a resource'
                         }) if installation channel is not defined`, async () => {
                             const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
-                            const logger = TypeMoq.Mock.ofType<ILogger>();
-                            logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
-                            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
 
                             moduleInstaller
                                 .setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)))
@@ -458,9 +451,6 @@ suite('Module Installer only', () => {
                             resource ? 'With a resource' : 'without a resource'
                         })`, async () => {
                             const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
-                            const logger = TypeMoq.Mock.ofType<ILogger>();
-                            logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
-                            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
 
                             moduleInstaller
                                 .setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)))

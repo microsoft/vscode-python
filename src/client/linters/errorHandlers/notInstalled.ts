@@ -1,4 +1,5 @@
 import { OutputChannel, Uri } from 'vscode';
+import { traceError, traceWarning } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -16,13 +17,13 @@ export class NotInstalledErrorHandler extends BaseErrorHandler {
             return this.nextHandler ? this.nextHandler.handleError(error, resource, execInfo) : false;
         }
 
-        this.installer.promptToInstall(this.product, resource).catch(this.logger.logError.bind(this, 'NotInstalledErrorHandler.promptToInstall'));
+        this.installer.promptToInstall(this.product, resource).catch(ex => traceError('NotInstalledErrorHandler.promptToInstall', ex));
 
         const linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
         const info = linterManager.getLinterInfo(execInfo.product!);
         const customError = `Linter '${info.id}' is not installed. Please install it or select another linter".`;
         this.outputChannel.appendLine(`\n${customError}\n${error}`);
-        this.logger.logWarning(customError, error);
+        traceWarning(customError, error);
         return true;
     }
 }

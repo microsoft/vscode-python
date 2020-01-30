@@ -6,7 +6,8 @@
 import { inject, injectable, named } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import { isTestExecution, STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
-import { ILogger, IOutputChannel, Resource } from '../../common/types';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
+import { IOutputChannel, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IApplicationDiagnostics } from '../types';
 import { IDiagnostic, IDiagnosticsService, ISourceMapSupportService } from './types';
@@ -49,22 +50,21 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         );
     }
     private log(diagnostics: IDiagnostic[]): void {
-        const logger = this.serviceContainer.get<ILogger>(ILogger);
         diagnostics.forEach(item => {
             const message = `Diagnostic Code: ${item.code}, Message: ${item.message}`;
             switch (item.severity) {
                 case DiagnosticSeverity.Error: {
-                    logger.logError(message);
+                    traceError(message);
                     this.outputChannel.appendLine(message);
                     break;
                 }
                 case DiagnosticSeverity.Warning: {
-                    logger.logWarning(message);
+                    traceWarning(message);
                     this.outputChannel.appendLine(message);
                     break;
                 }
                 default: {
-                    logger.logInformation(message);
+                    traceInfo(message);
                 }
             }
         });
