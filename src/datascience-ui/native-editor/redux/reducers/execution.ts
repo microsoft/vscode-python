@@ -69,6 +69,7 @@ export namespace Execution {
             const executeResult = executeRange(arg.prevState, index, index, [arg.payload.code], arg.queueAction);
 
             // Modify the execute result if moving
+            // Use `if` instead of `switch case` to ensure type safety.
             if (arg.payload.moveOp === 'add') {
                 // Add a new cell below
                 return Creation.insertBelow({ ...arg, prevState: executeResult, payload: { ...arg.payload } });
