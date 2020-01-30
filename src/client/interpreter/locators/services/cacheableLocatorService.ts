@@ -8,7 +8,7 @@ import * as md5 from 'md5';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
-import { Logger, traceDecorators, traceVerbose } from '../../../common/logger';
+import { traceDecorators, traceVerbose } from '../../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -88,7 +88,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         watchers.forEach(watcher => {
             watcher.onDidCreate(
                 () => {
-                    Logger.verbose(`Interpreter Watcher change handler for ${this.cacheKeyPrefix}`);
+                    traceVerbose(`Interpreter Watcher change handler for ${this.cacheKeyPrefix}`);
                     this.promisesPerResource.delete(cacheKey);
                     this.getInterpreters(resource).ignoreErrors();
                 },

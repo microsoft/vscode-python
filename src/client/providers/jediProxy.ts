@@ -21,7 +21,7 @@ import { PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { Logger, traceError } from './../common/logger';
+import { traceError } from './../common/logger';
 
 const pythonVSCodeTypeMappings = new Map<string, CompletionItemKind>();
 pythonVSCodeTypeMappings.set('none', CompletionItemKind.Value);
@@ -348,7 +348,7 @@ export class JediProxy implements Disposable {
     }
 
     private handleError(source: string, errorMessage: string) {
-        Logger.error(`${source} jediProxy`, `Error (${source}) ${errorMessage}`);
+        traceError(`${source} jediProxy`, `Error (${source}) ${errorMessage}`);
     }
 
     // tslint:disable-next-line:max-func-body-length
@@ -373,7 +373,7 @@ export class JediProxy implements Disposable {
         this.proc = result.proc;
         this.languageServerStarted.resolve();
         this.proc!.on('end', end => {
-            Logger.error('spawnProcess.end', `End - ${end}`);
+            traceError('spawnProcess.end', `End - ${end}`);
         });
         this.proc!.on('error', error => {
             this.handleError('error', `${error}`);
