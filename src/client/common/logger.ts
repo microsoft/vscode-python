@@ -206,13 +206,13 @@ export class Logger implements ILogger {
         }
     }
     public logError(...args: any[]) {
-        Logger.error(...args);
+        traceError(...args);
     }
     public logWarning(...args: any[]) {
-        Logger.warn(...args);
+        traceWarning(...args);
     }
     public logInformation(...args: any[]) {
-        Logger.verbose(...args);
+        traceVerbose(...args);
     }
 }
 
