@@ -148,11 +148,10 @@ suite('DataScience Interactive Window output tests', () => {
         'Ctrl + 1/Ctrl + 2',
         async wrapper => {
             await addCode(ioc, wrapper, 'a=1');
+            wrapper.find('button').simulate('focus');
 
-            if (ioc) {
-                const message = createMessageEvent({ type: InteractiveWindowMessages.Activate });
-                ioc.postMessageToWebPanel(message);
-            }
+            const message = createMessageEvent({ type: InteractiveWindowMessages.Activate });
+            ioc.postMessageToWebPanel(message);
 
             enterEditorKey(wrapper, { code: 'a', editorInfo: undefined });
             enterEditorKey(wrapper, { code: 'Enter', shiftKey: true, editorInfo: undefined });
