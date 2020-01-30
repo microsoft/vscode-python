@@ -47,8 +47,8 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         this.state = { allowWatermark: true };
     }
 
-    public componentDidUpdate() {
-        if (this.props.focusPending > 0) {
+    public componentDidUpdate(prevProps: ICodeProps) {
+        if (prevProps.focusPending !== this.props.focusPending) {
             this.giveFocus(CursorPos.Current);
         }
     }
