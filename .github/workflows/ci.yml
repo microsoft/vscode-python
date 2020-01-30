@@ -11,7 +11,7 @@ env:
   CACHE_PIP_DEPS: cache-pip
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
-  ARTIFACT_NAME_VSIX: pvsc-vsix
+  ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
 
 jobs:
   ### Pre-run tool check
@@ -179,6 +179,12 @@ jobs:
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+
+      - name: Retrieve cached pythonFiles files
+        uses: actions/cache@v1
+        with:
+          path: ./pythonFiles/lib/python
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-${{hashFiles('pythonFiles/lib/python/**')}}
 
       - name: Install dependencies (npm ci)
         run: npm ci
