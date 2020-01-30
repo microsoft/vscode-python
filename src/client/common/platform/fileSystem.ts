@@ -555,13 +555,11 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
     protected raw: RawFileSystem;
     private readonly paths: IFileSystemPaths;
     private readonly pathUtils: FileSystemPathUtils;
-    private readonly tmp: TemporaryFileSystem;
     private readonly globFiles: (pat: string, options?: { cwd: string }) => Promise<string[]>;
     constructor() {
         super();
         this.paths = FileSystemPaths.withDefaults();
         this.pathUtils = FileSystemPathUtils.withDefaults(this.paths);
-        this.tmp = TemporaryFileSystem.withDefaults();
         this.raw = RawFileSystem.withDefaults(this.paths);
         this.globFiles = promisify(glob);
     }
@@ -657,10 +655,6 @@ export class FileSystem extends FileSystemBase implements IFileSystem {
             found = await this.globFiles(globPattern);
         }
         return Array.isArray(found) ? found : [];
-    }
-
-    public createTemporaryFile(extension: string): Promise<TemporaryFile> {
-        return this.tmp.createFile(extension);
     }
 
     public async isDirReadonly(dirname: string): Promise<boolean> {
