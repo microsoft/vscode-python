@@ -48,6 +48,20 @@ steps:
       failOnStderr: true
       displayName: 'pipdeptree 2'
 
+    - bash: |
+          python -m pip --disable-pip-version-check install --upgrade pipdeptree
+          python -m pipdeptree
+      failOnStderr: true
+      displayName: 'pipdeptree 3'
+      workingDirectory: $(Build.SourcesDirectory)/news
+
+    - bash: |
+          python -m pip --disable-pip-version-check install --upgrade pipdeptree
+          python -m pipdeptree
+      failOnStderr: true
+      displayName: 'pipdeptree 4'
+      workingDirectory: $(Build.SourcesDirectory)/tpn
+
     - bash: npm run clean
       displayName: 'Clean'
 
