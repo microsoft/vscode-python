@@ -57,6 +57,25 @@ steps:
 
     - bash: |
           python -m pip --disable-pip-version-check install --upgrade pipdeptree
+          python -m pip --disable-pip-version-check install -t ./libs/python/news --no-cache-dir --upgrade -r requirements.txt
+          export PYTHONPATH=./libs/python/news
+          python -m pipdeptree
+      failOnStderr: true
+      displayName: 'pipdeptree 5'
+      workingDirectory: $(Build.SourcesDirectory)/news
+
+    - bash: |
+          python -m pip --disable-pip-version-check install --upgrade pipdeptree
+          python -m pip --disable-pip-version-check install -t ./libs/python/tpn --no-cache-dir --upgrade -r requirements.txt
+          export PYTHONPATH=./libs/python/tpn
+          python -m pipdeptree
+      failOnStderr: true
+      displayName: 'pipdeptree 6'
+      workingDirectory: $(Build.SourcesDirectory)/tpn
+
+
+    - bash: |
+          python -m pip --disable-pip-version-check install --upgrade pipdeptree
           export PYTHONPATH=./pythonFiles/lib/python
           python -m pipdeptree
       failOnStderr: true
