@@ -51,7 +51,6 @@ export namespace Effects {
     }
 
     export function updateSettings(arg: InteractiveReducerArg<string>): IMainState {
-        console.error(`Settings Message ${arg.payload}`);
         // String arg should be the IDataScienceExtraSettings
         const newSettingsJSON = JSON.parse(arg.payload.data);
         const newSettings = <IDataScienceExtraSettings>newSettingsJSON;

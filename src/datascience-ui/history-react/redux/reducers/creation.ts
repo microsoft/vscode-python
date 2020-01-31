@@ -114,7 +114,6 @@ export namespace Creation {
     }
 
     export function deleteAllCells(arg: InteractiveReducerArg<IAddCellAction>): IMainState {
-        // TODO: In Native Editor, we create a new blank cell, don't we need that here?
         // Send messages to other side to indicate the deletes
         arg.queueAction(createPostableAction(InteractiveWindowMessages.DeleteAllCells));
 
