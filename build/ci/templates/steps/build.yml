@@ -43,13 +43,6 @@ steps:
 
     - bash: |
           python -m pip --disable-pip-version-check install --upgrade pipdeptree
-          export PYTHONPATH=./pythonFiles/lib/python
-          python -m pipdeptree
-      failOnStderr: true
-      displayName: 'pipdeptree 2'
-
-    - bash: |
-          python -m pip --disable-pip-version-check install --upgrade pipdeptree
           python -m pipdeptree
       failOnStderr: true
       displayName: 'pipdeptree 3'
@@ -61,6 +54,13 @@ steps:
       failOnStderr: true
       displayName: 'pipdeptree 4'
       workingDirectory: $(Build.SourcesDirectory)/tpn
+
+    - bash: |
+          python -m pip --disable-pip-version-check install --upgrade pipdeptree
+          export PYTHONPATH=./pythonFiles/lib/python
+          python -m pipdeptree
+      failOnStderr: true
+      displayName: 'pipdeptree 2'
 
     - bash: npm run clean
       displayName: 'Clean'
