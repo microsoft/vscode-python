@@ -31,6 +31,12 @@ steps:
       failOnStderr: true
       displayName: 'Install PTVSD wheels'
 
+    - bash: |
+          python -m pip install pipdeptree
+          python -m pipdeptree
+      failOnStderr: true
+      displayName: 'pipdeptree'
+
     - bash: npm run clean
       displayName: 'Clean'
 
