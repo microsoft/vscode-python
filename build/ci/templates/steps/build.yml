@@ -41,6 +41,13 @@ steps:
       failOnStderr: true
       displayName: 'pipdeptree'
 
+    - bash: |
+          python -m pip --disable-pip-version-check install --upgrade pipdeptree
+          export PYTHONPATH=./pythonFiles/lib/python
+          python -m pipdeptree
+      failOnStderr: true
+      displayName: 'pipdeptree 2'
+
     - bash: npm run clean
       displayName: 'Clean'
 
