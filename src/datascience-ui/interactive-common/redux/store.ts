@@ -6,6 +6,8 @@ import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
+import { CssMessages } from '../../../client/datascience/messages';
 import { CellState } from '../../../client/datascience/types';
 import { IMainState, ServerStatus } from '../../interactive-common/mainState';
 import { getLocString } from '../../react-common/locReactSide';
@@ -14,7 +16,7 @@ import { combineReducers, createQueueableActionMiddleware, QueuableAction } from
 import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { forceLoad } from '../transforms';
-import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
+import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer } from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
@@ -167,7 +169,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
 
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
-    const actionsWithLargePayload = [IncomingMessageActions.LOADONIGASMASSEMBLYRESPONSE, IncomingMessageActions.GETCSSRESPONSE, IncomingMessageActions.LOADTMLANGUAGERESPONSE];
+    const actionsWithLargePayload = [InteractiveWindowMessages.LoadOnigasmAssemblyResponse, CssMessages.GetCssResponse, InteractiveWindowMessages.LoadTmLanguageResponse];
     const logger = createLogger({
         // tslint:disable-next-line: no-any
         stateTransformer: (state: any) => {
@@ -262,13 +264,22 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     // turn them into actions.
     postOffice.addHandler({
         // tslint:disable-next-line: no-any
-        handleMessage(message: string, payload: any): boolean {
+        handleMessage(message: string, payload?: any): boolean {
             // Double check this is one of our messages. React will actually post messages here too during development
-            if (AllowedMessages.find(k => k === message)) {
-                // Prefix message type with 'action.' so that we can:
-                // - Have one reducer for incoming
-                // - Have another reducer for outgoing
-                store.dispatch({ type: `action.${message}`, payload });
+            if (!AllowedMessages.find(k => k === message)) {
+                return true;
+            }
+            // Add `isIncomingMessage` property so we can differentiate between messages in reducers.
+            // This way we:
+            // - Have one reducer for incoming
+            // - Have another reducer for outgoing
+            let basePayload = payload as BaseReduxActionPayload<{}> | undefined;
+            if (!basePayload?.broadcastReason && !basePayload?.messageDirection) {
+                // Re-wrap to indicate this is an incoming message.
+                basePayload = { data: payload, messageDirection: 'incoming' };
+            }
+            if (AllowedMessages.find(k => k === message) && basePayload.messageDirection !== 'outgoing') {
+                store.dispatch({ type: message, payload: basePayload });
             }
             return true;
         }

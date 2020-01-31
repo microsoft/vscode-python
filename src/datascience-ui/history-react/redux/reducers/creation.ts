@@ -7,7 +7,7 @@ import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience
 import { createCellVM, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { ICellAction } from '../../../interactive-common/redux/reducers/types';
+import { IAddCellAction, ICellAction } from '../../../interactive-common/redux/reducers/types';
 import { InteractiveReducerArg } from '../mapping';
 
 export namespace Creation {
@@ -79,9 +79,9 @@ export namespace Creation {
     }
 
     export function startCell(arg: InteractiveReducerArg<ICell>): IMainState {
-        if (isCellSupported(arg.prevState, arg.payload)) {
+        if (isCellSupported(arg.prevState, arg.payload.data)) {
             const result = Helpers.updateOrAdd(arg, prepareCellVM);
-            if (result.cellVMs.length > arg.prevState.cellVMs.length && arg.payload.id !== Identifiers.EditCellId) {
+            if (result.cellVMs.length > arg.prevState.cellVMs.length && arg.payload.data.id !== Identifiers.EditCellId) {
                 const cellVM = result.cellVMs[result.cellVMs.length - 1];
 
                 // We're adding a new cell here. Tell the intellisense engine we have a new cell
@@ -100,20 +100,21 @@ export namespace Creation {
     }
 
     export function updateCell(arg: InteractiveReducerArg<ICell>): IMainState {
-        if (isCellSupported(arg.prevState, arg.payload)) {
+        if (isCellSupported(arg.prevState, arg.payload.data)) {
             return Helpers.updateOrAdd(arg, prepareCellVM);
         }
         return arg.prevState;
     }
 
     export function finishCell(arg: InteractiveReducerArg<ICell>): IMainState {
-        if (isCellSupported(arg.prevState, arg.payload)) {
+        if (isCellSupported(arg.prevState, arg.payload.data)) {
             return Helpers.updateOrAdd(arg, prepareCellVM);
         }
         return arg.prevState;
     }
 
-    export function deleteAllCells(arg: InteractiveReducerArg): IMainState {
+    export function deleteAllCells(arg: InteractiveReducerArg<IAddCellAction>): IMainState {
+        // TODO: In Native Editor, we create a new blank cell, don't we need that here?
         // Send messages to other side to indicate the deletes
         arg.queueAction(createPostableAction(InteractiveWindowMessages.DeleteAllCells));
 
@@ -127,11 +128,11 @@ export namespace Creation {
     }
 
     export function deleteCell(arg: InteractiveReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
-        if (index >= 0 && arg.payload.cellId) {
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        if (index >= 0 && arg.payload.data.cellId) {
             // Send messages to other side to indicate the delete
             arg.queueAction(createPostableAction(InteractiveWindowMessages.DeleteCell));
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell, { id: arg.payload.cellId }));
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell, { id: arg.payload.data.cellId }));
 
             const newVMs = arg.prevState.cellVMs.filter((_c, i) => i !== index);
             return {

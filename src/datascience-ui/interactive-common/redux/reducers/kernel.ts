@@ -5,20 +5,21 @@ import { InteractiveWindowMessages } from '../../../../client/datascience/intera
 import { CellState } from '../../../../client/datascience/types';
 import { IMainState, IServerState } from '../../mainState';
 import { createPostableAction } from '../postOffice';
-import { CommonReducerArg } from './types';
+import { CommonActionType, CommonReducerArg } from './types';
 
 export namespace Kernel {
-    export function selectKernel<T>(arg: CommonReducerArg<T>): IMainState {
+    // tslint:disable-next-line: no-any
+    export function selectKernel(arg: CommonReducerArg<CommonActionType | InteractiveWindowMessages, IServerState | undefined>): IMainState {
         arg.queueAction(createPostableAction(InteractiveWindowMessages.SelectKernel));
 
         return arg.prevState;
     }
-    export function selectJupyterURI<T>(arg: CommonReducerArg<T>): IMainState {
+    export function selectJupyterURI(arg: CommonReducerArg): IMainState {
         arg.queueAction(createPostableAction(InteractiveWindowMessages.SelectJupyterServer));
 
         return arg.prevState;
     }
-    export function restartKernel<T>(arg: CommonReducerArg<T>): IMainState {
+    export function restartKernel(arg: CommonReducerArg): IMainState {
         arg.queueAction(createPostableAction(InteractiveWindowMessages.RestartKernel));
 
         // Set busy until kernel is restarted
@@ -28,7 +29,7 @@ export namespace Kernel {
         };
     }
 
-    export function interruptKernel<T>(arg: CommonReducerArg<T>): IMainState {
+    export function interruptKernel(arg: CommonReducerArg): IMainState {
         arg.queueAction(createPostableAction(InteractiveWindowMessages.Interrupt));
 
         // Set busy until kernel is finished interrupting
@@ -38,13 +39,13 @@ export namespace Kernel {
         };
     }
 
-    export function updateStatus<T>(arg: CommonReducerArg<T, IServerState>): IMainState {
+    export function updateStatus(arg: CommonReducerArg<CommonActionType | InteractiveWindowMessages, IServerState>): IMainState {
         return {
             ...arg.prevState,
             kernel: {
-                localizedUri: arg.payload.localizedUri,
-                jupyterServerStatus: arg.payload.jupyterServerStatus,
-                displayName: arg.payload.displayName
+                localizedUri: arg.payload.data.localizedUri,
+                jupyterServerStatus: arg.payload.data.jupyterServerStatus,
+                displayName: arg.payload.data.displayName
             }
         };
     }

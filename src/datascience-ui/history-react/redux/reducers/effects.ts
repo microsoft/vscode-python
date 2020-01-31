@@ -37,9 +37,9 @@ export namespace Effects {
     }
 
     export function toggleInputBlock(arg: InteractiveReducerArg<ICellAction>): IMainState {
-        if (arg.payload.cellId) {
+        if (arg.payload.data.cellId) {
             const newVMs = [...arg.prevState.cellVMs];
-            const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+            const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
             const oldVM = arg.prevState.cellVMs[index];
             newVMs[index] = Creation.alterCellVM({ ...oldVM }, arg.prevState.settings, true, !oldVM.inputBlockOpen);
             return {
@@ -51,6 +51,7 @@ export namespace Effects {
     }
 
     export function updateSettings(arg: InteractiveReducerArg<string>): IMainState {
+        console.error(`Settings Message ${arg.payload}`);
         // String arg should be the IDataScienceExtraSettings
         const newSettingsJSON = JSON.parse(arg.payload.data);
         const newSettings = <IDataScienceExtraSettings>newSettingsJSON;
@@ -86,7 +87,7 @@ export namespace Effects {
 
     export function scrollToCell(arg: InteractiveReducerArg<IScrollToCell>): IMainState {
         // Up the scroll count on the necessary cell
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.id);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.id);
         if (index >= 0) {
             const newVMs = [...arg.prevState.cellVMs];
 
@@ -105,12 +106,12 @@ export namespace Effects {
     export function scrolled(arg: InteractiveReducerArg<IScrollAction>): IMainState {
         return {
             ...arg.prevState,
-            isAtBottom: arg.payload.isAtBottom
+            isAtBottom: arg.payload.data.isAtBottom
         };
     }
 
     export function clickCell(arg: InteractiveReducerArg<ICellAction>): IMainState {
-        if (arg.payload.cellId === Identifiers.EditCellId && arg.prevState.editCellVM && !arg.prevState.editCellVM.focused) {
+        if (arg.payload.data.cellId === Identifiers.EditCellId && arg.prevState.editCellVM && !arg.prevState.editCellVM.focused) {
             return {
                 ...arg.prevState,
                 editCellVM: {
@@ -132,7 +133,7 @@ export namespace Effects {
     }
 
     export function unfocusCell(arg: InteractiveReducerArg<ICellAction>): IMainState {
-        if (arg.payload.cellId === Identifiers.EditCellId && arg.prevState.editCellVM && arg.prevState.editCellVM.focused) {
+        if (arg.payload.data.cellId === Identifiers.EditCellId && arg.prevState.editCellVM && arg.prevState.editCellVM.focused) {
             return {
                 ...arg.prevState,
                 editCellVM: {

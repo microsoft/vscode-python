@@ -3,14 +3,15 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
-import { IShowDataViewer, NativeCommandType } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages, IShowDataViewer, NativeCommandType } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
+import { IJupyterVariablesRequest } from '../../../../client/datascience/types';
 import { ActionWithPayload, ReducerArg } from '../../../react-common/reduxUtils';
 import { CursorPos, IMainState } from '../../mainState';
 
 /**
  * How to add a new state change:
- * 1) Add a new action.<name> to CommonActionType
+ * 1) Add a new <name> to CommonActionType (preferably `InteractiveWindowMessages` - to keep messages in the same place).
  * 2) Add a new interface (or reuse 1 below) if the action takes any parameters (ex: ICellAction)
  * 3) Add a new actionCreator function (this is how you use it from a react control) to the
  *    appropriate actionCreator list (one for native and one for interactive).
@@ -25,13 +26,9 @@ export enum CommonActionType {
     ARROW_DOWN = 'action.arrow_down',
     ARROW_UP = 'action.arrow_up',
     CHANGE_CELL_TYPE = 'action.change_cell_type',
-    CLEAR_ALL_OUTPUTS = 'action.clear_all_outputs',
     CLICK_CELL = 'action.click_cell',
     CODE_CREATED = 'action.code_created',
-    COLLAPSE_ALL = 'action.collapse_all',
     COPY_CELL_CODE = 'action.copy_cell_code',
-    DELETE_ALL_CELLS = 'action.delete_all_cells',
-    DELETE_CELL = 'action.delete_cell',
     DESELECT_CELL = 'action.deselect_cell',
     DOUBLE_CLICK_CELL = 'action.double_click_cell',
     EDITOR_LOADED = 'action.editor_loaded',
@@ -40,7 +37,6 @@ export enum CommonActionType {
     EXECUTE_ALL_CELLS = 'action.execute_all_cells',
     EXECUTE_CELL = 'action.execute_cell',
     EXECUTE_CELL_AND_BELOW = 'action.execute_cell_and_below',
-    EXPAND_ALL = 'action.expand_all',
     EXPORT = 'action.export',
     FOCUS_CELL = 'action.focus_cell',
     GATHER_CELL = 'action.gather_cell',
@@ -54,27 +50,65 @@ export enum CommonActionType {
     LINK_CLICK = 'action.link_click',
     MOVE_CELL_DOWN = 'action.move_cell_down',
     MOVE_CELL_UP = 'action.move_cell_up',
-    REDO = 'action.redo',
     REFRESH_VARIABLES = 'action.refresh_variables',
     RESTART_KERNEL = 'action.restart_kernel_action',
     SAVE = 'action.save',
     SCROLL = 'action.scroll',
     SELECT_CELL = 'action.select_cell',
-    SELECT_KERNEL = 'action.select_kernel',
     SELECT_SERVER = 'action.select_server',
     SEND_COMMAND = 'action.send_command',
     SHOW_DATA_VIEWER = 'action.show_data_viewer',
-    SHOW_PLOT = 'action.show_plot',
-    START_CELL = 'action.start_cell',
     SUBMIT_INPUT = 'action.submit_input',
     TOGGLE_INPUT_BLOCK = 'action.toggle_input_block',
     TOGGLE_LINE_NUMBERS = 'action.toggle_line_numbers',
     TOGGLE_OUTPUT = 'action.toggle_output',
     TOGGLE_VARIABLE_EXPLORER = 'action.toggle_variable_explorer',
-    UNDO = 'action.undo',
     UNFOCUS_CELL = 'action.unfocus_cell',
     UNMOUNT = 'action.unmount'
 }
+
+export type CommonActionTypeMapping = {
+    [CommonActionType.INSERT_ABOVE]: ICellAction & IAddCellAction;
+    [CommonActionType.INSERT_BELOW]: ICellAction & IAddCellAction;
+    [CommonActionType.INSERT_ABOVE_FIRST]: IAddCellAction;
+    [CommonActionType.FOCUS_CELL]: ICellAndCursorAction;
+    [CommonActionType.UNFOCUS_CELL]: ICodeAction;
+    [CommonActionType.ADD_NEW_CELL]: IAddCellAction;
+    [CommonActionType.EDIT_CELL]: IEditCellAction;
+    [CommonActionType.EXECUTE_CELL]: IExecuteAction;
+    [CommonActionType.EXECUTE_ALL_CELLS]: never | undefined;
+    [CommonActionType.EXECUTE_ABOVE]: ICellAction;
+    [CommonActionType.EXECUTE_CELL_AND_BELOW]: ICodeAction;
+    [CommonActionType.RESTART_KERNEL]: never | undefined;
+    [CommonActionType.INTERRUPT_KERNEL]: never | undefined;
+    [CommonActionType.EXPORT]: never | undefined;
+    [CommonActionType.SAVE]: never | undefined;
+    [CommonActionType.SHOW_DATA_VIEWER]: IShowDataViewerAction;
+    [CommonActionType.SEND_COMMAND]: ISendCommandAction;
+    [CommonActionType.SELECT_CELL]: ICellAndCursorAction;
+    [CommonActionType.MOVE_CELL_UP]: ICellAction;
+    [CommonActionType.MOVE_CELL_DOWN]: ICellAction;
+    [CommonActionType.TOGGLE_LINE_NUMBERS]: ICellAction;
+    [CommonActionType.TOGGLE_OUTPUT]: ICellAction;
+    [CommonActionType.ARROW_UP]: ICodeAction;
+    [CommonActionType.ARROW_DOWN]: ICodeAction;
+    [CommonActionType.CHANGE_CELL_TYPE]: IChangeCellTypeAction;
+    [CommonActionType.LINK_CLICK]: ILinkClickAction;
+    [CommonActionType.GOTO_CELL]: ICellAction;
+    [CommonActionType.TOGGLE_INPUT_BLOCK]: ICellAction;
+    [CommonActionType.SUBMIT_INPUT]: ICodeAction;
+    [CommonActionType.SCROLL]: IScrollAction;
+    [CommonActionType.CLICK_CELL]: ICellAction;
+    [CommonActionType.COPY_CELL_CODE]: ICellAction;
+    [CommonActionType.GATHER_CELL]: ICellAction;
+    [CommonActionType.EDITOR_LOADED]: never | undefined;
+    [CommonActionType.LOADED_ALL_CELLS]: never | undefined;
+    [CommonActionType.UNMOUNT]: never | undefined;
+    [CommonActionType.SELECT_SERVER]: never | undefined;
+    [CommonActionType.CODE_CREATED]: ICodeCreatedAction;
+    [CommonActionType.GET_VARIABLE_DATA]: IJupyterVariablesRequest;
+    [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: never | undefined;
+};
 
 export interface IShowDataViewerAction extends IShowDataViewer {}
 
@@ -82,21 +116,12 @@ export interface ILinkClickAction {
     href: string;
 }
 
-export interface IShowPlotAction {
-    imageHtml: string;
-}
-
 export interface IScrollAction {
     isAtBottom: boolean;
 }
 
 // tslint:disable-next-line: no-any
-export type PrimitiveTypeInReduxActionPayload = string | number | boolean | Buffer | any[];
-export type CommonReducerArg<AT, T = never | undefined> = T extends never | undefined
-    ? ReducerArg<IMainState, AT, BaseReduxActionPayload>
-    : T extends PrimitiveTypeInReduxActionPayload
-    ? ReducerArg<IMainState, AT, { data: T } & BaseReduxActionPayload>
-    : ReducerArg<IMainState, AT, T & BaseReduxActionPayload>;
+export type CommonReducerArg<AT = CommonActionType | InteractiveWindowMessages, T = never | undefined> = ReducerArg<IMainState, AT, BaseReduxActionPayload<T>>;
 
 export interface ICellAction {
     cellId: string | undefined;
@@ -153,4 +178,12 @@ export interface IChangeCellTypeAction {
     cellId: string;
     currentCode: string;
 }
-export type CommonAction<T> = ActionWithPayload<T, CommonActionType>;
+export type CommonAction<T = never | undefined> = ActionWithPayload<T, CommonActionType | InteractiveWindowMessages>;
+
+export function createIncomingActionWithPayload<T>(type: CommonActionType | InteractiveWindowMessages, data: T): CommonAction<T> {
+    // tslint:disable-next-line: no-any
+    return { type, payload: ({ data, messageDirection: 'incoming' } as any) as BaseReduxActionPayload<T> };
+}
+export function createIncomingAction(type: CommonActionType | InteractiveWindowMessages): CommonAction {
+    return { type, payload: { messageDirection: 'incoming', data: undefined } };
+}

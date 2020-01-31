@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 'use strict';
 
-export namespace CssMessages {
-    export const GetCssRequest = 'get_css_request';
-    export const GetCssResponse = 'get_css_response';
-    export const GetMonacoThemeRequest = 'get_monaco_theme_request';
-    export const GetMonacoThemeResponse = 'get_monaco_theme_response';
+export enum CssMessages {
+    GetCssRequest = 'get_css_request',
+    GetCssResponse = 'get_css_response',
+    GetMonacoThemeRequest = 'get_monaco_theme_request',
+    GetMonacoThemeResponse = 'get_monaco_theme_response'
 }
 
-export namespace SharedMessages {
-    export const UpdateSettings = 'update_settings';
-    export const Started = 'started';
-    export const LocInit = 'loc_init';
-    export const StyleUpdate = 'style_update';
+export enum SharedMessages {
+    UpdateSettings = 'update_settings',
+    Started = 'started',
+    LocInit = 'loc_init',
+    StyleUpdate = 'style_update'
 }
 
 export interface IGetCssRequest {
