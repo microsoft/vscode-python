@@ -94,7 +94,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.addHandler(this);
 
         // Tell the dataviewer code we have started.
-        this.postOffice.sendMessage<IDataViewerMapping, 'started'>(DataViewerMessages.Started);
+        this.postOffice.sendMessage<IDataViewerMapping>(DataViewerMessages.Started);
     }
 
     public componentWillUnmount() {

@@ -12,10 +12,10 @@ import { Effects } from './effects';
 export namespace Movement {
     export function moveCellUp(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         const newVMs = [...arg.prevState.cellVMs];
-        const index = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.cellId);
+        const index = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.data.cellId);
         if (index > 0) {
             [newVMs[index - 1], newVMs[index]] = [newVMs[index], newVMs[index - 1]];
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.SwapCells, { firstCellId: arg.payload.cellId!, secondCellId: newVMs[index].cell.id }));
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.SwapCells, { firstCellId: arg.payload.data.cellId!, secondCellId: newVMs[index].cell.id }));
             return {
                 ...arg.prevState,
                 cellVMs: newVMs,
@@ -28,10 +28,10 @@ export namespace Movement {
 
     export function moveCellDown(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         const newVMs = [...arg.prevState.cellVMs];
-        const index = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.cellId);
+        const index = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.data.cellId);
         if (index < newVMs.length - 1) {
             [newVMs[index + 1], newVMs[index]] = [newVMs[index], newVMs[index + 1]];
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.SwapCells, { firstCellId: arg.payload.cellId!, secondCellId: newVMs[index].cell.id }));
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.SwapCells, { firstCellId: arg.payload.data.cellId!, secondCellId: newVMs[index].cell.id }));
             return {
                 ...arg.prevState,
                 cellVMs: newVMs,
@@ -43,14 +43,14 @@ export namespace Movement {
     }
 
     export function arrowUp(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index > 0) {
-            const newState = Effects.selectCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[index - 1].cell.id, cursorPos: CursorPos.Bottom } });
+            const newState = Effects.selectCell({ ...arg, payload: { ...arg.payload, data: { cellId: arg.prevState.cellVMs[index - 1].cell.id, cursorPos: CursorPos.Bottom } } });
             const newVMs = [...newState.cellVMs];
             newVMs[index] = Helpers.asCellViewModel({
                 ...newVMs[index],
-                inputBlockText: arg.payload.code,
-                cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.code } }
+                inputBlockText: arg.payload.data.code,
+                cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.data.code } }
             });
             return {
                 ...newState,
@@ -62,14 +62,14 @@ export namespace Movement {
     }
 
     export function arrowDown(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index < arg.prevState.cellVMs.length - 1) {
-            const newState = Effects.selectCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[index + 1].cell.id, cursorPos: CursorPos.Top } });
+            const newState = Effects.selectCell({ ...arg, payload: { ...arg.payload, data: { cellId: arg.prevState.cellVMs[index + 1].cell.id, cursorPos: CursorPos.Top } } });
             const newVMs = [...newState.cellVMs];
             newVMs[index] = Helpers.asCellViewModel({
                 ...newVMs[index],
-                inputBlockText: arg.payload.code,
-                cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.code } }
+                inputBlockText: arg.payload.data.code,
+                cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.data.code } }
             });
             return {
                 ...newState,

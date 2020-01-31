@@ -80,7 +80,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.addHandler(this);
 
         // Tell the plot viewer code we have started.
-        this.postOffice.sendMessage<IPlotViewerMapping, 'started'>(PlotViewerMessages.Started);
+        this.postOffice.sendMessage<IPlotViewerMapping>(PlotViewerMessages.Started);
 
         // Listen to key events
         window.addEventListener('keydown', this.onKeyDown);

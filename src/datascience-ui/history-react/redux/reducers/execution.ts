@@ -79,16 +79,16 @@ export namespace Execution {
     export function submitInput(arg: InteractiveReducerArg<ICodeAction>): IMainState {
         // noop if the submitted code is just a cell marker
         const matcher = new CellMatcher(arg.prevState.settings);
-        if (matcher.stripFirstMarker(arg.payload.code).length > 0 && arg.prevState.editCellVM) {
+        if (matcher.stripFirstMarker(arg.payload.data.code).length > 0 && arg.prevState.editCellVM) {
             // This should be from the edit cell VM. Copy it and change the cell id
             let newCell = cloneDeep(arg.prevState.editCellVM);
 
             // Change this editable cell to not editable.
             newCell.cell.state = CellState.executing;
-            newCell.cell.data.source = arg.payload.code;
+            newCell.cell.data.source = arg.payload.data.code;
 
             // Change type to markdown if necessary
-            const split = arg.payload.code.splitLines({ trim: false });
+            const split = arg.payload.data.code.splitLines({ trim: false });
             const firstLine = split[0];
             if (matcher.isMarkdown(firstLine)) {
                 newCell.cell.data = createCellFrom(newCell.cell.data, 'markdown');
@@ -113,7 +113,7 @@ export namespace Execution {
 
             // Send a message to execute this code if necessary.
             if (newCell.cell.state !== CellState.finished) {
-                arg.queueAction(createPostableAction(InteractiveWindowMessages.SubmitNewCell, { code: arg.payload.code, id: newCell.cell.id }));
+                arg.queueAction(createPostableAction(InteractiveWindowMessages.SubmitNewCell, { code: arg.payload.data.code, id: newCell.cell.id }));
             }
 
             // Stick in a new cell at the bottom that's editable and update our state

@@ -54,7 +54,7 @@ export namespace Execution {
     }
 
     export function executeAbove(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index > 0) {
             const codes = arg.prevState.cellVMs.filter((_c, i) => i < index).map(c => concatMultilineStringInput(c.cell.data.source));
             return executeRange(arg.prevState, 0, index - 1, codes, arg.queueAction);
@@ -63,17 +63,17 @@ export namespace Execution {
     }
 
     export function executeCell(arg: NativeEditorReducerArg<IExecuteAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             // Start executing this cell.
-            const executeResult = executeRange(arg.prevState, index, index, [arg.payload.code], arg.queueAction);
+            const executeResult = executeRange(arg.prevState, index, index, [arg.payload.data.code], arg.queueAction);
 
             // Modify the execute result if moving
             // Use `if` instead of `switch case` to ensure type safety.
-            if (arg.payload.moveOp === 'add') {
+            if (arg.payload.data.moveOp === 'add') {
                 // Add a new cell below
-                return Creation.insertBelow({ ...arg, prevState: executeResult, payload: { ...arg.payload } });
-            } else if (arg.payload.moveOp === 'select') {
+                return Creation.insertBelow({ ...arg, prevState: executeResult, payload: { ...arg.payload, data: { ...arg.payload.data } } });
+            } else if (arg.payload.data.moveOp === 'select') {
                 // Select the cell below this one, but don't focus it
                 if (index < arg.prevState.cellVMs.length - 1) {
                     return Effects.selectCell({
@@ -83,8 +83,11 @@ export namespace Execution {
                         },
                         payload: {
                             ...arg.payload,
-                            cellId: arg.prevState.cellVMs[index + 1].cell.id,
-                            cursorPos: CursorPos.Current
+                            data: {
+                                ...arg.payload.data,
+                                cellId: arg.prevState.cellVMs[index + 1].cell.id,
+                                cursorPos: CursorPos.Current
+                            }
                         }
                     });
                 }
@@ -97,10 +100,10 @@ export namespace Execution {
     }
 
     export function executeCellAndBelow(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             const codes = arg.prevState.cellVMs.filter((_c, i) => i > index).map(c => concatMultilineStringInput(c.cell.data.source));
-            return executeRange(arg.prevState, index, index + codes.length, [arg.payload.code, ...codes], arg.queueAction);
+            return executeRange(arg.prevState, index, index + codes.length, [arg.payload.data.code, ...codes], arg.queueAction);
         }
         return arg.prevState;
     }
@@ -109,7 +112,10 @@ export namespace Execution {
         // This is the same thing as executing the first cell and all below
         const firstCell = arg.prevState.cellVMs.length > 0 ? arg.prevState.cellVMs[0].cell.id : undefined;
         if (firstCell) {
-            return executeCellAndBelow({ ...arg, payload: { cellId: firstCell, code: concatMultilineStringInput(arg.prevState.cellVMs[0].cell.data.source) } });
+            return executeCellAndBelow({
+                ...arg,
+                payload: { ...arg.payload, data: { cellId: firstCell, code: concatMultilineStringInput(arg.prevState.cellVMs[0].cell.data.source) } }
+            });
         }
 
         return arg.prevState;
@@ -121,7 +127,10 @@ export namespace Execution {
         if (arg.prevState.selectedCellId && index >= 0) {
             return executeCell({
                 ...arg,
-                payload: { cellId: arg.prevState.selectedCellId, code: concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source), moveOp: 'none' }
+                payload: {
+                    ...arg.payload,
+                    data: { cellId: arg.prevState.selectedCellId, code: concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source), moveOp: 'none' }
+                }
             });
         }
 
@@ -142,16 +151,16 @@ export namespace Execution {
     }
 
     export function changeCellType(arg: NativeEditorReducerArg<IChangeCellTypeAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             const cellVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];
             const newType = current.cell.data.cell_type === 'code' ? 'markdown' : 'code';
             const newNotebookCell = createCellFrom(current.cell.data, newType);
-            newNotebookCell.source = arg.payload.currentCode;
+            newNotebookCell.source = arg.payload.data.currentCode;
             const newCell: ICellViewModel = {
                 ...current,
-                inputBlockText: arg.payload.currentCode,
+                inputBlockText: arg.payload.data.currentCode,
                 cell: {
                     ...current.cell,
                     data: newNotebookCell
@@ -164,7 +173,7 @@ export namespace Execution {
                     createPostableAction(InteractiveWindowMessages.InsertCell, {
                         cell: cellVMs[index].cell,
                         index,
-                        code: arg.payload.currentCode,
+                        code: arg.payload.data.currentCode,
                         codeCellAboveId: Helpers.firstCodeCellAbove(arg.prevState, current.cell.id)
                     })
                 );
@@ -173,7 +182,11 @@ export namespace Execution {
             }
 
             // When changing a cell type, also give the cell focus.
-            return Effects.focusCell({ ...arg, prevState: { ...arg.prevState, cellVMs }, payload: { cellId: arg.payload.cellId, cursorPos: CursorPos.Current } });
+            return Effects.focusCell({
+                ...arg,
+                prevState: { ...arg.prevState, cellVMs },
+                payload: { ...arg.payload, data: { cellId: arg.payload.data.cellId, cursorPos: CursorPos.Current } }
+            });
         }
 
         return arg.prevState;

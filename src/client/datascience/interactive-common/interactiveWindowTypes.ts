@@ -3,8 +3,9 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
-import { IAddCellAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
-import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest } from '../messages';
+import { IAddCellAction, ICellAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
+import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest, SharedMessages } from '../messages';
+import { IGetMonacoThemeResponse } from '../monacoMessages';
 import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../types';
 
 export enum InteractiveWindowMessages {
@@ -305,9 +306,9 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SelectKernel]: IServerState | undefined;
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
-    public [InteractiveWindowMessages.GetAllCells]: ICell;
+    public [InteractiveWindowMessages.GetAllCells]: never | undefined;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
-    public [InteractiveWindowMessages.DeleteCell]: never | undefined;
+    public [InteractiveWindowMessages.DeleteCell]: ICellAction;
     public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;
     public [InteractiveWindowMessages.Undo]: never | undefined;
     public [InteractiveWindowMessages.Redo]: never | undefined;
@@ -331,6 +332,7 @@ export class IInteractiveWindowMapping {
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
     public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest;
+    public [CssMessages.GetMonacoThemeResponse]: IGetMonacoThemeResponse;
     public [InteractiveWindowMessages.ProvideCompletionItemsRequest]: IProvideCompletionItemsRequest;
     public [InteractiveWindowMessages.CancelCompletionItemsRequest]: ICancelIntellisenseRequest;
     public [InteractiveWindowMessages.ProvideCompletionItemsResponse]: IProvideCompletionItemsResponse;
@@ -370,11 +372,14 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
     public [InteractiveWindowMessages.NotebookRunAllCells]: never | undefined;
     public [InteractiveWindowMessages.NotebookRunSelectedCell]: never | undefined;
-    public [InteractiveWindowMessages.NotebookAddCellBelow]: never | undefined;
+    public [InteractiveWindowMessages.NotebookAddCellBelow]: IAddCellAction;
+    public [InteractiveWindowMessages.DoSave]: never | undefined;
     public [InteractiveWindowMessages.ExecutionRendered]: IRenderComplete;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
     public [InteractiveWindowMessages.UnfocusedCellEditor]: never | undefined;
     public [InteractiveWindowMessages.MonacoReady]: never | undefined;
     public [InteractiveWindowMessages.ClearAllOutputs]: never | undefined;
-    public [InteractiveWindowMessages.UpdateKernel]: IServerState | undefined;
+    public [InteractiveWindowMessages.UpdateKernel]: IServerState;
+    public [SharedMessages.UpdateSettings]: string;
+    public [SharedMessages.LocInit]: string;
 }

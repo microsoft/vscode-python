@@ -3,7 +3,7 @@
 'use strict';
 import { JSONObject } from '@phosphor/coreutils';
 
-import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
+import { SharedMessages } from '../messages';
 import { IJupyterVariable } from '../types';
 
 export const CellFetchAllLimit = 100000;
@@ -40,15 +40,13 @@ export interface IGetRowsResponse {
 }
 
 // Map all messages to specific payloads
-export class IDataViewerMapping {
-    public [DataViewerMessages.Started]: never | undefined;
-    public [DataViewerMessages.UpdateSettings]: string;
-    public [DataViewerMessages.InitializeData]: IJupyterVariable;
-    public [DataViewerMessages.GetAllRowsRequest]: never | undefined;
-    public [DataViewerMessages.GetAllRowsResponse]: JSONObject;
-    public [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
-    public [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
-    public [DataViewerMessages.CompletedData]: never | undefined;
-    public [CssMessages.GetCssRequest]: IGetCssRequest;
-    public [CssMessages.GetCssResponse]: IGetCssResponse;
-}
+export type IDataViewerMapping = {
+    [DataViewerMessages.Started]: never | undefined;
+    [DataViewerMessages.UpdateSettings]: string;
+    [DataViewerMessages.InitializeData]: IJupyterVariable;
+    [DataViewerMessages.GetAllRowsRequest]: never | undefined;
+    [DataViewerMessages.GetAllRowsResponse]: JSONObject;
+    [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
+    [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
+    [DataViewerMessages.CompletedData]: never | undefined;
+};
