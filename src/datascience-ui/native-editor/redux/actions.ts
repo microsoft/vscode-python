@@ -6,11 +6,10 @@ import * as uuid from 'uuid/v4';
 import { InteractiveWindowMessages, NativeCommandType } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
 import { CursorPos } from '../../interactive-common/mainState';
+import { createIncomingAction, createIncomingActionWithPayload } from '../../interactive-common/redux/helpers';
 import {
     CommonAction,
     CommonActionType,
-    createIncomingAction,
-    createIncomingActionWithPayload,
     IAddCellAction,
     ICellAction,
     ICellAndCursorAction,

@@ -5,11 +5,10 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { InteractiveWindowMessages, IRefreshVariablesRequest } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
+import { createIncomingAction, createIncomingActionWithPayload } from '../../interactive-common/redux/helpers';
 import {
     CommonAction,
     CommonActionType,
-    createIncomingAction,
-    createIncomingActionWithPayload,
     ICellAction,
     ICodeAction,
     ICodeCreatedAction,

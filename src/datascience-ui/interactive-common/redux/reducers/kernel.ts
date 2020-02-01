@@ -4,7 +4,7 @@
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../../client/datascience/types';
 import { IMainState, IServerState } from '../../mainState';
-import { createPostableAction } from '../postOffice';
+import { createPostableAction } from '../helpers';
 import { CommonActionType, CommonReducerArg } from './types';
 
 export namespace Kernel {

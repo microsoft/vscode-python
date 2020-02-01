@@ -6,7 +6,7 @@ import { IScrollToCell } from '../../../../client/datascience/interactive-common
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
-import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { createPostableAction } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICellAction, IScrollAction } from '../../../interactive-common/redux/reducers/types';
 import { computeEditorOptions } from '../../../react-common/settingsReactSide';

@@ -11,7 +11,7 @@ import { CellState } from '../../../../client/datascience/types';
 import { generateMarkdownFromCodeLines } from '../../../common';
 import { createCellFrom } from '../../../common/cellFactory';
 import { createCellVM, IMainState } from '../../../interactive-common/mainState';
-import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { createPostableAction } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICodeAction } from '../../../interactive-common/redux/reducers/types';
 import { InteractiveReducerArg } from '../mapping';

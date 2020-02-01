@@ -5,7 +5,7 @@ import { Identifiers } from '../../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { createCellVM, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
-import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { createPostableAction } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { IAddCellAction, ICellAction } from '../../../interactive-common/redux/reducers/types';
 import { InteractiveReducerArg } from '../mapping';

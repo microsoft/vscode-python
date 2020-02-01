@@ -17,7 +17,8 @@ import { combineReducers, createQueueableActionMiddleware, QueuableAction } from
 import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { forceLoad } from '../transforms';
-import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer } from './postOffice';
+import { createPostableAction, isAllowedAction, isAllowedMessage } from './helpers';
+import { generatePostOfficeSendReducer } from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
 import { CommonActionType } from './reducers/types';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
@@ -236,11 +237,11 @@ type Dispatcher = (action: Redux.AnyAction) => Redux.AnyAction;
  * Checks whether a message needs to be re-broadcasted.
  */
 function reBroadcastMessageIfRequired(
-    storeDispatcher: Dispatcher,
+    _storeDispatcher: Dispatcher,
     message: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages,
     payload: BaseReduxActionPayload<{}>
 ) {
-    if (payload?.messageDirection === 'outgoing' && message !== InteractiveWindowMessages.Sync) {
+    if (payload?.messageDirection === 'outgoing' || message === InteractiveWindowMessages.Sync) {
         return;
     }
     console.error(`Check to Rebroadcast Message ${message}`);
@@ -255,32 +256,39 @@ function reBroadcastMessageIfRequired(
         const syncPayload = { type: message, payload: syncPayloadData } as any;
         // Send this out.
         console.error(`Rebroadcast Message ${message}`);
-        storeDispatcher(createPostableAction(InteractiveWindowMessages.Sync, syncPayload));
+        console.error(syncPayload);
+        // storeDispatcher(createPostableAction(InteractiveWindowMessages.Sync, syncPayload));
     }
 }
 
 /**
- * Middleware that will take messages dispatched to reducers, and re-broadcast them if necessary.
+ * Middleware that will ensure all actions have `messageDirection` property.
  */
-// tslint:disable-next-line: no-any
-const reBroadcasterMiddleware: Redux.Middleware = store => next => (action: Redux.AnyAction) => {
-    if (AllowedMessages.find(k => k === action.type)) {
+const addMessageDirectionMiddleware: Redux.Middleware = _store => next => (action: Redux.AnyAction) => {
+    if (isAllowedAction(action)) {
         // Ensure all dispatched messages have been flagged as `incoming`.
         const payload: BaseReduxActionPayload<{}> | undefined = action.payload;
         if (!payload?.messageDirection) {
             action.payload = { data: payload?.data, messageDirection: 'incoming' };
         }
     }
-    console.error(`Incoming Message ${action.type}`);
+
+    return next(action);
+};
+/**
+ * Middleware that will take messages dispatched to reducers, and re-broadcast them if necessary.
+ */
+// tslint:disable-next-line: no-any
+const reBroadcasterMiddleware: Redux.Middleware = store => next => (action: Redux.AnyAction) => {
     // First let the message be processed locally before we can think of passing this onto other editors.
     const result = next(action);
 
-    if (AllowedMessages.find(k => k === action.type) && action?.payload?.messageDirection === 'incoming') {
+    if (isAllowedAction(action) && action?.payload?.messageDirection === 'incoming') {
         reBroadcastMessageIfRequired(store.dispatch, action.type, action?.payload);
     }
     return result;
 };
-console.log(reBroadcasterMiddleware);
+
 export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, editable: boolean, reducerMap: M) {
     // Create a post office to listen to store dispatches and allow reducers to
     // send messages
@@ -307,7 +315,7 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     });
 
     // Create our middleware
-    const middleware = createMiddleWare(testMode); //.concat([reBroadcasterMiddleware]);
+    const middleware = createMiddleWare(testMode).concat([addMessageDirectionMiddleware, reBroadcasterMiddleware]);
 
     // Use this reducer and middle ware to create a store
     const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));
@@ -318,15 +326,11 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
         // tslint:disable-next-line: no-any
         handleMessage(message: string, payload?: any): boolean {
             // Double check this is one of our messages. React will actually post messages here too during development
-            if (!AllowedMessages.find(k => k === message)) {
-                return true;
+            if (isAllowedMessage(message)) {
+                const basePayload: BaseReduxActionPayload = { data: payload };
+                store.dispatch({ type: message, payload: basePayload });
             }
-            // Add `isIncomingMessage` property so we can differentiate between messages in reducers.
-            const basePayload: BaseReduxActionPayload<{}> = { data: payload, messageDirection: 'incoming' };
-            store.dispatch({ type: message, payload: basePayload });
 
-            // tslint:disable-next-line: no-any
-            // reBroadcastMessageIfRequired(store.dispatch, message as any, basePayload);
             return true;
         }
     });

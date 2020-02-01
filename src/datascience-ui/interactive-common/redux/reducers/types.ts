@@ -179,11 +179,3 @@ export interface IChangeCellTypeAction {
     currentCode: string;
 }
 export type CommonAction<T = never | undefined> = ActionWithPayload<T, CommonActionType | InteractiveWindowMessages>;
-
-export function createIncomingActionWithPayload<T>(type: CommonActionType | InteractiveWindowMessages, data: T): CommonAction<T> {
-    // tslint:disable-next-line: no-any
-    return { type, payload: ({ data, messageDirection: 'incoming' } as any) as BaseReduxActionPayload<T> };
-}
-export function createIncomingAction(type: CommonActionType | InteractiveWindowMessages): CommonAction {
-    return { type, payload: { messageDirection: 'incoming', data: undefined } };
-}

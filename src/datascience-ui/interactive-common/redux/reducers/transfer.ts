@@ -4,9 +4,9 @@
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { extractInputText, IMainState } from '../../mainState';
-import { createPostableAction } from '../postOffice';
 import { Helpers } from './helpers';
 import { CommonActionType, CommonReducerArg, ICellAction, IEditCellAction, ILinkClickAction, ISendCommandAction, IShowDataViewerAction } from './types';
+import { createPostableAction } from '../helpers';
 
 // These are all reducers that don't actually change state. They merely dispatch a message to the other side.
 export namespace Transfer {
