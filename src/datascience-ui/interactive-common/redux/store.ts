@@ -6,8 +6,9 @@ import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { shouldRebroadcast } from '../../../client/datascience/interactive-common/syncrhonization';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
-import { CssMessages } from '../../../client/datascience/messages';
+import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
 import { CellState } from '../../../client/datascience/types';
 import { IMainState, ServerStatus } from '../../interactive-common/mainState';
 import { getLocString } from '../../react-common/locReactSide';
@@ -18,6 +19,7 @@ import { createEditableCellVM, generateTestState } from '../mainState';
 import { forceLoad } from '../transforms';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer } from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
+import { CommonActionType } from './reducers/types';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
@@ -229,6 +231,56 @@ export interface IMainWithVariables extends IMainState {
     variableState: IVariableState;
 }
 
+type Dispatcher = (action: Redux.AnyAction) => Redux.AnyAction;
+/**
+ * Checks whether a message needs to be re-broadcasted.
+ */
+function reBroadcastMessageIfRequired(
+    storeDispatcher: Dispatcher,
+    message: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages,
+    payload: BaseReduxActionPayload<{}>
+) {
+    if (payload?.messageDirection === 'outgoing' && message !== InteractiveWindowMessages.Sync) {
+        return;
+    }
+    console.error(`Check to Rebroadcast Message ${message}`);
+    // Check if we need to re-broadcast this message to other editors/sessions.
+    // tslint:disable-next-line: no-any
+    const result = shouldRebroadcast(message as any);
+    if (result[0]) {
+        // Mark message as incoming, to indicate this will be sent into the other webviews.
+        // tslint:disable-next-line: no-any
+        const syncPayloadData: BaseReduxActionPayload<any> = { data: payload.data, messageType: result[1], messageDirection: 'incoming' };
+        // tslint:disable-next-line: no-any
+        const syncPayload = { type: message, payload: syncPayloadData } as any;
+        // Send this out.
+        console.error(`Rebroadcast Message ${message}`);
+        storeDispatcher(createPostableAction(InteractiveWindowMessages.Sync, syncPayload));
+    }
+}
+
+/**
+ * Middleware that will take messages dispatched to reducers, and re-broadcast them if necessary.
+ */
+// tslint:disable-next-line: no-any
+const reBroadcasterMiddleware: Redux.Middleware = store => next => (action: Redux.AnyAction) => {
+    if (AllowedMessages.find(k => k === action.type)) {
+        // Ensure all dispatched messages have been flagged as `incoming`.
+        const payload: BaseReduxActionPayload<{}> | undefined = action.payload;
+        if (!payload?.messageDirection) {
+            action.payload = { data: payload?.data, messageDirection: 'incoming' };
+        }
+    }
+    console.error(`Incoming Message ${action.type}`);
+    // First let the message be processed locally before we can think of passing this onto other editors.
+    const result = next(action);
+
+    if (AllowedMessages.find(k => k === action.type) && action?.payload?.messageDirection === 'incoming') {
+        reBroadcastMessageIfRequired(store.dispatch, action.type, action?.payload);
+    }
+    return result;
+};
+console.log(reBroadcasterMiddleware);
 export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, editable: boolean, reducerMap: M) {
     // Create a post office to listen to store dispatches and allow reducers to
     // send messages
@@ -255,7 +307,7 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     });
 
     // Create our middleware
-    const middleware = createMiddleWare(testMode);
+    const middleware = createMiddleWare(testMode); //.concat([reBroadcasterMiddleware]);
 
     // Use this reducer and middle ware to create a store
     const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));
@@ -270,17 +322,11 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
                 return true;
             }
             // Add `isIncomingMessage` property so we can differentiate between messages in reducers.
-            // This way we:
-            // - Have one reducer for incoming
-            // - Have another reducer for outgoing
-            let basePayload = payload as BaseReduxActionPayload<{}> | undefined;
-            if (!basePayload?.broadcastReason && !basePayload?.messageDirection) {
-                // Re-wrap to indicate this is an incoming message.
-                basePayload = { data: payload, messageDirection: 'incoming' };
-            }
-            if (AllowedMessages.find(k => k === message) && basePayload.messageDirection !== 'outgoing') {
-                store.dispatch({ type: message, payload: basePayload });
-            }
+            const basePayload: BaseReduxActionPayload<{}> = { data: payload, messageDirection: 'incoming' };
+            store.dispatch({ type: message, payload: basePayload });
+
+            // tslint:disable-next-line: no-any
+            // reBroadcastMessageIfRequired(store.dispatch, message as any, basePayload);
             return true;
         }
     });

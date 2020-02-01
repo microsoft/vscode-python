@@ -3,10 +3,11 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
-import { IAddCellAction, ICellAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
+import { CommonActionType, IAddCellAction, ICellAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest, SharedMessages } from '../messages';
 import { IGetMonacoThemeResponse } from '../monacoMessages';
 import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../types';
+import { BaseReduxActionPayload } from './types';
 
 export enum InteractiveWindowMessages {
     StartCell = 'start_cell',
@@ -58,6 +59,7 @@ export enum InteractiveWindowMessages {
     EditCell = 'edit_cell',
     RemoveCell = 'remove_cell',
     SwapCells = 'swap_cells',
+    Sync = 'sync_message_used_to_broadcasst_and_sync_editors',
     InsertCell = 'insert_cell',
     LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request',
     LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response',
@@ -368,6 +370,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookDirty]: never | undefined;
     public [InteractiveWindowMessages.NotebookClean]: never | undefined;
     public [InteractiveWindowMessages.SaveAll]: ISaveAll;
+    // tslint:disable-next-line: no-any
+    public [InteractiveWindowMessages.Sync]: { type: InteractiveWindowMessages | SharedMessages | CommonActionType; payload: BaseReduxActionPayload<any> };
     public [InteractiveWindowMessages.NativeCommand]: INativeCommand;
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
     public [InteractiveWindowMessages.NotebookRunAllCells]: never | undefined;

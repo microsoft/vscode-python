@@ -3,17 +3,12 @@
 
 'use strict';
 
+import { MessageType } from './syncrhonization';
+
 // Stuff common to React and Extensions.
 
 type BaseData = {
-    /**
-     * If this property exists, then this is an action that has been dispatched for the solve purpose of:
-     * 1. Synchronizing states across different editors (pointing to the same file).
-     * 2. Synchronizing states across different editors (pointing to the same file) in different sessions.
-     *
-     * @type {('syncEditors' | 'syncSessions')}
-     */
-    broadcastReason?: 'syncEditors' | 'syncSessions';
+    messageType?: MessageType;
     /**
      * Tells us whether this message is incoming for reducer use or
      * whether this is a message that needs to be sent out to extension (from reducer).
@@ -22,14 +17,7 @@ type BaseData = {
 };
 
 type BaseDataWithPayload<T> = {
-    /**
-     * If this property exists, then this is an action that has been dispatched for the solve purpose of:
-     * 1. Synchronizing states across different editors (pointing to the same file).
-     * 2. Synchronizing states across different editors (pointing to the same file) in different sessions.
-     *
-     * @type {('syncEditors' | 'syncSessions')}
-     */
-    broadcastReason?: 'syncEditors' | 'syncSessions';
+    messageType?: MessageType;
     /**
      * Tells us whether this message is incoming for reducer use or
      * whether this is a message that needs to be sent out to extension (from reducer).
