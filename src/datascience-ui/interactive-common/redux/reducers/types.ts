@@ -50,6 +50,7 @@ export enum CommonActionType {
     LINK_CLICK = 'action.link_click',
     MOVE_CELL_DOWN = 'action.move_cell_down',
     MOVE_CELL_UP = 'action.move_cell_up',
+    PostOutgoingMessage = 'action.postOutgoingMessage',
     REFRESH_VARIABLES = 'action.refresh_variables',
     RESTART_KERNEL = 'action.restart_kernel_action',
     SAVE = 'action.save',
