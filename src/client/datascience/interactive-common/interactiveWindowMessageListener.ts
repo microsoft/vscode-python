@@ -52,7 +52,6 @@ export class InteractiveWindowMessageListener implements IWebPanelMessageListene
 
     public onMessage(message: string, payload: any) {
         if (message === InteractiveWindowMessages.Sync) {
-            console.log(JSON.stringify(payload));
             const syncPayload = payload as BaseReduxActionPayload;
             Array.from(InteractiveWindowMessageListener.handlers.keys()).forEach(item => {
                 if (item === this) {
