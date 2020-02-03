@@ -297,7 +297,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<IConnection> {
-        return this.notebookStarter.start(useDefaultConfig, cancelToken);
+        console.clear();
+        console.error('Start Tracking Total Time');
+        const stopWatch = new StopWatch();
+        const connection = await this.notebookStarter.start(useDefaultConfig, cancelToken);
+        console.error(`Total Time = ${stopWatch.elapsedTime} `);
+        return connection;
     }
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values

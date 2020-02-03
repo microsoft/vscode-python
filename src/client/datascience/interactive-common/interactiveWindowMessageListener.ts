@@ -10,11 +10,13 @@ import { ILiveShareApi, IWebPanel, IWebPanelMessageListener } from '../../common
 import { Identifiers, LiveShare } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
 import { InteractiveWindowMessages, InteractiveWindowRemoteMessages } from './interactiveWindowTypes';
+import { BaseReduxActionPayload } from './types';
 
 // tslint:disable:no-any
 
 // This class listens to messages that come from the local Python Interactive window
 export class InteractiveWindowMessageListener implements IWebPanelMessageListener {
+    private static handlers = new Map<InteractiveWindowMessageListener, (message: string, payload: any) => void>();
     private postOffice: PostOffice;
     private disposedCallback: () => void;
     private callback: (message: string, payload: any) => void;
@@ -40,6 +42,7 @@ export class InteractiveWindowMessageListener implements IWebPanelMessageListene
         this.interactiveWindowMessages.forEach(m => {
             this.postOffice.registerCallback(m, a => callback(m, a)).ignoreErrors();
         });
+        InteractiveWindowMessageListener.handlers.set(this, callback);
     }
 
     public async dispose() {
@@ -48,6 +51,20 @@ export class InteractiveWindowMessageListener implements IWebPanelMessageListene
     }
 
     public onMessage(message: string, payload: any) {
+        if (message === InteractiveWindowMessages.Sync) {
+            console.log(JSON.stringify(payload));
+            const syncPayload = payload as BaseReduxActionPayload;
+            Array.from(InteractiveWindowMessageListener.handlers.keys()).forEach(item => {
+                if (item === this) {
+                    return;
+                }
+                const cb = InteractiveWindowMessageListener.handlers.get(item);
+                if (cb) {
+                    cb(InteractiveWindowMessages.Sync, { type: message, payload: syncPayload.data });
+                }
+            });
+            return;
+        }
         // We received a message from the local webview. Broadcast it to everybody if it's a remote message
         if (InteractiveWindowRemoteMessages.indexOf(message) >= 0) {
             this.postOffice.postCommand(message, payload).ignoreErrors();

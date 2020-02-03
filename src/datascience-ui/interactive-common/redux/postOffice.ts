@@ -3,10 +3,10 @@
 'use strict';
 import * as Redux from 'redux';
 
-import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { PostOffice } from '../../react-common/postOffice';
-import { isAllowedAction } from './helpers';
+import { isAllowedAction, reBroadcastMessageIfRequiredX } from './helpers';
 
 export function generatePostOfficeSendReducer(postOffice: PostOffice): Redux.Reducer<{}, Redux.AnyAction> {
     // tslint:disable-next-line: no-function-expression
@@ -14,11 +14,19 @@ export function generatePostOfficeSendReducer(postOffice: PostOffice): Redux.Red
         // Make sure a valid message
         // tslint:disable-next-line: no-any
         const payload: BaseReduxActionPayload<{}> | undefined = action.payload;
-        if (isAllowedAction(action) && payload?.messageDirection === 'outgoing') {
-            // Just post this to the post office.
-            // tslint:disable-next-line: no-any
-            postOffice.sendMessage<IInteractiveWindowMapping>(action.type, payload.data as any);
-            console.error(`Send Message ${action.type}`);
+        if (isAllowedAction(action)) {
+            if (payload?.messageDirection === 'outgoing') {
+                // Just post this to the post office.
+                // tslint:disable-next-line: no-any
+                postOffice.sendMessage<IInteractiveWindowMapping>(action.type, payload.data as any);
+                console.error(`Send Message ${action.type}`);
+            }
+
+            if (payload?.messageDirection === 'incoming' && typeof payload?.messageType !== 'number') {
+                setTimeout(() => {
+                    reBroadcastMessageIfRequiredX(postOffice.sendMessage.bind(postOffice), action.type, action?.payload);
+                }, 1);
+            }
         }
 
         // We don't modify the state.

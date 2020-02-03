@@ -6,9 +6,8 @@ import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { shouldRebroadcast } from '../../../client/datascience/interactive-common/syncrhonization';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
-import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
+import { CssMessages } from '../../../client/datascience/messages';
 import { CellState } from '../../../client/datascience/types';
 import { IMainState, ServerStatus } from '../../interactive-common/mainState';
 import { getLocString } from '../../react-common/locReactSide';
@@ -20,7 +19,6 @@ import { forceLoad } from '../transforms';
 import { createPostableAction, isAllowedAction, isAllowedMessage } from './helpers';
 import { generatePostOfficeSendReducer } from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
-import { CommonActionType } from './reducers/types';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
@@ -71,8 +69,13 @@ function generateMainReducer<M>(skipDefault: boolean, testMode: boolean, baseThe
 
 function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
     return store => next => action => {
-        const prevState = store.getState();
         const res = next(action);
+        // If the action is part of a sync message, then do not send it to the extension.
+        if (action.payload && typeof (action.payload as BaseReduxActionPayload).messageType === 'number') {
+            return res;
+        }
+
+        const prevState = store.getState();
         const afterState = store.getState();
 
         // If cell vm count changed or selected cell changed, send the message
@@ -232,62 +235,33 @@ export interface IMainWithVariables extends IMainState {
     variableState: IVariableState;
 }
 
-type Dispatcher = (action: Redux.AnyAction) => Redux.AnyAction;
-/**
- * Checks whether a message needs to be re-broadcasted.
- */
-function reBroadcastMessageIfRequired(
-    _storeDispatcher: Dispatcher,
-    message: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages,
-    payload: BaseReduxActionPayload<{}>
-) {
-    if (payload?.messageDirection === 'outgoing' || message === InteractiveWindowMessages.Sync) {
-        return;
-    }
-    console.error(`Check to Rebroadcast Message ${message}`);
-    // Check if we need to re-broadcast this message to other editors/sessions.
-    // tslint:disable-next-line: no-any
-    const result = shouldRebroadcast(message as any);
-    if (result[0]) {
-        // Mark message as incoming, to indicate this will be sent into the other webviews.
-        // tslint:disable-next-line: no-any
-        const syncPayloadData: BaseReduxActionPayload<any> = { data: payload.data, messageType: result[1], messageDirection: 'incoming' };
-        // tslint:disable-next-line: no-any
-        const syncPayload = { type: message, payload: syncPayloadData } as any;
-        // Send this out.
-        console.error(`Rebroadcast Message ${message}`);
-        console.error(syncPayload);
-        // storeDispatcher(createPostableAction(InteractiveWindowMessages.Sync, syncPayload));
-    }
-}
-
 /**
  * Middleware that will ensure all actions have `messageDirection` property.
  */
 const addMessageDirectionMiddleware: Redux.Middleware = _store => next => (action: Redux.AnyAction) => {
     if (isAllowedAction(action)) {
         // Ensure all dispatched messages have been flagged as `incoming`.
-        const payload: BaseReduxActionPayload<{}> | undefined = action.payload;
-        if (!payload?.messageDirection) {
-            action.payload = { data: payload?.data, messageDirection: 'incoming' };
+        const payload: BaseReduxActionPayload<{}> = action.payload || {};
+        if (!payload.messageDirection) {
+            action.payload = { ...payload, messageDirection: 'incoming' };
         }
     }
 
     return next(action);
 };
-/**
- * Middleware that will take messages dispatched to reducers, and re-broadcast them if necessary.
- */
-// tslint:disable-next-line: no-any
-const reBroadcasterMiddleware: Redux.Middleware = store => next => (action: Redux.AnyAction) => {
-    // First let the message be processed locally before we can think of passing this onto other editors.
-    const result = next(action);
+// /**
+//  * Middleware that will take messages dispatched to reducers, and re-broadcast them if necessary.
+//  */
+// // tslint:disable-next-line: no-any
+// const reBroadcasterMiddleware: Redux.Middleware = store => next => (action: Redux.AnyAction) => {
+//     // First let the message be processed locally before we can think of passing this onto other editors.
+//     const result = next(action);
 
-    if (isAllowedAction(action) && action?.payload?.messageDirection === 'incoming') {
-        reBroadcastMessageIfRequired(store.dispatch, action.type, action?.payload);
-    }
-    return result;
-};
+//     if (isAllowedAction(action) && action?.payload?.messageDirection === 'incoming') {
+//         reBroadcastMessageIfRequired(store.dispatch, action.type, action?.payload);
+//     }
+//     return result;
+// };
 
 export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, editable: boolean, reducerMap: M) {
     // Create a post office to listen to store dispatches and allow reducers to
@@ -315,7 +289,8 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     });
 
     // Create our middleware
-    const middleware = createMiddleWare(testMode).concat([addMessageDirectionMiddleware, reBroadcasterMiddleware]);
+    const middleware = createMiddleWare(testMode).concat([addMessageDirectionMiddleware]);
+    // const middleware = createMiddleWare(testMode).concat([addMessageDirectionMiddleware, reBroadcasterMiddleware]);
 
     // Use this reducer and middle ware to create a store
     const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));
@@ -328,6 +303,12 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
             // Double check this is one of our messages. React will actually post messages here too during development
             if (isAllowedMessage(message)) {
                 const basePayload: BaseReduxActionPayload = { data: payload };
+                if (message === InteractiveWindowMessages.Sync) {
+                    // Unwrap the message.
+                    message = payload.type;
+                    basePayload.messageType = payload.payload.messageType;
+                    basePayload.data = payload.payload.data;
+                }
                 store.dispatch({ type: message, payload: basePayload });
             }
 

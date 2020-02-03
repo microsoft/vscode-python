@@ -139,7 +139,6 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     tabIndex={0}
                     onKeyDown={this.onKeyDown}
                     onClick={this.onMouseClick}
-                    onDoubleClick={this.onMouseDoubleClick}
                 >
                     <div className={cellOuterClass}>
                         {this.renderControls()}
@@ -206,14 +205,6 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         if (this.props.clickCell) {
             ev.stopPropagation();
             this.props.clickCell(this.props.cellVM.cell.id);
-        }
-    };
-
-    private onMouseDoubleClick = (ev: React.MouseEvent<HTMLDivElement>) => {
-        // When we receive double click, propagate upwards. Might change our state
-        if (this.props.doubleClickCell) {
-            ev.stopPropagation();
-            this.props.doubleClickCell(this.props.cellVM.cell.id);
         }
     };
 

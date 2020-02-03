@@ -146,10 +146,12 @@ export namespace Effects {
             }
 
             const newVMs = [...prevState.cellVMs];
+            // Ensure not to focus the editor if this is a sync message.
+            const focus = typeof arg.payload.messageType === 'number' ? false : true;
             if (addIndex >= 0 && arg.payload.data.cellId !== prevState.selectedCellId) {
                 newVMs[addIndex] = {
                     ...newVMs[addIndex],
-                    focused: prevState.focusedCellId !== undefined && prevState.focusedCellId === prevState.selectedCellId,
+                    focused: focus && prevState.focusedCellId !== undefined && prevState.focusedCellId === prevState.selectedCellId,
                     selected: true,
                     cursorPos: arg.payload.data.cursorPos
                 };
@@ -158,7 +160,7 @@ export namespace Effects {
             return {
                 ...prevState,
                 cellVMs: newVMs,
-                focusedCellId: prevState.focusedCellId !== undefined ? arg.payload.data.cellId : undefined,
+                focusedCellId: focus && prevState.focusedCellId !== undefined ? arg.payload.data.cellId : undefined,
                 selectedCellId: arg.payload.data.cellId
             };
         }

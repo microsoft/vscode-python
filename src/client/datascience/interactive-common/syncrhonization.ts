@@ -1,3 +1,4 @@
+import { CommonActionType, CommonActionTypeMapping } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { CssMessages, SharedMessages } from '../messages';
 import { IInteractiveWindowMapping, InteractiveWindowMessages } from './interactiveWindowTypes';
 
@@ -13,7 +14,8 @@ export enum MessageType {
     /**
      * Messages must be re-broadcasted across all sessions.
      */
-    syncWithLiveShare = 1 << 1
+    syncWithLiveShare = 1 << 1,
+    noIdea = 1 << 2
 }
 
 type MessageMapping<T> = {
@@ -26,7 +28,48 @@ export type IInteractiveActionMapping = MessageMapping<IInteractiveWindowMapping
 // The current structure ensures all new enums added will be categorized.
 // This way, if a new message is added, we'll make the decision early on whether it needs to be synchronized and how.
 // Rather than waiting for users to report issues related to new messages.
-const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> = {
+const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & MessageMapping<CommonActionTypeMapping> = {
+    [CommonActionType.ADD_NEW_CELL]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.ARROW_DOWN]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.ARROW_UP]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.CHANGE_CELL_TYPE]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.CLICK_CELL]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.CODE_CREATED]: MessageType.noIdea,
+    [CommonActionType.COPY_CELL_CODE]: MessageType.other,
+    [CommonActionType.EDITOR_LOADED]: MessageType.other,
+    [CommonActionType.EDIT_CELL]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.EXECUTE_ABOVE]: MessageType.other,
+    [CommonActionType.EXECUTE_ALL_CELLS]: MessageType.other,
+    [CommonActionType.EXECUTE_CELL]: MessageType.other,
+    [CommonActionType.EXECUTE_CELL_AND_BELOW]: MessageType.other,
+    [CommonActionType.EXPORT]: MessageType.other,
+    [CommonActionType.FOCUS_CELL]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.GATHER_CELL]: MessageType.other,
+    [CommonActionType.GET_VARIABLE_DATA]: MessageType.other,
+    [CommonActionType.GOTO_CELL]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.INSERT_ABOVE]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.INSERT_ABOVE_FIRST]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.INSERT_BELOW]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.INTERRUPT_KERNEL]: MessageType.other,
+    [CommonActionType.LOADED_ALL_CELLS]: MessageType.other,
+    [CommonActionType.LINK_CLICK]: MessageType.other,
+    [CommonActionType.MOVE_CELL_DOWN]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.MOVE_CELL_UP]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.RESTART_KERNEL]: MessageType.other,
+    [CommonActionType.SAVE]: MessageType.other,
+    [CommonActionType.SCROLL]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
+    [CommonActionType.SELECT_CELL]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
+    [CommonActionType.SELECT_SERVER]: MessageType.other,
+    [CommonActionType.SEND_COMMAND]: MessageType.other,
+    [CommonActionType.SHOW_DATA_VIEWER]: MessageType.other,
+    [CommonActionType.SUBMIT_INPUT]: MessageType.other,
+    [CommonActionType.TOGGLE_INPUT_BLOCK]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.TOGGLE_LINE_NUMBERS]: MessageType.syncAcrossSameNotebooks,
+    [CommonActionType.TOGGLE_OUTPUT]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
+    [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
+    [CommonActionType.UNFOCUS_CELL]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
+    [CommonActionType.UNMOUNT]: MessageType.other,
+
     // Types from InteractiveWindowMessages
     [InteractiveWindowMessages.Activate]: MessageType.other,
     [InteractiveWindowMessages.AddCell]: MessageType.syncAcrossSameNotebooks,
