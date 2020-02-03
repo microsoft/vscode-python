@@ -41,17 +41,17 @@ jobs:
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_ptvsd.py
 
-      - name: Cache ./pythonFiles/lib/python
-        uses: actions/cache@v1
-        with:
-          path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-${{hashFiles('**/**-requirements.txt')}}
-
       - name: Cache pip files
         uses: actions/cache@v1
         with:
           path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-${{hashFiles('**/**-requirements.txt')}}
+          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('**/**-requirements.txt')}}
+
+      - name: Cache ./pythonFiles/lib/python
+        uses: actions/cache@v1
+        with:
+          path: ./pythonFiles/lib/python
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('**/**-requirements.txt')}}
 
   js-ts-deps:
     name: Install npm dependencies
