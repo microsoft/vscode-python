@@ -212,7 +212,9 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
         results.push(testMiddleware);
     }
     if (loggerMiddleware) {
-        results.push(loggerMiddleware);
+        // results.push(loggerMiddleware);
+        // tslint:disable-next-line: no-console
+        console.log(loggerMiddleware);
     }
 
     return results;
