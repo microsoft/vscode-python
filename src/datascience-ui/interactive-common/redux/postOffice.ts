@@ -3,7 +3,7 @@
 'use strict';
 import * as Redux from 'redux';
 
-import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { PostOffice } from '../../react-common/postOffice';
 import { isAllowedAction, reBroadcastMessageIfRequiredX } from './helpers';
@@ -20,6 +20,7 @@ export function generatePostOfficeSendReducer(postOffice: PostOffice): Redux.Red
                 // tslint:disable-next-line: no-any
                 postOffice.sendMessage<IInteractiveWindowMapping>(action.type, payload.data as any);
                 console.error(`Send Message ${action.type}`);
+                console.error(payload?.data);
             }
 
             if (payload?.messageDirection === 'incoming' && typeof payload?.messageType !== 'number') {

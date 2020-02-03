@@ -72,11 +72,9 @@ export function reBroadcastMessageIfRequiredX(
     message: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages,
     payload?: BaseReduxActionPayload<{}>
 ) {
-    console.error(`Check to Rebroadcast Messagexx11 ${message}`);
     if (typeof payload?.messageType === 'number' || payload?.messageDirection === 'outgoing' || message === InteractiveWindowMessages.Sync) {
         return;
     }
-    console.error(`Check to Rebroadcast Messagexx222 ${message}`);
     // Check if we need to re-broadcast this message to other editors/sessions.
     // tslint:disable-next-line: no-any
     const result = shouldRebroadcast(message as any);

@@ -34,6 +34,7 @@ export interface ICellViewModel {
     useQuickEdit?: boolean;
     selected: boolean;
     focused: boolean;
+    shouldNotAutoFocus?: boolean;
     scrollCount: number;
     cursorPos: CursorPos;
     hasBeenRun: boolean;
@@ -60,8 +61,6 @@ export type IMainState = {
     currentExecutionCount: number;
     debugging: boolean;
     dirty?: boolean;
-    selectedCellId?: string;
-    focusedCellId?: string;
     isAtBottom: boolean;
     newCellId?: string;
     loadTotal?: number;
@@ -75,6 +74,29 @@ export type IMainState = {
     kernel: IServerState;
 };
 
+export function getSelectedAndFocusedInfo(state: IMainState) {
+    const info:
+        | { selectedCellId?: string; selectedCellIndex?: number; focusedCellId?: string; focusedCellIndex?: number }
+        | { selectedCellId: string; selectedCellIndex: number; focusedCellId?: string; focusedCellIndex?: number }
+        | { selectedCellId?: string; selectedCellIndex?: number; focusedCellId: string; focusedCellIndex: number }
+        | { selectedCellId: string; selectedCellIndex: number; focusedCellId: string; focusedCellIndex: number } = {};
+    for (let index = 0; index < state.cellVMs.length; index += 1) {
+        const cell = state.cellVMs[index];
+        if (cell.selected) {
+            info.selectedCellId = cell.cell.id;
+            info.selectedCellIndex = index;
+        }
+        if (cell.focused) {
+            info.focusedCellId = cell.cell.id;
+            info.focusedCellIndex = index;
+        }
+        if (info.selectedCellId && info.focusedCellId) {
+            break;
+        }
+    }
+
+    return info;
+}
 export interface IFont {
     size: number;
     family: string;

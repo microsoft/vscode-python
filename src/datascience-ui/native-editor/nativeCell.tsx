@@ -65,7 +65,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     public componentDidUpdate(prevProps: INativeCellProps) {
-        if (this.props.cellVM.selected && !prevProps.cellVM.selected && !this.props.cellVM.focused) {
+        if (this.props.cellVM.selected && !prevProps.cellVM.selected && !this.props.cellVM.focused && !this.props.cellVM.shouldNotAutoFocus) {
             this.giveFocus();
         }
 
@@ -74,7 +74,12 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     public shouldComponentUpdate(nextProps: INativeCellProps): boolean {
-        return !fastDeepEqual(this.props, nextProps);
+        const update = !fastDeepEqual(this.props, nextProps);
+        console.error(
+            `Should cell update ${nextProps.cellVM.cell.id} = ${update}. Prev. Selected = ${this.props.cellVM.selected} and Prev. Focused = ${this.props.cellVM.focused}.`
+        );
+        console.error(`Should cell update ${nextProps.cellVM.cell.id} = ${update}. Selected = ${nextProps.cellVM.selected} and  Focused = ${nextProps.cellVM.focused}.`);
+        return update;
     }
 
     // Public for testing
