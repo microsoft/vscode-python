@@ -29,7 +29,7 @@
    ([#8720](https://github.com/Microsoft/vscode-python/issues/8720))
 1. Remove insiders re-enroll prompt.
    ([#8775](https://github.com/Microsoft/vscode-python/issues/8775))
-1. Attach to pid picker - bodyblock users who are not in the new debugger experiment
+1. Attach to pid picker - bodyblock users who are not in the new debugger experiment.
    ([#8935](https://github.com/Microsoft/vscode-python/issues/8935))
 1. Pass `-y` to `conda installer` to disable the prompt to install, as user has already ok'ed this action.
    ([#9194](https://github.com/Microsoft/vscode-python/issues/9194))
