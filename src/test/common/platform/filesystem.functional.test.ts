@@ -6,7 +6,7 @@
 import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { convertStat, FileSystem, RawFileSystem } from '../../../client/common/platform/fileSystem';
+import { convertStat, FileSystem, FileSystemUtils, RawFileSystem } from '../../../client/common/platform/fileSystem';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
 import { FileType } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
@@ -790,6 +790,266 @@ suite('FileSystem - raw', () => {
     });
 });
 
+suite('FileSystem - utils', () => {
+    let utils: FileSystemUtils;
+    let fix: FSFixture;
+    setup(async () => {
+        // prettier-ignore
+        utils = FileSystemUtils.withDefaults();
+        fix = new FSFixture();
+
+        await assertDoesNotExist(DOES_NOT_EXIST);
+    });
+    teardown(async () => {
+        await fix.cleanUp();
+        await fix.ensureDeleted(DOES_NOT_EXIST);
+    });
+
+    suite('createDirectory', () => {
+        test('wraps the low-level impl', async () => {
+            await fix.createDirectory('x');
+            // x/y, x/y/z, and x/y/z/spam are all missing.
+            const dirname = await fix.resolve('x/spam', false);
+            await assertDoesNotExist(dirname);
+
+            await utils.createDirectory(dirname);
+
+            await assertExists(dirname);
+        });
+    });
+
+    suite('deleteDirectory', () => {
+        test('wraps the low-level impl', async () => {
+            const dirname = await fix.createDirectory('x');
+            await assertExists(dirname);
+
+            await utils.deleteDirectory(dirname);
+
+            await assertDoesNotExist(dirname);
+        });
+    });
+
+    suite('deleteFile', () => {
+        test('wraps the low-level impl', async () => {
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            await assertExists(filename);
+
+            await utils.deleteFile(filename);
+
+            await assertDoesNotExist(filename);
+        });
+    });
+
+    suite('listdir', () => {
+        test('wraps the low-level impl', async () => {
+            test('mixed', async () => {
+                // Create the target directory and its contents.
+                const dirname = await fix.createDirectory('x/y/z');
+                const file = await fix.createFile('x/y/z/__init__.py', '');
+                const subdir = await fix.createDirectory('x/y/z/w');
+
+                const entries = await utils.listdir(dirname);
+
+                expect(entries.sort()).to.deep.equal([
+                    [file, FileType.File],
+                    [subdir, FileType.Directory]
+                ]);
+            });
+        });
+    });
+
+    suite('isDirReadonly', () => {
+        suite('non-Windows', () => {
+            suiteSetup(function() {
+                if (WINDOWS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+            });
+
+            // On Windows, chmod won't have any effect on the file itself.
+            test('is readonly', async () => {
+                const dirname = await fix.createDirectory('x/y/z/spam');
+                await fs.chmod(dirname, 0o444);
+
+                const isReadonly = await utils.isDirReadonly(dirname);
+
+                expect(isReadonly).to.equal(true);
+            });
+        });
+
+        test('is not readonly', async () => {
+            const dirname = await fix.createDirectory('x/y/z/spam');
+
+            const isReadonly = await utils.isDirReadonly(dirname);
+
+            expect(isReadonly).to.equal(false);
+        });
+
+        test('fail if the directory does not exist', async () => {
+            const promise = utils.isDirReadonly(DOES_NOT_EXIST);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+
+    suite('getFileHash', () => {
+        // Since getFileHash() relies on timestamps, we have to take
+        // into account filesystem timestamp resolution.  For instance
+        // on FAT and HFS it is 1 second.
+        // See: https://nodejs.org/api/fs.html#fs_stat_time_values
+
+        test('Getting hash for a file should return non-empty string', async () => {
+            const filename = await fix.createFile('x/y/z/spam.py');
+
+            const hash = await utils.getFileHash(filename);
+
+            expect(hash).to.not.equal('');
+        });
+
+        test('the returned hash is stable', async () => {
+            const filename = await fix.createFile('x/y/z/spam.py');
+
+            const hash1 = await utils.getFileHash(filename);
+            const hash2 = await utils.getFileHash(filename);
+            await sleep(2_000); // just in case
+            const hash3 = await utils.getFileHash(filename);
+
+            expect(hash1).to.equal(hash2);
+            expect(hash1).to.equal(hash3);
+            expect(hash2).to.equal(hash3);
+        });
+
+        test('the returned hash changes with modification', async () => {
+            const filename = await fix.createFile('x/y/z/spam.py', 'original text');
+
+            const hash1 = await utils.getFileHash(filename);
+            await sleep(2_000); // for filesystems with 1s resolution
+            await fs.writeFile(filename, 'new text');
+            const hash2 = await utils.getFileHash(filename);
+
+            expect(hash1).to.not.equal(hash2);
+        });
+
+        test('the returned hash is unique', async () => {
+            const file1 = await fix.createFile('spam.py');
+            await sleep(2_000); // for filesystems with 1s resolution
+            const file2 = await fix.createFile('x/y/z/spam.py');
+            await sleep(2_000); // for filesystems with 1s resolution
+            const file3 = await fix.createFile('eggs.py');
+
+            const hash1 = await utils.getFileHash(file1);
+            const hash2 = await utils.getFileHash(file2);
+            const hash3 = await utils.getFileHash(file3);
+
+            expect(hash1).to.not.equal(hash2);
+            expect(hash1).to.not.equal(hash3);
+            expect(hash2).to.not.equal(hash3);
+        });
+
+        test('Getting hash for non existent file should throw error', async () => {
+            const promise = utils.getFileHash(DOES_NOT_EXIST);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+
+    suite('search', () => {
+        test('found matches', async () => {
+            const pattern = await fix.resolve(`x/y/z/spam.*`);
+            const expected: string[] = [
+                await fix.createFile('x/y/z/spam.py'),
+                await fix.createFile('x/y/z/spam.pyc'),
+                await fix.createFile('x/y/z/spam.so'),
+                await fix.createDirectory('x/y/z/spam.data')
+            ];
+            // non-matches
+            await fix.createFile('x/spam.py');
+            await fix.createFile('x/y/z/eggs.py');
+            await fix.createFile('x/y/z/spam-all.py');
+            await fix.createFile('x/y/z/spam');
+            await fix.createFile('x/spam.py');
+
+            let files = await utils.search(pattern);
+
+            // For whatever reason, on Windows "search()" is
+            // returning filenames with forward slasshes...
+            files = files.map(fixPath);
+            expect(files.sort()).to.deep.equal(expected.sort());
+        });
+
+        test('no matches', async () => {
+            const pattern = await fix.resolve(`x/y/z/spam.*`);
+
+            const files = await utils.search(pattern);
+
+            expect(files).to.deep.equal([]);
+        });
+    });
+
+    suite('fileExistsSync', () => {
+        test('want file, got file', async () => {
+            const filename = await fix.createFile('x/y/z/spam.py');
+
+            const exists = utils.fileExistsSync(filename);
+
+            expect(exists).to.equal(true);
+        });
+
+        test('want file, not file', async () => {
+            const filename = await fix.createDirectory('x/y/z/spam.py');
+
+            const exists = utils.fileExistsSync(filename);
+
+            // Note that currently the "file" can be *anything*.  It
+            // doesn't have to be just a regular file.  This is the
+            // way it already worked, so we're keeping it that way
+            // for now.
+            expect(exists).to.equal(true);
+        });
+
+        test('symlink', async function() {
+            if (!SUPPORTS_SYMLINKS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
+
+            const exists = utils.fileExistsSync(symlink);
+
+            // Note that currently the "file" can be *anything*.  It
+            // doesn't have to be just a regular file.  This is the
+            // way it already worked, so we're keeping it that way
+            // for now.
+            expect(exists).to.equal(true);
+        });
+
+        test('unknown', async function() {
+            if (WINDOWS) {
+                // tslint:disable-next-line:no-suspicious-comment
+                // TODO(GH-8995) These tests are failing on Windows,
+                // so we are // temporarily disabling it.
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
+            }
+            if (!SUPPORTS_SOCKETS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const sockFile = await fix.createSocket('x/y/z/ipc.sock');
+
+            const exists = utils.fileExistsSync(sockFile);
+
+            // Note that currently the "file" can be *anything*.  It
+            // doesn't have to be just a regular file.  This is the
+            // way it already worked, so we're keeping it that way
+            // for now.
+            expect(exists).to.equal(true);
+        });
+    });
+});
+
 suite('FileSystem', () => {
     let fileSystem: FileSystem;
     let fix: FSFixture;
@@ -837,24 +1097,6 @@ suite('FileSystem', () => {
     });
 
     suite('raw', () => {
-        suite('lstat', () => {
-            test('wraps the low-level impl', async () => {
-                const filename = await fix.createFile('x/y/z/spam.py', '...');
-                // Ideally we would compare to the result of
-                // fileSystem.stat().  However, we do not have access
-                // to the VS Code API here.
-                // prettier-ignore
-                const expected = convertStat(
-                    await fs.lstat(filename),
-                    FileType.File
-                );
-
-                const stat = await fileSystem.lstat(filename);
-
-                expect(stat).to.deep.equal(expected);
-            });
-        });
-
         suite('createDirectory', () => {
             test('wraps the low-level impl', async () => {
                 await fix.createDirectory('x');
@@ -964,17 +1206,6 @@ suite('FileSystem', () => {
                 const original = await fs.readFile(src)
                     .then(buffer => buffer.toString());
                 expect(original).to.equal(data);
-            });
-        });
-
-        suite('deleteFile', () => {
-            test('wraps the low-level impl', async () => {
-                const filename = await fix.createFile('x/y/z/spam.py', '...');
-                await assertExists(filename);
-
-                await fileSystem.deleteFile(filename);
-
-                await assertDoesNotExist(filename);
             });
         });
 

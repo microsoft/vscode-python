@@ -43,4 +43,5 @@ debug*.log
 ptvsd*.log
 pydevd*.log
 nodeLanguageServer/**
+nodeLanguageServer.*/**
 

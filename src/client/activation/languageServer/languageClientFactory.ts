@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable, named } from 'inversify';
+
+import { inject, injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { LanguageClient, LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 
@@ -9,51 +10,16 @@ import { IConfigurationService, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
-import { ILanguageClientFactory, ILanguageServerFolderService, IPlatformData, LanguageClientFactory } from '../types';
+import { ILanguageClientFactory, ILanguageServerFolderService, IPlatformData } from '../types';
 
 // tslint:disable:no-require-imports no-require-imports no-var-requires max-classes-per-file
 
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 
-@injectable()
-export class BaseLanguageClientFactory implements ILanguageClientFactory {
-    constructor(
-        @inject(ILanguageClientFactory) @named(LanguageClientFactory.downloaded) private readonly downloadedFactory: ILanguageClientFactory,
-        @inject(ILanguageClientFactory) @named(LanguageClientFactory.simple) private readonly simpleFactory: ILanguageClientFactory,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(IEnvironmentActivationService) private readonly environmentActivationService: IEnvironmentActivationService
-    ) {}
-    public async createLanguageClient(resource: Resource, interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
-        const settings = this.configurationService.getSettings(resource);
-        const factory = settings.downloadLanguageServer ? this.downloadedFactory : this.simpleFactory;
-        const env = await this.getEnvVars(resource, interpreter);
-        return factory.createLanguageClient(resource, interpreter, clientOptions, env);
-    }
+export class DotNetDownloadedLanguageClientFactory implements ILanguageClientFactory {
+    constructor(private readonly platformData: IPlatformData, private readonly languageServerFolderService: ILanguageServerFolderService) {}
 
-    private async getEnvVars(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<NodeJS.ProcessEnv> {
-        const envVars = await this.environmentActivationService.getActivatedEnvironmentVariables(resource, interpreter);
-        if (envVars && Object.keys(envVars).length > 0) {
-            return envVars;
-        }
-        return this.envVarsProvider.getEnvironmentVariables(resource);
-    }
-}
-
-/**
- * Creates a language client for use by users of the extension.
- *
- * @export
- * @class DownloadedLanguageClientFactory
- * @implements {ILanguageClientFactory}
- */
-@injectable()
-export class DownloadedLanguageClientFactory implements ILanguageClientFactory {
-    constructor(
-        @inject(IPlatformData) private readonly platformData: IPlatformData,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
-    ) {}
     public async createLanguageClient(
         resource: Resource,
         _interpreter: PythonInterpreter | undefined,
@@ -72,19 +38,9 @@ export class DownloadedLanguageClientFactory implements ILanguageClientFactory {
     }
 }
 
-/**
- * Creates a language client factory primarily used for LS development purposes.
- *
- * @export
- * @class SimpleLanguageClientFactory
- * @implements {ILanguageClientFactory}
- */
-@injectable()
-export class SimpleLanguageClientFactory implements ILanguageClientFactory {
-    constructor(
-        @inject(IPlatformData) private readonly platformData: IPlatformData,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
-    ) {}
+export class DotNetSimpleLanguageClientFactory implements ILanguageClientFactory {
+    constructor(private readonly platformData: IPlatformData, private readonly languageServerFolderService: ILanguageServerFolderService) {}
+
     public async createLanguageClient(
         resource: Resource,
         _interpreter: PythonInterpreter | undefined,
@@ -100,5 +56,40 @@ export class SimpleLanguageClientFactory implements ILanguageClientFactory {
         };
         const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');
         return new vscodeLanguageClient.LanguageClient(PYTHON_LANGUAGE, languageClientName, serverOptions, clientOptions);
+    }
+}
+
+@injectable()
+export class DotNetLanguageClientFactory implements ILanguageClientFactory {
+    constructor(
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
+        @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
+        @inject(IEnvironmentActivationService) private readonly environmentActivationService: IEnvironmentActivationService,
+        @inject(IPlatformData) private readonly platformData: IPlatformData,
+        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService,
+        @unmanaged() private readonly downloadedFactory: ILanguageClientFactory,
+        @unmanaged() private readonly simpleFactory: ILanguageClientFactory
+    ) {}
+
+    public async createLanguageClient(resource: Resource, interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
+        const settings = this.configurationService.getSettings(resource);
+        let factory: ILanguageClientFactory;
+        if (this.platformData && this.languageServerFolderService) {
+            factory = settings.downloadLanguageServer
+                ? new DotNetDownloadedLanguageClientFactory(this.platformData, this.languageServerFolderService)
+                : new DotNetSimpleLanguageClientFactory(this.platformData, this.languageServerFolderService);
+        } else {
+            factory = settings.downloadLanguageServer ? this.downloadedFactory : this.simpleFactory;
+        }
+        const env = await this.getEnvVars(resource, interpreter);
+        return factory.createLanguageClient(resource, interpreter, clientOptions, env);
+    }
+
+    private async getEnvVars(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<NodeJS.ProcessEnv> {
+        const envVars = await this.environmentActivationService.getActivatedEnvironmentVariables(resource, interpreter);
+        if (envVars && Object.keys(envVars).length > 0) {
+            return envVars;
+        }
+        return this.envVarsProvider.getEnvironmentVariables(resource);
     }
 }

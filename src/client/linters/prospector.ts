@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
 import '../common/extensions';
+import { traceError } from '../common/logger';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { BaseLinter } from './baseLinter';
@@ -40,7 +41,7 @@ export class Prospector extends BaseLinter {
         } catch (ex) {
             this.outputChannel.appendLine(`${'#'.repeat(10)}Linting Output - ${this.info.id}${'#'.repeat(10)}`);
             this.outputChannel.append(output);
-            this.logger.logError('Failed to parse Prospector output', ex);
+            traceError('Failed to parse Prospector output', ex);
             return [];
         }
         return parsedData.messages

@@ -11,8 +11,8 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
+import { traceError } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { ICondaService, IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -27,8 +27,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
         @inject(IInterpreterHelper) private helperService: IInterpreterHelper,
         @inject(ICondaService) private condaService: ICondaService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(ILogger) private logger: ILogger
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         super('CondaEnvFileService', serviceContainer);
     }
@@ -88,7 +87,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
             }
             return interpreters;
         } catch (err) {
-            this.logger.logError('Python Extension (getEnvironmentsFromFile.readFile):', err);
+            traceError('Python Extension (getEnvironmentsFromFile.readFile):', err);
             // Ignore errors in reading the file.
             return [] as PythonInterpreter[];
         }

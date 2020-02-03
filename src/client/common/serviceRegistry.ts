@@ -39,7 +39,6 @@ import { InsidersExtensionPrompt } from './insidersBuild/insidersExtensionPrompt
 import { InsidersExtensionService } from './insidersBuild/insidersExtensionService';
 import { ExtensionChannel, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
-import { Logger } from './logger';
 import { BrowserService } from './net/browser';
 import { FileDownloader } from './net/fileDownloader';
 import { HttpClient } from './net/httpClient';
@@ -84,7 +83,6 @@ import {
     IExtensions,
     IFeatureDeprecationManager,
     IInstaller,
-    ILogger,
     IPathUtils,
     IPersistentStateFactory,
     IRandom,
@@ -99,7 +97,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IRandom>(IRandom, Random);
     serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
-    serviceManager.addSingleton<ILogger>(ILogger, Logger);
     serviceManager.addSingleton<ITerminalServiceFactory>(ITerminalServiceFactory, TerminalServiceFactory);
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);

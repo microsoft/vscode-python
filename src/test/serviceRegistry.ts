@@ -7,9 +7,8 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Memento, OutputChannel, Uri } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
-import { Logger } from '../client/common/logger';
 import { IS_WINDOWS } from '../client/common/platform/constants';
-import { convertStat, FileSystem, RawFileSystem } from '../client/common/platform/fileSystem';
+import { convertStat, FileSystem, FileSystemUtils, RawFileSystem } from '../client/common/platform/fileSystem';
 import { PathUtils } from '../client/common/platform/pathUtils';
 import { PlatformService } from '../client/common/platform/platformService';
 import { RegistryImplementation } from '../client/common/platform/registry';
@@ -22,7 +21,7 @@ import { PythonToolExecutionService } from '../client/common/process/pythonToolS
 import { registerTypes as processRegisterTypes } from '../client/common/process/serviceRegistry';
 import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonToolExecutionService } from '../client/common/process/types';
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
-import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPathUtils, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
+import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, IMemento, IOutputChannel, IPathUtils, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
@@ -98,7 +97,8 @@ class LegacyFileSystem extends FileSystem {
     constructor() {
         super();
         const vscfs = new FakeVSCodeFileSystemAPI();
-        this.raw = RawFileSystem.withDefaults(undefined, vscfs);
+        const raw = RawFileSystem.withDefaults(undefined, vscfs);
+        this.utils = FileSystemUtils.withDefaults(raw);
     }
 }
 
@@ -230,7 +230,6 @@ export class IocContainer {
     public registerMockProcess() {
         this.serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 
-        this.serviceManager.addSingleton<ILogger>(ILogger, Logger);
         this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         this.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, MockProcess);
     }

@@ -9,7 +9,7 @@ import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } f
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentState, IPersistentStateFactory } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
@@ -60,7 +60,6 @@ export class JupyterCommandFinderImpl {
         @unmanaged() private readonly knownSearchPaths: IKnownSearchPathsForInterpreters,
         @unmanaged() disposableRegistry: IDisposableRegistry,
         @unmanaged() protected readonly fileSystem: IFileSystem,
-        @unmanaged() private readonly logger: ILogger,
         @unmanaged() private readonly processServiceFactory: IProcessServiceFactory,
         @unmanaged() private readonly commandFactory: IJupyterCommandFactory,
         @unmanaged() protected readonly workspace: IWorkspaceService,
@@ -160,7 +159,7 @@ export class JupyterCommandFinderImpl {
             const files = await this.fileSystem.getFiles(pathToCheck);
             return files ? files.filter(s => RegExpValues.CheckJupyterRegEx.test(path.basename(s))) : [];
         } catch (err) {
-            this.logger.logWarning('Python Extension (fileSystem.getFiles):', err);
+            traceWarning('Python Extension (fileSystem.getFiles):', err);
         }
         return [] as string[];
     }
@@ -390,13 +389,13 @@ export class JupyterCommandFinderImpl {
             try {
                 const execResult = await pythonService.execModule('jupyter', [moduleName, '--version'], newOptions);
                 if (execResult.stderr) {
-                    this.logger.logWarning(`${execResult.stderr} for ${interpreter.path}`);
+                    traceWarning(`${execResult.stderr} for ${interpreter.path}`);
                     result.error = execResult.stderr;
                 } else {
                     result.status = ModuleExistsStatus.FoundJupyter;
                 }
             } catch (err) {
-                this.logger.logWarning(`${err} for ${interpreter.path}`);
+                traceWarning(`${err} for ${interpreter.path}`);
             }
 
             // After trying first as "-m jupyter <module> --version" then try "-m <module> --version" as this works in some cases
@@ -405,19 +404,19 @@ export class JupyterCommandFinderImpl {
                 try {
                     const execResult = await pythonService.execModule(moduleName, ['--version'], newOptions);
                     if (execResult.stderr) {
-                        this.logger.logWarning(`${execResult.stderr} for ${interpreter.path}`);
+                        traceWarning(`${execResult.stderr} for ${interpreter.path}`);
                         result.error = execResult.stderr;
                     } else {
                         result.status = ModuleExistsStatus.Found;
                     }
                 } catch (err) {
-                    this.logger.logWarning(`${err} for ${interpreter.path}`);
+                    traceWarning(`${err} for ${interpreter.path}`);
                     result.status = ModuleExistsStatus.NotFound;
                     result.error = err.toString();
                 }
             }
         } else {
-            this.logger.logWarning(`Interpreter not found. ${moduleName} cannot be loaded.`);
+            traceWarning(`Interpreter not found. ${moduleName} cannot be loaded.`);
             result.status = ModuleExistsStatus.NotFound;
         }
 
@@ -482,26 +481,13 @@ export class JupyterCommandFinder extends JupyterCommandFinderImpl {
         @inject(IKnownSearchPathsForInterpreters) knownSearchPaths: IKnownSearchPathsForInterpreters,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(ILogger) logger: ILogger,
         @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
         @inject(IJupyterCommandFactory) commandFactory: IJupyterCommandFactory,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IPersistentStateFactory) persistentStateFactory: IPersistentStateFactory
     ) {
-        super(
-            interpreterService,
-            executionFactory,
-            configuration,
-            knownSearchPaths,
-            disposableRegistry,
-            fileSystem,
-            logger,
-            processServiceFactory,
-            commandFactory,
-            workspace,
-            appShell
-        );
+        super(interpreterService, executionFactory, configuration, knownSearchPaths, disposableRegistry, fileSystem, processServiceFactory, commandFactory, workspace, appShell);
 
         // Cache stores to keep track of jupyter interpreters found.
         const workspaceState = persistentStateFactory.createWorkspacePersistentState<string>('DS-VSC-JupyterInterpreter');

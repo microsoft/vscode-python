@@ -9,7 +9,7 @@ import * as constants from '../common/constants';
 import { AlwaysDisplayTestExplorerGroups } from '../common/experimentGroups';
 import '../common/extensions';
 import { traceError } from '../common/logger';
-import { IConfigurationService, IDisposableRegistry, IExperimentsManager, ILogger, IOutputChannel, Resource } from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
@@ -71,7 +71,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         this.registerHandlers();
         this.registerCommands();
         this.checkExperiments();
-        this.autoDiscoverTests(undefined).catch(ex => this.serviceContainer.get<ILogger>(ILogger).logError('Failed to auto discover tests upon activation', ex));
+        this.autoDiscoverTests(undefined).catch(ex => traceError('Failed to auto discover tests upon activation', ex));
         await this.registerSymbolProvider(symbolProvider);
     }
     public checkExperiments() {
@@ -138,7 +138,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         if (this.testResultDisplay) {
             this.testResultDisplay.enabled = true;
         }
-        this.autoDiscoverTests(workspaceUri).catch(ex => this.serviceContainer.get<ILogger>(ILogger).logError('Failed to auto discover tests upon activation', ex));
+        this.autoDiscoverTests(workspaceUri).catch(ex => traceError('Failed to auto discover tests upon activation', ex));
     }
 
     public async discoverTestsForDocument(doc: TextDocument): Promise<void> {

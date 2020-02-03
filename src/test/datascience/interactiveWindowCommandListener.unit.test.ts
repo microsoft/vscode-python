@@ -13,10 +13,9 @@ import { ApplicationShell } from '../../client/common/application/applicationShe
 import { IApplicationShell } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { Logger } from '../../client/common/logger';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IConfigurationService, IDisposable, ILogger } from '../../client/common/types';
+import { IConfigurationService, IDisposable } from '../../client/common/types';
 import * as localize from '../../client/common/utils/localize';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
@@ -52,7 +51,6 @@ suite('Interactive window command listener', async () => {
     const interpreterService = mock(InterpreterService);
     const configService = mock(ConfigurationService);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
-    const logger = mock(Logger);
     const fileSystem = mock(FileSystem);
     const serviceContainer = mock(ServiceContainer);
     const dummyEvent = new EventEmitter<void>();
@@ -107,7 +105,6 @@ suite('Interactive window command listener', async () => {
         // Service container needs logger, file system, and config service
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
-        when(serviceContainer.get<ILogger>(ILogger)).thenReturn(instance(logger));
         when(configService.getSettings()).thenReturn(pythonSettings);
 
         // Setup default settings
@@ -201,7 +198,6 @@ suite('Interactive window command listener', async () => {
             documentManager,
             instance(applicationShell),
             instance(fileSystem),
-            instance(logger),
             instance(configService),
             statusProvider,
             instance(notebookImporter),

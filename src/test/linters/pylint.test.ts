@@ -10,7 +10,7 @@ import { CancellationTokenSource, DiagnosticSeverity, OutputChannel, TextDocumen
 import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPythonToolExecutionService } from '../../client/common/process/types';
-import { ExecutionInfo, IConfigurationService, IInstaller, ILogger, IPythonSettings } from '../../client/common/types';
+import { ExecutionInfo, IConfigurationService, IInstaller, IPythonSettings } from '../../client/common/types';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -57,8 +57,6 @@ suite('Linting - Pylint', () => {
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
         const linterManager = new LinterManager(serviceContainer, workspace.object);
         serviceManager.addSingletonInstance<ILinterManager>(ILinterManager, linterManager);
-        const logger = TypeMoq.Mock.ofType<ILogger>();
-        serviceManager.addSingletonInstance<ILogger>(ILogger, logger.object);
         const installer = TypeMoq.Mock.ofType<IInstaller>();
         serviceManager.addSingletonInstance<IInstaller>(IInstaller, installer.object);
     });

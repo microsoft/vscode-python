@@ -17,7 +17,6 @@ import {
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from '../../client/common/installer/types';
-import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
@@ -29,7 +28,6 @@ import {
     IConfigurationService,
     ICurrentProcess,
     IInstaller,
-    ILogger,
     IPathUtils,
     IPersistentStateFactory,
     IsWindows,
@@ -80,7 +78,6 @@ suite('Installer', () => {
         ioc.registerFormatterTypes();
 
         ioc.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
-        ioc.serviceManager.addSingleton<ILogger>(ILogger, Logger);
         ioc.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
         ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         ioc.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);

@@ -22,7 +22,7 @@ import { IArgumentsHelper, IArgumentsService, ITestManagerRunner, IUnitTestHelpe
 import { UnitTestHelper } from '../../client/testing/unittest/helper';
 import { ArgumentsService as UnitTestArgumentsService } from '../../client/testing/unittest/services/argsService';
 import { deleteDirectory, rootWorkspaceUri, updateSetting } from '../common';
-import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
+import { initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from './../initialize';
 import { MockDebugLauncher } from './mocks';
 import { UnitTestIocContainer } from './serviceRegistry';
 
@@ -42,7 +42,9 @@ suite('Unit Tests - debugging', () => {
         await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
         await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
     });
-    setup(async () => {
+    setup(async function() {
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2); // This hook requires more timeout as we're deleting files as well
         await deleteDirectory(path.join(testFilesPath, '.cache'));
         await initializeTest();
         initializeDI();

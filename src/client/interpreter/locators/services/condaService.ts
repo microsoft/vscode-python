@@ -4,10 +4,10 @@ import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
-import { Logger, traceDecorators, traceVerbose } from '../../../common/logger';
+import { traceDecorators, traceError, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../common/types';
 import { cache } from '../../../common/utils/decorators';
 import { CondaEnvironmentInfo, CondaInfo, ICondaService, IInterpreterLocatorService, InterpreterType, PythonInterpreter, WINDOWS_REGISTRY_SERVICE } from '../../contracts';
 import { CondaHelper } from './condaHelper';
@@ -53,7 +53,6 @@ export class CondaService implements ICondaService {
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IPersistentStateFactory) private persistentStateFactory: IPersistentStateFactory,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(ILogger) private logger: ILogger,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) @optional() private registryLookupForConda?: IInterpreterLocatorService
@@ -128,7 +127,7 @@ export class CondaService implements ICondaService {
             return version;
         }
         // Use a bogus version, at least to indicate the fact that a version was returned.
-        Logger.warn(`Unable to parse Version of Conda, ${versionString}`);
+        traceWarning(`Unable to parse Version of Conda, ${versionString}`);
         return new SemVer('0.0.1');
     }
 
@@ -245,7 +244,7 @@ export class CondaService implements ICondaService {
             // Failed because either:
             //   1. conda is not installed.
             //   2. `conda env list has changed signature.
-            this.logger.logInformation('Failed to get conda environment list from conda', ex);
+            traceError('Failed to get conda environment list from conda', ex);
         }
     }
 
@@ -376,7 +375,7 @@ export class CondaService implements ICondaService {
     private async getCondaFileFromKnownLocations(): Promise<string> {
         const globPattern = this.platform.isWindows ? CondaLocationsGlobWin : CondaLocationsGlob;
         const condaFiles = await this.fileSystem.search(globPattern).catch<string[]>(failReason => {
-            Logger.warn('Default conda location search failed.', `Searching for default install locations for conda results in error: ${failReason}`);
+            traceWarning('Default conda location search failed.', `Searching for default install locations for conda results in error: ${failReason}`);
             return [];
         });
         const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);

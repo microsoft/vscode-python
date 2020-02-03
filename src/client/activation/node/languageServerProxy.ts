@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import '../../common/extensions';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 
 import { traceDecorators, traceError } from '../../common/logger';
@@ -16,7 +16,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
 import { ProgressReporting } from '../progress';
-import { ILanguageClientFactory, ILanguageServerProxy, LanguageServerType } from '../types';
+import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 
 @injectable()
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
@@ -26,7 +26,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     private disposed: boolean = false;
 
     constructor(
-        @inject(ILanguageClientFactory) @named(LanguageServerType.Node) private readonly factory: ILanguageClientFactory,
+        @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {

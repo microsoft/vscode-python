@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../client/common/platform/types';
-import { ILogger, IPersistentStateFactory } from '../../client/common/types';
+import { IPersistentStateFactory } from '../../client/common/types';
 import { ICondaService, InterpreterType } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { AnacondaCompanyName } from '../../client/interpreter/locators/services/conda';
@@ -16,7 +16,6 @@ const environmentsPath = path.join(__dirname, '..', '..', '..', 'src', 'test', '
 // tslint:disable-next-line:max-func-body-length
 suite('Interpreters from Conda Environments', () => {
     let ioc: UnitTestIocContainer;
-    let logger: TypeMoq.IMock<ILogger>;
     let condaProvider: CondaEnvService;
     let condaService: TypeMoq.IMock<ICondaService>;
     let interpreterHelper: TypeMoq.IMock<InterpreterHelper>;
@@ -32,7 +31,7 @@ suite('Interpreters from Conda Environments', () => {
         condaService = TypeMoq.Mock.ofType<ICondaService>();
         interpreterHelper = TypeMoq.Mock.ofType<InterpreterHelper>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        condaProvider = new CondaEnvService(condaService.object, interpreterHelper.object, logger.object, serviceContainer.object, fileSystem.object);
+        condaProvider = new CondaEnvService(condaService.object, interpreterHelper.object, serviceContainer.object, fileSystem.object);
     });
     teardown(() => ioc.dispose());
     function initializeDI() {
@@ -40,7 +39,6 @@ suite('Interpreters from Conda Environments', () => {
         ioc.registerCommonTypes();
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
-        logger = TypeMoq.Mock.ofType<ILogger>();
     }
 
     test('Must return an empty list for empty json', async () => {

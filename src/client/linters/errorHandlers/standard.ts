@@ -1,5 +1,6 @@
 import { OutputChannel, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
+import { traceError } from '../../common/logger';
 import { ExecutionInfo, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ILinterManager, LinterId } from '../types';
@@ -17,7 +18,7 @@ export class StandardErrorHandler extends BaseErrorHandler {
         const linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
         const info = linterManager.getLinterInfo(execInfo.product!);
 
-        this.logger.logError(`There was an error in running the linter ${info.id}`, error);
+        traceError(`There was an error in running the linter ${info.id}`, error);
         this.outputChannel.appendLine(`Linting with ${info.id} failed.`);
         this.outputChannel.appendLine(error.toString());
 
