@@ -21,7 +21,7 @@
             "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
-            ],
+            ]
         },
         {
             "name": "Extension inside container",
