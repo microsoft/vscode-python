@@ -13,7 +13,7 @@ import { CancellationTokenSource, OutputChannel, TextDocument, Uri, WorkspaceFol
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import '../../client/common/extensions';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService, IInstaller, ILintingSettings, ILogger, IOutputChannel, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, IInstaller, ILintingSettings, IOutputChannel, IPythonSettings } from '../../client/common/types';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -89,9 +89,6 @@ suite('Linting - Arguments', () => {
                     workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
                     workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
                     serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
-
-                    const logger = TypeMoq.Mock.ofType<ILogger>();
-                    serviceManager.addSingletonInstance<ILogger>(ILogger, logger.object);
 
                     const installer = TypeMoq.Mock.ofType<IInstaller>();
                     serviceManager.addSingletonInstance<IInstaller>(IInstaller, installer.object);

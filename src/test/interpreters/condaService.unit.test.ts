@@ -12,7 +12,7 @@ import { FileSystemPaths, FileSystemPathUtils } from '../../client/common/platfo
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { ITerminalActivationCommandProvider } from '../../client/common/terminal/types';
-import { IConfigurationService, ILogger, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
+import { IConfigurationService, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterLocatorService, IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
@@ -45,7 +45,6 @@ suite('Interpreters Conda Service', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let procServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
     let persistentStateFactory: TypeMoq.IMock<IPersistentStateFactory>;
-    let logger: TypeMoq.IMock<ILogger>;
     let condaPathSetting: string;
     let disposableRegistry: Disposable[];
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
@@ -54,7 +53,6 @@ suite('Interpreters Conda Service', () => {
     let terminalProvider: TypeMoq.IMock<ITerminalActivationCommandProvider>;
     setup(async () => {
         condaPathSetting = '';
-        logger = TypeMoq.Mock.ofType<ILogger>();
         processService = TypeMoq.Mock.ofType<IProcessService>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
@@ -81,7 +79,6 @@ suite('Interpreters Conda Service', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny())).returns(() => procServiceFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => config.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalActivationCommandProvider), TypeMoq.It.isAny())).returns(() => terminalProvider.object);
@@ -104,7 +101,6 @@ suite('Interpreters Conda Service', () => {
             fileSystem.object,
             persistentStateFactory.object,
             config.object,
-            logger.object,
             disposableRegistry,
             workspaceService.object,
             registryInterpreterLocatorService.object
@@ -475,7 +471,6 @@ suite('Interpreters Conda Service', () => {
             fileSystem.object,
             persistentStateFactory.object,
             config.object,
-            logger.object,
             disposableRegistry,
             workspaceService.object
         );
@@ -602,10 +597,8 @@ suite('Interpreters Conda Service', () => {
         processService
             .setup(p => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['env', 'list']), TypeMoq.It.isAny()))
             .returns(() => Promise.reject(new Error('Not Found')));
-        logger.setup(l => l.logInformation(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.once());
         const environments = await condaService.getCondaEnvironments(true);
         assert.equal(environments, undefined, 'Conda environments do not match');
-        logger.verifyAll();
     });
 
     test('Returns cached conda environments', async () => {

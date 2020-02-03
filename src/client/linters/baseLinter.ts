@@ -7,8 +7,9 @@ import * as vscode from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
+import { traceError } from '../common/logger';
 import { IPythonToolExecutionService } from '../common/process/types';
-import { ExecutionInfo, IConfigurationService, ILogger, IPythonSettings, Product } from '../common/types';
+import { ExecutionInfo, IConfigurationService, IPythonSettings, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/errorHandler';
 import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from './types';
@@ -96,9 +97,6 @@ export abstract class BaseLinter implements ILinter {
         const workspaceRootPath = workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string' ? workspaceFolder.uri.fsPath : undefined;
         return typeof workspaceRootPath === 'string' ? workspaceRootPath : path.dirname(document.uri.fsPath);
     }
-    protected get logger(): ILogger {
-        return this.serviceContainer.get<ILogger>(ILogger);
-    }
     protected abstract runLinter(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]>;
 
     // tslint:disable-next-line:no-any
@@ -153,7 +151,7 @@ export abstract class BaseLinter implements ILinter {
         } else {
             this.errorHandler
                 .handleError(error, resource, execInfo)
-                .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'))
+                .catch(ex => traceError('Error in errorHandler.handleError', ex))
                 .ignoreErrors();
         }
     }
@@ -174,7 +172,7 @@ export abstract class BaseLinter implements ILinter {
                     }
                 }
             } catch (ex) {
-                this.logger.logError(`Linter '${this.info.id}' failed to parse the line '${line}.`, ex);
+                traceError(`Linter '${this.info.id}' failed to parse the line '${line}.`, ex);
             }
         }
         return messages;

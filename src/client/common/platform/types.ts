@@ -142,6 +142,51 @@ export interface IRawFileSystem {
     createWriteStream(filename: string): WriteStream;
 }
 
+// High-level filesystem operations used by the extension.
+export interface IFileSystemUtils {
+    readonly raw: IRawFileSystem;
+    readonly paths: IFileSystemPaths;
+    readonly pathUtils: IFileSystemPathUtils;
+    readonly tmp: ITempFileSystem;
+
+    //***********************
+    // aliases
+
+    createDirectory(dirname: string): Promise<void>;
+    deleteDirectory(dirname: string): Promise<void>;
+    deleteFile(filename: string): Promise<void>;
+
+    //***********************
+    // helpers
+
+    // Determine if the file exists, optionally requiring the type.
+    pathExists(filename: string, fileType?: FileType): Promise<boolean>;
+    // Determine if the regular file exists.
+    fileExists(filename: string): Promise<boolean>;
+    // Determine if the directory exists.
+    directoryExists(dirname: string): Promise<boolean>;
+    // Get all the directory's entries.
+    listdir(dirname: string): Promise<[string, FileType][]>;
+    // Get the paths of all immediate subdirectories.
+    getSubDirectories(dirname: string): Promise<string[]>;
+    // Get the paths of all immediately contained files.
+    getFiles(dirname: string): Promise<string[]>;
+    // Determine if the directory is read-only.
+    isDirReadonly(dirname: string): Promise<boolean>;
+    // Generate the sha512 hash for the file (based on timestamps).
+    getFileHash(filename: string): Promise<string>;
+    // Get the paths of all files matching the pattern.
+    search(globPattern: string): Promise<string[]>;
+
+    //***********************
+    // helpers (non-async)
+
+    fileExistsSync(path: string): boolean;
+}
+
+// tslint:disable-next-line:no-suspicious-comment
+// TODO(GH-8542): Later we will drop IFileSystem, switching usage to IFileSystemUtils.
+
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     // path-related

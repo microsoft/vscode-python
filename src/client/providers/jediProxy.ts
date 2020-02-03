@@ -12,7 +12,7 @@ import '../common/extensions';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
-import { BANNER_NAME_PROPOSE_LS, IConfigurationService, ILogger, IPythonExtensionBanner, IPythonSettings } from '../common/types';
+import { BANNER_NAME_PROPOSE_LS, IConfigurationService, IPythonExtensionBanner, IPythonSettings } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { swallowExceptions } from '../common/utils/decorators';
 import { StopWatch } from '../common/utils/stopWatch';
@@ -21,7 +21,7 @@ import { PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { Logger, traceError } from './../common/logger';
+import { traceError, traceWarning } from './../common/logger';
 
 const pythonVSCodeTypeMappings = new Map<string, CompletionItemKind>();
 pythonVSCodeTypeMappings.set('none', CompletionItemKind.Value);
@@ -146,7 +146,6 @@ export class JediProxy implements Disposable {
     private languageServerStarted!: Deferred<void>;
     private initialized: Deferred<void>;
     private environmentVariablesProvider!: IEnvironmentVariablesProvider;
-    private logger: ILogger;
     private ignoreJediMemoryFootprint: boolean = false;
     private pidUsageFailures = { timer: new StopWatch(), counter: 0 };
     private lastCmdIdProcessed?: number;
@@ -160,7 +159,6 @@ export class JediProxy implements Disposable {
         const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.pythonSettings = configurationService.getSettings(Uri.file(workspacePath));
         this.lastKnownPythonInterpreter = interpreter ? interpreter.path : this.pythonSettings.pythonPath;
-        this.logger = serviceContainer.get<ILogger>(ILogger);
         this.initialized = createDeferred<void>();
         this.startLanguageServer()
             .then(() => this.initialized.resolve())
@@ -290,7 +288,7 @@ export class JediProxy implements Disposable {
                     sendTelemetryEvent(EventName.JEDI_MEMORY, undefined, props);
                 }
                 if (restartJedi) {
-                    this.logger.logWarning(
+                    traceWarning(
                         `IntelliSense process memory consumption exceeded limit of ${limit} MB and process will be restarted.\nThe limit is controlled by the 'python.jediMemoryLimit' setting.`
                     );
                     await this.restartLanguageServer();
@@ -348,7 +346,7 @@ export class JediProxy implements Disposable {
     }
 
     private handleError(source: string, errorMessage: string) {
-        Logger.error(`${source} jediProxy`, `Error (${source}) ${errorMessage}`);
+        traceError(`${source} jediProxy`, `Error (${source}) ${errorMessage}`);
     }
 
     // tslint:disable-next-line:max-func-body-length
@@ -373,7 +371,7 @@ export class JediProxy implements Disposable {
         this.proc = result.proc;
         this.languageServerStarted.resolve();
         this.proc!.on('end', end => {
-            Logger.error('spawnProcess.end', `End - ${end}`);
+            traceError('spawnProcess.end', `End - ${end}`);
         });
         this.proc!.on('error', error => {
             this.handleError('error', `${error}`);

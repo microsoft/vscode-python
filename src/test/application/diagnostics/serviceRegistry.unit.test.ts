@@ -4,6 +4,7 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
+import { LanguageServerType } from '../../../client/activation/types';
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
 import { EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId } from '../../../client/application/diagnostics/checks/envPathVariable';
 import { InvalidLaunchJsonDebuggerService, InvalidLaunchJsonDebuggerServiceId } from '../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
@@ -28,7 +29,7 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
         serviceManager = mock(ServiceManager);
     });
     test('Register Classes', () => {
-        registerTypes(instance(serviceManager));
+        registerTypes(instance(serviceManager), LanguageServerType.Microsoft);
 
         verify(serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService));
         verify(

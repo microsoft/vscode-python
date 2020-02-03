@@ -2,18 +2,16 @@
 // Licensed under the MIT License.
 
 import { OutputChannel, Uri } from 'vscode';
-import { ExecutionInfo, IInstaller, ILogger, Product } from '../../common/types';
+import { ExecutionInfo, IInstaller, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IErrorHandler } from '../types';
 
 export abstract class BaseErrorHandler implements IErrorHandler {
-    protected logger: ILogger;
     protected installer: IInstaller;
 
     private handler?: IErrorHandler;
 
     constructor(protected product: Product, protected outputChannel: OutputChannel, protected serviceContainer: IServiceContainer) {
-        this.logger = this.serviceContainer.get<ILogger>(ILogger);
         this.installer = this.serviceContainer.get<IInstaller>(IInstaller);
     }
     protected get nextHandler(): IErrorHandler | undefined {

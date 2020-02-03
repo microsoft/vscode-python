@@ -8,8 +8,8 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
-import { azureCDNBlobStorageAccount, LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
-import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
+import { azureCDNBlobStorageAccount, LanguageServerDownloadChannel } from '../../../client/activation/common/packageRepository';
+import { DotNetLanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { PlatformName } from '../../../client/activation/types';
 import { IApplicationEnvironment } from '../../../client/common/application/types';
 import { NugetService } from '../../../client/common/nuget/nugetService';
@@ -24,13 +24,13 @@ const downloadBaseFileName = 'Python-Language-Server';
 suite('Language Server - Package Service', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let platform: typeMoq.IMock<IPlatformService>;
-    let lsPackageService: LanguageServerPackageService;
+    let lsPackageService: DotNetLanguageServerPackageService;
     let appVersion: typeMoq.IMock<IApplicationEnvironment>;
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         platform = typeMoq.Mock.ofType<IPlatformService>();
         appVersion = typeMoq.Mock.ofType<IApplicationEnvironment>();
-        lsPackageService = new LanguageServerPackageService(serviceContainer.object, appVersion.object, platform.object);
+        lsPackageService = new DotNetLanguageServerPackageService(serviceContainer.object, appVersion.object, platform.object);
         lsPackageService.getLanguageServerDownloadChannel = () => 'stable';
     });
     function setMinVersionOfLs(version: string) {
@@ -144,13 +144,13 @@ suite('Language Server - Package Service', () => {
             .returns(() => Promise.resolve(packages))
             .verifiable(typeMoq.Times.once());
 
-        const info = await lsPackageService.getLatestNugetPackageVersion(undefined);
+        const info = await lsPackageService.getLatestNugetPackageVersion(undefined, minimumVersion);
 
         repo.verifyAll();
         const expectedPackage: NugetPackage = {
             version: new SemVer(minimumVersion),
-            package: LanguageServerPackageStorageContainers.stable,
-            uri: `${azureCDNBlobStorageAccount}/${LanguageServerPackageStorageContainers.stable}/${packageName}.${minimumVersion}.nupkg`
+            package: LanguageServerDownloadChannel.stable,
+            uri: `${azureCDNBlobStorageAccount}/${LanguageServerDownloadChannel.stable}/${packageName}.${minimumVersion}.nupkg`
         };
         expect(info).to.deep.equal(expectedPackage);
     });
@@ -158,7 +158,7 @@ suite('Language Server - Package Service', () => {
 suite('Language Server Package Service - getLanguageServerDownloadChannel()', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let platform: typeMoq.IMock<IPlatformService>;
-    let lsPackageService: LanguageServerPackageService;
+    let lsPackageService: DotNetLanguageServerPackageService;
     let appVersion: typeMoq.IMock<IApplicationEnvironment>;
     let configService: typeMoq.IMock<IConfigurationService>;
     setup(() => {
@@ -167,7 +167,7 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
         appVersion = typeMoq.Mock.ofType<IApplicationEnvironment>();
         configService = typeMoq.Mock.ofType<IConfigurationService>();
         serviceContainer.setup(s => s.get(IConfigurationService)).returns(() => configService.object);
-        lsPackageService = new LanguageServerPackageService(serviceContainer.object, appVersion.object, platform.object);
+        lsPackageService = new DotNetLanguageServerPackageService(serviceContainer.object, appVersion.object, platform.object);
         lsPackageService.isAlphaVersionOfExtension = () => true;
     });
     test("If 'python.analysis.downloadChannel' setting is specified, return the value of the setting", async () => {

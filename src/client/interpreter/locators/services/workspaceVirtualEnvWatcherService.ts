@@ -8,7 +8,7 @@ import * as path from 'path';
 import { Disposable, Event, EventEmitter, FileSystemWatcher, RelativePattern, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
-import { Logger, traceDecorators } from '../../../common/logger';
+import { traceDecorators, traceVerbose } from '../../../common/logger';
 import { IPlatformService } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IDisposableRegistry, Resource } from '../../../common/types';
@@ -50,7 +50,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
 
         for (const pattern of patterns) {
             const globPatern = workspaceFolder ? new RelativePattern(workspaceFolder.uri.fsPath, pattern) : pattern;
-            Logger.verbose(`Create file systemwatcher with pattern ${pattern}`);
+            traceVerbose(`Create file systemwatcher with pattern ${pattern}`);
 
             const fsWatcher = this.workspaceService.createFileSystemWatcher(globPatern);
             fsWatcher.onDidCreate(e => this.createHandler(e), this, this.disposableRegistry);

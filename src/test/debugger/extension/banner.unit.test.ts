@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../../client/common/application/types';
-import { IBrowserService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory, IRandom } from '../../../client/common/types';
+import { IBrowserService, IDisposableRegistry, IPersistentState, IPersistentStateFactory, IRandom } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
 import { DebuggerBanner, PersistentStateKeys } from '../../../client/debugger/extension/banner';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -35,7 +35,6 @@ suite('Debugging - Banner', () => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         browser = typemoq.Mock.ofType<IBrowserService>();
         debugService = typemoq.Mock.ofType<IDebugService>();
-        const logger = typemoq.Mock.ofType<ILogger>();
 
         launchCounterState = typemoq.Mock.ofType<IPersistentState<number>>();
         showBannerState = typemoq.Mock.ofType<IPersistentState<boolean>>();
@@ -57,7 +56,6 @@ suite('Debugging - Banner', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IBrowserService))).returns(() => browser.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IPersistentStateFactory))).returns(() => factory.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDebugService))).returns(() => debugService.object);
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(ILogger))).returns(() => logger.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IRandom))).returns(() => runtime.object);

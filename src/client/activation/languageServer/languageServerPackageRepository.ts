@@ -4,41 +4,28 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { AzureBlobStoreNugetRepository } from '../../common/nuget/azureBlobStoreNugetRepository';
 import { IServiceContainer } from '../../ioc/types';
+import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, StableLanguageServerPackageRepository } from '../common/packageRepository';
 
-const azureBlobStorageAccount = 'https://pvsc.blob.core.windows.net';
-export const azureCDNBlobStorageAccount = 'https://pvsc.azureedge.net';
-
-export enum LanguageServerDownloadChannel {
-    stable = 'stable',
-    beta = 'beta',
-    daily = 'daily'
-}
-
-export enum LanguageServerPackageStorageContainers {
-    stable = 'python-language-server-stable',
-    beta = 'python-language-server-beta',
-    daily = 'python-language-server-daily'
-}
+const languageServerPackageName = 'python-language-server';
 
 @injectable()
-export class StableLanguageServerPackageRepository extends AzureBlobStoreNugetRepository {
+export class StableDotNetLanguageServerPackageRepository extends StableLanguageServerPackageRepository {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer, azureBlobStorageAccount, LanguageServerPackageStorageContainers.stable, azureCDNBlobStorageAccount);
+        super(serviceContainer, languageServerPackageName);
     }
 }
 
 @injectable()
-export class BetaLanguageServerPackageRepository extends AzureBlobStoreNugetRepository {
+export class BetaDotNetLanguageServerPackageRepository extends BetaLanguageServerPackageRepository {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer, azureBlobStorageAccount, LanguageServerPackageStorageContainers.beta, azureCDNBlobStorageAccount);
+        super(serviceContainer, languageServerPackageName);
     }
 }
 
 @injectable()
-export class DailyLanguageServerPackageRepository extends AzureBlobStoreNugetRepository {
+export class DailyDotNetLanguageServerPackageRepository extends DailyLanguageServerPackageRepository {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer, azureBlobStorageAccount, LanguageServerPackageStorageContainers.daily, azureCDNBlobStorageAccount);
+        super(serviceContainer, languageServerPackageName);
     }
 }

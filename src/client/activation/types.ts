@@ -124,7 +124,7 @@ export interface ILanguageServerDownloader {
 export const ILanguageServerPackageService = Symbol('ILanguageServerPackageService');
 export interface ILanguageServerPackageService {
     getNugetPackageName(): string;
-    getLatestNugetPackageVersion(resource: Resource): Promise<NugetPackage>;
+    getLatestNugetPackageVersion(resource: Resource, minVersion?: string): Promise<NugetPackage>;
     getLanguageServerDownloadChannel(): LanguageServerDownloadChannels;
 }
 

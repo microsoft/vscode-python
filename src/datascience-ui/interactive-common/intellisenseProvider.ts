@@ -66,12 +66,12 @@ export class IntellisenseProvider
         return promise.promise;
     }
 
-    public resolveCompletionItem(
+    public async resolveCompletionItem(
         model: monacoEditor.editor.ITextModel,
         position: monacoEditor.Position,
         item: monacoEditor.languages.CompletionItem,
         token: monacoEditor.CancellationToken
-    ): monacoEditor.languages.ProviderResult<monacoEditor.languages.CompletionItem> {
+    ): Promise<monacoEditor.languages.CompletionItem> {
         // If the item has already resolved documentation (as with MS LS) we don't need to do this
         if (!item.documentation) {
             // Emit a new request
@@ -86,7 +86,11 @@ export class IntellisenseProvider
             this.resolveCompletionRequests.set(requestId, { promise, cancelDisposable });
             this.sendMessage(InteractiveWindowMessages.ResolveCompletionItemRequest, { position, item, requestId, cellId: this.getCellId(model.id) });
 
-            return promise.promise;
+            const newItem = await promise.promise;
+            // Our code strips out _documentPosition and possibly other items that are too large to send
+            // so instead of returning the new resolve completion item, just return the old item with documentation added in
+            // which is what we are resolving the item to get
+            return Promise.resolve({ ...item, documentation: newItem.documentation });
         } else {
             return Promise.resolve(item);
         }

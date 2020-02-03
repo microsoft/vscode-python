@@ -17,6 +17,7 @@ import { ICondaService } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { ILinter, ILinterManager } from '../../client/linters/types';
 import { TEST_OUTPUT_CHANNEL } from '../../client/testing/common/constants';
+import { TEST_TIMEOUT } from '../constants';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
@@ -83,13 +84,13 @@ suite('Multiroot Linting', () => {
 
     test('Enabling Pylint in root and also in Workspace, should return errors', async () => {
         await runTest(Product.pylint, true, true, pylintSetting);
-    });
+    }).timeout(TEST_TIMEOUT * 2);
     test('Enabling Pylint in root and disabling in Workspace, should not return errors', async () => {
         await runTest(Product.pylint, true, false, pylintSetting);
-    });
+    }).timeout(TEST_TIMEOUT * 2);
     test('Disabling Pylint in root and enabling in Workspace, should return errors', async () => {
         await runTest(Product.pylint, false, true, pylintSetting);
-    });
+    }).timeout(TEST_TIMEOUT * 2);
 
     test('Enabling Flake8 in root and also in Workspace, should return errors', async () => {
         await runTest(Product.flake8, true, true, flake8Setting);

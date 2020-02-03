@@ -8,7 +8,7 @@ import * as semver from 'semver';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
-import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { IDownloadChannelRule, ILanguageServerPackageService } from '../../../client/activation/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService } from '../../../client/common/types';
@@ -17,7 +17,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 // tslint:disable-next-line:max-func-body-length
 suite('Language Server Folder Service', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-    let languageServerFolderService: LanguageServerFolderService;
+    let languageServerFolderService: DotNetLanguageServerFolderService;
     const resource = Uri.parse('a');
 
     suite('Method getLanguageServerFolderName()', async () => {
@@ -40,31 +40,31 @@ suite('Language Server Folder Service', () => {
         });
 
         test('Returns current Language server directory name if rule says we should not look for new LS', async () => {
-            shouldLookForNewLS = sinon.stub(LanguageServerFolderService.prototype, 'shouldLookForNewLanguageServer');
+            shouldLookForNewLS = sinon.stub(DotNetLanguageServerFolderService.prototype, 'shouldLookForNewLanguageServer');
             shouldLookForNewLS.resolves(false);
-            getCurrentLanguageServerDirectory = sinon.stub(LanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
+            getCurrentLanguageServerDirectory = sinon.stub(DotNetLanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
             getCurrentLanguageServerDirectory.resolves(currentLSDirectory);
-            languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
+            languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);
             const lsFolderName = await languageServerFolderService.getLanguageServerFolderName(resource);
             expect(lsFolderName).to.equal('currentLSDirectoryName');
         });
 
         test('Returns current Language server directory name if fetching latest LS version returns undefined', async () => {
-            shouldLookForNewLS = sinon.stub(LanguageServerFolderService.prototype, 'shouldLookForNewLanguageServer');
+            shouldLookForNewLS = sinon.stub(DotNetLanguageServerFolderService.prototype, 'shouldLookForNewLanguageServer');
             shouldLookForNewLS.resolves(true);
             languageServerPackageService
                 .setup(l => l.getLatestNugetPackageVersion(resource))
                 // tslint:disable-next-line: no-any
                 .returns(() => Promise.resolve(undefined) as any);
-            getCurrentLanguageServerDirectory = sinon.stub(LanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
+            getCurrentLanguageServerDirectory = sinon.stub(DotNetLanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
             getCurrentLanguageServerDirectory.resolves(currentLSDirectory);
-            languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
+            languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);
             const lsFolderName = await languageServerFolderService.getLanguageServerFolderName(resource);
             expect(lsFolderName).to.equal('currentLSDirectoryName');
         });
 
         test('Returns current Language server directory name if fetched latest LS version is less than the current LS version', async () => {
-            shouldLookForNewLS = sinon.stub(LanguageServerFolderService.prototype, 'shouldLookForNewLanguageServer');
+            shouldLookForNewLS = sinon.stub(DotNetLanguageServerFolderService.prototype, 'shouldLookForNewLanguageServer');
             shouldLookForNewLS.resolves(true);
             const nugetPackage = {
                 package: 'packageName',
@@ -72,25 +72,25 @@ suite('Language Server Folder Service', () => {
                 uri: 'nugetUri'
             };
             languageServerPackageService.setup(l => l.getLatestNugetPackageVersion(resource)).returns(() => Promise.resolve(nugetPackage));
-            getCurrentLanguageServerDirectory = sinon.stub(LanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
+            getCurrentLanguageServerDirectory = sinon.stub(DotNetLanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
             getCurrentLanguageServerDirectory.resolves(currentLSDirectory);
-            languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
+            languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);
             const lsFolderName = await languageServerFolderService.getLanguageServerFolderName(resource);
             expect(lsFolderName).to.equal('currentLSDirectoryName');
         });
 
         test('Returns expected Language server directory name otherwise', async () => {
-            shouldLookForNewLS = sinon.stub(LanguageServerFolderService.prototype, 'shouldLookForNewLanguageServer');
+            shouldLookForNewLS = sinon.stub(DotNetLanguageServerFolderService.prototype, 'shouldLookForNewLanguageServer');
             shouldLookForNewLS.resolves(true);
             const nugetPackage = {
                 package: 'packageName',
                 version: new semver.SemVer('1.3.2'),
                 uri: 'nugetUri'
             };
-            languageServerPackageService.setup(l => l.getLatestNugetPackageVersion(resource)).returns(() => Promise.resolve(nugetPackage));
-            getCurrentLanguageServerDirectory = sinon.stub(LanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
+            languageServerPackageService.setup(l => l.getLatestNugetPackageVersion(resource, '0.0.0')).returns(() => Promise.resolve(nugetPackage));
+            getCurrentLanguageServerDirectory = sinon.stub(DotNetLanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
             getCurrentLanguageServerDirectory.resolves(currentLSDirectory);
-            languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
+            languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);
             const lsFolderName = await languageServerFolderService.getLanguageServerFolderName(resource);
             expect(lsFolderName).to.equal('languageServer.1.3.2');
         });
@@ -113,7 +113,7 @@ suite('Language Server Folder Service', () => {
             serviceContainer.setup(s => s.get<IDownloadChannelRule>(IDownloadChannelRule, 'beta')).returns(() => downloadChannelRule.object);
             serviceContainer.setup(s => s.get<ILanguageServerPackageService>(ILanguageServerPackageService)).returns(() => lsPackageService.object);
             lsPackageService.setup(l => l.getLanguageServerDownloadChannel()).returns(() => 'beta');
-            languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
+            languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);
         });
 
         test('Returns false if current folder is provided and setting `python.downloadLanguageServer` is set to false', async () => {
@@ -170,7 +170,7 @@ suite('Language Server Folder Service', () => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             serviceContainer.setup(s => s.get<IConfigurationService>(IConfigurationService)).returns(() => configurationService.object);
             serviceContainer.setup(s => s.get<IFileSystem>(IFileSystem)).returns(() => fs.object);
-            languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
+            languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);
         });
 
         test('Returns the expected LS directory if setting `python.downloadLanguageServer` is set to false', async () => {

@@ -6,10 +6,10 @@
 import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { LanguageServerExtensionActivator } from '../../../client/activation/languageServer/activator';
-import { LanguageServerDownloader } from '../../../client/activation/languageServer/downloader';
-import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
-import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
+import { LanguageServerDownloader } from '../../../client/activation/common/downloader';
+import { DotNetLanguageServerActivator } from '../../../client/activation/languageServer/activator';
+import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import { DotNetLanguageServerManager } from '../../../client/activation/languageServer/manager';
 import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -25,7 +25,7 @@ import { sleep } from '../../core';
 // tslint:disable:max-func-body-length
 
 suite('Language Server - Activator', () => {
-    let activator: LanguageServerExtensionActivator;
+    let activator: DotNetLanguageServerActivator;
     let workspaceService: IWorkspaceService;
     let manager: ILanguageServerManager;
     let fs: IFileSystem;
@@ -34,15 +34,15 @@ suite('Language Server - Activator', () => {
     let configuration: IConfigurationService;
     let settings: IPythonSettings;
     setup(() => {
-        manager = mock(LanguageServerManager);
+        manager = mock(DotNetLanguageServerManager);
         workspaceService = mock(WorkspaceService);
         fs = mock(FileSystem);
         lsDownloader = mock(LanguageServerDownloader);
-        lsFolderService = mock(LanguageServerFolderService);
+        lsFolderService = mock(DotNetLanguageServerFolderService);
         configuration = mock(ConfigurationService);
         settings = mock(PythonSettings);
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
-        activator = new LanguageServerExtensionActivator(
+        activator = new DotNetLanguageServerActivator(
             instance(manager),
             instance(workspaceService),
             instance(fs),

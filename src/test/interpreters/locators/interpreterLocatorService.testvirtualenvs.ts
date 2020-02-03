@@ -51,7 +51,7 @@ suite('Python interpreter locator service', () => {
         const filteredInterpreters = interpreters.filter(i => i.envName === 'test_env1' && i.type === InterpreterType.Conda);
         expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment test_env1 not found');
     });
-    test('Ensure we are getting conda environment created using command `conda create -p "./test_env2`', async () => {
+    test('Ensure we are getting conda environment created using command `conda create -p "./test_env2`"', async () => {
         // Created in CI using command `conda create -p "./test_env2" -y python`
         const filteredInterpreters = interpreters.filter(i => {
             let dirName = path.dirname(i.path);

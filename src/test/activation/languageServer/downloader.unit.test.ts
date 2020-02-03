@@ -11,9 +11,8 @@ import { SemVer } from 'semver';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
-import { LanguageServerDownloader } from '../../../client/activation/languageServer/downloader';
-import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
-import { PlatformData } from '../../../client/activation/languageServer/platformData';
+import { LanguageServerDownloader } from '../../../client/activation/common/downloader';
+import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { ILanguageServerFolderService, ILanguageServerOutputChannel, IPlatformData } from '../../../client/activation/types';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
@@ -44,13 +43,13 @@ suite('Language Server Activation - Downloader', () => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
         resource = Uri.file(__dirname);
         languageServerDownloader = new LanguageServerDownloader(
-            undefined as any,
             lsOutputChannel.object,
             undefined as any,
             folderService.object,
             undefined as any,
             undefined as any,
-            workspaceService.object
+            workspaceService.object,
+            undefined as any
         );
     });
 
@@ -167,10 +166,9 @@ suite('Language Server Activation - Downloader', () => {
         const downloadUri = 'http://wow.com/file.txt';
         const downloadTitle = 'Downloadimg file.txt';
         setup(() => {
-            const platformData = mock(PlatformData);
             outputChannelDownload = mock(MockOutputChannel);
             fileDownloader = mock(FileDownloader);
-            const lsFolderService = mock(LanguageServerFolderService);
+            const lsFolderService = mock(DotNetLanguageServerFolderService);
             const appShell = mock(ApplicationShell);
             const fs = mock(FileSystem);
             // tslint:disable-next-line: no-shadowed-variable
@@ -179,13 +177,13 @@ suite('Language Server Activation - Downloader', () => {
             lsOutputChannelDownload.setup(l => l.channel).returns(() => instance(outputChannelDownload));
 
             lsDownloader = new LanguageServerDownloader(
-                instance(platformData),
                 lsOutputChannelDownload.object,
                 instance(fileDownloader),
                 instance(lsFolderService),
                 instance(appShell),
                 instance(fs),
-                instance(workspaceService)
+                instance(workspaceService),
+                undefined as any
             );
         });
 
@@ -269,22 +267,22 @@ suite('Language Server Activation - Downloader', () => {
             lsOutputChannel.setup(l => l.channel).returns(() => output.object);
 
             languageServerDownloaderTest = new LanguageServerDownloaderTest(
-                platformData.object,
                 lsOutputChannel.object,
                 undefined as any,
                 folderService.object,
                 appShell.object,
                 fs.object,
-                workspaceService.object
+                workspaceService.object,
+                undefined as any
             );
             languageServerExtractorTest = new LanguageServerExtractorTest(
-                platformData.object,
                 lsOutputChannel.object,
                 undefined as any,
                 folderService.object,
                 appShell.object,
                 fs.object,
-                workspaceService.object
+                workspaceService.object,
+                undefined as any
             );
         });
         test('Display error message if LS downloading fails', async () => {

@@ -39,7 +39,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
     private readonly appShell: IApplicationShell;
-    private readonly lsNotSupportedDiagnosticService: IDiagnosticsService;
     private readonly interpreterService: IInterpreterService;
     private resource!: Resource;
 
@@ -52,7 +51,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticServiceId);
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
@@ -200,8 +198,9 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
                     serverType = LanguageServerType.Jedi;
                     break;
                 }
-                const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
-                this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
+                const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticServiceId);
+                const diagnostic = await lsNotSupportedDiagnosticService.diagnose(undefined);
+                lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
                 if (diagnostic.length) {
                     sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
                     serverType = LanguageServerType.Jedi;

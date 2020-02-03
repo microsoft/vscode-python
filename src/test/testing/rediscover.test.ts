@@ -9,7 +9,7 @@ import { CondaService } from '../../client/interpreter/locators/services/condaSe
 import { CommandSource } from '../../client/testing/common/constants';
 import { ITestManagerFactory, TestProvider } from '../../client/testing/common/types';
 import { deleteDirectory, deleteFile, rootWorkspaceUri, updateSetting } from '../common';
-import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
+import { initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from './../initialize';
 import { UnitTestIocContainer } from './serviceRegistry';
 
 const testFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'debuggerTest');
@@ -25,7 +25,9 @@ suite('Unit Tests re-discovery', () => {
     suiteSetup(async () => {
         await initialize();
     });
-    setup(async () => {
+    setup(async function() {
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2); // This hook requires more timeout as we're dealing with files as well
         await fs.copy(testFileWithFewTests, testFile, { overwrite: true });
         await deleteDirectory(path.join(testFilesPath, '.cache'));
         await resetSettings();

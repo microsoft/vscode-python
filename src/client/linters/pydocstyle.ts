@@ -1,6 +1,7 @@
 import * as path from 'path';
 import { CancellationToken, OutputChannel, TextDocument } from 'vscode';
 import '../common/extensions';
+import { traceError } from '../common/logger';
 import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { IS_WINDOWS } from './../common/platform/constants';
@@ -72,7 +73,7 @@ export class PyDocStyle extends BaseLinter {
                             provider: this.info.id
                         } as ILintMessage;
                     } catch (ex) {
-                        this.logger.logError(`Failed to parse pydocstyle line '${line}'`, ex);
+                        traceError(`Failed to parse pydocstyle line '${line}'`, ex);
                         return;
                     }
                 })

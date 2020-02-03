@@ -147,7 +147,7 @@ suite('Unit Tests - unittest - run failed tests', () => {
         when(testStorage.getTests(anything())).thenReturn(tests);
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn({ name: '', index: 0, uri: workspaceFolder });
         when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
-        when(serviceContainer.get<IArgumentsHelper>(IArgumentsHelper)).thenReturn(new ArgumentsHelper(svcInstance));
+        when(serviceContainer.get<IArgumentsHelper>(IArgumentsHelper)).thenReturn(new ArgumentsHelper());
         when(serviceContainer.get<IArgumentsService>(IArgumentsService, anything())).thenReturn(new ArgumentsService(svcInstance));
         when(serviceContainer.get<ITestsHelper>(ITestsHelper)).thenReturn(instance(testsHelper));
         when(serviceContainer.get<ITestManagerRunner>(ITestManagerRunner, anything())).thenReturn(instance(testManagerRunner));

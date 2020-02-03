@@ -16,7 +16,7 @@ import { traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory } from '../terminal/types';
-import { IConfigurationService, IInstaller, ILogger, InstallerResponse, IOutputChannel, IPersistentStateFactory, ModuleNamePurpose, Product, ProductType } from '../types';
+import { IConfigurationService, IInstaller, InstallerResponse, IOutputChannel, IPersistentStateFactory, ModuleNamePurpose, Product, ProductType } from '../types';
 import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
 import { IInstallationChannelManager, InterpreterUri, IProductPathService, IProductService } from './types';
@@ -68,8 +68,7 @@ export abstract class BaseInstaller {
         }
 
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
-        const logger = this.serviceContainer.get<ILogger>(ILogger);
-        await installer.installModule(moduleName, resource, cancel).catch(logger.logError.bind(logger, `Error in installing the module '${moduleName}'`));
+        await installer.installModule(moduleName, resource, cancel).catch(ex => traceError(`Error in installing the module '${moduleName}', ${ex}`));
 
         return this.isInstalled(product, resource).then(isInstalled => (isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore));
     }

@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { DiagnosticSeverity } from 'vscode';
 import '../../../common/extensions';
-import { Logger } from '../../../common/logger';
+import { traceError } from '../../../common/logger';
 import { useCommandPromptAsDefaultShell } from '../../../common/terminal/commandPrompt';
 import { IConfigurationService, ICurrentProcess, IDisposableRegistry, Resource } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
@@ -68,7 +68,7 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
                         sendTelemetryEvent(EventName.DIAGNOSTICS_ACTION, undefined, {
                             action: 'switchToCommandPrompt'
                         });
-                        useCommandPromptAsDefaultShell(currentProcess, configurationService).catch(ex => Logger.error('Use Command Prompt as default shell', ex));
+                        useCommandPromptAsDefaultShell(currentProcess, configurationService).catch(ex => traceError('Use Command Prompt as default shell', ex));
                     }
                 }
             },
