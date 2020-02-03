@@ -45,13 +45,13 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles(build/**-requirements.txt)}}
+          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}
 
       - name: Cache ./pythonFiles/lib/python
         uses: actions/cache@v1
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles(build/**-requirements.txt)}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}
 
   js-ts-deps:
     name: Install npm dependencies
@@ -173,7 +173,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles(build/**-requirements.txt)}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
