@@ -139,7 +139,7 @@
    ([#9084](https://github.com/Microsoft/vscode-python/issues/9084))
 1. Fix working directory path verification for notebook tests.
    ([#9191](https://github.com/Microsoft/vscode-python/issues/9191))
-1. Update Jedi to 0.15.2 and parso to 0.5.2
+1. Update Jedi to 0.15.2 and parso to 0.5.2.
    ([#9243](https://github.com/Microsoft/vscode-python/issues/9243))
 1. Added a test performance measuring pipeline.
    ([#9421](https://github.com/Microsoft/vscode-python/issues/9421))
