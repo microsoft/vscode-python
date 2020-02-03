@@ -45,7 +45,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('**/**-requirements.txt')}}
+          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt'&&'build/**-requirements.txt')}}
 
       - name: Cache ./pythonFiles/lib/python
         uses: actions/cache@v1
