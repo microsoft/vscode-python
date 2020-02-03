@@ -120,9 +120,7 @@ export namespace Creation {
         return {
             ...arg.prevState,
             cellVMs: [],
-            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
-            selectedCellId: undefined,
-            focusedCellId: undefined
+            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs)
         };
     }
 

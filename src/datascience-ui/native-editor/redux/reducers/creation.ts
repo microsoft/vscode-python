@@ -4,7 +4,7 @@
 
 import { ILoadAllCells, InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
-import { createCellVM, createEmptyCell, CursorPos, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
+import { createCellVM, createEmptyCell, CursorPos, extractInputText, getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { IAddCellAction, ICellAction } from '../../../interactive-common/redux/reducers/types';
@@ -113,7 +113,10 @@ export namespace Creation {
 
     export function addNewCell(arg: NativeEditorReducerArg<IAddCellAction>): IMainState {
         // Do the same thing that an insertBelow does using the currently selected cell.
-        return insertBelow({ ...arg, payload: { ...arg.payload, data: { cellId: arg.prevState.selectedCellId, newCellId: arg.payload.data.newCellId } } });
+        return insertBelow({
+            ...arg,
+            payload: { ...arg.payload, data: { cellId: getSelectedAndFocusedInfo(arg.prevState).selectedCellId, newCellId: arg.payload.data.newCellId } }
+        });
     }
 
     export function startCell(arg: NativeEditorReducerArg<ICell>): IMainState {
@@ -152,9 +155,7 @@ export namespace Creation {
         return {
             ...arg.prevState,
             cellVMs: [newVM],
-            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
-            selectedCellId: undefined,
-            focusedCellId: undefined
+            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs)
         };
     }
 
@@ -194,23 +195,18 @@ export namespace Creation {
                 arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell, { id: arg.payload.data.cellId }));
 
                 // Recompute select/focus if this item has either
-                let newSelection = arg.prevState.selectedCellId;
-                let newFocused = arg.prevState.focusedCellId;
+                const previousSelection = getSelectedAndFocusedInfo(arg.prevState);
                 const newVMs = [...arg.prevState.cellVMs.filter(c => c.cell.id !== arg.payload.data.cellId)];
                 const nextOrPrev = index === arg.prevState.cellVMs.length - 1 ? index - 1 : index;
-                if (arg.prevState.selectedCellId === arg.payload.data.cellId || arg.prevState.focusedCellId === arg.payload.data.cellId) {
+                if (previousSelection.selectedCellId === arg.payload.data.cellId || previousSelection.focusedCellId === arg.payload.data.cellId) {
                     if (nextOrPrev >= 0) {
-                        newVMs[nextOrPrev] = { ...newVMs[nextOrPrev], selected: true, focused: arg.prevState.focusedCellId === arg.payload.data.cellId };
-                        newSelection = newVMs[nextOrPrev].cell.id;
-                        newFocused = newVMs[nextOrPrev].focused ? newVMs[nextOrPrev].cell.id : undefined;
+                        newVMs[nextOrPrev] = { ...newVMs[nextOrPrev], selected: true, focused: previousSelection.focusedCellId === arg.payload.data.cellId };
                     }
                 }
 
                 return {
                     ...arg.prevState,
                     cellVMs: newVMs,
-                    selectedCellId: newSelection,
-                    focusedCellId: newFocused,
                     undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
                     skipNextScroll: true
                 };

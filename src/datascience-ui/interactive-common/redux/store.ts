@@ -9,7 +9,7 @@ import { InteractiveWindowMessages } from '../../../client/datascience/interacti
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages } from '../../../client/datascience/messages';
 import { CellState } from '../../../client/datascience/types';
-import { IMainState, ServerStatus } from '../../interactive-common/mainState';
+import { getSelectedAndFocusedInfo, IMainState, ServerStatus } from '../../interactive-common/mainState';
 import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
@@ -73,9 +73,10 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
         const afterState = store.getState();
 
         // If cell vm count changed or selected cell changed, send the message
+        const currentSelection = getSelectedAndFocusedInfo(afterState.main);
         if (
             prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
-            prevState.main.selectedCellId !== afterState.main.selectedCellId ||
+            getSelectedAndFocusedInfo(prevState.main).selectedCellId !== currentSelection.selectedCellId ||
             prevState.main.undoStack.length !== afterState.main.undoStack.length ||
             prevState.main.redoStack.length !== afterState.main.redoStack.length
         ) {
@@ -84,7 +85,7 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
                     cellCount: afterState.main.cellVMs.length,
                     undoCount: afterState.main.undoStack.length,
                     redoCount: afterState.main.redoStack.length,
-                    selectedCell: afterState.main.selectedCellId
+                    selectedCell: currentSelection.selectedCellId
                 })
             );
         }
@@ -112,12 +113,14 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         };
 
         // Special case for focusing a cell
-        if (prevState.main.focusedCellId !== afterState.main.focusedCellId && afterState.main.focusedCellId) {
+        const previousSelection = getSelectedAndFocusedInfo(prevState.main);
+        const currentSelection = getSelectedAndFocusedInfo(afterState.main);
+        if (previousSelection.focusedCellId !== currentSelection.focusedCellId && currentSelection.focusedCellId) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
             sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId });
         }
         // Special case for unfocusing a cell
-        if (prevState.main.focusedCellId !== afterState.main.focusedCellId && !afterState.main.focusedCellId) {
+        if (previousSelection.focusedCellId !== currentSelection.focusedCellId && !currentSelection.focusedCellId) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
             sendMessage(InteractiveWindowMessages.UnfocusedCellEditor);
         }
