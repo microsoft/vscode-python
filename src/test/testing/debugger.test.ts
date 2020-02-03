@@ -35,12 +35,16 @@ const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 suite('Unit Tests - debugging', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-    suiteSetup(async () => {
-        // Test disvovery is where the delay is, hence give 10 seconds (as we discover tests at least twice in each test).
+    suiteSetup(async function() {
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2);
+        // Test discovery is where the delay is, hence give 10 seconds (as we discover tests at least twice in each test).
         await initialize();
-        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
-        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
-        await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
+        await Promise.all([
+            updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
+            updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
+            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget)
+        ]);
     });
     setup(async function() {
         // tslint:disable-next-line:no-invalid-this
@@ -51,9 +55,11 @@ suite('Unit Tests - debugging', () => {
     });
     teardown(async () => {
         await ioc.dispose();
-        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
-        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
-        await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
+        await Promise.all([
+            updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
+            updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
+            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget)
+        ]);
     });
 
     function initializeDI() {
