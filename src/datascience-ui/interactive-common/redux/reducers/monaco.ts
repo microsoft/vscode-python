@@ -20,7 +20,8 @@ import { PostOffice } from '../../../react-common/postOffice';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { IntellisenseProvider } from '../../intellisenseProvider';
 import { initializeTokenizer, registerMonacoLanguage } from '../../tokenizer';
-import { CommonActionType, createIncomingAction, ICodeCreatedAction, IEditCellAction } from './types';
+import { createIncomingAction } from '../helpers';
+import { CommonActionType, ICodeCreatedAction, IEditCellAction } from './types';
 
 export interface IMonacoState {
     onigasmData: ArrayBuffer | undefined;

@@ -34,6 +34,7 @@ export interface ICellViewModel {
     useQuickEdit?: boolean;
     selected: boolean;
     focused: boolean;
+    shouldNotAutoFocus?: boolean;
     scrollCount: number;
     cursorPos: CursorPos;
     hasBeenRun: boolean;
@@ -95,7 +96,6 @@ export function getSelectedAndFocusedInfo(state: IMainState) {
 
     return info;
 }
-
 export interface IFont {
     size: number;
     family: string;

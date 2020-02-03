@@ -29,8 +29,6 @@ export enum CommonActionType {
     CLICK_CELL = 'action.click_cell',
     CODE_CREATED = 'action.code_created',
     COPY_CELL_CODE = 'action.copy_cell_code',
-    DESELECT_CELL = 'action.deselect_cell',
-    DOUBLE_CLICK_CELL = 'action.double_click_cell',
     EDITOR_LOADED = 'action.editor_loaded',
     EDIT_CELL = 'action.edit_cell',
     EXECUTE_ABOVE = 'action.execute_above',
@@ -180,11 +178,3 @@ export interface IChangeCellTypeAction {
     currentCode: string;
 }
 export type CommonAction<T = never | undefined> = ActionWithPayload<T, CommonActionType | InteractiveWindowMessages>;
-
-export function createIncomingActionWithPayload<T>(type: CommonActionType | InteractiveWindowMessages, data: T): CommonAction<T> {
-    // tslint:disable-next-line: no-any
-    return { type, payload: ({ data, messageDirection: 'incoming' } as any) as BaseReduxActionPayload<T> };
-}
-export function createIncomingAction(type: CommonActionType | InteractiveWindowMessages): CommonAction {
-    return { type, payload: { messageDirection: 'incoming', data: undefined } };
-}

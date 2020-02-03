@@ -6,7 +6,7 @@ import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../.
 import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import { ICell, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../../client/datascience/types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
-import { createPostableAction } from '../postOffice';
+import { createPostableAction } from '../helpers';
 import { CommonActionType, CommonActionTypeMapping } from './types';
 
 export type IVariableState = {

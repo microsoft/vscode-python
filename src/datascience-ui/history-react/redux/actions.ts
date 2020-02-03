@@ -3,13 +3,12 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
-import { InteractiveWindowMessages, IRefreshVariablesRequest } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
+import { createIncomingAction, createIncomingActionWithPayload } from '../../interactive-common/redux/helpers';
 import {
     CommonAction,
     CommonActionType,
-    createIncomingAction,
-    createIncomingActionWithPayload,
     ICellAction,
     ICodeAction,
     ICodeCreatedAction,
@@ -21,8 +20,6 @@ import {
 
 // See https://react-redux.js.org/using-react-redux/connect-mapdispatch#defining-mapdispatchtoprops-as-an-object
 export const actionCreators = {
-    refreshVariables: (newExecutionCount?: number): CommonAction<IRefreshVariablesRequest> =>
-        createIncomingActionWithPayload(CommonActionType.REFRESH_VARIABLES, { newExecutionCount }),
     restartKernel: (): CommonAction => createIncomingAction(CommonActionType.RESTART_KERNEL),
     interruptKernel: (): CommonAction => createIncomingAction(CommonActionType.INTERRUPT_KERNEL),
     deleteAllCells: (): CommonAction => createIncomingAction(InteractiveWindowMessages.DeleteAllCells),
@@ -36,7 +33,6 @@ export const actionCreators = {
     copyCellCode: (cellId: string): CommonAction<ICellAction> => createIncomingActionWithPayload(CommonActionType.COPY_CELL_CODE, { cellId }),
     gatherCell: (cellId: string): CommonAction<ICellAction> => createIncomingActionWithPayload(CommonActionType.GATHER_CELL, { cellId }),
     clickCell: (cellId: string): CommonAction<ICellAction> => createIncomingActionWithPayload(CommonActionType.CLICK_CELL, { cellId }),
-    doubleClickCell: (cellId: string): CommonAction<ICellAction> => createIncomingActionWithPayload(CommonActionType.DOUBLE_CLICK_CELL, { cellId }),
     editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[], modelId: string, code: string): CommonAction<IEditCellAction> =>
         createIncomingActionWithPayload(CommonActionType.EDIT_CELL, { cellId, changes, modelId, code }),
     submitInput: (code: string, cellId: string): CommonAction<ICodeAction> => createIncomingActionWithPayload(CommonActionType.SUBMIT_INPUT, { code, cellId }),

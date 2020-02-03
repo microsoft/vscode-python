@@ -4,7 +4,7 @@
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { extractInputText, getSelectedAndFocusedInfo, IMainState } from '../../mainState';
-import { createPostableAction } from '../postOffice';
+import { createPostableAction } from '../helpers';
 import { Helpers } from './helpers';
 import { CommonActionType, CommonReducerArg, ICellAction, IEditCellAction, ILinkClickAction, ISendCommandAction, IShowDataViewerAction } from './types';
 

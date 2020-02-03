@@ -6,11 +6,10 @@ import * as uuid from 'uuid/v4';
 import { InteractiveWindowMessages, NativeCommandType } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
 import { CursorPos } from '../../interactive-common/mainState';
+import { createIncomingAction, createIncomingActionWithPayload } from '../../interactive-common/redux/helpers';
 import {
     CommonAction,
     CommonActionType,
-    createIncomingAction,
-    createIncomingActionWithPayload,
     IAddCellAction,
     ICellAction,
     ICellAndCursorAction,
@@ -20,7 +19,6 @@ import {
     IEditCellAction,
     IExecuteAction,
     ILinkClickAction,
-    IRefreshVariablesAction,
     ISendCommandAction,
     IShowDataViewerAction
 } from '../../interactive-common/redux/reducers/types';
@@ -49,8 +47,6 @@ export const actionCreators = {
     executeAbove: (cellId: string): CommonAction<ICellAction> => createIncomingActionWithPayload(CommonActionType.EXECUTE_ABOVE, { cellId }),
     executeCellAndBelow: (cellId: string, code: string): CommonAction<ICodeAction> => createIncomingActionWithPayload(CommonActionType.EXECUTE_CELL_AND_BELOW, { cellId, code }),
     toggleVariableExplorer: (): CommonAction => createIncomingAction(CommonActionType.TOGGLE_VARIABLE_EXPLORER),
-    refreshVariables: (newExecutionCount?: number): CommonAction<IRefreshVariablesAction> =>
-        createIncomingActionWithPayload(CommonActionType.REFRESH_VARIABLES, { newExecutionCount }),
     restartKernel: (): CommonAction => createIncomingAction(CommonActionType.RESTART_KERNEL),
     interruptKernel: (): CommonAction => createIncomingAction(CommonActionType.INTERRUPT_KERNEL),
     clearAllOutputs: (): CommonAction => createIncomingAction(InteractiveWindowMessages.ClearAllOutputs),

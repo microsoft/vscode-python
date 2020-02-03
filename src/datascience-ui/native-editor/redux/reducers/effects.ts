@@ -4,7 +4,7 @@
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { getSelectedAndFocusedInfo, IMainState } from '../../../interactive-common/mainState';
-import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { createPostableAction } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICellAction, ICellAndCursorAction, ICodeAction } from '../../../interactive-common/redux/reducers/types';
 import { computeEditorOptions } from '../../../react-common/settingsReactSide';
@@ -39,7 +39,8 @@ export namespace Effects {
             // Add focus on new cell
             const addFocusIndex = newVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
             if (addFocusIndex >= 0) {
-                newVMs[addFocusIndex] = { ...newVMs[addFocusIndex], focused: true, selected: true, cursorPos: arg.payload.data.cursorPos };
+                const focus = typeof arg.payload.messageType !== 'number';
+                newVMs[addFocusIndex] = { ...newVMs[addFocusIndex], focused: focus, selected: focus, cursorPos: arg.payload.data.cursorPos };
             }
 
             return {
@@ -51,6 +52,34 @@ export namespace Effects {
         return arg.prevState;
     }
 
+    export function unfocusAndUnSelectAll(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
+        const newVMs = [...arg.prevState.cellVMs];
+        newVMs.forEach((item, index) => {
+            if (item.selected || item.focused) {
+                const current = newVMs[index];
+                const newCell = {
+                    ...current,
+                    inputBlockText: arg.payload.data.code,
+                    focused: false,
+                    selected: false,
+                    cell: {
+                        ...current.cell,
+                        data: {
+                            ...current.cell.data,
+                            source: arg.payload.data.code
+                        }
+                    }
+                };
+                // tslint:disable-next-line: no-any
+                newVMs[index] = Helpers.asCellViewModel(newCell); // This is because IMessageCell doesn't fit in here
+            }
+        });
+
+        return {
+            ...arg.prevState,
+            cellVMs: newVMs
+        };
+    }
     export function unfocusCell(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
         // Unfocus the cell
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
@@ -155,10 +184,12 @@ export namespace Effects {
             }
 
             const newVMs = [...prevState.cellVMs];
+            // Ensure not to focus the editor if this is a sync message.
+            const focus = typeof arg.payload.messageType !== 'number';
             if (addIndex >= 0 && arg.payload.data.cellId !== selectionInfo.selectedCellId) {
                 newVMs[addIndex] = {
                     ...newVMs[addIndex],
-                    focused: typeof shouldFocusCell === 'boolean' ? shouldFocusCell : someOtherCellWasFocusedAndSelected,
+                    focused: focus && (typeof shouldFocusCell === 'boolean' ? shouldFocusCell : someOtherCellWasFocusedAndSelected),
                     selected: true,
                     cursorPos: arg.payload.data.cursorPos
                 };

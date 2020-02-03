@@ -65,7 +65,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     public componentDidUpdate(prevProps: INativeCellProps) {
-        if (this.props.cellVM.selected && !prevProps.cellVM.selected && !this.props.cellVM.focused) {
+        if (this.props.cellVM.selected && !prevProps.cellVM.selected && !this.props.cellVM.focused && !this.props.cellVM.shouldNotAutoFocus) {
             this.giveFocus();
         }
 
