@@ -19,8 +19,6 @@ export function generatePostOfficeSendReducer(postOffice: PostOffice): Redux.Red
                 // Just post this to the post office.
                 // tslint:disable-next-line: no-any
                 postOffice.sendMessage<IInteractiveWindowMapping>(action.type, payload.data as any);
-                console.error(`Send Message ${action.type}`);
-                console.error(payload?.data);
             }
 
             if (payload?.messageDirection === 'incoming' && typeof payload?.messageType !== 'number') {

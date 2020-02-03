@@ -74,12 +74,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     public shouldComponentUpdate(nextProps: INativeCellProps): boolean {
-        const update = !fastDeepEqual(this.props, nextProps);
-        console.error(
-            `Should cell update ${nextProps.cellVM.cell.id} = ${update}. Prev. Selected = ${this.props.cellVM.selected} and Prev. Focused = ${this.props.cellVM.focused}.`
-        );
-        console.error(`Should cell update ${nextProps.cellVM.cell.id} = ${update}. Selected = ${nextProps.cellVM.selected} and  Focused = ${nextProps.cellVM.focused}.`);
-        return update;
+        return !fastDeepEqual(this.props, nextProps);
     }
 
     // Public for testing

@@ -59,14 +59,6 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         if (this.props.hasFocus && (!prevProps.hasFocus || !prevState.editor)) {
             this.giveFocus(this.props.cursorPos);
         }
-        // if (!this.props.hasFocus && prevProps.hasFocus && prevState.editor && this.state.editor) {
-        //     console.error('Remove focus');
-        //     this.state.editor.getDomNode()?.blur();
-        //     setTimeout(() => {
-        //         // tslint:disable-next-line: no-unused-expression no-any
-        //         (window?.document?.activeElement as any).blur();
-        //     }, 3);
-        // }
     }
 
     public render() {

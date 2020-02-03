@@ -20,12 +20,10 @@ export function isAllowedAction(action: Redux.AnyAction) {
 }
 
 export function createIncomingActionWithPayload<T>(type: CommonActionType | InteractiveWindowMessages, data: T): CommonAction<T> {
-    console.error(`Create ${type}`);
     // tslint:disable-next-line: no-any
     return { type, payload: ({ data, messageDirection: 'incoming' } as any) as BaseReduxActionPayload<T> };
 }
 export function createIncomingAction(type: CommonActionType | InteractiveWindowMessages): CommonAction {
-    console.error(`Create ${type}`);
     return { type, payload: { messageDirection: 'incoming', data: undefined } };
 }
 
@@ -51,7 +49,6 @@ export function reBroadcastMessageIfRequired(
     if (typeof payload?.messageType === 'number' || payload?.messageDirection === 'outgoing' || message === InteractiveWindowMessages.Sync) {
         return;
     }
-    console.error(`Check to Rebroadcast Message ${message}`);
     // Check if we need to re-broadcast this message to other editors/sessions.
     // tslint:disable-next-line: no-any
     const result = shouldRebroadcast(message as any);
@@ -62,8 +59,6 @@ export function reBroadcastMessageIfRequired(
         // tslint:disable-next-line: no-any
         const syncPayload = { type: message, payload: syncPayloadData } as any;
         // Send this out.
-        console.error(`Rebroadcast Message ${message}`);
-        console.error(syncPayload);
         storeDispatcher(createPostableAction(InteractiveWindowMessages.Sync, syncPayload));
     }
 }
@@ -85,8 +80,6 @@ export function reBroadcastMessageIfRequiredX(
         // tslint:disable-next-line: no-any
         const syncPayload = { type: message, payload: syncPayloadData } as any;
         // Send this out.
-        console.error(`Rebroadcast Message ${message}`);
-        console.error(syncPayload);
         const action = createPostableAction(InteractiveWindowMessages.Sync, syncPayload);
         storeDispatcher(action.type, action.payload);
     }
