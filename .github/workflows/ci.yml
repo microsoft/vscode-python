@@ -70,10 +70,10 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
   ### Hygiene + VSIX upload
-  compile:
-    name: Compile and check for errors
+  compile-hygiene:
+    name: Compile, lint, check for errors
     runs-on: ubuntu-latest
-    needs: [js-ts-deps]
+    needs: [js-ts-deps, python-deps]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -90,44 +90,10 @@ jobs:
       - name: Run gulp prePublishNonBundle
         run: npx gulp prePublishNonBundle
 
-  check-dependencies:
-    name: Check dependencies
-    runs-on: ubuntu-latest
-    needs: [js-ts-deps]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
       - name: Check dependencies
         run: npm run checkDependencies
 
-  hygiene-js-ts:
-    name: Hygiene (JS/TS)
-    runs-on: ubuntu-latest
-    needs: [js-ts-deps]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
-
-      - name: Run linting
+      - name: Run linting on TypeScript code
         run: npx tslint --project tsconfig.json
 
       - name: Run prettier on TypeScript code
@@ -135,14 +101,6 @@ jobs:
 
       - name: Run prettier on JavaScript code
         run: npx prettier 'build/**/*.js' --check
-
-  hygiene-python:
-    name: Hygiene (Python)
-    runs-on: ubuntu-latest
-    needs: [python-deps]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
 
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v1
