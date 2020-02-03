@@ -33,13 +33,15 @@ import {
     addMockData,
     CellInputState,
     CellPosition,
-    enterEditorKey,
     enterInput,
     escapePath,
     findButton,
+    getInteractiveEditor,
     getLastOutputCell,
     srcDirectory,
+    submitInput,
     toggleCellExpansion,
+    typeCode,
     verifyHtmlOnCell,
     verifyLastCellInputState,
     waitForMessage,
@@ -147,16 +149,38 @@ suite('DataScience Interactive Window output tests', () => {
     runMountedTest(
         'Ctrl + 1/Ctrl + 2',
         async wrapper => {
-            await addCode(ioc, wrapper, 'a=1');
-            wrapper.find('button').simulate('focus');
+            // Create an interactive window so that it listens to the results.
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+            await interactiveWindow.show();
 
-            const message = createMessageEvent({ type: InteractiveWindowMessages.Activate });
-            ioc.postMessageToWebPanel(message);
+            // Type in the input box
+            const editor = getInteractiveEditor(wrapper);
+            typeCode(editor, 'a=1\na');
 
-            enterEditorKey(wrapper, { code: 'a', editorInfo: undefined });
-            enterEditorKey(wrapper, { code: 'Enter', shiftKey: true, editorInfo: undefined });
+            // Give focus to a random div
+            const reactDiv = wrapper
+                .find('div')
+                .first()
+                .getDOMNode();
 
-            verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.First);
+            const domDiv = reactDiv.querySelector('div');
+
+            if (domDiv && ioc.postMessage) {
+                domDiv.tabIndex = -1;
+                domDiv.focus();
+
+                // send the ctrl + 1/2 message, this should put focus back on the input box
+                const message = createMessageEvent({ type: InteractiveWindowMessages.Activate, payload: undefined });
+                ioc.postMessage(message);
+
+                // Then enter press shift + enter on the active element
+                const activeElement = document.activeElement;
+                if (activeElement) {
+                    await submitInput(ioc, activeElement as HTMLTextAreaElement);
+                }
+            }
+
+            verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
         },
         () => {
             return ioc;
