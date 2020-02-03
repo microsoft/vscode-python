@@ -13,8 +13,8 @@ function start() {
     runTests({
         extensionDevelopmentPath: EXTENSION_ROOT_DIR_FOR_TESTS,
         extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test', 'index'),
-        launchArgs: [workspacePath],
-        version: 'stable'
+        launchArgs: [workspacePath, '--enable-proposed-api', 'ms-python.python'],
+        version: 'insiders'
     }).catch(ex => {
         console.error('End Multiroot tests (with errors)', ex);
         process.exit(1);
