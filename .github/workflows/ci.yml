@@ -14,17 +14,6 @@ env:
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
 
 jobs:
-  ### Pre-run tool check
-  show-tools-versions:
-    name: Show tools versions
-    runs-on: ubuntu-latest
-    steps:
-      - name: Node
-        run: node --version
-
-      - name: npm
-        run: npm --version
-
   ### Initialization: retrieve, install and cache dependencies
   python-deps:
     name: Install Python Requirements
