@@ -60,8 +60,6 @@ export type IMainState = {
     currentExecutionCount: number;
     debugging: boolean;
     dirty?: boolean;
-    selectedCellId?: string;
-    focusedCellId?: string;
     isAtBottom: boolean;
     newCellId?: string;
     loadTotal?: number;
@@ -74,6 +72,29 @@ export type IMainState = {
     loaded: boolean;
     kernel: IServerState;
 };
+
+/**
+ * Returns the cell id and index of selected and focused cells.
+ */
+export function getSelectedAndFocusedInfo(state: IMainState) {
+    const info: { selectedCellId?: string; selectedCellIndex?: number; focusedCellId?: string; focusedCellIndex?: number } = {};
+    for (let index = 0; index < state.cellVMs.length; index += 1) {
+        const cell = state.cellVMs[index];
+        if (cell.selected) {
+            info.selectedCellId = cell.cell.id;
+            info.selectedCellIndex = index;
+        }
+        if (cell.focused) {
+            info.focusedCellId = cell.cell.id;
+            info.focusedCellIndex = index;
+        }
+        if (info.selectedCellId && info.focusedCellId) {
+            break;
+        }
+    }
+
+    return info;
+}
 
 export interface IFont {
     size: number;

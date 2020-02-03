@@ -3,7 +3,7 @@
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
-import { extractInputText, IMainState } from '../../mainState';
+import { extractInputText, getSelectedAndFocusedInfo, IMainState } from '../../mainState';
 import { createPostableAction } from '../postOffice';
 import { Helpers } from './helpers';
 import { CommonActionType, CommonReducerArg, ICellAction, IEditCellAction, ILinkClickAction, ISendCommandAction, IShowDataViewerAction } from './types';
@@ -99,7 +99,8 @@ export namespace Transfer {
             // We keep this saved here so we don't re-render and we put this code into the input / code data
             // when focus is lost
             const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
-            if (index >= 0 && arg.prevState.focusedCellId === arg.payload.data.cellId) {
+            const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
+            if (index >= 0 && selectionInfo.focusedCellId === arg.payload.data.cellId) {
                 const newVMs = [...arg.prevState.cellVMs];
                 const current = arg.prevState.cellVMs[index];
                 const newCell = {

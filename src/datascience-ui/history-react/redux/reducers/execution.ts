@@ -24,16 +24,13 @@ export namespace Execution {
             const cells = arg.prevState.undoStack[arg.prevState.undoStack.length - 1];
             const undoStack = arg.prevState.undoStack.slice(0, arg.prevState.undoStack.length - 1);
             const redoStack = Helpers.pushStack(arg.prevState.redoStack, arg.prevState.cellVMs);
-            const selected = cells.findIndex(c => c.selected);
             arg.queueAction(createPostableAction(InteractiveWindowMessages.Undo));
             return {
                 ...arg.prevState,
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true,
-                selectedCellId: selected >= 0 ? cells[selected].cell.id : undefined,
-                focusedCellId: selected >= 0 && cells[selected].focused ? cells[selected].cell.id : undefined
+                skipNextScroll: true
             };
         }
 
@@ -46,16 +43,13 @@ export namespace Execution {
             const cells = arg.prevState.redoStack[arg.prevState.redoStack.length - 1];
             const redoStack = arg.prevState.redoStack.slice(0, arg.prevState.redoStack.length - 1);
             const undoStack = Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs);
-            const selected = cells.findIndex(c => c.selected);
             arg.queueAction(createPostableAction(InteractiveWindowMessages.Redo));
             return {
                 ...arg.prevState,
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true,
-                selectedCellId: selected >= 0 ? cells[selected].cell.id : undefined,
-                focusedCellId: selected >= 0 && cells[selected].focused ? cells[selected].cell.id : undefined
+                skipNextScroll: true
             };
         }
 
