@@ -61,7 +61,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install dependencies (npm ci)
-        run: npm ci
+        run: npm ci --prefer-offline
 
       - name: Cache npm files
         uses: actions/cache@v1
@@ -85,7 +85,7 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Install dependencies (npm ci)
-        run: npm ci
+        run: npm ci --prefer-offline
 
       - name: Run gulp prePublishNonBundle
         run: npx gulp prePublishNonBundle
@@ -105,7 +105,7 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Install dependencies (npm ci)
-        run: npm ci
+        run: npm ci --prefer-offline
 
       - name: Check dependencies
         run: npm run checkDependencies
@@ -125,7 +125,7 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Install dependencies (npm ci)
-        run: npm ci
+        run: npm ci --prefer-offline
 
       - name: Run linting
         run: npx tslint --project tsconfig.json
@@ -176,7 +176,7 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-${{hashFiles('**/**-requirements.txt')}}
 
       - name: Install dependencies (npm ci)
-        run: npm ci
+        run: npm ci --prefer-offline
 
       - name: Clean directory
         run: npm run clean
