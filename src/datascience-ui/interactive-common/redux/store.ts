@@ -201,18 +201,17 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
             return action;
         }
     });
-    // const loggerMiddleware = process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode) ? logger : undefined;
+    const loggerMiddleware = process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode) ? logger : undefined;
     // tslint:disable-next-line: no-console
-    console.log(logger);
     const results: Redux.Middleware<{}, IStore>[] = [];
     results.push(queueableActions);
     results.push(updateContext);
     if (testMiddleware) {
         results.push(testMiddleware);
     }
-    // if (loggerMiddleware) {
-    //     results.push(loggerMiddleware);
-    // }
+    if (loggerMiddleware) {
+        results.push(loggerMiddleware);
+    }
 
     return results;
 }
