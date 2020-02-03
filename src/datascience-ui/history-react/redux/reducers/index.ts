@@ -39,6 +39,8 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [CommonActionType.UNMOUNT]: Creation.unmount,
 
     // Messages from the webview (some are ignored)
+    [InteractiveWindowMessages.Undo]: Execution.undo,
+    [InteractiveWindowMessages.Redo]: Execution.redo,
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
     [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
     [InteractiveWindowMessages.UpdateCell]: Creation.updateCell,
