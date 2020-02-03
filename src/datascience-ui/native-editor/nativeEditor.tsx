@@ -9,7 +9,7 @@ import { concatMultilineStringInput } from '../common';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
 import { KernelSelection } from '../interactive-common/kernelSelection';
-import { ICellViewModel, IMainState } from '../interactive-common/mainState';
+import { getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { getOSType } from '../react-common/constants';
@@ -109,7 +109,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     // tslint:disable: react-this-binding-issue
     // tslint:disable-next-line: max-func-body-length
     private renderToolbarPanel() {
-        const selectedIndex = this.props.cellVMs.findIndex(c => c.cell.id === this.props.selectedCellId);
+        const selectedInfo = getSelectedAndFocusedInfo(this.props);
 
         const addCell = () => {
             this.props.addCell();
@@ -132,16 +132,16 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')
             : getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
         const runAbove = () => {
-            if (this.props.selectedCellId) {
-                this.props.executeAbove(this.props.selectedCellId);
+            if (selectedInfo.selectedCellId) {
+                this.props.executeAbove(selectedInfo.selectedCellId);
                 this.props.sendCommand(NativeCommandType.RunAbove, 'mouse');
             }
         };
         const runBelow = () => {
-            if (this.props.selectedCellId) {
+            if (selectedInfo.selectedCellId && typeof selectedInfo.selectedCellIndex === 'number') {
                 // tslint:disable-next-line: no-suspicious-comment
                 // TODO: Is the source going to be up to date during run below?
-                this.props.executeCellAndBelow(this.props.selectedCellId, concatMultilineStringInput(this.props.cellVMs[selectedIndex].cell.data.source));
+                this.props.executeCellAndBelow(selectedInfo.selectedCellId, concatMultilineStringInput(this.props.cellVMs[selectedInfo.selectedCellIndex].cell.data.source));
                 this.props.sendCommand(NativeCommandType.RunBelow, 'mouse');
             }
         };
@@ -153,8 +153,8 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             this.props.selectServer();
             this.props.sendCommand(NativeCommandType.SelectServer, 'mouse');
         };
-        const canRunAbove = selectedIndex > 0;
-        const canRunBelow = selectedIndex < this.props.cellVMs.length - 1 && this.props.selectedCellId;
+        const canRunAbove = (selectedInfo.selectedCellIndex ?? -1) > 0;
+        const canRunBelow = (selectedInfo.selectedCellIndex ?? -1) < this.props.cellVMs.length - 1 && selectedInfo.selectedCellId;
 
         return (
             <div id="toolbar-panel">
@@ -315,7 +315,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             }
             case 'z':
             case 'Z':
-                if (this.props.focusedCellId === undefined) {
+                if (!getSelectedAndFocusedInfo(this.props).focusedCellId) {
                     if (event.shiftKey && !event.ctrlKey && !event.altKey) {
                         event.stopPropagation();
                         this.props.redo();

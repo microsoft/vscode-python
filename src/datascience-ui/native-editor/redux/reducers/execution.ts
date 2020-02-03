@@ -8,7 +8,7 @@ import { InteractiveWindowMessages } from '../../../../client/datascience/intera
 import { CellState } from '../../../../client/datascience/types';
 import { concatMultilineStringInput } from '../../../common';
 import { createCellFrom } from '../../../common/cellFactory';
-import { CursorPos, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
+import { CursorPos, getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { CommonActionType, ICellAction, IChangeCellTypeAction, ICodeAction, IExecuteAction } from '../../../interactive-common/redux/reducers/types';
@@ -123,13 +123,14 @@ export namespace Execution {
 
     export function executeSelectedCell(arg: NativeEditorReducerArg): IMainState {
         // This is the same thing as executing the selected cell
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.prevState.selectedCellId);
-        if (arg.prevState.selectedCellId && index >= 0) {
+        const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === selectionInfo.selectedCellId);
+        if (selectionInfo.selectedCellId && index >= 0) {
             return executeCell({
                 ...arg,
                 payload: {
                     ...arg.payload,
-                    data: { cellId: arg.prevState.selectedCellId, code: concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source), moveOp: 'none' }
+                    data: { cellId: selectionInfo.selectedCellId, code: concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source), moveOp: 'none' }
                 }
             });
         }
@@ -197,7 +198,6 @@ export namespace Execution {
             // Pop one off of our undo stack and update our redo
             const cells = arg.prevState.undoStack[arg.prevState.undoStack.length - 1];
             const undoStack = arg.prevState.undoStack.slice(0, arg.prevState.undoStack.length - 1);
-            const selected = cells.findIndex(c => c.selected);
             const redoStack = Helpers.pushStack(arg.prevState.redoStack, arg.prevState.cellVMs);
             arg.queueAction(createPostableAction(InteractiveWindowMessages.Undo));
             return {
@@ -205,9 +205,7 @@ export namespace Execution {
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true,
-                selectedCellId: selected >= 0 ? cells[selected].cell.id : undefined,
-                focusedCellId: selected >= 0 && cells[selected].focused ? cells[selected].cell.id : undefined
+                skipNextScroll: true
             };
         }
 
@@ -220,16 +218,13 @@ export namespace Execution {
             const cells = arg.prevState.redoStack[arg.prevState.redoStack.length - 1];
             const redoStack = arg.prevState.redoStack.slice(0, arg.prevState.redoStack.length - 1);
             const undoStack = Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs);
-            const selected = cells.findIndex(c => c.selected);
             arg.queueAction(createPostableAction(InteractiveWindowMessages.Redo));
             return {
                 ...arg.prevState,
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true,
-                selectedCellId: selected >= 0 ? cells[selected].cell.id : undefined,
-                focusedCellId: selected >= 0 && cells[selected].focused ? cells[selected].cell.id : undefined
+                skipNextScroll: true
             };
         }
 
