@@ -18,7 +18,7 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*"
             ],
-            // "preLaunchTask": "Compile",
+            "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
             ],

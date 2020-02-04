@@ -52,15 +52,16 @@ export class InteractiveWindowMessageListener implements IWebPanelMessageListene
 
     public onMessage(message: string, payload: any) {
         if (message === InteractiveWindowMessages.Sync) {
-            const syncPayload = payload as BaseReduxActionPayload;
+            // const syncPayload = payload as BaseReduxActionPayload;
             Array.from(InteractiveWindowMessageListener.handlers.keys()).forEach(item => {
                 if (item === this) {
                     return;
                 }
-                const cb = InteractiveWindowMessageListener.handlers.get(item);
-                if (cb) {
-                    cb(InteractiveWindowMessages.Sync, { type: message, payload: syncPayload });
-                }
+                // Temporarily disabled.
+                // const cb = InteractiveWindowMessageListener.handlers.get(item);
+                // if (cb) {
+                //     cb(InteractiveWindowMessages.Sync, { type: message, payload: syncPayload });
+                // }
             });
             return;
         }

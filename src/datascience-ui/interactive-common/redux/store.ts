@@ -252,19 +252,6 @@ const addMessageDirectionMiddleware: Redux.Middleware = _store => next => (actio
 
     return next(action);
 };
-// /**
-//  * Middleware that will take messages dispatched to reducers, and re-broadcast them if necessary.
-//  */
-// // tslint:disable-next-line: no-any
-// const reBroadcasterMiddleware: Redux.Middleware = store => next => (action: Redux.AnyAction) => {
-//     // First let the message be processed locally before we can think of passing this onto other editors.
-//     const result = next(action);
-
-//     if (isAllowedAction(action) && action?.payload?.messageDirection === 'incoming') {
-//         reBroadcastMessageIfRequired(store.dispatch, action.type, action?.payload);
-//     }
-//     return result;
-// };
 
 export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, editable: boolean, reducerMap: M) {
     // Create a post office to listen to store dispatches and allow reducers to
@@ -293,7 +280,6 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
 
     // Create our middleware
     const middleware = createMiddleWare(testMode).concat([addMessageDirectionMiddleware]);
-    // const middleware = createMiddleWare(testMode).concat([addMessageDirectionMiddleware, reBroadcasterMiddleware]);
 
     // Use this reducer and middle ware to create a store
     const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));

@@ -45,7 +45,7 @@ export function unwrapPostableAction(action: Redux.AnyAction): { type: keyof IIn
 
 
 export function reBroadcastMessageIfRequired(
-    dispatcher: Function,
+    _dispatcher: Function,
     message: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages,
     payload?: BaseReduxActionPayload<{}>
 ) {
@@ -55,16 +55,17 @@ export function reBroadcastMessageIfRequired(
     if (payload?.messageDirection === 'outgoing') {
         return;
     }
-    // Check if we need to re-broadcast this message to other editors/sessions.
-    // tslint:disable-next-line: no-any
-    const result = shouldRebroadcast(message as any);
-    if (result[0]) {
-        // Mark message as incoming, to indicate this will be sent into the other webviews.
-        // tslint:disable-next-line: no-any
-        const syncPayloadData: BaseReduxActionPayload<any> = { data: payload?.data, messageType: result[1], messageDirection: 'incoming' };
-        // tslint:disable-next-line: no-any
-        const syncPayload = { type: message, payload: syncPayloadData } as any;
-        // Send this out.
-        dispatcher(InteractiveWindowMessages.Sync, syncPayload);
-    }
+    // Temporarily disabled.
+    // // Check if we need to re-broadcast this message to other editors/sessions.
+    // // tslint:disable-next-line: no-any
+    // const result = shouldRebroadcast(message as any);
+    // if (result[0]) {
+    //     // Mark message as incoming, to indicate this will be sent into the other webviews.
+    //     // tslint:disable-next-line: no-any
+    //     const syncPayloadData: BaseReduxActionPayload<any> = { data: payload?.data, messageType: result[1], messageDirection: 'incoming' };
+    //     // tslint:disable-next-line: no-any
+    //     const syncPayload = { type: message, payload: syncPayloadData } as any;
+    //     // Send this out.
+    //     dispatcher(InteractiveWindowMessages.Sync, syncPayload);
+    // }
 }
