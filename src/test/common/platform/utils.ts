@@ -27,10 +27,7 @@ export const SUPPORTS_SYMLINKS = (() => {
     return true;
 })();
 
-// tslint:disable-next-line:no-suspicious-comment
-// TODO(GH-8995) For the moment we simply say we cannot test with
-// sockets on Windows.
-export const SUPPORTS_SOCKETS = !WINDOWS;
+export const SUPPORTS_SOCKETS = true;
 
 export const DOES_NOT_EXIST = 'this file does not exist';
 

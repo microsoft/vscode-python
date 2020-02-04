@@ -13,7 +13,7 @@ import { sleep } from '../../../client/common/utils/async';
 import {
     assertDoesNotExist, DOES_NOT_EXIST,
     fixPath, FSFixture,
-    OSX, SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS, WINDOWS
+    SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS, WINDOWS
 } from './utils';
 
 // tslint:disable:no-require-imports no-var-requires
@@ -303,14 +303,7 @@ suite('FileSystem - raw', () => {
             expect(actual).to.equal(data);
         });
 
-        test('overwrites existing file', async function() {
-            if (OSX) {
-                // tslint:disable-next-line:no-suspicious-comment
-                // TODO(GH-8995) This test is failing on Mac, so
-                // we are temporarily disabling it.
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
+        test('overwrites existing file', async () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const data = 'line1\nline2\n';
 
@@ -474,13 +467,6 @@ suite('FileSystem - utils', () => {
         });
 
         test('unknown', async function() {
-            if (WINDOWS) {
-                // tslint:disable-next-line:no-suspicious-comment
-                // TODO(GH-8995) These tests are failing on Windows,
-                // so we are // temporarily disabling it.
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
             if (!SUPPORTS_SOCKETS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -756,13 +742,6 @@ suite('FileSystem', () => {
             });
 
             test('unknown', async function() {
-                if (WINDOWS) {
-                    // tslint:disable-next-line:no-suspicious-comment
-                    // TODO(GH-8995) These tests are failing on Windows,
-                    // so we are // temporarily disabling it.
-                    // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
-                }
                 if (!SUPPORTS_SOCKETS) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();

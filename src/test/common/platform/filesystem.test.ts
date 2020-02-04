@@ -491,14 +491,6 @@ suite('FileSystem - raw', () => {
     });
 
     suite('listdir', () => {
-        setup(function() {
-            if (WINDOWS) {
-                // TODO(GH-8995) These tests are failing on Windows,
-                // so we are // temporarily disabling it.
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
-        });
         test('mixed', async () => {
             // Create the target directory and its contents.
             const dirname = await fix.createDirectory('x/y/z');
@@ -1212,14 +1204,6 @@ suite('FileSystem', () => {
         });
 
         suite('getSubDirectories', () => {
-            setup(function() {
-                if (WINDOWS) {
-                    // TODO(GH-8995) These tests are failing on Windows,
-                    // so we are // temporarily disabling it.
-                    // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
-                }
-            });
             test('mixed types', async () => {
                 // Create the target directory and its subdirs.
                 const dirname = await fix.createDirectory('x/y/z/scripts');
@@ -1260,14 +1244,6 @@ suite('FileSystem', () => {
         });
 
         suite('getFiles', () => {
-            setup(function() {
-                if (WINDOWS) {
-                    // TODO(GH-8995) These tests are failing on Windows,
-                    // so we are // temporarily disabling it.
-                    // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
-                }
-            });
             test('mixed types', async () => {
                 // Create the target directory and its files.
                 const dirname = await fix.createDirectory('x/y/z/scripts');
