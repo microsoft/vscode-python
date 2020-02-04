@@ -531,7 +531,8 @@ suite('FileSystem - raw', () => {
                 expected.push([symlink4, FileType.SymbolicLink | FileType.Directory]);
 
                 // a broken symlink
-                // TODO: VS Code ignores broken symlinks currently...
+                // TODO (https://github.com/microsoft/vscode/issues/90031):
+                //   VS Code ignores broken symlinks currently...
                 //const symlink2 = await fix.createSymlink(
                 //    'x/y/z/broken',
                 //    DOES_NOT_EXIST // source
@@ -550,7 +551,7 @@ suite('FileSystem - raw', () => {
                         sock // source
                     );
                     expected.push(
-                        // TODO:
+                        // TODO (https://github.com/microsoft/vscode/issues/90032):
                         //   VS Code gets symlinks to "unknown" files wrong:
                         [symlink3, FileType.SymbolicLink | FileType.File]
                         //[symlink3, FileType.SymbolicLink]
@@ -564,7 +565,8 @@ suite('FileSystem - raw', () => {
             await fix.createFile('x/y/z/w/data/v1.json');
             if (SUPPORTS_SYMLINKS) {
                 // a broken symlink
-                // TODO: VS Code ignores broken symlinks currently...
+                // TODO (https://github.com/microsoft/vscode/issues/90031):
+                //   VS Code ignores broken symlinks currently...
                 await fix.createSymlink(
                     'x/y/z/broken',
                     DOES_NOT_EXIST // source

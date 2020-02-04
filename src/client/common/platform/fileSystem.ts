@@ -150,7 +150,7 @@ export class RawFileSystem implements IRawFileSystem {
     }
 
     public async lstat(filename: string): Promise<FileStat> {
-        // TODO https://github.com/microsoft/vscode/issues/84175
+        // TODO https://github.com/microsoft/vscode/issues/71204 (84514)):
         //   This functionality has been requested for the VS Code API.
         const stat = await this.fsExtra.lstat(filename);
         // Note that, unlike stat(), lstat() does not include the type
@@ -160,19 +160,19 @@ export class RawFileSystem implements IRawFileSystem {
     }
 
     public async chmod(filename: string, mode: string | number): Promise<void> {
-        return this.fsExtra.chmod(filename, mode);
-        // TODO https://github.com/microsoft/vscode/issues/84175
+        // TODO (https://github.com/microsoft/vscode/issues/73122 (84513)):
         //   This functionality has been requested for the VS Code API.
+        return this.fsExtra.chmod(filename, mode);
     }
 
     public async move(src: string, tgt: string): Promise<void> {
         const srcUri = vscode.Uri.file(src);
         const tgtUri = vscode.Uri.file(tgt);
-        // TODO (https://github.com/microsoft/vscode/issues/84177)
-        //   The docs say "throws - FileNotFound when parent of
-        //   destination doesn't exist".  However, it happily creates
-        //   the parent directory (at least for remote-over-SSH).
-        //   So we have to manually stat, just to be sure.
+        // The VS Code API will automatically create the target parent
+        // directory if it does not exist (even though the docs imply
+        // otherwise).  So we have to manually stat, just to be sure.
+        // Note that this behavior was reported, but won't be changing.
+        // See: https://github.com/microsoft/vscode/issues/84177
         await this.vscfs.stat(vscode.Uri.file(this.paths.dirname(tgt)));
         // We stick with the pre-existing behavior where files are
         // overwritten and directories are not.
@@ -212,18 +212,18 @@ export class RawFileSystem implements IRawFileSystem {
     }
 
     public async appendText(filename: string, text: string): Promise<void> {
-        // TODO: We *could* use the new API for this (read, concat, write)...
+        // TODO (GH-9900): We *could* use the new API for this.
         return this.fsExtra.appendFile(filename, text);
     }
 
     public async copyFile(src: string, dest: string): Promise<void> {
         const srcURI = vscode.Uri.file(src);
         const destURI = vscode.Uri.file(dest);
-        // TODO (https://github.com/microsoft/vscode/issues/84177)
-        //   The docs say "throws - FileNotFound when parent of
-        //   destination doesn't exist".  However, it happily creates
-        //   the parent directory (at least for remote-over-SSH).
-        //   So we have to manually stat, just to be sure.
+        // The VS Code API will automatically create the target parent
+        // directory if it does not exist (even though the docs imply
+        // otherwise).  So we have to manually stat, just to be sure.
+        // Note that this behavior was reported, but won't be changing.
+        // See: https://github.com/microsoft/vscode/issues/84177
         await this.vscfs.stat(vscode.Uri.file(this.paths.dirname(dest)));
         await this.vscfs.copy(srcURI, destURI, {
             overwrite: true
@@ -240,13 +240,8 @@ export class RawFileSystem implements IRawFileSystem {
 
     public async rmdir(dirname: string): Promise<void> {
         const uri = vscode.Uri.file(dirname);
-        // TODO (https://github.com/microsoft/vscode/issues/84177)
-        //   The docs say "throws - FileNotFound when uri doesn't exist".
-        //   However, it happily does nothing (at least for remote-over-SSH).
-        //   So we have to (effectively) manually stat, just to be sure.
-        // TODO (https://github.com/microsoft/vscode/issues/84177)
-        //   The "recursive" option disallows directories, even if they
-        //   are empty.  So we have to deal with this ourselves.
+        // The "recursive" option disallows directories, even if they
+        // are empty.  So we have to deal with this ourselves.
         const files = await this.vscfs.readDirectory(uri);
         if (files && files.length > 0) {
             throw createDirNotEmptyError(dirname);
@@ -259,10 +254,10 @@ export class RawFileSystem implements IRawFileSystem {
 
     public async rmtree(dirname: string): Promise<void> {
         const uri = vscode.Uri.file(dirname);
-        // TODO (https://github.com/microsoft/vscode/issues/84177)
+        // TODO (https://github.com/microsoft/vscode/issues/84177):
         //   The docs say "throws - FileNotFound when uri doesn't exist".
-        //   However, it happily does nothing (at least for remote-over-SSH).
-        //   So we have to manually stat, just to be sure.
+        //   However, it happily does nothing.  So for now we have to
+        //   manually stat, just to be sure.
         await this.vscfs.stat(uri);
         return this.vscfs.delete(uri, {
             recursive: true,
@@ -271,37 +266,8 @@ export class RawFileSystem implements IRawFileSystem {
     }
 
     public async mkdirp(dirname: string): Promise<void> {
-        // TODO https://github.com/microsoft/vscode/issues/84175
-        //   Hopefully VS Code provides this method in their API
-        //   so we don't have to roll our own.
-        const stack = [dirname];
-        while (stack.length > 0) {
-            const current = stack.pop() || '';
-            const uri = vscode.Uri.file(current);
-            try {
-                await this.vscfs.createDirectory(uri);
-            } catch (err) {
-                if (isFileExistsError(err)) {
-                    // already done!
-                    return;
-                }
-                // According to the docs, FileNotFound means the parent
-                // does not exist.
-                // See: https://code.visualstudio.com/api/references/vscode-api#FileSystemProvider
-                if (!isFileNotFoundError(err)) {
-                    // Fail for anything else.
-                    throw err; // re-throw
-                }
-                // Try creating the parent first.
-                const parent = this.paths.dirname(current);
-                if (parent === '' || parent === current) {
-                    // This shouldn't ever happen.
-                    throw err;
-                }
-                stack.push(current);
-                stack.push(parent);
-            }
-        }
+        const uri = vscode.Uri.file(dirname);
+        await this.vscfs.createDirectory(uri);
     }
 
     public async listdir(dirname: string): Promise<[string, FileType][]> {
@@ -315,6 +281,10 @@ export class RawFileSystem implements IRawFileSystem {
 
     //****************************
     // non-async
+
+    // VS Code has decided to never support any sync functions (aside
+    // from perhaps create*Stream()).
+    // See: https://github.com/microsoft/vscode/issues/84518
 
     public statSync(filename: string): FileStat {
         // We follow the filetype behavior of the VS Code API, by
@@ -330,19 +300,17 @@ export class RawFileSystem implements IRawFileSystem {
     }
 
     public readTextSync(filename: string): string {
-        // TODO https://github.com/microsoft/vscode/issues/84175
-        //   This functionality has been requested for the VS Code API.
         return this.fsExtra.readFileSync(filename, ENCODING);
     }
 
     public createReadStream(filename: string): ReadStream {
-        // TODO https://github.com/microsoft/vscode/issues/84175
+        // TODO (https://github.com/microsoft/vscode/issues/84515):
         //   This functionality has been requested for the VS Code API.
         return this.fsExtra.createReadStream(filename);
     }
 
     public createWriteStream(filename: string): WriteStream {
-        // TODO https://github.com/microsoft/vscode/issues/84175
+        // TODO (https://github.com/microsoft/vscode/issues/84515):
         //   This functionality has been requested for the VS Code API.
         return this.fsExtra.createWriteStream(filename);
     }
