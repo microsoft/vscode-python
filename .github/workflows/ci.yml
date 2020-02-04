@@ -44,19 +44,22 @@ jobs:
       # Retrieve the list of ptvsd versions from PyPI in order to increase the specificity of the pip cache key, so that the cache gets invalidated as necessary.
       # See https://github.com/microsoft/vscode-python/pull/9843#discussion_r373635221
       - name: curl PyPI to get ptvsd versions
-        run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+        id: ptvsd-curl
+        run: |
+          curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+          echo ::set-output name=hash::${hashFiles('ptvsd.json')}
 
       - name: Cache pip files
         uses: actions/cache@v1
         with:
           path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{steps.ptvsd-curl.outputs.hash}}
 
       - name: Cache ./pythonFiles/lib/python
         uses: actions/cache@v1
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{steps.ptvsd-curl.outputs.hash}}
 
   js-ts-deps:
     name: Install npm dependencies
@@ -136,7 +139,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{jobs.python-deps.steps.ptvsd-curl.outputs.hash}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
