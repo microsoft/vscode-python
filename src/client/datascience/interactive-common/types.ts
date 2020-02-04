@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { MessageType } from './syncrhonization';
+import { MessageType } from './synchronization';
 
 // Stuff common to React and Extensions.
 
