@@ -69,14 +69,15 @@ function generateMainReducer<M>(skipDefault: boolean, testMode: boolean, baseThe
 
 function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
     return store => next => action => {
+        const prevState = store.getState();
         const res = next(action);
+        const afterState = store.getState();
+
         // If the action is part of a sync message, then do not send it to the extension.
         if (action.payload && typeof (action.payload as BaseReduxActionPayload).messageType === 'number') {
             return res;
         }
 
-        const prevState = store.getState();
-        const afterState = store.getState();
 
         // If cell vm count changed or selected cell changed, send the message
         const currentSelection = getSelectedAndFocusedInfo(afterState.main);
