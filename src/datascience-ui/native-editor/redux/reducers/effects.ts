@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { isActionPerformedByUser } from '../../../../client/datascience/interactive-common/synchronization';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { getSelectedAndFocusedInfo, IMainState } from '../../../interactive-common/mainState';
@@ -39,7 +40,7 @@ export namespace Effects {
             // Add focus on new cell
             const addFocusIndex = newVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
             if (addFocusIndex >= 0) {
-                const focus = typeof arg.payload.messageType !== 'number';
+                const focus = isActionPerformedByUser(arg.payload);
                 newVMs[addFocusIndex] = { ...newVMs[addFocusIndex], focused: focus, selected: focus, cursorPos: arg.payload.data.cursorPos };
             }
 
@@ -157,7 +158,7 @@ export namespace Effects {
 
             const newVMs = [...prevState.cellVMs];
             // Ensure not to focus the editor if this is a sync message.
-            const focus = typeof arg.payload.messageType !== 'number';
+            const focus = isActionPerformedByUser(arg.payload);
             if (addIndex >= 0 && arg.payload.data.cellId !== selectionInfo.selectedCellId) {
                 newVMs[addIndex] = {
                     ...newVMs[addIndex],

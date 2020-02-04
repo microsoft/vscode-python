@@ -1,6 +1,7 @@
 import { CommonActionType, CommonActionTypeMapping } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { CssMessages, SharedMessages } from '../messages';
 import { IInteractiveWindowMapping, InteractiveWindowMessages } from './interactiveWindowTypes';
+import { BaseReduxActionPayload } from './types';
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -163,6 +164,10 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [SharedMessages.Started]: MessageType.other,
     [SharedMessages.UpdateSettings]: MessageType.other
 };
+
+export function isActionPerformedByUser(action: BaseReduxActionPayload<{}> | BaseReduxActionPayload<never>) {
+    return action.messageType === undefined;
+}
 
 export function shouldRebroadcast(message: keyof IInteractiveWindowMapping): [boolean, MessageType] {
     const messageType: MessageType | undefined = messageWithMessageTypes[message];
