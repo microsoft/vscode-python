@@ -59,7 +59,7 @@ export class InteractiveWindowMessageListener implements IWebPanelMessageListene
                 }
                 const cb = InteractiveWindowMessageListener.handlers.get(item);
                 if (cb) {
-                    cb(InteractiveWindowMessages.Sync, { type: message, payload: syncPayload.data });
+                    cb(InteractiveWindowMessages.Sync, { type: message, payload: syncPayload });
                 }
             });
             return;

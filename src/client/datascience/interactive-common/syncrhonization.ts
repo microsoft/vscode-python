@@ -165,9 +165,12 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
 };
 
 export function shouldRebroadcast(message: keyof IInteractiveWindowMapping): [boolean, MessageType] {
-    if (!messageWithMessageTypes[message]) {
+    const messageType: MessageType | undefined = messageWithMessageTypes[message];
+    // Support for liveshare is turned off for now, we can enable that later.
+    // I.e. we only support synchronizing across editors in the same session.
+    if (messageType === undefined || (messageType & MessageType.syncAcrossSameNotebooks) !== MessageType.syncAcrossSameNotebooks) {
         return [false, MessageType.other];
     }
-    const messageType: MessageType = messageWithMessageTypes[message];
+
     return [(messageType & MessageType.syncAcrossSameNotebooks) > 0 || (messageType & MessageType.syncWithLiveShare) > 0, messageType];
 }

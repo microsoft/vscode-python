@@ -36,38 +36,23 @@ export function createPostableAction<M extends IInteractiveWindowMapping, T exte
     } as any) as BaseReduxActionPayload<M[T]>;
     return { type: CommonActionType.PostOutgoingMessage, payload: { payload: newPayload, type: message } };
 }
-
-type Dispatcher = (action: Redux.AnyAction) => Redux.AnyAction;
-/**
- * Checks whether a message needs to be re-broadcasted.
- */
-export function reBroadcastMessageIfRequired(
-    storeDispatcher: Dispatcher,
-    message: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages,
-    payload?: BaseReduxActionPayload<{}>
-) {
-    if (typeof payload?.messageType === 'number' || payload?.messageDirection === 'outgoing' || message === InteractiveWindowMessages.Sync) {
-        return;
-    }
-    // Check if we need to re-broadcast this message to other editors/sessions.
-    // tslint:disable-next-line: no-any
-    const result = shouldRebroadcast(message as any);
-    if (result[0]) {
-        // Mark message as incoming, to indicate this will be sent into the other webviews.
-        // tslint:disable-next-line: no-any
-        const syncPayloadData: BaseReduxActionPayload<any> = { data: payload?.data, messageType: result[1], messageDirection: 'incoming' };
-        // tslint:disable-next-line: no-any
-        const syncPayload = { type: message, payload: syncPayloadData } as any;
-        // Send this out.
-        storeDispatcher(createPostableAction(InteractiveWindowMessages.Sync, syncPayload));
-    }
+export function unwrapPostableAction(action: Redux.AnyAction): { type: keyof IInteractiveWindowMapping; payload?: BaseReduxActionPayload<{}> } {
+    // Unwrap the payload that was created in `createPostableAction`.
+    const type = action.type;
+    const payload: BaseReduxActionPayload<{}> | undefined = action.payload;
+    return { type, payload };
 }
-export function reBroadcastMessageIfRequiredX(
-    storeDispatcher: Function,
+
+
+export function reBroadcastMessageIfRequired(
+    dispatcher: Function,
     message: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages,
     payload?: BaseReduxActionPayload<{}>
 ) {
-    if (typeof payload?.messageType === 'number' || payload?.messageDirection === 'outgoing' || message === InteractiveWindowMessages.Sync) {
+    if (typeof payload?.messageType === 'number' || message === InteractiveWindowMessages.Sync) {
+        return;
+    }
+    if (payload?.messageDirection === 'outgoing') {
         return;
     }
     // Check if we need to re-broadcast this message to other editors/sessions.
@@ -80,7 +65,6 @@ export function reBroadcastMessageIfRequiredX(
         // tslint:disable-next-line: no-any
         const syncPayload = { type: message, payload: syncPayloadData } as any;
         // Send this out.
-        const action = createPostableAction(InteractiveWindowMessages.Sync, syncPayload);
-        storeDispatcher(action.type, action.payload);
+        dispatcher(InteractiveWindowMessages.Sync, syncPayload);
     }
 }
