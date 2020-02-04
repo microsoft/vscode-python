@@ -26,8 +26,26 @@ export const SUPPORTS_SYMLINKS = (() => {
     fsextra.unlinkSync(symlink);
     return true;
 })();
-
-export const SUPPORTS_SOCKETS = true;
+export const SUPPORTS_SOCKETS = (() => {
+    const tmp = tmpMod.dirSync({
+        prefix: 'pyvsc-test-',
+        unsafeCleanup: true // for non-empty dir
+    });
+    const filename = path.join(tmp.name, 'test.sock');
+    try {
+        const srv = net.createServer();
+        try {
+            srv.listen(filename);
+        } finally {
+            srv.close();
+        }
+    } catch {
+        return false;
+    } finally {
+        tmp.removeCallback();
+    }
+    return true;
+})();
 
 export const DOES_NOT_EXIST = 'this file does not exist';
 
