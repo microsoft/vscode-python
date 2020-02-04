@@ -7,29 +7,38 @@ import * as ReactDOM from 'react-dom';
 import { MaxStringCompare } from '../../client/datascience/data-viewing/types';
 import { KeyCodes } from '../react-common/constants';
 import { measureText } from '../react-common/textMeasure';
+import './globalJQueryImports';
 import { ReactSlickGridFilterBox } from './reactSlickGridFilterBox';
 
-// Slickgrid requires jquery to be defined. Globally. So we do some hacks here.
-// We need to manipulate the grid with the same jquery that it uses
-// use slickgridJQ instead of the usual $ to make it clear that we need that JQ and not
-// the one currently in node-modules
-// tslint:disable-next-line: no-var-requires no-require-imports
-require('expose-loader?jQuery!slickgrid/lib/jquery-1.11.2.min');
+/*
+WARNING: Do not change the order of these imports.
+Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
+*/
 // tslint:disable-next-line: no-var-requires no-require-imports
 const slickgridJQ = require('slickgrid/lib/jquery-1.11.2.min');
-// tslint:disable-next-line: no-var-requires no-require-imports
-require('expose-loader?jQuery.fn.drag!slickgrid/lib/jquery.event.drag-2.3.0');
 
+// Adding comments to ensure order of imports does not change due to auto formatters.
+// tslint:disable-next-line: ordered-imports
 import 'slickgrid/slick.core';
+// Adding comments to ensure order of imports does not change due to auto formatters.
+// tslint:disable-next-line: ordered-imports
 import 'slickgrid/slick.dataview';
+// Adding comments to ensure order of imports does not change due to auto formatters.
+// tslint:disable-next-line: ordered-imports
 import 'slickgrid/slick.grid';
-
+// Adding comments to ensure order of imports does not change due to auto formatters.
+// tslint:disable-next-line: ordered-imports
 import 'slickgrid/plugins/slick.autotooltips';
-
+// Adding comments to ensure order of imports does not change due to auto formatters.
+// tslint:disable-next-line: ordered-imports
 import 'slickgrid/slick.grid.css';
-
 // Make sure our css comes after the slick grid css. We override some of its styles.
+// tslint:disable-next-line: ordered-imports
 import './reactSlickGrid.css';
+/*
+WARNING: Do not change the order of these imports.
+Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
+*/
 
 const MinColumnWidth = 70;
 const MaxColumnWidth = 500;
