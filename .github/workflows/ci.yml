@@ -12,6 +12,7 @@ env:
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
+  TEST_RESULTS_DIRECTORY: .
 
 jobs:
   ### Initialization: retrieve, install and cache dependencies
@@ -69,126 +70,6 @@ jobs:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
-  ### Hygiene + VSIX upload
-  compile:
-    name: Compile and check for errors
-    runs-on: ubuntu-latest
-    needs: [js-ts-deps]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci
-
-      - name: Run gulp prePublishNonBundle
-        run: npx gulp prePublishNonBundle
-
-  check-dependencies:
-    name: Check dependencies
-    runs-on: ubuntu-latest
-    needs: [js-ts-deps]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci
-
-      - name: Check dependencies
-        run: npm run checkDependencies
-
-  hygiene-js-ts:
-    name: Hygiene (JS/TS)
-    runs-on: ubuntu-latest
-    needs: [js-ts-deps]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci
-
-      - name: Run linting
-        run: npx tslint --project tsconfig.json
-
-      - name: Run prettier on TypeScript code
-        run: npx prettier 'src/**/*.ts*' --check
-
-      - name: Run prettier on JavaScript code
-        run: npx prettier 'build/**/*.js' --check
-
-  hygiene-python:
-    name: Hygiene (Python)
-    runs-on: ubuntu-latest
-    needs: [python-deps]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Use Python ${{env.PYTHON_VERSION}}
-        uses: actions/setup-python@v1
-        with:
-          python-version: ${{env.PYTHON_VERSION}}
-
-      - name: Run Black on Python code
-        run: |
-          python -m pip install -U black
-          python -m black . --check
-        working-directory: pythonFiles
-
-  build-vsix:
-    name: Build VSIX
-    runs-on: ubuntu-latest
-    needs: [python-deps, js-ts-deps]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-
-      - name: Retrieve cached pythonFiles/ directory
-        uses: actions/cache@v1
-        with:
-          path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('**/**-requirements.txt')}}
-
-      - name: Install dependencies (npm ci)
-        run: npm ci
-
-      - name: Clean directory
-        run: npm run clean
-
-      - name: Package the VSIX
-        run: npm run package
-
-      - uses: actions/upload-artifact@v1
-        with:
-          name: ${{env.ARTIFACT_NAME_VSIX}}
-          path: ms-python-insiders.vsix
-
   ### Non-smoke tests
   tests:
     name: Tests
@@ -244,31 +125,39 @@ jobs:
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
         working-directory: ${{env.PVSC_WORKDIR}}
-        # - name: Install IPython test requirements
-        #   run: |
-        #     python -m pip install numpy
-        #     python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-        #   working-directory: ${{env.PVSC_WORKDIR}}
-        #   if: matrix.tests == ipython
 
-        # - name: Install functional test requirements
-        #   run: |
-        #     python -m pip install numpy
-        #     python -m pip install --upgrade -r ./build/functional-test-requirements.txt
-        #   working-directory: ${{env.PVSC_WORKDIR}}
-        #   if: matrix.tests == functional
+      # - name: Install IPython test requirements
+      #   run: |
+      #     python -m pip install numpy
+      #     python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+      #   working-directory: ${{env.PVSC_WORKDIR}}
+      #   if: matrix.tests == ipython
 
-        # - name: Downgrade pywin32 for functional tests on Windows + Python 3.6
-        #   run: python -m pip install --upgrade pywin32==224
-        #   working-directory: ${{env.PVSC_WORKDIR}}
-        #   if: matrix.tests == functional && matrix.os == windows-latest && matrix.python == 3.6
+      # - name: Install functional test requirements
+      #   run: |
+      #     python -m pip install numpy
+      #     python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+      #   working-directory: ${{env.PVSC_WORKDIR}}
+      #   if: matrix.tests == functional
 
-        # - name: Run TypeScript unit tests
-        #   run: npm run unittests:cover
-        #   working-directory: ${{env.PVSC_WORKDIR}}
-        #   if: matrix.tests == unit
+      # - name: Downgrade pywin32 for functional tests on Windows + Python 3.6
+      #   run: python -m pip install --upgrade pywin32==224
+      #   working-directory: ${{env.PVSC_WORKDIR}}
+      #   if: matrix.tests == functional && matrix.os == windows-latest && matrix.python == 3.6
 
-        # - name: Run Python unit tests
-        #   run: python pythonFiles/tests/run_all.py --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tests-junit.xml
-        #   working-directory: ${{env.PVSC_WORKDIR}}
-        #   if: matrix.tests == python-unit
+      - name: Run TypeScript unit tests
+        run: npm run unittests:cover
+        working-directory: ${{env.PVSC_WORKDIR}}
+        if: matrix.tests == unit
+
+      - name: Run Python unit tests
+        run: python pythonFiles/tests/run_all.py --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
+        working-directory: ${{env.PVSC_WORKDIR}}
+        if: matrix.tests == python-unit
+
+      # Run the Python IPython tests in our codebase.
+      # Produces a JUnit-style log file that will be uploaded after all tests are complete.
+      - name: Run IPython unit tests
+        run: python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
+        working-directory: ${{env.PVSC_WORKDIR}}
+        if: matrix.tests == ipython
