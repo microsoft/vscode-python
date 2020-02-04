@@ -79,7 +79,7 @@
         "max": 24
     },
     {
-        "name": "UseTerminalToGetActivatedEnvVars - enabled",
+        "name": "UseTerminalToGetActivatedEnvVars - experiment",
         "salt": "UseTerminalToGetActivatedEnvVars",
         "min": 0,
         "max": 20
@@ -105,13 +105,13 @@
     {
         "name": "WebHostNotebook - experiment",
         "salt": "WebHostNotebook",
-        "max": 20,
+        "max": 0,
         "min": 0
     },
     {
         "name": "WebHostNotebook - control",
         "salt": "WebHostNotebook",
-        "min": 80,
+        "min": 0,
         "max": 100
     }
 ]
