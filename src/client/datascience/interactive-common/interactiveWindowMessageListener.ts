@@ -10,7 +10,6 @@ import { ILiveShareApi, IWebPanel, IWebPanelMessageListener } from '../../common
 import { Identifiers, LiveShare } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
 import { InteractiveWindowMessages, InteractiveWindowRemoteMessages } from './interactiveWindowTypes';
-import { BaseReduxActionPayload } from './types';
 
 // tslint:disable:no-any
 

@@ -132,14 +132,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
-                <div
-                    className={cellWrapperClass}
-                    role={this.props.role}
-                    ref={this.wrapperRef}
-                    tabIndex={0}
-                    onKeyDown={this.onKeyDown}
-                    onClick={this.onMouseClick}
-                >
+                <div className={cellWrapperClass} role={this.props.role} ref={this.wrapperRef} tabIndex={0} onKeyDown={this.onKeyDown} onClick={this.onMouseClick}>
                     <div className={cellOuterClass}>
                         {this.renderControls()}
                         <div className="content-div">

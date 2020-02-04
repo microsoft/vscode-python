@@ -5,7 +5,6 @@
 
 import * as Redux from 'redux';
 import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { shouldRebroadcast } from '../../../client/datascience/interactive-common/syncrhonization';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
 import { CommonAction, CommonActionType } from './reducers/types';
@@ -42,7 +41,6 @@ export function unwrapPostableAction(action: Redux.AnyAction): { type: keyof IIn
     const payload: BaseReduxActionPayload<{}> | undefined = action.payload;
     return { type, payload };
 }
-
 
 export function reBroadcastMessageIfRequired(
     _dispatcher: Function,
