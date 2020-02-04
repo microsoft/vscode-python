@@ -64,9 +64,9 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [CommonActionType.SHOW_DATA_VIEWER]: MessageType.other,
     [CommonActionType.SUBMIT_INPUT]: MessageType.other,
     [CommonActionType.TOGGLE_INPUT_BLOCK]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
-    [CommonActionType.TOGGLE_LINE_NUMBERS]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
-    [CommonActionType.TOGGLE_OUTPUT]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
-    [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
+    [CommonActionType.TOGGLE_LINE_NUMBERS]: MessageType.syncWithLiveShare,
+    [CommonActionType.TOGGLE_OUTPUT]: MessageType.syncWithLiveShare,
+    [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: MessageType.syncWithLiveShare,
     [CommonActionType.UNFOCUS_CELL]: MessageType.syncWithLiveShare,
     [CommonActionType.UNMOUNT]: MessageType.other,
 

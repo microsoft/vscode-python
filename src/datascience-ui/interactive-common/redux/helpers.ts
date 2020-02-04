@@ -30,12 +30,11 @@ export function createIncomingAction(type: CommonActionType | InteractiveWindowM
 // Actions created from messages
 export function createPostableAction<M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(message: T, payload?: M[T]): Redux.AnyAction {
     const newPayload: BaseReduxActionPayload<M[T]> = ({
-            data: payload,
-            messageDirection: 'outgoing'
-            // tslint:disable-next-line: no-any
-        } as any) as BaseReduxActionPayload<M[T]>;
-        return { type: CommonActionType.PostOutgoingMessage, payload: { payload: newPayload, type: message } };
-    }
+        data: payload,
+        messageDirection: 'outgoing'
+        // tslint:disable-next-line: no-any
+    } as any) as BaseReduxActionPayload<M[T]>;
+    return { type: CommonActionType.PostOutgoingMessage, payload: { payload: newPayload, type: message } };
 }
 
 type Dispatcher = (action: Redux.AnyAction) => Redux.AnyAction;
