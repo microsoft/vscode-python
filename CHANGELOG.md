@@ -47,6 +47,8 @@
 
 ### Fixes
 
+1. Fixed the focus on the interactive window when pressing ctrl + 1/ ctrl + 2
+   ([#9693](https://github.com/microsoft/vscode-python/issues/9693))
 1. Fix variable explorer in Interactive and Notebook editors from interfering with execution.
    ([#5980](https://github.com/Microsoft/vscode-python/issues/5980))
 1. Fix a crash when using pytest to discover doctests with unknown line number.
