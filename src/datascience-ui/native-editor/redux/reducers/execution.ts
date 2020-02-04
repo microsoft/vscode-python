@@ -76,20 +76,24 @@ export namespace Execution {
             } else if (arg.payload.data.moveOp === 'select') {
                 // Select the cell below this one, but don't focus it
                 if (index < arg.prevState.cellVMs.length - 1) {
-                    return Effects.selectCell({
-                        ...arg,
-                        prevState: {
-                            ...executeResult
-                        },
-                        payload: {
-                            ...arg.payload,
-                            data: {
-                                ...arg.payload.data,
-                                cellId: arg.prevState.cellVMs[index + 1].cell.id,
-                                cursorPos: CursorPos.Current
+                    return Effects.selectCell(
+                        {
+                            ...arg,
+                            prevState: {
+                                ...executeResult
+                            },
+                            payload: {
+                                ...arg.payload,
+                                data: {
+                                    ...arg.payload.data,
+                                    cellId: arg.prevState.cellVMs[index + 1].cell.id,
+                                    cursorPos: CursorPos.Current
+                                }
                             }
-                        }
-                    });
+                        },
+                        // Select the next cell, but do not set focus to it.
+                        false
+                    );
                 }
                 return executeResult;
             } else {

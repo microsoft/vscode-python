@@ -129,13 +129,18 @@ export namespace Effects {
         return arg.prevState;
     }
 
-    export function selectCell(arg: NativeEditorReducerArg<ICellAndCursorAction>): IMainState {
+    /**
+     * Select a cell.
+     *
+     * @param {boolean} [shouldFocusCell] If provided, then will control the focus behavior of the cell. (defaults to focus state of previously selected cell).
+     */
+    export function selectCell(arg: NativeEditorReducerArg<ICellAndCursorAction>, shouldFocusCell?: boolean): IMainState {
         // Skip doing anything if already selected.
         const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
         if (arg.payload.data.cellId !== selectionInfo.selectedCellId) {
             let prevState = arg.prevState;
             const addIndex = prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
-
+            const someOtherCellWasFocusedAndSelected = selectionInfo.focusedCellId === selectionInfo.selectedCellId && !!selectionInfo.focusedCellId;
             // First find the old focused cell and unfocus it
             let removeFocusIndex = arg.prevState.cellVMs.findIndex(c => c.cell.id === selectionInfo.focusedCellId);
             if (removeFocusIndex < 0) {
@@ -153,7 +158,7 @@ export namespace Effects {
             if (addIndex >= 0 && arg.payload.data.cellId !== selectionInfo.selectedCellId) {
                 newVMs[addIndex] = {
                     ...newVMs[addIndex],
-                    focused: selectionInfo.focusedCellId !== undefined && selectionInfo.focusedCellId === selectionInfo.selectedCellId,
+                    focused: typeof shouldFocusCell === 'boolean' ? shouldFocusCell : someOtherCellWasFocusedAndSelected,
                     selected: true,
                     cursorPos: arg.payload.data.cursorPos
                 };
