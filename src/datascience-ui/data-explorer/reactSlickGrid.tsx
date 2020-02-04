@@ -40,7 +40,6 @@ WARNING: Do not change the order of these imports.
 Slick grid MUST be imported after we load jQuery and other stuff from `./globalJQueryImports`
 */
 
-
 const MinColumnWidth = 70;
 const MaxColumnWidth = 500;
 

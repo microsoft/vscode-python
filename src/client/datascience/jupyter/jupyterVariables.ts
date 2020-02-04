@@ -45,7 +45,7 @@ export class JupyterVariables implements IJupyterVariables {
     private languageToQueryMap = new Map<string, { query: string; parser: RegExp }>();
     private notebookState = new Map<Uri, INotebookState>();
 
-    constructor(@inject(IFileSystem) private fileSystem: IFileSystem, @inject(IConfigurationService) private configService: IConfigurationService) { }
+    constructor(@inject(IFileSystem) private fileSystem: IFileSystem, @inject(IConfigurationService) private configService: IConfigurationService) {}
 
     // IJupyterVariables implementation
     public async getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse> {
@@ -256,7 +256,7 @@ export class JupyterVariables implements IJupyterVariables {
             result.pageStartIndex = startPos;
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
-            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length;) {
+            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
                 const fullVariable = list.variables[i].value ? list.variables[i] : await this.getVariableValueFromKernel(list.variables[i], notebook);
 
                 // See if this is excluded or not.
