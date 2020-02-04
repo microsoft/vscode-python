@@ -52,34 +52,6 @@ export namespace Effects {
         return arg.prevState;
     }
 
-    export function unfocusAndUnSelectAll(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
-        const newVMs = [...arg.prevState.cellVMs];
-        newVMs.forEach((item, index) => {
-            if (item.selected || item.focused) {
-                const current = newVMs[index];
-                const newCell = {
-                    ...current,
-                    inputBlockText: arg.payload.data.code,
-                    focused: false,
-                    selected: false,
-                    cell: {
-                        ...current.cell,
-                        data: {
-                            ...current.cell.data,
-                            source: arg.payload.data.code
-                        }
-                    }
-                };
-                // tslint:disable-next-line: no-any
-                newVMs[index] = Helpers.asCellViewModel(newCell); // This is because IMessageCell doesn't fit in here
-            }
-        });
-
-        return {
-            ...arg.prevState,
-            cellVMs: newVMs
-        };
-    }
     export function unfocusCell(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
         // Unfocus the cell
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
