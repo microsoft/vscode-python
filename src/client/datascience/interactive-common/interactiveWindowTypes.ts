@@ -59,7 +59,7 @@ export enum InteractiveWindowMessages {
     EditCell = 'edit_cell',
     RemoveCell = 'remove_cell',
     SwapCells = 'swap_cells',
-    Sync = 'sync_message_used_to_broadcasst_and_sync_editors',
+    Sync = 'sync_message_used_to_broadcast_and_sync_editors',
     InsertCell = 'insert_cell',
     LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request',
     LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response',
