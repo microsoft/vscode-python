@@ -148,16 +148,16 @@ jobs:
       - name: Run TypeScript unit tests
         run: npm run unittests:cover
         working-directory: ${{env.PVSC_WORKDIR}}
-        if: matrix.tests == unit
+        if: matrix.tests == 'unit'
 
       - name: Run Python unit tests
         run: python pythonFiles/tests/run_all.py --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
         working-directory: ${{env.PVSC_WORKDIR}}
-        if: matrix.tests == python-unit
+        if: matrix.tests == 'python-unit'
 
       # Run the Python IPython tests in our codebase.
       # Produces a JUnit-style log file that will be uploaded after all tests are complete.
       - name: Run IPython unit tests
         run: python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
         working-directory: ${{env.PVSC_WORKDIR}}
-        if: matrix.tests == ipython
+        if: matrix.tests == 'ipython'
