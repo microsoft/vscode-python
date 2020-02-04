@@ -14,7 +14,7 @@ import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { fixLatexEquations } from './latexManipulation';
 import { ICellViewModel } from './mainState';
-import { getRichestMimetype, getTransform } from './transforms';
+import { getRichestMimetype, getTransform, isMimeTypeSupported } from './transforms';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
@@ -380,7 +380,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             let mimetype = transformed.mimeType;
 
             // If that worked, use the transform
-            if (mimetype) {
+            if (mimetype && isMimeTypeSupported(mimetype)) {
                 // Get the matching React.Component for that mimetype
                 const Transform = getTransform(mimetype);
 
