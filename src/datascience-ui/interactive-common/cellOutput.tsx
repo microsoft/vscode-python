@@ -405,6 +405,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         </div>
                     );
                 }
+            } else if (mimetype.startsWith('application/scrapbook.scrap.')) {
+                // Silently skip rendering of these mime types, render an empty div so the user sees the cell was executed.
+                buffer.push(<div key={index}></div>);
             } else {
                 if (transformed.data) {
                     const keys = Object.keys(transformed.data);
