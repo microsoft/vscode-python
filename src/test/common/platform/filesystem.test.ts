@@ -499,121 +499,95 @@ suite('FileSystem - raw', () => {
                 return this.skip();
             }
         });
-        if (SUPPORTS_SYMLINKS) {
-            test('mixed', async () => {
-                // Create the target directory and its contents.
-                const dirname = await fix.createDirectory('x/y/z');
-                const file1 = await fix.createFile('x/y/z/__init__.py', '');
-                const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
-                const file2 = await fix.createFile('x/y/z/spam.py', '...');
+        test('mixed', async () => {
+            // Create the target directory and its contents.
+            const dirname = await fix.createDirectory('x/y/z');
+            const file1 = await fix.createFile('x/y/z/__init__.py', '');
+            const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
+            const file2 = await fix.createFile('x/y/z/spam.py', '...');
+            const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
+            const subdir = await fix.createDirectory('x/y/z/w');
+            const expected = [
+                [file1, FileType.File],
+                [script, FileType.File],
+                [file3, FileType.File],
+                [file2, FileType.File],
+                [subdir, FileType.Directory]
+            ];
+            if (SUPPORTS_SYMLINKS) {
+                // a symlink to a file (source not directly in listed dir)
                 const symlink1 = await fix.createSymlink(
                     'x/y/z/info.py',
                     // Link to an ignored file.
                     await fix.createFile('x/_info.py', '<info here>') // source
                 );
-                const sock = await fix.createSocket('x/y/z/ipc.sock');
-                const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
-                //const symlink2 = await fix.createSymlink(
-                await fix.createSymlink(
-                    'x/y/z/broken',
-                    DOES_NOT_EXIST // source
-                );
-                const symlink3 = await fix.createSymlink(
-                    'x/y/z/ipc.sck',
-                    sock // source
-                );
-                const subdir = await fix.createDirectory('x/y/z/w');
+                expected.push([symlink1, FileType.SymbolicLink | FileType.File]);
+
+                // a symlink to a directory (source not directly in listed dir)
                 const symlink4 = await fix.createSymlink(
                     'x/y/z/static_files',
                     await fix.resolve('x/y/z/w/data') // source
                 );
-                // Create other files and directories (should be ignored).
+                expected.push([symlink4, FileType.SymbolicLink | FileType.Directory]);
+
+                // a broken symlink
+                // TODO: VS Code ignores broken symlinks currently...
+                //const symlink2 = await fix.createSymlink(
+                //    'x/y/z/broken',
+                //    DOES_NOT_EXIST // source
+                //);
+                //expected.push([symlink2, FileType.SymbolicLink]);
+            }
+            if (SUPPORTS_SOCKETS) {
+                // a socket
+                const sock = await fix.createSocket('x/y/z/ipc.sock');
+                expected.push([sock, FileType.Unknown]);
+
+                if (SUPPORTS_SYMLINKS) {
+                    // a symlink to a socket
+                    const symlink3 = await fix.createSymlink(
+                        'x/y/z/ipc.sck',
+                        sock // source
+                    );
+                    expected.push(
+                        // TODO:
+                        //   VS Code gets symlinks to "unknown" files wrong:
+                        [symlink3, FileType.SymbolicLink | FileType.File]
+                        //[symlink3, FileType.SymbolicLink]
+                    );
+                }
+            }
+            // Create other files and directories (should be ignored).
+            await fix.createFile('x/__init__.py', '');
+            await fix.createFile('x/y/__init__.py', '');
+            await fix.createDirectory('x/y/z/w/data');
+            await fix.createFile('x/y/z/w/data/v1.json');
+            if (SUPPORTS_SYMLINKS) {
+                // a broken symlink
+                // TODO: VS Code ignores broken symlinks currently...
+                await fix.createSymlink(
+                    'x/y/z/broken',
+                    DOES_NOT_EXIST // source
+                );
+
+                // a symlink outside the listed dir (to a file inside the dir)
                 await fix.createSymlink(
                     'my-script.py',
                     // Link to a listed file.
                     script // source (__main__.py)
                 );
-                const ignored1 = await fix.createFile('x/__init__.py', '');
-                await fix.createFile('x/y/__init__.py', '');
+
+                // a symlink in a subdir (to a file outside the dir)
                 await fix.createSymlink(
                     'x/y/z/w/__init__.py',
-                    ignored1 // source (x/__init__.py)
+                    await fix.createFile('x/__init__.py', '') // source
                 );
-                await fix.createDirectory('x/y/z/w/data');
-                await fix.createFile('x/y/z/w/data/v1.json');
+            }
 
-                const entries = await filesystem.listdir(dirname);
+            const entries = await filesystem.listdir(dirname);
 
-                expect(entries.sort()).to.deep.equal([
-                    [file1, FileType.File],
-                    [script, FileType.File],
-                    // TODO: VS Code ignores broken symlinks:
-                    //[symlink2, FileType.SymbolicLink],
-                    [file3, FileType.File],
-                    [symlink1, FileType.SymbolicLink | FileType.File],
-                    // TODO:
-                    //   VS Code gets symlinks to "unknown" files wrong:
-                    [symlink3, FileType.SymbolicLink | FileType.File],
-                    //[symlink3, FileType.SymbolicLink],
-                    [sock, FileType.Unknown],
-                    [file2, FileType.File],
-                    [symlink4, FileType.SymbolicLink | FileType.Directory],
-                    [subdir, FileType.Directory]
-                ]);
-            });
-        } else if (SUPPORTS_SOCKETS) {
-            test('mixed', async () => {
-                // Create the target directory and its contents.
-                const dirname = await fix.createDirectory('x/y/z');
-                const file1 = await fix.createFile('x/y/z/__init__.py', '');
-                const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
-                const file2 = await fix.createFile('x/y/z/spam.py', '...');
-                const sock = await fix.createSocket('x/y/z/ipc.sock');
-                const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
-                const subdir = await fix.createDirectory('x/y/z/w');
-                // Create other files and directories (should be ignored).
-                await fix.createFile('x/__init__.py', '');
-                await fix.createFile('x/y/__init__.py', '');
-                await fix.createDirectory('x/y/z/w/data');
-                await fix.createFile('x/y/z/w/data/v1.json');
-
-                const entries = await filesystem.listdir(dirname);
-
-                expect(entries.sort()).to.deep.equal([
-                    [file1, FileType.File],
-                    [script, FileType.File],
-                    [file3, FileType.File],
-                    [sock, FileType.Unknown],
-                    [file2, FileType.File],
-                    [subdir, FileType.Directory]
-                ]);
-            });
-        } else {
-            test('mixed', async () => {
-                // Create the target directory and its contents.
-                const dirname = await fix.createDirectory('x/y/z');
-                const file1 = await fix.createFile('x/y/z/__init__.py', '');
-                const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
-                const file2 = await fix.createFile('x/y/z/spam.py', '...');
-                const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
-                const subdir = await fix.createDirectory('x/y/z/w');
-                // Create other files and directories (should be ignored).
-                await fix.createFile('x/__init__.py', '');
-                await fix.createFile('x/y/__init__.py', '');
-                await fix.createDirectory('x/y/z/w/data');
-                await fix.createFile('x/y/z/w/data/v1.json');
-
-                const entries = await filesystem.listdir(dirname);
-
-                expect(entries.sort()).to.deep.equal([
-                    [file1, FileType.File],
-                    [script, FileType.File],
-                    [file3, FileType.File],
-                    [file2, FileType.File],
-                    [subdir, FileType.Directory]
-                ]);
-            });
-        }
+            expect(entries.sort()).to.deep.equal(expected.sort());
+        });
 
         test('empty', async () => {
             const dirname = await fix.createDirectory('x/y/z/eggs');
@@ -1244,50 +1218,37 @@ suite('FileSystem', () => {
                     return this.skip();
                 }
             });
-            if (SUPPORTS_SYMLINKS) {
-                test('mixed types', async () => {
-                    const symlinkFileSource = await fix.createFile('x/info.py');
+            test('mixed types', async () => {
+                // Create the target directory and its subdirs.
+                const dirname = await fix.createDirectory('x/y/z/scripts');
+                const expected = [
+                    await fix.createDirectory('x/y/z/scripts/w'), // subdir1
+                    await fix.createDirectory('x/y/z/scripts/v') // subdir2
+                ];
+                if (SUPPORTS_SYMLINKS) {
+                    // a symlink to a directory (source is outside listed dir)
                     const symlinkDirSource = await fix.createDirectory('x/data');
-                    const dirname = await fix.createDirectory('x/y/z/scripts');
-                    const subdir1 = await fix.createDirectory('x/y/z/scripts/w');
-                    await fix.createFile('x/y/z/scripts/spam.py');
-                    const subdir2 = await fix.createDirectory('x/y/z/scripts/v');
-                    await fix.createFile('x/y/z/scripts/eggs.py');
-                    await fix.createSocket('x/y/z/scripts/spam.sock');
-                    await fix.createSymlink('x/y/z/scripts/other', symlinkFileSource);
                     const symlink = await fix.createSymlink('x/y/z/scripts/datadir', symlinkDirSource);
-                    await fix.createFile('x/y/z/scripts/data.json');
+                    expected.push(symlink);
+                }
+                // Create files in the directory (should be ignored).
+                await fix.createFile('x/y/z/scripts/spam.py');
+                await fix.createFile('x/y/z/scripts/eggs.py');
+                await fix.createFile('x/y/z/scripts/data.json');
+                if (SUPPORTS_SYMLINKS) {
+                    // a symlink to a file (source outside listed dir)
+                    const symlinkFileSource = await fix.createFile('x/info.py');
+                    await fix.createSymlink('x/y/z/scripts/other', symlinkFileSource);
+                }
+                if (SUPPORTS_SOCKETS) {
+                    // a plain socket
+                    await fix.createSocket('x/y/z/scripts/spam.sock');
+                }
 
-                    const results = await filesystem.getSubDirectories(dirname);
+                const results = await filesystem.getSubDirectories(dirname);
 
-                    // prettier-ignore
-                    expect(results.sort()).to.deep.equal([
-                        symlink,
-                        subdir2,
-                        subdir1
-                    ]);
-                });
-            } else {
-                test('mixed types', async () => {
-                    const dirname = await fix.createDirectory('x/y/z/scripts');
-                    const subdir1 = await fix.createDirectory('x/y/z/scripts/w');
-                    await fix.createFile('x/y/z/scripts/spam.py');
-                    const subdir2 = await fix.createDirectory('x/y/z/scripts/v');
-                    await fix.createFile('x/y/z/scripts/eggs.py');
-                    if (SUPPORTS_SOCKETS) {
-                        await fix.createSocket('x/y/z/scripts/spam.sock');
-                    }
-                    await fix.createFile('x/y/z/scripts/data.json');
-
-                    const results = await filesystem.getSubDirectories(dirname);
-
-                    // prettier-ignore
-                    expect(results.sort()).to.deep.equal([
-                        subdir2,
-                        subdir1
-                    ]);
-                });
-            }
+                expect(results.sort()).to.deep.equal(expected.sort());
+            });
 
             test('empty if the directory does not exist', async () => {
                 const entries = await filesystem.getSubDirectories(DOES_NOT_EXIST);
@@ -1305,52 +1266,34 @@ suite('FileSystem', () => {
                     return this.skip();
                 }
             });
-            if (SUPPORTS_SYMLINKS) {
-                test('mixed types', async () => {
+            test('mixed types', async () => {
+                // Create the target directory and its files.
+                const dirname = await fix.createDirectory('x/y/z/scripts');
+                const expected = [
+                    await fix.createFile('x/y/z/scripts/spam.py'), // file1
+                    await fix.createFile('x/y/z/scripts/eggs.py'), // file2
+                    await fix.createFile('x/y/z/scripts/data.json') // file3
+                ];
+                if (SUPPORTS_SYMLINKS) {
                     const symlinkFileSource = await fix.createFile('x/info.py');
-                    const symlinkDirSource = await fix.createDirectory('x/data');
-                    const dirname = await fix.createDirectory('x/y/z/scripts');
-                    await fix.createDirectory('x/y/z/scripts/w');
-                    const file1 = await fix.createFile('x/y/z/scripts/spam.py');
-                    await fix.createDirectory('x/y/z/scripts/v');
-                    const file2 = await fix.createFile('x/y/z/scripts/eggs.py');
-                    await fix.createSocket('x/y/z/scripts/spam.sock');
                     const symlink = await fix.createSymlink('x/y/z/scripts/other', symlinkFileSource);
+                    expected.push(symlink);
+                }
+                // Create subdirs, sockets, etc. in the directory (should be ignored).
+                await fix.createDirectory('x/y/z/scripts/w');
+                await fix.createDirectory('x/y/z/scripts/v');
+                if (SUPPORTS_SYMLINKS) {
+                    const symlinkDirSource = await fix.createDirectory('x/data');
                     await fix.createSymlink('x/y/z/scripts/datadir', symlinkDirSource);
-                    const file3 = await fix.createFile('x/y/z/scripts/data.json');
+                }
+                if (SUPPORTS_SOCKETS) {
+                    await fix.createSocket('x/y/z/scripts/spam.sock');
+                }
 
-                    const results = await filesystem.getFiles(dirname);
+                const results = await filesystem.getFiles(dirname);
 
-                    // prettier-ignore
-                    expect(results.sort()).to.deep.equal([
-                        file3,
-                        file2,
-                        symlink,
-                        file1
-                    ]);
-                });
-            } else {
-                test('mixed types', async () => {
-                    const dirname = await fix.createDirectory('x/y/z/scripts');
-                    await fix.createDirectory('x/y/z/scripts/w');
-                    const file1 = await fix.createFile('x/y/z/scripts/spam.py');
-                    await fix.createDirectory('x/y/z/scripts/v');
-                    const file2 = await fix.createFile('x/y/z/scripts/eggs.py');
-                    if (SUPPORTS_SOCKETS) {
-                        await fix.createSocket('x/y/z/scripts/spam.sock');
-                    }
-                    const file3 = await fix.createFile('x/y/z/scripts/data.json');
-
-                    const results = await filesystem.getFiles(dirname);
-
-                    // prettier-ignore
-                    expect(results.sort()).to.deep.equal([
-                        file3,
-                        file2,
-                        file1
-                    ]);
-                });
-            }
+                expect(results.sort()).to.deep.equal(expected.sort());
+            });
 
             test('empty if the directory does not exist', async () => {
                 const entries = await filesystem.getFiles(DOES_NOT_EXIST);
