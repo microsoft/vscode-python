@@ -179,7 +179,7 @@ jobs:
         python: [3.7]
         os: [ubuntu-latest]
         # tests: [unit, python-unit, ipython, venv, single-workspace, multi-workspace, debugger, functional]
-        tests: [multi-workspace]
+        tests: [debugger]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
