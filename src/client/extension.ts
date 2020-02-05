@@ -33,7 +33,7 @@ import {
 } from 'vscode';
 
 import { registerTypes as activationRegisterTypes } from './activation/serviceRegistry';
-import { IExtensionActivationManager, ILanguageServerExtension } from './activation/types';
+import { IExtensionActivationManager, ILanguageServerExtension, LanguageServerType } from './activation/types';
 import { buildApi, IExtensionApi } from './api';
 import { registerTypes as appRegisterTypes } from './application/serviceRegistry';
 import { IApplicationDiagnostics } from './application/types';
@@ -132,9 +132,6 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
 
     const standardOutputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
-
-    const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
-    sortImports.registerCommands();
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
@@ -251,6 +248,11 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
     const languageServerType = configuration.getSettings().languageServer;
+
+    if (languageServerType === LanguageServerType.Microsoft || languageServerType === LanguageServerType.Jedi) {
+        const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
+        sortImports.registerCommands();
+    }
 
     appRegisterTypes(serviceManager, languageServerType);
     providersRegisterTypes(serviceManager);
