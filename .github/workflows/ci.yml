@@ -129,19 +129,19 @@ jobs:
         run: |
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-        if: matrix.tests == ipython
+        if: matrix.tests == 'ipython'
 
       - name: Install functional test requirements
         run: |
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/functional-test-requirements.txt
-        if: matrix.tests == functional
+        if: matrix.tests == 'functional'
 
       # Downgrade pywin32 on Windows because of a bug https://github.com/jupyter/notebook/issues/4909.
       # Only needed for functional tests.
       - name: Downgrade pywin32 for functional tests on Windows + Python 3.6
         run: python -m pip install --upgrade pywin32==224
-        if: matrix.tests == functional && matrix.os == windows-latest && matrix.python == 3.6
+        if: matrix.tests == 'functional' && matrix.os == windows-latest && matrix.python == 3.6
 
       # Run TypeScript unit tests only for Python 3.7
       - name: Run TypeScript unit tests
