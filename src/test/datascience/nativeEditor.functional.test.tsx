@@ -860,6 +860,13 @@ for _ in range(50):
                 editorService.undo(uri);
                 return update;
             }
+            async function redo(): Promise<void> {
+                const uri = Uri.file(notebookFile.filePath);
+                const update = waitForMessage(ioc, InteractiveWindowMessages.ReceivedUpdateModel);
+                const editorService = ioc.serviceManager.get<ICustomEditorService>(ICustomEditorService) as MockCustomEditorService;
+                editorService.redo(uri);
+                return update;
+            }
             test('Add a cell and undo', async () => {
                 addMockData(ioc, 'c=4\nc', '4');
                 await addCell(wrapper, ioc, 'c=4\nc', false);
@@ -872,6 +879,52 @@ for _ in range(50):
 
                 // Should have 3
                 assert.equal(wrapper.find('NativeCell').length, 3, 'Cell not removed');
+            });
+            test('Edit a cell and undo', async () => {
+                await addCell(wrapper, ioc, '', false);
+
+                // Should have 4 cells
+                assert.equal(wrapper.find('NativeCell').length, 4, 'Cell not added');
+
+                // Change the contents of the cell
+                const editorEnzyme = getNativeFocusedEditor(wrapper);
+
+                // Type in something with brackets
+                typeCode(editorEnzyme, 'some more');
+
+                // Verify cell content
+                const reactEditor = editorEnzyme!.instance() as MonacoEditor;
+                const editor = reactEditor.state.editor;
+                if (editor) {
+                    assert.equal(editor.getModel()!.getValue(), 'some more', 'Text does not match');
+                }
+
+                // Add a new cell
+                await addCell(wrapper, ioc, '', false);
+
+                // Send undo a bunch of times. Should undo the add and the edits
+                await undo();
+                await undo();
+                await undo();
+
+                // Should have four again
+                assert.equal(wrapper.find('NativeCell').length, 4, 'Cell not removed on undo');
+
+                // Should have different content
+                if (editor) {
+                    assert.equal(editor.getModel()!.getValue(), 'some mo', 'Text does not match after undo');
+                }
+
+                // Send redo to see if goes back
+                await redo();
+                if (editor) {
+                    assert.equal(editor.getModel()!.getValue(), 'some mor', 'Text does not match');
+                }
+
+                // Send redo to see if goes back
+                await redo();
+                await redo();
+                assert.equal(wrapper.find('NativeCell').length, 5, 'Cell not readded on redo');
             });
         });
 
