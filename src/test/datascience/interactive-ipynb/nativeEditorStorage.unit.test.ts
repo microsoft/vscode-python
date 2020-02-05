@@ -460,7 +460,7 @@ suite('Data Science - Native Editor Storage', () => {
         expect(cells[0].id).to.be.match(/NotebookImport#1/);
         await deleteAllCells();
         cells = storage.cells;
-        expect(cells).to.be.lengthOf(0);
+        expect(cells).to.be.lengthOf(1);
     });
 
     test('Opening file with local storage but no global will still open with old contents', async () => {

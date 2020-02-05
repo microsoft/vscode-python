@@ -330,6 +330,11 @@ export interface INotebookModelInsertChange extends INotebookModelChange {
     cell: ICell;
     index: number;
     codeCellAboveId?: string;
+}
+
+export interface INotebookModelAddChange extends INotebookModelChange {
+    kind: 'add';
+    cell: ICell;
     fullText: string;
     currentText: string;
 }
@@ -413,6 +418,7 @@ export type NotebookModelChange =
     | INotebookModelSwapChange
     | INotebookModelRemoveChange
     | INotebookModelInsertChange
+    | INotebookModelAddChange
     | INotebookModelEditChange
     | INotebookModelVersionChange
     | INotebookModelFileChange;

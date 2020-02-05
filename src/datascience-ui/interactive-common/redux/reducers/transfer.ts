@@ -1,15 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { Identifiers } from '../../../../client/datascience/constants';
 import { IEditorContentChange, InteractiveWindowMessages, NotebookModelChange } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { ICell } from '../../../../client/datascience/types';
-import { concatMultilineStringInput } from '../../../common';
 import { extractInputText, IMainState } from '../../mainState';
 import { createPostableAction } from '../postOffice';
 import { Helpers } from './helpers';
 import { CommonReducerArg, ICellAction, IEditCellAction, ILinkClickAction, ISendCommandAction, IShowDataViewerAction, IShowPlotAction } from './types';
-import { Identifiers } from '../../../../client/datascience/constants';
 
 // These are all reducers that don't actually change state. They merely dispatch a message to the other side.
 export namespace Transfer {
@@ -108,9 +107,7 @@ export namespace Transfer {
         });
     }
 
-    export function postModelInsert<T>(arg: CommonReducerArg<T>, index: number, cell: ICell, codeCellAboveId?: string, fullText?: string, currentText?: string) {
-        const trueFullText = fullText === undefined ? concatMultilineStringInput(cell.data.source) : fullText;
-        const trueCurrentText = currentText === undefined ? trueFullText : currentText;
+    export function postModelInsert<T>(arg: CommonReducerArg<T>, index: number, cell: ICell, codeCellAboveId?: string) {
         postModelUpdate(arg, {
             source: 'user',
             kind: 'insert',
@@ -118,9 +115,7 @@ export namespace Transfer {
             oldDirty: arg.prevState.dirty,
             index,
             cell,
-            codeCellAboveId,
-            fullText: trueFullText,
-            currentText: trueCurrentText
+            codeCellAboveId
         });
     }
 

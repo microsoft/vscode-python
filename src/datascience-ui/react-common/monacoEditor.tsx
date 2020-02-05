@@ -420,7 +420,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private onModelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
         // If not skipping notifications, send an event
         if (!this.skipNotifications && this.state.model && this.state.editor) {
-            this.props.modelChanged(generateChangeEvent(e, this.state.editor, this.state.model, this.props.previousValue ? this.props.previousValue : this.props.value));
+            this.props.modelChanged(generateChangeEvent(e, this.state.model, this.props.previousValue ? this.props.previousValue : this.props.value));
         }
     };
 

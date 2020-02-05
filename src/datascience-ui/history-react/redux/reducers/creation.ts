@@ -88,13 +88,12 @@ export namespace Creation {
                 arg.queueAction(
                     createPostableAction(InteractiveWindowMessages.UpdateModel, {
                         source: 'user',
-                        kind: 'insert',
+                        kind: 'add',
                         oldDirty: arg.prevState.dirty,
                         newDirty: true,
                         cell: cellVM.cell,
                         fullText: extractInputText(cellVM, result.settings),
-                        currentText: cellVM.inputBlockText,
-                        index: result.cellVMs.findIndex(c => c.cell.id === arg.payload.id) - 1
+                        currentText: cellVM.inputBlockText
                     })
                 );
             }

@@ -10,11 +10,13 @@ import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
+import { IntellisenseDocument } from '../../client/datascience/interactive-common/intellisense/intellisenseDocument';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
 import { IEditorContentChange, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICell, IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import { ICell, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { createEmptyCell, generateTestCells } from '../../datascience-ui/interactive-common/mainState';
+import { generateReverseChange, IMonacoTextModel } from '../../datascience-ui/react-common/monacoHelpers';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageServerCache } from './mockLanguageServerCache';
 
@@ -34,8 +36,9 @@ df
 `;
 
 // tslint:disable-next-line: max-func-body-length
-suite('DataScience Intellisense Unit Tests', () => {
-    let intellisenseProvider: IInteractiveWindowListener;
+suite('Data Science Intellisense Unit Tests', () => {
+    let intellisenseProvider: IntellisenseProvider;
+    let intellisenseDocument: IntellisenseDocument;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let languageServerCache: MockLanguageServerCache;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
@@ -50,7 +53,7 @@ suite('DataScience Intellisense Unit Tests', () => {
         }
     })(undefined, new MockAutoSelectionService());
 
-    setup(() => {
+    setup(async () => {
         languageServerCache = new MockLanguageServerCache();
         interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
@@ -71,6 +74,7 @@ suite('DataScience Intellisense Unit Tests', () => {
             interpreterService.object,
             languageServerCache
         );
+        intellisenseDocument = await intellisenseProvider.getDocument();
     });
 
     function sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): Promise<void> {
@@ -84,19 +88,45 @@ suite('DataScience Intellisense Unit Tests', () => {
         cell.data.source = code;
         const result = sendMessage(InteractiveWindowMessages.UpdateModel, {
             source: 'user',
-            kind: 'insert',
+            kind: 'add',
             oldDirty: false,
             newDirty: true,
             fullText: code,
             currentText: code,
-            index: cells.length - 1,
             cell
         });
         cells.splice(cells.length - 1, 0, cell);
         return result;
     }
 
-    function updateCell(newCode: string, oldCode: string, id: string): Promise<void> {
+    function generateModel(doc: IntellisenseDocument): IMonacoTextModel {
+        const code = doc.getText();
+        return {
+            id: '1',
+            getValue: () => code,
+            getValueLength: () => code.length,
+            getVersionId: () => doc.version,
+            getPositionAt: (o: number) => {
+                const p = doc.positionAt(o);
+                return { lineNumber: p.line + 1, column: p.character + 1 };
+            }
+        };
+    }
+
+    function sendUpdate(id: string, oldText: string, doc: IntellisenseDocument, change: IEditorContentChange, source: 'user' | 'undo' | 'redo' = 'user') {
+        const reverse = { ...generateReverseChange(oldText, generateModel(doc), change), position: { lineNumber: 1, column: 1 } };
+        return sendMessage(InteractiveWindowMessages.UpdateModel, {
+            source,
+            kind: 'edit',
+            oldDirty: false,
+            newDirty: true,
+            forward: [change],
+            reverse: [reverse],
+            id
+        });
+    }
+
+    function updateCell(newCode: string, oldCode: string, id: string, source: 'user' | 'undo' | 'redo' = 'user'): Promise<void> {
         const oldSplit = oldCode.split('\n');
         const change: IEditorContentChange = {
             range: {
@@ -113,15 +143,7 @@ suite('DataScience Intellisense Unit Tests', () => {
                 lineNumber: 1
             }
         };
-        return sendMessage(InteractiveWindowMessages.UpdateModel, {
-            source: 'user',
-            kind: 'edit',
-            oldDirty: false,
-            newDirty: true,
-            forward: [change],
-            reverse: [change],
-            id
-        });
+        return sendUpdate(id, oldCode, getDocument(), change, source);
     }
 
     function addCode(code: string, line: number, pos: number, offset: number): Promise<void> {
@@ -173,42 +195,44 @@ suite('DataScience Intellisense Unit Tests', () => {
                 lineNumber: 1
             }
         };
-        return sendMessage(InteractiveWindowMessages.UpdateModel, {
-            source: 'user',
-            kind: 'edit',
-            oldDirty: false,
-            newDirty: true,
-            forward: [change],
-            reverse: [change],
-            id: cells[cells.length - 1].id
-        });
+        return sendUpdate(cells[cells.length - 1].id, '', getDocument(), change);
     }
 
-    function removeCell(id: string): Promise<void> {
-        return sendMessage(InteractiveWindowMessages.UpdateModel, {
-            source: 'user',
-            kind: 'remove',
-            oldDirty: false,
-            newDirty: true,
-            cell: cells.find(c => c.id === id)!,
-            index: cells.findIndex(c => c.id === id)
-        });
+    async function removeCell(cell: ICell | undefined, oldIndex: number = -1, source: 'user' | 'undo' | 'redo' = 'user'): Promise<number> {
+        if (cell) {
+            let index = cells.findIndex(c => c.id === cell.id);
+            if (index < 0) {
+                index = oldIndex;
+            } else {
+                cells.splice(index, 1);
+            }
+            await sendMessage(InteractiveWindowMessages.UpdateModel, {
+                source,
+                kind: 'remove',
+                oldDirty: false,
+                newDirty: true,
+                cell,
+                index
+            });
+            return index;
+        }
+        return -1;
     }
 
-    function removeAllCells(): Promise<void> {
+    function removeAllCells(source: 'user' | 'undo' | 'redo' = 'user', oldCells: ICell[] = cells): Promise<void> {
         return sendMessage(InteractiveWindowMessages.UpdateModel, {
-            source: 'user',
+            source,
             kind: 'remove_all',
             oldDirty: false,
             newDirty: true,
-            oldCells: cells,
+            oldCells,
             newCellId: uuid()
         });
     }
 
-    function swapCells(id1: string, id2: string): Promise<void> {
+    function swapCells(id1: string, id2: string, source: 'user' | 'undo' | 'redo' = 'user'): Promise<void> {
         return sendMessage(InteractiveWindowMessages.UpdateModel, {
-            source: 'user',
+            source,
             kind: 'swap',
             oldDirty: false,
             newDirty: true,
@@ -217,20 +241,23 @@ suite('DataScience Intellisense Unit Tests', () => {
         });
     }
 
-    function insertCell(id: string, code: string, codeCellAbove?: string): Promise<void> {
+    function insertCell(id: string, code: string, codeCellAbove?: string, source: 'user' | 'undo' | 'redo' = 'user', end?: boolean): Promise<void> {
         const cell = createEmptyCell(id, null);
         cell.data.source = code;
-        const index = codeCellAbove ? cells.findIndex(c => c.id === codeCellAbove) : 0;
+        const index = codeCellAbove ? cells.findIndex(c => c.id === codeCellAbove) : end ? cells.length : 0;
+        if (source === 'undo') {
+            cells = cells.filter(c => c.id !== id);
+        } else {
+            cells.splice(index, 0, cell);
+        }
         return sendMessage(InteractiveWindowMessages.UpdateModel, {
-            source: 'user',
+            source,
             kind: 'insert',
             oldDirty: false,
             newDirty: true,
             codeCellAboveId: codeCellAbove,
             cell,
-            index,
-            fullText: code,
-            currentText: code
+            index
         });
     }
 
@@ -241,6 +268,10 @@ suite('DataScience Intellisense Unit Tests', () => {
 
     function getDocumentContents(): string {
         return languageServerCache.getMockServer().getDocumentContents();
+    }
+
+    function getDocument(): IntellisenseDocument {
+        return intellisenseDocument;
     }
 
     test('Add a single cell', async () => {
@@ -363,13 +394,13 @@ suite('DataScience Intellisense Unit Tests', () => {
         await addCode('y', 1, 2, 1);
         await addCode('s', 1, 3, 2);
         expect(getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set after edit');
-        await removeCell('1');
+        await removeCell(cells.find(c => c.id === '1'));
         expect(getDocumentContents()).to.be.eq('import sys\nsys', 'Removing a cell broken');
         await addCell('import sys', '2');
         expect(getDocumentContents()).to.be.eq('import sys\nimport sys\nsys', 'Adding a cell broken');
         await addCell('import bar', '3');
         expect(getDocumentContents()).to.be.eq('import sys\nimport sys\nimport bar\nsys', 'Adding a cell broken');
-        await removeCell('1');
+        await removeCell(cells.find(c => c.id === '1'));
         expect(getDocumentContents()).to.be.eq('import sys\nimport sys\nimport bar\nsys', 'Removing a cell broken');
     });
 
@@ -463,7 +494,7 @@ df
 df
 `;
         expect(getDocumentContents()).to.be.eq(afterInsert2, 'Insert2 cell failed');
-        await removeCell('7');
+        await removeCell(cells.find(c => c.id === '7'));
         expect(getDocumentContents()).to.be.eq(afterInsert, 'Remove 2 cell failed');
         await swapCells('0', '2');
         const afterSwap = `foo
@@ -481,5 +512,61 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 df
 `;
         expect(getDocumentContents()).to.be.eq(afterSwap, 'Swap cell failed');
+    });
+
+    test('Edit and undo', async () => {
+        const loadable = [createEmptyCell('0', null), createEmptyCell('1', null)];
+        loadable[0].data.source = 'a=1\na';
+        loadable[1].data.source = 'b=2\nb';
+        await loadAllCells(loadable);
+        const startContent = `a=1
+a
+b=2
+b
+`;
+        expect(getDocumentContents()).to.be.eq(startContent, 'Load all cells is failing');
+        await swapCells('0', '1');
+        const afterSwap = `b=2
+b
+a=1
+a
+`;
+        expect(getDocumentContents()).to.be.eq(afterSwap, 'Swap cell failed');
+        await swapCells('0', '1', 'undo');
+        expect(getDocumentContents()).to.be.eq(startContent, 'Swap cell undo failed');
+        await updateCell('a=4\na', 'a=1\na', '0');
+        const afterUpdate = `a=4
+a
+b=2
+b
+`;
+        expect(getDocumentContents()).to.be.eq(afterUpdate, 'Edit cell failed');
+        await updateCell('a=4\na', 'a=1\na', '0', 'undo');
+        expect(getDocumentContents()).to.be.eq(startContent, 'Edit undo cell failed');
+
+        const afterInsert = `a=1
+a
+b=2
+b
+c=5
+c
+`;
+        await insertCell('2', 'c=5\nc', undefined, 'user', true);
+        expect(getDocumentContents()).to.be.eq(afterInsert, 'Insert cell failed');
+        await insertCell('2', 'c=5\nc', undefined, 'undo', true);
+        expect(getDocumentContents()).to.be.eq(startContent, 'Insert cell update failed');
+        const oldCells = [...cells];
+        await removeAllCells();
+        expect(getDocumentContents()).to.be.eq('', 'Remove all failed');
+        await removeAllCells('undo', oldCells);
+        expect(getDocumentContents()).to.be.eq(startContent, 'Remove all undo failed');
+        const cell = cells.find(c => c.id === '1');
+        const oldIndex = await removeCell(cell);
+        const afterRemove = `a=1
+a
+`;
+        expect(getDocumentContents()).to.be.eq(afterRemove, 'Remove failed');
+        await removeCell(cell, oldIndex, 'undo');
+        expect(getDocumentContents()).to.be.eq(startContent, 'Remove undo failed');
     });
 });

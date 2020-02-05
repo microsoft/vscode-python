@@ -90,7 +90,7 @@ export namespace Creation {
         };
 
         // Send a messsage that we inserted a cell
-        Transfer.postModelInsert(arg, -1, newVM.cell, findFirstCodeCellAbove(newList, position));
+        Transfer.postModelInsert(arg, arg.prevState.cellVMs.length, newVM.cell, findFirstCodeCellAbove(newList, position));
 
         // Queue up an action to set focus to the cell we're inserting
         setTimeout(() => {

@@ -48,6 +48,9 @@ import { IntellisenseDocument } from './intellisenseDocument';
 // tslint:disable:no-any
 @injectable()
 export class IntellisenseProvider implements IInteractiveWindowListener {
+    public get postMessage(): Event<{ message: string; payload: any }> {
+        return this.postEmitter.event;
+    }
     private documentPromise: Deferred<IntellisenseDocument> | undefined;
     private temporaryFile: TemporaryFile | undefined;
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
@@ -76,10 +79,6 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             this.languageServer.dispose();
             this.languageServer = undefined;
         }
-    }
-
-    public get postMessage(): Event<{ message: string; payload: any }> {
-        return this.postEmitter.event;
     }
 
     public onMessage(message: string, payload?: any) {
@@ -126,6 +125,32 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         }
     }
 
+    public getDocument(resource?: Uri): Promise<IntellisenseDocument> {
+        if (!this.documentPromise) {
+            this.documentPromise = createDeferred<IntellisenseDocument>();
+
+            // Create our dummy document. Compute a file path for it.
+            if (this.workspaceService.rootPath || resource) {
+                const dir = resource ? path.dirname(resource.fsPath) : this.workspaceService.rootPath!;
+                const dummyFilePath = path.join(dir, HiddenFileFormatString.format(uuid().replace(/-/g, '')));
+                this.documentPromise.resolve(new IntellisenseDocument(dummyFilePath));
+            } else {
+                this.fileSystem
+                    .createTemporaryFile('.py')
+                    .then(t => {
+                        this.temporaryFile = t;
+                        const dummyFilePath = this.temporaryFile.filePath;
+                        this.documentPromise!.resolve(new IntellisenseDocument(dummyFilePath));
+                    })
+                    .catch(e => {
+                        this.documentPromise!.reject(e);
+                    });
+            }
+        }
+
+        return this.documentPromise.promise;
+    }
+
     protected async getLanguageServer(): Promise<ILanguageServer | undefined> {
         // Resource should be our potential resource if its set. Otherwise workspace root
         const resource = this.potentialResource || (this.workspaceService.rootPath ? Uri.parse(this.workspaceService.rootPath) : undefined);
@@ -167,32 +192,6 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             }
         }
         return this.languageServer;
-    }
-
-    protected getDocument(resource?: Uri): Promise<IntellisenseDocument> {
-        if (!this.documentPromise) {
-            this.documentPromise = createDeferred<IntellisenseDocument>();
-
-            // Create our dummy document. Compute a file path for it.
-            if (this.workspaceService.rootPath || resource) {
-                const dir = resource ? path.dirname(resource.fsPath) : this.workspaceService.rootPath!;
-                const dummyFilePath = path.join(dir, HiddenFileFormatString.format(uuid().replace(/-/g, '')));
-                this.documentPromise.resolve(new IntellisenseDocument(dummyFilePath));
-            } else {
-                this.fileSystem
-                    .createTemporaryFile('.py')
-                    .then(t => {
-                        this.temporaryFile = t;
-                        const dummyFilePath = this.temporaryFile.filePath;
-                        this.documentPromise!.resolve(new IntellisenseDocument(dummyFilePath));
-                    })
-                    .catch(e => {
-                        this.documentPromise!.reject(e);
-                    });
-            }
-        }
-
-        return this.documentPromise.promise;
     }
 
     protected async provideCompletionItems(
@@ -525,6 +524,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             case 'edit':
                 changes = document.editCell(request.reverse, request.id);
                 break;
+            case 'add':
             case 'insert':
                 changes = document.remove(request.cell.id);
                 break;
@@ -560,8 +560,11 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             case 'edit':
                 changes = document.editCell(request.forward, request.id);
                 break;
+            case 'add':
+                changes = document.addCell(request.fullText, request.currentText, request.cell.id);
+                break;
             case 'insert':
-                changes = document.insertCell(request.cell.id, concatMultilineStringInput(request.cell.data.source), request.codeCellAboveId);
+                changes = document.insertCell(request.cell.id, concatMultilineStringInput(request.cell.data.source), request.codeCellAboveId || request.index);
                 break;
             case 'modify':
                 // This one can be ignored. it's only used for updating cell finished state.
