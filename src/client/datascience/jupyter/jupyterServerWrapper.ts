@@ -12,10 +12,12 @@ import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IConnection, IDataScience, IJupyterSessionManagerFactory, INotebook, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo } from '../types';
+import { KernelSelector } from './kernels/kernelSelector';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from './liveshare/types';
+import { nbformat } from '@jupyterlab/coreutils';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
 
@@ -32,6 +34,7 @@ type JupyterServerClassType = {
         loggers: INotebookExecutionLogger[],
         appShell: IApplicationShell,
         fs: IFileSystem,
+        kernelSelector: KernelSelector,
         interpreterService: IInterpreterService
     ): IJupyterServerInterface;
 };
@@ -57,7 +60,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IFileSystem) fs: IFileSystem,
-        @inject(IInterpreterService) interpreterService: IInterpreterService
+        @inject(IInterpreterService) interpreterService: IInterpreterService,
+        @inject(KernelSelector) kernelSelector: KernelSelector
     ) {
         // The server factory will create the appropriate HostJupyterServer or GuestJupyterServer based on
         // the liveshare state.
@@ -75,6 +79,7 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             loggers ? loggers : [],
             appShell,
             fs,
+            kernelSelector,
             interpreterService
         );
     }
@@ -93,9 +98,9 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         return server.connect(launchInfo, cancelToken);
     }
 
-    public async createNotebook(resource: Uri): Promise<INotebook> {
+    public async createNotebook(resource: Uri, notebookMetadata?: nbformat.INotebookMetadata, cancelToken?: CancellationToken): Promise<INotebook> {
         const server = await this.serverFactory.get();
-        return server.createNotebook(resource);
+        return server.createNotebook(resource, notebookMetadata, cancelToken);
     }
 
     public async shutdown(): Promise<void> {
