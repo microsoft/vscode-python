@@ -34,7 +34,6 @@ export interface ICellViewModel {
     useQuickEdit?: boolean;
     selected: boolean;
     focused: boolean;
-    shouldNotAutoFocus?: boolean;
     scrollCount: number;
     cursorPos: CursorPos;
     hasBeenRun: boolean;
