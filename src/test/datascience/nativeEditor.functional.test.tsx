@@ -926,6 +926,52 @@ for _ in range(50):
                 await redo();
                 assert.equal(wrapper.find('NativeCell').length, 5, 'Cell not readded on redo');
             });
+            test('Remove, move, and undo', async () => {
+                await addCell(wrapper, ioc, '', false);
+
+                // Should have 4 cells
+                assert.equal(wrapper.find('NativeCell').length, 4, 'Cell not added');
+
+                // Delete the cell
+                let cell = getLastOutputCell(wrapper, 'NativeCell');
+                let imageButtons = cell.find(ImageButton);
+                assert.equal(imageButtons.length, 6, 'Cell buttons not found');
+                const deleteButton = imageButtons.at(5);
+                await getNativeCellResults(ioc, wrapper, async () => {
+                    deleteButton.simulate('click');
+                    return Promise.resolve();
+                });
+                // Should have 3 cells
+                assert.equal(wrapper.find('NativeCell').length, 3, 'Cell not deleted');
+
+                // Undo the delete
+                await undo();
+
+                // Should have 4 cells again
+                assert.equal(wrapper.find('NativeCell').length, 4, 'Cell delete not undone');
+
+                // Redo the delete
+                await redo();
+
+                // Should have 3 cells again
+                assert.equal(wrapper.find('NativeCell').length, 3, 'Cell delete not redone');
+
+                // Move some cells around
+                cell = getLastOutputCell(wrapper, 'NativeCell');
+                imageButtons = cell.find(ImageButton);
+                assert.equal(imageButtons.length, 6, 'Cell buttons not found');
+                const moveUpButton = imageButtons.at(0);
+                await getNativeCellResults(ioc, wrapper, async () => {
+                    moveUpButton.simulate('click');
+                    return Promise.resolve();
+                });
+
+                let foundCell = getOutputCell(wrapper, 'NativeCell', 2)?.instance() as NativeCell;
+                assert.equal(foundCell.props.cellVM.cell.id, 'NotebookImport#1', 'Cell did not move');
+                await undo();
+                foundCell = getOutputCell(wrapper, 'NativeCell', 2)?.instance() as NativeCell;
+                assert.equal(foundCell.props.cellVM.cell.id, 'NotebookImport#2', 'Cell did not move back');
+            });
         });
 
         suite('Keyboard Shortcuts', () => {

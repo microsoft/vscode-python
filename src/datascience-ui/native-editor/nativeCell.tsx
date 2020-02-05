@@ -315,30 +315,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     this.props.sendCommand(NativeCommandType.InsertBelow, 'keyboard');
                 }
                 break;
-            case 'z':
-            case 'Z':
-                if (!this.isFocused()) {
-                    if (e.shiftKey && !e.ctrlKey && !e.altKey) {
-                        e.stopPropagation();
-                        this.props.redo();
-                        this.props.sendCommand(NativeCommandType.Redo, 'keyboard');
-                    } else if (!e.shiftKey && !e.altKey && !e.ctrlKey) {
-                        e.stopPropagation();
-                        this.props.undo();
-                        this.props.sendCommand(NativeCommandType.Undo, 'keyboard');
-                    }
-                }
-                break;
-            case 'KeyZ':
-                if (e.ctrlKey) {
-                    window.console.log('Undoing');
-                }
-                break;
-            case 'KeyY':
-                if (e.ctrlKey) {
-                    window.console.log('Redoing');
-                }
-                break;
 
             default:
                 break;

@@ -313,20 +313,6 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                 }
                 break;
             }
-            case 'z':
-            case 'Z':
-                if (this.props.focusedCellId === undefined) {
-                    if (event.shiftKey && !event.ctrlKey && !event.altKey) {
-                        event.stopPropagation();
-                        this.props.redo();
-                        this.props.sendCommand(NativeCommandType.Redo, 'keyboard');
-                    } else if (!event.shiftKey && !event.altKey && !event.ctrlKey) {
-                        event.stopPropagation();
-                        this.props.undo();
-                        this.props.sendCommand(NativeCommandType.Undo, 'keyboard');
-                    }
-                }
-                break;
             default:
                 break;
         }
