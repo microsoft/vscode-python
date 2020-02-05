@@ -170,7 +170,7 @@ jobs:
         # python: [3.6, 3.7]
         python: [3.7]
         os: [ubuntu-latest]
-        tests: [ipython]
+        tests: [single-workspace, multi-workspace, debugger]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -245,29 +245,29 @@ jobs:
 
       # Run the Python IPython tests in our codebase.
       # Produces a JUnit-style log file that will be uploaded after all tests are complete.
-      - name: Run IPython unit tests
-        run: python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
-        if: matrix.tests == 'ipython'
+      # - name: Run IPython unit tests
+      #   run: python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
+      #   if: matrix.tests == 'ipython'
 
       # - name: Run venv tests
       #   run: todo
       #   if: matrix.tests == 'venv'
 
-      # - name: Run single-workspace tests
-      #   uses: GabrielBB/xvfb-action@v1.0
-      #   with:
-      #     run: npm run testSingleWorkspace
-      #   if: matrix.tests == 'single-workspace'
+      - name: Run single-workspace tests
+        uses: GabrielBB/xvfb-action@v1.0
+        with:
+          run: npm run testSingleWorkspace
+        if: matrix.tests == 'single-workspace'
 
-      # - name: Run multi-workspace tests
-      #   uses: GabrielBB/xvfb-action@v1.0
-      #   with:
-      #     run: npm run testMultiWorkspace
-      #   if: matrix.tests == 'multi-workspace'
+      - name: Run multi-workspace tests
+        uses: GabrielBB/xvfb-action@v1.0
+        with:
+          run: npm run testMultiWorkspace
+        if: matrix.tests == 'multi-workspace'
 
-      # - name: Run debugger tests
-      #   run: npm run testDebugger
-      #   if: matrix.tests == 'debugger'
+      - name: Run debugger tests
+        run: npm run testDebugger
+        if: matrix.tests == 'debugger'
 
       # - name: Run functional tests
       #   run: npm run test:functional
