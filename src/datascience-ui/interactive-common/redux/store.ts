@@ -78,7 +78,6 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
             return res;
         }
 
-
         // If cell vm count changed or selected cell changed, send the message
         const currentSelection = getSelectedAndFocusedInfo(afterState.main);
         if (
