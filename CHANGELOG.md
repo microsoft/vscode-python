@@ -47,6 +47,8 @@
 
 ### Fixes
 
+1. Use the autoStart server when available.
+   ([#9926](https://github.com/Microsoft/vscode-python/issues/9926))
 1. Removed unnecessary warning when executing cells that use Scrapbook,
    Fix an html crash when using not supported mime types
    ([#9796](https://github.com/microsoft/vscode-python/issues/9796))
