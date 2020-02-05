@@ -96,6 +96,10 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci
 
+      - name: Compile
+        working-directory: ${{env.PVSC_WORKDIR}}
+        run: npx gulp prePublishNonBundle
+
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v1
         with:
