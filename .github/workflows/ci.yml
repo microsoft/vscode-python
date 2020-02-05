@@ -103,7 +103,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('out/**')}}
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Check dependencies
         run: npm run checkDependencies
