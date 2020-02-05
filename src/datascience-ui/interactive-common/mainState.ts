@@ -95,6 +95,7 @@ export function getSelectedAndFocusedInfo(state: IMainState) {
 
     return info;
 }
+
 export interface IFont {
     size: number;
     family: string;

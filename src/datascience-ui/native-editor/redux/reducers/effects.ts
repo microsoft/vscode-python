@@ -155,7 +155,6 @@ export namespace Effects {
             }
 
             const newVMs = [...prevState.cellVMs];
-            // Ensure not to focus the editor if this is a sync message.
             if (addIndex >= 0 && arg.payload.data.cellId !== selectionInfo.selectedCellId) {
                 newVMs[addIndex] = {
                     ...newVMs[addIndex],
