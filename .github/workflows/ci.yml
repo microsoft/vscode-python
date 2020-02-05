@@ -170,7 +170,7 @@ jobs:
         # python: [3.6, 3.7]
         python: [3.7]
         os: [ubuntu-latest]
-        tests: [python-unit]
+        tests: [ipython]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -239,19 +239,19 @@ jobs:
       #   run: npm run test:unittests:cover
       #   if: matrix.tests == 'unit' && matrix.python == 3.7
 
-      - name: Run Python unit tests
-        run: python pythonFiles/tests/run_all.py --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
-        if: matrix.tests == 'python-unit'
+      # - name: Run Python unit tests
+      #   run: python pythonFiles/tests/run_all.py --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
+      #   if: matrix.tests == 'python-unit'
 
       # Run the Python IPython tests in our codebase.
       # Produces a JUnit-style log file that will be uploaded after all tests are complete.
-      # - name: Run IPython unit tests
-      #   run: python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
-      #   if: matrix.tests == 'ipython'
+      - name: Run IPython unit tests
+        run: python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
+        if: matrix.tests == 'ipython'
 
-      # # - name: Run venv tests
-      # #   run: todo
-      # #   if: matrix.tests == 'venv'
+      # - name: Run venv tests
+      #   run: todo
+      #   if: matrix.tests == 'venv'
 
       # - name: Run single-workspace tests
       #   uses: GabrielBB/xvfb-action@v1.0
