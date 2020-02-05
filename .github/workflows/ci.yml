@@ -82,7 +82,7 @@ jobs:
         # python: [3.6, 3.7]
         python: [3.7]
         os: [ubuntu-latest]
-        tests: [unit, python-unit]
+        tests: [unit, python-unit, ipython, venv, single-workspace, multi-workspace, debugger, functional]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -124,40 +124,56 @@ jobs:
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
-        working-directory: ${{env.PVSC_WORKDIR}}
 
-      # - name: Install IPython test requirements
-      #   run: |
-      #     python -m pip install numpy
-      #     python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-      #   working-directory: ${{env.PVSC_WORKDIR}}
-      #   if: matrix.tests == ipython
+      - name: Install IPython test requirements
+        run: |
+          python -m pip install numpy
+          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+        if: matrix.tests == ipython
 
-      # - name: Install functional test requirements
-      #   run: |
-      #     python -m pip install numpy
-      #     python -m pip install --upgrade -r ./build/functional-test-requirements.txt
-      #   working-directory: ${{env.PVSC_WORKDIR}}
-      #   if: matrix.tests == functional
+      - name: Install functional test requirements
+        run: |
+          python -m pip install numpy
+          python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+        if: matrix.tests == functional
 
-      # - name: Downgrade pywin32 for functional tests on Windows + Python 3.6
-      #   run: python -m pip install --upgrade pywin32==224
-      #   working-directory: ${{env.PVSC_WORKDIR}}
-      #   if: matrix.tests == functional && matrix.os == windows-latest && matrix.python == 3.6
+      # Downgrade pywin32 on Windows because of a bug https://github.com/jupyter/notebook/issues/4909.
+      # Only needed for functional tests.
+      - name: Downgrade pywin32 for functional tests on Windows + Python 3.6
+        run: python -m pip install --upgrade pywin32==224
+        if: matrix.tests == functional && matrix.os == windows-latest && matrix.python == 3.6
 
+      # Run TypeScript unit tests only for Python 3.7
       - name: Run TypeScript unit tests
         run: npm run test:unittests:cover
-        working-directory: ${{env.PVSC_WORKDIR}}
-        if: matrix.tests == 'unit'
+        if: matrix.tests == 'unit' && matrix.python == 3.7
 
       - name: Run Python unit tests
         run: python pythonFiles/tests/run_all.py --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
-        working-directory: ${{env.PVSC_WORKDIR}}
         if: matrix.tests == 'python-unit'
 
       # Run the Python IPython tests in our codebase.
       # Produces a JUnit-style log file that will be uploaded after all tests are complete.
       - name: Run IPython unit tests
         run: python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
-        working-directory: ${{env.PVSC_WORKDIR}}
         if: matrix.tests == 'ipython'
+
+      # - name: Run venv tests
+      #   run: todo
+      #   if: matrix.tests == 'venv'
+
+      - name: Run single-workspace tests
+        run: npm run testSingleWorkspace
+        if: matrix.tests == 'single-workspace'
+
+      - name: Run multi-workspace tests
+        run: npm run testMultiWorkspace
+        if: matrix.tests == 'multi-workspace'
+
+      - name: Run debugger tests
+        run: npm run testDebugger
+        if: matrix.tests == 'debugger'
+
+      - name: Run functional tests
+        run: npm run test:functional
+        if: matrix.tests == 'functional'
