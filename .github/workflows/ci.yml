@@ -166,11 +166,15 @@ jobs:
       #   if: matrix.tests == 'venv'
 
       - name: Run single-workspace tests
-        run: npm run testSingleWorkspace
+        uses: GabrielBB/xvfb-action@v1.0
+        with:
+          run: npm run testSingleWorkspace
         if: matrix.tests == 'single-workspace'
 
       - name: Run multi-workspace tests
-        run: npm run testMultiWorkspace
+        uses: GabrielBB/xvfb-action@v1.0
+        with:
+          run: npm run testMultiWorkspace
         if: matrix.tests == 'multi-workspace'
 
       - name: Run debugger tests
