@@ -18,7 +18,7 @@ suite('Terminal Environment Activation (bash)', () => {
         const hasSpaces = pythonPath.indexOf(' ') > 0;
         const suiteTitle = hasSpaces ? 'and there are spaces in the script file (pythonpath),' : 'and there are no spaces in the script file (pythonpath),';
         suite(suiteTitle, () => {
-            ['activate', 'activate.sh', 'activate.csh', 'activate.fish', 'activate.bat', 'activate.ps1'].forEach(scriptFileName => {
+            ['activate', 'activate.sh', 'activate.csh', 'activate.fish', 'activate.bat', 'Activate.ps1'].forEach(scriptFileName => {
                 suite(`and script file is ${scriptFileName}`, () => {
                     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
                     let fileSystem: TypeMoq.IMock<IFileSystem>;

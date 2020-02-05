@@ -25,9 +25,9 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
 
         if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.bat')) {
             return [scriptFile.fileToCommandArgument()];
-        } else if ((targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore) && scriptFile.endsWith('activate.ps1')) {
+        } else if ((targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore) && scriptFile.endsWith('Activate.ps1')) {
             return [`& ${scriptFile.fileToCommandArgument()}`];
-        } else if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('activate.ps1')) {
+        } else if (targetShell === TerminalShellType.commandPrompt && scriptFile.endsWith('Activate.ps1')) {
             // lets not try to run the powershell file from command prompt (user may not have powershell)
             return [];
         } else {
@@ -37,7 +37,7 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
 
     private getScriptsInOrderOfPreference(targetShell: TerminalShellType): string[] {
         const batchFiles = ['activate.bat', path.join('Scripts', 'activate.bat'), path.join('scripts', 'activate.bat')];
-        const powerShellFiles = ['activate.ps1', path.join('Scripts', 'activate.ps1'), path.join('scripts', 'activate.ps1')];
+        const powerShellFiles = ['Activate.ps1', path.join('Scripts', 'Activate.ps1'), path.join('scripts', 'Activate.ps1')];
         if (targetShell === TerminalShellType.commandPrompt) {
             return batchFiles.concat(powerShellFiles);
         } else {
