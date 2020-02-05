@@ -78,9 +78,8 @@ export class ServerCache implements IAsyncDisposable {
                 };
 
                 // We've resolved the promise at this point
-                const resolvedData = this.cache.get(key);
-                if (resolvedData) {
-                    resolvedData.resolved = true;
+                if (data) {
+                    data.resolved = true;
                 }
 
                 return server;
