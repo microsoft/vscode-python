@@ -91,6 +91,10 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string, op
                 clearTimeout(timer);
             }
             ioc.removeMessageListener(handler);
+            // Make sure to rerender current state.
+            if (ioc.wrapper) {
+                ioc.wrapper.update();
+            }
             promise.resolve();
         }
     };

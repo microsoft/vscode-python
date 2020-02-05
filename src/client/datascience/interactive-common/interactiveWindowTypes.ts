@@ -86,7 +86,8 @@ export enum InteractiveWindowMessages {
     SelectKernel = 'select_kernel',
     UpdateKernel = 'update_kernel',
     SelectJupyterServer = 'select_jupyter_server',
-    UpdateModel = 'update_model'
+    UpdateModel = 'update_model',
+    ReceivedUpdateModel = 'received_update_model'
 }
 
 export enum NativeCommandType {
@@ -502,4 +503,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ClearAllOutputs]: never | undefined;
     public [InteractiveWindowMessages.UpdateKernel]: IServerState | undefined;
     public [InteractiveWindowMessages.UpdateModel]: NotebookModelChange;
+    public [InteractiveWindowMessages.ReceivedUpdateModel]: never | undefined;
 }

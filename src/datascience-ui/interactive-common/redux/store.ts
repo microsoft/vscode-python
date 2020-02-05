@@ -142,6 +142,11 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             sendMessage(InteractiveWindowMessages.VariablesComplete);
         }
 
+        // Indicate update from extension side
+        if (action.type && action.type === IncomingMessageActions.UPDATEMODEL) {
+            sendMessage(InteractiveWindowMessages.ReceivedUpdateModel);
+        }
+
         // Special case for rendering complete
         const prevFinished = prevState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
         const afterFinished = afterState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);

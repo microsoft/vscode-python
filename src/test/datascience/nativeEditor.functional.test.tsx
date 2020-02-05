@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri } from 'vscode';
-import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
+import { IApplicationShell, ICustomEditorService, IDocumentManager } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -30,6 +30,7 @@ import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-com
 import { waitForCondition } from '../common';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { MockCustomEditorService } from './mockCustomEditorService';
 import { MockDocumentManager } from './mockDocumentManager';
 import { addCell, closeNotebook, createNewEditor, getNativeCellResults, mountNativeWebView, openEditor, runMountedTest, setupWebview } from './nativeEditorTestHelpers';
 import { waitForUpdate } from './reactHelpers';
@@ -843,6 +844,34 @@ for _ in range(50):
                 assert.equal(isCellFocused(wrapper, 'NativeCell', 0), false);
 
                 verifyHtmlOnCell(wrapper, 'NativeCell', '<p>worlda=1\na</p>', 0);
+            });
+        });
+
+        suite('Model updates', () => {
+            setup(async function() {
+                initIoc();
+                // tslint:disable-next-line: no-invalid-this
+                await setupFunction.call(this);
+            });
+            async function undo(): Promise<void> {
+                const uri = Uri.file(notebookFile.filePath);
+                const update = waitForMessage(ioc, InteractiveWindowMessages.ReceivedUpdateModel);
+                const editorService = ioc.serviceManager.get<ICustomEditorService>(ICustomEditorService) as MockCustomEditorService;
+                editorService.undo(uri);
+                return update;
+            }
+            test('Add a cell and undo', async () => {
+                addMockData(ioc, 'c=4\nc', '4');
+                await addCell(wrapper, ioc, 'c=4\nc', false);
+
+                // Should have 4 cells
+                assert.equal(wrapper.find('NativeCell').length, 4, 'Cell not added');
+
+                // Send undo through the custom editor
+                await undo();
+
+                // Should have 3
+                assert.equal(wrapper.find('NativeCell').length, 3, 'Cell not removed');
             });
         });
 
