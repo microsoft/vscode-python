@@ -173,6 +173,7 @@ jobs:
     needs: [python-deps, js-ts-deps]
     strategy:
       matrix:
+        # TODO: clean the matrix up when the PR is ready for review
         # os: [ubuntu-latest, macos-latest, windows-latest]
         # python: [3.6, 3.7]
         python: [3.7]
