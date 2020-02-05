@@ -146,7 +146,7 @@ jobs:
       #   if: matrix.tests == functional && matrix.os == windows-latest && matrix.python == 3.6
 
       - name: Run TypeScript unit tests
-        run: npm run unittests:cover
+        run: npm run test:unittests:cover
         working-directory: ${{env.PVSC_WORKDIR}}
         if: matrix.tests == 'unit'
 
