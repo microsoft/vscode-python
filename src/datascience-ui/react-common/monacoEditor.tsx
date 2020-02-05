@@ -392,6 +392,14 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     }
 
+    private closeSuggestWidget() {
+        // tslint:disable-next-line: no-any
+        const suggest = this.state.editor?.getContribution('editor.contrib.suggestController') as any;
+        if (suggest && suggest._widget) {
+            suggest._widget.getValue().hideWidget();
+        }
+    }
+
     private forceValue(text: string, cursorPos: CursorPos | monacoEditor.IPosition) {
         if (this.state.model && this.state.editor) {
             // Save current position. May need it to update after setting.
@@ -400,6 +408,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             // Disable change notifications as we know this
             // is different.
             this.skipNotifications = true;
+
+            // Close any suggestions that are open
+            this.closeSuggestWidget();
 
             // Change our text. This shouldn't fire an update to the model
             this.state.model.setValue(text);
