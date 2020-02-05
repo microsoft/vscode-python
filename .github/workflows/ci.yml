@@ -177,7 +177,8 @@ jobs:
         # python: [3.6, 3.7]
         python: [3.7]
         os: [ubuntu-latest]
-        tests: [functional]
+        # tests: [unit, python-unit, ipython, venv, single-workspace, multi-workspace, debugger, functional]
+        tests: [single-workspace]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -250,39 +251,41 @@ jobs:
         if: matrix.tests == 'functional' && matrix.os == 'windows-latest' && matrix.python == 3.6
 
       # Run TypeScript unit tests only for Python 3.7
-      # - name: Run TypeScript unit tests
-      #   run: npm run test:unittests:cover
-      #   if: matrix.tests == 'unit' && matrix.python == 3.7
+      - name: Run TypeScript unit tests
+        run: npm run test:unittests:cover
+        if: matrix.tests == 'unit' && matrix.python == 3.7
 
-      # - name: Run Python unit tests
-      #   run: python pythonFiles/tests/run_all.py --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
-      #   if: matrix.tests == 'python-unit'
+      - name: Run Python unit tests
+        run: python pythonFiles/tests/run_all.py --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
+        if: matrix.tests == 'python-unit'
 
       # Run the Python IPython tests in our codebase.
       # Produces a JUnit-style log file that will be uploaded after all tests are complete.
-      # - name: Run IPython unit tests
-      #   run: python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
-      #   if: matrix.tests == 'ipython'
+      - name: Run IPython unit tests
+        run: python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
+        if: matrix.tests == 'ipython'
 
       # - name: Run venv tests
       #   run: todo
       #   if: matrix.tests == 'venv'
 
-      # - name: Run single-workspace tests
-      #   uses: GabrielBB/xvfb-action@v1.0
-      #   with:
-      #     run: npm run testSingleWorkspace
-      #   if: matrix.tests == 'single-workspace'
+      - name: Run single-workspace tests
+        uses: GabrielBB/xvfb-action@v1.0
+        with:
+          run: npm run testSingleWorkspace
+        if: matrix.tests == 'single-workspace'
 
-      # - name: Run multi-workspace tests
-      #   uses: GabrielBB/xvfb-action@v1.0
-      #   with:
-      #     run: npm run testMultiWorkspace
-      #   if: matrix.tests == 'multi-workspace'
+      - name: Run multi-workspace tests
+        uses: GabrielBB/xvfb-action@v1.0
+        with:
+          run: npm run testMultiWorkspace
+        if: matrix.tests == 'multi-workspace'
 
-      # - name: Run debugger tests
-      #   run: npm run testDebugger
-      #   if: matrix.tests == 'debugger'
+      - name: Run debugger tests
+        uses: GabrielBB/xvfb-action@v1.0
+        with:
+          run: npm run testDebugger
+        if: matrix.tests == 'debugger'
 
       - name: Run functional tests
         run: npm run test:functional
