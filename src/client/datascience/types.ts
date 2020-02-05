@@ -321,7 +321,6 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly closed: Event<INotebookEditor>;
     readonly executed: Event<INotebookEditor>;
     readonly modified: Event<INotebookEditor>;
-    readonly saved: Event<INotebookEditor>;
     /**
      * Is this notebook representing an untitled file which has never been saved yet.
      */

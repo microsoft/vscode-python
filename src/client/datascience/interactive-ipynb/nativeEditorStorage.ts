@@ -170,10 +170,13 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
                 break;
             case 'file':
                 this._state.file = change.newFile;
+                this._state.isDirty = false;
                 NativeEditorStorage.storageMap.delete(change.oldFile.toString());
                 NativeEditorStorage.storageMap.set(change.newFile.toString(), this);
-                changed = change.oldFile.toString() !== change.newFile.toString();
-                break;
+
+                // Special case for file, don't set dirty (as we're saving), but still
+                // indicate changed.
+                return true;
             default:
                 break;
         }

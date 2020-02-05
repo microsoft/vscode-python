@@ -54,7 +54,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private executedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private modifiedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
-    private savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private loadedPromise: Deferred<void> = createDeferred<void>();
     private startupTimer: StopWatch = new StopWatch();
     private loadedAllCells: boolean = false;
@@ -176,10 +175,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     public get modified(): Event<INotebookEditor> {
         return this.modifiedEvent.event;
-    }
-
-    public get saved(): Event<INotebookEditor> {
-        return this.savedEvent.event;
     }
 
     public get isDirty(): boolean {
@@ -420,9 +415,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             if (this._model.isDirty) {
                 await this.postMessage(InteractiveWindowMessages.NotebookDirty);
             } else {
-                // Going clean should only happen on a save (for now. Undo might do this too)
-                this.savedEvent.fire(this);
-
                 // Then tell the UI
                 await this.postMessage(InteractiveWindowMessages.NotebookClean);
             }

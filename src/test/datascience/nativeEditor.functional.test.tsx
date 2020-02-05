@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-import { assert, expect, use } from 'chai';
+import { assert, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { ReactWrapper } from 'enzyme';
 import { EventEmitter } from 'events';
@@ -27,7 +27,6 @@ import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
-import { waitForCondition } from '../common';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockCustomEditorService } from './mockCustomEditorService';
@@ -384,17 +383,14 @@ for _ in range(50):
                 ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
                 // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
-                const saveCalled = createDeferred<boolean>();
-                const editor = await createNewEditor(ioc);
-                editor.saved(() => {
-                    saveCalled.resolve(true);
-                });
+                await createNewEditor(ioc);
                 await addCell(wrapper, ioc, 'a=1\na');
 
                 // Export should cause exportCalled to change to true
                 const saveButton = findButton(wrapper, NativeEditor, 8);
+                const saved = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
                 await waitForMessageResponse(ioc, () => saveButton!.simulate('click'));
-                await waitForPromise(saveCalled.promise, 5_000);
+                await saved;
 
                 // Click export and wait for a document to change
                 const activeTextEditorChange = createDeferred();
@@ -1366,155 +1362,6 @@ for _ in range(50):
                 const monacoEditor = editor!.instance() as MonacoEditor;
                 assert.equal('foo', monacoEditor.state.editor!.getValue(), 'Changing cell type lost input');
             });
-
-            test("Test undo using the key 'z'", async () => {
-                clickCell(0);
-
-                // Add, then undo, keep doing at least 3 times and confirm it works as expected.
-                for (let i = 0; i < 3; i += 1) {
-                    // Add a new cell
-                    let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
-                    simulateKeyPressOnCell(0, { code: 'a' });
-                    await update;
-
-                    // Wait a bit for the time out to try and set focus a second time (this will be
-                    // fixed when we switch to redux)
-                    await sleep(100);
-
-                    // There should be 4 cells and first cell is focused.
-                    assert.equal(isCellSelected(wrapper, 'NativeCell', 0), false);
-                    assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
-                    assert.equal(isCellFocused(wrapper, 'NativeCell', 0), true);
-                    assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
-                    assert.equal(wrapper.find('NativeCell').length, 4);
-
-                    // Unfocus the cell
-                    update = waitForUpdate(wrapper, NativeEditor, 1);
-                    simulateKeyPressOnCell(0, { code: 'Escape' });
-                    await update;
-                    assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
-
-                    // Press 'ctrl+z'. This should do nothing
-                    update = waitForUpdate(wrapper, NativeEditor, 1);
-                    simulateKeyPressOnCell(0, { code: 'z', ctrlKey: true });
-                    await waitForPromise(update, 100);
-
-                    // There should be 4 cells and first cell is selected.
-                    assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
-                    assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
-                    assert.equal(isCellFocused(wrapper, 'NativeCell', 0), false);
-                    assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
-                    assert.equal(wrapper.find('NativeCell').length, 4);
-
-                    // Press 'z' to undo.
-                    update = waitForUpdate(wrapper, NativeEditor, 1);
-                    simulateKeyPressOnCell(0, { code: 'z' });
-                    await update;
-
-                    // There should be 3 cells and first cell is selected & nothing focused.
-                    assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
-                    assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
-                    assert.equal(wrapper.find('NativeCell').length, 3);
-
-                    // Press 'shift+z' to redo
-                    update = waitForUpdate(wrapper, NativeEditor, 1);
-                    simulateKeyPressOnCell(0, { code: 'z', shiftKey: true });
-                    await update;
-
-                    // There should be 4 cells and first cell is selected.
-                    assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
-                    assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
-                    assert.equal(isCellFocused(wrapper, 'NativeCell', 0), false);
-                    assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
-                    assert.equal(wrapper.find('NativeCell').length, 4);
-
-                    // Press 'z' to undo.
-                    update = waitForUpdate(wrapper, NativeEditor, 1);
-                    simulateKeyPressOnCell(0, { code: 'z' });
-                    await update;
-
-                    // There should be 3 cells and first cell is selected & nothing focused.
-                    assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
-                    assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
-                    assert.equal(wrapper.find('NativeCell').length, 3);
-                }
-            });
-
-            test("Test save using the key 'ctrl+s' on Windows", async () => {
-                (window.navigator as any).platform = 'Win';
-                clickCell(0);
-
-                await addCell(wrapper, ioc, 'a=1\na', true);
-
-                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                const editor = notebookProvider.editors[0];
-                assert.ok(editor, 'No editor when saving');
-                const savedPromise = createDeferred();
-                editor.saved(() => savedPromise.resolve());
-
-                simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
-
-                await waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout');
-
-                assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
-            });
-
-            test("Test save using the key 'ctrl+s' on Mac", async () => {
-                (window.navigator as any).platform = 'Mac';
-                clickCell(0);
-
-                await addCell(wrapper, ioc, 'a=1\na', true);
-
-                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                const editor = notebookProvider.editors[0];
-                assert.ok(editor, 'No editor when saving');
-                const savedPromise = createDeferred();
-                editor.saved(() => savedPromise.resolve());
-
-                simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
-
-                await expect(waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout')).to.eventually.be.rejected;
-                assert.ok(editor!.isDirty, 'Editor be dirty as nothing got saved');
-            });
-
-            test("Test save using the key 'cmd+s' on a Mac", async () => {
-                (window.navigator as any).platform = 'Mac';
-
-                clickCell(0);
-
-                await addCell(wrapper, ioc, 'a=1\na', true);
-
-                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                const editor = notebookProvider.editors[0];
-                assert.ok(editor, 'No editor when saving');
-                const savedPromise = createDeferred();
-                editor.saved(() => savedPromise.resolve());
-
-                simulateKeyPressOnCell(1, { code: 's', metaKey: true });
-
-                await waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout');
-
-                assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
-            });
-            test("Test save using the key 'cmd+s' on a Windows", async () => {
-                (window.navigator as any).platform = 'Win';
-
-                clickCell(0);
-
-                await addCell(wrapper, ioc, 'a=1\na', true);
-
-                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                const editor = notebookProvider.editors[0];
-                assert.ok(editor, 'No editor when saving');
-                const savedPromise = createDeferred();
-                editor.saved(() => savedPromise.resolve());
-
-                // CMD+s won't work on Windows.
-                simulateKeyPressOnCell(1, { code: 's', metaKey: true });
-
-                await expect(waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout')).to.eventually.be.rejected;
-                assert.ok(editor!.isDirty, 'Editor be dirty as nothing got saved');
-            });
         });
 
         suite('Update Metadata', () => {
@@ -1597,8 +1444,6 @@ for _ in range(50):
                 const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
                 const editor = notebookProvider.editors[0];
                 assert.ok(editor, 'No editor when saving');
-                const savedPromise = createDeferred();
-                const disposeSaved = editor.saved(() => savedPromise.resolve());
 
                 // add cells, run them and save
                 await addCell(wrapper, ioc, 'a=1\na');
@@ -1607,10 +1452,10 @@ for _ in range(50):
                 await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
                 await threeCellsUpdated;
 
-                simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
-
-                await savedPromise.promise;
-                disposeSaved.dispose();
+                const saveButton = findButton(wrapper, NativeEditor, 8);
+                const saved = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
+                await waitForMessageResponse(ioc, () => saveButton!.simulate('click'));
+                await saved;
 
                 // the file has output and execution count
                 const fileContent = await fs.readFile(notebookFile.filePath, 'utf8');
@@ -1690,30 +1535,26 @@ for _ in range(50):
                 const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
                 const editor = notebookProvider.editors[0];
                 assert.ok(editor, 'No editor when saving');
-                let savedPromise = createDeferred();
-                let disp = editor.saved(() => savedPromise.resolve());
-
                 // add cells, run them and save
                 await addCell(wrapper, ioc, 'a=1\na');
                 const runAllButton = findButton(wrapper, NativeEditor, 0);
                 await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-                simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
 
-                await savedPromise.promise;
-                disp.dispose();
+                const saveButton = findButton(wrapper, NativeEditor, 8);
+                let saved = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
+                await waitForMessageResponse(ioc, () => saveButton!.simulate('click'));
+                await saved;
 
                 // the file has output and execution count
                 const fileContent = await fs.readFile(notebookFile.filePath, 'utf8');
 
-                savedPromise = createDeferred();
-                disp = editor.saved(() => savedPromise.resolve());
-
                 // press clear all outputs, and save
                 const clearAllOutputButton = findButton(wrapper, NativeEditor, 6);
                 await waitForMessageResponse(ioc, () => clearAllOutputButton!.simulate('click'));
-                simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
 
-                await savedPromise.promise;
+                saved = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
+                await waitForMessageResponse(ioc, () => saveButton!.simulate('click'));
+                await saved;
 
                 // the file now shouldn't have outputs or execution count
                 const newFileContent = await fs.readFile(notebookFile.filePath, 'utf8');
