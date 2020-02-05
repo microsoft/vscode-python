@@ -194,12 +194,12 @@ jobs:
         run: npm ci
 
       - name: Retrieve cached compile output directory
-        # Use an id for this step so that its cache-it output can be accessed and checked in the next step.
+        # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
         id: out-cache
         uses: actions/cache@v1
         with:
           path: ./out
-          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('out/**')}}
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
