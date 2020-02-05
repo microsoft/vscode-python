@@ -3,7 +3,9 @@ name: CI
 on:
   push:
     branches:
-      - gh-action-ci
+      # TODO: replace the current test branch with master
+      # - master
+      - gh-action-ci-tests
 
 env:
   PYTHON_VERSION: 3.8
