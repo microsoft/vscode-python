@@ -10,6 +10,7 @@ on:
 env:
   PYTHON_VERSION: 3.8
   CACHE_NPM_DEPS: cache-npm
+  CACHE_OUT_DIRECTORY: cache-out-directory
   CACHE_PIP_DEPS: cache-pip
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
@@ -98,6 +99,12 @@ jobs:
       - name: Run gulp prePublishNonBundle
         run: npx gulp prePublishNonBundle
 
+      - name: Cache the out/ directory
+        uses: actions/cache@v1
+        with:
+          path: ./out
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('out/**')}}
+
       - name: Check dependencies
         run: npm run checkDependencies
 
@@ -184,8 +191,17 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci
 
-      - name: Compile
+      - name: Retrieve cached compile output directory
+        # Use an id for this step so that its cache-it output can be accessed and checked in the next step.
+        id: out-cache
+        uses: actions/cache@v1
+        with:
+          path: ./out
+          key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('out/**')}}
+
+      - name: Compile if not cached
         run: npx gulp prePublishNonBundle
+        if: steps.out-cache.outputs.cache-hit == false
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v1
