@@ -121,42 +121,42 @@ jobs:
           python -m black . --check
         working-directory: pythonFiles
 
-  build-vsix:
-    name: Build VSIX
-    runs-on: ubuntu-latest
-    needs: [python-deps, js-ts-deps]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+        # TODO: uncomment this job when PR is ready for review
+  # build-vsix:
+  #   name: Build VSIX
+  #   runs-on: ubuntu-latest
+  #   needs: [python-deps, js-ts-deps]
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v2
 
-      - name: Retrieve cached npm files
-        uses: actions/cache@v1
-        with:
-          path: ~/.npm
-          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+  #     - name: Retrieve cached npm files
+  #       uses: actions/cache@v1
+  #       with:
+  #         path: ~/.npm
+  #         key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
-      - name: curl PyPI to get ptvsd versions
-        run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+  #     - name: curl PyPI to get ptvsd versions
+  #       run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
 
-      - name: Retrieve cached pythonFiles/ directory
-        uses: actions/cache@v1
-        with:
-          path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+  #     - name: Retrieve cached pythonFiles/ directory
+  #       uses: actions/cache@v1
+  #       with:
+  #         path: ./pythonFiles/lib/python
+  #         key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
 
-      - name: Install dependencies (npm ci)
-        run: npm ci --prefer-offline
+  #     - name: Install dependencies (npm ci)
+  #       run: npm ci --prefer-offline
 
-      - name: Clean directory
-        run: npm run clean
+  #     - name: Clean directory
+  #       run: npm run clean
 
-      - name: Package the VSIX
-        run: npm run package
-
-      - uses: actions/upload-artifact@v1
-        with:
-          name: ${{env.ARTIFACT_NAME_VSIX}}
-          path: ms-python-insiders.vsix
+  #     - name: Package the VSIX
+  #       run: npm run package
+  #     - uses: actions/upload-artifact@v1
+  #       with:
+  #         name: ${{env.ARTIFACT_NAME_VSIX}}
+  #         path: ms-python-insiders.vsix
 
   ### Non-smoke tests
   tests:
