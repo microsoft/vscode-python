@@ -210,12 +210,15 @@ jobs:
         with:
           python-version: ${{matrix.python}}
 
+      - name: curl PyPI to get ptvsd versions
+        run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+
       - name: Retrieve cached pythonFiles/ directory
         uses: actions/cache@v1
         id: pythonFiles-cache
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('**/**-requirements.txt')}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
 
       - name: Install Python requirements if not cached
         run: |
