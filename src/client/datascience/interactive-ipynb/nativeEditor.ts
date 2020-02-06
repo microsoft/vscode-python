@@ -306,7 +306,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     line: 0,
                     state: CellState.error
                 }
-            ]).ignoreErrors();
+            ]);
 
             // Tell the other side we restarted the kernel. This will stop all executions
             this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
@@ -331,7 +331,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    protected async sendCellsToWebView(cells: ICell[]) {
+    protected sendCellsToWebView(cells: ICell[]) {
         // Filter out sysinfo messages. Don't want to show those
         const filtered = cells.filter(c => c.data.cell_type !== 'messages');
 
