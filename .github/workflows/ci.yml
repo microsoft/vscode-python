@@ -312,11 +312,11 @@ jobs:
       # is set in the "Prepare environment for venv tests" step.
       # Use a third-party GitHub Action to install xvfb on Linux, run tests and then clean up the process once the tests ran.
       # See https://github.com/GabrielBB/xvfb-action
-      # - name: Run venv tests
-      #   uses: GabrielBB/xvfb-action@v1.0
-      #   with:
-      #     run: npm run testSingleWorkspace
-      #   if: matrix.tests == 'venv'
+      - name: Run venv tests
+        uses: GabrielBB/xvfb-action@v1.0
+        with:
+          run: npm run testSingleWorkspace
+        if: matrix.tests == 'venv'
 
       - name: Run single-workspace tests
         uses: GabrielBB/xvfb-action@v1.0
