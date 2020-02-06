@@ -336,6 +336,7 @@ export namespace DataScience {
     export const noRowsInDataViewer = localize('DataScience.noRowsInDataViewer', 'No rows match current filter');
     export const jupyterServer = localize('DataScience.jupyterServer', 'Jupyter Server');
     export const noKernel = localize('DataScience.noKernel', 'No Kernel');
+    export const serverNotStarted = localize('DataScience.serverNotStarted', 'Not Started');
     export const selectKernel = localize('DataScience.selectKernel', 'Select a Kernel');
     export const selectDifferentKernel = localize('DataScience.selectDifferentKernel', 'Select a different Kernel');
     export const selectDifferentJupyterInterpreter = localize('DataScience.selectDifferentJupyterInterpreter', 'Select a different Interpreter');

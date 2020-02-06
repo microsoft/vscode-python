@@ -46,8 +46,8 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             monacoReady: testMode, // When testing, monaco starts out ready
             loaded: false,
             kernel: {
-                displayName: 'Python',
-                localizedUri: getLocString('DataScience.noKernel', 'No Kernel'),
+                displayName: getLocString('DataScience.noKernel', 'No Kernel'),
+                localizedUri: getLocString('DataScience.serverNotStarted', 'Not Started'),
                 jupyterServerStatus: ServerStatus.NotStarted
             },
             settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
