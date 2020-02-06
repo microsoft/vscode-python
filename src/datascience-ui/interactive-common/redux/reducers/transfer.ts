@@ -5,14 +5,14 @@ import { Identifiers } from '../../../../client/datascience/constants';
 import { IEditorContentChange, InteractiveWindowMessages, NotebookModelChange } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { ICell } from '../../../../client/datascience/types';
-import { extractInputText, IMainState } from '../../mainState';
-import { createPostableAction } from '../postOffice';
+import { extractInputText, getSelectedAndFocusedInfo, IMainState } from '../../mainState';
+import { createPostableAction } from '../helpers';
 import { Helpers } from './helpers';
-import { CommonReducerArg, ICellAction, IEditCellAction, ILinkClickAction, ISendCommandAction, IShowDataViewerAction, IShowPlotAction } from './types';
+import { CommonActionType, CommonReducerArg, ICellAction, IEditCellAction, ILinkClickAction, ISendCommandAction, IShowDataViewerAction } from './types';
 
 // These are all reducers that don't actually change state. They merely dispatch a message to the other side.
 export namespace Transfer {
-    export function exportCells<T>(arg: CommonReducerArg<T>): IMainState {
+    export function exportCells(arg: CommonReducerArg): IMainState {
         const cellContents = arg.prevState.cellVMs.map(v => v.cell);
         arg.queueAction(createPostableAction(InteractiveWindowMessages.Export, cellContents));
 
@@ -23,7 +23,7 @@ export namespace Transfer {
         };
     }
 
-    export function save<T>(arg: CommonReducerArg<T>): IMainState {
+    export function save(arg: CommonReducerArg): IMainState {
         // Note: this is assuming editor contents have already been saved. That should happen as a result of focus change
 
         // Actually waiting for save results before marking as not dirty, so don't do it here.
@@ -31,47 +31,49 @@ export namespace Transfer {
         return arg.prevState;
     }
 
-    export function showDataViewer<T>(arg: CommonReducerArg<T, IShowDataViewerAction>): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.ShowDataViewer, { variable: arg.payload.variable, columnSize: arg.payload.columnSize }));
+    export function showDataViewer(arg: CommonReducerArg<CommonActionType, IShowDataViewerAction>): IMainState {
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.ShowDataViewer, { variable: arg.payload.data.variable, columnSize: arg.payload.data.columnSize }));
         return arg.prevState;
     }
 
-    export function sendCommand<T>(arg: CommonReducerArg<T, ISendCommandAction>): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.NativeCommand, { command: arg.payload.command, source: arg.payload.commandType }));
+    export function sendCommand(arg: CommonReducerArg<CommonActionType, ISendCommandAction>): IMainState {
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.NativeCommand, { command: arg.payload.data.command, source: arg.payload.data.commandType }));
         return arg.prevState;
     }
 
-    export function showPlot<T>(arg: CommonReducerArg<T, IShowPlotAction>): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.ShowPlot, arg.payload.imageHtml));
-        return arg.prevState;
-    }
-
-    export function linkClick<T>(arg: CommonReducerArg<T, ILinkClickAction>): IMainState {
-        if (arg.payload.href.startsWith('data:image/png')) {
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.SavePng, arg.payload.href));
-        } else {
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.OpenLink, arg.payload.href));
+    export function showPlot(arg: CommonReducerArg<CommonActionType | InteractiveWindowMessages, string | undefined>): IMainState {
+        if (arg.payload.data) {
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.ShowPlot, arg.payload.data));
         }
         return arg.prevState;
     }
 
-    export function getAllCells<T>(arg: CommonReducerArg<T>): IMainState {
+    export function linkClick(arg: CommonReducerArg<CommonActionType, ILinkClickAction>): IMainState {
+        if (arg.payload.data.href.startsWith('data:image/png')) {
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.SavePng, arg.payload.data.href));
+        } else {
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.OpenLink, arg.payload.data.href));
+        }
+        return arg.prevState;
+    }
+
+    export function getAllCells(arg: CommonReducerArg): IMainState {
         const cells = arg.prevState.cellVMs.map(c => c.cell);
         arg.queueAction(createPostableAction(InteractiveWindowMessages.ReturnAllCells, cells));
         return arg.prevState;
     }
 
-    export function gotoCell<T>(arg: CommonReducerArg<T, ICellAction>): IMainState {
-        const cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.cellId);
+    export function gotoCell(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
+        const cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.data.cellId);
         if (cellVM && cellVM.cell.data.cell_type === 'code') {
             arg.queueAction(createPostableAction(InteractiveWindowMessages.GotoCodeCell, { file: cellVM.cell.file, line: cellVM.cell.line }));
         }
         return arg.prevState;
     }
 
-    export function copyCellCode<T>(arg: CommonReducerArg<T, ICellAction>): IMainState {
-        let cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.cellId);
-        if (!cellVM && arg.prevState.editCellVM && arg.payload.cellId === arg.prevState.editCellVM.cell.id) {
+    export function copyCellCode(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
+        let cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.data.cellId);
+        if (!cellVM && arg.prevState.editCellVM && arg.payload.data.cellId === arg.prevState.editCellVM.cell.id) {
             cellVM = arg.prevState.editCellVM;
         }
 
@@ -83,19 +85,19 @@ export namespace Transfer {
         return arg.prevState;
     }
 
-    export function gather<T>(arg: CommonReducerArg<T, ICellAction>): IMainState {
-        const cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.cellId);
+    export function gather(arg: CommonReducerArg<CommonActionType, ICellAction>): IMainState {
+        const cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.data.cellId);
         if (cellVM) {
             arg.queueAction(createPostableAction(InteractiveWindowMessages.GatherCodeRequest, cellVM.cell));
         }
         return arg.prevState;
     }
 
-    function postModelUpdate<T>(arg: CommonReducerArg<T>, update: NotebookModelChange) {
+    function postModelUpdate<T>(arg: CommonReducerArg<CommonActionType, T>, update: NotebookModelChange) {
         arg.queueAction(createPostableAction(InteractiveWindowMessages.UpdateModel, update));
     }
 
-    export function postModelEdit<T>(arg: CommonReducerArg<T>, forward: IEditorContentChange[], reverse: IEditorContentChange[], id: string) {
+    export function postModelEdit<T>(arg: CommonReducerArg<CommonActionType, T>, forward: IEditorContentChange[], reverse: IEditorContentChange[], id: string) {
         postModelUpdate(arg, {
             source: 'user',
             kind: 'edit',
@@ -107,7 +109,7 @@ export namespace Transfer {
         });
     }
 
-    export function postModelInsert<T>(arg: CommonReducerArg<T>, index: number, cell: ICell, codeCellAboveId?: string) {
+    export function postModelInsert<T>(arg: CommonReducerArg<CommonActionType, T>, index: number, cell: ICell, codeCellAboveId?: string) {
         postModelUpdate(arg, {
             source: 'user',
             kind: 'insert',
@@ -119,7 +121,7 @@ export namespace Transfer {
         });
     }
 
-    export function postModelRemove<T>(arg: CommonReducerArg<T>, index: number, cell: ICell) {
+    export function postModelRemove<T>(arg: CommonReducerArg<CommonActionType, T>, index: number, cell: ICell) {
         postModelUpdate(arg, {
             source: 'user',
             kind: 'remove',
@@ -130,7 +132,7 @@ export namespace Transfer {
         });
     }
 
-    export function postModelClearOutputs<T>(arg: CommonReducerArg<T>) {
+    export function postModelClearOutputs<T>(arg: CommonReducerArg<CommonActionType, T>) {
         postModelUpdate(arg, {
             source: 'user',
             kind: 'clear',
@@ -141,7 +143,7 @@ export namespace Transfer {
         });
     }
 
-    export function postModelRemoveAll<T>(arg: CommonReducerArg<T>, newCellId: string) {
+    export function postModelRemoveAll<T>(arg: CommonReducerArg<CommonActionType, T>, newCellId: string) {
         postModelUpdate(arg, {
             source: 'user',
             kind: 'remove_all',
@@ -153,7 +155,7 @@ export namespace Transfer {
         });
     }
 
-    export function postModelSwap<T>(arg: CommonReducerArg<T>, firstCellId: string, secondCellId: string) {
+    export function postModelSwap<T>(arg: CommonReducerArg<CommonActionType, T>, firstCellId: string, secondCellId: string) {
         postModelUpdate(arg, {
             source: 'user',
             kind: 'swap',
@@ -164,23 +166,24 @@ export namespace Transfer {
         });
     }
 
-    export function editCell<T>(arg: CommonReducerArg<T, IEditCellAction>): IMainState {
-        const cellVM = arg.payload.cellId === Identifiers.EditCellId ? arg.prevState.editCellVM : arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.cellId);
+    export function editCell(arg: CommonReducerArg<CommonActionType, IEditCellAction>): IMainState {
+        const cellVM = arg.payload.data.cellId === Identifiers.EditCellId ? arg.prevState.editCellVM : arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.data.cellId);
         if (cellVM) {
             // Tell the underlying model on the extension side
-            postModelEdit(arg, arg.payload.forward, arg.payload.reverse, cellVM.cell.id);
+            postModelEdit(arg, arg.payload.data.forward, arg.payload.data.reverse, cellVM.cell.id);
 
             // Update the uncommitted text on the cell view model
             // We keep this saved here so we don't re-render and we put this code into the input / code data
             // when focus is lost
-            const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
-            if (index >= 0 && arg.prevState.focusedCellId === arg.payload.cellId) {
+            const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+            const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
+            if (index >= 0 && selectionInfo.focusedCellId === arg.payload.data.cellId) {
                 const newVMs = [...arg.prevState.cellVMs];
                 const current = arg.prevState.cellVMs[index];
                 const newCell = {
                     ...current,
-                    uncommittedText: arg.payload.code,
-                    codeVersion: arg.payload.version
+                    uncommittedText: arg.payload.data.code,
+                    codeVersion: arg.payload.data.version
                 };
 
                 // tslint:disable-next-line: no-any
@@ -194,7 +197,7 @@ export namespace Transfer {
         return arg.prevState;
     }
 
-    export function started<T>(arg: CommonReducerArg<T>): IMainState {
+    export function started(arg: CommonReducerArg): IMainState {
         // Send all of our initial requests
         arg.queueAction(createPostableAction(InteractiveWindowMessages.Started));
         arg.queueAction(createPostableAction(CssMessages.GetCssRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' }));
@@ -204,7 +207,7 @@ export namespace Transfer {
         return arg.prevState;
     }
 
-    export function loadedAllCells<T>(arg: CommonReducerArg<T>): IMainState {
+    export function loadedAllCells(arg: CommonReducerArg): IMainState {
         arg.queueAction(createPostableAction(InteractiveWindowMessages.LoadAllCellsComplete, { cells: arg.prevState.cellVMs.map(c => c.cell) }));
         return arg.prevState;
     }

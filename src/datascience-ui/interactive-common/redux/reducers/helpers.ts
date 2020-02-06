@@ -9,7 +9,7 @@ import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience
 import { arePathsSame } from '../../../react-common/arePathsSame';
 import { detectBaseTheme } from '../../../react-common/themeDetector';
 import { ICellViewModel, IMainState } from '../../mainState';
-import { CommonReducerArg } from './types';
+import { CommonActionType, CommonReducerArg } from './types';
 
 const StackLimit = 10;
 
@@ -50,14 +50,14 @@ export namespace Helpers {
         return cell as ICell;
     }
 
-    export function updateOrAdd<T>(arg: CommonReducerArg<T, ICell>, generateVM: (cell: ICell, mainState: IMainState) => ICellViewModel): IMainState {
+    export function updateOrAdd(arg: CommonReducerArg<CommonActionType, ICell>, generateVM: (cell: ICell, mainState: IMainState) => ICellViewModel): IMainState {
         // First compute new execution count.
-        const newExecutionCount = arg.payload.data.execution_count
-            ? Math.max(arg.prevState.currentExecutionCount, parseInt(arg.payload.data.execution_count.toString(), 10))
+        const newExecutionCount = arg.payload.data.data.execution_count
+            ? Math.max(arg.prevState.currentExecutionCount, parseInt(arg.payload.data.data.execution_count.toString(), 10))
             : arg.prevState.currentExecutionCount;
 
         const index = arg.prevState.cellVMs.findIndex((c: ICellViewModel) => {
-            return c.cell.id === arg.payload.id && c.cell.line === arg.payload.line && arePathsSame(c.cell.file, arg.payload.file);
+            return c.cell.id === arg.payload.data.id && c.cell.line === arg.payload.data.line && arePathsSame(c.cell.file, arg.payload.data.file);
         });
         if (index >= 0) {
             // This means the cell existed already so it was actual executed code.
@@ -77,9 +77,9 @@ export namespace Helpers {
                 ...newVMs[index],
                 cell: {
                     ...newVMs[index].cell,
-                    state: arg.payload.state,
+                    state: arg.payload.data.state,
                     data: {
-                        ...arg.payload.data,
+                        ...arg.payload.data.data,
                         source: newVMs[index].cell.data.source
                     }
                 }
@@ -93,7 +93,7 @@ export namespace Helpers {
             };
         } else {
             // This is an entirely new cell (it may have started out as finished)
-            const newVM = generateVM(arg.payload, arg.prevState);
+            const newVM = generateVM(arg.payload.data, arg.prevState);
             const newVMs = [...arg.prevState.cellVMs, newVM];
             return {
                 ...arg.prevState,

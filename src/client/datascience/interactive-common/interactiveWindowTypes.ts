@@ -4,11 +4,13 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Uri } from 'vscode';
 import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
-import { IAddCellAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
+import { CommonActionType, IAddCellAction } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { LiveKernelModel } from '../jupyter/kernels/types';
-import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest } from '../messages';
+import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest, SharedMessages } from '../messages';
+import { IGetMonacoThemeResponse } from '../monacoMessages';
 import { ICell, IInteractiveWindowInfo, IJupyterKernelSpec, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../types';
+import { BaseReduxActionPayload } from './types';
 
 export enum InteractiveWindowMessages {
     StartCell = 'start_cell',
@@ -55,6 +57,7 @@ export enum InteractiveWindowMessages {
     ResolveCompletionItemRequest = 'resolve_completion_item_request',
     CancelResolveCompletionItemRequest = 'cancel_resolve_completion_item_request',
     ResolveCompletionItemResponse = 'resolve_completion_item_response',
+    Sync = 'sync_message_used_to_broadcast_and_sync_editors',
     LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request',
     LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response',
     LoadTmLanguageRequest = 'load_tmlanguage_request',
@@ -436,7 +439,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.SelectKernel]: IServerState | undefined;
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
-    public [InteractiveWindowMessages.GetAllCells]: ICell;
+    public [InteractiveWindowMessages.GetAllCells]: never | undefined;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
     public [InteractiveWindowMessages.DeleteAllCells]: IAddCellAction;
     public [InteractiveWindowMessages.Undo]: never | undefined;
@@ -461,6 +464,7 @@ export class IInteractiveWindowMapping {
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
     public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest;
+    public [CssMessages.GetMonacoThemeResponse]: IGetMonacoThemeResponse;
     public [InteractiveWindowMessages.ProvideCompletionItemsRequest]: IProvideCompletionItemsRequest;
     public [InteractiveWindowMessages.CancelCompletionItemsRequest]: ICancelIntellisenseRequest;
     public [InteractiveWindowMessages.ProvideCompletionItemsResponse]: IProvideCompletionItemsResponse;
@@ -491,11 +495,14 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookDirty]: never | undefined;
     public [InteractiveWindowMessages.NotebookClean]: never | undefined;
     public [InteractiveWindowMessages.SaveAll]: ISaveAll;
+    // tslint:disable-next-line: no-any
+    public [InteractiveWindowMessages.Sync]: { type: InteractiveWindowMessages | SharedMessages | CommonActionType; payload: BaseReduxActionPayload<any> };
     public [InteractiveWindowMessages.NativeCommand]: INativeCommand;
     public [InteractiveWindowMessages.VariablesComplete]: never | undefined;
     public [InteractiveWindowMessages.NotebookRunAllCells]: never | undefined;
     public [InteractiveWindowMessages.NotebookRunSelectedCell]: never | undefined;
-    public [InteractiveWindowMessages.NotebookAddCellBelow]: never | undefined;
+    public [InteractiveWindowMessages.NotebookAddCellBelow]: IAddCellAction;
+    public [InteractiveWindowMessages.DoSave]: never | undefined;
     public [InteractiveWindowMessages.ExecutionRendered]: IRenderComplete;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
     public [InteractiveWindowMessages.UnfocusedCellEditor]: never | undefined;
@@ -504,4 +511,6 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.UpdateKernel]: IServerState | undefined;
     public [InteractiveWindowMessages.UpdateModel]: NotebookModelChange;
     public [InteractiveWindowMessages.ReceivedUpdateModel]: never | undefined;
+    public [SharedMessages.UpdateSettings]: string;
+    public [SharedMessages.LocInit]: string;
 }

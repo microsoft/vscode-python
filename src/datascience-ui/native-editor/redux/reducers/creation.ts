@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as uuid from 'uuid/v4';
 
 import { noop } from '../../../../client/common/utils/misc';
 import { IEditorContentChange, ILoadAllCells, NotebookModelChange } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
-import { createCellVM, createEmptyCell, CursorPos, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
+import { createCellVM, createEmptyCell, CursorPos, extractInputText, getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { IAddCellAction, ICellAction } from '../../../interactive-common/redux/reducers/types';
@@ -42,11 +41,11 @@ export namespace Creation {
     }
 
     export function insertAbove(arg: NativeEditorReducerArg<ICellAction & IAddCellAction>): IMainState {
-        const newVM = prepareCellVM(createEmptyCell(arg.payload.newCellId || uuid(), null), false, arg.prevState.settings);
+        const newVM = prepareCellVM(createEmptyCell(arg.payload.data.newCellId, null), false, arg.prevState.settings);
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
-        let position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        let position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (position >= 0) {
             newList.splice(position, 0, newVM);
         } else {
@@ -72,11 +71,11 @@ export namespace Creation {
     }
 
     export function insertBelow(arg: NativeEditorReducerArg<ICellAction & IAddCellAction>): IMainState {
-        const newVM = prepareCellVM(createEmptyCell(arg.payload.newCellId || uuid(), null), false, arg.prevState.settings);
+        const newVM = prepareCellVM(createEmptyCell(arg.payload.data.newCellId, null), false, arg.prevState.settings);
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
-        let position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        let position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (position >= 0) {
             newList.splice(position + 1, 0, newVM);
         } else {
@@ -106,12 +105,15 @@ export namespace Creation {
         const firstCellId = arg.prevState.cellVMs.length > 0 ? arg.prevState.cellVMs[0].cell.id : undefined;
 
         // Do what an insertAbove does
-        return insertAbove({ ...arg, payload: { cellId: firstCellId, newCellId: arg.payload.newCellId } });
+        return insertAbove({ ...arg, payload: { ...arg.payload, data: { cellId: firstCellId, newCellId: arg.payload.data.newCellId } } });
     }
 
     export function addNewCell(arg: NativeEditorReducerArg<IAddCellAction>): IMainState {
         // Do the same thing that an insertBelow does using the currently selected cell.
-        return insertBelow({ ...arg, payload: { cellId: arg.prevState.selectedCellId, newCellId: arg.payload.newCellId } });
+        return insertBelow({
+            ...arg,
+            payload: { ...arg.payload, data: { cellId: getSelectedAndFocusedInfo(arg.prevState).selectedCellId, newCellId: arg.payload.data.newCellId } }
+        });
     }
 
     export function startCell(arg: NativeEditorReducerArg<ICell>): IMainState {
@@ -129,7 +131,7 @@ export namespace Creation {
     export function deleteAllCells(arg: NativeEditorReducerArg<IAddCellAction>): IMainState {
         // Just leave one single blank empty cell
         const newVM: ICellViewModel = {
-            cell: createEmptyCell(arg.payload.newCellId, null),
+            cell: createEmptyCell(arg.payload.data.newCellId, null),
             editable: true,
             inputBlockOpen: true,
             inputBlockShow: true,
@@ -147,17 +149,15 @@ export namespace Creation {
         return {
             ...arg.prevState,
             cellVMs: [newVM],
-            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
-            selectedCellId: undefined,
-            focusedCellId: undefined
+            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs)
         };
     }
 
     export function applyCellEdit(arg: NativeEditorReducerArg<{ id: string; changes: IEditorContentChange[] }>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.id);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.id);
         if (index) {
             const newVM = { ...arg.prevState.cellVMs[index] };
-            arg.payload.changes.forEach(c => {
+            arg.payload.data.changes.forEach(c => {
                 const source = newVM.uncommittedText ? newVM.uncommittedText : newVM.inputBlockText;
                 const before = source.slice(0, c.rangeOffset);
                 const after = source.slice(c.rangeOffset + c.rangeLength);
@@ -165,21 +165,25 @@ export namespace Creation {
             });
             newVM.codeVersion = newVM.codeVersion ? newVM.codeVersion + 1 : 1;
             newVM.inputBlockText = newVM.cell.data.source = newVM.uncommittedText!;
-            newVM.cursorPos = arg.payload.changes[0].position;
+            newVM.cursorPos = arg.payload.data.changes[0].position;
             const newVMs = [...arg.prevState.cellVMs];
             newVMs[index] = Helpers.asCellViewModel(newVM);
             // When editing, make sure we focus the edited cell (otherwise undo looks weird because it undoes a non focused cell)
-            return Effects.focusCell({ ...arg, prevState: { ...arg.prevState, cellVMs: newVMs }, payload: { cursorPos: CursorPos.Current, cellId: arg.payload.id } });
+            return Effects.focusCell({
+                ...arg,
+                prevState: { ...arg.prevState, cellVMs: newVMs },
+                payload: { ...arg.payload, data: { cursorPos: CursorPos.Current, cellId: arg.payload.data.id } }
+            });
         }
         return arg.prevState;
     }
 
     export function deleteCell(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         const cells = arg.prevState.cellVMs;
-        if (cells.length === 1 && cells[0].cell.id === arg.payload.cellId) {
+        if (cells.length === 1 && cells[0].cell.id === arg.payload.data.cellId) {
             // Special case, if this is the last cell, don't delete it, just clear it's output and input
             const newVM: ICellViewModel = {
-                cell: createEmptyCell(arg.payload.cellId, null),
+                cell: createEmptyCell(arg.payload.data.cellId, null),
                 editable: true,
                 inputBlockOpen: true,
                 inputBlockShow: true,
@@ -201,30 +205,25 @@ export namespace Creation {
                 undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
                 cellVMs: [newVM]
             };
-        } else if (arg.payload.cellId) {
+        } else if (arg.payload.data.cellId) {
             // Otherwise just a straight delete
-            const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+            const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
             if (index >= 0) {
                 Transfer.postModelRemove(arg, 0, cells[index].cell);
 
                 // Recompute select/focus if this item has either
-                let newSelection = arg.prevState.selectedCellId;
-                let newFocused = arg.prevState.focusedCellId;
-                const newVMs = [...arg.prevState.cellVMs.filter(c => c.cell.id !== arg.payload.cellId)];
+                const previousSelection = getSelectedAndFocusedInfo(arg.prevState);
+                const newVMs = [...arg.prevState.cellVMs.filter(c => c.cell.id !== arg.payload.data.cellId)];
                 const nextOrPrev = index === arg.prevState.cellVMs.length - 1 ? index - 1 : index;
-                if (arg.prevState.selectedCellId === arg.payload.cellId || arg.prevState.focusedCellId === arg.payload.cellId) {
+                if (previousSelection.selectedCellId === arg.payload.data.cellId || previousSelection.focusedCellId === arg.payload.data.cellId) {
                     if (nextOrPrev >= 0) {
-                        newVMs[nextOrPrev] = { ...newVMs[nextOrPrev], selected: true, focused: arg.prevState.focusedCellId === arg.payload.cellId };
-                        newSelection = newVMs[nextOrPrev].cell.id;
-                        newFocused = newVMs[nextOrPrev].focused ? newVMs[nextOrPrev].cell.id : undefined;
+                        newVMs[nextOrPrev] = { ...newVMs[nextOrPrev], selected: true, focused: previousSelection.focusedCellId === arg.payload.data.cellId };
                     }
                 }
 
                 return {
                     ...arg.prevState,
                     cellVMs: newVMs,
-                    selectedCellId: newSelection,
-                    focusedCellId: newFocused,
                     undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
                     skipNextScroll: true
                 };
@@ -235,11 +234,11 @@ export namespace Creation {
     }
 
     export function loadAllCells(arg: NativeEditorReducerArg<ILoadAllCells>): IMainState {
-        const vms = arg.payload.cells.map(c => prepareCellVM(c, false, arg.prevState.settings));
+        const vms = arg.payload.data.cells.map(c => prepareCellVM(c, false, arg.prevState.settings));
         return {
             ...arg.prevState,
             busy: false,
-            loadTotal: arg.payload.cells.length,
+            loadTotal: arg.payload.data.cells.length,
             undoStack: [],
             cellVMs: vms,
             loaded: true
@@ -259,20 +258,26 @@ export namespace Creation {
         // Disable the queueAction in the arg so that calling other reducers doesn't cause
         // messages to be posted back (as were handling a message from the extension here)
         const disabledQueueArg = { ...arg, queueAction: noop };
-        switch (arg.payload.kind) {
+        switch (arg.payload.data.kind) {
             case 'clear':
-                return loadAllCells({ ...disabledQueueArg, payload: { cells: arg.payload.oldCells } });
+                return loadAllCells({ ...disabledQueueArg, payload: { ...arg.payload, data: { cells: arg.payload.data.oldCells } } });
             case 'edit':
-                return applyCellEdit({ ...disabledQueueArg, payload: { id: arg.payload.id, changes: arg.payload.reverse } });
+                return applyCellEdit({ ...disabledQueueArg, payload: { ...arg.payload, data: { id: arg.payload.data.id, changes: arg.payload.data.reverse } } });
             case 'insert':
-                return deleteCell({ ...disabledQueueArg, payload: { cellId: arg.payload.cell.id } });
+                return deleteCell({ ...disabledQueueArg, payload: { ...arg.payload, data: { cellId: arg.payload.data.cell.id } } });
             case 'remove':
-                const cellBelow = arg.prevState.cellVMs.length > arg.payload.index ? arg.prevState.cellVMs[arg.payload.index].cell : undefined;
-                return insertAbove({ ...disabledQueueArg, payload: { newCellId: arg.payload.cell.id, cellId: cellBelow ? cellBelow.id : undefined } });
+                const cellBelow = arg.prevState.cellVMs.length > arg.payload.data.index ? arg.prevState.cellVMs[arg.payload.data.index].cell : undefined;
+                return insertAbove({
+                    ...disabledQueueArg,
+                    payload: { ...arg.payload, data: { newCellId: arg.payload.data.cell.id, cellId: cellBelow ? cellBelow.id : undefined } }
+                });
             case 'remove_all':
-                return loadAllCells({ ...disabledQueueArg, payload: { cells: arg.payload.oldCells } });
+                return loadAllCells({ ...disabledQueueArg, payload: { ...arg.payload, data: { cells: arg.payload.data.oldCells } } });
             case 'swap':
-                return Movement.swapCells({ ...disabledQueueArg, payload: { firstCellId: arg.payload.secondCellId, secondCellId: arg.payload.firstCellId } });
+                return Movement.swapCells({
+                    ...disabledQueueArg,
+                    payload: { ...arg.payload, data: { firstCellId: arg.payload.data.secondCellId, secondCellId: arg.payload.data.firstCellId } }
+                });
             default:
                 // Modify, file, version can all be ignored.
                 break;
@@ -285,19 +290,23 @@ export namespace Creation {
         // Disable the queueAction in the arg so that calling other reducers doesn't cause
         // messages to be posted back (as were handling a message from the extension here)
         const disabledQueueArg = { ...arg, queueAction: noop };
-        switch (arg.payload.kind) {
+        switch (arg.payload.data.kind) {
             case 'clear':
-                return Execution.clearAllOutputs(disabledQueueArg);
+                // tslint:disable-next-line: no-any
+                return Execution.clearAllOutputs(disabledQueueArg as any);
             case 'edit':
-                return applyCellEdit({ ...disabledQueueArg, payload: { id: arg.payload.id, changes: arg.payload.forward } });
+                return applyCellEdit({ ...disabledQueueArg, payload: { ...arg.payload, data: { id: arg.payload.data.id, changes: arg.payload.data.forward } } });
             case 'insert':
-                return insertAbove({ ...disabledQueueArg, payload: { newCellId: arg.payload.cell.id, cellId: arg.payload.codeCellAboveId } });
+                return insertAbove({ ...disabledQueueArg, payload: { ...arg.payload, data: { newCellId: arg.payload.data.cell.id, cellId: arg.payload.data.codeCellAboveId } } });
             case 'remove':
-                return deleteCell({ ...disabledQueueArg, payload: { cellId: arg.payload.cell.id } });
+                return deleteCell({ ...disabledQueueArg, payload: { ...arg.payload, data: { cellId: arg.payload.data.cell.id } } });
             case 'remove_all':
-                return deleteAllCells({ ...disabledQueueArg, payload: { newCellId: arg.payload.newCellId } });
+                return deleteAllCells({ ...disabledQueueArg, payload: { ...arg.payload, data: { newCellId: arg.payload.data.newCellId } } });
             case 'swap':
-                return Movement.swapCells({ ...disabledQueueArg, payload: { firstCellId: arg.payload.secondCellId, secondCellId: arg.payload.firstCellId } });
+                return Movement.swapCells({
+                    ...disabledQueueArg,
+                    payload: { ...arg.payload, data: { firstCellId: arg.payload.data.secondCellId, secondCellId: arg.payload.data.firstCellId } }
+                });
             default:
                 // Modify, file, version can all be ignored.
                 break;
@@ -307,7 +316,7 @@ export namespace Creation {
     }
 
     export function handleUpdate(arg: NativeEditorReducerArg<NotebookModelChange>): IMainState {
-        switch (arg.payload.source) {
+        switch (arg.payload.data.source) {
             case 'undo':
                 return handleUndoModel(arg);
             case 'redo':

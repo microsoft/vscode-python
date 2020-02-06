@@ -11,13 +11,13 @@ import { Effects } from './effects';
 export namespace Movement {
     export function swapCells(arg: NativeEditorReducerArg<{ firstCellId: string; secondCellId: string }>) {
         const newVMs = [...arg.prevState.cellVMs];
-        const first = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.firstCellId);
-        const second = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.secondCellId);
+        const first = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.data.firstCellId);
+        const second = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.data.secondCellId);
         if (first >= 0 && second >= 0) {
             const temp = newVMs[first];
             newVMs[first] = newVMs[second];
             newVMs[second] = temp;
-            Transfer.postModelSwap(arg, arg.payload.firstCellId, arg.payload.secondCellId);
+            Transfer.postModelSwap(arg, arg.payload.data.firstCellId, arg.payload.data.secondCellId);
             return {
                 ...arg.prevState,
                 cellVMs: newVMs,
@@ -29,9 +29,9 @@ export namespace Movement {
     }
 
     export function moveCellUp(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(cvm => cvm.cell.id === arg.payload.cellId);
-        if (index > 0 && arg.payload.cellId) {
-            return swapCells({ ...arg, payload: { firstCellId: arg.prevState.cellVMs[index - 1].cell.id, secondCellId: arg.payload.cellId } });
+        const index = arg.prevState.cellVMs.findIndex(cvm => cvm.cell.id === arg.payload.data.cellId);
+        if (index > 0 && arg.payload.data.cellId) {
+            return swapCells({ ...arg, payload: { ...arg.payload, data: { firstCellId: arg.prevState.cellVMs[index - 1].cell.id, secondCellId: arg.payload.data.cellId } } });
         }
 
         return arg.prevState;
@@ -39,23 +39,23 @@ export namespace Movement {
 
     export function moveCellDown(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         const newVMs = [...arg.prevState.cellVMs];
-        const index = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.cellId);
-        if (index < newVMs.length - 1 && arg.payload.cellId) {
-            return swapCells({ ...arg, payload: { firstCellId: arg.payload.cellId, secondCellId: arg.prevState.cellVMs[index + 1].cell.id } });
+        const index = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.data.cellId);
+        if (index < newVMs.length - 1 && arg.payload.data.cellId) {
+            return swapCells({ ...arg, payload: { ...arg.payload, data: { firstCellId: arg.payload.data.cellId, secondCellId: arg.prevState.cellVMs[index + 1].cell.id } } });
         }
 
         return arg.prevState;
     }
 
     export function arrowUp(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index > 0) {
-            const newState = Effects.selectCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[index - 1].cell.id, cursorPos: CursorPos.Bottom } });
+            const newState = Effects.selectCell({ ...arg, payload: { ...arg.payload, data: { cellId: arg.prevState.cellVMs[index - 1].cell.id, cursorPos: CursorPos.Bottom } } });
             const newVMs = [...newState.cellVMs];
             newVMs[index] = Helpers.asCellViewModel({
                 ...newVMs[index],
-                inputBlockText: arg.payload.code,
-                cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.code } }
+                inputBlockText: arg.payload.data.code,
+                cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.data.code } }
             });
             return {
                 ...newState,
@@ -67,14 +67,14 @@ export namespace Movement {
     }
 
     export function arrowDown(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index < arg.prevState.cellVMs.length - 1) {
-            const newState = Effects.selectCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[index + 1].cell.id, cursorPos: CursorPos.Top } });
+            const newState = Effects.selectCell({ ...arg, payload: { ...arg.payload, data: { cellId: arg.prevState.cellVMs[index + 1].cell.id, cursorPos: CursorPos.Top } } });
             const newVMs = [...newState.cellVMs];
             newVMs[index] = Helpers.asCellViewModel({
                 ...newVMs[index],
-                inputBlockText: arg.payload.code,
-                cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.code } }
+                inputBlockText: arg.payload.data.code,
+                cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.data.code } }
             });
             return {
                 ...newState,

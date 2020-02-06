@@ -7,52 +7,52 @@ import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMe
 import { IMainState } from '../../../interactive-common/mainState';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { storeLocStrings } from '../../../react-common/locReactSide';
-import { CommonReducerArg } from './types';
+import { CommonActionType, CommonReducerArg } from './types';
 
 export namespace CommonEffects {
-    export function notebookDirty<T>(arg: CommonReducerArg<T>): IMainState {
+    export function notebookDirty(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
             dirty: true
         };
     }
 
-    export function notebookClean<T>(arg: CommonReducerArg<T>): IMainState {
+    export function notebookClean(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
             dirty: false
         };
     }
 
-    export function startProgress<T>(arg: CommonReducerArg<T>): IMainState {
+    export function startProgress(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
             busy: true
         };
     }
 
-    export function stopProgress<T>(arg: CommonReducerArg<T>): IMainState {
+    export function stopProgress(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
             busy: false
         };
     }
 
-    export function activate<T>(arg: CommonReducerArg<T>): IMainState {
+    export function activate(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
             activateCount: arg.prevState.activateCount + 1
         };
     }
 
-    export function handleLocInit<T>(arg: CommonReducerArg<T, string>): IMainState {
+    export function handleLocInit(arg: CommonReducerArg<CommonActionType, string>): IMainState {
         // Read in the loc strings
-        const locJSON = JSON.parse(arg.payload);
+        const locJSON = JSON.parse(arg.payload.data);
         storeLocStrings(locJSON);
         return arg.prevState;
     }
 
-    export function handleCss<T>(arg: CommonReducerArg<T, IGetCssResponse>): IMainState {
+    export function handleCss(arg: CommonReducerArg<CommonActionType, IGetCssResponse>): IMainState {
         // Recompute our known dark value from the class name in the body
         // VS code should update this dynamically when the theme changes
         const computedKnownDark = Helpers.computeKnownDark(arg.prevState.settings);
@@ -66,27 +66,27 @@ export namespace CommonEffects {
         let fontFamily: string = "Consolas, 'Courier New', monospace";
         const sizeSetting = '--code-font-size: ';
         const familySetting = '--code-font-family: ';
-        const fontSizeIndex = arg.payload.css.indexOf(sizeSetting);
-        const fontFamilyIndex = arg.payload.css.indexOf(familySetting);
+        const fontSizeIndex = arg.payload.data.css.indexOf(sizeSetting);
+        const fontFamilyIndex = arg.payload.data.css.indexOf(familySetting);
 
         if (fontSizeIndex > -1) {
-            const fontSizeEndIndex = arg.payload.css.indexOf('px;', fontSizeIndex + sizeSetting.length);
-            fontSize = parseInt(arg.payload.css.substring(fontSizeIndex + sizeSetting.length, fontSizeEndIndex), 10);
+            const fontSizeEndIndex = arg.payload.data.css.indexOf('px;', fontSizeIndex + sizeSetting.length);
+            fontSize = parseInt(arg.payload.data.css.substring(fontSizeIndex + sizeSetting.length, fontSizeEndIndex), 10);
         }
 
         if (fontFamilyIndex > -1) {
-            const fontFamilyEndIndex = arg.payload.css.indexOf(';', fontFamilyIndex + familySetting.length);
-            fontFamily = arg.payload.css.substring(fontFamilyIndex + familySetting.length, fontFamilyEndIndex);
+            const fontFamilyEndIndex = arg.payload.data.css.indexOf(';', fontFamilyIndex + familySetting.length);
+            fontFamily = arg.payload.data.css.substring(fontFamilyIndex + familySetting.length, fontFamilyEndIndex);
         }
 
         return {
             ...arg.prevState,
-            rootCss: arg.payload.css,
+            rootCss: arg.payload.data.css,
             font: {
                 size: fontSize,
                 family: fontFamily
             },
-            vscodeThemeName: arg.payload.theme,
+            vscodeThemeName: arg.payload.data.theme,
             knownDark: computedKnownDark,
             baseTheme: newBaseTheme
         };

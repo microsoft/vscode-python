@@ -6,15 +6,18 @@ import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
+import { CssMessages } from '../../../client/datascience/messages';
 import { CellState } from '../../../client/datascience/types';
-import { IMainState, ServerStatus } from '../../interactive-common/mainState';
+import { getSelectedAndFocusedInfo, IMainState, ServerStatus } from '../../interactive-common/mainState';
 import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { forceLoad } from '../transforms';
-import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
+import { createPostableAction, isAllowedAction, isAllowedMessage } from './helpers';
+import { generatePostOfficeSendReducer } from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
@@ -71,10 +74,16 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
         const res = next(action);
         const afterState = store.getState();
 
+        // If the action is part of a sync message, then do not send it to the extension.
+        if (action.payload && typeof (action.payload as BaseReduxActionPayload).messageType === 'number') {
+            return res;
+        }
+
         // If cell vm count changed or selected cell changed, send the message
+        const currentSelection = getSelectedAndFocusedInfo(afterState.main);
         if (
             prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
-            prevState.main.selectedCellId !== afterState.main.selectedCellId ||
+            getSelectedAndFocusedInfo(prevState.main).selectedCellId !== currentSelection.selectedCellId ||
             prevState.main.undoStack.length !== afterState.main.undoStack.length ||
             prevState.main.redoStack.length !== afterState.main.redoStack.length
         ) {
@@ -83,7 +92,7 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
                     cellCount: afterState.main.cellVMs.length,
                     undoCount: afterState.main.undoStack.length,
                     redoCount: afterState.main.redoStack.length,
-                    selectedCell: afterState.main.selectedCellId
+                    selectedCell: currentSelection.selectedCellId
                 })
             );
         }
@@ -111,12 +120,14 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         };
 
         // Special case for focusing a cell
-        if (prevState.main.focusedCellId !== afterState.main.focusedCellId && afterState.main.focusedCellId) {
+        const previousSelection = getSelectedAndFocusedInfo(prevState.main);
+        const currentSelection = getSelectedAndFocusedInfo(afterState.main);
+        if (previousSelection.focusedCellId !== currentSelection.focusedCellId && currentSelection.focusedCellId) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
             sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId });
         }
         // Special case for unfocusing a cell
-        if (prevState.main.focusedCellId !== afterState.main.focusedCellId && !afterState.main.focusedCellId) {
+        if (previousSelection.focusedCellId !== currentSelection.focusedCellId && !currentSelection.focusedCellId) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
             sendMessage(InteractiveWindowMessages.UnfocusedCellEditor);
         }
@@ -173,7 +184,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
 
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
-    const actionsWithLargePayload = [IncomingMessageActions.LOADONIGASMASSEMBLYRESPONSE, IncomingMessageActions.GETCSSRESPONSE, IncomingMessageActions.LOADTMLANGUAGERESPONSE];
+    const actionsWithLargePayload = [InteractiveWindowMessages.LoadOnigasmAssemblyResponse, CssMessages.GetCssResponse, InteractiveWindowMessages.LoadTmLanguageResponse];
     const logger = createLogger({
         // tslint:disable-next-line: no-any
         stateTransformer: (state: any) => {
@@ -208,7 +219,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
         }
     });
     const loggerMiddleware = process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode) ? logger : undefined;
-
+    // tslint:disable-next-line: no-console
     const results: Redux.Middleware<{}, IStore>[] = [];
     results.push(queueableActions);
     results.push(updateContext);
@@ -232,6 +243,21 @@ export interface IStore {
 export interface IMainWithVariables extends IMainState {
     variableState: IVariableState;
 }
+
+/**
+ * Middleware that will ensure all actions have `messageDirection` property.
+ */
+const addMessageDirectionMiddleware: Redux.Middleware = _store => next => (action: Redux.AnyAction) => {
+    if (isAllowedAction(action)) {
+        // Ensure all dispatched messages have been flagged as `incoming`.
+        const payload: BaseReduxActionPayload<{}> = action.payload || {};
+        if (!payload.messageDirection) {
+            action.payload = { ...payload, messageDirection: 'incoming' };
+        }
+    }
+
+    return next(action);
+};
 
 export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, editable: boolean, reducerMap: M) {
     // Create a post office to listen to store dispatches and allow reducers to
@@ -259,7 +285,7 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     });
 
     // Create our middleware
-    const middleware = createMiddleWare(testMode);
+    const middleware = createMiddleWare(testMode).concat([addMessageDirectionMiddleware]);
 
     // Use this reducer and middle ware to create a store
     const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));
@@ -268,14 +294,19 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     // turn them into actions.
     postOffice.addHandler({
         // tslint:disable-next-line: no-any
-        handleMessage(message: string, payload: any): boolean {
+        handleMessage(message: string, payload?: any): boolean {
             // Double check this is one of our messages. React will actually post messages here too during development
-            if (AllowedMessages.find(k => k === message)) {
-                // Prefix message type with 'action.' so that we can:
-                // - Have one reducer for incoming
-                // - Have another reducer for outgoing
-                store.dispatch({ type: `action.${message}`, payload });
+            if (isAllowedMessage(message)) {
+                const basePayload: BaseReduxActionPayload = { data: payload };
+                if (message === InteractiveWindowMessages.Sync) {
+                    // Unwrap the message.
+                    message = payload.type;
+                    basePayload.messageType = payload.payload.messageType;
+                    basePayload.data = payload.payload.data;
+                }
+                store.dispatch({ type: message, payload: basePayload });
             }
+
             return true;
         }
     });

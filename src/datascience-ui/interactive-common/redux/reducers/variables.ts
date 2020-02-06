@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import { Reducer } from 'redux';
-import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import { ICell, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../../client/datascience/types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
-import { createPostableAction, IncomingMessageActions } from '../postOffice';
-import { CommonActionType } from './types';
+import { createPostableAction } from '../helpers';
+import { CommonActionType, CommonActionTypeMapping } from './types';
 
 export type IVariableState = {
     currentExecutionCount: number;
@@ -17,24 +18,23 @@ export type IVariableState = {
     pageSize: number;
 };
 
-type VariableReducerFunc<T> = ReducerFunc<IVariableState, IncomingMessageActions, T>;
-
-type VariableReducerArg<T = never | undefined> = ReducerArg<IVariableState, IncomingMessageActions, T>;
+type VariableReducerFunc<T = never | undefined> = ReducerFunc<IVariableState, InteractiveWindowMessages, BaseReduxActionPayload<T>>;
+type VariableReducerArg<T = never | undefined> = ReducerArg<IVariableState, InteractiveWindowMessages, BaseReduxActionPayload<T>>;
 
 function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVariableState {
-    const newExecutionCount = arg.payload.executionCount ? arg.payload.executionCount : arg.prevState.currentExecutionCount;
+    const newExecutionCount = arg.payload.data.executionCount ? arg.payload.data.executionCount : arg.prevState.currentExecutionCount;
     arg.queueAction(
         createPostableAction(InteractiveWindowMessages.GetVariablesRequest, {
             executionCount: newExecutionCount,
-            sortColumn: arg.payload.sortColumn,
-            startIndex: arg.payload.startIndex,
-            sortAscending: arg.payload.sortAscending,
-            pageSize: arg.payload.pageSize
+            sortColumn: arg.payload.data.sortColumn,
+            startIndex: arg.payload.data.startIndex,
+            sortAscending: arg.payload.data.sortAscending,
+            pageSize: arg.payload.data.pageSize
         })
     );
     return {
         ...arg.prevState,
-        pageSize: Math.max(arg.prevState.pageSize, arg.payload.pageSize)
+        pageSize: Math.max(arg.prevState.pageSize, arg.payload.data.pageSize)
     };
 }
 
@@ -51,7 +51,10 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
         return handleRequest({
             ...arg,
             prevState: newState,
-            payload: { executionCount: arg.prevState.currentExecutionCount, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize }
+            payload: {
+                ...arg.payload,
+                data: { executionCount: arg.prevState.currentExecutionCount, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize }
+            }
         });
     } else {
         return newState;
@@ -59,7 +62,7 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
 }
 
 function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVariableState {
-    const response = arg.payload;
+    const response = arg.payload.data;
 
     // Check to see if we have moved to a new execution count
     if (
@@ -108,17 +111,23 @@ function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVa
 function handleRestarted(arg: VariableReducerArg): IVariableState {
     // If the variables are visible, refresh them
     if (arg.prevState.visible) {
-        return handleRequest({ ...arg, payload: { executionCount: 0, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize } });
+        return handleRequest({
+            ...arg,
+            payload: { ...arg.payload, data: { executionCount: 0, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize } }
+        });
     }
     return arg.prevState;
 }
 
 function handleFinishCell(arg: VariableReducerArg<ICell>): IVariableState {
-    const executionCount = arg.payload.data.execution_count ? parseInt(arg.payload.data.execution_count.toString(), 10) : undefined;
+    const executionCount = arg.payload.data.data.execution_count ? parseInt(arg.payload.data.data.execution_count.toString(), 10) : undefined;
 
     // If the variables are visible, refresh them
     if (arg.prevState.visible && executionCount) {
-        return handleRequest({ ...arg, payload: { executionCount, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize } });
+        return handleRequest({
+            ...arg,
+            payload: { ...arg.payload, data: { executionCount, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize } }
+        });
     }
     return {
         ...arg.prevState,
@@ -126,25 +135,22 @@ function handleFinishCell(arg: VariableReducerArg<ICell>): IVariableState {
     };
 }
 
-// Create a mapping between message and reducer type
-class IVariableActionMapping {
-    public [IncomingMessageActions.RESTARTKERNEL]: VariableReducerFunc<never | undefined>;
-    public [IncomingMessageActions.FINISHCELL]: VariableReducerFunc<ICell>;
-    public [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: VariableReducerFunc<never | undefined>;
-    public [CommonActionType.GET_VARIABLE_DATA]: VariableReducerFunc<IJupyterVariablesRequest>;
-    public [IncomingMessageActions.GETVARIABLESRESPONSE]: VariableReducerFunc<IJupyterVariablesResponse>;
-}
-
-// Create the map between message type and the actual function to call to update state
-const reducerMap: IVariableActionMapping = {
-    [IncomingMessageActions.RESTARTKERNEL]: handleRestarted,
-    [IncomingMessageActions.FINISHCELL]: handleFinishCell,
-    [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: toggleVariableExplorer,
-    [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
-    [IncomingMessageActions.GETVARIABLESRESPONSE]: handleResponse
+type VariableReducerFunctions<T> = {
+    [P in keyof T]: T[P] extends never | undefined ? VariableReducerFunc : VariableReducerFunc<T[P]>;
 };
 
-export function generateVariableReducer(): Reducer<IVariableState, QueuableAction<IVariableActionMapping>> {
+type VariableActionMapping = VariableReducerFunctions<IInteractiveWindowMapping> & VariableReducerFunctions<CommonActionTypeMapping>;
+
+// Create the map between message type and the actual function to call to update state
+const reducerMap: Partial<VariableActionMapping> = {
+    [InteractiveWindowMessages.RestartKernel]: handleRestarted,
+    [InteractiveWindowMessages.FinishCell]: handleFinishCell,
+    [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: toggleVariableExplorer,
+    [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
+    [InteractiveWindowMessages.GetVariablesResponse]: handleResponse
+};
+
+export function generateVariableReducer(): Reducer<IVariableState, QueuableAction<Partial<VariableActionMapping>>> {
     // First create our default state.
     const defaultState: IVariableState = {
         currentExecutionCount: 0,
@@ -156,5 +162,5 @@ export function generateVariableReducer(): Reducer<IVariableState, QueuableActio
     };
 
     // Then combine that with our map of state change message to reducer
-    return combineReducers<IVariableState, IVariableActionMapping>(defaultState, reducerMap);
+    return combineReducers<IVariableState, Partial<VariableActionMapping>>(defaultState, reducerMap);
 }
