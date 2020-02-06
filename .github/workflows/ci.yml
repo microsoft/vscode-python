@@ -308,7 +308,7 @@ jobs:
       # Produce JUnit-style log files that will be uploaded after all tests are complete.
       - name: Run Python and IPython unit tests
         run: |
-          python pythonFiles/tests/run_all.py --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
+          python pythonFiles/tests/run_all.py --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
           python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
         if: matrix.tests == 'python-unit'
 
