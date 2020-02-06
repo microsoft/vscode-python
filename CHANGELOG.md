@@ -47,6 +47,8 @@
 
 ### Fixes
 
+1. Make sure to clear variable list on restart kernel.
+   ([#9740](https://github.com/Microsoft/vscode-python/issues/9740))
 1. Removed unnecessary warning when executing cells that use Scrapbook,
    Fix an html crash when using not supported mime types
    ([#9796](https://github.com/microsoft/vscode-python/issues/9796))
