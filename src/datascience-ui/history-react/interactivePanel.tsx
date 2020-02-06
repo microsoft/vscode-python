@@ -305,7 +305,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     };
 
     private handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        window.console.log(`Internal scroll count : ${this.internalScrollCount}`);
         if (this.internalScrollCount > 0) {
             this.internalScrollCount -= 1;
         } else {
