@@ -46,7 +46,8 @@
    ([#9701](https://github.com/Microsoft/vscode-python/issues/9701))
 
 ### Fixes
-
+1. Correct the server and kernel text for when not connected to a server.
+   ([#9933](https://github.com/Microsoft/vscode-python/issues/9933))
 1. Make sure to clear variable list on restart kernel.
    ([#9740](https://github.com/Microsoft/vscode-python/issues/9740))
 1. Use the autoStart server when available.
