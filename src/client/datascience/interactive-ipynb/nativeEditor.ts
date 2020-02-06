@@ -84,6 +84,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private metadataUpdatedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private loadedPromise: Deferred<void> = createDeferred<void>();
+    private contentsLoadedPromise: Deferred<void> = createDeferred<void>();
     private _file: Uri = Uri.file('');
     private _dirty: boolean = false;
     private isPromptingToSaveToDisc: boolean = false;
@@ -299,6 +300,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     public async getNotebookOptions(): Promise<INotebookServerOptions> {
         const options = await this.ipynbProvider.getNotebookOptions();
+        await this.contentsLoadedPromise.promise;
         const metadata = this.notebookJson.metadata;
         return {
             ...options,
@@ -587,6 +589,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (json) {
             this.notebookJson = json;
         }
+        this.contentsLoadedPromise.resolve();
 
         // Extract cells from the json
         const cells = contents ? (json.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[]) : [];

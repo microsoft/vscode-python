@@ -81,7 +81,7 @@ export interface INotebookCompletion {
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
     readonly id: string;
-    createNotebook(resource: Uri, cancelToken?: CancellationToken): Promise<INotebook>;
+    createNotebook(resource: Uri, notebookMetadata?: nbformat.INotebookMetadata, cancelToken?: CancellationToken): Promise<INotebook>;
     getNotebook(resource: Uri): Promise<INotebook | undefined>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
     getConnectionInfo(): IConnection | undefined;

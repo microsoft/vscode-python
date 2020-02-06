@@ -972,9 +972,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async ensureNotebookImpl(server: INotebookServer): Promise<void> {
         // Create a new notebook if we need to.
         if (!this._notebook) {
-            this._notebook = await server.createNotebook(await this.getNotebookIdentity());
+            const [uri, options] = await Promise.all([this.getNotebookIdentity(), this.getNotebookOptions()]);
+            this._notebook = await server.createNotebook(uri, options.metadata);
             if (this._notebook) {
-                const uri: Uri = await this.getNotebookIdentity();
                 this.postMessage(InteractiveWindowMessages.NotebookExecutionActivated, uri.toString()).ignoreErrors();
 
                 const statusChangeHandler = async (status: ServerStatus) => {
