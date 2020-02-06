@@ -209,7 +209,7 @@ jobs:
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
-        if: ! steps.out-cache.outputs.cache-hit
+        if: !steps.out-cache.outputs.cache-hit
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v1
