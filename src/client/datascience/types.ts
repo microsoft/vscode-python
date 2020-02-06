@@ -735,6 +735,7 @@ export interface INotebookModel {
     readonly cells: ICell[];
     getJson(): Promise<Partial<nbformat.INotebookContent>>;
     getContent(cells?: ICell[]): Promise<string>;
+    update(change: NotebookModelChange): void;
 }
 
 export const INotebookStorage = Symbol('INotebookStorage');
@@ -743,5 +744,4 @@ export interface INotebookStorage {
     load(file: Uri, contents?: string): Promise<INotebookModel>;
     save(): Promise<INotebookModel>;
     saveAs(file: Uri): Promise<INotebookModel>;
-    update(change: NotebookModelChange): void;
 }

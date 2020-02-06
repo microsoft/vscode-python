@@ -9,7 +9,6 @@ import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, ConfigurationTarget, EventEmitter, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
 
-import { ICommandNameArgumentTypeMapping } from '../../../client/common/application/commands';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { IDocumentManager, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
 import { WebPanel } from '../../../client/common/application/webPanels/webPanel';
@@ -21,7 +20,6 @@ import { CryptoUtils } from '../../../client/common/crypto';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ICryptoUtils, IDisposable, IExtensionContext } from '../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
-import { Commands } from '../../../client/datascience/constants';
 import { IEditorContentChange, InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -30,7 +28,6 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { MockMemento } from '../../mocks/mementos';
-import { MockCommandManager } from '../mockCommandManager';
 
 // tslint:disable: no-any chai-vague-errors no-unused-expression
 class MockWorkspaceConfiguration implements WorkspaceConfiguration {
@@ -67,7 +64,6 @@ suite('Data Science - Native Editor Storage', () => {
     let configService: IConfigurationService;
     let fileSystem: typemoq.IMock<IFileSystem>;
     let docManager: IDocumentManager;
-    let cmdManager: MockCommandManager;
     let interpreterService: IInterpreterService;
     let webPanelProvider: IWebPanelProvider;
     let executionProvider: IJupyterExecution;
@@ -261,7 +257,6 @@ suite('Data Science - Native Editor Storage', () => {
         configService = mock(ConfigurationService);
         fileSystem = typemoq.Mock.ofType<IFileSystem>();
         docManager = mock(DocumentManager);
-        cmdManager = new MockCommandManager();
         workspace = mock(WorkspaceService);
         interpreterService = mock(InterpreterService);
         webPanelProvider = mock(WebPanelProvider);
@@ -328,14 +323,12 @@ suite('Data Science - Native Editor Storage', () => {
             });
 
         storage = new NativeEditorStorage(
-            disposables,
             instance(executionProvider),
             fileSystem.object, // Use typemoq so can save values in returns
             instance(crypto),
             context.object,
             globalMemento,
-            localMemento,
-            cmdManager
+            localMemento
         );
     });
 
@@ -346,20 +339,18 @@ suite('Data Science - Native Editor Storage', () => {
     });
 
     function insertCell(index: number, code: string) {
-        return executeCommand(Commands.NotebookModel_Update, baseUri, {
+        return storage.update({
             source: 'user',
             kind: 'insert',
             oldDirty: storage.isDirty,
             newDirty: true,
             cell: createEmptyCell(code, 1),
-            index,
-            fullText: code,
-            currentText: code
+            index
         });
     }
 
     function swapCells(first: string, second: string) {
-        return executeCommand(Commands.NotebookModel_Update, baseUri, {
+        return storage.update({
             source: 'user',
             kind: 'swap',
             oldDirty: storage.isDirty,
@@ -370,7 +361,7 @@ suite('Data Science - Native Editor Storage', () => {
     }
 
     function editCell(changes: IEditorContentChange[], cell: ICell, _newCode: string) {
-        return executeCommand(Commands.NotebookModel_Update, baseUri, {
+        return storage.update({
             source: 'user',
             kind: 'edit',
             oldDirty: storage.isDirty,
@@ -382,7 +373,7 @@ suite('Data Science - Native Editor Storage', () => {
     }
 
     function removeCell(index: number, cell: ICell) {
-        return executeCommand(Commands.NotebookModel_Update, baseUri, {
+        return storage.update({
             source: 'user',
             kind: 'remove',
             oldDirty: storage.isDirty,
@@ -393,7 +384,7 @@ suite('Data Science - Native Editor Storage', () => {
     }
 
     function deleteAllCells() {
-        return executeCommand(Commands.NotebookModel_Update, baseUri, {
+        return storage.update({
             source: 'user',
             kind: 'remove_all',
             oldDirty: storage.isDirty,
@@ -403,13 +394,9 @@ suite('Data Science - Native Editor Storage', () => {
         });
     }
 
-    function executeCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, ...rest: U) {
-        return cmdManager.executeCommand(command, ...rest);
-    }
-
     test('Create new editor and add some cells', async () => {
         await storage.load(baseUri);
-        await insertCell(0, '1');
+        insertCell(0, '1');
         const cells = storage.cells;
         expect(cells).to.be.lengthOf(4);
         expect(storage.isDirty).to.be.equal(true, 'Editor should be dirty');
@@ -418,7 +405,7 @@ suite('Data Science - Native Editor Storage', () => {
 
     test('Move cells around', async () => {
         await storage.load(baseUri);
-        await swapCells('NotebookImport#0', 'NotebookImport#1');
+        swapCells('NotebookImport#0', 'NotebookImport#1');
         const cells = storage.cells;
         expect(cells).to.be.lengthOf(3);
         expect(storage.isDirty).to.be.equal(true, 'Editor should be dirty');
@@ -428,7 +415,7 @@ suite('Data Science - Native Editor Storage', () => {
     test('Edit/delete cells', async () => {
         await storage.load(baseUri);
         expect(storage.isDirty).to.be.equal(false, 'Editor should not be dirty');
-        await editCell(
+        editCell(
             [
                 {
                     range: {
@@ -454,11 +441,11 @@ suite('Data Science - Native Editor Storage', () => {
         expect(cells[1].id).to.be.match(/NotebookImport#1/);
         expect(cells[1].data.source).to.be.equals('b=2\nab');
         expect(storage.isDirty).to.be.equal(true, 'Editor should be dirty');
-        await removeCell(0, cells[0]);
+        removeCell(0, cells[0]);
         cells = storage.cells;
         expect(cells).to.be.lengthOf(2);
         expect(cells[0].id).to.be.match(/NotebookImport#1/);
-        await deleteAllCells();
+        deleteAllCells();
         cells = storage.cells;
         expect(cells).to.be.lengthOf(1);
     });

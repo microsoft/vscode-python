@@ -19,7 +19,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Commands, EditorContexts, Identifiers, NativeKeyboardCommandTelemetryLookup, NativeMouseCommandTelemetryLookup, Telemetry } from '../constants';
+import { EditorContexts, Identifiers, NativeKeyboardCommandTelemetryLookup, NativeMouseCommandTelemetryLookup, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import { INativeCommand, InteractiveWindowMessages, ISaveAll, ISubmitNewCell, NotebookModelChange, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
 import { ProgressReporter } from '../progress/progressReporter';
@@ -339,7 +339,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const modified = filtered.filter(c => c.state === CellState.finished || c.state === CellState.error);
         const unmodified = this._model?.cells.filter(c => modified.find(m => m.id === c.id));
         if (modified.length > 0 && unmodified && this._model) {
-            await this.commandManager.executeCommand(Commands.NotebookModel_Update, this.file, {
+            this._model.update({
                 source: 'user',
                 kind: 'modify',
                 newCells: modified,
@@ -354,7 +354,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (notebook && this._model) {
             const interpreter = notebook.getMatchingInterpreter();
             const kernelSpec = notebook.getKernelSpec();
-            this.commandManager.executeCommand(Commands.NotebookModel_Update, this.file, {
+            this._model.update({
                 source: 'user',
                 kind: 'version',
                 oldDirty: this._model.isDirty,
@@ -424,7 +424,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private updateModel(change: NotebookModelChange) {
         // Send to our model using a command. User has done something that changes the model
         if (change.source === 'user' && this._model) {
-            this.commandManager.executeCommand(Commands.NotebookModel_Update, this.file, change);
+            // Note, originally this was posted with a command but sometimes had problems
+            // with commands being handled out of order.
+            this._model.update(change);
         }
     }
 

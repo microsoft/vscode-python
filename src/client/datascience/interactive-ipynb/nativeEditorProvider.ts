@@ -79,14 +79,14 @@ export class NativeEditorProvider implements INotebookEditorProvider, WebviewCus
         return this._editEventEmitter.event;
     }
     public applyEdits(resource: Uri, edits: readonly NotebookModelChange[]): Thenable<void> {
-        return this.loadStorage(resource).then(s => {
+        return this.loadModel(resource).then(s => {
             if (s) {
                 edits.forEach(e => s.update({ ...e, source: 'redo' }));
             }
         });
     }
     public undoEdits(resource: Uri, edits: readonly NotebookModelChange[]): Thenable<void> {
-        return this.loadStorage(resource).then(s => {
+        return this.loadModel(resource).then(s => {
             if (s) {
                 edits.forEach(e => s.update({ ...e, source: 'undo' }));
             }

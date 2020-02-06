@@ -5,13 +5,12 @@ import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Memento, Uri } from 'vscode';
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
-import { ICommandManager } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { GLOBAL_MEMENTO, ICryptoUtils, IDisposable, IDisposableRegistry, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
+import { GLOBAL_MEMENTO, ICryptoUtils, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { PythonInterpreter } from '../../interpreter/contracts';
-import { Commands, Identifiers } from '../constants';
+import { Identifiers } from '../constants';
 import { IEditorContentChange, NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { LiveKernelModel } from '../jupyter/kernels/types';
@@ -31,7 +30,7 @@ interface INativeEditorStorageState {
 }
 
 @injectable()
-export class NativeEditorStorage implements INotebookModel, INotebookStorage, IDisposable {
+export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     public get isDirty(): boolean {
         return this._state.isDirty;
     }
@@ -48,43 +47,19 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
     public get cells(): ICell[] {
         return this._state.cells;
     }
-    private static signedUpForCommands = false;
-
-    private static storageMap = new Map<string, NativeEditorStorage>();
     private _changedEmitter = new EventEmitter<NotebookModelChange>();
     private _state: INativeEditorStorageState = { file: Uri.file(''), isDirty: false, cells: [], notebookJson: {} };
     private _loadPromise: Promise<ICell[]> | undefined;
     private indentAmount: string = ' ';
 
     constructor(
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(ICryptoUtils) private crypto: ICryptoUtils,
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
-        @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
-        @inject(ICommandManager) cmdManager: ICommandManager
-    ) {
-        // Sign up for commands if this is the first storage created.
-        if (!NativeEditorStorage.signedUpForCommands) {
-            this.registerCommands(cmdManager, disposables);
-        }
-        disposables.push(this);
-    }
-
-    private static async getStorage(resource: Uri): Promise<NativeEditorStorage | undefined> {
-        const storage = NativeEditorStorage.storageMap.get(resource.toString());
-        if (storage && storage._loadPromise) {
-            await storage._loadPromise;
-            return storage;
-        }
-        return undefined;
-    }
-
-    public dispose(): void {
-        NativeEditorStorage.storageMap.delete(this.file.toString());
-    }
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento
+    ) {}
 
     public async load(file: Uri, possibleContents?: string): Promise<INotebookModel> {
         // Reset the load promise and reload our cells
@@ -171,8 +146,6 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
             case 'file':
                 this._state.file = change.newFile;
                 this._state.isDirty = false;
-                NativeEditorStorage.storageMap.delete(change.oldFile.toString());
-                NativeEditorStorage.storageMap.set(change.newFile.toString(), this);
 
                 // Special case for file, don't set dirty (as we're saving), but still
                 // indicate changed.
@@ -194,7 +167,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
                 changed = true;
                 break;
             case 'edit':
-                changed = this.editCell(change.reverse, change.id);
+                this.editCell(change.reverse, change.id);
+                changed = true;
                 break;
             case 'insert':
                 changed = this.removeCell(change.cell);
@@ -211,9 +185,6 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
                 break;
             case 'swap':
                 changed = this.swapCells(change.firstCellId, change.secondCellId);
-                break;
-            case 'version':
-                // Not supporting undo
                 break;
             default:
                 break;
@@ -321,28 +292,9 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage, ID
         return cell as ICell;
     }
 
-    private registerCommands(commandManager: ICommandManager, disposableRegistry: IDisposableRegistry): void {
-        NativeEditorStorage.signedUpForCommands = true;
-        disposableRegistry.push({
-            dispose: () => {
-                NativeEditorStorage.signedUpForCommands = false;
-            }
-        });
-        disposableRegistry.push(
-            commandManager.registerCommand(Commands.NotebookModel_Update, async (resource: Uri, change: NotebookModelChange) => {
-                // Find the appropriate storage object and call into it
-                const storage = await NativeEditorStorage.getStorage(resource);
-                if (storage) {
-                    return storage.handleModelChange(change);
-                }
-            })
-        );
-    }
-
     private async loadFromFile(file: Uri, possibleContents?: string): Promise<ICell[]> {
         // Save file
         this._state.file = file;
-        NativeEditorStorage.storageMap.set(file.toString(), this);
 
         try {
             // Attempt to read the contents if a viable file

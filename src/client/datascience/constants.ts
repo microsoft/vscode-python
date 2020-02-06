@@ -62,7 +62,6 @@ export namespace Commands {
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
     export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';
-    export const NotebookModel_Update = 'python.datascience.notebook.update';
 }
 
 export namespace CodeLensCommands {
