@@ -388,18 +388,22 @@ jobs:
         run: npx gulp prePublishNonBundle
         if: steps.out-cache.outputs.cache-hit == false
 
+      # Use the GITHUB_RUN_ID environment variable to update the build number.
+      # GITHUB_RUN_ID is a unique number for each run within a repository.
+      # This number does not change if you re-run the workflow run.
       - name: Run Smoke tests
         env:
           DISPLAY: 10
-        # Use the GITHUB_RUN_ID environment variable to update the build number
-        run: |
-          npm run clean
-          npx tsc -p ./
-          npx gulp clean:cleanExceptTests
-          mkdir -p ./tmp
-          cp -r ./out/test ./tmp/test
-          npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
-          npm run package
-          npx gulp clean:cleanExceptTests
-          cp -r ./tmp/test ./out/test
-          node ./out/test/smokeTest.js
+        uses: GabrielBB/xvfb-action@v1.0
+        with:
+          run: |
+            npm run clean
+            npx tsc -p ./
+            npx gulp clean:cleanExceptTests
+            mkdir -p ./tmp
+            cp -r ./out/test ./tmp/test
+            npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
+            npm run package
+            npx gulp clean:cleanExceptTests
+            cp -r ./tmp/test ./out/test
+            node ./out/test/smokeTest.js
