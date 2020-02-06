@@ -18,6 +18,7 @@ import { IProcessService, IProcessServiceFactory } from '../../../client/common/
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalHelper } from '../../../client/common/terminal/types';
 import { ICurrentProcess } from '../../../client/common/types';
+import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
@@ -26,7 +27,6 @@ import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
-import { clearCache } from '../../../client/common/utils/cacheUtils';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const defaultShells = {
