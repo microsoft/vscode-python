@@ -267,7 +267,7 @@ gulp.task('installPythonRequirements', async () => {
         '-r',
         './requirements.txt'
     ];
-    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
         .then(() => true)
         .catch(ex => {
             console.error("Failed to install Python Libs using 'python3'", ex);
@@ -283,7 +283,7 @@ gulp.task('installPythonRequirements', async () => {
 gulp.task('installNewPtvsd', async () => {
     // Install dependencies needed for 'install_ptvsd.py'
     const depsArgs = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/temp', '-r', './build/debugger-install-requirements.txt'];
-    const successWithWheelsDeps = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', depsArgs)
+    const successWithWheelsDeps = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', depsArgs, undefined, true)
         .then(() => true)
         .catch(ex => {
             console.error("Failed to install new PTVSD wheels using 'python3'", ex);
@@ -297,7 +297,7 @@ gulp.task('installNewPtvsd', async () => {
     // Install new PTVSD with wheels for python 3.7
     const wheelsArgs = ['./pythonFiles/install_ptvsd.py'];
     const wheelsEnv = { PYTHONPATH: './pythonFiles/lib/temp' };
-    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', wheelsArgs, wheelsEnv)
+    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', wheelsArgs, wheelsEnv, true)
         .then(() => true)
         .catch(ex => {
             console.error("Failed to install new PTVSD wheels using 'python3'", ex);
@@ -326,7 +326,7 @@ gulp.task('installNewPtvsd', async () => {
         '--pre',
         'ptvsd'
     ];
-    const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+    const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
         .then(() => true)
         .catch(ex => {
             console.error("Failed to install PTVSD using 'python3'", ex);
@@ -356,7 +356,7 @@ gulp.task('installOldPtvsd', async () => {
         '--upgrade',
         'ptvsd==4.3.2'
     ];
-    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
         .then(() => true)
         .catch(ex => {
             console.error("Failed to install PTVSD using 'python3'", ex);
@@ -388,7 +388,7 @@ function uploadExtension(uploadBlobName) {
 gulp.task('uploadDeveloperExtension', () => uploadExtension('ms-python-insiders.vsix'));
 gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH || process.env.BUILD_SOURCEBRANCHNAME}.vsix`));
 
-function spawnAsync(command, args, env) {
+function spawnAsync(command, args, env, rejectOnStdErr = false) {
     env = env || {};
     env = { ...process.env, ...env };
     return new Promise((resolve, reject) => {
@@ -402,7 +402,12 @@ function spawnAsync(command, args, env) {
                 console.log(data.toString());
             }
         });
-        proc.stderr.on('data', data => console.error(data.toString()));
+        proc.stderr.on('data', data => {
+            console.error(data.toString());
+            if (rejectOnStdErr) {
+                reject(data.toString());
+            }
+        });
         proc.on('close', () => resolve(stdOut));
         proc.on('error', error => reject(error));
     });

@@ -21,6 +21,7 @@ jobs:
   python-deps:
     name: Install Python Requirements
     runs-on: ubuntu-latest
+    if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -61,11 +62,11 @@ jobs:
         with:
           path: ./pythonFiles/lib/python
           key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
-    # if: github.repository == 'microsoft/vscode-python'
 
   js-ts-deps:
     name: Install npm dependencies
     runs-on: ubuntu-latest
+    if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -84,6 +85,7 @@ jobs:
   compile-hygiene:
     name: Compile, lint, check for errors
     runs-on: ubuntu-latest
+    if: github.repository == 'microsoft/vscode-python'
     needs: [js-ts-deps, python-deps]
     steps:
       - name: Checkout
@@ -134,6 +136,7 @@ jobs:
   build-vsix:
     name: Build VSIX
     runs-on: ubuntu-latest
+    if: github.repository == 'microsoft/vscode-python'
     needs: [python-deps, js-ts-deps]
     steps:
       - name: Checkout
@@ -167,25 +170,22 @@ jobs:
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
           path: ms-python-insiders.vsix
-    if: github.repository == 'microsoft/vscode-python'
 
   ### Non-smoke tests
   tests:
     name: Tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
-    needs: [python-deps, js-ts-deps]
     if: github.repository == 'microsoft/vscode-python'
+    needs: [python-deps, js-ts-deps]
     strategy:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
         os: [ubuntu-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        # python: [2.7, 3.8]
-        python: [3.8]
-        # test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
-        test-suite: [ts-unit, python-unit, venv, single-workspace]
+        python: [2.7, 3.8]
+        test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -225,7 +225,7 @@ jobs:
         id: pythonFiles-cache
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements')}}-${{hashFiles('ptvsd.json')}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
 
       - name: Install Python requirements if not cached
         run: |
@@ -312,7 +312,7 @@ jobs:
       - name: Run Python and IPython unit tests
         run: |
           python pythonFiles/tests/run_all.py --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
-          python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
+          python -m IPython pythonFiles/tests/run_all.py -- --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
         if: matrix.test-suite == 'python-unit'
 
       # The virtual environment based tests use the `testSingleWorkspace` set of tests

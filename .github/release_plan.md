@@ -34,7 +34,6 @@
    - [ ] Create a pull request against `master` (🤖)
    - [ ] Merge pull request into `master`
 - [ ] Update the [`release` branch](https://github.com/microsoft/vscode-python/branches)
-   - [ ] (if necessary) Request from a repo admin that the branch be un-"protected"
    - [ ] Delete the `release` branch in the repo
    - [ ] Create a new `release` branch from `master`
    - (alternately, force-push the master branch to the GitHub "release" branch)

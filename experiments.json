@@ -82,12 +82,12 @@
         "name": "UseTerminalToGetActivatedEnvVars - experiment",
         "salt": "UseTerminalToGetActivatedEnvVars",
         "min": 0,
-        "max": 20
+        "max": 0
     },
     {
         "name": "UseTerminalToGetActivatedEnvVars - control",
         "salt": "UseTerminalToGetActivatedEnvVars",
-        "min": 20,
+        "min": 0,
         "max": 100
     },
     {

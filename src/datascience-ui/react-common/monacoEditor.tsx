@@ -5,6 +5,7 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
+import { isTestExecution } from '../../client/common/constants';
 import { IDisposable } from '../../client/common/types';
 import { logMessage } from './logger';
 
@@ -393,6 +394,10 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     }
 
     private scrollToCurrentPosition(_editor: monacoEditor.editor.IStandaloneCodeEditor) {
+        // Unfortunately during functional tests we hack the line count and the like.
+        if (isTestExecution()) {
+            return;
+        }
         // Scroll to the visible line that has our current line. Note: Visible lines are not sorted by monaco
         // so we have to retrieve the current line's index (not its visible position)
         const visibleLineDivs = this.getVisibleLines();

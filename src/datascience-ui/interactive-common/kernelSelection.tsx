@@ -41,9 +41,7 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
         const displayNameTextWidth: React.CSSProperties = {
             maxWidth: this.getMaxWidth(displayNameTextSize)
         };
-        const kernelSelectionClass = this.isKernelSelectionAllowed
-            ? 'kernel-status-section kernel-status-section-hoverable kernel-status-status'
-            : 'kernel-status-section kernel-status-status';
+
         return (
             <div className="kernel-status" style={dynamicFont}>
                 <div className="kernel-status-section kernel-status-server" style={serverTextWidth} role="button">
@@ -53,19 +51,34 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
                     <Image baseTheme={this.props.baseTheme} class="image-button-image kernel-status-icon" image={this.getIcon()} />
                 </div>
                 <div className="kernel-status-divider" />
-                <div className={kernelSelectionClass} style={displayNameTextWidth} onClick={this.selectKernel} role="button">
-                    {this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}
-                </div>
+                {this.renderKernelStatus(displayNameTextWidth)}
             </div>
         );
     }
+
+    private renderKernelStatus(displayNameTextWidth: React.CSSProperties) {
+        if (this.isKernelSelectionAllowed) {
+            return (
+                <div className="kernel-status-section kernel-status-section-hoverable kernel-status-status" style={displayNameTextWidth} onClick={this.selectKernel} role="button">
+                    {this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}
+                </div>
+            );
+        } else {
+            return (
+                <div className="kernel-status-section kernel-status-status" style={displayNameTextWidth}>
+                    {getLocString('DataScience.noKernel', 'No Kernel')}
+                </div>
+            );
+        }
+    }
+
     private selectKernel() {
         if (this.isKernelSelectionAllowed) {
             this.props.selectKernel();
         }
     }
     private getIcon(): ImageName {
-        return this.props.kernel.localizedUri === getLocString('DataScience.noKernel', 'No Kernel') ? ImageName.JupyterServerDisconnected : ImageName.JupyterServerConnected;
+        return this.props.kernel.jupyterServerStatus === ServerStatus.NotStarted ? ImageName.JupyterServerDisconnected : ImageName.JupyterServerConnected;
     }
 
     private getMaxWidth(charLenght: number): string {

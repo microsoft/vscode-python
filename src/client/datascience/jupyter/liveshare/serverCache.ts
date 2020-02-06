@@ -17,6 +17,7 @@ interface IServerData {
     options: INotebookServerOptions;
     promise: Promise<INotebookServer | undefined>;
     cancelSource: CancellationTokenSource;
+    resolved: boolean;
 }
 
 export class ServerCache implements IAsyncDisposable {
@@ -43,7 +44,7 @@ export class ServerCache implements IAsyncDisposable {
 
         // See if the old options had the same UI setting. If not,
         // cancel the old
-        if (data && data.options.disableUI !== fixedOptions.disableUI) {
+        if (data && !data.resolved && data.options.disableUI !== fixedOptions.disableUI) {
             traceInfo('Cancelling server create as UI state has changed');
             data.cancelSource.cancel();
             data = undefined;
@@ -55,7 +56,8 @@ export class ServerCache implements IAsyncDisposable {
             data = {
                 promise: createFunction(options, cancelSource.token),
                 options: fixedOptions,
-                cancelSource
+                cancelSource,
+                resolved: false
             };
             this.cache.set(key, data);
         }
@@ -74,6 +76,11 @@ export class ServerCache implements IAsyncDisposable {
                     this.cache.delete(key);
                     return oldDispose();
                 };
+
+                // We've resolved the promise at this point
+                if (data) {
+                    data.resolved = true;
+                }
 
                 return server;
             })

@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -25,6 +26,7 @@ import {
     INotebookServerLaunchInfo
 } from '../../types';
 import { JupyterServerBase } from '../jupyterServer';
+import { KernelSelector } from '../kernels/kernelSelector';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
@@ -46,7 +48,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         private workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[],
         private appService: IApplicationShell,
-        private fs: IFileSystem
+        private fs: IFileSystem,
+        private readonly kernelSelector: KernelSelector
     ) {
         super(liveShare, asyncRegistry, disposableRegistry, configService, sessionManager, loggers);
     }
@@ -86,7 +89,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                     const uri = vscode.Uri.parse(args[0]);
                     const resource = uri.scheme && uri.scheme !== Identifiers.InteractiveWindowIdentityScheme ? this.finishedApi!.convertSharedUriToLocal(uri) : uri;
                     // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
-                    const notebook = (await this.createNotebook(resource, cancellation)) as HostJupyterNotebook;
+                    const notebook = (await this.createNotebook(resource, undefined, cancellation)) as HostJupyterNotebook;
                     await notebook.onAttach(api);
                 });
 
@@ -137,6 +140,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
         loggers: INotebookExecutionLogger[],
+        notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         // See if already exists.
@@ -154,13 +158,36 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         // Otherwise create a new notebook.
 
         // First we need our launch information so we can start a new session (that's what our notebook is really)
-        const launchInfo = await this.waitForConnect();
+        let launchInfo = await this.waitForConnect();
         if (!launchInfo) {
             throw this.getDisposedError();
         }
+        // Create a copy of launch info, cuz we're modifying it here.
+        // This launch info contains the server connection info (that could be shared across other nbs).
+        // However the kernel info is different. The kernel info is stored as a  property of this, hence create a separate instance for each nb.
+        launchInfo = {
+            ...launchInfo
+        };
 
+        // Find a kernel that can be used.
+        // Do this only if kernel information has been provided in the metadata, else use the default.
+        let defaultKernelInfoToUse = launchInfo.kernelSpec;
+        if (notebookMetadata?.kernelspec) {
+            const kernelInfo = await (launchInfo.connectionInfo.localLaunch
+                ? this.kernelSelector.getKernelForLocalConnection(sessionManager, notebookMetadata, false, cancelToken)
+                : this.kernelSelector.getKernelForRemoteConnection(sessionManager, notebookMetadata, cancelToken));
+
+            const kernelInfoToUse = kernelInfo?.kernelSpec || kernelInfo?.kernelModel;
+            if (kernelInfoToUse) {
+                defaultKernelInfoToUse = kernelInfoToUse;
+            }
+            if (possibleSession && kernelInfoToUse) {
+                await possibleSession.changeKernel(kernelInfoToUse, this.configService.getSettings().datascience.jupyterLaunchTimeout);
+            }
+            launchInfo.kernelSpec = defaultKernelInfoToUse;
+        }
         // Start a session (or use the existing one)
-        const session = possibleSession || (await sessionManager.startNew(launchInfo.kernelSpec, cancelToken));
+        const session = possibleSession || (await sessionManager.startNew(defaultKernelInfoToUse, cancelToken));
         traceInfo(`Started session ${this.id}`);
 
         if (session) {
