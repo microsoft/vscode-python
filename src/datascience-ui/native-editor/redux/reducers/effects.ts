@@ -126,12 +126,18 @@ export namespace Effects {
         return arg.prevState;
     }
 
-    export function selectCell(arg: NativeEditorReducerArg<ICellAndCursorAction>): IMainState {
+    /**
+     * Select a cell.
+     *
+     * @param {boolean} [shouldFocusCell] If provided, then will control the focus behavior of the cell. (defaults to focus state of previously selected cell).
+     */
+    export function selectCell(arg: NativeEditorReducerArg<ICellAndCursorAction>, shouldFocusCell?: boolean): IMainState {
         // Skip doing anything if already selected.
         if (arg.payload.cellId !== arg.prevState.selectedCellId) {
             let prevState = arg.prevState;
             const addIndex = prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
-
+            const anotherCellWasFocusedAndSelected = typeof prevState.focusedCellId === 'string' && prevState.focusedCellId === prevState.selectedCellId;
+            const shouldSetFocusToCell = typeof shouldFocusCell === 'boolean' ? shouldFocusCell : anotherCellWasFocusedAndSelected;
             // First find the old focused cell and unfocus it
             let removeFocusIndex = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.prevState.focusedCellId);
             if (removeFocusIndex < 0) {
@@ -149,7 +155,7 @@ export namespace Effects {
             if (addIndex >= 0 && arg.payload.cellId !== prevState.selectedCellId) {
                 newVMs[addIndex] = {
                     ...newVMs[addIndex],
-                    focused: prevState.focusedCellId !== undefined && prevState.focusedCellId === prevState.selectedCellId,
+                    focused: shouldSetFocusToCell,
                     selected: true,
                     cursorPos: arg.payload.cursorPos
                 };
@@ -158,7 +164,7 @@ export namespace Effects {
             return {
                 ...prevState,
                 cellVMs: newVMs,
-                focusedCellId: prevState.focusedCellId !== undefined ? arg.payload.cellId : undefined,
+                focusedCellId: shouldSetFocusToCell ? arg.payload.cellId : undefined,
                 selectedCellId: arg.payload.cellId
             };
         }

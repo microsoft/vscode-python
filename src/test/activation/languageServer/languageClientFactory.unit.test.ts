@@ -12,8 +12,12 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
-import { BaseLanguageClientFactory, DownloadedLanguageClientFactory, SimpleLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
-import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import {
+    DotNetDownloadedLanguageClientFactory,
+    DotNetLanguageClientFactory,
+    DotNetSimpleLanguageClientFactory
+} from '../../../client/activation/languageServer/languageClientFactory';
+import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { PlatformData } from '../../../client/activation/languageServer/platformData';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
@@ -38,16 +42,18 @@ suite('Language Server - LanguageClient Factory', () => {
     });
 
     test('Download factory is used when required to download the LS', async () => {
-        const downloadFactory = mock(DownloadedLanguageClientFactory);
-        const simpleFactory = mock(SimpleLanguageClientFactory);
+        const downloadFactory = mock(DotNetDownloadedLanguageClientFactory);
+        const simpleFactory = mock(DotNetSimpleLanguageClientFactory);
         const envVarProvider = mock(EnvironmentVariablesProvider);
         const activationService = mock(EnvironmentActivationService);
-        const factory = new BaseLanguageClientFactory(
-            instance(downloadFactory),
-            instance(simpleFactory),
+        const factory = new DotNetLanguageClientFactory(
             instance(configurationService),
             instance(envVarProvider),
-            instance(activationService)
+            instance(activationService),
+            undefined as any,
+            undefined as any,
+            instance(downloadFactory),
+            instance(simpleFactory)
         );
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
@@ -63,16 +69,18 @@ suite('Language Server - LanguageClient Factory', () => {
         verify(simpleFactory.createLanguageClient(uri, undefined, options, env)).never();
     });
     test('Simple factory is used when not required to download the LS', async () => {
-        const downloadFactory = mock(DownloadedLanguageClientFactory);
-        const simpleFactory = mock(SimpleLanguageClientFactory);
+        const downloadFactory = mock(DotNetDownloadedLanguageClientFactory);
+        const simpleFactory = mock(DotNetSimpleLanguageClientFactory);
         const envVarProvider = mock(EnvironmentVariablesProvider);
         const activationService = mock(EnvironmentActivationService);
-        const factory = new BaseLanguageClientFactory(
-            instance(downloadFactory),
-            instance(simpleFactory),
+        const factory = new DotNetLanguageClientFactory(
             instance(configurationService),
             instance(envVarProvider),
-            instance(activationService)
+            instance(activationService),
+            undefined as any,
+            undefined as any,
+            instance(downloadFactory),
+            instance(simpleFactory)
         );
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
@@ -89,8 +97,8 @@ suite('Language Server - LanguageClient Factory', () => {
     });
     test('Download factory will make use of the language server folder name and client will be created', async () => {
         const platformData = mock(PlatformData);
-        const lsFolderService = mock(LanguageServerFolderService);
-        const factory = new DownloadedLanguageClientFactory(instance(platformData), instance(lsFolderService));
+        const lsFolderService = mock(DotNetLanguageServerFolderService);
+        const factory = new DotNetDownloadedLanguageClientFactory(instance(platformData), instance(lsFolderService));
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
         const languageServerFolder = 'some folder name';
@@ -125,8 +133,8 @@ suite('Language Server - LanguageClient Factory', () => {
     });
     test('Simple factory will make use of the language server folder name and client will be created', async () => {
         const platformData = mock(PlatformData);
-        const lsFolderService = mock(LanguageServerFolderService);
-        const factory = new SimpleLanguageClientFactory(instance(platformData), instance(lsFolderService));
+        const lsFolderService = mock(DotNetLanguageServerFolderService);
+        const factory = new DotNetSimpleLanguageClientFactory(instance(platformData), instance(lsFolderService));
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
         const languageServerFolder = 'some folder name';

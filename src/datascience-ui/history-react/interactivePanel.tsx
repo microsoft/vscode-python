@@ -216,6 +216,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                         monacoTheme={this.props.monacoTheme}
                         font={this.props.font}
                         settings={this.props.settings}
+                        focusPending={this.props.activateCount}
                     />
                 </ErrorBoundary>
             </div>
@@ -279,6 +280,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                             monacoTheme={this.props.monacoTheme}
                             font={this.props.font}
                             settings={this.props.settings}
+                            focusPending={this.props.activateCount}
                         />
                     </ErrorBoundary>
                 </div>

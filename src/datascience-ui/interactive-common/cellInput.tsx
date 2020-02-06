@@ -26,6 +26,7 @@ interface ICellInputProps {
     editorMeasureClassName?: string;
     showLineNumbers?: boolean;
     font: IFont;
+    focusPending: number;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
     onCodeCreated(code: string, file: string, cellId: string, modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -110,6 +111,7 @@ export class CellInput extends React.Component<ICellInputProps> {
                         showLineNumbers={this.props.showLineNumbers}
                         useQuickEdit={this.props.cellVM.useQuickEdit}
                         font={this.props.font}
+                        focusPending={this.props.focusPending}
                     />
                 </div>
             );

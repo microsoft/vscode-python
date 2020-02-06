@@ -46,24 +46,24 @@
         "name": "PtvsdWheels37 - control",
         "salt": "DebugAdapterFactory",
         "min": 0,
-        "max": 20
+        "max": 50
     },
     {
         "name": "PtvsdWheels37 - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 80,
+        "min": 50,
         "max": 100
     },
     {
         "name": "Reload - control",
         "salt": "DebugAdapterFactory",
-        "min": 80,
-        "max": 83
+        "min": 50,
+        "max": 60
     },
     {
         "name": "Reload - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 97,
+        "min": 90,
         "max": 100
     },
     {
@@ -79,15 +79,15 @@
         "max": 24
     },
     {
-        "name": "UseTerminalToGetActivatedEnvVars - enabled",
+        "name": "UseTerminalToGetActivatedEnvVars - experiment",
         "salt": "UseTerminalToGetActivatedEnvVars",
         "min": 0,
-        "max": 20
+        "max": 0
     },
     {
         "name": "UseTerminalToGetActivatedEnvVars - control",
         "salt": "UseTerminalToGetActivatedEnvVars",
-        "min": 20,
+        "min": 0,
         "max": 100
     },
     {
@@ -105,13 +105,13 @@
     {
         "name": "WebHostNotebook - experiment",
         "salt": "WebHostNotebook",
-        "max": 20,
+        "max": 0,
         "min": 0
     },
     {
         "name": "WebHostNotebook - control",
         "salt": "WebHostNotebook",
-        "min": 80,
+        "min": 0,
         "max": 100
     }
 ]

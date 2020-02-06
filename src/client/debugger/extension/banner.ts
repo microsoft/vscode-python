@@ -7,7 +7,8 @@ import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import '../../common/extensions';
-import { IBrowserService, IDisposableRegistry, ILogger, IPersistentStateFactory, IRandom } from '../../common/types';
+import { traceError } from '../../common/logger';
+import { IBrowserService, IDisposableRegistry, IPersistentStateFactory, IRandom } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { DebuggerTypeName } from '../constants';
 import { IDebuggerBanner } from './types';
@@ -161,8 +162,7 @@ export class DebuggerBanner implements IDebuggerBanner {
         const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
         const disposable = debuggerService.onDidTerminateDebugSession(async e => {
             if (e.type === DebuggerTypeName) {
-                const logger = this.serviceContainer.get<ILogger>(ILogger);
-                await this.onDidTerminateDebugSession().catch(ex => logger.logError('Error in debugger Banner', ex));
+                await this.onDidTerminateDebugSession().catch(ex => traceError('Error in debugger Banner', ex));
             }
         });
         this.serviceContainer.get<Disposable[]>(IDisposableRegistry).push(disposable);

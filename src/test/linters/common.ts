@@ -14,7 +14,6 @@ import {
     Flake8CategorySeverity,
     IConfigurationService,
     IInstaller,
-    ILogger,
     IMypyCategorySeverity,
     IOutputChannel,
     IPycodestyleCategorySeverity,
@@ -172,7 +171,6 @@ export class BaseTestFixture {
 
     // services
     public workspaceService: TypeMoq.IMock<IWorkspaceService>;
-    public logger: TypeMoq.IMock<ILogger>;
     public installer: TypeMoq.IMock<IInstaller>;
     public appShell: TypeMoq.IMock<IApplicationShell>;
 
@@ -204,13 +202,11 @@ export class BaseTestFixture {
         // services
 
         this.workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
-        this.logger = TypeMoq.Mock.ofType<ILogger>(undefined, TypeMoq.MockBehavior.Strict);
         this.installer = TypeMoq.Mock.ofType<IInstaller>(undefined, TypeMoq.MockBehavior.Strict);
         this.appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
 
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => filesystem);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny())).returns(() => this.workspaceService.object);
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => this.logger.object);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny())).returns(() => this.installer.object);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonToolExecutionService), TypeMoq.It.isAny())).returns(() => pythonToolExecService);
@@ -273,17 +269,6 @@ export class BaseTestFixture {
         const workspaceFolder = TypeMoq.Mock.ofType<WorkspaceFolder>(undefined, TypeMoq.MockBehavior.Strict);
         workspaceFolder.setup(f => f.uri).returns(() => Uri.file(this.workspaceDir));
         this.workspaceService.setup(s => s.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
-
-        this.logger
-            .setup(l => l.logError(TypeMoq.It.isAny()))
-            .callback(msg => {
-                this.logged.push(msg);
-                if (this.printLogs) {
-                    // tslint:disable-next-line:no-console
-                    console.log(msg);
-                }
-            })
-            .returns(() => undefined);
 
         this.appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
     }

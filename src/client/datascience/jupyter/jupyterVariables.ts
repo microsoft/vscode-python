@@ -23,11 +23,11 @@ import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 
 // Regexes for parsing data from Python kernel. Not sure yet if other
 // kernels will add the ansi encoding.
-const TypeRegex = /\u001b\[1;31mType:\u001b\[0m\s+(\w+)/;
-const ValueRegex = /\u001b\[1;31mValue:\u001b\[0m\s+(.*)/;
-const StringFormRegex = /\u001b\[1;31mString form:\u001b\[0m\s+([\s\S]+?)\n\u001b\[1/;
-const DocStringRegex = /\u001b\[1;31mDocstring:\u001b\[0m\s+(.*)/;
-const CountRegex = /\u001b\[1;31mLength:\u001b\[0m\s+(.*)/;
+const TypeRegex = /.*?\[.*?;31mType:.*?\[0m\s+(\w+)/;
+const ValueRegex = /.*?\[.*?;31mValue:.*?\[0m\s+(.*)/;
+const StringFormRegex = /.*?\[.*?;31mString form:.*?\[0m\s+([\s\S]+?)\n.*?\[.*?/;
+const DocStringRegex = /.*?\[.*?;31mDocstring:.*?\[0m\s+(.*)/;
+const CountRegex = /.*?\[.*?;31mLength:.*?\[0m\s+(.*)/;
 const ShapeRegex = /^\s+\[(\d+) rows x (\d+) columns\]/m;
 
 const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'np.array', 'Series']);
@@ -99,7 +99,7 @@ export class JupyterVariables implements IJupyterVariables {
         }
 
         // Prep our targetVariable to send over
-        const variableString = JSON.stringify(targetVariable).replace('\\n', '\\\\n');
+        const variableString = JSON.stringify(targetVariable).replace(/\\n/g, '\\\\n');
 
         // Setup a regex
         const regexPattern = extraReplacements.length === 0 ? '_VSCode_JupyterTestValue' : ['_VSCode_JupyterTestValue', ...extraReplacements.map(v => v.key)].join('|');

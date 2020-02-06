@@ -10,11 +10,11 @@
 - [ ] Announce the code freeze (not just to team but also to ptvsd and language server)
 - [ ] Update master for the release
    - [ ] Create a branch against `master` for a pull request
-   - [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) from a `-dev` suffix to `-rc`
-   - [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date
+   - [ ] Change the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) from a `-dev` suffix to `-rc` (🤖)
+   - [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date (🤖)
    - [ ] Update `requirements.txt` to point to latest release version of [ptvsd](https://github.com/microsoft/ptvsd).
    - [ ] Update `languageServerVersion` in `package.json` to point to the latest version (???) of [the Language Server](https://github.com/Microsoft/python-language-server).
-   - [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
+   - [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md) (🤖)
       - [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) (typically `python news --final --update CHANGELOG.md | code-insiders -`)
       - [ ] Copy over the "Thanks" section from the previous release
       - [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in requirements.json)
@@ -31,15 +31,14 @@
          + ask the package maintainer (e.g. via github)
          + ask CELA
    - [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) as appropriate
-   - [ ] Create a pull request against `master`
+   - [ ] Create a pull request against `master` (🤖)
    - [ ] Merge pull request into `master`
 - [ ] Update the [`release` branch](https://github.com/microsoft/vscode-python/branches)
-   - [ ] (if necessary) Request from a repo admin that the branch be un-"protected"
    - [ ] Delete the `release` branch in the repo
    - [ ] Create a new `release` branch from `master`
    - (alternately, force-push the master branch to the GitHub "release" branch)
    - [ ] (if necessary) Request that the branch be set anew as "protected"
-- [ ] Update master post-release
+- [ ] Update master post-release (🤖)
    - [ ] Bump the version number to the next monthly ("YYYY.M.0-dev") release in the `master` branch
       - [ ] `package.json`
       - [ ] `package-lock.json`
@@ -49,7 +48,7 @@
 - [ ] Update [Component Governance](https://dev.azure.com/ms/vscode-python/_componentGovernance) (Click on "microsoft/vscode-python" on that page)
   - [ ] Provide details for any automatically detected npm dependencies
   - [ ] Manually add any repository dependencies
-- [ ] GDPR bookkeeping (@brettcannon)
+- [ ] GDPR bookkeeping (@brettcannon) (🤖)
 - [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
    + new features
    + settings changes
@@ -65,14 +64,14 @@
 - [ ] Make sure the [appropriate pull requests](https://github.com/microsoft/vscode-docs/pulls) for the [documentation](https://code.visualstudio.com/docs/python/python-tutorial) -- including the [WOW](https://code.visualstudio.com/docs/languages/python) page -- are ready
 - [ ] final updates to the `release` branch
    - [ ] Create a branch against `release` for a pull request
-   - [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json)
-   - [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date (the only update should be the version number if `package-lock.json` has been kept up-to-date)
-   - [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md)
+   - [ ] Update the version in [`package.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) (🤖)
+   - [ ] Run `npm install` to make sure [`package-lock.json`](https://github.com/Microsoft/vscode-python/blob/master/package.json) is up-to-date (the only update should be the version number if `package-lock.json` has been kept up-to-date) (🤖)
+   - [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md) (🤖)
       - [ ] Update version and date for the release section
       - [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) and copy-and-paste new entries (typically `python news --final | code-insiders -`; quite possibly nothing new to add)
-   - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by running [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`; quite possible there will be no change)
+   - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by running [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`; quite possible there will be no change) (🤖)
    - [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) manually if necessary
-   - [ ] Create pull request against `release`
+   - [ ] Create pull request against `release` (🤖)
    - [ ] Merge pull request into `release`
 - [ ] Make sure component governance is happy
 
@@ -86,12 +85,12 @@
 - [ ] Publish [documentation changes](https://github.com/Microsoft/vscode-docs/pulls?q=is%3Apr+is%3Aopen+label%3Apython)
 - [ ] Publish the [blog](http://aka.ms/pythonblog) post
 - [ ] Determine if a hotfix is needed
-- [ ] Merge `release` back into `master`
+- [ ] Merge `release` back into `master` (🤖)
 
 ## Clean up after _this_ release
-- [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22info+needed%22+-label%3A%22data+science%22+sort%3Aupdated-asc) and close any that have no activity for over a month
-- [ ] GDPR bookkeeping
+- [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22info+needed%22+-label%3A%22data+science%22+sort%3Aupdated-asc) and close any that have no activity for over a month (🤖)
+- [ ] GDPR bookkeeping (🤖)
 
 ## Prep for the _next_ release
-- [ ] Create a new [release plan](https://raw.githubusercontent.com/microsoft/vscode-python/master/.github/release_plan.md)
-- [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-python/labels/release%20plan)
+- [ ] Create a new [release plan](https://raw.githubusercontent.com/microsoft/vscode-python/master/.github/release_plan.md) (🤖)
+- [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-python/labels/release%20plan) (🤖)

@@ -5,8 +5,9 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../common/constants';
+import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { ICurrentProcess, IExtensions, ILogger } from '../common/types';
+import { ICurrentProcess, IExtensions } from '../common/types';
 import { IThemeFinder } from './types';
 
 // tslint:disable:no-any
@@ -24,7 +25,6 @@ export class ThemeFinder implements IThemeFinder {
     constructor(
         @inject(IExtensions) private extensions: IExtensions,
         @inject(ICurrentProcess) private currentProcess: ICurrentProcess,
-        @inject(ILogger) private logger: ILogger,
         @inject(IFileSystem) private fs: IFileSystem
     ) {}
 
@@ -44,7 +44,7 @@ export class ThemeFinder implements IThemeFinder {
             try {
                 this.languageCache[language] = await this.findMatchingLanguage(language);
             } catch (exc) {
-                this.logger.logError(exc);
+                traceError(exc);
             }
         }
         return this.languageCache[language];
@@ -66,7 +66,7 @@ export class ThemeFinder implements IThemeFinder {
             try {
                 this.themeCache[themeName] = await this.findMatchingTheme(themeName);
             } catch (exc) {
-                this.logger.logError(exc);
+                traceError(exc);
             }
         }
         return this.themeCache[themeName];

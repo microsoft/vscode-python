@@ -26,6 +26,7 @@ export interface ICodeProps {
     font: IFont;
     hasFocus: boolean;
     cursorPos: CursorPos;
+    focusPending: number;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -44,6 +45,12 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
     constructor(prop: ICodeProps) {
         super(prop);
         this.state = { allowWatermark: true };
+    }
+
+    public componentDidUpdate(prevProps: ICodeProps) {
+        if (prevProps.focusPending !== this.props.focusPending) {
+            this.giveFocus(CursorPos.Current);
+        }
     }
 
     public render() {

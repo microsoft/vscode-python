@@ -3,17 +3,12 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
-import { ILogger } from '../../common/types';
-import { IServiceContainer } from '../../ioc/types';
+import { injectable } from 'inversify';
+import { traceWarning } from '../../common/logger';
 import { IArgumentsHelper } from '../types';
 
 @injectable()
 export class ArgumentsHelper implements IArgumentsHelper {
-    private readonly logger: ILogger;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        this.logger = serviceContainer.get<ILogger>(ILogger);
-    }
     public getOptionValues(args: string[], option: string): string | string[] | undefined {
         const values: string[] = [];
         let returnNextValue = false;
@@ -58,16 +53,12 @@ export class ArgumentsHelper implements IArgumentsHelper {
                 return;
             } else if (arg.startsWith('-')) {
                 // Ok this is an unknown option, lets treat this as one without values.
-                this.logger.logWarning(
-                    `Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`
-                );
+                traceWarning(`Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`);
                 nonPositionalIndexes.push(index);
                 return;
             } else if (arg.indexOf('=') > 0) {
                 // Ok this is an unknown option with a value
-                this.logger.logWarning(
-                    `Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`
-                );
+                traceWarning(`Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`);
                 nonPositionalIndexes.push(index);
             }
         });

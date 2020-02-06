@@ -3,8 +3,8 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+import { traceError } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { CondaInfo, ICondaService, IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -18,7 +18,6 @@ export class CondaEnvService extends CacheableLocatorService {
     constructor(
         @inject(ICondaService) private condaService: ICondaService,
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
-        @inject(ILogger) private logger: ILogger,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IFileSystem) private fileSystem: IFileSystem
     ) {
@@ -70,7 +69,7 @@ export class CondaEnvService extends CacheableLocatorService {
             //   2. `conda info --json` has changed signature.
             //   3. output of `conda info --json` has changed in structure.
             // In all cases, we can't offer conda pythonPath suggestions.
-            this.logger.logError('Failed to get Suggestions from conda', ex);
+            traceError('Failed to get Suggestions from conda', ex);
             return [];
         }
     }

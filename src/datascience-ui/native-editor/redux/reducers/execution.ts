@@ -77,17 +77,20 @@ export namespace Execution {
                 case 'select':
                     // Select the cell below this one, but don't focus it
                     if (index < arg.prevState.cellVMs.length - 1) {
-                        return Effects.selectCell({
-                            ...arg,
-                            prevState: {
-                                ...executeResult
+                        return Effects.selectCell(
+                            {
+                                ...arg,
+                                prevState: {
+                                    ...executeResult
+                                },
+                                payload: {
+                                    ...arg.payload,
+                                    cellId: arg.prevState.cellVMs[index + 1].cell.id,
+                                    cursorPos: CursorPos.Current
+                                }
                             },
-                            payload: {
-                                ...arg.payload,
-                                cellId: arg.prevState.cellVMs[index + 1].cell.id,
-                                cursorPos: CursorPos.Current
-                            }
-                        });
+                            false
+                        );
                     }
                     return executeResult;
 

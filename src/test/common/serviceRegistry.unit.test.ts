@@ -40,7 +40,6 @@ import { InsidersExtensionPrompt } from '../../client/common/insidersBuild/insid
 import { InsidersExtensionService } from '../../client/common/insidersBuild/insidersExtensionService';
 import { ExtensionChannel, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from '../../client/common/insidersBuild/types';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
-import { Logger } from '../../client/common/logger';
 import { BrowserService } from '../../client/common/net/browser';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { NugetService } from '../../client/common/nuget/nugetService';
@@ -83,7 +82,6 @@ import {
     IFeatureDeprecationManager,
     IHttpClient,
     IInstaller,
-    ILogger,
     IPathUtils,
     IPersistentStateFactory,
     IRandom
@@ -103,7 +101,6 @@ suite('Common - Service Registry', () => {
             [IExtensions, Extensions],
             [IRandom, Random],
             [IPersistentStateFactory, PersistentStateFactory],
-            [ILogger, Logger],
             [ITerminalServiceFactory, TerminalServiceFactory],
             [IPathUtils, PathUtils],
             [IApplicationShell, ApplicationShell],

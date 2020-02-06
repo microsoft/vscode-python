@@ -306,21 +306,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 [[project]]
-name = "@types/dom4"
-version = "2.0.1"
-url = "https://registry.npmjs.org/@types/dom4/-/dom4-2.0.1.tgz"
-purpose = "npm"
-license = """
-Copyright 2019 Adi Dahiya https://github.com/adidahiya, Gilad Gray https://github.com/giladgray.
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-
-[[project]]
 name = "IPython"
 version = "(for PyDev.Debugger)"
 url = "https://ipython.org/"
@@ -1357,8 +1342,8 @@ SOFTWARE.
 
 [[project]]
 name = "popper.js"
-version = "1.15.0"
-url = "https://registry.npmjs.org/popper.js/-/popper.js-1.15.0.tgz"
+version = "1.16.0"
+url = "https://registry.npmjs.org/popper.js/-/popper.js-1.16.0.tgz"
 purpose = "npm"
 license = """
 The MIT License (MIT)
@@ -1374,8 +1359,8 @@ THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR I
 
 [[project]]
 name = "ptvsd"
-version = "4.2.4"
-url = "https://github.com/Microsoft/ptvsd/tree/v4.2.4"
+version = "4.3.2"
+url = "https://github.com/Microsoft/ptvsd/tree/v4.3.2"
 purpose = "PyPI"
 license = """
 Copyright (c) Microsoft Corporation
@@ -1587,62 +1572,6 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
-"""
-
-[[project]]
-name = "slickgrid"
-version = "2.4.7"
-url = "https://registry.npmjs.org/slickgrid/-/slickgrid-2.4.7.tgz"
-purpose = "npm"
-license = """
-Copyright (c) 2009-2019 Michael Leibman and Ben McIntyre, http://github.com/6pac/slickgrid
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-"""
-
-[[project]]
-name = "slickgrid"
-version = "2.4.9"
-url = "https://registry.npmjs.org/slickgrid/-/slickgrid-2.4.9.tgz"
-purpose = "npm"
-license = """
-Copyright (c) 2009-2019 Michael Leibman and Ben McIntyre, http://github.com/6pac/slickgrid
-
-Permission is hereby granted, free of charge, to any person obtaining
-a copy of this software and associated documentation files (the
-"Software"), to deal in the Software without restriction, including
-without limitation the rights to use, copy, modify, merge, publish,
-distribute, sublicense, and/or sell copies of the Software, and to
-permit persons to whom the Software is furnished to do so, subject to
-the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
 [[project]]

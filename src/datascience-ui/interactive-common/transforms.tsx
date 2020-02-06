@@ -151,3 +151,8 @@ export async function forceLoad() {
     // Used for tests to make sure we don't end up with 'Loading ...' anywhere in a test
     await Promise.all(mimeTypeToImport.map(m => m.getComponent()));
 }
+
+export function isMimeTypeSupported(mimeType: string): Boolean {
+    const match = mimeTypeToImport.find(m => m.mimeType === mimeType);
+    return match ? true : false;
+}

@@ -471,7 +471,7 @@ export function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown
     }
 }
 
-async function submitInput(ioc: DataScienceIocContainer, textArea: HTMLTextAreaElement): Promise<void> {
+export async function submitInput(ioc: DataScienceIocContainer, textArea: HTMLTextAreaElement): Promise<void> {
     // Get a render promise with the expected number of renders (how many updates a the shift + enter will cause)
     // Should be 6 - 1 for the shift+enter and 5 for the new cell.
     const renderPromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);

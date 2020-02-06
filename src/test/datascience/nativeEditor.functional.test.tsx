@@ -1076,6 +1076,50 @@ for _ in range(50):
                 }
             });
 
+            test('Navigating cells using up/down keys while focus is set to editor', async () => {
+                wrapper.update();
+
+                const firstCell = 0;
+                const secondCell = 1;
+
+                // Set focus to the first cell.
+                let update = waitForUpdate(wrapper, NativeEditor, 1);
+                clickCell(firstCell);
+                await update;
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                simulateKeyPressOnCell(firstCell, { code: 'Enter' });
+                await update;
+                assert.ok(isCellFocused(wrapper, 'NativeCell', firstCell));
+
+                // Now press the down arrow, and focus should go to the next cell.
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                let monacoEditor = getNativeFocusedEditor(wrapper)!.instance() as MonacoEditor;
+                monacoEditor.getCurrentVisibleLine = () => 0;
+                monacoEditor.getVisibleLineCount = () => 1;
+                simulateKeyPressOnCell(firstCell, { code: 'ArrowDown' });
+                await update;
+
+                // The next cell must be focused, but not selected.
+                assert.isFalse(isCellFocused(wrapper, 'NativeCell', firstCell), 'First new cell must not be focused');
+                assert.isTrue(isCellFocused(wrapper, 'NativeCell', secondCell), 'Second new cell must be focused');
+                assert.isFalse(isCellSelected(wrapper, 'NativeCell', firstCell), 'First new cell must not be selected');
+                assert.isFalse(isCellSelected(wrapper, 'NativeCell', secondCell), 'Second new cell must not be selected');
+
+                // Now press the up arrow, and focus should go back to the first cell.
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                monacoEditor = getNativeFocusedEditor(wrapper)!.instance() as MonacoEditor;
+                monacoEditor.getCurrentVisibleLine = () => 0;
+                monacoEditor.getVisibleLineCount = () => 1;
+                simulateKeyPressOnCell(firstCell, { code: 'ArrowUp' });
+                await update;
+
+                // The first cell must be focused, but not selected.
+                assert.isTrue(isCellFocused(wrapper, 'NativeCell', firstCell), 'First new cell must not be focused');
+                assert.isFalse(isCellFocused(wrapper, 'NativeCell', secondCell), 'Second new cell must be focused');
+                assert.isFalse(isCellSelected(wrapper, 'NativeCell', firstCell), 'First new cell must not be selected');
+                assert.isFalse(isCellSelected(wrapper, 'NativeCell', secondCell), 'Second new cell must not be selected');
+            });
+
             test("Pressing 'd' on a selected cell twice deletes the cell", async () => {
                 // Initially 3 cells.
                 wrapper.update();

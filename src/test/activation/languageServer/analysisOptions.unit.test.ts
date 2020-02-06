@@ -7,7 +7,7 @@ import { ConfigurationChangeEvent, Uri, WorkspaceFolder } from 'vscode';
 import { DocumentSelector } from 'vscode-languageclient';
 
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
-import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { ILanguageServerFolderService, ILanguageServerOutputChannel } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -63,7 +63,7 @@ suite('Language Server - Analysis Options', () => {
         lsOutputChannel = typemoq.Mock.ofType<ILanguageServerOutputChannel>();
         lsOutputChannel.setup(l => l.channel).returns(() => outputChannel);
         pathUtils = mock(PathUtils);
-        lsFolderService = mock(LanguageServerFolderService);
+        lsFolderService = mock(DotNetLanguageServerFolderService);
         analysisOptions = new TestClass(
             context.object,
             instance(envVarsProvider),

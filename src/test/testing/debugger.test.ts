@@ -22,7 +22,7 @@ import { IArgumentsHelper, IArgumentsService, ITestManagerRunner, IUnitTestHelpe
 import { UnitTestHelper } from '../../client/testing/unittest/helper';
 import { ArgumentsService as UnitTestArgumentsService } from '../../client/testing/unittest/services/argsService';
 import { deleteDirectory, rootWorkspaceUri, updateSetting } from '../common';
-import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../initialize';
+import { initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_TIMEOUT } from './../initialize';
 import { MockDebugLauncher } from './mocks';
 import { UnitTestIocContainer } from './serviceRegistry';
 
@@ -35,23 +35,31 @@ const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 suite('Unit Tests - debugging', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-    suiteSetup(async () => {
-        // Test disvovery is where the delay is, hence give 10 seconds (as we discover tests at least twice in each test).
+    suiteSetup(async function() {
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2);
+        // Test discovery is where the delay is, hence give 10 seconds (as we discover tests at least twice in each test).
         await initialize();
-        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
-        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
-        await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
+        await Promise.all([
+            updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
+            updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
+            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget)
+        ]);
     });
-    setup(async () => {
+    setup(async function() {
+        // tslint:disable-next-line:no-invalid-this
+        this.timeout(TEST_TIMEOUT * 2); // This hook requires more timeout as we're deleting files as well
         await deleteDirectory(path.join(testFilesPath, '.cache'));
         await initializeTest();
         initializeDI();
     });
     teardown(async () => {
         await ioc.dispose();
-        await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
-        await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
-        await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
+        await Promise.all([
+            updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
+            updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
+            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget)
+        ]);
     });
 
     function initializeDI() {

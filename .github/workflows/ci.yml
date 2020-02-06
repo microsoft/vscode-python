@@ -1,0 +1,156 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - gh-action-ci
+
+env:
+  PYTHON_VERSION: 3.8
+  CACHE_NPM_DEPS: cache-npm
+  CACHE_PIP_DEPS: cache-pip
+  # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
+  CACHE_PYTHONFILES: cache-pvsc-pythonFiles
+  ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
+
+jobs:
+  ### Initialization: retrieve, install and cache dependencies
+  python-deps:
+    name: Install Python Requirements
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Python ${{env.PYTHON_VERSION}}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Upgrade pip
+        run: python -m pip install -U pip
+
+      - name: Install Python requirements
+        run: |
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
+
+      - name: Install ptvsd wheels
+        run: |
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_ptvsd.py
+
+      # Retrieve the list of ptvsd versions from PyPI in order to increase the specificity of the pip cache key, so that the cache gets invalidated as necessary.
+      # See https://github.com/microsoft/vscode-python/pull/9843#discussion_r373635221
+      - name: curl PyPI to get ptvsd versions
+        run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+
+      - name: Cache pip files
+        uses: actions/cache@v1
+        with:
+          path: ~/.cache/pip
+          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+
+      - name: Cache ./pythonFiles/lib/python
+        uses: actions/cache@v1
+        with:
+          path: ./pythonFiles/lib/python
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+
+  js-ts-deps:
+    name: Install npm dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      - name: Cache npm files
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+
+  ### Hygiene + VSIX upload
+  compile-hygiene:
+    name: Compile, lint, check for errors
+    runs-on: ubuntu-latest
+    needs: [js-ts-deps, python-deps]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Retrieve cached npm files
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      - name: Run gulp prePublishNonBundle
+        run: npx gulp prePublishNonBundle
+
+      - name: Check dependencies
+        run: npm run checkDependencies
+
+      - name: Run linting on TypeScript code
+        run: npx tslint --project tsconfig.json
+
+      - name: Run prettier on TypeScript code
+        run: npx prettier 'src/**/*.ts*' --check
+
+      - name: Run prettier on JavaScript code
+        run: npx prettier 'build/**/*.js' --check
+
+      - name: Use Python ${{env.PYTHON_VERSION}}
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{env.PYTHON_VERSION}}
+
+      - name: Run Black on Python code
+        run: |
+          python -m pip install -U black
+          python -m black . --check
+        working-directory: pythonFiles
+
+  build-vsix:
+    name: Build VSIX
+    runs-on: ubuntu-latest
+    needs: [python-deps, js-ts-deps]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Retrieve cached npm files
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+
+      - name: curl PyPI to get ptvsd versions
+        run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+
+      - name: Retrieve cached pythonFiles/ directory
+        uses: actions/cache@v1
+        with:
+          path: ./pythonFiles/lib/python
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      - name: Clean directory
+        run: npm run clean
+
+      - name: Package the VSIX
+        run: npm run package
+
+      - uses: actions/upload-artifact@v1
+        with:
+          name: ${{env.ARTIFACT_NAME_VSIX}}
+          path: ms-python-insiders.vsix

@@ -5,12 +5,11 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
-
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
-import { LanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
-import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
-import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerProxy, LanguageServerType } from '../../../client/activation/types';
+import { DotNetLanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
+import { DotNetLanguageServerManager } from '../../../client/activation/languageServer/manager';
+import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerProxy } from '../../../client/activation/types';
 import { IPythonExtensionBanner } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -22,7 +21,7 @@ use(chaiAsPromised);
 // tslint:disable:max-func-body-length no-any chai-vague-errors no-unused-expression
 
 suite('Language Server - Manager', () => {
-    let manager: LanguageServerManager;
+    let manager: DotNetLanguageServerManager;
     let serviceContainer: IServiceContainer;
     let analysisOptions: ILanguageServerAnalysisOptions;
     let languageServer: ILanguageServerProxy;
@@ -33,10 +32,10 @@ suite('Language Server - Manager', () => {
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         analysisOptions = mock(LanguageServerAnalysisOptions);
-        languageServer = mock(LanguageServerProxy);
+        languageServer = mock(DotNetLanguageServerProxy);
         lsExtension = mock(LanguageServerExtension);
         surveyBanner = mock(ProposeLanguageServerBanner);
-        manager = new LanguageServerManager(instance(serviceContainer), instance(analysisOptions), instance(lsExtension), instance(surveyBanner));
+        manager = new DotNetLanguageServerManager(instance(serviceContainer), instance(analysisOptions), instance(lsExtension), instance(surveyBanner));
     });
 
     [undefined, Uri.file(__filename)].forEach(resource => {
@@ -55,14 +54,14 @@ suite('Language Server - Manager', () => {
             when(analysisOptions.initialize(resource, undefined)).thenResolve();
             when(analysisOptions.getAnalysisOptions()).thenResolve(languageClientOptions);
             when(analysisOptions.onDidChange).thenReturn(analysisChangeFn as any);
-            when(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerType.Microsoft)).thenReturn(instance(languageServer));
+            when(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).thenReturn(instance(languageServer));
             when(languageServer.start(resource, undefined, languageClientOptions)).thenResolve();
 
             await manager.start(resource, undefined);
 
             verify(analysisOptions.initialize(resource, undefined)).once();
             verify(analysisOptions.getAnalysisOptions()).once();
-            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerType.Microsoft)).once();
+            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).once();
             verify(languageServer.start(resource, undefined, languageClientOptions)).once();
             expect(invoked).to.be.true;
             expect(analysisHandlerRegistered).to.be.true;
@@ -89,7 +88,7 @@ suite('Language Server - Manager', () => {
             verify(languageServer.dispose()).once();
 
             verify(analysisOptions.getAnalysisOptions()).twice();
-            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerType.Microsoft)).twice();
+            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).twice();
             verify(languageServer.start(resource, undefined, languageClientOptions)).twice();
         });
         test('Changes in analysis options must throttled when restarting LS', async () => {
@@ -110,7 +109,7 @@ suite('Language Server - Manager', () => {
             verify(languageServer.dispose()).once();
 
             verify(analysisOptions.getAnalysisOptions()).twice();
-            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerType.Microsoft)).twice();
+            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).twice();
             verify(languageServer.start(resource, undefined, languageClientOptions)).twice();
         });
         test('Multiple changes in analysis options must restart LS twice', async () => {
@@ -131,7 +130,7 @@ suite('Language Server - Manager', () => {
             verify(languageServer.dispose()).once();
 
             verify(analysisOptions.getAnalysisOptions()).twice();
-            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerType.Microsoft)).twice();
+            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).twice();
             verify(languageServer.start(resource, undefined, languageClientOptions)).twice();
 
             await onChangeAnalysisHandler.call(manager);
@@ -149,7 +148,7 @@ suite('Language Server - Manager', () => {
             verify(languageServer.dispose()).twice();
 
             verify(analysisOptions.getAnalysisOptions()).thrice();
-            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerType.Microsoft)).thrice();
+            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).thrice();
             verify(languageServer.start(resource, undefined, languageClientOptions)).thrice();
         });
         test('Must load extension when command was been sent before starting LS', async () => {

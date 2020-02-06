@@ -18,7 +18,6 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { Logger } from '../../client/common/logger';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -33,7 +32,7 @@ import {
     ObservableExecutionResult,
     Output
 } from '../../client/common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../client/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
@@ -90,7 +89,6 @@ suite('Jupyter Execution', async () => {
     const application = mock(ApplicationShell);
     const processServiceFactory = mock(ProcessServiceFactory);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
-    const logger = mock(Logger);
     const fileSystem = mock(FileSystem);
     const activationHelper = mock(EnvironmentActivationService);
     const serviceContainer = mock(ServiceContainer);
@@ -583,7 +581,6 @@ suite('Jupyter Execution', async () => {
         // Service container needs logger, file system, and config service
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
-        when(serviceContainer.get<ILogger>(ILogger)).thenReturn(instance(logger));
         when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
         when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(application));
         when(configService.getSettings()).thenReturn(pythonSettings);
@@ -661,7 +658,6 @@ suite('Jupyter Execution', async () => {
             instance(knownSearchPaths),
             disposableRegistry,
             instance(fileSystem),
-            instance(logger),
             instance(processServiceFactory),
             commandFactory,
             instance(workspaceService),
