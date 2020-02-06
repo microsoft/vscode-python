@@ -3,9 +3,8 @@ name: CI
 on:
   push:
     branches:
-      # TODO: replace the current test branch with master
-      # - master
-      - gh-action-ci-tests
+      # Run the CI pipeline only on master for microsoft/vscode-python for now
+      - master
 
 env:
   PYTHON_VERSION: 3.8
@@ -61,6 +60,7 @@ jobs:
         with:
           path: ./pythonFiles/lib/python
           key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-python-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/**-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+    if: github.repository == 'microsoft/vscode-python'
 
   js-ts-deps:
     name: Install npm dependencies
@@ -77,6 +77,7 @@ jobs:
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+    if: github.repository == 'microsoft/vscode-python'
 
   ### Hygiene + VSIX upload
   compile-hygiene:
@@ -127,6 +128,7 @@ jobs:
           python -m pip install -U black
           python -m black . --check
         working-directory: pythonFiles
+    if: github.repository == 'microsoft/vscode-python'
 
   build-vsix:
     name: Build VSIX
@@ -164,6 +166,7 @@ jobs:
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
           path: ms-python-insiders.vsix
+    if: github.repository == 'microsoft/vscode-python'
 
   ### Non-smoke tests
   tests:
@@ -340,3 +343,4 @@ jobs:
       - name: Run functional tests
         run: npm run test:functional
         if: matrix.tests == 'functional'
+    if: github.repository == 'microsoft/vscode-python'
