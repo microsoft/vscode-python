@@ -40,6 +40,7 @@ interface IInteractiveCellBaseProps {
     editorMeasureClassName?: string;
     font: IFont;
     settings: IDataScienceExtraSettings;
+    focusPending: number;
 }
 
 type IInteractiveCellProps = IInteractiveCellBaseProps & typeof actionCreators;
@@ -266,6 +267,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     keyDown={this.isEditCell() ? this.onEditCellKeyDown : undefined}
                     showLineNumbers={this.props.cellVM.showLineNumbers}
                     font={this.props.font}
+                    focusPending={this.props.focusPending}
                 />
             );
         }

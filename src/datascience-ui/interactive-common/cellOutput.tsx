@@ -14,7 +14,7 @@ import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { fixLatexEquations } from './latexManipulation';
 import { ICellViewModel } from './mainState';
-import { getRichestMimetype, getTransform } from './transforms';
+import { getRichestMimetype, getTransform, isMimeTypeSupported } from './transforms';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
@@ -380,7 +380,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             let mimetype = transformed.mimeType;
 
             // If that worked, use the transform
-            if (mimetype) {
+            if (mimetype && isMimeTypeSupported(mimetype)) {
                 // Get the matching React.Component for that mimetype
                 const Transform = getTransform(mimetype);
 
@@ -405,6 +405,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         </div>
                     );
                 }
+            } else if (mimetype.startsWith('application/scrapbook.scrap.')) {
+                // Silently skip rendering of these mime types, render an empty div so the user sees the cell was executed.
+                buffer.push(<div key={index}></div>);
             } else {
                 if (transformed.data) {
                     const keys = Object.keys(transformed.data);

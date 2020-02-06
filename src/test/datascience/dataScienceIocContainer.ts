@@ -898,17 +898,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
 
-    private findPythonPath(): string {
-        try {
-            // Give preference to the CI test python (could also be set in launch.json for debugging).
-            const output = child_process.execFileSync(process.env.CI_PYTHON_PATH || 'python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
-            return output.replace(/\r?\n/g, '');
-        } catch (ex) {
-            return 'python';
-        }
-    }
-
-    private postMessageToWebPanel(msg: any) {
+    public postMessageToWebPanel(msg: any) {
         if (this.webPanelListener) {
             this.webPanelListener.onMessage(msg.type, msg.payload);
         } else {
@@ -920,6 +910,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
         if (this.wrapperCreatedPromise && !this.wrapperCreatedPromise.resolved) {
             this.wrapperCreatedPromise.resolve();
+        }
+    }
+
+    private findPythonPath(): string {
+        try {
+            // Give preference to the CI test python (could also be set in launch.json for debugging).
+            const output = child_process.execFileSync(process.env.CI_PYTHON_PATH || 'python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
+            return output.replace(/\r?\n/g, '');
+        } catch (ex) {
+            return 'python';
         }
     }
 

@@ -26,7 +26,7 @@ import { defaultDataScienceSettings } from './helpers';
 import { addCode, getInteractiveCellResults, getOrCreateInteractiveWindow, runMountedTest } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
-import { waitForUpdate } from './reactHelpers';
+import { createMessageEvent, waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
     addInputMockData,
@@ -36,9 +36,12 @@ import {
     enterInput,
     escapePath,
     findButton,
+    getInteractiveEditor,
     getLastOutputCell,
     srcDirectory,
+    submitInput,
     toggleCellExpansion,
+    typeCode,
     verifyHtmlOnCell,
     verifyLastCellInputState,
     waitForMessage,
@@ -137,6 +140,47 @@ suite('DataScience Interactive Window output tests', () => {
             await addCode(ioc, wrapper, 'a=1\na');
 
             verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Expanded);
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
+        'Ctrl + 1/Ctrl + 2',
+        async wrapper => {
+            // Create an interactive window so that it listens to the results.
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+            await interactiveWindow.show();
+
+            // Type in the input box
+            const editor = getInteractiveEditor(wrapper);
+            typeCode(editor, 'a=1\na');
+
+            // Give focus to a random div
+            const reactDiv = wrapper
+                .find('div')
+                .first()
+                .getDOMNode();
+
+            const domDiv = reactDiv.querySelector('div');
+
+            if (domDiv && ioc.postMessage) {
+                domDiv.tabIndex = -1;
+                domDiv.focus();
+
+                // send the ctrl + 1/2 message, this should put focus back on the input box
+                const message = createMessageEvent({ type: InteractiveWindowMessages.Activate, payload: undefined });
+                ioc.postMessage(message);
+
+                // Then enter press shift + enter on the active element
+                const activeElement = document.activeElement;
+                if (activeElement) {
+                    await submitInput(ioc, activeElement as HTMLTextAreaElement);
+                }
+            }
+
+            verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
         },
         () => {
             return ioc;

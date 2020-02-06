@@ -69,10 +69,12 @@ This is especially true if you have added or removed files.
 
 TypeScript errors and warnings will be displayed in the `Problems` window of Visual Studio Code.
 
-### Validate your changes
+### Run dev build and validate your changes
 
-To test the changes you launch a development version of VS Code on the workspace vscode, which you are currently editing.
-Use the `Extension` launch option.
+To test changes, open the `vscode-python` folder in VSCode, and select the workspace titled `vscode`.
+Then, open the debug panel by clicking the `Run and Debug` icon on the sidebar, select the `Extension`
+option from the top menu, and click start. A new window will launch with the title
+`[Extension Development Host]`.
 
 ### Running Unit Tests
 
