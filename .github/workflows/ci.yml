@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     branches:
-      # Run the CI pipeline only on master for microsoft/vscode-python for now
+      # Run the CI workflow only on master for microsoft/vscode-python for now.
       - master
 
 env:
@@ -44,7 +44,8 @@ jobs:
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_ptvsd.py
 
-      # Retrieve the list of ptvsd versions from PyPI in order to increase the specificity of the pip cache key, so that the cache gets invalidated as necessary.
+      # Retrieve the list of ptvsd versions from PyPI in order to increase the specificity of the pip cache key,
+      # so that the cache gets invalidated as necessary.
       # See https://github.com/microsoft/vscode-python/pull/9843#discussion_r373635221
       - name: curl PyPI to get ptvsd versions
         run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
@@ -176,7 +177,7 @@ jobs:
     needs: [python-deps, js-ts-deps]
     strategy:
       matrix:
-        # We're not running CI on macOS for now because we assume that Ubuntu covers the Unix case well enough.
+        # We're not running CI on macOS for now because we assume that Ubuntu is enough to cover the Unix case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: [2.7, 3.7]
@@ -297,7 +298,7 @@ jobs:
         shell: pwsh
         if: matrix.tests == 'venv'
 
-      # Run TypeScript unit tests only for Python 3.X
+      # Run TypeScript unit tests only for Python 3.X.
       - name: Run TypeScript unit tests
         run: npm run test:unittests:cover
         if: matrix.tests == 'ts-unit' && startsWith(matrix.python, 3.)
@@ -310,11 +311,11 @@ jobs:
           python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
         if: matrix.tests == 'python-unit'
 
-      # Run the virtual environment based tests.
-      # This set of tests is simply using the `testSingleWorkspace` set of tests
-      # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`, which
-      # is set in the "Prepare environment for venv tests" step.
-      # Use a third-party GitHub Action to install xvfb on Linux, run tests and then clean up the process once the tests ran.
+      # The virtual environment based tests use the `testSingleWorkspace` set of tests
+      # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`,
+      # which is set in the "Prepare environment for venv tests" step.
+      # We also use a third-party GitHub Action to install xvfb on Linux,
+      # run tests and then clean up the process once the tests ran.
       # See https://github.com/GabrielBB/xvfb-action
       - name: Run venv tests
         uses: GabrielBB/xvfb-action@v1.0
