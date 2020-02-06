@@ -392,7 +392,6 @@ jobs:
         env:
           DISPLAY: 10
         run: |
-          npm install -g vsce
           npm run clean
           npx tsc -p ./
           npx gulp clean:cleanExceptTests
