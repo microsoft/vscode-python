@@ -206,7 +206,7 @@ jobs:
 
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
-        if: steps.out-cache.outputs.cache-hit == false
+        if: ! steps.out-cache.outputs.cache-hit
 
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v1
@@ -229,13 +229,13 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
-        if: steps.pythonFiles-cache.outputs.cache-hit == false
+        if: ! steps.pythonFiles-cache.outputs.cache-hit
 
       - name: Install ptvsd wheels if not cached
         run: |
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_ptvsd.py
-        if: steps.pythonFiles-cache.outputs.cache-hit == false
+        if: ! steps.pythonFiles-cache.outputs.cache-hit
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
