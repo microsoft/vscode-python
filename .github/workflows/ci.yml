@@ -173,11 +173,10 @@ jobs:
     needs: [python-deps, js-ts-deps]
     strategy:
       matrix:
-        # TODO: clean the matrix up when the PR is ready for review
-        # os: [ubuntu-latest, macos-latest, windows-latest]
-        # python: [2.7, 3.8]
-        python: [3.7]
-        os: [ubuntu-latest]
+        # We're not running CI on macOS for now because we assume that Ubuntu covers the Unix case well enough.
+        os: [ubuntu-latest, windows-latest]
+        # Run the tests on the oldest and most recent versions of Python.
+        python: [2.7, 3.8]
         tests: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
     steps:
       - name: Checkout
@@ -264,9 +263,10 @@ jobs:
           python -m pipenv run python build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} pipenvPath
 
           # venv
-          # what happens when running under Python 2.7?
-          python -m venv .venv
-          & ".venv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+          if ('${{matrix.python}}' -like '3.?') {
+            python -m venv .venv
+            & ".venv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
+          }
 
           # virtualenv
           python -m pip install virtualenv
