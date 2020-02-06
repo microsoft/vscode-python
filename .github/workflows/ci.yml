@@ -180,7 +180,7 @@ jobs:
         # We're not running CI on macOS for now because we assume that Ubuntu is enough to cover the Unix case.
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: [2.7, 3.7]
+        python: [2.7, 3.8]
         tests: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
     steps:
       - name: Checkout
