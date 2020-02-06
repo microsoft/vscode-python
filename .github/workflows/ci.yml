@@ -21,7 +21,7 @@ jobs:
   python-deps:
     name: Install Python Requirements
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -66,7 +66,7 @@ jobs:
   js-ts-deps:
     name: Install npm dependencies
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
