@@ -370,7 +370,6 @@ jobs:
       - name: echo a bunch of stuff
         run: |
           echo ${{env.GITHUB_RUN_ID}}
-          echo ${{GITHUB_RUN_ID}}
           echo ${GITHUB_RUN_ID}
           echo $GITHUB_RUN_ID
           echo GITHUB_RUN_ID
