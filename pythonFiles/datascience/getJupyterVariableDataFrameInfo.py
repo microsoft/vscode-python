@@ -49,7 +49,10 @@ else:
     # If any rows, use pandas json to convert a single row to json. Extract
     # the column names and types from the json so we match what we'll fetch when
     # we ask for all of the rows
-    if hasattr(_VSCODE_targetVariable, "rowCount") and _VSCODE_targetVariable["rowCount"]:
+    if (
+        hasattr(_VSCODE_targetVariable, "rowCount")
+        and _VSCODE_targetVariable["rowCount"]
+    ):
         try:
             _VSCODE_row = _VSCODE_df.iloc[0:1]
             _VSCODE_json_row = _VSCODE_pd_json.to_json(
