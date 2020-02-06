@@ -21,6 +21,7 @@ jobs:
   python-deps:
     name: Install Python Requirements
     runs-on: ubuntu-latest
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -61,11 +62,11 @@ jobs:
         with:
           path: ./pythonFiles/lib/python
           key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
-    if: github.repository == 'microsoft/vscode-python'
 
   js-ts-deps:
     name: Install npm dependencies
     runs-on: ubuntu-latest
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -78,12 +79,12 @@ jobs:
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
-    if: github.repository == 'microsoft/vscode-python'
 
   ### Hygiene + VSIX upload
   compile-hygiene:
     name: Compile, lint, check for errors
     runs-on: ubuntu-latest
+    # if: github.repository == 'microsoft/vscode-python'
     needs: [js-ts-deps, python-deps]
     steps:
       - name: Checkout
@@ -129,11 +130,11 @@ jobs:
           python -m pip install -U black
           python -m black . --check
         working-directory: pythonFiles
-    if: github.repository == 'microsoft/vscode-python'
 
   build-vsix:
     name: Build VSIX
     runs-on: ubuntu-latest
+    # if: github.repository == 'microsoft/vscode-python'
     needs: [python-deps, js-ts-deps]
     steps:
       - name: Checkout
@@ -167,15 +168,14 @@ jobs:
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
           path: ms-python-insiders.vsix
-    if: github.repository == 'microsoft/vscode-python'
 
   ### Non-smoke tests
   tests:
     name: Tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
+    # if: github.repository == 'microsoft/vscode-python'
     needs: [python-deps, js-ts-deps]
-    if: github.repository == 'microsoft/vscode-python'
     strategy:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
