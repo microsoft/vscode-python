@@ -367,6 +367,14 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
+      - name: echo a bunch of stuff
+        run: |
+          echo ${{env.GITHUB_RUN_ID}}
+          echo ${{GITHUB_RUN_ID}}
+          echo ${GITHUB_RUN_ID}
+          echo $GITHUB_RUN_ID
+          echo GITHUB_RUN_ID
+
       - name: Retrieve cached npm files
         uses: actions/cache@v1
         with:
