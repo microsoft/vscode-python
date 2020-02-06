@@ -12,6 +12,7 @@ import { IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
+import { cacheResourceSpecificInterpreterData, clearCachedResourceSpecificIngterpreterData } from '../../common/utils/decorators';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -21,6 +22,7 @@ import { PythonInterpreter } from '../contracts';
 import { IEnvironmentActivationService } from './types';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
+const cacheDuration = 10 * 60 * 1000;
 export const getEnvironmentTimeout = 30000;
 
 // The shell under which we'll execute activation scripts.
@@ -40,13 +42,16 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
         @inject(ICurrentProcess) private currentProcess: ICurrentProcess,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider
-    ) {}
+    ) {
+        this.envVarsService.onDidEnvironmentVariablesChange(this.onDidEnvironmentVariablesChange, this, this.disposables);
+    }
 
     public dispose(): void {
         this.disposables.forEach(d => d.dispose());
     }
     @traceDecorators.verbose('getActivatedEnvironmentVariables', LogOptions.Arguments)
     @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
+    @cacheResourceSpecificInterpreterData('ActivatedEnvironmentVariables', cacheDuration)
     public async getActivatedEnvironmentVariables(resource: Resource, interpreter?: PythonInterpreter, allowExceptions?: boolean): Promise<NodeJS.ProcessEnv | undefined> {
         const shellInfo = defaultShells[this.platform.osType];
         if (!shellInfo) {
@@ -109,6 +114,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                 throw e;
             }
         }
+    }
+    protected onDidEnvironmentVariablesChange(affectedResource: Resource) {
+        clearCachedResourceSpecificIngterpreterData('ActivatedEnvironmentVariables', affectedResource);
     }
     protected fixActivationCommands(commands: string[]): string[] {
         // Replace 'source ' with '. ' as that works in shell exec
