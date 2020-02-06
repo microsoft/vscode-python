@@ -4,7 +4,7 @@ on:
   push:
     branches:
       # Run the CI workflow only on master for microsoft/vscode-python for now.
-      - master
+      - gh-action-*
 
 env:
   PYTHON_VERSION: 3.8
