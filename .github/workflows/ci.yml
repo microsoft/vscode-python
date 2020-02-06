@@ -5,7 +5,7 @@ on:
     branches:
       # TODO: replace the current test branch with master
       # - master
-      - gh-action-venv
+      - gh-action-ci-tests
 
 env:
   PYTHON_VERSION: 3.8
