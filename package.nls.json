@@ -307,6 +307,7 @@
     "DataScience.noRowsInDataViewer": "No rows match current filter",
     "DataScience.jupyterServer": "Jupyter Server",
     "DataScience.noKernel": "No Kernel",
+    "DataScience.serverNotStarted": "Not Started",
     "DataScience.localJupyterServer": "local",
     "DataScience.pandasTooOldForViewingFormat": "Python package 'pandas' is version {0}. Version 0.20 or greater is required for viewing data.",
     "DataScience.pandasRequiredForViewing": "Python package 'pandas' is required for viewing data.",
