@@ -225,7 +225,7 @@ jobs:
         id: pythonFiles-cache
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements')}}-${{hashFiles('ptvsd.json')}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
 
       - name: Install Python requirements if not cached
         run: |
