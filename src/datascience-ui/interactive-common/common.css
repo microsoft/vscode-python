@@ -146,9 +146,20 @@ body, html {
 
 .cell-output-text {
     white-space: pre-wrap;
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
 }
+
 .cell-output-text pre {
     white-space: pre-wrap;
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
+}
+
+.cell-output-text xmp {
+    white-space: pre-wrap;
+    font-family: var(--vscode-editor-font-family);
+    font-weight: var(--vscode-editor-font-weight);
 }
 
 .cell-output-html {
