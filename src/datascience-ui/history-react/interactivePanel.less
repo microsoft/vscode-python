@@ -2,7 +2,8 @@
 @import "../interactive-common/common.css";
 
 :root {
-    --right-offset-px: 20px;
+    --messages-offset-px: 20px;
+    --output-offset-px: 45px;
 }
 
 .toolbar-menu-bar-child {
@@ -18,7 +19,7 @@
 }
 
 .messages-result-container {
-    width: calc(100vw - var(--right-offset-px));
+    width: calc(100vw - var(--messages-offset-px));
 }
 
 .messages-result-container pre {
@@ -49,6 +50,7 @@
 
 .cell-output {
     margin: 0px;
+    width: calc(100vw - var(--output-offset-px));
     overflow-x: scroll;
     background: transparent;
 }
@@ -66,7 +68,7 @@ xmp {
 }
 
 .markdown-cell-output {
-    width: calc(100vw - 40);
+    width: calc(100vw - var(--output-offset-px));
     overflow-x: scroll;
 }
 
