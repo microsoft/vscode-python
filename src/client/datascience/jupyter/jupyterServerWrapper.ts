@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, multiInject, optional } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
@@ -17,7 +18,6 @@ import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from './liveshare/types';
-import { nbformat } from '@jupyterlab/coreutils';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
 
