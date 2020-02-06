@@ -2752,6 +2752,7 @@
             {
                 "id": "toml",
                 "filenames": [
+                    "poetry.lock",
                     "Pipfile"
                 ]
             },
