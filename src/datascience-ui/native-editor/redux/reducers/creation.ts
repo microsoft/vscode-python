@@ -12,6 +12,7 @@ import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { IAddCellAction, ICellAction } from '../../../interactive-common/redux/reducers/types';
 import { actionCreators } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
+import { Effects } from './effects';
 import { Execution } from './execution';
 import { Movement } from './movement';
 
@@ -167,10 +168,8 @@ export namespace Creation {
             newVM.cursorPos = arg.payload.changes[0].position;
             const newVMs = [...arg.prevState.cellVMs];
             newVMs[index] = Helpers.asCellViewModel(newVM);
-            return {
-                ...arg.prevState,
-                cellVMs: newVMs
-            };
+            // When editing, make sure we focus the edited cell (otherwise undo looks weird because it undoes a non focused cell)
+            return Effects.focusCell({ ...arg, prevState: { ...arg.prevState, cellVMs: newVMs }, payload: { cursorPos: CursorPos.Current, cellId: arg.payload.id } });
         }
         return arg.prevState;
     }
