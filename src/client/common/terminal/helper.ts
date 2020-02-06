@@ -93,7 +93,7 @@ export class TerminalHelper implements ITerminalHelper {
         }
 
         // If we have a conda environment, then use that.
-        const isCondaEnvironment = await this.condaService.isCondaEnvironment(settings.pythonPath);
+        const isCondaEnvironment = interpreter ? interpreter.type === InterpreterType.Conda : await this.condaService.isCondaEnvironment(settings.pythonPath);
         if (isCondaEnvironment) {
             const activationCommands = interpreter
                 ? await this.conda.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)
