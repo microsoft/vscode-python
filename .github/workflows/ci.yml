@@ -244,13 +244,13 @@ jobs:
         run: |
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-        if: matrix.tests == 'python-unit'
+        if: matrix.test-suite == 'python-unit'
 
       - name: Install functional test requirements
         run: |
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/functional-test-requirements.txt
-        if: matrix.tests == 'functional'
+        if: matrix.test-suite == 'functional'
 
       - name: Prepare environment for venv tests
         env:
@@ -297,12 +297,12 @@ jobs:
           & $condaExecPath create -p "./test_env2" -y python
           & $condaExecPath create -p "$Env:HOME/test_env3" -y python
         shell: pwsh
-        if: matrix.tests == 'venv'
+        if: matrix.test-suite == 'venv'
 
       # Run TypeScript unit tests only for Python 3.X.
       - name: Run TypeScript unit tests
         run: npm run test:unittests:cover
-        if: matrix.tests == 'ts-unit' && startsWith(matrix.python, 3.)
+        if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
       # Run the Python IPython tests in our codebase.
       # Produce JUnit-style log files that will be uploaded after all tests are complete.
@@ -310,7 +310,7 @@ jobs:
         run: |
           python pythonFiles/tests/run_all.py --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
           python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
-        if: matrix.tests == 'python-unit'
+        if: matrix.test-suite == 'python-unit'
 
       # The virtual environment based tests use the `testSingleWorkspace` set of tests
       # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`,
@@ -322,27 +322,27 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testSingleWorkspace
-        if: matrix.tests == 'venv'
+        if: matrix.test-suite == 'venv'
 
       - name: Run single-workspace tests
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testSingleWorkspace
-        if: matrix.tests == 'single-workspace'
+        if: matrix.test-suite == 'single-workspace'
 
       - name: Run multi-workspace tests
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testMultiWorkspace
-        if: matrix.tests == 'multi-workspace'
+        if: matrix.test-suite == 'multi-workspace'
 
       - name: Run debugger tests
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testDebugger
-        if: matrix.tests == 'debugger'
+        if: matrix.test-suite == 'debugger'
 
       - name: Run functional tests
         run: npm run test:functional
-        if: matrix.tests == 'functional'
+        if: matrix.test-suite == 'functional'
     if: github.repository == 'microsoft/vscode-python'
