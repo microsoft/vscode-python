@@ -158,10 +158,15 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         // Otherwise create a new notebook.
 
         // First we need our launch information so we can start a new session (that's what our notebook is really)
-        const launchInfo = await this.waitForConnect();
+        let launchInfo = await this.waitForConnect();
         if (!launchInfo) {
             throw this.getDisposedError();
         }
+        // Create a copy of launch info, cuz we're modifying it here.
+        // Probably need a better structure than using a simple dict.
+        launchInfo = {
+            ...launchInfo
+        };
 
         // Find a kernel that can be used.
         // Do this only if kernel information has been provided in the metadata, else use the default.
