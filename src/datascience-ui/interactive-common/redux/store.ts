@@ -154,7 +154,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // Indicate update from extension side
-        if (action.type && action.type === IncomingMessageActions.UPDATEMODEL) {
+        if (action.type && action.type === InteractiveWindowMessages.UpdateModel) {
             sendMessage(InteractiveWindowMessages.ReceivedUpdateModel);
         }
 

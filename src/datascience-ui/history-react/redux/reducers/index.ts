@@ -22,7 +22,7 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [CommonActionType.EXPORT]: Transfer.exportCells,
     [CommonActionType.SAVE]: Transfer.save,
     [CommonActionType.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
-    [InteractiveWindowMessages.DeleteCell]: Creation.deleteCell,
+    [CommonActionType.DELETE_CELL]: Creation.deleteCell,
     [InteractiveWindowMessages.ShowPlot]: Transfer.showPlot,
     [CommonActionType.LINK_CLICK]: Transfer.linkClick,
     [CommonActionType.GOTO_CELL]: Transfer.gotoCell,
