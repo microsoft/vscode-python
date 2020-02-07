@@ -84,7 +84,7 @@ jobs:
   compile-hygiene:
     name: Compile, lint, check for errors
     runs-on: ubuntu-latest
-    # if: github.repository == 'microsoft/vscode-python'
+    if: github.repository == 'microsoft/vscode-python'
     needs: [js-ts-deps, python-deps]
     steps:
       - name: Checkout
@@ -400,10 +400,11 @@ jobs:
           npx gulp clean:cleanExceptTests
           mkdir -p ./tmp
           cp -r ./out/test ./tmp/test
-          npm run updateBuildNumber -- --buildNumber ${GITHUB_RUN_ID}
+          npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
           npm run package
           npx gulp clean:cleanExceptTests
           cp -r ./tmp/test ./out/test
+        shell: bash
           
       - name: List everything (debug)
         run: |
