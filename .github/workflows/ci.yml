@@ -388,22 +388,14 @@ jobs:
           path: ./pythonFiles/lib/python
           key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
 
-      #- name: Download VSIX
-      #  uses: actions/download-artifact@v1
-      #  with:
-      #    name: ${{env.ARTIFACT_NAME_VSIX}}
+      - name: Download VSIX
+        uses: actions/download-artifact@v1
+        with:
+          name: ${{env.ARTIFACT_NAME_VSIX}}
+          path: ms-python-insiders.vsix
 
       - name: Prepare for smoke tests
-        run: |
-          npm run clean
-          npx tsc -p ./
-          npx gulp clean:cleanExceptTests
-          mkdir -p ./tmp
-          cp -r ./out/test ./tmp/test
-          npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
-          npm run package
-          npx gulp clean:cleanExceptTests
-          cp -r ./tmp/test ./out/test
+        run: npx tsc -p ./
 
       - name: List everything (debug)
         run: |
