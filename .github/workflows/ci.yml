@@ -363,7 +363,8 @@ jobs:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
+#         os: [ubuntu-latest, windows-latest]
         python: [3.8]
     steps:
       - name: Checkout
@@ -387,14 +388,22 @@ jobs:
           path: ./pythonFiles/lib/python
           key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
 
-      - name: Download VSIX
-        uses: actions/download-artifact@v1
-        with:
-          name: ${{env.ARTIFACT_NAME_VSIX}}
+      #- name: Download VSIX
+      #  uses: actions/download-artifact@v1
+      #  with:
+      #    name: ${{env.ARTIFACT_NAME_VSIX}}
 
       - name: Prepare for smoke tests
-        run: npx tsc -p ./
-        shell: bash
+        run: |
+          npm run clean
+          npx tsc -p ./
+          npx gulp clean:cleanExceptTests
+          mkdir -p ./tmp
+          cp -r ./out/test ./tmp/test
+          npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
+          npm run package
+          npx gulp clean:cleanExceptTests
+          cp -r ./tmp/test ./out/test
 
       - name: List everything (debug)
         run: |
