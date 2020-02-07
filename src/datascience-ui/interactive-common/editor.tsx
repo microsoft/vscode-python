@@ -46,7 +46,6 @@ export class Editor extends React.Component<IEditorProps> {
 
     constructor(prop: IEditorProps) {
         super(prop);
-        this.state = { editor: undefined, model: null, forceMonaco: false };
     }
 
     public componentWillUnmount = () => {
@@ -61,7 +60,7 @@ export class Editor extends React.Component<IEditorProps> {
 
     public render() {
         const classes = this.props.readOnly ? 'editor-area' : 'editor-area editor-area-editable';
-        const renderEditor = this.props.useQuickEdit === undefined || this.props.useQuickEdit === false ? this.renderMonacoEditor : this.renderQuickEditor;
+        const renderEditor = this.renderMonacoEditor;
         return <div className={classes}>{renderEditor()}</div>;
     }
 
@@ -77,20 +76,6 @@ export class Editor extends React.Component<IEditorProps> {
         }
         return '';
     }
-
-    private renderQuickEditor = (): JSX.Element => {
-        const readOnly = this.props.readOnly;
-        return (
-            <textarea
-                className="plain-editor"
-                readOnly={readOnly}
-                value={this.props.content}
-                rows={this.props.content.split('\n').length}
-                onChange={this.onAreaChange}
-                onMouseEnter={this.onAreaEnter}
-            />
-        );
-    };
 
     private renderMonacoEditor = (): JSX.Element => {
         const readOnly = this.props.readOnly;
@@ -144,20 +129,8 @@ export class Editor extends React.Component<IEditorProps> {
         );
     };
 
-    private onAreaChange = (_event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        // Force switch to monaco
-        this.setState({ forceMonaco: true });
-    };
-
-    private onAreaEnter = (_event: React.MouseEvent<HTMLTextAreaElement, MouseEvent>) => {
-        // Force switch to monaco
-        this.setState({ forceMonaco: true });
-    };
-
     private editorDidMount = (editor: monacoEditor.editor.IStandaloneCodeEditor) => {
-        // Update our state
         const model = editor.getModel();
-        this.setState({ editor, model: editor.getModel() });
 
         // Disable undo/redo on the model if asked
         // tslint:disable: no-any

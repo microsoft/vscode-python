@@ -26,14 +26,14 @@ const NotebookTransferKey = 'notebook-transfered';
 interface INativeEditorStorageState {
     file: Uri;
     cells: ICell[];
-    isDirty: boolean;
+    changeCountSinceSave: number;
     notebookJson: Partial<nbformat.INotebookContent>;
 }
 
 @injectable()
 export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     public get isDirty(): boolean {
-        return this._state.isDirty;
+        return this._state.changeCountSinceSave > 0;
     }
     public get changed(): Event<NotebookModelChange> {
         return this._changedEmitter.event;
@@ -49,8 +49,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         return this._state.cells;
     }
     private _changedEmitter = new EventEmitter<NotebookModelChange>();
-    private _state: INativeEditorStorageState = { file: Uri.file(''), isDirty: false, cells: [], notebookJson: {} };
-    private _loadPromise: Promise<ICell[]> | undefined;
+    private _state: INativeEditorStorageState = { file: Uri.file(''), changeCountSinceSave: 0, cells: [], notebookJson: {} };
     private indentAmount: string = ' ';
 
     constructor(
@@ -63,9 +62,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     ) {}
 
     public async load(file: Uri, possibleContents?: string): Promise<INotebookModel> {
-        // Reset the load promise and reload our cells
-        this._loadPromise = this.loadFromFile(file, possibleContents);
-        await this._loadPromise;
+        // Reload our cells
+        await this.loadFromFile(file, possibleContents);
         return this;
     }
 
@@ -112,7 +110,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         }
 
         // Forward onto our listeners if necessary
-        if (changed) {
+        if (changed || this.isDirty !== oldDirty) {
             this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty });
         }
     }
@@ -145,18 +143,20 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 this.updateVersionInfo(change.interpreter, change.kernelSpec);
                 break;
             case 'file':
+                changed = !this.fileSystem.arePathsSame(this._state.file.fsPath, change.newFile.fsPath);
                 this._state.file = change.newFile;
-                this._state.isDirty = false;
-
-                // Special case for file, don't set dirty (as we're saving), but still
-                // indicate changed.
-                return true;
+                this._state.changeCountSinceSave = 0;
+                break;
             default:
                 break;
         }
-        if (changed) {
-            this._state.isDirty = true;
+
+        // Dirty state comes from undo. At least VS code will track it that way. However
+        // skip version and file changes as we don't forward those to VS code
+        if (change.kind !== 'file' && change.kind !== 'version') {
+            this._state.changeCountSinceSave += 1;
         }
+
         return changed;
     }
 
@@ -191,8 +191,11 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 break;
         }
 
-        // Dirty state comes from undo
-        this._state.isDirty = change.oldDirty;
+        // Dirty state comes from undo. At least VS code will track it that way.
+        // Note unlike redo, 'file' and 'version' are not possible on undo as
+        // we don't send them to VS code.
+        this._state.changeCountSinceSave -= 1;
+
         return changed;
     }
 
@@ -234,7 +237,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     private swapCells(firstCellId: string, secondCellId: string) {
         const first = this.cells.findIndex(v => v.id === firstCellId);
         const second = this.cells.findIndex(v => v.id === secondCellId);
-        if (first >= 0 && second >= 0) {
+        if (first >= 0 && second >= 0 && first !== second) {
             const temp = { ...this.cells[first] };
             this._state.cells[first] = this.asCell(this.cells[second]);
             this._state.cells[second] = this.asCell(temp);
@@ -253,8 +256,12 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     }
 
     private removeCell(cell: ICell): boolean {
-        this._state.cells = this.cells.filter(c => c.id !== cell.id);
-        return true;
+        const index = this.cells.findIndex(c => c.id === cell.id);
+        if (index >= 0) {
+            this._state.cells.splice(index, 1);
+            return true;
+        }
+        return false;
     }
 
     private clearOutputs(): boolean {
@@ -295,7 +302,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         return cell as ICell;
     }
 
-    private async loadFromFile(file: Uri, possibleContents?: string): Promise<ICell[]> {
+    private async loadFromFile(file: Uri, possibleContents?: string) {
         // Save file
         this._state.file = file;
 
@@ -307,10 +314,10 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             const dirtyContents = await this.getStoredContents();
             if (dirtyContents) {
                 // This means we're dirty. Indicate dirty and load from this content
-                return this.loadContents(dirtyContents, true);
+                this.loadContents(dirtyContents);
             } else {
                 // Load without setting dirty
-                return this.loadContents(contents, false);
+                this.loadContents(contents);
             }
         } catch {
             // May not exist at this time. Should always have a single cell though
@@ -328,7 +335,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         };
     }
 
-    private async loadContents(contents: string | undefined, forceDirty: boolean): Promise<ICell[]> {
+    private loadContents(contents: string | undefined) {
         // tslint:disable-next-line: no-any
         const json = contents ? (JSON.parse(contents) as Partial<nbformat.INotebookContent>) : undefined;
 
@@ -364,14 +371,10 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Make sure at least one
         if (remapped.length === 0) {
             remapped.splice(0, 0, this.createEmptyCell(uuid()));
-            forceDirty = true;
         }
 
         // Save as our visible list
         this._state.cells = remapped;
-        this._state.isDirty = forceDirty;
-
-        return this.cells;
     }
 
     private async extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): Promise<number> {
