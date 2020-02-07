@@ -45,6 +45,7 @@ sample text
 (a+b)^2 = a^2+2ab+b^2
 \\end{align*}
 sample text
+
 sample text
 \\begin{align*}
 (a+b)^2 = a^2+2ab+b^2
@@ -74,6 +75,7 @@ $$
 $$
 
 sample text
+
 sample text
 
 $$
@@ -95,17 +97,21 @@ $$
 $$
 `;
 
-    const markdown5 = `\\begin{equation*}
+    const markdown5 = `
+\\begin{equation*}
 P(E)   = {n \\choose k} p^k (1-p)^{ n-k}
 \\end{equation*}
+
 This expression $\\sqrt{3x-1}+(1+x)^2$ is an example of a TeX inline equation in a [Markdown-formatted](https://daringfireball.net/projects/markdown/) sentence.
 `;
     const output5 = `
+
 $$
 \\begin{equation*}
 P(E)   = {n \\choose k} p^k (1-p)^{ n-k}
 \\end{equation*}
 $$
+
 
 This expression $\\sqrt{3x-1}+(1+x)^2$ is an example of a TeX inline equation in a [Markdown-formatted](https://daringfireball.net/projects/markdown/) sentence.
 `;
