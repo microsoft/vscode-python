@@ -5,6 +5,7 @@ on:
     branches:
       # Run the CI workflow only on master for microsoft/vscode-python for now.
       - master
+
 env:
   PYTHON_VERSION: 3.8
   CACHE_NPM_DEPS: cache-npm
