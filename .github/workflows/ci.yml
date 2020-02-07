@@ -161,6 +161,12 @@ jobs:
       - name: Clean directory
         run: npm run clean
 
+      # Use the GITHUB_RUN_ID environment variable to update the build number.
+      # GITHUB_RUN_ID is a unique number for each run within a repository.
+      # This number does not change if you re-run the workflow run.
+      - name: Update build number
+        run: npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
+
       - name: Package the VSIX
         run: npm run package
 
@@ -381,9 +387,6 @@ jobs:
           path: ./pythonFiles/lib/python
           key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
 
-      # Use the GITHUB_RUN_ID environment variable to update the build number.
-      # GITHUB_RUN_ID is a unique number for each run within a repository.
-      # This number does not change if you re-run the workflow run.
       - name: Prepare for smoke tests
         run: |
           npm run clean
