@@ -168,6 +168,7 @@ jobs:
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
           path: ms-python-insiders.vsix
+
   ### Non-smoke tests
   tests:
     name: Tests
@@ -262,20 +263,26 @@ jobs:
           if ('${{runner.os}}' -match 'windows-latest') {
             $environmentExecutableFolder = 'Scripts'
           }
+
           # pipenv
           python -m pip install pipenv
           python -m pipenv run python build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} pipenvPath
+
           # venv
           if ('${{matrix.python}}' -like '3.?') {
             python -m venv .venv
             & ".venv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} venvPath
           }
+
           # virtualenv
           python -m pip install virtualenv
           python -m virtualenv .virtualenv
           & ".virtualenv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} virtualEnvPath
+
           # conda
+
           # 1. For `terminalActivation.testvirtualenvs.test.ts`
+
           $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
           if ('${{runner.os}}' -match 'windows-latest') {
               $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
@@ -284,7 +291,9 @@ jobs:
               & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaExecPath $condaExecPath
           }
           & $condaPythonPath ./build/ci/addEnvPath.py ${{env.PYTHON_VIRTUAL_ENVS_LOCATION}} condaPath
+
           # 2. For `interpreterLocatorService.testvirtualenvs.ts`
+
           & $condaExecPath create -n "test_env1" -y python
           & $condaExecPath create -p "./test_env2" -y python
           & $condaExecPath create -p "$Env:HOME/test_env3" -y python
