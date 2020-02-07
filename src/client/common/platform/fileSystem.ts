@@ -298,7 +298,7 @@ export class FileSystemUtils implements IFileSystemUtils {
         private readonly fs: IFSExtraForUtils,
         private readonly getHash: (data: string) => string,
         private readonly globFiles: (pat: string, options?: { cwd: string }) => Promise<string[]>
-    ) { }
+    ) {}
     // Create a new object using common-case default values.
     public static withDefaults(
         raw?: IRawFileSystem,
