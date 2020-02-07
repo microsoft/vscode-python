@@ -376,7 +376,7 @@ jobs:
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
       - name: Install dependencies (npm ci)
-        run: npm ci
+        run: npm ci --prefer-offline
 
       - name: Download VSIX
         uses: actions/download-artifact@v1
