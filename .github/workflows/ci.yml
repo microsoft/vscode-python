@@ -89,37 +89,48 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Retrieve cached npm files
         uses: actions/cache@v1
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
+
       - name: Run gulp prePublishNonBundle
         run: npx gulp prePublishNonBundle
+
       - name: Cache the out/ directory
         uses: actions/cache@v1
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
       - name: Check dependencies
         run: npm run checkDependencies
+
       - name: Run linting on TypeScript code
         run: npx tslint --project tsconfig.json
+
       - name: Run prettier on TypeScript code
         run: npx prettier 'src/**/*.ts*' --check
+
       - name: Run prettier on JavaScript code
         run: npx prettier 'build/**/*.js' --check
+
       - name: Use Python ${{env.PYTHON_VERSION}}
         uses: actions/setup-python@v1
         with:
           python-version: ${{env.PYTHON_VERSION}}
+
       - name: Run Black on Python code
         run: |
           python -m pip install -U black
           python -m black . --check
         working-directory: pythonFiles
+
   build-vsix:
     name: Build VSIX
     runs-on: ubuntu-latest
@@ -128,24 +139,31 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Retrieve cached npm files
         uses: actions/cache@v1
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+
       - name: curl PyPI to get ptvsd versions
         run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+
       - name: Retrieve cached pythonFiles/ directory
         uses: actions/cache@v1
         with:
           path: ./pythonFiles/lib/python
           key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
+
       - name: Clean directory
         run: npm run clean
+
       - name: Package the VSIX
         run: npm run package
+
       - uses: actions/upload-artifact@v1
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
@@ -168,13 +186,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: Retrieve cached npm files
         uses: actions/cache@v1
         with:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+
       - name: Install dependencies (npm ci)
         run: npm ci
+
       - name: Retrieve cached compile output directory
         # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
         id: out-cache
@@ -182,15 +203,19 @@ jobs:
         with:
           path: ./out
           key: ${{runner.os}}-${{env.CACHE_OUT_DIRECTORY}}-${{hashFiles('src/**')}}
+
       - name: Compile if not cached
         run: npx gulp prePublishNonBundle
         if: steps.out-cache.outputs.cache-hit == false
+
       - name: Use Python ${{matrix.python}}
         uses: actions/setup-python@v1
         with:
           python-version: ${{matrix.python}}
+
       - name: curl PyPI to get ptvsd versions
         run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+
       - name: Retrieve cached pythonFiles/ directory
         uses: actions/cache@v1
         # Use an id for this step so that its cache-hit output can be accessed and checked in the next step.
@@ -198,29 +223,35 @@ jobs:
         with:
           path: ./pythonFiles/lib/python
           key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+
       - name: Install Python requirements if not cached
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
         if: steps.pythonFiles-cache.outputs.cache-hit == false
+
       - name: Install ptvsd wheels if not cached
         run: |
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_ptvsd.py
         if: steps.pythonFiles-cache.outputs.cache-hit == false
+
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
+
       - name: Install IPython test requirements
         run: |
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
         if: matrix.test-suite == 'python-unit'
+
       - name: Install functional test requirements
         run: |
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/functional-test-requirements.txt
         if: matrix.test-suite == 'functional'
+
       - name: Prepare environment for venv tests
         env:
           TEST_FILES_SUFFIX: testvirtualenvs
@@ -259,10 +290,12 @@ jobs:
           & $condaExecPath create -p "$Env:HOME/test_env3" -y python
         shell: pwsh
         if: matrix.test-suite == 'venv'
+
       # Run TypeScript unit tests only for Python 3.X.
       - name: Run TypeScript unit tests
         run: npm run test:unittests:cover
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
+
       # Run the Python IPython tests in our codebase.
       # Produce JUnit-style log files that will be uploaded after all tests are complete.
       - name: Run Python and IPython unit tests
@@ -270,6 +303,7 @@ jobs:
           python pythonFiles/tests/run_all.py --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
           python -m IPython pythonFiles/tests/run_all.py -- --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
         if: matrix.test-suite == 'python-unit'
+
       # The virtual environment based tests use the `testSingleWorkspace` set of tests
       # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`,
       # which is set in the "Prepare environment for venv tests" step.
@@ -281,21 +315,25 @@ jobs:
         with:
           run: npm run testSingleWorkspace
         if: matrix.test-suite == 'venv'
+
       - name: Run single-workspace tests
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testSingleWorkspace
         if: matrix.test-suite == 'single-workspace'
+
       - name: Run multi-workspace tests
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testMultiWorkspace
         if: matrix.test-suite == 'multi-workspace'
+
       - name: Run debugger tests
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: npm run testDebugger
         if: matrix.test-suite == 'debugger'
+
       - name: Run functional tests
         run: npm run test:functional
         if: matrix.test-suite == 'functional'
