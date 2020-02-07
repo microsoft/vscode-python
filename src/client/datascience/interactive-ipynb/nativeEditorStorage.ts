@@ -1,4 +1,5 @@
 import { nbformat } from '@jupyterlab/coreutils';
+import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -163,8 +164,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         let changed = false;
         switch (change.kind) {
             case 'clear':
+                changed = !fastDeepEqual(this._state.cells, change.oldCells);
                 this._state.cells = change.oldCells;
-                changed = true;
                 break;
             case 'edit':
                 this.editCell(change.reverse, change.id);
@@ -257,8 +258,10 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     }
 
     private clearOutputs(): boolean {
-        this._state.cells = this.cells.map(c => this.asCell({ ...c, data: { ...c.data, execution_count: null, outputs: [] } }));
-        return true;
+        const newCells = this.cells.map(c => this.asCell({ ...c, data: { ...c.data, execution_count: null, outputs: [] } }));
+        const result = !fastDeepEqual(newCells, this.cells);
+        this._state.cells = newCells;
+        return result;
     }
 
     private insertCell(cell: ICell, index: number): boolean {
