@@ -327,8 +327,8 @@ suite('Terminal Service helpers', () => {
 
                             expect(cmd).to.equal(undefined, 'Command must be undefined');
                             verify(pythonSettings.terminal).once();
-                            verify(pythonSettings.pythonPath).once();
-                            verify(condaService.isCondaEnvironment(pythonPath)).once();
+                            verify(pythonSettings.pythonPath).times(interpreter ? 0 : 1);
+                            verify(condaService.isCondaEnvironment(pythonPath)).times(interpreter ? 0 : 1);
                             verify(bashActivationProvider.isShellSupported(shellToExpect)).atLeast(1);
                             verify(pyenvActivationProvider.isShellSupported(anything())).never();
                             verify(pipenvActivationProvider.isShellSupported(anything())).never();
