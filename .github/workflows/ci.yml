@@ -400,7 +400,7 @@ jobs:
           npx gulp clean:cleanExceptTests
           mkdir -p ./tmp
           cp -r ./out/test ./tmp/test
-          npm run updateBuildNumber -- --buildNumber $GITHUB_RUN_ID
+          npm run updateBuildNumber -- --buildNumber ${GITHUB_RUN_ID}
           npm run package
           npx gulp clean:cleanExceptTests
           cp -r ./tmp/test ./out/test
