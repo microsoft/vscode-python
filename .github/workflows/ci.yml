@@ -372,6 +372,15 @@ jobs:
       - name: Install dependencies (npm ci)
         run: npm ci
 
+      - name: curl PyPI to get ptvsd versions
+        run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+
+      - name: Retrieve cached pythonFiles/ directory
+        uses: actions/cache@v1
+        with:
+          path: ./pythonFiles/lib/python
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+
       # Use the GITHUB_RUN_ID environment variable to update the build number.
       # GITHUB_RUN_ID is a unique number for each run within a repository.
       # This number does not change if you re-run the workflow run.
