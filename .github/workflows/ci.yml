@@ -393,9 +393,7 @@ jobs:
           name: ${{env.ARTIFACT_NAME_VSIX}}
 
       - name: Prepare for smoke tests
-        run: |
-          npm run clean
-          npx tsc -p ./
+        run: npx tsc -p ./
         shell: bash
 
       - name: List everything (debug)
@@ -405,6 +403,7 @@ jobs:
           cd ./out
           pwd
           ls -la
+        shell: bash
 
       - name: Run smoke tests
         env:
