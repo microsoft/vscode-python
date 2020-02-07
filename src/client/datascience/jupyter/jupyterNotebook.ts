@@ -36,7 +36,7 @@ import {
     INotebookServerLaunchInfo,
     InterruptResult
 } from '../types';
-import { expandWorkingDir } from './jupyterUtils';
+import { expandWorkingDir, modifyTraceback } from './jupyterUtils';
 import { LiveKernelModel } from './kernels/types';
 
 // tslint:disable-next-line: no-require-imports
@@ -1079,7 +1079,7 @@ export class JupyterNotebookBase implements INotebook {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
-            traceback: msg.content.traceback
+            traceback: modifyTraceback(cell.file, cell.line, msg.content.traceback)
         };
         this.addToCellData(cell, output, clearState);
         cell.state = CellState.error;

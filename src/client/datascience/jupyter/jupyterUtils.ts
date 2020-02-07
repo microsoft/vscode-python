@@ -10,7 +10,11 @@ import { IWorkspaceService } from '../../common/application/types';
 import { IDataScienceSettings } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { SystemVariables } from '../../common/variables/systemVariables';
-import { IConnection } from '../types';
+import { Identifiers } from '../constants';
+import { ICell, IConnection } from '../types';
+
+// tslint:disable-next-line:no-require-imports no-var-requires
+const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp');
 
 export function expandWorkingDir(workingDir: string | undefined, launchingFile: string, workspace: IWorkspaceService): string {
     if (workingDir) {
@@ -44,4 +48,34 @@ export function createRemoteConnectionInfo(uri: string, settings: IDataScienceSe
         },
         dispose: noop
     };
+}
+
+const LineMatchRegex = /(;32m[ ->]*?)(\d+)/g;
+const IPythonMatchRegex = /(<ipython-input.*?>)/g;
+
+function modifyLineNumbers(entry: string, startLine: number): string {
+    return entry.replace(LineMatchRegex, (_s, prefix, num) => {
+        const n = parseInt(num, 10);
+        // Todo: href for source click
+        return `${prefix}${startLine + n + 1}`;
+    });
+}
+
+function modifyTracebackEntry(fileMatchRegex: RegExp, file: string, startLine: number, entry: string): string {
+    if (fileMatchRegex.test(entry)) {
+        return modifyLineNumbers(entry, startLine);
+    } else if (IPythonMatchRegex.test(entry)) {
+        const ipythonReplaced = entry.replace(IPythonMatchRegex, file);
+        return modifyLineNumbers(ipythonReplaced, startLine);
+    }
+    return entry;
+}
+
+export function modifyTraceback(file: string, startLine: number, traceback: string[]): string[] {
+    if (file && file !== Identifiers.EmptyFileName) {
+        const escaped = _escapeRegExp(file);
+        const fileMatchRegex = new RegExp(`\\[.*?;32m${escaped}`);
+        return traceback.map(modifyTracebackEntry.bind(undefined, fileMatchRegex, file, startLine));
+    }
+    return traceback;
 }
