@@ -392,7 +392,6 @@ jobs:
         uses: actions/download-artifact@v1
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
-          path: ms-python-insiders.vsix
 
       - name: Extract artifact
         run: |
