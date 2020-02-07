@@ -46,6 +46,8 @@
    ([#9701](https://github.com/Microsoft/vscode-python/issues/9701))
 
 ### Fixes
+1. Fixed an issue with multiple latex formulas in the same '$$' block.
+   ([#9766](https://github.com/microsoft/vscode-python/issues/9766))
 1. add --ip=127.0.0.1 argument of jupyter server when running in k8s container
    ([#9976](https://github.com/Microsoft/vscode-python/issues/9976))
 1. Correct the server and kernel text for when not connected to a server.
