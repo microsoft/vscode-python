@@ -6,7 +6,7 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { expandWorkingDir } from '../../client/datascience/jupyter/jupyterUtils';
+import { expandWorkingDir, modifyTraceback } from '../../client/datascience/jupyter/jupyterUtils';
 
 suite('Data Science JupyterUtils', () => {
     const workspaceService = mock(WorkspaceService);
@@ -32,5 +32,29 @@ suite('Data Science JupyterUtils', () => {
         assert.equal(expandWorkingDir('${cwd}', 'test/xyz/bip/foo.baz', inst), Uri.file('test/bar').fsPath);
         assert.equal(expandWorkingDir('${workspaceFolder}', 'test/xyz/bip/foo.baz', inst), Uri.file('test/bar').fsPath);
         assert.equal(expandWorkingDir('${cwd}-${file}', 'bar/bip/foo.baz', inst), `${Uri.file('test/bar').fsPath}-${Uri.file('bar/bip/foo.baz').fsPath}`);
+    });
+
+    test('modifying traceback', () => {
+        const trace1 = [
+            '"\u001b[1;36m  File \u001b[1;32m"<ipython-input-2-940d61ce6e42>"\u001b[1;36m, line \u001b[1;32m599999\u001b[0m\n\u001b[1;33m    sys.\u001b[0m\n\u001b[1;37m        ^\u001b[0m\n\u001b[1;31mSyntaxError\u001b[0m\u001b[1;31m:\u001b[0m invalid syntax\n"'
+        ];
+        const after1 = [
+            `"\u001b[1;36m  File \u001b[1;32m"foo.py"\u001b[1;36m, line \u001b[1;32m<a href='file://foo.py?line=600001'>600002</a>\u001b[0m\n\u001b[1;33m    sys.\u001b[0m\n\u001b[1;37m        ^\u001b[0m\n\u001b[1;31mSyntaxError\u001b[0m\u001b[1;31m:\u001b[0m invalid syntax\n"`
+        ];
+        // Use a join after to make the assert show the results
+        assert.equal(after1.join('\n'), modifyTraceback('foo.py', 2, trace1).join('\n'), 'Syntax error failure');
+        const trace2 = [
+            '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
+            '\u001b[1;31mException\u001b[0m                                 Traceback (most recent call last)',
+            "\u001b[1;32md:\\Training\\SnakePython\\manualTestFile.py\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[0;32m      3\u001b[0m \u001b[1;32mfor\u001b[0m \u001b[0mi\u001b[0m \u001b[1;32min\u001b[0m \u001b[0mtrange\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;36m100\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m:\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m      4\u001b[0m     \u001b[0mtime\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0msleep\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;36m0.01\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m----> 5\u001b[1;33m     \u001b[1;32mraise\u001b[0m \u001b[0mException\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;34m'spam'\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m",
+            '\u001b[1;31mException\u001b[0m: spam'
+        ];
+        const after2 = [
+            '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
+            '\u001b[1;31mException\u001b[0m                                 Traceback (most recent call last)',
+            `\u001b[1;32md:\\Training\\SnakePython\\manualTestFile.py\u001b[0m in \u001b[0;36m<module>\u001b[1;34m\u001b[0m\n\u001b[0;32m      <a href='file://d:\\Training\\SnakePython\\manualTestFile.py?line=23'>24</a>\u001b[0m \u001b[1;32mfor\u001b[0m \u001b[0mi\u001b[0m \u001b[1;32min\u001b[0m \u001b[0mtrange\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;36m100\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m:\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0;32m      <a href='file://d:\\Training\\SnakePython\\manualTestFile.py?line=24'>25</a>\u001b[0m     \u001b[0mtime\u001b[0m\u001b[1;33m.\u001b[0m\u001b[0msleep\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;36m0.01\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[1;32m----> <a href='file://d:\\Training\\SnakePython\\manualTestFile.py?line=25'>26</a>\u001b[1;33m     \u001b[1;32mraise\u001b[0m \u001b[0mException\u001b[0m\u001b[1;33m(\u001b[0m\u001b[1;34m'spam'\u001b[0m\u001b[1;33m)\u001b[0m\u001b[1;33m\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m`,
+            '\u001b[1;31mException\u001b[0m: spam'
+        ];
+        assert.equal(after2.join('\n'), modifyTraceback('d:\\Training\\SnakePython\\manualTestFile.py', 20, trace2).join('\n'), 'Exception failure');
     });
 });

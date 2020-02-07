@@ -11,7 +11,7 @@ import { IDataScienceSettings } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { SystemVariables } from '../../common/variables/systemVariables';
 import { Identifiers } from '../constants';
-import { ICell, IConnection } from '../types';
+import { IConnection } from '../types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp');
@@ -53,20 +53,20 @@ export function createRemoteConnectionInfo(uri: string, settings: IDataScienceSe
 const LineMatchRegex = /(;32m[ ->]*?)(\d+)/g;
 const IPythonMatchRegex = /(<ipython-input.*?>)/g;
 
-function modifyLineNumbers(entry: string, startLine: number): string {
+function modifyLineNumbers(entry: string, file: string, startLine: number): string {
     return entry.replace(LineMatchRegex, (_s, prefix, num) => {
         const n = parseInt(num, 10);
-        // Todo: href for source click
-        return `${prefix}${startLine + n + 1}`;
+        const newLine = startLine + n;
+        return `${prefix}<a href='file://${file}?line=${newLine}'>${newLine + 1}</a>`;
     });
 }
 
 function modifyTracebackEntry(fileMatchRegex: RegExp, file: string, startLine: number, entry: string): string {
     if (fileMatchRegex.test(entry)) {
-        return modifyLineNumbers(entry, startLine);
+        return modifyLineNumbers(entry, file, startLine);
     } else if (IPythonMatchRegex.test(entry)) {
         const ipythonReplaced = entry.replace(IPythonMatchRegex, file);
-        return modifyLineNumbers(ipythonReplaced, startLine);
+        return modifyLineNumbers(ipythonReplaced, file, startLine);
     }
     return entry;
 }
