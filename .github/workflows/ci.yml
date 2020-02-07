@@ -393,13 +393,6 @@ jobs:
           name: ${{env.ARTIFACT_NAME_VSIX}}
           path: ms-python-insiders.vsix
 
-      - name: Prepare for smoke tests
-        run: |
-          npm run clean
-          npx tsc -p ./
-          npx gulp clean:cleanExceptTests
-          cp -r ./out/test ./tmp/test
-        
       - name: List everything (debug)
         run: |
           pwd
@@ -407,6 +400,14 @@ jobs:
           cd ./out
           pwd
           ls -la
+
+      - name: Prepare for smoke tests
+        run: |
+          npm run clean
+          npx tsc -p ./
+          npx gulp clean:cleanExceptTests
+          mkdir -p ./tmp
+          cp -r ./out/test ./tmp/test
 
       - name: Run smoke tests
         env:
