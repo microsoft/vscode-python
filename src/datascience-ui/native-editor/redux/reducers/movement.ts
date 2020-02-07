@@ -13,7 +13,7 @@ export namespace Movement {
         const newVMs = [...arg.prevState.cellVMs];
         const first = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.data.firstCellId);
         const second = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.data.secondCellId);
-        if (first >= 0 && second >= 0) {
+        if (first >= 0 && second >= 0 && first !== second) {
             const temp = newVMs[first];
             newVMs[first] = newVMs[second];
             newVMs[second] = temp;
