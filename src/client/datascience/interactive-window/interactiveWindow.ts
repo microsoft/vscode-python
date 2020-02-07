@@ -34,7 +34,8 @@ import {
     INotebookExporter,
     INotebookServerOptions,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
+    WebViewViewChangeEventArgs
 } from '../types';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
@@ -241,8 +242,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public scrollToCell(id: string): void {
         this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }).ignoreErrors();
     }
-    protected async onViewStateChanged(visible: boolean, active: boolean) {
-        super.onViewStateChanged(visible, active);
+    protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
+        super.onViewStateChanged(args);
         this._onDidChangeViewState.fire();
     }
 

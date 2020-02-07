@@ -725,3 +725,9 @@ export interface IJupyterInterpreterDependencyManager {
      */
     installMissingDependencies(err?: JupyterInstallError): Promise<void>;
 }
+
+type WebViewViewState = {
+    readonly visible: boolean;
+    readonly active: boolean;
+};
+export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };

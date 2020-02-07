@@ -56,7 +56,8 @@ import {
     INotebookImporter,
     INotebookServerOptions,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
+    WebViewViewChangeEventArgs
 } from '../types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -495,12 +496,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    protected async onViewStateChanged(visible: boolean, active: boolean) {
-        super.onViewStateChanged(visible, active);
+    protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
+        super.onViewStateChanged(args);
 
         // Update our contexts
         const interactiveContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
-        interactiveContext.set(visible && active).catch();
+        interactiveContext.set(args.current.visible && args.current.active).catch();
         this._onDidChangeViewState.fire();
     }
 

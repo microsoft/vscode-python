@@ -16,7 +16,7 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DefaultTheme, Telemetry } from './constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
-import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './types';
+import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from './types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export class WebViewHost<IMapping> implements IDisposable {
@@ -144,7 +144,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         this.messageListener.onMessage(type.toString(), payload);
     }
 
-    protected onViewStateChanged(_visible: boolean, _active: boolean) {
+    protected onViewStateChanged(_args: WebViewViewChangeEventArgs) {
         noop();
     }
 
@@ -263,11 +263,13 @@ export class WebViewHost<IMapping> implements IDisposable {
     }
 
     private webPanelViewStateChanged = (webPanel: IWebPanel) => {
-        const isVisible = webPanel.isVisible();
-        const isActive = webPanel.isActive();
-        this.onViewStateChanged(isVisible, isActive);
-        this.viewState.visible = isVisible;
-        this.viewState.active = isActive;
+        const visible = webPanel.isVisible();
+        const active = webPanel.isActive();
+        const current = { visible, active };
+        const previous = { visible: this.viewState.visible, active: this.viewState.active };
+        this.viewState.visible = visible;
+        this.viewState.active = active;
+        this.onViewStateChanged({ current, previous });
     };
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
