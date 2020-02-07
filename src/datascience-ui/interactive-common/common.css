@@ -498,3 +498,12 @@ body, html {
     width: 16px;
     height: 0px;
 }
+
+.image-button-image {
+    cursor: pointer;
+}
+
+.image-button-inner-disabled-filter .image-button-image {
+    cursor: unset;
+}
+
