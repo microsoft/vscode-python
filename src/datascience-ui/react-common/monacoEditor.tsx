@@ -373,6 +373,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     public getContents(): string {
         if (this.state.model) {
+            // Make sure to remove any carriage returns as they're not expected
+            // in an ipynb file (and would mess up updates from the file)
             return this.state.model.getValue().replace(/\r/g, '');
         }
         return '';
