@@ -398,6 +398,15 @@ jobs:
           npm run clean
           npx tsc -p ./
           npx gulp clean:cleanExceptTests
+          cp -r ./out/test ./tmp/test
+        
+      - name: List everything (debug)
+        run: |
+          pwd
+          ls -la
+          cd ./out
+          pwd
+          ls -la
 
       - name: Run smoke tests
         env:
