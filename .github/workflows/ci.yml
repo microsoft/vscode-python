@@ -394,6 +394,11 @@ jobs:
           name: ${{env.ARTIFACT_NAME_VSIX}}
           path: ms-python-insiders.vsix
 
+      - name: Extract artifact
+        run: |
+          mv ${{env.ARTIFACT_NAME_VSIX}}/* .
+          rm -r ${{env.ARTIFACT_NAME_VSIX}}
+
       - name: Prepare for smoke tests
         run: npx tsc -p ./
 
