@@ -581,6 +581,12 @@
                 "command": "python.analysis.clearCache",
                 "title": "%python.command.python.analysis.clearCache.title%",
                 "category": "Python"
+            },
+            {
+                "command": "python.datascience.switchKernel",
+                "title": "%DataScience.selectKernel%",
+                "category": "Python",
+                "enablement": "python.datascience.isnativeactive"
             }
         ],
         "menus": {
@@ -1011,6 +1017,12 @@
                     "command": "python.datascience.execSelectionInteractive",
                     "category": "Python",
                     "when": "editorFocus && editorLangId == python && python.datascience.featureenabled && python.datascience.ownsSelection"
+                },
+                {
+                    "command": "python.datascience.switchKernel",
+                    "title": "%DataScience.selectKernel%",
+                    "category": "Python",
+                    "when": "python.datascience.isnativeactive"
                 }
             ],
             "view/title": [

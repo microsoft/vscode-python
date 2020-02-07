@@ -103,7 +103,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
             editor = await this.create(file, contents);
             this.onOpenedEditor(editor);
         } else {
-            await editor.show();
+            await this.showEditor(editor);
         }
         return editor;
     }
@@ -112,7 +112,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         // See if this file is open or not already
         const editor = this.activeEditors.get(file.fsPath);
         if (editor) {
-            await editor.show();
+            await this.showEditor(editor);
         }
         return editor;
     }
@@ -161,17 +161,23 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         this.openNotebookAndCloseEditor(editor.document, true).ignoreErrors();
     }
 
+    private async showEditor(editor: INotebookEditor) {
+        await editor.show();
+        this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
+    }
+
     private async create(file: Uri, contents: string): Promise<INotebookEditor> {
         const editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
         await editor.load(contents, file);
         this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
         this.disposables.push(editor.executed(this.onExecutedEditor.bind(this)));
-        await editor.show();
+        await this.showEditor(editor);
         return editor;
     }
 
     private onClosedEditor(e: INotebookEditor) {
         this.activeEditors.delete(e.file.fsPath);
+        this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
     }
 
     private onExecutedEditor(e: INotebookEditor) {
@@ -183,6 +189,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         this.disposables.push(e.saved(this.onSavedEditor.bind(this, e.file.fsPath)));
         this.openedNotebookCount += 1;
         this._onDidOpenNotebookEditor.fire(e);
+        this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
         this.disposables.push(e.onDidChangeViewState(this.onDidChangeViewState, this));
     }
     private onDidChangeViewState() {

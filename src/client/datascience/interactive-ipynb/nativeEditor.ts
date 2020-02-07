@@ -479,8 +479,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // time state changes. We use this opportunity to update our
         // extension contexts
         if (this.commandManager && this.commandManager.executeCommand) {
-            const interactiveContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
-            interactiveContext.set(!this.isDisposed).catch();
+            const nativeContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
+            nativeContext.set(!this.isDisposed).catch();
             const interactiveCellsContext = new ContextKey(EditorContexts.HaveNativeCells, this.commandManager);
             const redoableContext = new ContextKey(EditorContexts.HaveNativeRedoableCells, this.commandManager);
             const hasCellSelectedContext = new ContextKey(EditorContexts.HaveCellSelected, this.commandManager);
@@ -500,8 +500,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         super.onViewStateChanged(args);
 
         // Update our contexts
-        const interactiveContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
-        interactiveContext.set(args.current.visible && args.current.active).catch();
+        const nativeContext = new ContextKey(EditorContexts.HaveNative, this.commandManager);
+        nativeContext.set(args.current.visible && args.current.active).catch();
         this._onDidChangeViewState.fire();
     }
 
