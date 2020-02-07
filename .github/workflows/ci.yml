@@ -363,8 +363,7 @@ jobs:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest]
-#         os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
         python: [3.8]
     steps:
       - name: Checkout
@@ -393,21 +392,13 @@ jobs:
         with:
           name: ${{env.ARTIFACT_NAME_VSIX}}
 
-      - name: Extract artifact
-        run: |
-          mv ${{env.ARTIFACT_NAME_VSIX}}/* .
-          rm -r ${{env.ARTIFACT_NAME_VSIX}}
-
+      # Extract the artifact from its download folder (./${{env.ARTIFACT_NAME_VSIX}}) to the repo root,
+      # then delete the download folder and compile the source code.
       - name: Prepare for smoke tests
-        run: npx tsc -p ./
-
-      - name: List everything (debug)
         run: |
-          pwd
-          ls -la
-          cd ./out
-          pwd
-          ls -la
+           mv ${{env.ARTIFACT_NAME_VSIX}}/* .
+           rm -r ${{env.ARTIFACT_NAME_VSIX}}
+           npx tsc -p ./
         shell: bash
 
       - name: Run smoke tests
