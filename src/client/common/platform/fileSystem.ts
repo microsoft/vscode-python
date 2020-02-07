@@ -129,7 +129,7 @@ export class RawFileSystem implements IRawFileSystem {
         paths?: IRawPath,
         vscfs?: IVSCodeFileSystemAPI,
         fsExtra?: IRawFSExtra
-    ): RawFileSystem{
+    ): RawFileSystem {
         // prettier-ignore
         return new RawFileSystem(
             paths || FileSystemPaths.withDefaults(),
@@ -298,7 +298,7 @@ export class FileSystemUtils implements IFileSystemUtils {
         private readonly fs: IFSExtraForUtils,
         private readonly getHash: (data: string) => string,
         private readonly globFiles: (pat: string, options?: { cwd: string }) => Promise<string[]>
-    ) {}
+    ) { }
     // Create a new object using common-case default values.
     public static withDefaults(
         raw?: IRawFileSystem,
@@ -471,6 +471,9 @@ export class FileSystem implements IFileSystem {
     }
     public arePathsSame(path1: string, path2: string): boolean {
         return this.utils.pathUtils.arePathsSame(path1, path2);
+    }
+    public getDisplayName(path: string): string {
+        return this.utils.pathUtils.getDisplayName(path);
     }
     public async stat(filename: string): Promise<FileStat> {
         return this.utils.raw.stat(filename);

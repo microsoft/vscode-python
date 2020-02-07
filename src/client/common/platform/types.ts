@@ -192,6 +192,7 @@ export interface IFileSystem {
     // path-related
     directorySeparatorChar: string;
     arePathsSame(path1: string, path2: string): boolean;
+    getDisplayName(path: string): string;
 
     // "raw" operations
     stat(filePath: string): Promise<FileStat>;

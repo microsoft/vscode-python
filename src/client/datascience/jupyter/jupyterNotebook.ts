@@ -684,15 +684,15 @@ export class JupyterNotebookBase implements INotebook {
             const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
             return this.session
                 ? this.session.requestExecute(
-                      {
-                          // Remove the cell marker if we have one.
-                          code: cellMatcher.stripFirstMarker(code),
-                          stop_on_error: false,
-                          allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
-                          store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
-                      },
-                      true
-                  )
+                    {
+                        // Remove the cell marker if we have one.
+                        code: cellMatcher.stripFirstMarker(code),
+                        stop_on_error: false,
+                        allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
+                        store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
+                    },
+                    true
+                )
                 : undefined;
         } catch (exc) {
             // Any errors generating a request should just be logged. User can't do anything about it.
@@ -1079,7 +1079,7 @@ export class JupyterNotebookBase implements INotebook {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
-            traceback: modifyTraceback(cell.file, cell.line, msg.content.traceback)
+            traceback: modifyTraceback(cell.file, this.fs.getDisplayName(cell.file), cell.line, msg.content.traceback)
         };
         this.addToCellData(cell, output, clearState);
         cell.state = CellState.error;

@@ -61,21 +61,21 @@ function modifyLineNumbers(entry: string, file: string, startLine: number): stri
     });
 }
 
-function modifyTracebackEntry(fileMatchRegex: RegExp, file: string, startLine: number, entry: string): string {
+function modifyTracebackEntry(fileMatchRegex: RegExp, file: string, fileDisplayName: string, startLine: number, entry: string): string {
     if (fileMatchRegex.test(entry)) {
         return modifyLineNumbers(entry, file, startLine);
     } else if (IPythonMatchRegex.test(entry)) {
-        const ipythonReplaced = entry.replace(IPythonMatchRegex, file);
+        const ipythonReplaced = entry.replace(IPythonMatchRegex, fileDisplayName);
         return modifyLineNumbers(ipythonReplaced, file, startLine);
     }
     return entry;
 }
 
-export function modifyTraceback(file: string, startLine: number, traceback: string[]): string[] {
+export function modifyTraceback(file: string, fileDisplayName: string, startLine: number, traceback: string[]): string[] {
     if (file && file !== Identifiers.EmptyFileName) {
-        const escaped = _escapeRegExp(file);
+        const escaped = _escapeRegExp(fileDisplayName);
         const fileMatchRegex = new RegExp(`\\[.*?;32m${escaped}`);
-        return traceback.map(modifyTracebackEntry.bind(undefined, fileMatchRegex, file, startLine));
+        return traceback.map(modifyTracebackEntry.bind(undefined, fileMatchRegex, file, fileDisplayName, startLine));
     }
     return traceback;
 }
