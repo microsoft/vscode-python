@@ -211,7 +211,7 @@ export class NotebookStarter implements Disposable {
         // Check for a docker situation.
         try {
             const cgroup = await this.fileSystem.readFile('/proc/self/cgroup').catch(() => '');
-            if (!cgroup.includes('docker')) {
+            if (!cgroup.includes('docker') && !cgroup.includes('kubepods')) {
                 return args;
             }
             // We definitely need an ip address.
