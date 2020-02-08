@@ -26,14 +26,15 @@ const NotebookTransferKey = 'notebook-transfered';
 interface INativeEditorStorageState {
     file: Uri;
     cells: ICell[];
-    changeCountSinceSave: number;
+    changeCount: number;
+    saveChangeCount: number;
     notebookJson: Partial<nbformat.INotebookContent>;
 }
 
 @injectable()
 export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     public get isDirty(): boolean {
-        return this._state.changeCountSinceSave !== 0;
+        return this._state.changeCount !== this._state.saveChangeCount && this._state.changeCount !== 0;
     }
     public get changed(): Event<NotebookModelChange> {
         return this._changedEmitter.event;
@@ -49,7 +50,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         return this._state.cells;
     }
     private _changedEmitter = new EventEmitter<NotebookModelChange>();
-    private _state: INativeEditorStorageState = { file: Uri.file(''), changeCountSinceSave: 0, cells: [], notebookJson: {} };
+    private _state: INativeEditorStorageState = { file: Uri.file(''), changeCount: 0, saveChangeCount: 0, cells: [], notebookJson: {} };
     private indentAmount: string = ' ';
 
     constructor(
@@ -145,7 +146,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             case 'file':
                 changed = !this.fileSystem.arePathsSame(this._state.file.fsPath, change.newFile.fsPath);
                 this._state.file = change.newFile;
-                this._state.changeCountSinceSave = 0;
+                this._state.saveChangeCount = this._state.changeCount;
                 break;
             default:
                 break;
@@ -154,7 +155,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Dirty state comes from undo. At least VS code will track it that way. However
         // skip version and file changes as we don't forward those to VS code
         if (change.kind !== 'file' && change.kind !== 'version') {
-            this._state.changeCountSinceSave += 1;
+            this._state.changeCount += 1;
         }
 
         return changed;
@@ -194,7 +195,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Dirty state comes from undo. At least VS code will track it that way.
         // Note unlike redo, 'file' and 'version' are not possible on undo as
         // we don't send them to VS code.
-        this._state.changeCountSinceSave -= 1;
+        this._state.changeCount -= 1;
 
         return changed;
     }

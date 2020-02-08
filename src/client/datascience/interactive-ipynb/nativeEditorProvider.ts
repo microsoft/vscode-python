@@ -197,6 +197,12 @@ export class NativeEditorProvider implements INotebookEditorProvider, WebviewCus
 
     private closedEditor(editor: INotebookEditor): void {
         this.openedEditors.delete(editor);
+        // If last editor, dispose of the storage
+        const key = editor.file.toString();
+        if (![...this.openedEditors].find(e => e.file.toString() === key)) {
+            this.modelChangedHandlers.delete(key);
+            this.models.delete(key);
+        }
         this._onDidCloseNotebookEditor.fire(editor);
     }
 

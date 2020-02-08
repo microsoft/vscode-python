@@ -45,6 +45,9 @@ import {
     WebViewViewChangeEventArgs
 } from '../types';
 
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
+
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 @injectable()
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -345,7 +348,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 source: 'user',
                 kind: 'modify',
                 newCells: modified,
-                oldCells: unmodified,
+                oldCells: cloneDeep(unmodified),
                 oldDirty: this._model.isDirty,
                 newDirty: true
             });

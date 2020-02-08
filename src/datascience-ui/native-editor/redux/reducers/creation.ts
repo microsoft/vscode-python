@@ -278,8 +278,16 @@ export namespace Creation {
                     ...disabledQueueArg,
                     payload: { ...arg.payload, data: { firstCellId: arg.payload.data.secondCellId, secondCellId: arg.payload.data.firstCellId } }
                 });
+            case 'modify':
+                // Undo for modify should reapply the outputs. Go through each and apply the update
+                let result = arg.prevState;
+                arg.payload.data.oldCells.forEach(c => {
+                    result = updateCell({ ...disabledQueueArg, prevState: result, payload: { ...arg.payload, data: c } });
+                });
+                return result;
+
             default:
-                // Modify, file, version can all be ignored.
+                // File, version can be ignored.
                 break;
         }
 
@@ -307,6 +315,13 @@ export namespace Creation {
                     ...disabledQueueArg,
                     payload: { ...arg.payload, data: { firstCellId: arg.payload.data.secondCellId, secondCellId: arg.payload.data.firstCellId } }
                 });
+            case 'modify':
+                // Redo for modify should reapply the outputs. Go through each and apply the update
+                let result = arg.prevState;
+                arg.payload.data.newCells.forEach(c => {
+                    result = updateCell({ ...disabledQueueArg, prevState: result, payload: { ...arg.payload, data: c } });
+                });
+                return result;
             default:
                 // Modify, file, version can all be ignored.
                 break;
