@@ -6,6 +6,7 @@ import { IDisposableRegistry } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { NotebookModelChange } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import { createTemporaryFile } from '../utils/fs';
 
 export class MockCustomEditorService implements ICustomEditorService {
     private provider: WebviewCustomEditorProvider | undefined;
@@ -90,7 +91,9 @@ export class MockCustomEditorService implements ICustomEditorService {
         const nativeProvider = (this.provider as unknown) as WebviewCustomEditorEditingDelegate<NotebookModelChange>;
         if (nativeProvider) {
             // Just make up a new URI
-            nativeProvider.saveAs(file, Uri.file('bar.ipynb'));
+            createTemporaryFile('.ipynb')
+                .then(tmp => nativeProvider.saveAs(file, Uri.file(tmp.filePath)))
+                .ignoreErrors();
         }
     }
 
