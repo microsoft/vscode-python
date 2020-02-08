@@ -4,7 +4,7 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, Position, Range, TextEditorRevealType, Uri } from 'vscode';
+import { Event, EventEmitter, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
 
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
@@ -92,11 +92,14 @@ export class LinkProvider implements IInteractiveWindowListener {
                 e.revealRange(selection, TextEditorRevealType.InCenter);
             });
         } else {
+            // Not a visible editor, try opening otherwise
             this.commandManager.executeCommand('vscode.open', uri).then(() => {
                 // See if that opened a text document
                 editor = this.documentManager.visibleTextEditors.find(e => this.fileSystem.arePathsSame(e.document.fileName, uri.fsPath));
                 if (editor) {
-                    editor.revealRange(selection, TextEditorRevealType.InCenter);
+                    // Force the selection to change
+                    editor.revealRange(selection);
+                    editor.selection = new Selection(selection.start, selection.start);
                 }
             });
         }
