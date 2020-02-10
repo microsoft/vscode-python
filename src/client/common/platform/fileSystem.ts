@@ -359,7 +359,8 @@ export class FileSystemUtils implements IFileSystemUtils {
             if (isFileNotFoundError(err)) {
                 return false;
             }
-            throw err;
+            traceError(`stat() failed for "${filename}"`, err);
+            return false;
         }
 
         if (fileType === undefined) {
