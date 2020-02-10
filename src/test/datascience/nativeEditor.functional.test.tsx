@@ -813,7 +813,7 @@ for _ in range(50):
                 assert.ok(isCellMarkdown(wrapper, 'NativeCell', 0));
 
                 // Focus the cell.
-                update = waitForUpdate(wrapper, NativeEditor, 1);
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                 simulateKeyPressOnCell(0, { code: 'Enter', editorInfo: undefined });
                 await update;
 
