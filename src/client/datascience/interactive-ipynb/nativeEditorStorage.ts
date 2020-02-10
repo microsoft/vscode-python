@@ -34,7 +34,7 @@ interface INativeEditorStorageState {
 @injectable()
 export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     public get isDirty(): boolean {
-        return this._state.changeCount !== this._state.saveChangeCount && this._state.changeCount !== 0;
+        return this._state.changeCount !== this._state.saveChangeCount;
     }
     public get changed(): Event<NotebookModelChange> {
         return this._changedEmitter.event;
