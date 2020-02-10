@@ -27,6 +27,13 @@ export const SUPPORTS_SYMLINKS = (() => {
     return true;
 })();
 export const SUPPORTS_SOCKETS = (() => {
+    if (WINDOWS) {
+        // Windows requires named pipes to have a specific path under
+        // the local domain ("\\.\pipe\*").  This makes them relatively
+        // useless in our functional tests, where we want to use them
+        // to exercise FileType.Unknown.
+        return false;
+    }
     const tmp = tmpMod.dirSync({
         prefix: 'pyvsc-test-',
         unsafeCleanup: true // for non-empty dir
