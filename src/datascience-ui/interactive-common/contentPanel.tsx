@@ -43,7 +43,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
 
     public render() {
         return (
-            <div id="content-panel-div" ref={this.containerRef}>
+            <div id="content-panel-div" role="group" ref={this.containerRef}>
                 <div id="cell-table">
                     <div id="cell-table-body" role="list">
                         {this.renderCells()}

@@ -72,7 +72,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                 <section id="main-panel-variable" aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
-                <main id="main-panel-content" onScroll={this.handleScroll}>
+                <main id="main-panel-content" onClick={this.contentPanelClick} onScroll={this.handleScroll}>
                     {this.renderContentPanel(this.props.baseTheme)}
                 </main>
                 <section id="main-panel-footer" aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
@@ -81,6 +81,11 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             </div>
         );
     }
+
+    private contentPanelClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        // tslint:disable-next-line:no-console
+        console.log('here');
+    };
 
     private renderToolbarPanel() {
         const variableExplorerTooltip = this.props.variableState.visible
