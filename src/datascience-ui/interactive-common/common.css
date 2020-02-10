@@ -79,6 +79,7 @@ body, html {
 }
 
 .cell-wrapper:focus {
+    outline-width: 0px;
     outline-color:var(--override-selection-background, var(--vscode-editor-selectionBackground));
 }
 
