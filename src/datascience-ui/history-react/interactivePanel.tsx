@@ -82,7 +82,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         );
     }
 
-    private contentPanelClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    private contentPanelClick = (_event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         this.props.focusInput();
     };
 
@@ -220,7 +220,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                         monacoTheme={this.props.monacoTheme}
                         font={this.props.font}
                         settings={this.props.settings}
-                        focusPending={this.props.activateCount}
+                        focusPending={this.props.focusPending}
                     />
                 </ErrorBoundary>
             </div>
@@ -284,7 +284,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                             monacoTheme={this.props.monacoTheme}
                             font={this.props.font}
                             settings={this.props.settings}
-                            focusPending={this.props.activateCount}
+                            focusPending={this.props.focusPending}
                         />
                     </ErrorBoundary>
                 </div>

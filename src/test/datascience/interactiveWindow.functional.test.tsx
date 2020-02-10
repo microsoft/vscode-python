@@ -188,6 +188,50 @@ suite('DataScience Interactive Window output tests', () => {
     );
 
     runMountedTest(
+        'Click outside cells sets focus to input box',
+        async wrapper => {
+            // Create an interactive window so that it listens to the results.
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+            await interactiveWindow.show();
+
+            // Type in the input box
+            const editor = getInteractiveEditor(wrapper);
+            typeCode(editor, 'a=1\na');
+
+            // Give focus to a random div
+            const reactDiv = wrapper
+                .find('div')
+                .first()
+                .getDOMNode();
+
+            const domDiv = reactDiv.querySelector('div');
+
+            if (domDiv && ioc.postMessage) {
+                domDiv.tabIndex = -1;
+                domDiv.focus();
+
+                // Click in content-panel-div, since this doesn't click on any valid click handlers this
+                // should set input back to the input box
+                wrapper
+                    .find('div#content-panel-div')
+                    .first()
+                    .simulate('click');
+
+                // Then enter press shift + enter on the active element
+                const activeElement = document.activeElement;
+                if (activeElement) {
+                    await submitInput(ioc, activeElement as HTMLTextAreaElement);
+                }
+            }
+
+            verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
         'Collapse / expand cell',
         async wrapper => {
             await forceSettingsChange({ ...defaultDataScienceSettings() });
