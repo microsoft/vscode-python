@@ -1038,9 +1038,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 filtersObject[filtersKey] = ['ipynb'];
                 isDirty = true;
 
+                const defaultUri =
+                    Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length > 0
+                        ? this.workspaceService.workspaceFolders[0].uri
+                        : undefined;
                 fileToSaveTo = await this.applicationShell.showSaveDialog({
                     saveLabel: localize.DataScience.dirtyNotebookDialogTitle(),
-                    filters: filtersObject
+                    filters: filtersObject,
+                    defaultUri
                 });
             }
 
