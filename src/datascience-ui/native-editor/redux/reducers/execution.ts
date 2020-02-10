@@ -10,7 +10,7 @@ import { CellState } from '../../../../client/datascience/types';
 import { concatMultilineStringInput } from '../../../common';
 import { createCellFrom } from '../../../common/cellFactory';
 import { CursorPos, getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
-import { createIncomingActionWithPayload, postActionToExtension } from '../../../interactive-common/redux/helpers';
+import { postActionToExtension, queueIncomingActionWithPayload } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CommonActionType, ICellAction, IChangeCellTypeAction, ICodeAction, IExecuteAction } from '../../../interactive-common/redux/reducers/types';
@@ -64,13 +64,11 @@ export namespace Execution {
     }
 
     export function executeCellAndAdvance(arg: NativeEditorReducerArg<IExecuteAction>): IMainState {
-        arg.queueAction(
-            createIncomingActionWithPayload(CommonActionType.EXECUTE_CELL, { cellId: arg.payload.data.cellId, code: arg.payload.data.code, moveOp: arg.payload.data.moveOp })
-        );
+        queueIncomingActionWithPayload(arg, CommonActionType.EXECUTE_CELL, { cellId: arg.payload.data.cellId, code: arg.payload.data.code, moveOp: arg.payload.data.moveOp });
         if (arg.payload.data.moveOp === 'add') {
             const newCellId = uuid();
-            arg.queueAction(createIncomingActionWithPayload(CommonActionType.INSERT_BELOW, { cellId: arg.payload.data.cellId, newCellId }));
-            arg.queueAction(createIncomingActionWithPayload(CommonActionType.FOCUS_CELL, { cellId: newCellId, cursorPos: CursorPos.Current }));
+            queueIncomingActionWithPayload(arg, CommonActionType.INSERT_BELOW, { cellId: arg.payload.data.cellId, newCellId });
+            queueIncomingActionWithPayload(arg, CommonActionType.FOCUS_CELL, { cellId: newCellId, cursorPos: CursorPos.Current });
         }
         return arg.prevState;
     }

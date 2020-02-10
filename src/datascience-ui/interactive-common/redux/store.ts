@@ -6,6 +6,7 @@ import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { MessageType } from '../../../client/datascience/interactive-common/synchronization';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages } from '../../../client/datascience/messages';
 import { CellState } from '../../../client/datascience/types';
@@ -294,12 +295,17 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
         handleMessage(message: string, payload?: any): boolean {
             // Double check this is one of our messages. React will actually post messages here too during development
             if (isAllowedMessage(message)) {
+                debugger;
                 const basePayload: BaseReduxActionPayload = { data: payload };
                 if (message === InteractiveWindowMessages.Sync) {
+                    // This is a message that has been sent from extension purely for synchronization purposes.
                     // Unwrap the message.
                     message = payload.type;
-                    basePayload.messageType = payload.payload.messageType;
+                    basePayload.messageType = payload.payload.messageType ?? MessageType.syncAcrossSameNotebooks;
                     basePayload.data = payload.payload.data;
+                } else {
+                    // Messages result of some user action.
+                    basePayload.messageType = basePayload.messageType ?? MessageType.userAction;
                 }
                 store.dispatch({ type: message, payload: basePayload });
             }

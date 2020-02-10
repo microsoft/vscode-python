@@ -1,7 +1,6 @@
 import { CommonActionType, CommonActionTypeMapping } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { CssMessages, SharedMessages } from '../messages';
 import { IInteractiveWindowMapping, InteractiveWindowMessages } from './interactiveWindowTypes';
-import { BaseReduxActionPayload } from './types';
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -172,11 +171,31 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [SharedMessages.UpdateSettings]: MessageType.userAction
 };
 
-export function isActionPerformedByUser(action: BaseReduxActionPayload<{}> | BaseReduxActionPayload<never>) {
-    return action.messageType === undefined;
+/**
+ * If the original message was a sync message, then do not send messages to extension.
+ *  We allow messages to be sent to extension ONLY when the original message was triggered by the user.
+ *
+ * @export
+ * @param {MessageType} [messageType]
+ * @returns
+ */
+export function checkToPostBasedOnOriginalMessageType(messageType?: MessageType): boolean {
+    if (!messageType) {
+        return true;
+    }
+    if (
+        (messageType & MessageType.syncAcrossSameNotebooks) === MessageType.syncAcrossSameNotebooks ||
+        (messageType & MessageType.syncWithLiveShare) === MessageType.syncWithLiveShare
+    ) {
+        return false;
+    }
+
+    return true;
 }
 
 export function shouldRebroadcast(message: keyof IInteractiveWindowMapping): [boolean, MessageType] {
+    console.error(messageWithMessageTypes);
+    // Get the configured type for this message (whether it should be re-broadcasted or not).
     const messageType: MessageType | undefined = messageWithMessageTypes[message];
     // Support for liveshare is turned off for now, we can enable that later.
     // I.e. we only support synchronizing across editors in the same session.

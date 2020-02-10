@@ -20,7 +20,7 @@ import { PostOffice } from '../../../react-common/postOffice';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { IntellisenseProvider } from '../../intellisenseProvider';
 import { initializeTokenizer, registerMonacoLanguage } from '../../tokenizer';
-import { createIncomingAction } from '../helpers';
+import { queueIncomingAction } from '../helpers';
 import { CommonActionType, ICodeCreatedAction, IEditCellAction } from './types';
 
 export interface IMonacoState {
@@ -63,7 +63,7 @@ function finishTokenizer<T>(buffer: ArrayBuffer, tmJson: string, arg: MonacoRedu
         if (e) {
             logMessage(`ERROR from onigasm: ${e}`);
         }
-        arg.queueAction(createIncomingAction(InteractiveWindowMessages.MonacoReady));
+        queueIncomingAction(arg, InteractiveWindowMessages.MonacoReady);
     }).ignoreErrors();
 }
 

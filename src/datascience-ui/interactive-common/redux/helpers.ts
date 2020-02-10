@@ -5,10 +5,11 @@
 
 import * as Redux from 'redux';
 import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { checkToPostBasedOnOriginalMessageType, MessageType, shouldRebroadcast } from '../../../client/datascience/interactive-common/synchronization';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
 import { QueueAnotherFunc } from '../../react-common/reduxUtils';
-import { CommonAction, CommonActionType, CommonActionTypeMapping } from './reducers/types';
+import { CommonActionType, CommonActionTypeMapping } from './reducers/types';
 
 const AllowedMessages = [...Object.values(InteractiveWindowMessages), ...Object.values(CssMessages), ...Object.values(SharedMessages), ...Object.values(CommonActionType)];
 export function isAllowedMessage(message: string) {
@@ -19,20 +20,32 @@ export function isAllowedAction(action: Redux.AnyAction) {
     return isAllowedMessage(action.type);
 }
 
-export function createIncomingActionWithPayload<M extends IInteractiveWindowMapping & CommonActionTypeMapping, K extends keyof M>(type: K, data: M[K]): CommonAction<M[K]> {
-    // tslint:disable-next-line: no-any
-    return { type, payload: { data, messageDirection: 'incoming' } as any } as any;
-}
-export function createIncomingAction(type: CommonActionType | InteractiveWindowMessages): CommonAction {
-    return { type, payload: { messageDirection: 'incoming', data: undefined } };
-}
-
 type ReducerArg = {
     // tslint:disable-next-line: no-any
     queueAction: QueueAnotherFunc<any>;
     // tslint:disable-next-line: no-any
     payload?: BaseReduxActionPayload<any>;
 };
+
+export function queueIncomingActionWithPayload<M extends IInteractiveWindowMapping & CommonActionTypeMapping, K extends keyof M>(
+    originalReducerArg: ReducerArg,
+    type: K,
+    data: M[K]
+): void {
+    if (!checkToPostBasedOnOriginalMessageType(originalReducerArg.payload?.messageType)) {
+        return;
+    }
+
+    // tslint:disable-next-line: no-any
+    const action = { type, payload: { data, messageDirection: 'incoming' } as any } as any;
+    originalReducerArg.queueAction(action);
+}
+
+export function queueIncomingAction<M extends IInteractiveWindowMapping & CommonActionTypeMapping, K extends keyof M>(originalReducerArg: ReducerArg, type: K): void {
+    // tslint:disable-next-line: no-any
+    queueIncomingActionWithPayload(originalReducerArg, type as any, undefined);
+}
+
 /**
  * Post a message to the extension (via dispatcher actions).
  */
@@ -44,10 +57,15 @@ export function postActionToExtension<K, M extends IInteractiveWindowMapping, T 
 export function postActionToExtension<K, M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(originalReducerArg: ReducerArg, message: T, payload?: M[T]): void;
 // tslint:disable-next-line: no-any
 export function postActionToExtension(originalReducerArg: ReducerArg, message: any, payload?: any) {
+    if (!checkToPostBasedOnOriginalMessageType(originalReducerArg.payload?.messageType)) {
+        return;
+    }
+
     // tslint:disable-next-line: no-any
     const newPayload: BaseReduxActionPayload<any> = ({
         data: payload,
-        messageDirection: 'outgoing'
+        messageDirection: 'outgoing',
+        messageType: MessageType.userAction
         // tslint:disable-next-line: no-any
     } as any) as BaseReduxActionPayload<any>;
     const action = { type: CommonActionType.PostOutgoingMessage, payload: { payload: newPayload, type: message } };
@@ -61,27 +79,28 @@ export function unwrapPostableAction(action: Redux.AnyAction): { type: keyof IIn
 }
 
 export function reBroadcastMessageIfRequired(
-    _dispatcher: Function,
+    dispatcher: Function,
     message: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages,
     payload?: BaseReduxActionPayload<{}>
 ) {
-    if (typeof payload?.messageType === 'number' || message === InteractiveWindowMessages.Sync) {
+    if (
+        message === InteractiveWindowMessages.Sync ||
+        payload?.messageType === MessageType.syncAcrossSameNotebooks ||
+        payload?.messageType === MessageType.syncWithLiveShare ||
+        payload?.messageDirection === 'outgoing'
+    ) {
         return;
     }
-    if (payload?.messageDirection === 'outgoing') {
-        return;
+    // Check if we need to re-broadcast this message to other editors/sessions.
+    // tslint:disable-next-line: no-any
+    const result = shouldRebroadcast(message as any);
+    if (result[0]) {
+        // Mark message as incoming, to indicate this will be sent into the other webviews.
+        // tslint:disable-next-line: no-any
+        const syncPayloadData: BaseReduxActionPayload<any> = { data: payload?.data, messageType: result[1], messageDirection: 'incoming' };
+        // tslint:disable-next-line: no-any
+        const syncPayload = { type: message, payload: syncPayloadData } as any;
+        // Send this out.
+        dispatcher(InteractiveWindowMessages.Sync, syncPayload);
     }
-    // Temporarily disabled.
-    // // Check if we need to re-broadcast this message to other editors/sessions.
-    // // tslint:disable-next-line: no-any
-    // const result = shouldRebroadcast(message as any);
-    // if (result[0]) {
-    //     // Mark message as incoming, to indicate this will be sent into the other webviews.
-    //     // tslint:disable-next-line: no-any
-    //     const syncPayloadData: BaseReduxActionPayload<any> = { data: payload?.data, messageType: result[1], messageDirection: 'incoming' };
-    //     // tslint:disable-next-line: no-any
-    //     const syncPayload = { type: message, payload: syncPayloadData } as any;
-    //     // Send this out.
-    //     dispatcher(InteractiveWindowMessages.Sync, syncPayload);
-    // }
 }

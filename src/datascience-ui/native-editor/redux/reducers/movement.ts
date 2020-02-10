@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { CursorPos, IMainState } from '../../../interactive-common/mainState';
-import { createIncomingActionWithPayload } from '../../../interactive-common/redux/helpers';
+import { queueIncomingActionWithPayload } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CommonActionType, ICellAction, ICodeAction } from '../../../interactive-common/redux/reducers/types';
@@ -50,7 +50,7 @@ export namespace Movement {
     export function arrowUp(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index > 0) {
-            arg.queueAction(createIncomingActionWithPayload(CommonActionType.SELECT_CELL, { cellId: arg.prevState.cellVMs[index - 1].cell.id, cursorPos: CursorPos.Bottom }));
+            queueIncomingActionWithPayload(arg, CommonActionType.SELECT_CELL, { cellId: arg.prevState.cellVMs[index - 1].cell.id, cursorPos: CursorPos.Bottom });
         }
 
         return arg.prevState;
@@ -59,7 +59,7 @@ export namespace Movement {
     export function arrowDown(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index < arg.prevState.cellVMs.length - 1) {
-            arg.queueAction(createIncomingActionWithPayload(CommonActionType.SELECT_CELL, { cellId: arg.prevState.cellVMs[index + 1].cell.id, cursorPos: CursorPos.Bottom }));
+            queueIncomingActionWithPayload(arg, CommonActionType.SELECT_CELL, { cellId: arg.prevState.cellVMs[index + 1].cell.id, cursorPos: CursorPos.Bottom });
         }
 
         return arg.prevState;

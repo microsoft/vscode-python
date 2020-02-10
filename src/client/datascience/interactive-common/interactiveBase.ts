@@ -11,7 +11,6 @@ import { CancellationToken, ConfigurationTarget, Event, EventEmitter, Memento, P
 import { Disposable } from 'vscode-jsonrpc';
 
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
@@ -44,7 +43,7 @@ import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { LiveKernelModel } from '../jupyter/kernels/types';
-import { CssMessages, SharedMessages } from '../messages';
+import { CssMessages } from '../messages';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     CellState,
@@ -74,7 +73,6 @@ import {
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
-import { BaseReduxActionPayload } from './types';
 
 @injectable()
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
@@ -178,11 +176,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
     public onMessage(message: string, payload: any) {
         switch (message) {
-            case InteractiveWindowMessages.Sync:
-                // tslint:disable-next-line: no-any
-                const syncPayload = payload as { type: InteractiveWindowMessages | SharedMessages | CommonActionType; payload: BaseReduxActionPayload<any> };
-                this.postMessageInternal(syncPayload.type, syncPayload.payload).ignoreErrors();
-                break;
             case InteractiveWindowMessages.GotoCodeCell:
                 this.handleMessage(message, payload, this.gotoCode);
                 break;

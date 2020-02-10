@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
-import { createIncomingAction, createIncomingActionWithPayload } from '../../interactive-common/redux/helpers';
 import {
     CommonAction,
     CommonActionType,
+    CommonActionTypeMapping,
     ICellAction,
     ICodeAction,
     ICodeCreatedAction,
@@ -17,6 +17,16 @@ import {
     IShowDataViewerAction
 } from '../../interactive-common/redux/reducers/types';
 import { IMonacoModelContentChangeEvent } from '../../react-common/monacoHelpers';
+
+// This function isn't made common and not exported, to ensure it isn't used elsewhere.
+function createIncomingActionWithPayload<M extends IInteractiveWindowMapping & CommonActionTypeMapping, K extends keyof M>(type: K, data: M[K]): CommonAction<M[K]> {
+    // tslint:disable-next-line: no-any
+    return { type, payload: { data, messageDirection: 'incoming' } as any } as any;
+}
+// This function isn't made common and not exported, to ensure it isn't used elsewhere.
+function createIncomingAction(type: CommonActionType | InteractiveWindowMessages): CommonAction {
+    return { type, payload: { messageDirection: 'incoming', data: undefined } };
+}
 
 // See https://react-redux.js.org/using-react-redux/connect-mapdispatch#defining-mapdispatchtoprops-as-an-object
 export const actionCreators = {
