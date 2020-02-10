@@ -1721,7 +1721,7 @@ for _ in range(50):
                 await setupFunction.call(this, JSON.stringify(oldJson));
             });
 
-            test('xUpdate notebook metadata on execution', async () => {
+            test('Update notebook metadata on execution', async () => {
                 const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
                 const editor = notebookProvider.editors[0];
                 assert.ok(editor, 'No editor when saving');
@@ -1731,7 +1731,7 @@ for _ in range(50):
                 const disposeMetadataUpdated = editor.metadataUpdated(() => metadataUpdatedPromise.resolve());
 
                 // add cells, run them and save
-                // await addCell(wrapper, ioc, 'a=1\na');
+                await addCell(wrapper, ioc, 'a=1\na');
                 const runAllButton = findButton(wrapper, NativeEditor, 0);
                 const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, { numberOfTimes: 3 });
                 await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
