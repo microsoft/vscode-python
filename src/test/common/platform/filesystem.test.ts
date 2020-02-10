@@ -820,7 +820,11 @@ suite('FileSystem - utils', () => {
             expect(exists).to.equal(false);
         });
 
-        test('symlink', async () => {
+        test('symlink', async function() {
+            if (!SUPPORTS_SYMLINKS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
             const dirname = await fix.createDirectory('x/y/z/spam');
             const symlink = await fix.createSymlink('x/y/z/eggs', dirname);
 
@@ -1180,7 +1184,11 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(false);
             });
 
-            test('symlink', async () => {
+            test('symlink', async function() {
+                if (!SUPPORTS_SYMLINKS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
                 const dirname = await fix.createDirectory('x/y/z/spam');
                 const symlink = await fix.createSymlink('x/y/z/eggs', dirname);
 
