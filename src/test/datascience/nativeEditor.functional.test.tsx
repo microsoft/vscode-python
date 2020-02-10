@@ -47,6 +47,7 @@ import {
     getLastOutputCell,
     getNativeFocusedEditor,
     getOutputCell,
+    injectCode,
     isCellFocused,
     isCellMarkdown,
     isCellSelected,
@@ -1233,7 +1234,7 @@ for _ in range(50):
             test("Toggle markdown and code modes using 'y' and 'm' keys (cells should not be focused)", async () => {
                 clickCell(1);
                 // Switch to markdown
-                let update = waitForMessage(ioc, CommonActionType.CHANGE_CELL_TYPE);
+                let update = waitForMessage(ioc, InteractiveWindowMessages.RemoveCell);
                 simulateKeyPressOnCell(1, { code: 'm' });
                 await update;
 
@@ -1242,12 +1243,76 @@ for _ in range(50):
                 assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
 
                 // Switch to code
-                update = waitForMessage(ioc, CommonActionType.CHANGE_CELL_TYPE);
+                update = waitForMessage(ioc, InteractiveWindowMessages.InsertCell);
                 simulateKeyPressOnCell(1, { code: 'y' });
                 await update;
 
                 assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused 2nd time');
                 assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is markdown second time');
+            });
+            test("Toggle markdown and code modes using 'y' and 'm' keys & ensure changes to cells is preserved", async () => {
+                clickCell(1);
+                // Switch to markdown
+                let update = waitForMessage(ioc, InteractiveWindowMessages.RemoveCell);
+                simulateKeyPressOnCell(1, { code: 'm' });
+                await update;
+
+                // Monaco editor should be rendered and the cell should be markdown
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused');
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
+
+                // Focus the cell.
+                update = waitForUpdate(wrapper, NativeEditor, 1);
+                simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
+                await update;
+
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
+                assert.equal(
+                    wrapper
+                        .find(NativeCell)
+                        .at(1)
+                        .find(MonacoEditor).length,
+                    1
+                );
+
+                // Change the markdown
+                let editor = getNativeFocusedEditor(wrapper);
+                injectCode(editor, 'foo');
+
+                // Switch back to code mode.
+                // First lose focus
+                update = waitForUpdate(wrapper, NativeEditor, 1);
+                simulateKeyPressOnCell(1, { code: 'Escape' });
+                await update;
+
+                // Confirm markdown output is rendered
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is focused');
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
+                assert.equal(
+                    wrapper
+                        .find(NativeCell)
+                        .at(1)
+                        .find(MonacoEditor).length,
+                    0
+                );
+
+                // Switch to code
+                update = waitForMessage(ioc, InteractiveWindowMessages.InsertCell);
+                simulateKeyPressOnCell(1, { code: 'y' });
+                await update;
+
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused 2nd time');
+                assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is markdown second time');
+
+                // Focus the cell.
+                update = waitForUpdate(wrapper, NativeEditor, 1);
+                simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
+                await update;
+
+                // Confirm editor still has the same text
+                editor = getNativeFocusedEditor(wrapper);
+                const monacoEditor = editor!.instance() as MonacoEditor;
+                assert.equal('foo', monacoEditor.state.editor!.getValue(), 'Changing cell type lost input');
             });
 
             test("Test undo using the key 'z'", async () => {
