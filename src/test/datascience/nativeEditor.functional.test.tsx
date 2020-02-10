@@ -1645,78 +1645,77 @@ for _ in range(50):
             }).timeout(10_000);
         });
 
+        const oldJson: nbformat.INotebookContent = {
+            nbformat: 4,
+            nbformat_minor: 2,
+            cells: [
+                {
+                    cell_type: 'code',
+                    execution_count: 1,
+                    metadata: {
+                        collapsed: true
+                    },
+                    outputs: [
+                        {
+                            data: {
+                                'text/plain': ['1']
+                            },
+                            output_type: 'execute_result',
+                            execution_count: 1,
+                            metadata: {}
+                        }
+                    ],
+                    source: ['a=1\n', 'a']
+                },
+                {
+                    cell_type: 'code',
+                    execution_count: 2,
+                    metadata: {},
+                    outputs: [
+                        {
+                            data: {
+                                'text/plain': ['2']
+                            },
+                            output_type: 'execute_result',
+                            execution_count: 2,
+                            metadata: {}
+                        }
+                    ],
+                    source: ['b=2\n', 'b']
+                },
+                {
+                    cell_type: 'code',
+                    execution_count: 3,
+                    metadata: {},
+                    outputs: [
+                        {
+                            data: {
+                                'text/plain': ['3']
+                            },
+                            output_type: 'execute_result',
+                            execution_count: 3,
+                            metadata: {}
+                        }
+                    ],
+                    source: ['c=3\n', 'c']
+                }
+            ],
+            metadata: {
+                orig_nbformat: 4,
+                kernelspec: {
+                    display_name: 'JUNK',
+                    name: 'JUNK'
+                },
+                language_info: {
+                    name: 'python',
+                    version: '1.2.3'
+                }
+            }
+        };
+
         suite('Update Metadata', () => {
             setup(async function() {
                 initIoc();
-
-                const oldJson: nbformat.INotebookContent = {
-                    nbformat: 4,
-                    nbformat_minor: 2,
-                    cells: [
-                        {
-                            cell_type: 'code',
-                            execution_count: 1,
-                            metadata: {
-                                collapsed: true
-                            },
-                            outputs: [
-                                {
-                                    data: {
-                                        'text/plain': ['1']
-                                    },
-                                    output_type: 'execute_result',
-                                    execution_count: 1,
-                                    metadata: {}
-                                }
-                            ],
-                            source: ['a=1\n', 'a']
-                        },
-                        {
-                            cell_type: 'code',
-                            execution_count: 2,
-                            metadata: {},
-                            outputs: [
-                                {
-                                    data: {
-                                        'text/plain': ['2']
-                                    },
-                                    output_type: 'execute_result',
-                                    execution_count: 2,
-                                    metadata: {}
-                                }
-                            ],
-                            source: ['b=2\n', 'b']
-                        },
-                        {
-                            cell_type: 'code',
-                            execution_count: 3,
-                            metadata: {},
-                            outputs: [
-                                {
-                                    data: {
-                                        'text/plain': ['3']
-                                    },
-                                    output_type: 'execute_result',
-                                    execution_count: 3,
-                                    metadata: {}
-                                }
-                            ],
-                            source: ['c=3\n', 'c']
-                        }
-                    ],
-                    metadata: {
-                        orig_nbformat: 4,
-                        kernelspec: {
-                            display_name: 'JUNK',
-                            name: 'JUNK'
-                        },
-                        language_info: {
-                            name: 'python',
-                            version: '1.2.3'
-                        }
-                    }
-                };
-
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this, JSON.stringify(oldJson));
             });
@@ -1764,77 +1763,8 @@ for _ in range(50):
         });
 
         suite('Clear Outputs', () => {
-            const oldJson: nbformat.INotebookContent = {
-                nbformat: 4,
-                nbformat_minor: 2,
-                cells: [
-                    {
-                        cell_type: 'code',
-                        execution_count: 1,
-                        metadata: {
-                            collapsed: true
-                        },
-                        outputs: [
-                            {
-                                data: {
-                                    'text/plain': ['1']
-                                },
-                                output_type: 'execute_result',
-                                execution_count: 1,
-                                metadata: {}
-                            }
-                        ],
-                        source: ['a=1\n', 'a']
-                    },
-                    {
-                        cell_type: 'code',
-                        execution_count: 2,
-                        metadata: {},
-                        outputs: [
-                            {
-                                data: {
-                                    'text/plain': ['2']
-                                },
-                                output_type: 'execute_result',
-                                execution_count: 2,
-                                metadata: {}
-                            }
-                        ],
-                        source: ['b=2\n', 'b']
-                    },
-                    {
-                        cell_type: 'code',
-                        execution_count: 3,
-                        metadata: {},
-                        outputs: [
-                            {
-                                data: {
-                                    'text/plain': ['3']
-                                },
-                                output_type: 'execute_result',
-                                execution_count: 3,
-                                metadata: {}
-                            }
-                        ],
-                        source: ['c=3\n', 'c']
-                    }
-                ],
-                metadata: {
-                    orig_nbformat: 4,
-                    kernelspec: {
-                        display_name: 'JUNK',
-                        name: 'JUNK'
-                    },
-                    language_info: {
-                        name: 'python',
-                        version: '1.2.3'
-                    }
-                }
-            };
-
             setup(async function() {
                 initIoc();
-
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this, JSON.stringify(oldJson));
             });
