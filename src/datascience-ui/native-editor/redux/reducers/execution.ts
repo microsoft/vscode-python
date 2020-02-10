@@ -177,8 +177,10 @@ export namespace Execution {
                 arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell, { id: current.cell.id }));
             }
 
-            // When changing a cell type, also give the cell focus.
-            return Effects.focusCell({ ...arg, prevState: { ...arg.prevState, cellVMs }, payload: { cellId: arg.payload.cellId, cursorPos: CursorPos.Current } });
+            return {
+                ...arg.prevState,
+                cellVMs
+            };
         }
 
         return arg.prevState;
