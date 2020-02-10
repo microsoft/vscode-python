@@ -597,6 +597,38 @@ suite('Raw FileSystem', () => {
             await expect(promise).to.eventually.be.rejected;
             verifyAll();
         });
+
+        test('ignores errors from getFileType()', async () => {
+            const dirname = 'x/y/z';
+            const names = [
+                // These match the items in "expected".
+                '__init__.py',
+                'spam.py',
+                'eggs.py'
+            ];
+            const expected: [string, FileType][] = [
+                ['x/y/z/__init__.py', FileType.File],
+                ['x/y/z/spam.py', FileType.File],
+                ['x/y/z/eggs.py', FileType.Unknown]
+            ];
+            raw.setup(r => r.readdir(dirname)) // expect the specific filename
+                .returns(() => Promise.resolve(names));
+            names.forEach((name, i) => {
+                const [filename, filetype] = expected[i];
+                raw.setup(r => r.join(dirname, name)) // expect the specific filename
+                    .returns(() => filename);
+                if (filetype === FileType.Unknown) {
+                    raw.setup(r => r.lstat(filename)) // expect the specific filename
+                        .throws(new Error('oops!'));
+                } else {
+                    setupForFileType(filename, filetype);
+                }
+            });
+
+            const entries = await filesystem.listdir(dirname);
+
+            expect(entries.sort()).to.deep.equal(expected.sort());
+        });
     });
 
     suite('readTextSync', () => {
