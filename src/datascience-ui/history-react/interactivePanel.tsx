@@ -82,6 +82,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         );
     }
 
+    // If click is not handled by something else, focus our input box
     private contentPanelClick = (_event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         this.props.focusInput();
     };
