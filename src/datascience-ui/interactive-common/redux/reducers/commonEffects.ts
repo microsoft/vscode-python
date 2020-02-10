@@ -45,6 +45,13 @@ export namespace CommonEffects {
         };
     }
 
+    export function focusInput<T>(arg: CommonReducerArg<T>): IMainState {
+        return {
+            ...arg.prevState,
+            activateCount: arg.prevState.activateCount + 1
+        };
+    }
+
     export function handleLocInit<T>(arg: CommonReducerArg<T, string>): IMainState {
         // Read in the loc strings
         const locJSON = JSON.parse(arg.payload);

@@ -40,6 +40,7 @@ export const reducerMap: IInteractiveActionMapping = {
     [CommonActionType.CLICK_CELL]: Effects.clickCell,
     [CommonActionType.UNFOCUS_CELL]: Effects.unfocusCell,
     [CommonActionType.UNMOUNT]: Creation.unmount,
+    [CommonActionType.FOCUS_INPUT]: CommonEffects.focusInput,
 
     // Messages from the webview (some are ignored)
     [IncomingMessageActions.STARTCELL]: Creation.startCell,

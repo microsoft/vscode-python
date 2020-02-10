@@ -83,8 +83,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     }
 
     private contentPanelClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-        // tslint:disable-next-line:no-console
-        console.log('here');
+        this.props.focusInput();
     };
 
     private renderToolbarPanel() {
