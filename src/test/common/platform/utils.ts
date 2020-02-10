@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable:no-console
+
 import { expect } from 'chai';
 import * as fsextra from 'fs-extra';
 import * as net from 'net';
 import * as path from 'path';
 import * as tmpMod from 'tmp';
-import { traceVerbose } from '../../../client/common/logger';
 
 // Note: all functional tests that trigger the VS Code "fs" API are
 // found in filesystem.test.ts.
@@ -90,8 +91,8 @@ export class CleanupFixture {
                         await res;
                     }
                 } catch (err) {
-                    traceVerbose(`cleanup ${i + 1} failed: ${err}`);
-                    traceVerbose('moving on...');
+                    console.log(`cleanup ${i + 1} failed: ${err}`);
+                    console.log('moving on...');
                 }
             })
         );
@@ -163,8 +164,8 @@ export class FSFixture extends CleanupFixture {
                 if (!(await fsextra.pathExists(filename))) {
                     return;
                 }
-                traceVerbose(`failure during dispose() for ${filename}: ${err}`);
-                traceVerbose('...manually deleting');
+                console.log(`failure during dispose() for ${filename}: ${err}`);
+                console.log('...manually deleting');
                 // Fall back to fsextra.
             }
         }
@@ -175,7 +176,7 @@ export class FSFixture extends CleanupFixture {
             if (!(await fsextra.pathExists(filename))) {
                 return;
             }
-            traceVerbose(`failure while deleting ${filename}: ${err}`);
+            console.log(`failure while deleting ${filename}: ${err}`);
         }
     }
 
@@ -220,7 +221,7 @@ export class FSFixture extends CleanupFixture {
             try {
                 await new Promise(resolve => srv.close(resolve));
             } catch (err) {
-                traceVerbose(`failure while closing socket server: ${err}`);
+                console.log(`failure while closing socket server: ${err}`);
             }
         });
         return srv;
