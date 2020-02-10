@@ -17,7 +17,7 @@ import {
 // prettier-ignore
 import {
     assertDoesNotExist, DOES_NOT_EXIST, FSFixture,
-    SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS
+    SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS, WINDOWS
 } from './utils';
 
 // Note: all functional tests that do not trigger the VS Code "fs" API
@@ -242,6 +242,25 @@ suite('FileSystem - utils', () => {
 
             expect(exists).to.equal(false);
         });
+
+        test('failure in stat()', async function() {
+            if (WINDOWS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const dirname = await fix.createDirectory('x/y/z');
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            await fsextra.chmod(dirname, 0o400);
+
+            let exists: boolean;
+            try {
+                exists = await utils.fileExists(filename);
+            } finally {
+                await fsextra.chmod(dirname, 0o755);
+            }
+
+            expect(exists).to.equal(false);
+        });
     });
 
     suite('directoryExists', () => {
@@ -279,6 +298,25 @@ suite('FileSystem - utils', () => {
             const sockFile = await fix.createSocket('x/y/z/ipc.sock');
 
             const exists = await utils.directoryExists(sockFile);
+
+            expect(exists).to.equal(false);
+        });
+
+        test('failure in stat()', async function() {
+            if (WINDOWS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const parentdir = await fix.createDirectory('x/y/z');
+            const dirname = await fix.createDirectory('x/y/z/spam');
+            await fsextra.chmod(parentdir, 0o400);
+
+            let exists: boolean;
+            try {
+                exists = await utils.fileExists(dirname);
+            } finally {
+                await fsextra.chmod(parentdir, 0o755);
+            }
 
             expect(exists).to.equal(false);
         });

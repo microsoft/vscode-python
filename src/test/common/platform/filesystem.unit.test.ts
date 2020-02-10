@@ -813,15 +813,14 @@ suite('FileSystemUtils', () => {
             verifyAll();
         });
 
-        test('fails if stat fails', async () => {
+        test('ignores errors from stat()', async () => {
             const filename = 'x/y/z/spam.py';
-            const err = new Error('oops!');
-            deps.setup(d => d.stat(filename)) // There was a problem while stat'ing the file.
-                .throws(err);
+            deps.setup(d => d.stat(filename)) // It's broken.
+                .returns(() => Promise.reject(new Error('oops!')));
 
-            const promise = utils.pathExists(filename);
+            const exists = await utils.pathExists(filename);
 
-            await expect(promise).to.eventually.be.rejected;
+            expect(exists).to.equal(false);
             verifyAll();
         });
 
