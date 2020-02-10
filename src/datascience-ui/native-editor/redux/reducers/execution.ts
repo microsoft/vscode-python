@@ -10,16 +10,16 @@ import { CellState } from '../../../../client/datascience/types';
 import { concatMultilineStringInput } from '../../../common';
 import { createCellFrom } from '../../../common/cellFactory';
 import { CursorPos, getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
-import { createIncomingActionWithPayload, createPostableAction } from '../../../interactive-common/redux/helpers';
+import { createIncomingActionWithPayload, postActionToExtension } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CommonActionType, ICellAction, IChangeCellTypeAction, ICodeAction, IExecuteAction } from '../../../interactive-common/redux/reducers/types';
-import { QueueAnotherFunc } from '../../../react-common/reduxUtils';
 import { NativeEditorReducerArg } from '../mapping';
 import { Effects } from './effects';
 
 export namespace Execution {
-    function executeRange(prevState: IMainState, start: number, end: number, codes: string[], queueAction: QueueAnotherFunc<CommonActionType>): IMainState {
+    // tslint:disable-next-line: no-any
+    function executeRange(prevState: IMainState, start: number, end: number, codes: string[], originalArg: NativeEditorReducerArg<any>): IMainState {
         const newVMs = [...prevState.cellVMs];
         for (let pos = start; pos <= end; pos += 1) {
             const orig = prevState.cellVMs[pos];
@@ -40,7 +40,7 @@ export namespace Execution {
                     });
 
                     // Send a message if a code cell
-                    queueAction(createPostableAction(InteractiveWindowMessages.ReExecuteCell, { code, id: orig.cell.id }));
+                    postActionToExtension(originalArg, InteractiveWindowMessages.ReExecuteCell, { code, id: orig.cell.id });
                 } else {
                     // Update our input to be our new code
                     newVMs[pos] = Helpers.asCellViewModel({ ...orig, inputBlockText: code, cell: { ...orig.cell, data: clonedCell } });
@@ -58,7 +58,7 @@ export namespace Execution {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index > 0) {
             const codes = arg.prevState.cellVMs.filter((_c, i) => i < index).map(c => concatMultilineStringInput(c.cell.data.source));
-            return executeRange(arg.prevState, 0, index - 1, codes, arg.queueAction);
+            return executeRange(arg.prevState, 0, index - 1, codes, arg);
         }
         return arg.prevState;
     }
@@ -79,7 +79,7 @@ export namespace Execution {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             // Start executing this cell.
-            const executeResult = executeRange(arg.prevState, index, index, [arg.payload.data.code], arg.queueAction);
+            const executeResult = executeRange(arg.prevState, index, index, [arg.payload.data.code], arg);
 
             // Modify the execute result if moving
             if (arg.payload.data.moveOp === 'select') {
@@ -116,7 +116,7 @@ export namespace Execution {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             const codes = arg.prevState.cellVMs.filter((_c, i) => i > index).map(c => concatMultilineStringInput(c.cell.data.source));
-            return executeRange(arg.prevState, index, index + codes.length, [arg.payload.data.code, ...codes], arg.queueAction);
+            return executeRange(arg.prevState, index, index + codes.length, [arg.payload.data.code, ...codes], arg);
         }
         return arg.prevState;
     }
@@ -203,7 +203,7 @@ export namespace Execution {
             const cells = arg.prevState.undoStack[arg.prevState.undoStack.length - 1];
             const undoStack = arg.prevState.undoStack.slice(0, arg.prevState.undoStack.length - 1);
             const redoStack = Helpers.pushStack(arg.prevState.redoStack, arg.prevState.cellVMs);
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.Undo));
+            postActionToExtension(arg, InteractiveWindowMessages.Undo);
             return {
                 ...arg.prevState,
                 cellVMs: cells,
@@ -222,7 +222,7 @@ export namespace Execution {
             const cells = arg.prevState.redoStack[arg.prevState.redoStack.length - 1];
             const redoStack = arg.prevState.redoStack.slice(0, arg.prevState.redoStack.length - 1);
             const undoStack = Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs);
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.Redo));
+            postActionToExtension(arg, InteractiveWindowMessages.Redo);
             return {
                 ...arg.prevState,
                 cellVMs: cells,

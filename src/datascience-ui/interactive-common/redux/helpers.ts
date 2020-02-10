@@ -7,6 +7,7 @@ import * as Redux from 'redux';
 import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
+import { QueueAnotherFunc } from '../../react-common/reduxUtils';
 import { CommonAction, CommonActionType, CommonActionTypeMapping } from './reducers/types';
 
 const AllowedMessages = [...Object.values(InteractiveWindowMessages), ...Object.values(CssMessages), ...Object.values(SharedMessages), ...Object.values(CommonActionType)];
@@ -26,14 +27,31 @@ export function createIncomingAction(type: CommonActionType | InteractiveWindowM
     return { type, payload: { messageDirection: 'incoming', data: undefined } };
 }
 
-// Actions created from messages
-export function createPostableAction<M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(message: T, payload?: M[T]): Redux.AnyAction {
-    const newPayload: BaseReduxActionPayload<M[T]> = ({
+type ReducerArg = {
+    // tslint:disable-next-line: no-any
+    queueAction: QueueAnotherFunc<any>;
+    // tslint:disable-next-line: no-any
+    payload?: BaseReduxActionPayload<any>;
+};
+/**
+ * Post a message to the extension (via dispatcher actions).
+ */
+export function postActionToExtension<K, M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(originalReducerArg: ReducerArg, message: T, payload?: M[T]): void;
+/**
+ * Post a message to the extension (via dispatcher actions).
+ */
+// tslint:disable-next-line: unified-signatures
+export function postActionToExtension<K, M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(originalReducerArg: ReducerArg, message: T, payload?: M[T]): void;
+// tslint:disable-next-line: no-any
+export function postActionToExtension(originalReducerArg: ReducerArg, message: any, payload?: any) {
+    // tslint:disable-next-line: no-any
+    const newPayload: BaseReduxActionPayload<any> = ({
         data: payload,
         messageDirection: 'outgoing'
         // tslint:disable-next-line: no-any
-    } as any) as BaseReduxActionPayload<M[T]>;
-    return { type: CommonActionType.PostOutgoingMessage, payload: { payload: newPayload, type: message } };
+    } as any) as BaseReduxActionPayload<any>;
+    const action = { type: CommonActionType.PostOutgoingMessage, payload: { payload: newPayload, type: message } };
+    originalReducerArg.queueAction(action);
 }
 export function unwrapPostableAction(action: Redux.AnyAction): { type: keyof IInteractiveWindowMapping; payload?: BaseReduxActionPayload<{}> } {
     // Unwrap the payload that was created in `createPostableAction`.

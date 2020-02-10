@@ -6,7 +6,7 @@ import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../.
 import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import { ICell, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../../client/datascience/types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
-import { createPostableAction } from '../helpers';
+import { postActionToExtension } from '../helpers';
 import { CommonActionType, CommonActionTypeMapping } from './types';
 
 export type IVariableState = {
@@ -23,15 +23,13 @@ type VariableReducerArg<T = never | undefined> = ReducerArg<IVariableState, Inte
 
 function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVariableState {
     const newExecutionCount = arg.payload.data.executionCount !== undefined ? arg.payload.data.executionCount : arg.prevState.currentExecutionCount;
-    arg.queueAction(
-        createPostableAction(InteractiveWindowMessages.GetVariablesRequest, {
-            executionCount: newExecutionCount,
-            sortColumn: arg.payload.data.sortColumn,
-            startIndex: arg.payload.data.startIndex,
-            sortAscending: arg.payload.data.sortAscending,
-            pageSize: arg.payload.data.pageSize
-        })
-    );
+    postActionToExtension(arg, InteractiveWindowMessages.GetVariablesRequest, {
+        executionCount: newExecutionCount,
+        sortColumn: arg.payload.data.sortColumn,
+        startIndex: arg.payload.data.startIndex,
+        sortAscending: arg.payload.data.sortAscending,
+        pageSize: arg.payload.data.pageSize
+    });
     return {
         ...arg.prevState,
         pageSize: Math.max(arg.prevState.pageSize, arg.payload.data.pageSize)
@@ -44,7 +42,7 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
         visible: !arg.prevState.visible
     };
 
-    arg.queueAction(createPostableAction(InteractiveWindowMessages.VariableExplorerToggle, newState.visible));
+    postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerToggle, newState.visible);
 
     // If going visible for the first time, refresh our variables
     if (newState.visible) {

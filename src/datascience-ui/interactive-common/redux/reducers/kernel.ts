@@ -4,23 +4,23 @@
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../../client/datascience/types';
 import { IMainState, IServerState } from '../../mainState';
-import { createPostableAction } from '../helpers';
+import { postActionToExtension } from '../helpers';
 import { CommonActionType, CommonReducerArg } from './types';
 
 export namespace Kernel {
     // tslint:disable-next-line: no-any
     export function selectKernel(arg: CommonReducerArg<CommonActionType | InteractiveWindowMessages, IServerState | undefined>): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.SelectKernel));
+        postActionToExtension(arg, InteractiveWindowMessages.SelectKernel);
 
         return arg.prevState;
     }
     export function selectJupyterURI(arg: CommonReducerArg): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.SelectJupyterServer));
+        postActionToExtension(arg, InteractiveWindowMessages.SelectJupyterServer);
 
         return arg.prevState;
     }
     export function restartKernel(arg: CommonReducerArg): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.RestartKernel));
+        postActionToExtension(arg, InteractiveWindowMessages.RestartKernel);
 
         // Set busy until kernel is restarted
         return {
@@ -30,7 +30,7 @@ export namespace Kernel {
     }
 
     export function interruptKernel(arg: CommonReducerArg): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.Interrupt));
+        postActionToExtension(arg, InteractiveWindowMessages.Interrupt);
 
         // Set busy until kernel is finished interrupting
         return {

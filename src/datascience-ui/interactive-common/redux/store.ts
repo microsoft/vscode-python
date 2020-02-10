@@ -16,7 +16,7 @@ import { combineReducers, createQueueableActionMiddleware, QueuableAction } from
 import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { forceLoad } from '../transforms';
-import { createPostableAction, isAllowedAction, isAllowedMessage } from './helpers';
+import { isAllowedAction, isAllowedMessage, postActionToExtension } from './helpers';
 import { generatePostOfficeSendReducer } from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
@@ -87,14 +87,12 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
             prevState.main.undoStack.length !== afterState.main.undoStack.length ||
             prevState.main.redoStack.length !== afterState.main.redoStack.length
         ) {
-            store.dispatch(
-                createPostableAction(InteractiveWindowMessages.SendInfo, {
-                    cellCount: afterState.main.cellVMs.length,
-                    undoCount: afterState.main.undoStack.length,
-                    redoCount: afterState.main.redoStack.length,
-                    selectedCell: currentSelection.selectedCellId
-                })
-            );
+            postActionToExtension({ queueAction: store.dispatch }, InteractiveWindowMessages.SendInfo, {
+                cellCount: afterState.main.cellVMs.length,
+                undoCount: afterState.main.undoStack.length,
+                redoCount: afterState.main.redoStack.length,
+                selectedCell: currentSelection.selectedCellId
+            });
         }
         return res;
     };
@@ -111,11 +109,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         // tslint:disable-next-line: no-any
         const sendMessage = (message: any, payload?: any) => {
             setTimeout(() => {
-                transformPromise
-                    .then(() => {
-                        store.dispatch(createPostableAction(message, payload));
-                    })
-                    .ignoreErrors();
+                transformPromise.then(() => postActionToExtension({ queueAction: store.dispatch }, message, payload)).ignoreErrors();
             });
         };
 

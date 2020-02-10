@@ -5,7 +5,7 @@ import { Identifiers } from '../../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { createCellVM, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
-import { createPostableAction } from '../../../interactive-common/redux/helpers';
+import { postActionToExtension } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { IAddCellAction, ICellAction } from '../../../interactive-common/redux/reducers/types';
 import { InteractiveReducerArg } from '../mapping';
@@ -85,17 +85,15 @@ export namespace Creation {
                 const cellVM = result.cellVMs[result.cellVMs.length - 1];
 
                 // We're adding a new cell here. Tell the intellisense engine we have a new cell
-                arg.queueAction(
-                    createPostableAction(InteractiveWindowMessages.UpdateModel, {
-                        source: 'user',
-                        kind: 'add',
-                        oldDirty: arg.prevState.dirty,
-                        newDirty: true,
-                        cell: cellVM.cell,
-                        fullText: extractInputText(cellVM, result.settings),
-                        currentText: cellVM.inputBlockText
-                    })
-                );
+                postActionToExtension(arg, InteractiveWindowMessages.UpdateModel, {
+                    source: 'user',
+                    kind: 'add',
+                    oldDirty: arg.prevState.dirty,
+                    newDirty: true,
+                    cell: cellVM.cell,
+                    fullText: extractInputText(cellVM, result.settings),
+                    currentText: cellVM.inputBlockText
+                });
             }
 
             return result;
@@ -119,7 +117,7 @@ export namespace Creation {
 
     export function deleteAllCells(arg: InteractiveReducerArg<IAddCellAction>): IMainState {
         // Send messages to other side to indicate the deletes
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.DeleteAllCells));
+        postActionToExtension(arg, InteractiveWindowMessages.DeleteAllCells);
 
         return {
             ...arg.prevState,
@@ -132,16 +130,14 @@ export namespace Creation {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index >= 0 && arg.payload.data.cellId) {
             // Send messages to other side to indicate the delete
-            arg.queueAction(
-                createPostableAction(InteractiveWindowMessages.UpdateModel, {
-                    source: 'user',
-                    kind: 'remove',
-                    index,
-                    oldDirty: arg.prevState.dirty,
-                    newDirty: true,
-                    cell: arg.prevState.cellVMs[index].cell
-                })
-            );
+            postActionToExtension(arg, InteractiveWindowMessages.UpdateModel, {
+                source: 'user',
+                kind: 'remove',
+                index,
+                oldDirty: arg.prevState.dirty,
+                newDirty: true,
+                cell: arg.prevState.cellVMs[index].cell
+            });
 
             const newVMs = arg.prevState.cellVMs.filter((_c, i) => i !== index);
             return {

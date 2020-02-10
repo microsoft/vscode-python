@@ -11,7 +11,7 @@ import { CellState } from '../../../../client/datascience/types';
 import { generateMarkdownFromCodeLines } from '../../../common';
 import { createCellFrom } from '../../../common/cellFactory';
 import { createCellVM, IMainState } from '../../../interactive-common/mainState';
-import { createPostableAction } from '../../../interactive-common/redux/helpers';
+import { postActionToExtension } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICodeAction } from '../../../interactive-common/redux/reducers/types';
 import { InteractiveReducerArg } from '../mapping';
@@ -24,7 +24,7 @@ export namespace Execution {
             const cells = arg.prevState.undoStack[arg.prevState.undoStack.length - 1];
             const undoStack = arg.prevState.undoStack.slice(0, arg.prevState.undoStack.length - 1);
             const redoStack = Helpers.pushStack(arg.prevState.redoStack, arg.prevState.cellVMs);
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.Undo));
+            postActionToExtension(arg, InteractiveWindowMessages.Undo);
             return {
                 ...arg.prevState,
                 cellVMs: cells,
@@ -43,7 +43,7 @@ export namespace Execution {
             const cells = arg.prevState.redoStack[arg.prevState.redoStack.length - 1];
             const redoStack = arg.prevState.redoStack.slice(0, arg.prevState.redoStack.length - 1);
             const undoStack = Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs);
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.Redo));
+            postActionToExtension(arg, InteractiveWindowMessages.Redo);
             return {
                 ...arg.prevState,
                 cellVMs: cells,
@@ -107,7 +107,7 @@ export namespace Execution {
 
             // Send a message to execute this code if necessary.
             if (newCell.cell.state !== CellState.finished) {
-                arg.queueAction(createPostableAction(InteractiveWindowMessages.SubmitNewCell, { code: arg.payload.data.code, id: newCell.cell.id }));
+                postActionToExtension(arg, InteractiveWindowMessages.SubmitNewCell, { code: arg.payload.data.code, id: newCell.cell.id });
             }
 
             // Stick in a new cell at the bottom that's editable and update our state
