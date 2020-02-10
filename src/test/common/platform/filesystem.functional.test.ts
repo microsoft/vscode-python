@@ -12,7 +12,7 @@ import { sleep } from '../../../client/common/utils/async';
 // prettier-ignore
 import {
     assertDoesNotExist, DOES_NOT_EXIST,
-    fixPath, FSFixture,
+    fixPath, FSFixture, OSX,
     SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS, WINDOWS
 } from './utils';
 
@@ -303,7 +303,15 @@ suite('FileSystem - raw', () => {
             expect(actual).to.equal(data);
         });
 
-        test('overwrites existing file', async () => {
+        test('overwrites existing file', async function() {
+            if (OSX) {
+                // tslint:disable-next-line:no-suspicious-comment
+                // TODO(GH-10031) This appears to be producing
+                // false negative test results, so we're skipping
+                // it for now.
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const data = 'line1\nline2\n';
 
