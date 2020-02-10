@@ -9,6 +9,7 @@ import { injectable } from 'inversify';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import '../../common/extensions';
+import { traceError } from '../logger';
 import { createDeferred } from '../utils/async';
 import { isFileNotFoundError, isNoPermissionsError } from './errors';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
@@ -213,9 +214,15 @@ export class RawFileSystem implements IRawFileSystem {
         const files = await this.fsExtra.readdir(dirname);
         const promises = files.map(async basename => {
             const filename = this.paths.join(dirname, basename);
-            // Note that this follows symlinks (while still preserving
-            // the Symlink flag).
-            const fileType = await this.getFileType(filename);
+            let fileType: FileType;
+            try {
+                // Note that getFileType() follows symlinks (while still
+                // preserving the Symlink flag).
+                fileType = await this.getFileType(filename);
+            } catch (err) {
+                traceError(`failure while getting file type for "${filename}"`, err);
+                fileType = FileType.Unknown;
+            }
             return [filename, fileType] as [string, FileType];
         });
         return Promise.all(promises);

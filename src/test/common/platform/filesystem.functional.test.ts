@@ -678,6 +678,31 @@ suite('FileSystem - raw', () => {
 
             await expect(promise).to.eventually.be.rejected;
         });
+
+        test('ignores errors from getFileType()', async function() {
+            if (WINDOWS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const dirname = await fix.createDirectory('x/y/z');
+            const file1 = await fix.createFile('x/y/z/__init__.py', '');
+            const file2 = await fix.createFile('x/y/z/spam.py', '...');
+            const file3 = await fix.createFile('x/y/z/eggs.py', '...');
+            await fs.chmod(dirname, 0o400);
+
+            let entries: [string, FileType][];
+            try {
+                entries = await fileSystem.listdir(dirname);
+            } finally {
+                await fs.chmod(dirname, 0o755);
+            }
+
+            expect(entries.sort()).to.deep.equal([
+                [file1, FileType.Unknown],
+                [file3, FileType.Unknown],
+                [file2, FileType.Unknown]
+            ]);
+        });
     });
 
     // non-async
