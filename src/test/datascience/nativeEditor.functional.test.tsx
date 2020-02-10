@@ -1261,7 +1261,7 @@ for _ in range(50):
                 assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
 
                 // Focus the cell.
-                update = waitForUpdate(wrapper, NativeEditor, 1);
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                 simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                 await update;
 
@@ -1304,7 +1304,7 @@ for _ in range(50):
                 assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is markdown second time');
 
                 // Focus the cell.
-                update = waitForUpdate(wrapper, NativeEditor, 1);
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                 simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                 await update;
 
