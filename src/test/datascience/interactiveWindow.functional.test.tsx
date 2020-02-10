@@ -289,6 +289,17 @@ for _ in range(50):
 
             await addCode(ioc, wrapper, spinningCursor);
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<div>', CellPosition.Last);
+
+            addContinuousMockData(ioc, 'len?', async _c => {
+                return Promise.resolve({
+                    result: `Signature: len(obj, /)
+Docstring: Return the number of items in a container.
+Type:      builtin_function_or_method`,
+                    haveMore: false
+                });
+            });
+            await addCode(ioc, wrapper, 'len?');
+            verifyHtmlOnCell(wrapper, 'InteractiveCell', 'len', CellPosition.Last);
         },
         () => {
             return ioc;

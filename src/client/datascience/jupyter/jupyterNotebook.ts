@@ -829,6 +829,31 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
+    private handleReply(subscriber: CellSubscriber, silent: boolean | undefined, clearState: Map<string, boolean>, msg: KernelMessage.IShellControlMessage) {
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+        // Create a trimming function. Only trim user output. Silent output requires the full thing
+        const trimFunc = silent ? (s: string) => s : this.trimOutput.bind(this);
+
+        if (jupyterLab.KernelMessage.isExecuteReplyMsg(msg)) {
+            this.handleExecuteReply(msg, clearState, subscriber.cell, trimFunc);
+
+            // Set execution count, all messages should have it
+            if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
+                subscriber.cell.data.execution_count = msg.content.execution_count as number;
+            }
+
+            // Mark cell as done. This is the last message sent
+            if (subscriber.cell.state !== CellState.error) {
+                subscriber.cell.state = CellState.finished;
+            }
+
+            // Send this event.
+            subscriber.next(this.sessionStartTime);
+        }
+    }
+
     // tslint:disable-next-line: max-func-body-length
     private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
         // Generate a new request if we still can
@@ -867,11 +892,14 @@ export class JupyterNotebookBase implements INotebook {
                     // Stop handling the request if the subscriber is canceled.
                     subscriber.onCanceled(() => {
                         request.onIOPub = noop;
+                        request.onStdin = noop;
+                        request.onReply = noop;
                     });
 
                     // Listen to messages.
                     request.onIOPub = this.handleIOPub.bind(this, subscriber, silent, clearState);
                     request.onStdin = this.handleInputRequest.bind(this, subscriber);
+                    request.onReply = this.handleReply.bind(this, subscriber, silent, clearState);
 
                     // When the request finishes we are done
                     request.done
@@ -984,16 +1012,36 @@ export class JupyterNotebookBase implements INotebook {
         );
     }
 
+    private handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
+        const reply = msg.content as KernelMessage.IExecuteReply;
+        if (reply.payload) {
+            reply.payload.forEach(o => {
+                if (o.data && o.data.hasOwnProperty('text/plain')) {
+                    // tslint:disable-next-line: no-any
+                    const str = (o.data as any)['text/plain'].toString();
+                    const data = trimFunc(str) as string;
+                    this.addToCellData(
+                        cell,
+                        {
+                            // Mark as stream output so the text is formatted because it likely has ansi codes in it.
+                            output_type: 'stream',
+                            text: data,
+                            metadata: {},
+                            execution_count: reply.execution_count
+                        },
+                        clearState
+                    );
+                }
+            });
+        }
+    }
+
     private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: Map<string, boolean>, cell: ICell) {
         cell.data.execution_count = msg.content.execution_count;
     }
 
-    private handleStatusMessage(msg: KernelMessage.IStatusMsg, _clearState: Map<string, boolean>, cell: ICell) {
-        // Status change to idle generally means we finished. Not sure how to
-        // make sure of this. Maybe only bother if an interrupt
-        if (msg.content.execution_state === 'idle' && cell.state !== CellState.error) {
-            cell.state = CellState.finished;
-        }
+    private handleStatusMessage(msg: KernelMessage.IStatusMsg, _clearState: Map<string, boolean>, _cell: ICell) {
+        traceInfo(`Kernel switching to ${msg.content.execution_state}`);
     }
 
     private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
