@@ -474,9 +474,10 @@ for _ in range(50):
                 let editor = await openEditor(ioc, JSON.stringify(notebook));
 
                 // Run everything
+                let threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, { numberOfTimes: 3 });
                 let runAllButton = findButton(wrapper, NativeEditor, 0);
                 await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-                await waitForUpdate(wrapper, NativeEditor, 15);
+                await threeCellsUpdated;
 
                 // Close editor. Should still have the server up
                 await closeNotebook(editor, wrapper);
@@ -489,9 +490,11 @@ for _ in range(50):
                 const newWrapper = await setupWebview(ioc);
                 assert.ok(newWrapper, 'Could not mount a second time');
                 editor = await openEditor(ioc, JSON.stringify(notebook));
+
+                threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, { numberOfTimes: 3 });
                 runAllButton = findButton(newWrapper!, NativeEditor, 0);
                 await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-                await waitForUpdate(newWrapper!, NativeEditor, 15);
+                await threeCellsUpdated;
                 verifyHtmlOnCell(newWrapper!, 'NativeCell', `1`, 0);
             },
             () => {
