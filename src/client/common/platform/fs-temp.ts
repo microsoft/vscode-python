@@ -18,13 +18,13 @@ interface IRawTempFS {
 
 // Operations related to temporary files and directories.
 export class TemporaryFileSystem implements ITempFileSystem {
-    // prettier-ignore
     constructor(
+        // (effectively) the third-party "tmp" module to use
         private readonly raw: IRawTempFS
-    ) { }
+    ) {}
     public static withDefaults(): TemporaryFileSystem {
-        // prettier-ignore
         return new TemporaryFileSystem(
+            // Use the actual "tmp" module.
             tmp
         );
     }

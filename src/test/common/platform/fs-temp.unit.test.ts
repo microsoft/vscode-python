@@ -30,8 +30,8 @@ suite('FileSystem - temp files', () => {
     suite('createFile', () => {
         test(`fails if the raw call fails`, async () => {
             const failure = new Error('oops');
-            // prettier-ignore
             deps.setup(d => d.file({ postfix: '.tmp' }, TypeMoq.It.isAny()))
+                // fail with an arbitrary error
                 .throws(failure);
 
             const promise = temp.createFile('.tmp');

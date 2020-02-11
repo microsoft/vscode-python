@@ -36,8 +36,8 @@ namespace vscErrors {
     const IS_DIR = vscode.FileSystemError.FileIsADirectory().name;
     const NOT_DIR = vscode.FileSystemError.FileNotADirectory().name;
     const NO_PERM = vscode.FileSystemError.NoPermissions().name;
-    // prettier-ignore
     const known = [
+        // (order does not matter)
         FILE_NOT_FOUND,
         FILE_EXISTS,
         IS_DIR,

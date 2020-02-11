@@ -61,10 +61,9 @@ export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
     };
 }
 
-// prettier-ignore
 function filterByFileType(
-    files: [string, FileType][],
-    fileType: FileType
+    files: [string, FileType][], // the files to filter
+    fileType: FileType // the file type to look for
 ): [string, FileType][] {
     // We preserve the pre-existing behavior of following symlinks.
     if (fileType === FileType.Unknown) {
@@ -119,24 +118,27 @@ interface IRawPath {
 
 // The low-level filesystem operations used by the extension.
 export class RawFileSystem implements IRawFileSystem {
-    // prettier-ignore
     constructor(
+        // the low-level FS path operations to use
         protected readonly paths: IRawPath,
+        // the VS Code FS API to use
         protected readonly vscfs: IVSCodeFileSystemAPI,
+        // the node FS API to use
         protected readonly fsExtra: IRawFSExtra
-    ) { }
+    ) {}
 
     // Create a new object using common-case default values.
-    // prettier-ignore
     public static withDefaults(
-        paths?: IRawPath,
-        vscfs?: IVSCodeFileSystemAPI,
-        fsExtra?: IRawFSExtra
+        paths?: IRawPath, // default: a new FileSystemPaths object (using defaults)
+        vscfs?: IVSCodeFileSystemAPI, // default: the actual "vscode.workspace.fs" namespace
+        fsExtra?: IRawFSExtra // default: the "fs-extra" module
     ): RawFileSystem {
-        // prettier-ignore
         return new RawFileSystem(
             paths || FileSystemPaths.withDefaults(),
             vscfs || vscode.workspace.fs,
+            // The "fs-extra" module is effectively equivalent to node's "fs"
+            // module (but is a bit more async-friendly).  So we use that
+            // instead of "fs".
             fsExtra || fs
         );
     }
@@ -366,9 +368,11 @@ export class FileSystemUtils implements IFileSystemUtils {
     //****************************
     // helpers
 
-    // prettier-ignore
     public async pathExists(
+        // the "file" to look for
         filename: string,
+        // the file type to expect; if not provided then any file type
+        // matches; otherwise a mismatch results in a "false" value
         fileType?: FileType
     ): Promise<boolean> {
         let stat: FileStat;
@@ -401,29 +405,26 @@ export class FileSystemUtils implements IFileSystemUtils {
     }
 
     public async listdir(dirname: string): Promise<[string, FileType][]> {
-        // prettier-ignore
-        return this.raw.listdir(dirname)
-            .catch(async err => {
-                // We're only preserving pre-existng behavior here...
-                if (!(await this.pathExists(dirname))) {
-                    return [];
-                }
-                throw err; // re-throw
-            });
+        try {
+            return await this.raw.listdir(dirname);
+        } catch (err) {
+            // We're only preserving pre-existng behavior here...
+            if (!(await this.pathExists(dirname))) {
+                return [];
+            }
+            throw err; // re-throw
+        }
     }
     public async getSubDirectories(dirname: string): Promise<string[]> {
-        // prettier-ignore
-        return filterByFileType(
-            (await this.listdir(dirname)),
-            FileType.Directory
-        ).map(([filename, _fileType]) => filename);
+        const files = await this.listdir(dirname);
+        const filtered = filterByFileType(files, FileType.Directory);
+        return filtered.map(([filename, _fileType]) => filename);
     }
     public async getFiles(dirname: string): Promise<string[]> {
-        // prettier-ignore
-        return filterByFileType(
-            (await this.listdir(dirname)),
-            FileType.File
-        ).map(([filename, _fileType]) => filename);
+        // Note that only "regular" files are returned.
+        const files = await this.listdir(dirname);
+        const filtered = filterByFileType(files, FileType.File);
+        return filtered.map(([filename, _fileType]) => filename);
     }
 
     public async isDirReadonly(dirname: string): Promise<boolean> {

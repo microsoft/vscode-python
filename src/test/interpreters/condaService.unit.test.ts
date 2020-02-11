@@ -113,7 +113,6 @@ suite('Interpreters Conda Service', () => {
         fileSystem
             .setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((p1, p2) => {
-                // prettier-ignore
                 const utils = FileSystemPathUtils.withDefaults(
                     FileSystemPaths.withDefaults(platformService.object.isWindows)
                 );

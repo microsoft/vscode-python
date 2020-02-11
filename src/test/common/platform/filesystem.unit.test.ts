@@ -1276,6 +1276,9 @@ suite('FileSystemUtils', () => {
             const err = new Error('oops!');
             deps.setup(d => d.listdir(dirname)) // Fail with an arbirary error.
                 .throws(err);
+            const stat = createMockStat();
+            deps.setup(d => d.stat(dirname)) // The "file" exists.
+                .returns(() => Promise.resolve(stat.object));
 
             const promise = utils.listdir(dirname);
 
