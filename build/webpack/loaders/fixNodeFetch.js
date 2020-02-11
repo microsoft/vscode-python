@@ -6,7 +6,16 @@
 const path = require('path');
 const constants = require('../../constants');
 
-const nodeFetchIndexFile = path.join(constants.ExtensionRootDir, 'node_modules', '@jupyterlab', 'services', 'node_modules', 'node-fetch', 'lib', 'index.js');
+const nodeFetchIndexFile = path.join(
+    constants.ExtensionRootDir,
+    'node_modules',
+    '@jupyterlab',
+    'services',
+    'node_modules',
+    'node-fetch',
+    'lib',
+    'index.js'
+);
 // On windows replace `\` with `\\`, else we get an error in webpack (Module parse failed: Octal literal in strict mode).
 const nodeFetchFile = constants.isWindows ? nodeFetchIndexFile.replace(/\\/g, '\\\\') : nodeFetchIndexFile;
 

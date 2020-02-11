@@ -14,7 +14,16 @@ var constants_1 = require('../constants');
  * The solution is to modify the type definition file after `npm install`.
  */
 function fixJupyterLabDTSFiles() {
-    var relativePath = path.join('node_modules', '@jupyterlab', 'services', 'node_modules', '@jupyterlab', 'coreutils', 'lib', 'settingregistry.d.ts');
+    var relativePath = path.join(
+        'node_modules',
+        '@jupyterlab',
+        'services',
+        'node_modules',
+        '@jupyterlab',
+        'coreutils',
+        'lib',
+        'settingregistry.d.ts'
+    );
     var filePath = path.join(constants_1.ExtensionRootDir, relativePath);
     if (!fs.existsSync(filePath)) {
         throw new Error("Type Definition file from JupyterLab not found '" + filePath + "' (pvsc post install script)");
