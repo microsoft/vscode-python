@@ -1224,7 +1224,7 @@ plt.show()`,
                 threw = true;
                 // When using old command finder, the error is `Not Supported` (directly from stdout). - can be deprecated when jupyterCommandFinder.ts is deleted.
                 // When using new approach, we inform user that some packages are not installed.
-                const expectedErrorMsg = getMessageForLibrariesNotInstalled([Product.jupyter, Product.notebook]);
+                const expectedErrorMsg = getMessageForLibrariesNotInstalled([Product.jupyter, Product.notebook], undefined);
 
                 assert.ok(e.message.includes('Not supported') || e.message.includes(expectedErrorMsg), `Wrong error thrown when notebook is created. Error is ${e.message}`);
             }
