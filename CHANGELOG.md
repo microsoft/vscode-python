@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.2.0 (10 February 2020)
+## 2020.2.0 (11 February 2020)
 
 ### Enhancements
 
@@ -129,6 +129,8 @@
    ([#9780](https://github.com/Microsoft/vscode-python/issues/9780))
 1. When comitting intellisense in Notebook Editor with Jedi place code in correct position.
    ([#9857](https://github.com/Microsoft/vscode-python/issues/9857))
+1. Ignore errors coming from stat(), where appropriate.
+   ([#9901](https://github.com/Microsoft/vscode-python/issues/9901))
 
 ### Code Health
 
