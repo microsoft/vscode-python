@@ -119,12 +119,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                 width: 34,
                 sortable: false,
                 resizable: false,
-                formatter: (
-                    <VariableExplorerButtonCellFormatter
-                        showDataExplorer={this.props.showDataExplorer}
-                        baseTheme={this.props.baseTheme}
-                    />
-                )
+                formatter: <VariableExplorerButtonCellFormatter showDataExplorer={this.props.showDataExplorer} baseTheme={this.props.baseTheme} />
             }
         ];
 
@@ -153,9 +148,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         return (
             <div className="variable-explorer" ref={this.divRef} style={fontSizeStyle}>
                 <div className="variable-explorer-menu-bar">
-                    <label className="inputLabel variable-explorer-label">
-                        {getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                    </label>
+                    <label className="inputLabel variable-explorer-label">{getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}</label>
                     <ImageButton
                         baseTheme={this.props.baseTheme}
                         onClick={this.props.closeVariableExplorer}
@@ -174,19 +167,12 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         if (this.props.debugging) {
             return (
                 <span className="span-debug-message">
-                    {getLocString(
-                        'DataScience.variableExplorerDisabledDuringDebugging',
-                        "Please see the Debug Side Bar's VARIABLES section."
-                    )}
+                    {getLocString('DataScience.variableExplorerDisabledDuringDebugging', "Please see the Debug Side Bar's VARIABLES section.")}
                 </span>
             );
         } else {
             return (
-                <div
-                    id="variable-explorer-data-grid"
-                    role="table"
-                    aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                >
+                <div id="variable-explorer-data-grid" role="table" aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     <AdazzleReactDataGrid
                         columns={this.gridColumns.map(c => {
                             return { ...defaultColumnProperties, ...c };
@@ -235,9 +221,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                     type: variable.type,
                     size: newSize,
                     index,
-                    value: variable.value
-                        ? variable.value
-                        : getLocString('DataScience.variableLoadingValue', 'Loading...')
+                    value: variable.value ? variable.value : getLocString('DataScience.variableLoadingValue', 'Loading...')
                 };
             }
         }
@@ -276,11 +260,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         if (!haveValue && (newExecution || notRequested)) {
             // Try to find a page of data around this index.
             let pageIndex = index;
-            while (
-                pageIndex >= 0 &&
-                pageIndex > index - pageSize / 2 &&
-                (!this.props.variables[pageIndex] || !this.props.variables[pageIndex].value)
-            ) {
+            while (pageIndex >= 0 && pageIndex > index - pageSize / 2 && (!this.props.variables[pageIndex] || !this.props.variables[pageIndex].value)) {
                 pageIndex -= 1;
             }
 
@@ -313,13 +293,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
 
     private rowDoubleClick = (_rowIndex: number, row: IGridRow) => {
         // On row double click, see if data explorer is supported and open it if it is
-        if (
-            row.buttons &&
-            row.buttons.supportsDataExplorer !== undefined &&
-            row.buttons.name &&
-            row.buttons.supportsDataExplorer &&
-            row.buttons.variable
-        ) {
+        if (row.buttons && row.buttons.supportsDataExplorer !== undefined && row.buttons.name && row.buttons.supportsDataExplorer && row.buttons.variable) {
             this.props.showDataExplorer(row.buttons.variable, row.buttons.numberOfColumns);
         }
     };

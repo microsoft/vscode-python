@@ -60,6 +60,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private static get ansiToHtmlClass(): ClassType<any> {
         if (!CellOutput.ansiToHtmlClass_ctor) {
             // ansiToHtml is different between the tests running and webpack. figure out which one
+            // tslint:disable-next-line: no-any
             if (ansiToHtml instanceof Function) {
                 CellOutput.ansiToHtmlClass_ctor = ansiToHtml;
             } else {
@@ -116,9 +117,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     public render() {
         // Only render results if not an edit cell
         if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
-            const outputClassNames = this.isCodeCell()
-                ? `cell-output cell-output-${this.props.baseTheme}`
-                : 'markdown-cell-output-container';
+            const outputClassNames = this.isCodeCell() ? `cell-output cell-output-${this.props.baseTheme}` : 'markdown-cell-output-container';
 
             // Then combine them inside a div
             return <div className={outputClassNames}>{this.renderResults()}</div>;
@@ -126,12 +125,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return null;
     }
 
-    public shouldComponentUpdate(
-        nextProps: Readonly<ICellOutputProps>,
-        _nextState: Readonly<ICellOutputProps>,
-        // tslint:disable-next-line: no-any
-        _nextContext: any
-    ): boolean {
+    // tslint:disable-next-line: no-any
+    public shouldComponentUpdate(nextProps: Readonly<ICellOutputProps>, _nextState: Readonly<ICellOutputProps>, _nextContext: any): boolean {
         if (nextProps === this.props) {
             return false;
         }
@@ -158,11 +153,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         if (nextProps.cellVM.cell.data.outputs !== this.props.cellVM.cell.data.outputs) {
             return true;
         }
-        if (
-            !this.isCodeCell() &&
-            nextProps.cellVM.cell.id !== Identifiers.EditCellId &&
-            nextProps.cellVM.cell.data.source !== this.props.cellVM.cell.data.source
-        ) {
+        if (!this.isCodeCell() && nextProps.cellVM.cell.id !== Identifiers.EditCellId && nextProps.cellVM.cell.data.source !== this.props.cellVM.cell.data.source) {
             return true;
         }
 
@@ -182,11 +173,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     };
 
     private hasOutput = () => {
-        return (
-            this.getCell().state === CellState.finished ||
-            this.getCell().state === CellState.error ||
-            this.getCell().state === CellState.executing
-        );
+        return this.getCell().state === CellState.finished || this.getCell().state === CellState.error || this.getCell().state === CellState.executing;
     };
 
     private getCodeCell = () => {
@@ -352,11 +339,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     };
                     extraButton = (
                         <div className="plot-open-button">
-                            <ImageButton
-                                baseTheme={buttonTheme}
-                                tooltip={getLocString('DataScience.plotOpen', 'Expand image')}
-                                onClick={openClick}
-                            >
+                            <ImageButton baseTheme={buttonTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
                                 <Image baseTheme={buttonTheme} class="image-button-image" image={ImageName.OpenPlot} />
                             </ImageButton>
                         </div>

@@ -68,19 +68,13 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                     {this.renderToolbarPanel()}
                     {progressBar}
                 </header>
-                <section
-                    id="main-panel-variable"
-                    aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
-                >
+                <section id="main-panel-variable" aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
                 <main id="main-panel-content" onClick={this.contentPanelClick} onScroll={this.handleScroll}>
                     {this.renderContentPanel(this.props.baseTheme)}
                 </main>
-                <section
-                    id="main-panel-footer"
-                    aria-label={getLocString('DataScience.editSection', 'Input new cells here')}
-                >
+                <section id="main-panel-footer" aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
                     {this.renderFooterPanel(this.props.baseTheme)}
                 </section>
             </div>
@@ -92,7 +86,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         this.props.focusInput();
     };
 
-    // tslint:disable-next-line:max-func-body-length
     private renderToolbarPanel() {
         const variableExplorerTooltip = this.props.variableState.visible
             ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')
@@ -102,16 +95,8 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             <div id="toolbar-panel">
                 <div className="toolbar-menu-bar">
                     <div className="toolbar-menu-bar-child">
-                        <ImageButton
-                            baseTheme={this.props.baseTheme}
-                            onClick={this.props.deleteAllCells}
-                            tooltip={getLocString('DataScience.clearAll', 'Remove all cells')}
-                        >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.Cancel}
-                            />
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.deleteAllCells} tooltip={getLocString('DataScience.clearAll', 'Remove all cells')}>
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Cancel} />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
@@ -135,11 +120,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                             disabled={this.props.busy}
                             tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
                         >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.Interrupt}
-                            />
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Interrupt} />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
@@ -147,22 +128,10 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                             disabled={this.props.busy}
                             tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
                         >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.Restart}
-                            />
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Restart} />
                         </ImageButton>
-                        <ImageButton
-                            baseTheme={this.props.baseTheme}
-                            onClick={this.props.toggleVariableExplorer}
-                            tooltip={variableExplorerTooltip}
-                        >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.VariableExplorer}
-                            />
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.toggleVariableExplorer} tooltip={variableExplorerTooltip}>
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.VariableExplorer} />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
@@ -170,11 +139,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                             disabled={this.props.cellVMs.length === 0 || this.props.busy}
                             tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}
                         >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.SaveAs}
-                            />
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.SaveAs} />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
@@ -182,11 +147,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                             disabled={this.props.cellVMs.length === 0}
                             tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}
                         >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.ExpandAll}
-                            />
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ExpandAll} />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
@@ -194,11 +155,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                             disabled={this.props.cellVMs.length === 0}
                             tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}
                         >
-                            <Image
-                                baseTheme={this.props.baseTheme}
-                                class="image-button-image"
-                                image={ImageName.CollapseAll}
-                            />
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.CollapseAll} />
                         </ImageButton>
                     </div>
                     <KernelSelection
@@ -308,11 +265,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
     };
 
-    private renderCell = (
-        cellVM: ICellViewModel,
-        _index: number,
-        containerRef?: React.RefObject<HTMLDivElement>
-    ): JSX.Element | null => {
+    private renderCell = (cellVM: ICellViewModel, _index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
         if (this.props.settings && this.props.editorOptions) {
             return (
                 <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>

@@ -368,9 +368,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     const ctx = canvas.getContext('2d');
                     if (ctx) {
                         const waitable = createDeferred();
-                        const svgBlob = new Blob([this.state.images[this.state.currentImage]], {
-                            type: 'image/svg+xml;charset=utf-8'
-                        });
+                        const svgBlob = new Blob([this.state.images[this.state.currentImage]], { type: 'image/svg+xml;charset=utf-8' });
                         const img = new Image();
                         const url = window.URL.createObjectURL(svgBlob);
                         img.onload = () => {
@@ -386,10 +384,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         canvas.remove();
 
                         // Send both our image and the png.
-                        this.sendMessage(PlotViewerMessages.ExportPlot, {
-                            svg: this.state.images[this.state.currentImage],
-                            png
-                        });
+                        this.sendMessage(PlotViewerMessages.ExportPlot, { svg: this.state.images[this.state.currentImage], png });
                     }
                 }
             }
