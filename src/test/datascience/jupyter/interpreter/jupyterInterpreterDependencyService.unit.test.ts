@@ -12,9 +12,12 @@ import { PythonExecutionFactory } from '../../../../client/common/process/python
 import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
 import { IPythonExecutionService } from '../../../../client/common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
-import { Common, DataScience } from '../../../../client/common/utils/localize';
+import { DataScience } from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
-import { JupyterInterpreterDependencyResponse, JupyterInterpreterDependencyService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
+import {
+    JupyterInterpreterDependencyResponse,
+    JupyterInterpreterDependencyService
+} from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 
 // tslint:disable: max-func-body-length
@@ -43,7 +46,11 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
             stdout: ''
         });
 
-        configuration = new JupyterInterpreterDependencyService(instance(appShell), instance(installer), instance(pythonExecFactory));
+        configuration = new JupyterInterpreterDependencyService(
+            instance(appShell),
+            instance(installer),
+            instance(pythonExecFactory)
+        );
     });
     test('Return ok if all dependencies are installed', async () => {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(true);
@@ -53,7 +60,10 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
 
         assert.equal(response, JupyterInterpreterDependencyResponse.ok);
     });
-    async function testPromptIfModuleNotInstalled(jupyterInstalled: boolean, notebookInstalled: boolean): Promise<void> {
+    async function testPromptIfModuleNotInstalled(
+        jupyterInstalled: boolean,
+        notebookInstalled: boolean
+    ): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(jupyterInstalled);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(notebookInstalled);
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve();
@@ -61,15 +71,24 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
         const response = await configuration.installMissingDependencies(pythonInterpreter);
 
         verify(
-            appShell.showErrorMessage(anything(), DataScience.jupyterInstall(), DataScience.selectDifferentJupyterInterpreter(), DataScience.pythonInteractiveHelpLink())
+            appShell.showErrorMessage(
+                anything(),
+                DataScience.jupyterInstall(),
+                DataScience.selectDifferentJupyterInterpreter(),
+                DataScience.pythonInteractiveHelpLink()
+            )
         ).once();
         assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
     }
     test('Prompt to install if Jupyter is not installed', async () => testPromptIfModuleNotInstalled(false, true));
     test('Prompt to install if notebook is not installed', async () => testPromptIfModuleNotInstalled(true, false));
-    test('Prompt to install if jupyter & notebook is not installed', async () => testPromptIfModuleNotInstalled(false, false));
+    test('Prompt to install if jupyter & notebook is not installed', async () =>
+        testPromptIfModuleNotInstalled(false, false));
 
-    async function testInstallationOfJupyter(installerResponse: InstallerResponse, expectedConfigurationReponse: JupyterInterpreterDependencyResponse): Promise<void> {
+    async function testInstallationOfJupyter(
+        installerResponse: InstallerResponse,
+        expectedConfigurationReponse: JupyterInterpreterDependencyResponse
+    ): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
@@ -103,11 +122,20 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
         verify(installer.install(Product.notebook, pythonInterpreter, anything())).once();
         assert.equal(response, expectedConfigurationReponse);
     }
-    test('Install Jupyter and return ok if installed successfully', async () => testInstallationOfJupyter(InstallerResponse.Installed, JupyterInterpreterDependencyResponse.ok));
+    test('Install Jupyter and return ok if installed successfully', async () =>
+        testInstallationOfJupyter(InstallerResponse.Installed, JupyterInterpreterDependencyResponse.ok));
     test('Install Jupyter & notebook and return ok if both are installed successfully', async () =>
-        testInstallationOfJupyterAndNotebook(InstallerResponse.Installed, InstallerResponse.Installed, JupyterInterpreterDependencyResponse.ok));
+        testInstallationOfJupyterAndNotebook(
+            InstallerResponse.Installed,
+            InstallerResponse.Installed,
+            JupyterInterpreterDependencyResponse.ok
+        ));
     test('Install Jupyter & notebook and return cancel if notebook is not installed', async () =>
-        testInstallationOfJupyterAndNotebook(InstallerResponse.Installed, InstallerResponse.Ignore, JupyterInterpreterDependencyResponse.cancel));
+        testInstallationOfJupyterAndNotebook(
+            InstallerResponse.Installed,
+            InstallerResponse.Ignore,
+            JupyterInterpreterDependencyResponse.cancel
+        ));
     test('Install Jupyter and return cancel if installation is disabled', async () =>
         testInstallationOfJupyter(InstallerResponse.Disabled, JupyterInterpreterDependencyResponse.cancel));
     test('Install Jupyter and return cancel if installation is ignored', async () =>
