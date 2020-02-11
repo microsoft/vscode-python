@@ -52,7 +52,9 @@ export class CurrentPathService extends CacheableLocatorService {
      * Return the located interpreters.
      */
     private async suggestionsFromKnownPaths(resource?: Uri) {
-        const configSettings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource);
+        const configSettings = this.serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(resource);
         const pathsToCheck = [...this.pythonCommandProvider.getCommands(), { command: configSettings.pythonPath }];
 
         const pythonPaths = Promise.all(pathsToCheck.map(item => this.getInterpreter(item)));
@@ -60,7 +62,9 @@ export class CurrentPathService extends CacheableLocatorService {
             pythonPaths
                 .then(interpreters => interpreters.filter(item => item.length > 0))
                 // tslint:disable-next-line:promise-function-async
-                .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))))
+                .then(interpreters =>
+                    Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter)))
+                )
                 .then(interpreters => interpreters.filter(item => !!item).map(item => item!))
         );
     }
@@ -96,11 +100,19 @@ export class CurrentPathService extends CacheableLocatorService {
                     if (value.length > 0 && (await this.fs.fileExists(value))) {
                         return value;
                     }
-                    traceError(`Detection of Python Interpreter for Command ${options.command} and args ${args.join(' ')} failed as file ${value} does not exist`);
+                    traceError(
+                        `Detection of Python Interpreter for Command ${options.command} and args ${args.join(
+                            ' '
+                        )} failed as file ${value} does not exist`
+                    );
                     return '';
                 })
                 .catch(_ex => {
-                    traceInfo(`Detection of Python Interpreter for Command ${options.command} and args ${args.join(' ')} failed`);
+                    traceInfo(
+                        `Detection of Python Interpreter for Command ${options.command} and args ${args.join(
+                            ' '
+                        )} failed`
+                    );
                     return '';
                 }); // Ignore exceptions in getting the executable.
         } catch (ex) {

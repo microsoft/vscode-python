@@ -9,7 +9,8 @@ import { IHttpClient } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { INugetRepository, NugetPackage } from './types';
 
-const nugetPackageBaseAddress = 'https://dotnetmyget.blob.core.windows.net/artifacts/dotnet-core-svc/nuget/v3/flatcontainer';
+const nugetPackageBaseAddress =
+    'https://dotnetmyget.blob.core.windows.net/artifacts/dotnet-core-svc/nuget/v3/flatcontainer';
 
 @injectable()
 export class NugetRepository implements INugetRepository {

@@ -33,7 +33,8 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     private initialized?: boolean;
     private disabledInCurrentSession: boolean = false;
     private sampleSizePerHundred: number;
-    private bannerMessage: string = 'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
+    private bannerMessage: string =
+        'Try out Preview of our new Python Language Server to get richer and faster IntelliSense completions, and syntax errors as you type.';
     private bannerLabels: string[] = ['Try it now', 'No thanks', 'Remind me Later'];
 
     constructor(
@@ -105,7 +106,9 @@ export class ProposeLanguageServerBanner implements IPythonExtensionBanner {
     }
 
     public async disable(): Promise<void> {
-        await this.persistentState.createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, false).updateValue(false);
+        await this.persistentState
+            .createGlobalPersistentState<boolean>(ProposeLSStateKeys.ShowBanner, false)
+            .updateValue(false);
     }
 
     public async enableNewLanguageServer(): Promise<void> {

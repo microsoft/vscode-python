@@ -9,7 +9,13 @@ import { UseTerminalToGetActivatedEnvVars } from '../../common/experimentGroups'
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { ICryptoUtils, IDisposableRegistry, IExperimentsManager, IExtensionContext, Resource } from '../../common/types';
+import {
+    ICryptoUtils,
+    IDisposableRegistry,
+    IExperimentsManager,
+    IExtensionContext,
+    Resource
+} from '../../common/types';
 import { createDeferredFromPromise } from '../../common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { captureTelemetry } from '../../telemetry';
@@ -32,7 +38,8 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     private readonly cachePerResourceAndInterpreter = new Map<string, Promise<NodeJS.ProcessEnv | undefined>>();
     constructor(
         @inject(EnvironmentActivationService) private readonly procActivation: IEnvironmentActivationService,
-        @inject(TerminalEnvironmentActivationService) private readonly terminalActivation: IEnvironmentActivationService,
+        @inject(TerminalEnvironmentActivationService)
+        private readonly terminalActivation: IEnvironmentActivationService,
         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
@@ -43,21 +50,34 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         // Environment variables rely on custom variables defined by the user in `.env` files.
-        disposables.push(envVarsProvider.onDidEnvironmentVariablesChange(() => this.cachePerResourceAndInterpreter.clear()));
+        disposables.push(
+            envVarsProvider.onDidEnvironmentVariablesChange(() => this.cachePerResourceAndInterpreter.clear())
+        );
     }
-    @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false, activatedByWrapper: true }, true)
+    @captureTelemetry(
+        EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES,
+        { failed: false, activatedByWrapper: true },
+        true
+    )
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonInterpreter | undefined,
         allowExceptions?: boolean | undefined
     ): Promise<NodeJS.ProcessEnv | undefined> {
         let key: string;
-        [key, interpreter] = await Promise.all([this.getCacheKey(resource, interpreter), interpreter || (await this.interpreterService.getActiveInterpreter(undefined))]);
+        [key, interpreter] = await Promise.all([
+            this.getCacheKey(resource, interpreter),
+            interpreter || (await this.interpreterService.getActiveInterpreter(undefined))
+        ]);
 
         const procCacheKey = `Process${key}`;
         const terminalCacheKey = `Terminal${key}`;
-        const procEnvVarsPromise = this.cacheCallback(procCacheKey, () => this.getActivatedEnvVarsFromProc(resource, interpreter, allowExceptions));
-        const terminalEnvVarsPromise = this.cacheCallback(terminalCacheKey, () => this.getActivatedEnvVarsFromTerminal(procEnvVarsPromise, resource, interpreter, allowExceptions));
+        const procEnvVarsPromise = this.cacheCallback(procCacheKey, () =>
+            this.getActivatedEnvVarsFromProc(resource, interpreter, allowExceptions)
+        );
+        const terminalEnvVarsPromise = this.cacheCallback(terminalCacheKey, () =>
+            this.getActivatedEnvVarsFromTerminal(procEnvVarsPromise, resource, interpreter, allowExceptions)
+        );
 
         const procEnvVars = createDeferredFromPromise(procEnvVarsPromise);
         const terminalEnvVars = createDeferredFromPromise(terminalEnvVarsPromise);
@@ -79,7 +99,10 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
      * @returns {(Promise<NodeJS.ProcessEnv | undefined>)}
      * @memberof WrapperEnvironmentActivationService
      */
-    private async cacheCallback(cacheKey: string, implementation: () => Promise<NodeJS.ProcessEnv | undefined>): Promise<NodeJS.ProcessEnv | undefined> {
+    private async cacheCallback(
+        cacheKey: string,
+        implementation: () => Promise<NodeJS.ProcessEnv | undefined>
+    ): Promise<NodeJS.ProcessEnv | undefined> {
         const contents = await this.getDataCachedInFile(cacheKey);
         if (contents) {
             // If we have it in file cache, then blow away in memory cache, we don't need that anymore.
@@ -94,13 +117,17 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
             this.cachePerResourceAndInterpreter.set(cacheKey, promise);
 
             // What ever result we get back, store that in file (cache it for other VSC sessions).
-            promise.then(env => this.writeDataToCacheFile(cacheKey, { env })).catch(ex => traceError('Failed to write Env Vars to disc', ex));
+            promise
+                .then(env => this.writeDataToCacheFile(cacheKey, { env }))
+                .catch(ex => traceError('Failed to write Env Vars to disc', ex));
         }
 
         return this.cachePerResourceAndInterpreter.get(cacheKey)!;
     }
     private getCacheFile(cacheKey: string): string | undefined {
-        return this.context.storagePath ? path.join(this.context.storagePath, `pvscEnvVariables${cacheKey}.json`) : undefined;
+        return this.context.storagePath
+            ? path.join(this.context.storagePath, `pvscEnvVariables${cacheKey}.json`)
+            : undefined;
     }
     private async getDataCachedInFile(cacheKey: string): Promise<EnvVariablesInCachedFile | undefined> {
         const cacheFile = this.getCacheFile(cacheKey);
@@ -129,7 +156,11 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     /**
      * Get environment variables by spawning a process (old approach).
      */
-    private async getActivatedEnvVarsFromProc(resource: Resource, interpreter?: PythonInterpreter, allowExceptions?: boolean): Promise<NodeJS.ProcessEnv | undefined> {
+    private async getActivatedEnvVarsFromProc(
+        resource: Resource,
+        interpreter?: PythonInterpreter,
+        allowExceptions?: boolean
+    ): Promise<NodeJS.ProcessEnv | undefined> {
         return this.procActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions);
     }
     /**
@@ -173,6 +204,10 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
             .then(item => (item ? JSON.stringify(item) : ''))
             .catch(() => '');
 
-        return this.crypto.createHash(`${customEnvVariables}${interpreter?.path}${interpreter?.version?.raw}`, 'string', 'SHA256');
+        return this.crypto.createHash(
+            `${customEnvVariables}${interpreter?.path}${interpreter?.version?.raw}`,
+            'string',
+            'SHA256'
+        );
     }
 }

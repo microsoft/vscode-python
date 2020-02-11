@@ -96,16 +96,28 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
     }
 
     private update(editor: vscode.TextEditor | undefined) {
-        if (editor && editor.document && editor.document.languageId === PYTHON_LANGUAGE && this.activeCellTop && this.cellSeparatorType && this.activeCellBottom) {
+        if (
+            editor &&
+            editor.document &&
+            editor.document.languageId === PYTHON_LANGUAGE &&
+            this.activeCellTop &&
+            this.cellSeparatorType &&
+            this.activeCellBottom
+        ) {
             const settings = this.configuration.getSettings().datascience;
             if (settings.decorateCells && settings.enabled) {
                 // Find all of the cells
-                const cells = generateCellRangesFromDocument(editor.document, this.configuration.getSettings().datascience);
+                const cells = generateCellRangesFromDocument(
+                    editor.document,
+                    this.configuration.getSettings().datascience
+                );
 
                 // Find the range for our active cell.
                 const currentRange = cells.map(c => c.range).filter(r => r.contains(editor.selection.anchor));
-                const rangeTop = currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
-                const rangeBottom = currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
+                const rangeTop =
+                    currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
+                const rangeBottom =
+                    currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
                 editor.setDecorations(this.activeCellTop, rangeTop);
                 editor.setDecorations(this.activeCellBottom, rangeBottom);
 

@@ -93,8 +93,14 @@ import { UnitTestSocketServer } from './unittest/socketServer';
 export function registerTypes(serviceManager: IServiceManager) {
     registerNavigationTypes(serviceManager);
     serviceManager.addSingleton<ITestDebugLauncher>(ITestDebugLauncher, DebugLauncher);
-    serviceManager.addSingleton<ITestCollectionStorageService>(ITestCollectionStorageService, TestCollectionStorageService);
-    serviceManager.addSingleton<IWorkspaceTestManagerService>(IWorkspaceTestManagerService, WorkspaceTestManagerService);
+    serviceManager.addSingleton<ITestCollectionStorageService>(
+        ITestCollectionStorageService,
+        TestCollectionStorageService
+    );
+    serviceManager.addSingleton<IWorkspaceTestManagerService>(
+        IWorkspaceTestManagerService,
+        WorkspaceTestManagerService
+    );
 
     serviceManager.add<ITestsHelper>(ITestsHelper, TestsHelper);
     serviceManager.add<ITestDiscoveredTestParser>(ITestDiscoveredTestParser, TestDiscoveredTestParser);
@@ -132,7 +138,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestResultDisplay>(ITestResultDisplay, TestResultDisplay);
     serviceManager.addSingleton<ITestDisplay>(ITestDisplay, TestDisplay);
     serviceManager.addSingleton<ITestConfigSettingsService>(ITestConfigSettingsService, TestConfigSettingsService);
-    serviceManager.addSingleton<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory, TestConfigurationManagerFactory);
+    serviceManager.addSingleton<ITestConfigurationManagerFactory>(
+        ITestConfigurationManagerFactory,
+        TestConfigurationManagerFactory
+    );
 
     serviceManager.addSingleton<ITestDiagnosticService>(ITestDiagnosticService, UnitTestDiagnosticService);
     serviceManager.addSingleton<ITestMessageService>(ITestMessageService, TestMessageService, PYTEST_PROVIDER);
@@ -140,8 +149,14 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestDataItemResource>(ITestDataItemResource, TestTreeViewProvider);
     serviceManager.addSingleton<ITestExplorerCommandHandler>(ITestExplorerCommandHandler, TestExplorerCommandHandler);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, TreeViewService);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, FailedTestHandler);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, EnablementTracker);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        FailedTestHandler
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        EnablementTracker
+    );
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, UpdateTestSettingService);
 
     serviceManager.addFactory<ITestManager>(ITestManagerFactory, context => {

@@ -49,7 +49,9 @@ export class JupyterInterpreterSelector {
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: currentPythonPath ? DataScience.currentlySelectedJupyterInterpreterForPlaceholder().format(currentPythonPath) : ''
+            placeHolder: currentPythonPath
+                ? DataScience.currentlySelectedJupyterInterpreterForPlaceholder().format(currentPythonPath)
+                : ''
         };
 
         const selection = await this.applicationShell.showQuickPick(suggestions, quickPickOptions);

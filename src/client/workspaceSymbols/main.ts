@@ -36,7 +36,9 @@ export class WorkspaceSymbols implements Disposable {
         this.disposables.push(this.outputChannel);
         this.registerCommands();
         this.initializeGenerators();
-        languages.registerWorkspaceSymbolProvider(new WorkspaceSymbolProvider(this.fs, this.commandMgr, this.generators));
+        languages.registerWorkspaceSymbolProvider(
+            new WorkspaceSymbolProvider(this.fs, this.commandMgr, this.generators)
+        );
         this.disposables.push(this.workspace.onDidChangeWorkspaceFolders(() => this.initializeGenerators()));
         this.disposables.push(this.documents.onDidSaveTextDocument(e => this.onDocumentSaved(e)));
         this.buildSymbolsOnStart();
@@ -52,7 +54,16 @@ export class WorkspaceSymbols implements Disposable {
 
         if (Array.isArray(this.workspace.workspaceFolders)) {
             this.workspace.workspaceFolders.forEach(wkSpc => {
-                this.generators.push(new Generator(wkSpc.uri, this.outputChannel, this.appShell, this.fs, this.processFactory, this.configurationService));
+                this.generators.push(
+                    new Generator(
+                        wkSpc.uri,
+                        this.outputChannel,
+                        this.appShell,
+                        this.fs,
+                        this.processFactory,
+                        this.configurationService
+                    )
+                );
             });
         }
     }
@@ -71,10 +82,13 @@ export class WorkspaceSymbols implements Disposable {
 
     private registerCommands() {
         this.disposables.push(
-            this.commandMgr.registerCommand(Commands.Build_Workspace_Symbols, async (rebuild: boolean = true, token?: CancellationToken) => {
-                const promises = this.buildWorkspaceSymbols(rebuild, token);
-                return Promise.all(promises);
-            })
+            this.commandMgr.registerCommand(
+                Commands.Build_Workspace_Symbols,
+                async (rebuild: boolean = true, token?: CancellationToken) => {
+                    const promises = this.buildWorkspaceSymbols(rebuild, token);
+                    return Promise.all(promises);
+                }
+            )
         );
     }
 

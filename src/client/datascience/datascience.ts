@@ -41,7 +41,9 @@ export class DataScience implements IDataScience {
     public async activate(): Promise<void> {
         this.commandRegistry.register();
 
-        this.extensionContext.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON_ALLFILES, this.dataScienceCodeLensProvider));
+        this.extensionContext.subscriptions.push(
+            vscode.languages.registerCodeLensProvider(PYTHON_ALLFILES, this.dataScienceCodeLensProvider)
+        );
 
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
@@ -49,7 +51,9 @@ export class DataScience implements IDataScience {
         this.disposableRegistry.push(this);
 
         // Listen for active editor changes so we can detect have code cells or not
-        this.disposableRegistry.push(this.documentManager.onDidChangeActiveTextEditor(() => this.onChangedActiveTextEditor()));
+        this.disposableRegistry.push(
+            this.documentManager.onDidChangeActiveTextEditor(() => this.onChangedActiveTextEditor())
+        );
         this.onChangedActiveTextEditor();
 
         // Send telemetry for all of our settings

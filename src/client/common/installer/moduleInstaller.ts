@@ -30,7 +30,9 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
         const uri = isResource(resource) ? resource : undefined;
         const executionInfo = await this.getExecutionInfo(name, resource);
-        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(uri);
+        const terminalService = this.serviceContainer
+            .get<ITerminalServiceFactory>(ITerminalServiceFactory)
+            .getTerminalService(uri);
         const install = async (token?: CancellationToken) => {
             const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
             if (executionInfo.moduleName) {
@@ -39,7 +41,9 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 const args = ['-m', executionInfo.moduleName].concat(executionInfoArgs);
 
                 const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-                const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
+                const interpreter = isResource(resource)
+                    ? await interpreterService.getActiveInterpreter(resource)
+                    : resource;
                 const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
                 if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
                     await terminalService.sendCommand(pythonPath, args, token);
@@ -68,7 +72,9 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 cancellable: true,
                 title: Products.installingModule().format(name)
             };
-            await shell.withProgress(options, async (_, token: CancellationToken) => install(wrapCancellationTokens(token, cancel)));
+            await shell.withProgress(options, async (_, token: CancellationToken) =>
+                install(wrapCancellationTokens(token, cancel))
+            );
         } else {
             await install(cancel);
         }

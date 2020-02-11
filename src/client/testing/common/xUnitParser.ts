@@ -141,7 +141,11 @@ function updateSummary(summary: TestSummary, testSuiteResult: TestSuiteResult) {
     summary.passed = testCount - summary.failures - summary.skipped - summary.errors;
 }
 
-function findTestFunction(candidates: FlattenedTestFunction[], className: string, funcName: string): TestFunction | undefined {
+function findTestFunction(
+    candidates: FlattenedTestFunction[],
+    className: string,
+    funcName: string
+): TestFunction | undefined {
     const xmlClassName = className
         .replace(/\(\)/g, '')
         .replace(/\.\./g, '.')

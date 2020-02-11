@@ -2,12 +2,22 @@ import { FormattingOptions, Position, Range, TextDocument, TextEdit, TextLine } 
 import { BlockRegEx } from './contracts';
 
 export class CodeBlockFormatProvider {
-    constructor(private blockRegExp: BlockRegEx, private previousBlockRegExps: BlockRegEx[], private boundaryRegExps: BlockRegEx[]) {}
+    constructor(
+        private blockRegExp: BlockRegEx,
+        private previousBlockRegExps: BlockRegEx[],
+        private boundaryRegExps: BlockRegEx[]
+    ) {}
     public canProvideEdits(line: string): boolean {
         return this.blockRegExp.test(line);
     }
 
-    public provideEdits(document: TextDocument, position: Position, _ch: string, options: FormattingOptions, line: TextLine): TextEdit[] {
+    public provideEdits(
+        document: TextDocument,
+        position: Position,
+        _ch: string,
+        options: FormattingOptions,
+        line: TextLine
+    ): TextEdit[] {
         // We can have else for the following blocks:
         // if:
         // elif x:
@@ -52,7 +62,10 @@ export class CodeBlockFormatProvider {
                 const startDeletePosition = new Position(position.line, 0);
                 const endDeletePosition = new Position(position.line, line.firstNonWhitespaceCharacterIndex);
 
-                return [TextEdit.delete(new Range(startDeletePosition, endDeletePosition)), TextEdit.insert(startDeletePosition, prefixOfPreviousBlock)];
+                return [
+                    TextEdit.delete(new Range(startDeletePosition, endDeletePosition)),
+                    TextEdit.insert(startDeletePosition, prefixOfPreviousBlock)
+                ];
             }
         }
 

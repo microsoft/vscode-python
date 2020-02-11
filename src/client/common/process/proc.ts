@@ -8,7 +8,16 @@ import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
 import { DEFAULT_ENCODING } from './constants';
-import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionResult, Output, ShellOptions, SpawnOptions, StdErrError } from './types';
+import {
+    ExecutionResult,
+    IBufferDecoder,
+    IProcessService,
+    ObservableExecutionResult,
+    Output,
+    ShellOptions,
+    SpawnOptions,
+    StdErrError
+} from './types';
 
 // tslint:disable:no-any
 export class ProcessService extends EventEmitter implements IProcessService {
@@ -160,7 +169,8 @@ export class ProcessService extends EventEmitter implements IProcessService {
             if (deferred.completed) {
                 return;
             }
-            const stderr: string | undefined = stderrBuffers.length === 0 ? undefined : this.decoder.decode(stderrBuffers, encoding);
+            const stderr: string | undefined =
+                stderrBuffers.length === 0 ? undefined : this.decoder.decode(stderrBuffers, encoding);
             if (stderr && stderr.length > 0 && options.throwOnStdErr) {
                 deferred.reject(new StdErrError(stderr));
             } else {
@@ -208,7 +218,10 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const defaultOptions = { ...options };
         const execOptions = defaultOptions as SpawnOptions;
         if (execOptions) {
-            const encoding = (execOptions.encoding = typeof execOptions.encoding === 'string' && execOptions.encoding.length > 0 ? execOptions.encoding : DEFAULT_ENCODING);
+            const encoding = (execOptions.encoding =
+                typeof execOptions.encoding === 'string' && execOptions.encoding.length > 0
+                    ? execOptions.encoding
+                    : DEFAULT_ENCODING);
             delete execOptions.encoding;
             execOptions.encoding = encoding;
         }

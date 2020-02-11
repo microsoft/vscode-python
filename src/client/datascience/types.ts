@@ -6,7 +6,18 @@ import { Session } from '@jupyterlab/services';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import { CancellationToken, CodeLens, CodeLensProvider, DebugSession, Disposable, Event, Range, TextDocument, TextEditor, Uri } from 'vscode';
+import {
+    CancellationToken,
+    CodeLens,
+    CodeLensProvider,
+    DebugSession,
+    Disposable,
+    Event,
+    Range,
+    TextDocument,
+    TextEditor,
+    Uri
+} from 'vscode';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -81,7 +92,11 @@ export interface INotebookCompletion {
 export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
     readonly id: string;
-    createNotebook(resource: Uri, notebookMetadata?: nbformat.INotebookMetadata, cancelToken?: CancellationToken): Promise<INotebook>;
+    createNotebook(
+        resource: Uri,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        cancelToken?: CancellationToken
+    ): Promise<INotebook>;
     getNotebook(resource: Uri): Promise<INotebook | undefined>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
     getConnectionInfo(): IConnection | undefined;
@@ -97,9 +112,20 @@ export interface INotebook extends IAsyncDisposable {
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
-    execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]>;
+    execute(
+        code: string,
+        file: string,
+        line: number,
+        id: string,
+        cancelToken?: CancellationToken,
+        silent?: boolean
+    ): Promise<ICell[]>;
     inspect(code: string, cancelToken?: CancellationToken): Promise<JSONObject>;
-    getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken): Promise<INotebookCompletion>;
+    getCompletion(
+        cellCode: string,
+        offsetInCode: number,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookCompletion>;
     restartKernel(timeoutInMs: number): Promise<void>;
     waitForIdle(timeoutInMs: number): Promise<void>;
     interruptKernel(timeoutInMs: number): Promise<InterruptResult>;
@@ -145,7 +171,10 @@ export interface IJupyterExecution extends IAsyncDisposable {
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined>;
+    connectToNotebookServer(
+        options?: INotebookServerOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookServer | undefined>;
     spawnNotebook(file: string): Promise<void>;
     importNotebook(file: string, template: string | undefined): Promise<string>;
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined>;
@@ -170,7 +199,10 @@ export interface IJupyterPasswordConnectInfo {
 
 export const IJupyterPasswordConnect = Symbol('IJupyterPasswordConnect');
 export interface IJupyterPasswordConnect {
-    getPasswordConnectionInfo(url: string, allowUnauthorized: boolean): Promise<IJupyterPasswordConnectInfo | undefined>;
+    getPasswordConnectionInfo(
+        url: string,
+        allowUnauthorized: boolean
+    ): Promise<IJupyterPasswordConnectInfo | undefined>;
 }
 
 export const IJupyterSession = Symbol('IJupyterSession');
@@ -185,8 +217,12 @@ export interface IJupyterSession extends IAsyncDisposable {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
-    requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
-    requestInspect(content: KernelMessage.IInspectRequestMsg['content']): Promise<KernelMessage.IInspectReplyMsg | undefined>;
+    requestComplete(
+        content: KernelMessage.ICompleteRequestMsg['content']
+    ): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
+    requestInspect(
+        content: KernelMessage.IInspectRequestMsg['content']
+    ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
     sendInputReply(content: string): void;
     changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
 }
@@ -197,7 +233,10 @@ export interface IJupyterSessionManagerFactory {
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
-    startNew(kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
+    startNew(
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getConnInfo(): IConnection;
     getRunningKernels(): Promise<IJupyterKernel[]>;
@@ -289,9 +328,21 @@ export interface IInteractiveWindow extends IInteractiveBase {
     readonly visible: boolean;
     readonly active: boolean;
     closed: Event<IInteractiveWindow>;
-    addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
+    addCode(
+        code: string,
+        file: string,
+        line: number,
+        editor?: TextEditor,
+        runningStopWatch?: StopWatch
+    ): Promise<boolean>;
     addMessage(message: string): Promise<void>;
-    debugCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
+    debugCode(
+        code: string,
+        file: string,
+        line: number,
+        editor?: TextEditor,
+        runningStopWatch?: StopWatch
+    ): Promise<boolean>;
     expandAllCells(): void;
     collapseAllCells(): void;
     exportCells(): void;
@@ -451,10 +502,23 @@ export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
     // interactive window. Dispose of the returned object when done.
-    set(message: string, showInWebView: boolean, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Disposable;
+    set(
+        message: string,
+        showInWebView: boolean,
+        timeout?: number,
+        canceled?: () => void,
+        interactivePanel?: IInteractiveBase
+    ): Disposable;
 
     // call this function to wait for a promise while displaying status
-    waitWithStatus<T>(promise: () => Promise<T>, message: string, showInWebView: boolean, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Promise<T>;
+    waitWithStatus<T>(
+        promise: () => Promise<T>,
+        message: string,
+        showInWebView: boolean,
+        timeout?: number,
+        canceled?: () => void,
+        interactivePanel?: IInteractiveBase
+    ): Promise<T>;
 }
 
 export interface IJupyterCommand {
@@ -465,7 +529,13 @@ export interface IJupyterCommand {
 
 export const IJupyterCommandFactory = Symbol('IJupyterCommandFactory');
 export interface IJupyterCommandFactory {
-    createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter, isActiveInterpreter: boolean): IJupyterCommand;
+    createInterpreterCommand(
+        command: JupyterCommands,
+        moduleName: string,
+        args: string[],
+        interpreter: PythonInterpreter,
+        isActiveInterpreter: boolean
+    ): IJupyterCommand;
     createProcessCommand(exe: string, args: string[]): IJupyterCommand;
 }
 
@@ -530,7 +600,12 @@ export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
     getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse>;
     getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
-    getDataFrameRows(targetVariable: IJupyterVariable, notebook: INotebook, start: number, end: number): Promise<JSONObject>;
+    getDataFrameRows(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        start: number,
+        end: number
+    ): Promise<JSONObject>;
 }
 
 // Request for variables

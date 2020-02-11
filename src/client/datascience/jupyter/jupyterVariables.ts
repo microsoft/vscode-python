@@ -16,7 +16,14 @@ import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers, Settings } from '../constants';
-import { ICell, IJupyterVariable, IJupyterVariables, IJupyterVariablesRequest, IJupyterVariablesResponse, INotebook } from '../types';
+import {
+    ICell,
+    IJupyterVariable,
+    IJupyterVariables,
+    IJupyterVariablesRequest,
+    IJupyterVariablesResponse,
+    INotebook
+} from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -45,22 +52,37 @@ export class JupyterVariables implements IJupyterVariables {
     private languageToQueryMap = new Map<string, { query: string; parser: RegExp }>();
     private notebookState = new Map<Uri, INotebookState>();
 
-    constructor(@inject(IFileSystem) private fileSystem: IFileSystem, @inject(IConfigurationService) private configService: IConfigurationService) {}
+    constructor(
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IConfigurationService) private configService: IConfigurationService
+    ) {}
 
     // IJupyterVariables implementation
-    public async getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse> {
+    public async getVariables(
+        notebook: INotebook,
+        request: IJupyterVariablesRequest
+    ): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
         return this.getVariablesBasedOnKernel(notebook, request);
     }
 
     public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
         // Run the get dataframe info script
-        return this.runScript<IJupyterVariable>(notebook, targetVariable, targetVariable, () => this.fetchDataFrameInfoScript, [
-            { key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn() }
-        ]);
+        return this.runScript<IJupyterVariable>(
+            notebook,
+            targetVariable,
+            targetVariable,
+            () => this.fetchDataFrameInfoScript,
+            [{ key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn() }]
+        );
     }
 
-    public async getDataFrameRows(targetVariable: IJupyterVariable, notebook: INotebook, start: number, end: number): Promise<JSONObject> {
+    public async getDataFrameRows(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook,
+        start: number,
+        end: number
+    ): Promise<JSONObject> {
         // Run the get dataframe rows script
         return this.runScript<JSONObject>(notebook, targetVariable, {}, () => this.fetchDataFrameRowsScript, [
             { key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn() },
@@ -102,7 +124,10 @@ export class JupyterVariables implements IJupyterVariables {
         const variableString = JSON.stringify(targetVariable).replace(/\\n/g, '\\\\n');
 
         // Setup a regex
-        const regexPattern = extraReplacements.length === 0 ? '_VSCode_JupyterTestValue' : ['_VSCode_JupyterTestValue', ...extraReplacements.map(v => v.key)].join('|');
+        const regexPattern =
+            extraReplacements.length === 0
+                ? '_VSCode_JupyterTestValue'
+                : ['_VSCode_JupyterTestValue', ...extraReplacements.map(v => v.key)].join('|');
         const replaceRegex = new RegExp(regexPattern, 'g');
 
         // Replace the test value with our current value. Replace start and end as well
@@ -132,7 +157,12 @@ export class JupyterVariables implements IJupyterVariables {
             const codeCell = cells[0].data as nbformat.ICodeCell;
             if (codeCell.outputs.length > 0) {
                 const codeCellOutput = codeCell.outputs[0] as nbformat.IOutput;
-                if (codeCellOutput && codeCellOutput.output_type === 'stream' && codeCellOutput.name === 'stderr' && codeCellOutput.hasOwnProperty('text')) {
+                if (
+                    codeCellOutput &&
+                    codeCellOutput.output_type === 'stream' &&
+                    codeCellOutput.name === 'stderr' &&
+                    codeCellOutput.hasOwnProperty('text')
+                ) {
                     const resultString = codeCellOutput.text as string;
                     // See if this the IOPUB data rate limit problem
                     if (resultString.includes('iopub_data_rate_limit')) {
@@ -150,10 +180,18 @@ export class JupyterVariables implements IJupyterVariables {
                         return (data as any)['text/plain'];
                     }
                 }
-                if (codeCellOutput && codeCellOutput.output_type === 'stream' && codeCellOutput.hasOwnProperty('text')) {
+                if (
+                    codeCellOutput &&
+                    codeCellOutput.output_type === 'stream' &&
+                    codeCellOutput.hasOwnProperty('text')
+                ) {
                     return codeCellOutput.text as string;
                 }
-                if (codeCellOutput && codeCellOutput.output_type === 'error' && codeCellOutput.hasOwnProperty('traceback')) {
+                if (
+                    codeCellOutput &&
+                    codeCellOutput.output_type === 'error' &&
+                    codeCellOutput.hasOwnProperty('traceback')
+                ) {
                     const traceback: string[] = codeCellOutput.traceback as string[];
                     const stripped = traceback.map(stripAnsi).join('\r\n');
                     const error = localize.DataScience.jupyterGetVariablesExecutionError().format(stripped);
@@ -216,7 +254,10 @@ export class JupyterVariables implements IJupyterVariables {
         return result;
     }
 
-    private async getVariablesBasedOnKernel(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse> {
+    private async getVariablesBasedOnKernel(
+        notebook: INotebook,
+        request: IJupyterVariablesRequest
+    ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
         let list = this.notebookState.get(notebook.resource);
         if (!list || list.currentExecutionCount !== request.executionCount) {
@@ -257,7 +298,9 @@ export class JupyterVariables implements IJupyterVariables {
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
             for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
-                const fullVariable = list.variables[i].value ? list.variables[i] : await this.getVariableValueFromKernel(list.variables[i], notebook);
+                const fullVariable = list.variables[i].value
+                    ? list.variables[i]
+                    : await this.getVariableValueFromKernel(list.variables[i], notebook);
 
                 // See if this is excluded or not.
                 if (exclusionList && exclusionList.indexOf(fullVariable.type) >= 0) {
@@ -301,7 +344,10 @@ export class JupyterVariables implements IJupyterVariables {
         return [];
     }
 
-    private async getVariableValueFromKernel(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
+    private async getVariableValueFromKernel(
+        targetVariable: IJupyterVariable,
+        notebook: INotebook
+    ): Promise<IJupyterVariable> {
         const result = { ...targetVariable };
         if (notebook) {
             const output = await notebook.inspect(targetVariable.name);

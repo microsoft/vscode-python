@@ -19,7 +19,9 @@ const untildify: (value: string) => string = require('untildify');
 @injectable()
 export class GlobalVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
-        @inject(IVirtualEnvironmentsSearchPathProvider) @named('global') globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
+        @inject(IVirtualEnvironmentsSearchPathProvider)
+        @named('global')
+        globalVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         super(globalVirtualEnvPathProvider, serviceContainer, 'VirtualEnvService');
@@ -40,7 +42,13 @@ export class GlobalVirtualEnvironmentsSearchPathProvider implements IVirtualEnvi
 
     public async getSearchPaths(resource?: Uri): Promise<string[]> {
         const homedir = os.homedir();
-        const venvFolders = ['envs', '.pyenv', '.direnv', '.virtualenvs', ...this.config.getSettings(resource).venvFolders];
+        const venvFolders = [
+            'envs',
+            '.pyenv',
+            '.direnv',
+            '.virtualenvs',
+            ...this.config.getSettings(resource).venvFolders
+        ];
         const folders = [...new Set(venvFolders.map(item => path.join(homedir, item)))];
 
         // Add support for the WORKON_HOME environment variable used by pipenv and virtualenvwrapper.

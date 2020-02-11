@@ -82,7 +82,10 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
             return;
         }
 
-        const timer = setTimeout(() => this.notifyCreationWhenReady(pythonPath).ignoreErrors(), timeToPollForEnvCreation);
+        const timer = setTimeout(
+            () => this.notifyCreationWhenReady(pythonPath).ignoreErrors(),
+            timeToPollForEnvCreation
+        );
         this.timers.set(pythonPath, { timer, counter });
     }
     private clearTimers() {

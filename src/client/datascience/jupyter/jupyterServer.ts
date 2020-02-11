@@ -48,7 +48,9 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
-        traceInfo(`Connecting server ${this.id} kernelSpec ${launchInfo.kernelSpec ? launchInfo.kernelSpec.name : 'unknown'}`);
+        traceInfo(
+            `Connecting server ${this.id} kernelSpec ${launchInfo.kernelSpec ? launchInfo.kernelSpec.name : 'unknown'}`
+        );
 
         // Save our launch info
         this.launchInfo = launchInfo;
@@ -78,7 +80,11 @@ export class JupyterServerBase implements INotebookServer {
         this.savedSession = session;
     }
 
-    public createNotebook(resource: Uri, notebookMetadata?: nbformat.INotebookMetadata, cancelToken?: CancellationToken): Promise<INotebook> {
+    public createNotebook(
+        resource: Uri,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        cancelToken?: CancellationToken
+    ): Promise<INotebook> {
         if (!this.sessionManager) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
@@ -87,7 +93,16 @@ export class JupyterServerBase implements INotebookServer {
         this.savedSession = undefined;
 
         // Create a notebook and return it.
-        return this.createNotebookInstance(resource, this.sessionManager, savedSession, this.disposableRegistry, this.configService, this.loggers, notebookMetadata, cancelToken);
+        return this.createNotebookInstance(
+            resource,
+            this.sessionManager,
+            savedSession,
+            this.disposableRegistry,
+            this.configService,
+            this.loggers,
+            notebookMetadata,
+            cancelToken
+        );
     }
 
     public async shutdown(): Promise<void> {

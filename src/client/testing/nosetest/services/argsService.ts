@@ -190,7 +190,11 @@ export class ArgumentsService implements IArgumentsService {
 
         let filteredArgs = args.slice();
         if (removePositionalArgs) {
-            const positionalArgs = this.helper.getPositionalArguments(filteredArgs, OptionsWithArguments, OptionsWithoutArguments);
+            const positionalArgs = this.helper.getPositionalArguments(
+                filteredArgs,
+                OptionsWithArguments,
+                OptionsWithoutArguments
+            );
             filteredArgs = filteredArgs.filter(item => positionalArgs.indexOf(item) === -1);
         }
         return this.helper.filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);

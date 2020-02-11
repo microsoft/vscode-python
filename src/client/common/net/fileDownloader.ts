@@ -25,14 +25,21 @@ export class FileDownloader implements IFileDownloader {
         }
         const tempFile = await this.fs.createTemporaryFile(options.extension);
 
-        await this.downloadFileWithStatusBarProgress(uri, options.progressMessagePrefix, tempFile.filePath).then(noop, ex => {
-            tempFile.dispose();
-            return Promise.reject(ex);
-        });
+        await this.downloadFileWithStatusBarProgress(uri, options.progressMessagePrefix, tempFile.filePath).then(
+            noop,
+            ex => {
+                tempFile.dispose();
+                return Promise.reject(ex);
+            }
+        );
 
         return tempFile.filePath;
     }
-    public async downloadFileWithStatusBarProgress(uri: string, progressMessage: string, tmpFilePath: string): Promise<void> {
+    public async downloadFileWithStatusBarProgress(
+        uri: string,
+        progressMessage: string,
+        tmpFilePath: string
+    ): Promise<void> {
         await this.appShell.withProgress({ location: ProgressLocation.Window }, async progress => {
             const req = await this.httpClient.downloadFile(uri);
             const fileStream = this.fs.createWriteStream(tmpFilePath);
@@ -49,7 +56,9 @@ export class FileDownloader implements IFileDownloader {
         return new Promise<void>((resolve, reject) => {
             request.on('response', response => {
                 if (response.statusCode !== 200) {
-                    reject(new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`));
+                    reject(
+                        new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`)
+                    );
                 }
             });
             // tslint:disable-next-line: no-require-imports
@@ -60,7 +69,12 @@ export class FileDownloader implements IFileDownloader {
                     const received = Math.round(state.size.transferred / 1024);
                     const total = Math.round(state.size.total / 1024);
                     const percentage = Math.round(100 * state.percent);
-                    const message = Http.downloadingFileProgress().format(progressMessagePrefix, received.toString(), total.toString(), percentage.toString());
+                    const message = Http.downloadingFileProgress().format(
+                        progressMessagePrefix,
+                        received.toString(),
+                        total.toString(),
+                        percentage.toString()
+                    );
                     progress.report({ message });
                 })
                 // Handle errors from download.

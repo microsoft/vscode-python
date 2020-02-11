@@ -55,7 +55,13 @@ export class StatusProvider implements IStatusProvider {
 
     constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell) {}
 
-    public set(message: string, showInWebView: boolean, timeout?: number, cancel?: () => void, panel?: IInteractiveBase): Disposable {
+    public set(
+        message: string,
+        showInWebView: boolean,
+        timeout?: number,
+        cancel?: () => void,
+        panel?: IInteractiveBase
+    ): Disposable {
         // Start our progress
         this.incrementCount(showInWebView, panel);
 

@@ -55,7 +55,9 @@ export class CondaEnvService extends CacheableLocatorService {
             const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
                 interpreters.forEach(interpreter => {
-                    const environment = environments.find(item => this.fileSystem.arePathsSame(item.path, interpreter!.envPath!));
+                    const environment = environments.find(item =>
+                        this.fileSystem.arePathsSame(item.path, interpreter!.envPath!)
+                    );
                     if (environment) {
                         interpreter.envName = environment!.name;
                     }
@@ -78,7 +80,12 @@ export class CondaEnvService extends CacheableLocatorService {
 /**
  * Return the list of conda env interpreters.
  */
-export async function parseCondaInfo(info: CondaInfo, condaService: ICondaService, fileSystem: IFileSystem, helper: IInterpreterHelper) {
+export async function parseCondaInfo(
+    info: CondaInfo,
+    condaService: ICondaService,
+    fileSystem: IFileSystem,
+    helper: IInterpreterHelper
+) {
     // The root of the conda environment is itself a Python interpreter
     // envs reported as e.g.: /Users/bob/miniconda3/envs/someEnv.
     const envs = Array.isArray(info.envs) ? info.envs : [];

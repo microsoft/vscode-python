@@ -123,7 +123,11 @@ export interface IPythonExecutionFactory {
      */
     createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
-    createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined>;
+    createCondaExecutionService(
+        pythonPath: string,
+        processService?: IProcessService,
+        resource?: Uri
+    ): Promise<CondaExecutionService | undefined>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];
@@ -178,6 +182,10 @@ export interface IExecutionEnvironmentVariablesService {
 export const IPythonToolExecutionService = Symbol('IPythonToolRunnerService');
 
 export interface IPythonToolExecutionService {
-    execObservable(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ObservableExecutionResult<string>>;
+    execObservable(
+        executionInfo: ExecutionInfo,
+        options: SpawnOptions,
+        resource: Uri
+    ): Promise<ObservableExecutionResult<string>>;
     exec(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ExecutionResult<string>>;
 }

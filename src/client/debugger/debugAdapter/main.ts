@@ -15,7 +15,15 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { PassThrough } from 'stream';
 import { Disposable } from 'vscode';
-import { DebugSession, ErrorDestination, Event, logger, OutputEvent, Response, TerminatedEvent } from 'vscode-debugadapter';
+import {
+    DebugSession,
+    ErrorDestination,
+    Event,
+    logger,
+    OutputEvent,
+    Response,
+    TerminatedEvent
+} from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
 import { DebugProtocol } from 'vscode-debugprotocol';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
@@ -47,7 +55,10 @@ export class PythonDebugger extends DebugSession {
     public debugServer?: BaseDebugServer;
     public client = createDeferred<Socket>();
     private supportsRunInTerminalRequest: boolean = false;
-    constructor(private readonly serviceContainer: IServiceContainer, private readonly fileExistsSync = fsextra.existsSync) {
+    constructor(
+        private readonly serviceContainer: IServiceContainer,
+        private readonly fileExistsSync = fsextra.existsSync
+    ) {
         super(false);
     }
     public shutdown(): void {
@@ -57,7 +68,10 @@ export class PythonDebugger extends DebugSession {
         }
         super.shutdown();
     }
-    protected initializeRequest(response: DebugProtocol.InitializeResponse, args: DebugProtocol.InitializeRequestArguments): void {
+    protected initializeRequest(
+        response: DebugProtocol.InitializeResponse,
+        args: DebugProtocol.InitializeRequestArguments
+    ): void {
         const body = response.body!;
 
         body.supportsExceptionInfoRequest = true;
@@ -101,12 +115,28 @@ export class PythonDebugger extends DebugSession {
                 logger.error('Attach failed');
                 logger.error(`${ex}, ${ex.name}, ${ex.message}, ${ex.stack}`);
                 const message = this.getUserFriendlyAttachErrorMessage(ex) || 'Attach Failed';
-                this.sendErrorResponse(response, { format: message, id: 1 }, undefined, undefined, ErrorDestination.User);
+                this.sendErrorResponse(
+                    response,
+                    { format: message, id: 1 },
+                    undefined,
+                    undefined,
+                    ErrorDestination.User
+                );
             });
     }
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
-        if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !this.fileExistsSync(args.program)) {
-            return this.sendErrorResponse(response, { format: `File does not exist. "${args.program}"`, id: 1 }, undefined, undefined, ErrorDestination.User);
+        if (
+            (typeof args.module !== 'string' || args.module.length === 0) &&
+            args.program &&
+            !this.fileExistsSync(args.program)
+        ) {
+            return this.sendErrorResponse(
+                response,
+                { format: `File does not exist. "${args.program}"`, id: 1 },
+                undefined,
+                undefined,
+                ErrorDestination.User
+            );
         }
 
         this.launchPTVSD(args)
@@ -114,7 +144,13 @@ export class PythonDebugger extends DebugSession {
             .then(() => this.emit('debugger_launched'))
             .catch(ex => {
                 const message = this.getUserFriendlyLaunchErrorMessage(args, ex) || 'Debug Error';
-                this.sendErrorResponse(response, { format: message, id: 1 }, undefined, undefined, ErrorDestination.User);
+                this.sendErrorResponse(
+                    response,
+                    { format: message, id: 1 },
+                    undefined,
+                    undefined,
+                    ErrorDestination.User
+                );
             });
     }
     private async launchPTVSD(args: LaunchRequestArguments) {
@@ -146,14 +182,16 @@ export class PythonDebugger extends DebugSession {
     private getConnectionTimeout(args: LaunchRequestArguments) {
         // The timeout can be overridden, but won't be documented unless we see the need for it.
         // This is just a fail safe mechanism, if the current timeout isn't enough (let study the current behaviour before exposing this setting).
-        const connectionTimeout = typeof (args as any).timeout === 'number' ? ((args as any).timeout as number) : DEBUGGER_CONNECT_TIMEOUT;
+        const connectionTimeout =
+            typeof (args as any).timeout === 'number' ? ((args as any).timeout as number) : DEBUGGER_CONNECT_TIMEOUT;
         return Math.max(connectionTimeout, MIN_DEBUGGER_CONNECT_TIMEOUT);
     }
     private getUserFriendlyLaunchErrorMessage(launchArgs: LaunchRequestArguments, error: any): string | undefined {
         if (!error) {
             return;
         }
-        const errorMsg = typeof error === 'string' ? error : error.message && error.message.length > 0 ? error.message : '';
+        const errorMsg =
+            typeof error === 'string' ? error : error.message && error.message.length > 0 ? error.message : '';
         if (isNotInstalledError(error)) {
             return `Failed to launch the Python Process, please validate the path '${launchArgs.pythonPath}'`;
         } else {
@@ -308,7 +346,9 @@ class DebugManager implements Disposable {
                 logger.verbose('Sending Terminated Event');
                 this.sendMessage(new TerminatedEvent(), this.outputStream);
             } catch (err) {
-                const message = `Error in sending Terminated Event: ${err && err.message ? err.message : err.toString()}`;
+                const message = `Error in sending Terminated Event: ${
+                    err && err.message ? err.message : err.toString()
+                }`;
                 const details = [message, err && err.name ? err.name : '', err && err.stack ? err.stack : ''].join(EOL);
                 logger.error(`${message}${EOL}${details}`);
             }
@@ -321,7 +361,9 @@ class DebugManager implements Disposable {
                 logger.verbose('Sending Disconnect Response');
                 this.sendMessage(new Response(this.disconnectRequest, ''), this.outputStream);
             } catch (err) {
-                const message = `Error in sending Disconnect Response: ${err && err.message ? err.message : err.toString()}`;
+                const message = `Error in sending Disconnect Response: ${
+                    err && err.message ? err.message : err.toString()
+                }`;
                 const details = [message, err && err.name ? err.name : '', err && err.stack ? err.stack : ''].join(EOL);
                 logger.error(`${message}${EOL}${details}`);
             }
@@ -354,7 +396,10 @@ class DebugManager implements Disposable {
             this.disposables.forEach(disposable => disposable.dispose());
         }
     };
-    private sendMessage(message: DebugProtocol.ProtocolMessage, outputStream: Socket | PassThrough | NodeJS.WriteStream): void {
+    private sendMessage(
+        message: DebugProtocol.ProtocolMessage,
+        outputStream: Socket | PassThrough | NodeJS.WriteStream
+    ): void {
         this.protocolMessageWriter.write(outputStream, message);
         this.protocolMessageWriter.write(this.throughOutputStream, message);
     }
@@ -392,7 +437,9 @@ class DebugManager implements Disposable {
      * @memberof DebugManager
      */
     private connectVSCodeToPTVSD = async (_response: DebugProtocol.AttachResponse | DebugProtocol.LaunchResponse) => {
-        const attachOrLaunchRequest = await (this.launchOrAttach === 'attach' ? this.attachRequest : this.launchRequest);
+        const attachOrLaunchRequest = await (this.launchOrAttach === 'attach'
+            ? this.attachRequest
+            : this.launchRequest);
         // By now we're connected to the client.
         this.socket = await this.debugSession!.debugServer!.client;
 

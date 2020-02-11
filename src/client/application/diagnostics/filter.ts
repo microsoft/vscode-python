@@ -19,7 +19,10 @@ export class DiagnosticFilterService implements IDiagnosticFilterService {
     public async shouldIgnoreDiagnostic(code: string): Promise<boolean> {
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const globalState = factory.createGlobalPersistentState<string[]>(FilterKeys.GlobalDiagnosticFilter, []);
-        const workspaceState = factory.createWorkspacePersistentState<string[]>(FilterKeys.WorkspaceDiagnosticFilter, []);
+        const workspaceState = factory.createWorkspacePersistentState<string[]>(
+            FilterKeys.WorkspaceDiagnosticFilter,
+            []
+        );
         return globalState.value.indexOf(code) >= 0 || workspaceState.value.indexOf(code) >= 0;
     }
     public async ignoreDiagnostic(code: string, scope: DiagnosticScope): Promise<void> {

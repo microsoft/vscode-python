@@ -9,7 +9,12 @@ import { PythonExecutionService } from './pythonProcess';
 import { IProcessService } from './types';
 
 export class WindowsStorePythonProcess extends PythonExecutionService {
-    constructor(serviceContainer: IServiceContainer, procService: IProcessService, pythonPath: string, private readonly windowsStoreInterpreter: IWindowsStoreInterpreter) {
+    constructor(
+        serviceContainer: IServiceContainer,
+        procService: IProcessService,
+        pythonPath: string,
+        private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
+    ) {
         super(serviceContainer, procService, pythonPath);
     }
     /**
@@ -21,6 +26,8 @@ export class WindowsStorePythonProcess extends PythonExecutionService {
      * @memberof WindowsStorePythonProcess
      */
     public async getExecutablePath(): Promise<string> {
-        return this.windowsStoreInterpreter.isWindowsStoreInterpreter(this.pythonPath) ? this.pythonPath : super.getExecutablePath();
+        return this.windowsStoreInterpreter.isWindowsStoreInterpreter(this.pythonPath)
+            ? this.pythonPath
+            : super.getExecutablePath();
     }
 }

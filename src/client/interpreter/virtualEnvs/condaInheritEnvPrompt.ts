@@ -42,19 +42,30 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
 
     @traceDecorators.error('Failed to display conda inherit env prompt')
     public async promptAndUpdate() {
-        const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(condaInheritEnvPromptKey, true);
+        const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
+            condaInheritEnvPromptKey,
+            true
+        );
         if (!notificationPromptEnabled.value) {
             return;
         }
-        const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Common.moreInfo()];
+        const prompts = [
+            InteractiveShiftEnterBanner.bannerLabelYes(),
+            InteractiveShiftEnterBanner.bannerLabelNo(),
+            Common.moreInfo()
+        ];
         const telemetrySelections: ['Yes', 'No', 'More Info'] = ['Yes', 'No', 'More Info'];
         const selection = await this.appShell.showInformationMessage(Interpreters.condaInheritEnvMessage(), ...prompts);
-        sendTelemetryEvent(EventName.CONDA_INHERIT_ENV_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
+        sendTelemetryEvent(EventName.CONDA_INHERIT_ENV_PROMPT, undefined, {
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined
+        });
         if (!selection) {
             return;
         }
         if (selection === prompts[0]) {
-            await this.workspaceService.getConfiguration('terminal').update('integrated.inheritEnv', false, ConfigurationTarget.Global);
+            await this.workspaceService
+                .getConfiguration('terminal')
+                .update('integrated.inheritEnv', false, ConfigurationTarget.Global);
         } else if (selection === prompts[1]) {
             await notificationPromptEnabled.updateValue(false);
         } else if (selection === prompts[2]) {
@@ -74,12 +85,20 @@ export class CondaInheritEnvPrompt implements IExtensionActivationService {
         if (!interpreter || interpreter.type !== InterpreterType.Conda) {
             return false;
         }
-        const setting = this.workspaceService.getConfiguration('terminal', resource).inspect<boolean>('integrated.inheritEnv');
+        const setting = this.workspaceService
+            .getConfiguration('terminal', resource)
+            .inspect<boolean>('integrated.inheritEnv');
         if (!setting) {
-            traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `terminal.integrated.inheritEnv`');
+            traceError(
+                'WorkspaceConfiguration.inspect returns `undefined` for setting `terminal.integrated.inheritEnv`'
+            );
             return false;
         }
-        if (setting.globalValue !== undefined || setting.workspaceValue !== undefined || setting.workspaceFolderValue !== undefined) {
+        if (
+            setting.globalValue !== undefined ||
+            setting.workspaceValue !== undefined ||
+            setting.workspaceFolderValue !== undefined
+        ) {
             return false;
         }
         this.hasPromptBeenShownInCurrentSession = true;

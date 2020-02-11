@@ -15,7 +15,10 @@ import { TestFile, TestFolder, TestFunction, TestsToRun, TestSuite } from '../co
 import { ITestExplorerCommandHandler } from '../navigation/types';
 import { ITestDataItemResource, TestDataItem, TestDataItemType } from '../types';
 
-type NavigationCommands = typeof Commands.navigateToTestFile | typeof Commands.navigateToTestFunction | typeof Commands.navigateToTestSuite;
+type NavigationCommands =
+    | typeof Commands.navigateToTestFile
+    | typeof Commands.navigateToTestFunction
+    | typeof Commands.navigateToTestSuite;
 const testNavigationCommandMapping: { [key: string]: NavigationCommands } = {
     [TestDataItemType.file]: Commands.navigateToTestFile,
     [TestDataItemType.function]: Commands.navigateToTestFunction,
@@ -25,11 +28,16 @@ const testNavigationCommandMapping: { [key: string]: NavigationCommands } = {
 @injectable()
 export class TestExplorerCommandHandler implements ITestExplorerCommandHandler {
     private readonly disposables: IDisposable[] = [];
-    constructor(@inject(ICommandManager) private readonly cmdManager: ICommandManager, @inject(ITestDataItemResource) private readonly testResource: ITestDataItemResource) {}
+    constructor(
+        @inject(ICommandManager) private readonly cmdManager: ICommandManager,
+        @inject(ITestDataItemResource) private readonly testResource: ITestDataItemResource
+    ) {}
     public register(): void {
         this.disposables.push(this.cmdManager.registerCommand(Commands.runTestNode, this.onRunTestNode, this));
         this.disposables.push(this.cmdManager.registerCommand(Commands.debugTestNode, this.onDebugTestNode, this));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.openTestNodeInEditor, this.onOpenTestNodeInEditor, this));
+        this.disposables.push(
+            this.cmdManager.registerCommand(Commands.openTestNodeInEditor, this.onOpenTestNodeInEditor, this)
+        );
     }
     public dispose(): void {
         this.disposables.forEach(item => item.dispose());

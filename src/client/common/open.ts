@@ -31,7 +31,16 @@ export function open(opts: any): Promise<childProcess.ChildProcess> {
     if (process.platform === 'darwin') {
         const sudoPrefix = opts.sudo === true ? 'sudo ' : '';
         cmd = 'osascript';
-        args = ['-e', 'tell application "terminal"', '-e', 'activate', '-e', 'do script "' + sudoPrefix + [opts.app].concat(appArgs).join(' ') + '"', '-e', 'end tell'];
+        args = [
+            '-e',
+            'tell application "terminal"',
+            '-e',
+            'activate',
+            '-e',
+            'do script "' + sudoPrefix + [opts.app].concat(appArgs).join(' ') + '"',
+            '-e',
+            'end tell'
+        ];
     } else if (process.platform === 'win32') {
         cmd = 'cmd';
         args.push('/c', 'start');

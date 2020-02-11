@@ -6,7 +6,15 @@
 import { inject, injectable } from 'inversify';
 import { getLocation } from 'jsonc-parser';
 import * as path from 'path';
-import { CancellationToken, CompletionItem, CompletionItemKind, CompletionItemProvider, Position, SnippetString, TextDocument } from 'vscode';
+import {
+    CancellationToken,
+    CompletionItem,
+    CompletionItemKind,
+    CompletionItemProvider,
+    Position,
+    SnippetString,
+    TextDocument
+} from 'vscode';
 import { IExtensionSingleActivationService } from '../../../../activation/types';
 import { ILanguageService } from '../../../../common/application/types';
 import { IDisposableRegistry } from '../../../../common/types';
@@ -25,10 +33,18 @@ export class LaunchJsonCompletionProvider implements CompletionItemProvider, IEx
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
     ) {}
     public async activate(): Promise<void> {
-        this.disposableRegistry.push(this.languageService.registerCompletionItemProvider({ language: JsonLanguages.json }, this));
-        this.disposableRegistry.push(this.languageService.registerCompletionItemProvider({ language: JsonLanguages.jsonWithComments }, this));
+        this.disposableRegistry.push(
+            this.languageService.registerCompletionItemProvider({ language: JsonLanguages.json }, this)
+        );
+        this.disposableRegistry.push(
+            this.languageService.registerCompletionItemProvider({ language: JsonLanguages.jsonWithComments }, this)
+        );
     }
-    public async provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken): Promise<CompletionItem[]> {
+    public async provideCompletionItems(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken
+    ): Promise<CompletionItem[]> {
         if (!this.canProvideCompletions(document, position)) {
             return [];
         }

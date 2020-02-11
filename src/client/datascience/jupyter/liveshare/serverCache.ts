@@ -24,10 +24,17 @@ export class ServerCache implements IAsyncDisposable {
     private cache: Map<string, IServerData> = new Map<string, IServerData>();
     private emptyKey = uuid();
 
-    constructor(private configService: IConfigurationService, private workspace: IWorkspaceService, private fileSystem: IFileSystem) {}
+    constructor(
+        private configService: IConfigurationService,
+        private workspace: IWorkspaceService,
+        private fileSystem: IFileSystem
+    ) {}
 
     public async getOrCreate(
-        createFunction: (options?: INotebookServerOptions, cancelToken?: CancellationToken) => Promise<INotebookServer | undefined>,
+        createFunction: (
+            options?: INotebookServerOptions,
+            cancelToken?: CancellationToken
+        ) => Promise<INotebookServer | undefined>,
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {

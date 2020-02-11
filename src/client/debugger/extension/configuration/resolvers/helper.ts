@@ -25,7 +25,8 @@ export class DebugEnvironmentVariablesHelper implements IDebugEnvironmentVariabl
 
         // Merge variables from both .env file and env json variables.
         // tslint:disable-next-line:no-any
-        const debugLaunchEnvVars: Record<string, string> = args.env && Object.keys(args.env).length > 0 ? ({ ...args.env } as any) : ({} as any);
+        const debugLaunchEnvVars: Record<string, string> =
+            args.env && Object.keys(args.env).length > 0 ? ({ ...args.env } as any) : ({} as any);
         const envFileVars = await this.envParser.parseFile(args.envFile, debugLaunchEnvVars);
         const env = envFileVars ? { ...envFileVars! } : {};
         this.envParser.mergeVariables(debugLaunchEnvVars, env);

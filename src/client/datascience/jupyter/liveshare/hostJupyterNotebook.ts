@@ -13,7 +13,15 @@ import { IConfigurationService, IDisposableRegistry } from '../../../common/type
 import { createDeferred } from '../../../common/utils/async';
 import { Identifiers, LiveShare, LiveShareCommands } from '../../constants';
 import { IExecuteInfo } from '../../interactive-common/interactiveWindowTypes';
-import { ICell, IJupyterSession, INotebook, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo, InterruptResult } from '../../types';
+import {
+    ICell,
+    IJupyterSession,
+    INotebook,
+    INotebookExecutionLogger,
+    INotebookServer,
+    INotebookServerLaunchInfo,
+    InterruptResult
+} from '../../types';
 import { JupyterNotebookBase } from '../jupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
@@ -25,7 +33,9 @@ import cloneDeep = require('lodash/cloneDeep');
 
 // tslint:disable:no-any
 
-export class HostJupyterNotebook extends LiveShareParticipantHost(JupyterNotebookBase, LiveShare.JupyterNotebookSharedService) implements IRoleBasedObject, INotebook {
+export class HostJupyterNotebook
+    extends LiveShareParticipantHost(JupyterNotebookBase, LiveShare.JupyterNotebookSharedService)
+    implements IRoleBasedObject, INotebook {
     private catchupResponses: ResponseQueue = new ResponseQueue();
     private localResponses: ResponseQueue = new ResponseQueue();
     private requestLog: Map<string, number> = new Map<string, number>();
@@ -45,7 +55,20 @@ export class HostJupyterNotebook extends LiveShareParticipantHost(JupyterNoteboo
         appService: IApplicationShell,
         fs: IFileSystem
     ) {
-        super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError, workspace, appService, fs);
+        super(
+            liveShare,
+            session,
+            configService,
+            disposableRegistry,
+            owner,
+            launchInfo,
+            loggers,
+            resource,
+            getDisposedError,
+            workspace,
+            appService,
+            fs
+        );
     }
 
     public dispose = async (): Promise<void> => {
@@ -66,20 +89,36 @@ export class HostJupyterNotebook extends LiveShareParticipantHost(JupyterNoteboo
             // Attach event handlers to different requests
             if (service) {
                 // Requests return arrays
-                service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) => this.onSync());
-                service.onRequest(LiveShareCommands.getSysInfo, (_args: any[], cancellation: CancellationToken) => this.onGetSysInfoRequest(cancellation));
-                service.onRequest(LiveShareCommands.inspect, (args: any[], cancellation: CancellationToken) => this.inspect(args[0], cancellation));
+                service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) =>
+                    this.onSync()
+                );
+                service.onRequest(LiveShareCommands.getSysInfo, (_args: any[], cancellation: CancellationToken) =>
+                    this.onGetSysInfoRequest(cancellation)
+                );
+                service.onRequest(LiveShareCommands.inspect, (args: any[], cancellation: CancellationToken) =>
+                    this.inspect(args[0], cancellation)
+                );
                 service.onRequest(LiveShareCommands.restart, (args: any[], cancellation: CancellationToken) =>
-                    this.onRestartRequest(args.length > 0 ? (args[0] as number) : LiveShare.InterruptDefaultTimeout, cancellation)
+                    this.onRestartRequest(
+                        args.length > 0 ? (args[0] as number) : LiveShare.InterruptDefaultTimeout,
+                        cancellation
+                    )
                 );
                 service.onRequest(LiveShareCommands.interrupt, (args: any[], cancellation: CancellationToken) =>
-                    this.onInterruptRequest(args.length > 0 ? (args[0] as number) : LiveShare.InterruptDefaultTimeout, cancellation)
+                    this.onInterruptRequest(
+                        args.length > 0 ? (args[0] as number) : LiveShare.InterruptDefaultTimeout,
+                        cancellation
+                    )
                 );
-                service.onRequest(LiveShareCommands.disposeServer, (_args: any[], _cancellation: CancellationToken) => this.dispose());
+                service.onRequest(LiveShareCommands.disposeServer, (_args: any[], _cancellation: CancellationToken) =>
+                    this.dispose()
+                );
 
                 // Notifications are always objects.
                 service.onNotify(LiveShareCommands.catchupRequest, (args: object) => this.onCatchupRequest(args));
-                service.onNotify(LiveShareCommands.executeObservable, (args: object) => this.onExecuteObservableRequest(args));
+                service.onNotify(LiveShareCommands.executeObservable, (args: object) =>
+                    this.onExecuteObservableRequest(args)
+                );
             }
         }
     }
@@ -87,7 +126,8 @@ export class HostJupyterNotebook extends LiveShareParticipantHost(JupyterNoteboo
     public async waitForServiceName(): Promise<string> {
         // Use our base name plus our id. This means one unique server per notebook
         // Convert to our shared URI to match the guest and remove any '.' as live share won't support them
-        const sharedUri = this.resource.scheme === 'file' ? this.finishedApi!.convertLocalUriToShared(this.resource) : this.resource;
+        const sharedUri =
+            this.resource.scheme === 'file' ? this.finishedApi!.convertLocalUriToShared(this.resource) : this.resource;
         return Promise.resolve(`${LiveShare.JupyterNotebookSharedService}${sharedUri.toString()}`);
     }
 
@@ -95,14 +135,22 @@ export class HostJupyterNotebook extends LiveShareParticipantHost(JupyterNoteboo
         await super.onPeerChange(ev);
 
         // Keep track of the number of guests that need to do a catchup request
-        this.catchupPendingCount += ev.added.filter(e => e.role === vsls.Role.Guest).length - ev.removed.filter(e => e.role === vsls.Role.Guest).length;
+        this.catchupPendingCount +=
+            ev.added.filter(e => e.role === vsls.Role.Guest).length -
+            ev.removed.filter(e => e.role === vsls.Role.Guest).length;
     }
 
     public clear(id: string): void {
         this.requestLog.delete(id);
     }
 
-    public executeObservable(code: string, file: string, line: number, id: string, silent?: boolean): Observable<ICell[]> {
+    public executeObservable(
+        code: string,
+        file: string,
+        line: number,
+        id: string,
+        silent?: boolean
+    ): Observable<ICell[]> {
         // See if this has already been asked for not
         if (this.requestLog.has(id)) {
             // This must be a local call that occurred after a guest call. Just
@@ -134,7 +182,14 @@ export class HostJupyterNotebook extends LiveShareParticipantHost(JupyterNoteboo
         }
     }
 
-    private makeRequest(code: string, file: string, line: number, id: string, silent: boolean | undefined, responseQueues: ResponseQueue[]): Promise<ICell[]> {
+    private makeRequest(
+        code: string,
+        file: string,
+        line: number,
+        id: string,
+        silent: boolean | undefined,
+        responseQueues: ResponseQueue[]
+    ): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -158,7 +213,14 @@ export class HostJupyterNotebook extends LiveShareParticipantHost(JupyterNoteboo
         return deferred.promise;
     }
 
-    private makeObservableRequest(code: string, file: string, line: number, id: string, silent: boolean | undefined, responseQueues: ResponseQueue[]): Observable<ICell[]> {
+    private makeObservableRequest(
+        code: string,
+        file: string,
+        line: number,
+        id: string,
+        silent: boolean | undefined,
+        responseQueues: ResponseQueue[]
+    ): Observable<ICell[]> {
         try {
             this.requestLog.set(id, Date.now());
             const inner = super.executeObservable(code, file, line, id, silent);
@@ -229,10 +291,16 @@ export class HostJupyterNotebook extends LiveShareParticipantHost(JupyterNoteboo
                 try {
                     // Convert the file name if necessary
                     const uri = vscode.Uri.parse(`vsls:${obj.file}`);
-                    const file = this.finishedApi && obj.file !== Identifiers.EmptyFileName ? this.finishedApi.convertSharedUriToLocal(uri).fsPath : obj.file;
+                    const file =
+                        this.finishedApi && obj.file !== Identifiers.EmptyFileName
+                            ? this.finishedApi.convertSharedUriToLocal(uri).fsPath
+                            : obj.file;
 
                     // We need the results of this execute to end up in both the guest responses and the local responses
-                    this.makeRequest(obj.code, file, obj.line, obj.id, false, [this.localResponses, this.catchupResponses]).ignoreErrors();
+                    this.makeRequest(obj.code, file, obj.line, obj.id, false, [
+                        this.localResponses,
+                        this.catchupResponses
+                    ]).ignoreErrors();
                 } catch (e) {
                     traceError(e);
                 }
@@ -240,7 +308,12 @@ export class HostJupyterNotebook extends LiveShareParticipantHost(JupyterNoteboo
         }
     }
 
-    private postObservableResult(code: string, observable: Observable<ICell[]>, id: string, responseQueues: ResponseQueue[]): Observable<ICell[]> {
+    private postObservableResult(
+        code: string,
+        observable: Observable<ICell[]>,
+        id: string,
+        responseQueues: ResponseQueue[]
+    ): Observable<ICell[]> {
         return new Observable(subscriber => {
             let pos = 0;
 
@@ -299,7 +372,12 @@ export class HostJupyterNotebook extends LiveShareParticipantHost(JupyterNoteboo
     }
 
     private postException(exc: any, responseQueues: ResponseQueue[]) {
-        this.postResult(ServerResponseType.Exception, { type: ServerResponseType.Exception, time: Date.now(), message: exc.toString() }, r => r, responseQueues);
+        this.postResult(
+            ServerResponseType.Exception,
+            { type: ServerResponseType.Exception, time: Date.now(), message: exc.toString() },
+            r => r,
+            responseQueues
+        );
     }
 
     private postResult<R extends IResponseMapping, T extends keyof R>(

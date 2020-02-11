@@ -19,20 +19,35 @@ export enum LanguageServerDownloadChannel {
 @injectable()
 export abstract class StableLanguageServerPackageRepository extends AzureBlobStoreNugetRepository {
     constructor(serviceContainer: IServiceContainer, packageName: string) {
-        super(serviceContainer, azureBlobStorageAccount, `${packageName}-${LanguageServerDownloadChannel.stable}`, azureCDNBlobStorageAccount);
+        super(
+            serviceContainer,
+            azureBlobStorageAccount,
+            `${packageName}-${LanguageServerDownloadChannel.stable}`,
+            azureCDNBlobStorageAccount
+        );
     }
 }
 
 @injectable()
 export abstract class BetaLanguageServerPackageRepository extends AzureBlobStoreNugetRepository {
     constructor(serviceContainer: IServiceContainer, packageName: string) {
-        super(serviceContainer, azureBlobStorageAccount, `${packageName}-${LanguageServerDownloadChannel.beta}`, azureCDNBlobStorageAccount);
+        super(
+            serviceContainer,
+            azureBlobStorageAccount,
+            `${packageName}-${LanguageServerDownloadChannel.beta}`,
+            azureCDNBlobStorageAccount
+        );
     }
 }
 
 @injectable()
 export abstract class DailyLanguageServerPackageRepository extends AzureBlobStoreNugetRepository {
     constructor(serviceContainer: IServiceContainer, packageName: string) {
-        super(serviceContainer, azureBlobStorageAccount, `${packageName}-${LanguageServerDownloadChannel.daily}`, azureCDNBlobStorageAccount);
+        super(
+            serviceContainer,
+            azureBlobStorageAccount,
+            `${packageName}-${LanguageServerDownloadChannel.daily}`,
+            azureCDNBlobStorageAccount
+        );
     }
 }

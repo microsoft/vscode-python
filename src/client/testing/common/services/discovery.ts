@@ -7,7 +7,12 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { OutputChannel } from 'vscode';
 import { traceError } from '../../../common/logger';
-import { ExecutionFactoryCreateWithEnvironmentOptions, ExecutionResult, IPythonExecutionFactory, SpawnOptions } from '../../../common/process/types';
+import {
+    ExecutionFactoryCreateWithEnvironmentOptions,
+    ExecutionResult,
+    IPythonExecutionFactory,
+    SpawnOptions
+} from '../../../common/process/types';
 import { IOutputChannel } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { captureTelemetry } from '../../../telemetry';

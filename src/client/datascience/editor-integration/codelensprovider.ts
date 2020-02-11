@@ -39,7 +39,10 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     public dispose() {
         // On shutdown send how long on average we spent parsing code lens
         if (this.totalGetCodeLensCalls > 0) {
-            sendTelemetryEvent(Telemetry.CodeLensAverageAcquisitionTime, this.totalExecutionTimeInMs / this.totalGetCodeLensCalls);
+            sendTelemetryEvent(
+                Telemetry.CodeLensAverageAcquisitionTime,
+                this.totalExecutionTimeInMs / this.totalGetCodeLensCalls
+            );
         }
     }
 
@@ -137,7 +140,11 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     private getCodeLens(document: vscode.TextDocument): vscode.CodeLens[] {
         // See if we already have a watcher for this file and version
-        const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
+        const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(
+            document.fileName,
+            document.version,
+            this.configuration.getSettings().datascience
+        );
         if (codeWatcher) {
             return codeWatcher.getCodeLenses();
         }

@@ -22,7 +22,13 @@ const InvalidEnvPathVariableMessage =
 
 export class InvalidEnvironmentPathVariableDiagnostic extends BaseDiagnostic {
     constructor(message: string, resource: Resource) {
-        super(DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic, message, DiagnosticSeverity.Warning, DiagnosticScope.Global, resource);
+        super(
+            DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic,
+            message,
+            DiagnosticSeverity.Warning,
+            DiagnosticScope.Global,
+            resource
+        );
     }
 }
 
@@ -32,10 +38,16 @@ export const EnvironmentPathVariableDiagnosticsServiceId = 'EnvironmentPathVaria
 export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
     private readonly platform: IPlatformService;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer, @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry) {
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+    ) {
         super([DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic], serviceContainer, disposableRegistry, true);
         this.platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
-        this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
+        this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
+            IDiagnosticHandlerService,
+            DiagnosticCommandPromptHandlerServiceId
+        );
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (this.platform.isWindows && this.doesPathVariableHaveInvalidEntries()) {

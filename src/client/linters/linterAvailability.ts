@@ -64,14 +64,20 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
      * @returns true if the user requested a configuration change, false otherwise.
      */
     public async promptToConfigureAvailableLinter(linterInfo: ILinterInfo): Promise<boolean> {
-        const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(doNotDisplayPromptStateKey, true);
+        const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(
+            doNotDisplayPromptStateKey,
+            true
+        );
         if (!notificationPromptEnabled.value) {
             return false;
         }
         const optButtons = [Linters.enableLinter().format(linterInfo.id), Common.notNow(), Common.doNotShowAgain()];
 
         const telemetrySelections: ['enable', 'ignore', 'disablePrompt'] = ['enable', 'ignore', 'disablePrompt'];
-        const pick = await this.appShell.showInformationMessage(Linters.enablePylint().format(linterInfo.id), ...optButtons);
+        const pick = await this.appShell.showInformationMessage(
+            Linters.enablePylint().format(linterInfo.id),
+            ...optButtons
+        );
         sendTelemetryEvent(EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT, undefined, {
             tool: linterInfo.id,
             action: pick ? telemetrySelections[optButtons.indexOf(pick)] : undefined
@@ -96,7 +102,8 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         if (!this.workspaceService.hasWorkspaceFolders) {
             return false;
         }
-        const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource) || this.workspaceService.workspaceFolders![0];
+        const workspaceFolder =
+            this.workspaceService.getWorkspaceFolder(resource) || this.workspaceService.workspaceFolders![0];
         let isAvailable = false;
         for (const configName of linterInfo.configFileNames) {
             const configPath = path.join(workspaceFolder.uri.fsPath, configName);
@@ -116,7 +123,9 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
     public isLinterUsingDefaultConfiguration(linterInfo: ILinterInfo, resource?: Uri): boolean {
         const ws = this.workspaceService.getConfiguration('python.linting', resource);
         const pe = ws!.inspect(linterInfo.enabledSettingName);
-        return pe!.globalValue === undefined && pe!.workspaceValue === undefined && pe!.workspaceFolderValue === undefined;
+        return (
+            pe!.globalValue === undefined && pe!.workspaceValue === undefined && pe!.workspaceFolderValue === undefined
+        );
     }
 
     /**

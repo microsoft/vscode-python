@@ -10,7 +10,10 @@ interface IRawTempFS {
     //   This functionality has been requested for the
     //   VS Code FS API (vscode.workspace.fs.*).
     // tslint:disable-next-line:no-any
-    file(config: tmp.Options, callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void): void;
+    file(
+        config: tmp.Options,
+        callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void
+    ): void;
 }
 
 // Operations related to temporary files and directories.

@@ -21,8 +21,15 @@ export class InteractiveWindowMessageListener implements IWebPanelMessageListene
     private viewChanged: (panel: IWebPanel) => void;
     private interactiveWindowMessages: string[] = [];
 
-    constructor(liveShare: ILiveShareApi, callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) {
-        this.postOffice = new PostOffice(LiveShare.WebPanelMessageService, liveShare, (api, _command, role, args) => this.translateHostArgs(api, role, args));
+    constructor(
+        liveShare: ILiveShareApi,
+        callback: (message: string, payload: any) => void,
+        viewChanged: (panel: IWebPanel) => void,
+        disposed: () => void
+    ) {
+        this.postOffice = new PostOffice(LiveShare.WebPanelMessageService, liveShare, (api, _command, role, args) =>
+            this.translateHostArgs(api, role, args)
+        );
 
         // Save our dispose callback so we remove our interactive window
         this.disposedCallback = disposed;
@@ -84,10 +91,14 @@ export class InteractiveWindowMessageListener implements IWebPanelMessageListene
 
                             // Skip the empty file
                             if (file !== Identifiers.EmptyFileName) {
-                                const uri = role === vsls.Role.Host ? vscode.Uri.file(file) : vscode.Uri.parse(`vsls:${file}`);
+                                const uri =
+                                    role === vsls.Role.Host ? vscode.Uri.file(file) : vscode.Uri.parse(`vsls:${file}`);
 
                                 // Translate this into the other side.
-                                trueArg[k] = role === vsls.Role.Host ? api.convertLocalUriToShared(uri).fsPath : api.convertSharedUriToLocal(uri).fsPath;
+                                trueArg[k] =
+                                    role === vsls.Role.Host
+                                        ? api.convertLocalUriToShared(uri).fsPath
+                                        : api.convertSharedUriToLocal(uri).fsPath;
                             }
                         }
                     }

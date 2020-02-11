@@ -110,14 +110,21 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         return this.applyThemeData(isDark, theme, {} as any, this.generateMonacoThemeObject.bind(this));
     }
 
-    private async applyThemeData<T>(isDark: boolean, theme: string, defaultT: T, applier: (args: IApplyThemeArgs) => T): Promise<T> {
+    private async applyThemeData<T>(
+        isDark: boolean,
+        theme: string,
+        defaultT: T,
+        applier: (args: IApplyThemeArgs) => T
+    ): Promise<T> {
         let result = defaultT;
         try {
             // First compute our current theme.
             const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
             theme = ignoreTheme ? DefaultTheme : theme;
             const editor = this.workspaceService.getConfiguration('editor', undefined);
-            const fontFamily = editor ? editor.get<string>('fontFamily', "Consolas, 'Courier New', monospace") : "Consolas, 'Courier New', monospace";
+            const fontFamily = editor
+                ? editor.get<string>('fontFamily', "Consolas, 'Courier New', monospace")
+                : "Consolas, 'Courier New', monospace";
             const fontSize = editor ? editor.get<number>('fontSize', 14) : 14;
             const isDarkUpdated = ignoreTheme ? false : isDark;
 
@@ -130,7 +137,14 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                 // The tokens object then contains the necessary data to generate our css
                 if (tokenColors && fontFamily && fontSize) {
                     traceInfo('Using colors to generate CSS ...');
-                    result = applier({ tokenColors, baseColors, fontFamily, fontSize, isDark: isDarkUpdated, defaultStyle: ignoreTheme ? LightTheme : undefined });
+                    result = applier({
+                        tokenColors,
+                        baseColors,
+                        fontFamily,
+                        fontSize,
+                        isDark: isDarkUpdated,
+                        defaultStyle: ignoreTheme ? LightTheme : undefined
+                    });
                 } else if (tokenColors === null && fontFamily && fontSize) {
                     // No colors found. See if we can figure out what type of theme we have
                     const style = isDark ? DarkTheme : LightTheme;
@@ -191,7 +205,9 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     };
 
     private getDefaultColor(style: string | undefined, scope: string): string {
-        return style ? DefaultColors[`${style}.${scope}`] : 'var(--override-foreground, var(--vscode-editor-foreground))';
+        return style
+            ? DefaultColors[`${style}.${scope}`]
+            : 'var(--override-foreground, var(--vscode-editor-foreground))';
     }
 
     // tslint:disable-next-line:max-func-body-length
@@ -201,7 +217,12 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         const numericStyle = this.getScopeStyle(args.tokenColors, 'constant.numeric', 'constant', args.defaultStyle);
         const stringStyle = this.getScopeStyle(args.tokenColors, 'string', 'string', args.defaultStyle);
         const variableStyle = this.getScopeStyle(args.tokenColors, 'variable', 'variable', args.defaultStyle);
-        const entityTypeStyle = this.getScopeStyle(args.tokenColors, 'entity.name.type', 'entity.name.type', args.defaultStyle);
+        const entityTypeStyle = this.getScopeStyle(
+            args.tokenColors,
+            'entity.name.type',
+            'entity.name.type',
+            args.defaultStyle
+        );
 
         // Use these values to fill in our format string
         return `
@@ -295,9 +316,11 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                 }
             });
 
-            result.rules = result.rules.sort((a: monacoEditor.editor.ITokenThemeRule, b: monacoEditor.editor.ITokenThemeRule) => {
-                return a.token.localeCompare(b.token);
-            });
+            result.rules = result.rules.sort(
+                (a: monacoEditor.editor.ITokenThemeRule, b: monacoEditor.editor.ITokenThemeRule) => {
+                    return a.token.localeCompare(b.token);
+                }
+            );
         } else {
             // Otherwise use our default values.
             result.base = args.defaultStyle === DarkTheme ? 'vs-dark' : 'vs';

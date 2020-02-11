@@ -33,7 +33,11 @@ export class FailedTestHandler implements IExtensionSingleActivationService, IDi
         this.storage.onDidChange(this.onDidChangeTestData, this, this.disposables);
     }
     public onDidChangeTestData(args: { uri: Uri; data?: TestDataItem }): void {
-        if (args.data && (args.data.status === TestStatus.Error || args.data.status === TestStatus.Fail) && getTestDataItemType(args.data) === TestDataItemType.function) {
+        if (
+            args.data &&
+            (args.data.status === TestStatus.Error || args.data.status === TestStatus.Fail) &&
+            getTestDataItemType(args.data) === TestDataItemType.function
+        ) {
             this.failedItems.push(args.data);
             this.revealFailedNodes().ignoreErrors();
         }

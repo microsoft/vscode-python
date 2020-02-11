@@ -21,7 +21,8 @@ import { PythonPathSource } from '../../types';
 import { IDebugConfigurationResolver } from '../types';
 
 @injectable()
-export abstract class BaseConfigurationResolver<T extends DebugConfiguration> implements IDebugConfigurationResolver<T> {
+export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
+    implements IDebugConfigurationResolver<T> {
     protected pythonPathSource: PythonPathSource = PythonPathSource.launchJson;
     constructor(
         protected readonly workspaceService: IWorkspaceService,
@@ -29,13 +30,20 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
         protected readonly platformService: IPlatformService,
         protected readonly configurationService: IConfigurationService
     ) {}
-    public abstract resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): Promise<T | undefined>;
+    public abstract resolveDebugConfiguration(
+        folder: WorkspaceFolder | undefined,
+        debugConfiguration: DebugConfiguration,
+        token?: CancellationToken
+    ): Promise<T | undefined>;
     protected getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
         if (folder) {
             return folder.uri;
         }
         const program = this.getProgram();
-        if (!Array.isArray(this.workspaceService.workspaceFolders) || this.workspaceService.workspaceFolders.length === 0) {
+        if (
+            !Array.isArray(this.workspaceService.workspaceFolders) ||
+            this.workspaceService.workspaceFolders.length === 0
+        ) {
             return program ? Uri.file(path.dirname(program)) : undefined;
         }
         if (this.workspaceService.workspaceFolders.length === 1) {
@@ -54,20 +62,32 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
             return editor.document.fileName;
         }
     }
-    protected resolveAndUpdatePaths(workspaceFolder: Uri | undefined, debugConfiguration: LaunchRequestArguments): void {
+    protected resolveAndUpdatePaths(
+        workspaceFolder: Uri | undefined,
+        debugConfiguration: LaunchRequestArguments
+    ): void {
         this.resolveAndUpdateEnvFilePath(workspaceFolder, debugConfiguration);
         this.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
     }
-    protected resolveAndUpdateEnvFilePath(workspaceFolder: Uri | undefined, debugConfiguration: LaunchRequestArguments): void {
+    protected resolveAndUpdateEnvFilePath(
+        workspaceFolder: Uri | undefined,
+        debugConfiguration: LaunchRequestArguments
+    ): void {
         if (!debugConfiguration) {
             return;
         }
         if (debugConfiguration.envFile && (workspaceFolder || debugConfiguration.cwd)) {
-            const systemVariables = new SystemVariables(undefined, (workspaceFolder ? workspaceFolder.fsPath : undefined) || debugConfiguration.cwd);
+            const systemVariables = new SystemVariables(
+                undefined,
+                (workspaceFolder ? workspaceFolder.fsPath : undefined) || debugConfiguration.cwd
+            );
             debugConfiguration.envFile = systemVariables.resolveAny(debugConfiguration.envFile);
         }
     }
-    protected resolveAndUpdatePythonPath(workspaceFolder: Uri | undefined, debugConfiguration: LaunchRequestArguments): void {
+    protected resolveAndUpdatePythonPath(
+        workspaceFolder: Uri | undefined,
+        debugConfiguration: LaunchRequestArguments
+    ): void {
         if (!debugConfiguration) {
             return;
         }
@@ -89,7 +109,11 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
         const LocalHosts = ['localhost', '127.0.0.1', '::1'];
         return hostName && LocalHosts.indexOf(hostName.toLowerCase()) >= 0 ? true : false;
     }
-    protected fixUpPathMappings(pathMappings: PathMapping[], defaultLocalRoot?: string, defaultRemoteRoot?: string): PathMapping[] {
+    protected fixUpPathMappings(
+        pathMappings: PathMapping[],
+        defaultLocalRoot?: string,
+        defaultRemoteRoot?: string
+    ): PathMapping[] {
         if (!defaultLocalRoot) {
             return [];
         }
@@ -132,7 +156,10 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
     protected isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         return debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK' ? true : false;
     }
-    protected sendTelemetry(trigger: 'launch' | 'attach' | 'test', debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
+    protected sendTelemetry(
+        trigger: 'launch' | 'attach' | 'test',
+        debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>
+    ) {
         const name = debugConfiguration.name || '';
         const moduleName = debugConfiguration.module || '';
         const telemetryProps: DebuggerTelemetry = {

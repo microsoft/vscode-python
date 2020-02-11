@@ -15,9 +15,24 @@ import { ITestCodeNavigator, ITestCodeNavigatorCommandHandler, ITestNavigatorHel
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestNavigatorHelper>(ITestNavigatorHelper, TestNavigatorHelper);
-    serviceManager.addSingleton<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler, TestCodeNavigatorCommandHandler);
-    serviceManager.addSingleton<ITestCodeNavigator>(ITestCodeNavigator, TestFileCodeNavigator, NavigableItemType.testFile);
-    serviceManager.addSingleton<ITestCodeNavigator>(ITestCodeNavigator, TestFunctionCodeNavigator, NavigableItemType.testFunction);
-    serviceManager.addSingleton<ITestCodeNavigator>(ITestCodeNavigator, TestSuiteCodeNavigator, NavigableItemType.testSuite);
+    serviceManager.addSingleton<ITestCodeNavigatorCommandHandler>(
+        ITestCodeNavigatorCommandHandler,
+        TestCodeNavigatorCommandHandler
+    );
+    serviceManager.addSingleton<ITestCodeNavigator>(
+        ITestCodeNavigator,
+        TestFileCodeNavigator,
+        NavigableItemType.testFile
+    );
+    serviceManager.addSingleton<ITestCodeNavigator>(
+        ITestCodeNavigator,
+        TestFunctionCodeNavigator,
+        NavigableItemType.testFunction
+    );
+    serviceManager.addSingleton<ITestCodeNavigator>(
+        ITestCodeNavigator,
+        TestSuiteCodeNavigator,
+        NavigableItemType.testSuite
+    );
     serviceManager.addSingleton<IDocumentSymbolProvider>(IDocumentSymbolProvider, TestFileSymbolProvider, 'test');
 }

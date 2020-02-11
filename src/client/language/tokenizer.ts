@@ -7,7 +7,15 @@ import Char from 'typescript-char';
 import { isBinary, isDecimal, isHex, isIdentifierChar, isIdentifierStartChar, isOctal } from './characters';
 import { CharacterStream } from './characterStream';
 import { TextRangeCollection } from './textRangeCollection';
-import { ICharacterStream, ITextRangeCollection, IToken, ITokenizer, TextRange, TokenizerMode, TokenType } from './types';
+import {
+    ICharacterStream,
+    ITextRangeCollection,
+    IToken,
+    ITokenizer,
+    TextRange,
+    TokenizerMode,
+    TokenType
+} from './types';
 
 enum QuoteType {
     None,
@@ -263,7 +271,8 @@ export class Tokenizer implements ITokenizer {
             while (isDecimal(this.cs.currentChar)) {
                 this.cs.moveNext();
             }
-            decimal = this.cs.currentChar !== Char.Period && this.cs.currentChar !== Char.e && this.cs.currentChar !== Char.E;
+            decimal =
+                this.cs.currentChar !== Char.Period && this.cs.currentChar !== Char.e && this.cs.currentChar !== Char.E;
         }
 
         if (this.cs.currentChar === Char._0) {
@@ -271,7 +280,8 @@ export class Tokenizer implements ITokenizer {
             while (this.cs.currentChar === Char._0 || this.cs.currentChar === Char.Underscore) {
                 this.cs.moveNext();
             }
-            decimal = this.cs.currentChar !== Char.Period && this.cs.currentChar !== Char.e && this.cs.currentChar !== Char.E;
+            decimal =
+                this.cs.currentChar !== Char.Period && this.cs.currentChar !== Char.e && this.cs.currentChar !== Char.E;
         }
 
         if (decimal) {
@@ -424,10 +434,14 @@ export class Tokenizer implements ITokenizer {
 
     private getQuoteType(): QuoteType {
         if (this.cs.currentChar === Char.SingleQuote) {
-            return this.cs.nextChar === Char.SingleQuote && this.cs.lookAhead(2) === Char.SingleQuote ? QuoteType.TripleSingle : QuoteType.Single;
+            return this.cs.nextChar === Char.SingleQuote && this.cs.lookAhead(2) === Char.SingleQuote
+                ? QuoteType.TripleSingle
+                : QuoteType.Single;
         }
         if (this.cs.currentChar === Char.DoubleQuote) {
-            return this.cs.nextChar === Char.DoubleQuote && this.cs.lookAhead(2) === Char.DoubleQuote ? QuoteType.TripleDouble : QuoteType.Double;
+            return this.cs.nextChar === Char.DoubleQuote && this.cs.lookAhead(2) === Char.DoubleQuote
+                ? QuoteType.TripleDouble
+                : QuoteType.Double;
         }
         return QuoteType.None;
     }
@@ -462,7 +476,10 @@ export class Tokenizer implements ITokenizer {
     }
 
     private skipToTripleEndQuote(quote: number): void {
-        while (!this.cs.isEndOfStream() && (this.cs.currentChar !== quote || this.cs.nextChar !== quote || this.cs.lookAhead(2) !== quote)) {
+        while (
+            !this.cs.isEndOfStream() &&
+            (this.cs.currentChar !== quote || this.cs.nextChar !== quote || this.cs.lookAhead(2) !== quote)
+        ) {
             this.cs.moveNext();
         }
         this.cs.advance(3);

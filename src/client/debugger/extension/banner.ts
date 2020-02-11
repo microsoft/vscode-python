@@ -126,7 +126,10 @@ export class DebuggerBanner implements IDebuggerBanner {
     // persistent counter
 
     private async passedThreshold(): Promise<boolean> {
-        const [threshold, debuggerCounter] = await Promise.all([this.getDebuggerLaunchThresholdCounter(), this.getGetDebuggerLaunchCounter()]);
+        const [threshold, debuggerCounter] = await Promise.all([
+            this.getDebuggerLaunchThresholdCounter(),
+            this.getGetDebuggerLaunchCounter()
+        ]);
         return debuggerCounter >= threshold;
     }
 

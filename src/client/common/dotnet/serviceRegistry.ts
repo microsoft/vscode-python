@@ -13,8 +13,24 @@ import { IDotNetCompatibilityService, IOSDotNetCompatibilityService } from './ty
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDotNetCompatibilityService>(IDotNetCompatibilityService, DotNetCompatibilityService);
-    serviceManager.addSingleton<IOSDotNetCompatibilityService>(IOSDotNetCompatibilityService, MacDotNetCompatibilityService, OSType.OSX);
-    serviceManager.addSingleton<IOSDotNetCompatibilityService>(IOSDotNetCompatibilityService, WindowsDotNetCompatibilityService, OSType.Windows);
-    serviceManager.addSingleton<IOSDotNetCompatibilityService>(IOSDotNetCompatibilityService, LinuxDotNetCompatibilityService, OSType.Linux);
-    serviceManager.addSingleton<IOSDotNetCompatibilityService>(IOSDotNetCompatibilityService, UnknownOSDotNetCompatibilityService, OSType.Unknown);
+    serviceManager.addSingleton<IOSDotNetCompatibilityService>(
+        IOSDotNetCompatibilityService,
+        MacDotNetCompatibilityService,
+        OSType.OSX
+    );
+    serviceManager.addSingleton<IOSDotNetCompatibilityService>(
+        IOSDotNetCompatibilityService,
+        WindowsDotNetCompatibilityService,
+        OSType.Windows
+    );
+    serviceManager.addSingleton<IOSDotNetCompatibilityService>(
+        IOSDotNetCompatibilityService,
+        LinuxDotNetCompatibilityService,
+        OSType.Linux
+    );
+    serviceManager.addSingleton<IOSDotNetCompatibilityService>(
+        IOSDotNetCompatibilityService,
+        UnknownOSDotNetCompatibilityService,
+        OSType.Unknown
+    );
 }

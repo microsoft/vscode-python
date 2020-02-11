@@ -38,7 +38,10 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
     /**
      * Return the command needed to activate the conda env.
      */
-    public getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
+    public getActivationCommands(
+        resource: Uri | undefined,
+        targetShell: TerminalShellType
+    ): Promise<string[] | undefined> {
         const pythonPath = this.configService.getSettings(resource).pythonPath;
         return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
     }
@@ -47,7 +50,10 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
      * Return the command needed to activate the conda env.
      *
      */
-    public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
+    public async getActivationCommandsForInterpreter(
+        pythonPath: string,
+        targetShell: TerminalShellType
+    ): Promise<string[] | undefined> {
         const envInfo = await this.condaService.getCondaEnvironment(pythonPath);
         if (!envInfo) {
             return;
@@ -62,7 +68,10 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         const versionInfo = await this.condaService.getCondaVersion();
         if (versionInfo && versionInfo.major >= CondaRequiredMajor) {
             // Conda added support for powershell in 4.6.
-            if (versionInfo.minor >= CondaRequiredMinorForPowerShell && (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore)) {
+            if (
+                versionInfo.minor >= CondaRequiredMinorForPowerShell &&
+                (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore)
+            ) {
                 return this.getPowershellCommands(condaEnv);
             }
             if (versionInfo.minor >= CondaRequiredMinor) {

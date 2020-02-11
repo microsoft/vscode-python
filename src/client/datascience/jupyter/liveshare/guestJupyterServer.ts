@@ -10,12 +10,21 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } 
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { IConnection, IDataScience, IJupyterSessionManagerFactory, INotebook, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo } from '../../types';
+import {
+    IConnection,
+    IDataScience,
+    IJupyterSessionManagerFactory,
+    INotebook,
+    INotebookExecutionLogger,
+    INotebookServer,
+    INotebookServerLaunchInfo
+} from '../../types';
 import { GuestJupyterNotebook } from './guestJupyterNotebook';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ILiveShareParticipant } from './types';
 
-export class GuestJupyterServer extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterServerSharedService)
+export class GuestJupyterServer
+    extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterServerSharedService)
     implements INotebookServer, ILiveShareParticipant {
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
@@ -54,7 +63,14 @@ export class GuestJupyterServer extends LiveShareParticipantGuest(LiveShareParti
         }
 
         // Return a new notebook to listen to
-        const result = new GuestJupyterNotebook(this.liveShare, this.disposableRegistry, this.configService, resource, this, this.dataScience.activationStartTime);
+        const result = new GuestJupyterNotebook(
+            this.liveShare,
+            this.disposableRegistry,
+            this.configService,
+            resource,
+            this,
+            this.dataScience.activationStartTime
+        );
         this.notebooks.set(resource.toString(), result);
         const oldDispose = result.dispose;
         result.dispose = () => {

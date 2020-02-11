@@ -7,7 +7,12 @@ import { Disposable, Event, EventEmitter } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../common/application/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
+import {
+    IAsyncDisposable,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry
+} from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
@@ -49,8 +54,12 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.postOffice.peerCountChanged(n => this.onPeerCountChanged(n));
 
         // Listen for messages so we force a create on both sides.
-        this.postOffice.registerCallback(LiveShareCommands.interactiveWindowCreate, this.onRemoteCreate, this).ignoreErrors();
-        this.postOffice.registerCallback(LiveShareCommands.interactiveWindowCreateSync, this.onRemoteSync, this).ignoreErrors();
+        this.postOffice
+            .registerCallback(LiveShareCommands.interactiveWindowCreate, this.onRemoteCreate, this)
+            .ignoreErrors();
+        this.postOffice
+            .registerCallback(LiveShareCommands.interactiveWindowCreateSync, this.onRemoteSync, this)
+            .ignoreErrors();
 
         // Make a unique id so we can tell who sends a message
         this.id = uuid();
@@ -110,16 +119,22 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         const handler = this.activeInteractiveWindow.closed(this.onInteractiveWindowClosed);
         this.disposables.push(this.activeInteractiveWindow);
         this.disposables.push(handler);
-        this.activeInteractiveWindowExecuteHandler = this.activeInteractiveWindow.onExecutedCode(this.onInteractiveWindowExecute);
+        this.activeInteractiveWindowExecuteHandler = this.activeInteractiveWindow.onExecutedCode(
+            this.onInteractiveWindowExecute
+        );
         this.disposables.push(this.activeInteractiveWindowExecuteHandler);
-        this.disposables.push(this.activeInteractiveWindow.onDidChangeViewState(() => this.raiseOnDidChangeActiveInteractiveWindow()));
+        this.disposables.push(
+            this.activeInteractiveWindow.onDidChangeViewState(() => this.raiseOnDidChangeActiveInteractiveWindow())
+        );
         this.raiseOnDidChangeActiveInteractiveWindow();
         return this.activeInteractiveWindow;
     }
 
     private raiseOnDidChangeActiveInteractiveWindow() {
         const currentWindow = this.getActive();
-        this._onDidChangeActiveInteractiveWindow.fire(currentWindow?.active && currentWindow.visible ? currentWindow : undefined);
+        this._onDidChangeActiveInteractiveWindow.fire(
+            currentWindow?.active && currentWindow.visible ? currentWindow : undefined
+        );
     }
     private onPeerCountChanged(newCount: number) {
         // If we're losing peers, resolve all syncs

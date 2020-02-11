@@ -12,11 +12,19 @@ import { NugetPackage } from '../../common/nuget/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { FolderVersionPair, IDownloadChannelRule, ILanguageServerFolderService, ILanguageServerPackageService } from '../types';
+import {
+    FolderVersionPair,
+    IDownloadChannelRule,
+    ILanguageServerFolderService,
+    ILanguageServerPackageService
+} from '../types';
 
 @injectable()
 export abstract class LanguageServerFolderService implements ILanguageServerFolderService {
-    constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer, @unmanaged() protected readonly languageServerFolder: string) {}
+    constructor(
+        @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
+        @unmanaged() protected readonly languageServerFolder: string
+    ) {}
 
     @traceDecorators.verbose('Get language server folder name')
     public async getLanguageServerFolderName(resource: Resource): Promise<string> {
@@ -44,7 +52,9 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
     @traceDecorators.verbose('Get latest version of Language Server')
     public getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined> {
         const minVersion = this.getMinimalLanguageServerVersion();
-        const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
+        const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(
+            ILanguageServerPackageService
+        );
         return lsPackageService.getLatestNugetPackageVersion(resource, minVersion);
     }
 
@@ -85,13 +95,17 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
 
     public getFolderVersion(dirName: string): semver.SemVer {
         const suffix = dirName.substring(this.languageServerFolder.length + 1);
-        return suffix.length === 0 ? new semver.SemVer('0.0.0') : semver.parse(suffix, true) || new semver.SemVer('0.0.0');
+        return suffix.length === 0
+            ? new semver.SemVer('0.0.0')
+            : semver.parse(suffix, true) || new semver.SemVer('0.0.0');
     }
 
     protected abstract getMinimalLanguageServerVersion(): string;
 
     private getDownloadChannel() {
-        const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
+        const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(
+            ILanguageServerPackageService
+        );
         return lsPackageService.getLanguageServerDownloadChannel();
     }
 }
