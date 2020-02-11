@@ -311,7 +311,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             this.internalScrollCount -= 1;
         } else if (this.contentPanelRef.current) {
             const isAtBottom = this.contentPanelRef.current.computeIsAtBottom(e.currentTarget);
-            window.console.log(`Scrolling: ${isAtBottom}`);
             this.props.scroll(isAtBottom);
         }
     };

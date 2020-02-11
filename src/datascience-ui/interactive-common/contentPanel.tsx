@@ -43,7 +43,6 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
 
     public computeIsAtBottom(parent: HTMLDivElement): boolean {
         if (this.bottomRef.current) {
-            window.console.log(`Computing at bottom: ${this.bottomRef.current.offsetTop} ${parent.clientHeight} ${parent.scrollTop} ${parent.offsetTop}`);
             // if the bottom div is on the screen, the content is at the bottom
             return this.bottomRef.current.offsetTop - parent.offsetTop - 2 < parent.clientHeight + parent.scrollTop;
         }
