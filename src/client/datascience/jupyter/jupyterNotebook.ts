@@ -42,6 +42,7 @@ import { LiveKernelModel } from './kernels/types';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput, concatMultilineStringOutput, formatStreamText } from '../../../datascience-ui/common';
+import { RefBool } from '../../common/refBool';
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
@@ -75,9 +76,6 @@ class CellSubscriber {
         if (this.isValid(sessionStartTime)) {
             this.subscriber.next(this.cellRef);
         }
-
-        // Then see if we're finished or not.
-        this.attemptToFinish();
     }
 
     // tslint:disable-next-line:no-any
@@ -89,6 +87,9 @@ class CellSubscriber {
 
     public complete(sessionStartTime: number | undefined) {
         if (this.isValid(sessionStartTime)) {
+            if (this.cellRef.state !== CellState.error) {
+                this.cellRef.state = CellState.finished;
+            }
             this.subscriber.next(this.cellRef);
         }
         this.subscriber.complete();
@@ -767,7 +768,7 @@ export class JupyterNotebookBase implements INotebook {
         }
     };
 
-    private handleIOPub(subscriber: CellSubscriber, silent: boolean | undefined, clearState: Map<string, boolean>, msg: KernelMessage.IIOPubMessage) {
+    private handleIOPub(subscriber: CellSubscriber, silent: boolean | undefined, clearState: RefBool, msg: KernelMessage.IIOPubMessage) {
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
@@ -829,7 +830,7 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
-    private handleReply(subscriber: CellSubscriber, silent: boolean | undefined, clearState: Map<string, boolean>, msg: KernelMessage.IShellControlMessage) {
+    private handleReply(subscriber: CellSubscriber, silent: boolean | undefined, clearState: RefBool, msg: KernelMessage.IShellControlMessage) {
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
@@ -842,11 +843,6 @@ export class JupyterNotebookBase implements INotebook {
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
                 subscriber.cell.data.execution_count = msg.content.execution_count as number;
-            }
-
-            // Mark cell as done. This is the last message sent
-            if (subscriber.cell.state !== CellState.error) {
-                subscriber.cell.state = CellState.finished;
             }
 
             // Send this event.
@@ -885,7 +881,7 @@ export class JupyterNotebookBase implements INotebook {
                 }
 
                 // Keep track of our clear state
-                const clearState: Map<string, boolean> = new Map<string, boolean>();
+                const clearState = new RefBool(false);
 
                 // Listen to the reponse messages and update state as we go
                 if (request) {
@@ -974,32 +970,24 @@ export class JupyterNotebookBase implements INotebook {
     private addToCellData = (
         cell: ICell,
         output: nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError,
-        clearState: Map<string, boolean>
+        clearState: RefBool
     ) => {
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
 
-        // If a clear is pending, replace the output with the new one
-        if (clearState.get(output.output_type)) {
-            clearState.delete(output.output_type);
-            // Find the one with the same type and replace all of them
-            const index = data.outputs.findIndex(o => o.output_type === output.output_type);
-            if (index >= 0) {
-                data.outputs = data.outputs.filter(o => o.output_type !== output.output_type);
-                data.outputs.splice(index, 0, output);
-            } else {
-                data.outputs = [...data.outputs, output];
-            }
-        } else {
-            // Then append this data onto the end.
-            data.outputs = [...data.outputs, output];
+        // Clear if necessary
+        if (clearState.value) {
+            data.outputs = [];
+            clearState.update(false);
         }
 
+        // Append to the data.
+        data.outputs = [...data.outputs, output];
         cell.data = data;
     };
 
     // See this for docs on the messages:
     // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
-    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
+    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: RefBool, cell: ICell, trimFunc: (str: string) => string) {
         // Check our length on text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
             msg.content.data['text/plain'] = trimFunc(msg.content.data['text/plain'] as string);
@@ -1012,7 +1000,7 @@ export class JupyterNotebookBase implements INotebook {
         );
     }
 
-    private handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
+    private handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: RefBool, cell: ICell, trimFunc: (str: string) => string) {
         const reply = msg.content as KernelMessage.IExecuteReply;
         if (reply.payload) {
             reply.payload.forEach(o => {
@@ -1036,28 +1024,29 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
-    private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: Map<string, boolean>, cell: ICell) {
+    private handleExecuteInput(msg: KernelMessage.IExecuteInputMsg, _clearState: RefBool, cell: ICell) {
         cell.data.execution_count = msg.content.execution_count;
     }
 
-    private handleStatusMessage(msg: KernelMessage.IStatusMsg, _clearState: Map<string, boolean>, _cell: ICell) {
+    private handleStatusMessage(msg: KernelMessage.IStatusMsg, _clearState: RefBool, _cell: ICell) {
         traceInfo(`Kernel switching to ${msg.content.execution_state}`);
     }
 
-    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
-        // Might already have a stream message. If so, just add on to it.
+    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: RefBool, cell: ICell, trimFunc: (str: string) => string) {
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
+
+        // Clear output if waiting for a clear
+        if (clearState.value) {
+            data.outputs = [];
+            clearState.update(false);
+        }
+
+        // Might already have a stream message. If so, just add on to it.
         const existing = data.outputs.length > 0 && data.outputs[data.outputs.length - 1].output_type === 'stream' ? data.outputs[data.outputs.length - 1] : undefined;
         if (existing) {
-            // If clear pending, then don't add.
-            if (clearState.get('stream')) {
-                clearState.delete('stream');
-                existing.text = msg.content.text;
-            } else {
-                // tslint:disable-next-line:restrict-plus-operands
-                existing.text = existing.text + msg.content.text;
-                existing.text = trimFunc(formatStreamText(concatMultilineStringOutput(existing.text)));
-            }
+            // tslint:disable-next-line:restrict-plus-operands
+            existing.text = existing.text + msg.content.text;
+            existing.text = trimFunc(formatStreamText(concatMultilineStringOutput(existing.text)));
         } else {
             // Create a new stream entry
             const output: nbformat.IStream = {
@@ -1065,11 +1054,12 @@ export class JupyterNotebookBase implements INotebook {
                 name: msg.content.name,
                 text: trimFunc(formatStreamText(concatMultilineStringOutput(msg.content.text)))
             };
-            this.addToCellData(cell, output, clearState);
+            data.outputs = [...data.outputs, output];
+            cell.data = data;
         }
     }
 
-    private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: Map<string, boolean>, cell: ICell) {
+    private handleDisplayData(msg: KernelMessage.IDisplayDataMsg, clearState: RefBool, cell: ICell) {
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: msg.content.data,
@@ -1078,7 +1068,7 @@ export class JupyterNotebookBase implements INotebook {
         this.addToCellData(cell, output, clearState);
     }
 
-    private handleUpdateDisplayData(msg: KernelMessage.IUpdateDisplayDataMsg, _clearState: Map<string, boolean>, cell: ICell) {
+    private handleUpdateDisplayData(msg: KernelMessage.IUpdateDisplayDataMsg, _clearState: RefBool, cell: ICell) {
         // Should already have a display data output in our cell.
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
         const output = data.outputs.find(o => o.output_type === 'display_data');
@@ -1088,14 +1078,11 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
-    private handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: Map<string, boolean>, cell: ICell) {
+    private handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: RefBool, cell: ICell) {
         // If the message says wait, add every message type to our clear state. This will
         // make us wait for this type of output before we clear it.
         if (msg && msg.content.wait) {
-            clearState.set('display_data', true);
-            clearState.set('error', true);
-            clearState.set('execute_result', true);
-            clearState.set('stream', true);
+            clearState.update(true);
         } else {
             // Clear all outputs and start over again.
             const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
@@ -1117,12 +1104,12 @@ export class JupyterNotebookBase implements INotebook {
                     traceback: ['[1;31m---------------------------------------------------------------------------[0m', '[1;31mKeyboardInterrupt[0m: ']
                 }
             },
-            new Map<string, boolean>(),
+            new RefBool(false),
             cell
         );
     }
 
-    private handleError(msg: KernelMessage.IErrorMsg, clearState: Map<string, boolean>, cell: ICell) {
+    private handleError(msg: KernelMessage.IErrorMsg, clearState: RefBool, cell: ICell) {
         const output: nbformat.IError = {
             output_type: 'error',
             ename: msg.content.ename,

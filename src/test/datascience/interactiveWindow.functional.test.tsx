@@ -98,6 +98,29 @@ suite('DataScience Interactive Window output tests', () => {
     );
 
     runMountedTest(
+        'Clear output',
+        async wrapper => {
+            const text = `from IPython.display import clear_output
+for i in range(10):
+    clear_output()
+    print("Hello World {0}!".format(i))
+`;
+            addContinuousMockData(ioc, text, async _c => {
+                return {
+                    result: 'Hello World 9!',
+                    haveMore: false
+                };
+            });
+            await addCode(ioc, wrapper, text);
+
+            verifyHtmlOnCell(wrapper, 'InteractiveCell', '<div>Hello World 9!', CellPosition.Last);
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
         'Hide inputs',
         async wrapper => {
             await forceSettingsChange({ ...defaultDataScienceSettings(), showCellInputCode: false });
