@@ -138,7 +138,8 @@ def should_never_reach_here(item, **extra):
 
 
 def parse_item(
-    item,  # *,
+    item,
+    # *,
     _get_item_kind=(lambda *a: _get_item_kind(*a)),
     _parse_node_id=(lambda *a: _parse_node_id(*a)),
     _split_fspath=(lambda *a: _split_fspath(*a)),
@@ -169,12 +170,19 @@ def parse_item(
     if kind == "function":
         if testfunc and fullname != testfunc + parameterized:
             raise should_never_reach_here(
-                item, fullname=fullname, testfunc=testfunc, parameterized=parameterized,
+                item,
+                fullname=fullname,
+                testfunc=testfunc,
+                parameterized=parameterized,
+                # ...
             )
     elif kind == "doctest":
         if testfunc and fullname != testfunc and fullname != "[doctest] " + testfunc:
             raise should_never_reach_here(
-                item, fullname=fullname, testfunc=testfunc,
+                item,
+                fullname=fullname,
+                testfunc=testfunc,
+                # ...
             )
         testfunc = None
 
@@ -218,7 +226,11 @@ def parse_item(
 
 
 def _split_fspath(
-    fspath, fileid, item, _normcase=NORMCASE,  # *,
+    fspath,
+    fileid,
+    item,
+    # *,
+    _normcase=NORMCASE,
 ):
     """Return (testroot, relfile) for the given fspath.
 
@@ -230,7 +242,10 @@ def _split_fspath(
     relsuffix = fileid[1:]  # Drop (only) the "." prefix.
     if not _normcase(fspath).endswith(_normcase(relsuffix)):
         raise should_never_reach_here(
-            item, fspath=fspath, fileid=fileid,
+            item,
+            fspath=fspath,
+            fileid=fileid,
+            # ...
         )
     testroot = fspath[: -len(fileid) + 1]  # Ignore the "./" prefix.
     relfile = "." + fspath[-len(fileid) + 1 :]  # Keep the pathsep.
@@ -240,7 +255,8 @@ def _split_fspath(
 def _get_location(
     item,
     testroot,
-    relfile,  # *,
+    relfile,
+    # *,
     _matches_relfile=(lambda *a: _matches_relfile(*a)),
     _is_legacy_wrapper=(lambda *a: _is_legacy_wrapper(*a)),
     _unwrap_decorator=(lambda *a: _unwrap_decorator(*a)),
@@ -288,7 +304,12 @@ def _get_location(
 
 
 def _matches_relfile(
-    srcfile, testroot, relfile, _normcase=NORMCASE, _pathsep=PATH_SEP,  # *,
+    srcfile,
+    testroot,
+    relfile,
+    # *,
+    _normcase=NORMCASE,
+    _pathsep=PATH_SEP,
 ):
     """Return True if "srcfile" matches the given relfile."""
     testroot = _normcase(testroot)
@@ -305,7 +326,10 @@ def _matches_relfile(
 
 
 def _is_legacy_wrapper(
-    srcfile, _pathsep=PATH_SEP, _pyversion=sys.version_info,  # *,
+    srcfile,
+    # *,
+    _pathsep=PATH_SEP,
+    _pyversion=sys.version_info,
 ):
     """Return True if the test might be wrapped.
 
@@ -347,7 +371,10 @@ def _unwrap_decorator(func):
 
 
 def _parse_node_id(
-    testid, kind, _iter_nodes=(lambda *a: _iter_nodes(*a)),  # *,
+    testid,
+    kind,
+    # *,
+    _iter_nodes=(lambda *a: _iter_nodes(*a)),
 ):
     """Return the components of the given node ID, in heirarchical order."""
     nodes = iter(_iter_nodes(testid, kind))
@@ -371,7 +398,9 @@ def _parse_node_id(
             funcname = name
         else:
             raise should_never_reach_here(
-                testid, kind=kind,
+                testid,
+                kind=kind,
+                # ...
             )
         fullname = funcname
 
@@ -388,18 +417,27 @@ def _parse_node_id(
             fullname = name + "." + fullname
         else:
             raise should_never_reach_here(
-                testid, node=node,
+                testid,
+                node=node,
+                # ...
             )
     else:
         fileid = None
     parents.extend(nodes)  # Add the rest in as-is.
 
-    return testid, parents, fileid, fullname, parameterized or ""
+    return (
+        testid,
+        parents,
+        fileid,
+        fullname,
+        parameterized or "",
+    )
 
 
 def _iter_nodes(
     testid,
-    kind,  # *,
+    kind,
+    # *,
     _normalize_test_id=(lambda *a: _normalize_test_id(*a)),
     _normcase=NORMCASE,
     _pathsep=PATH_SEP,
@@ -412,7 +450,10 @@ def _iter_nodes(
     if kind == "function" and nodeid.endswith("]"):
         funcid, sep, parameterized = nodeid.partition("[")
         if not sep:
-            raise should_never_reach_here(nodeid,)
+            raise should_never_reach_here(
+                nodeid,
+                # ...
+            )
         yield (nodeid, sep + parameterized, "subtest")
         nodeid = funcid
 
@@ -424,7 +465,10 @@ def _iter_nodes(
             yield (nodeid, name, kind)
             return
         # We expect at least a filename and a name.
-        raise should_never_reach_here(nodeid,)
+        raise should_never_reach_here(
+            nodeid,
+            # ...
+        )
     yield (nodeid, name, kind)
 
     # Extract the suites.
@@ -453,7 +497,11 @@ def _iter_nodes(
 
 
 def _normalize_test_id(
-    testid, kind, _fix_fileid=fix_fileid, _pathsep=PATH_SEP,  # *,
+    testid,
+    kind,
+    # *,
+    _fix_fileid=fix_fileid,
+    _pathsep=PATH_SEP,
 ):
     """Return the canonical form for the given node ID."""
     while "::()::" in testid:
@@ -470,7 +518,9 @@ def _normalize_test_id(
     fileid = _fix_fileid(fileid)
     if not fileid.startswith("./"):  # Absolute "paths" not expected.
         raise should_never_reach_here(
-            testid, fileid=fileid,
+            testid,
+            fileid=fileid,
+            # ...
         )
     testid = fileid + sep + remainder
 

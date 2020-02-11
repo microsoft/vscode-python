@@ -7,7 +7,13 @@ import json
 
 
 def report_discovered(
-    tests, parents, pretty=False, simple=False, _send=print, **_ignored
+    tests,
+    parents,
+    # *,
+    pretty=False,
+    simple=False,
+    _send=print,
+    **_ignored
 ):
     """Serialize the discovered tests and write to stdout."""
     if simple:
@@ -77,7 +83,12 @@ def report_discovered(
     kwargs = {}
     if pretty:
         # human-formatted
-        kwargs = dict(sort_keys=True, indent=4, separators=(",", ": "),)
+        kwargs = dict(
+            sort_keys=True,
+            indent=4,
+            separators=(",", ": "),
+            # ...
+        )
     serialized = json.dumps(data, **kwargs)
 
     _send(serialized)
