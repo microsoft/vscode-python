@@ -71,18 +71,18 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                 <section id="main-panel-variable" aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
-                <main id="main-panel-content" onClick={this.contentPanelClick} onScroll={this.handleScroll}>
+                <main id="main-panel-content" onScroll={this.handleScroll}>
                     {this.renderContentPanel(this.props.baseTheme)}
                 </main>
-                <section id="main-panel-footer" aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
+                <section id="main-panel-footer" onClick={this.footerPanelClick} aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
                     {this.renderFooterPanel(this.props.baseTheme)}
                 </section>
             </div>
         );
     }
 
-    // If click is not handled by something else, focus our input box
-    private contentPanelClick = (_event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+    // Make the entire footer focus our input, instead of having to click directly on the monaco editor
+    private footerPanelClick = (_event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
         this.props.focusInput();
     };
 
