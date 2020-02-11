@@ -3,6 +3,7 @@
 
 import * as fsextra from 'fs-extra';
 import { Container } from 'inversify';
+import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Memento, OutputChannel, Uri } from 'vscode';
@@ -22,6 +23,7 @@ import { registerTypes as processRegisterTypes } from '../client/common/process/
 import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonToolExecutionService } from '../client/common/process/types';
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
 import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, IMemento, IOutputChannel, IPathUtils, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
+import { createDeferred } from '../client/common/utils/async';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
@@ -76,6 +78,20 @@ import { MockProcess } from './mocks/process';
 // do not run under VS Code so they do not have access to the actual
 // "vscode" namespace.
 class FakeVSCodeFileSystemAPI {
+    public async readFile(uri: Uri): Promise<Uint8Array> {
+        return fsextra.readFile(uri.fsPath);
+    }
+    public async writeFile(uri: Uri, content: Uint8Array): Promise<void> {
+        return fsextra.writeFile(uri.fsPath, Buffer.from(content));
+    }
+    public async delete(uri: Uri, _options?: { recursive: boolean; useTrash: boolean }): Promise<void> {
+        return (
+            fsextra
+                // Make sure the file exists before deleting.
+                .stat(uri.fsPath)
+                .then(() => fsextra.remove(uri.fsPath))
+        );
+    }
     public async stat(uri: Uri): Promise<FileStat> {
         const filename = uri.fsPath;
 
@@ -91,6 +107,62 @@ class FakeVSCodeFileSystemAPI {
             filetype |= FileType.Directory;
         }
         return convertStat(stat, filetype);
+    }
+    public async readDirectory(uri: Uri): Promise<[string, FileType][]> {
+        const names: string[] = await fsextra.readdir(uri.fsPath);
+        const promises = names.map(name => {
+            const filename = path.join(uri.fsPath, name);
+            return (
+                fsextra
+                    // Get the lstat info and deal with symlinks if necessary.
+                    .lstat(filename)
+                    .then(async stat => {
+                        let filetype = FileType.Unknown;
+                        if (stat.isFile()) {
+                            filetype = FileType.File;
+                        } else if (stat.isDirectory()) {
+                            filetype = FileType.Directory;
+                        } else if (stat.isSymbolicLink()) {
+                            filetype = FileType.SymbolicLink;
+                            stat = await fsextra.stat(filename);
+                            if (stat.isFile()) {
+                                filetype |= FileType.File;
+                            } else if (stat.isDirectory()) {
+                                filetype |= FileType.Directory;
+                            }
+                        }
+                        return [filename, filetype] as [string, FileType];
+                    })
+                    .catch(() => [filename, FileType.Unknown] as [string, FileType])
+            );
+        });
+        return Promise.all(promises);
+    }
+    public async createDirectory(uri: Uri): Promise<void> {
+        return fsextra.mkdirp(uri.fsPath);
+    }
+    public async copy(src: Uri, dest: Uri): Promise<void> {
+        const deferred = createDeferred<void>();
+        const rs = fsextra
+            // Set an error handler on the stream.
+            .createReadStream(src.fsPath)
+            .on('error', err => {
+                deferred.reject(err);
+            });
+        const ws = fsextra
+            .createWriteStream(dest.fsPath)
+            // Set an error & close handler on the stream.
+            .on('error', err => {
+                deferred.reject(err);
+            })
+            .on('close', () => {
+                deferred.resolve();
+            });
+        rs.pipe(ws);
+        return deferred.promise;
+    }
+    public async rename(src: Uri, dest: Uri): Promise<void> {
+        return fsextra.rename(src.fsPath, dest.fsPath);
     }
 }
 class LegacyFileSystem extends FileSystem {

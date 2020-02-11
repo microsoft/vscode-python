@@ -39,10 +39,11 @@ export namespace CommonEffects {
     }
 
     export function activate<T>(arg: CommonReducerArg<T>): IMainState {
-        return {
-            ...arg.prevState,
-            activateCount: arg.prevState.activateCount + 1
-        };
+        return focusPending(arg.prevState);
+    }
+
+    export function focusInput<T>(arg: CommonReducerArg<T>): IMainState {
+        return focusPending(arg.prevState);
     }
 
     export function handleLocInit<T>(arg: CommonReducerArg<T, string>): IMainState {
@@ -103,6 +104,13 @@ export namespace CommonEffects {
         return {
             ...arg.prevState,
             monacoTheme: Identifiers.GeneratedThemeName
+        };
+    }
+
+    function focusPending(prevState: IMainState): IMainState {
+        return {
+            ...prevState,
+            focusPending: prevState.focusPending + 1
         };
     }
 }

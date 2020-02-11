@@ -5,6 +5,10 @@ import * as tmp from 'tmp';
 import { ITempFileSystem, TemporaryFile } from './types';
 
 interface IRawTempFS {
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO (https://github.com/microsoft/vscode/issues/84517)
+    //   This functionality has been requested for the
+    //   VS Code FS API (vscode.workspace.fs.*).
     // tslint:disable-next-line:no-any
     file(config: tmp.Options, callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void): void;
 }

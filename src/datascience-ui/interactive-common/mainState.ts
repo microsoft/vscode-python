@@ -69,7 +69,7 @@ export type IMainState = {
     testMode?: boolean;
     codeTheme: string;
     settings?: IDataScienceExtraSettings;
-    activateCount: number;
+    focusPending: number;
     monacoReady: boolean;
     loaded: boolean;
     kernel: IServerState;
@@ -134,7 +134,7 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         },
         codeTheme: 'Foo',
         settings: defaultSettings,
-        activateCount: 0,
+        focusPending: 0,
         monacoReady: true,
         loaded: false,
         testMode: true,

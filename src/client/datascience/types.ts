@@ -485,6 +485,7 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
             autoClosingQuotes: string;
             autoSurround: string;
             autoIndent: boolean;
+            scrollBeyondLastLine: boolean;
         };
         fontSize: number;
         fontFamily: string;

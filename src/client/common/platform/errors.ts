@@ -78,6 +78,16 @@ interface ISystemError extends INodeJSError {
     port?: string;
 }
 
+// Return a new error for errno ENOTEMPTY.
+export function createDirNotEmptyError(dirname: string): ISystemError {
+    const err = new Error(`directory "${dirname}" not empty`) as ISystemError;
+    err.name = 'SystemError';
+    err.code = 'ENOTEMPTY';
+    err.path = dirname;
+    err.syscall = 'rmdir';
+    return err;
+}
+
 function isSystemError(err: Error, expectedCode: string): boolean | undefined {
     const code = (err as ISystemError).code;
     if (!code) {
@@ -129,4 +139,9 @@ export function isNoPermissionsError(err: Error): boolean | undefined {
         return matched;
     }
     return isSystemError(err, 'EACCES');
+}
+
+// Return true if the given error is ENOTEMPTY.
+export function isDirNotEmptyError(err: Error): boolean | undefined {
+    return isSystemError(err, 'ENOTEMPTY');
 }

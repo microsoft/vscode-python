@@ -3,8 +3,8 @@ name: '$(Year:yyyy).$(Month).0.$(BuildID)-nightly-uitest'
 trigger: none
 pr: none
 schedules:
-- cron: "0 0 * * *"
-  # Daily midnight build, runs at midnight every day, but only if the code has changed since the last run, for master and all releases/*
+- cron: "0 8 * * *"
+  # Daily midnight PST build, runs at midnight every day, but only if the code has changed since the last run, for master and all releases/*
   displayName: Daily midnight build
   branches:
     include:

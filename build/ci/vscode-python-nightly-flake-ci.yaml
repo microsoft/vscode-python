@@ -11,8 +11,8 @@ trigger: none
 pr: none
 
 schedules:
-- cron: "0 0 * * 1-5"
-  # Daily midnight build, runs Monday - Friday always
+- cron: "0 8 * * 1-5"
+  # Daily midnight PST build, runs Monday - Friday always
   displayName: Nightly flake build
   branches:
     include:

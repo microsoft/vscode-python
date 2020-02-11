@@ -20,6 +20,7 @@ import {
 
 // See https://react-redux.js.org/using-react-redux/connect-mapdispatch#defining-mapdispatchtoprops-as-an-object
 export const actionCreators = {
+    focusInput: (): CommonAction<never | undefined> => ({ type: CommonActionType.FOCUS_INPUT }),
     refreshVariables: (newExecutionCount?: number): CommonAction<IRefreshVariablesRequest> => ({ type: CommonActionType.REFRESH_VARIABLES, payload: { newExecutionCount } }),
     restartKernel: (): CommonAction<never | undefined> => ({ type: CommonActionType.RESTART_KERNEL }),
     interruptKernel: (): CommonAction<never | undefined> => ({ type: CommonActionType.INTERRUPT_KERNEL }),

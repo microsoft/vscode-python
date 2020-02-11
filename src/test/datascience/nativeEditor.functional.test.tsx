@@ -23,6 +23,7 @@ import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyte
 import { ICell, IDataScienceErrorHandler, IJupyterExecution, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
+import { ExecutionCount } from '../../datascience-ui/interactive-common/executionCount';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
@@ -803,13 +804,20 @@ for _ in range(50):
                 clickCell(0);
 
                 // Switch to markdown
-                let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                let update = waitForMessage(ioc, InteractiveWindowMessages.RemoveCell);
                 simulateKeyPressOnCell(0, { code: 'm' });
                 await update;
 
                 // Monaco editor should be rendered and the cell should be markdown
-                assert.ok(isCellFocused(wrapper, 'NativeCell', 0));
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 0));
                 assert.ok(isCellMarkdown(wrapper, 'NativeCell', 0));
+
+                // Focus the cell.
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                simulateKeyPressOnCell(0, { code: 'Enter', editorInfo: undefined });
+                await update;
+
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 0));
                 assert.equal(
                     wrapper
                         .find(NativeCell)
@@ -1222,17 +1230,42 @@ for _ in range(50):
                 assert.equal(optionsUpdated.lastCall.args[0].lineNumbers, 'off');
             });
 
-            test("Toggle markdown and code modes using 'y' and 'm' keys", async () => {
+            test("Toggle markdown and code modes using 'y' and 'm' keys (cells should not be focused)", async () => {
                 clickCell(1);
-
                 // Switch to markdown
-                let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                let update = waitForMessage(ioc, InteractiveWindowMessages.RemoveCell);
                 simulateKeyPressOnCell(1, { code: 'm' });
                 await update;
 
                 // Monaco editor should be rendered and the cell should be markdown
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused');
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
+
+                // Switch to code
+                update = waitForMessage(ioc, InteractiveWindowMessages.InsertCell);
+                simulateKeyPressOnCell(1, { code: 'y' });
+                await update;
+
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused 2nd time');
+                assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is markdown second time');
+            });
+            test("Toggle markdown and code modes using 'y' and 'm' keys & ensure changes to cells is preserved", async () => {
+                clickCell(1);
+                // Switch to markdown
+                let update = waitForMessage(ioc, InteractiveWindowMessages.RemoveCell);
+                simulateKeyPressOnCell(1, { code: 'm' });
+                await update;
+
+                // Monaco editor should be rendered and the cell should be markdown
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused');
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
+
+                // Focus the cell.
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
+                await update;
+
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
-                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1));
                 assert.equal(
                     wrapper
                         .find(NativeCell)
@@ -1252,8 +1285,8 @@ for _ in range(50):
                 await update;
 
                 // Confirm markdown output is rendered
-                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1));
-                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1));
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is focused');
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
                 assert.equal(
                     wrapper
                         .find(NativeCell)
@@ -1263,18 +1296,17 @@ for _ in range(50):
                 );
 
                 // Switch to code
-                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
-                // At this moment, there's no cell input element, hence send key strokes to the wrapper.
-                const wrapperElement = wrapper
-                    .find(NativeCell)
-                    .at(1)
-                    .find('.cell-wrapper')
-                    .first();
-                wrapperElement.simulate('keyDown', { key: 'y' });
+                update = waitForMessage(ioc, InteractiveWindowMessages.InsertCell);
+                simulateKeyPressOnCell(1, { code: 'y' });
                 await update;
 
-                assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
-                assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1));
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused 2nd time');
+                assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is markdown second time');
+
+                // Focus the cell.
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
+                await update;
 
                 // Confirm editor still has the same text
                 editor = getNativeFocusedEditor(wrapper);
@@ -1644,78 +1676,77 @@ for _ in range(50):
             }).timeout(10_000);
         });
 
+        const oldJson: nbformat.INotebookContent = {
+            nbformat: 4,
+            nbformat_minor: 2,
+            cells: [
+                {
+                    cell_type: 'code',
+                    execution_count: 1,
+                    metadata: {
+                        collapsed: true
+                    },
+                    outputs: [
+                        {
+                            data: {
+                                'text/plain': ['1']
+                            },
+                            output_type: 'execute_result',
+                            execution_count: 1,
+                            metadata: {}
+                        }
+                    ],
+                    source: ['a=1\n', 'a']
+                },
+                {
+                    cell_type: 'code',
+                    execution_count: 2,
+                    metadata: {},
+                    outputs: [
+                        {
+                            data: {
+                                'text/plain': ['2']
+                            },
+                            output_type: 'execute_result',
+                            execution_count: 2,
+                            metadata: {}
+                        }
+                    ],
+                    source: ['b=2\n', 'b']
+                },
+                {
+                    cell_type: 'code',
+                    execution_count: 3,
+                    metadata: {},
+                    outputs: [
+                        {
+                            data: {
+                                'text/plain': ['3']
+                            },
+                            output_type: 'execute_result',
+                            execution_count: 3,
+                            metadata: {}
+                        }
+                    ],
+                    source: ['c=3\n', 'c']
+                }
+            ],
+            metadata: {
+                orig_nbformat: 4,
+                kernelspec: {
+                    display_name: 'JUNK',
+                    name: 'JUNK'
+                },
+                language_info: {
+                    name: 'python',
+                    version: '1.2.3'
+                }
+            }
+        };
+
         suite('Update Metadata', () => {
             setup(async function() {
                 initIoc();
-
-                const oldJson: nbformat.INotebookContent = {
-                    nbformat: 4,
-                    nbformat_minor: 2,
-                    cells: [
-                        {
-                            cell_type: 'code',
-                            execution_count: 1,
-                            metadata: {
-                                collapsed: true
-                            },
-                            outputs: [
-                                {
-                                    data: {
-                                        'text/plain': ['1']
-                                    },
-                                    output_type: 'execute_result',
-                                    execution_count: 1,
-                                    metadata: {}
-                                }
-                            ],
-                            source: ['a=1\n', 'a']
-                        },
-                        {
-                            cell_type: 'code',
-                            execution_count: 2,
-                            metadata: {},
-                            outputs: [
-                                {
-                                    data: {
-                                        'text/plain': ['2']
-                                    },
-                                    output_type: 'execute_result',
-                                    execution_count: 2,
-                                    metadata: {}
-                                }
-                            ],
-                            source: ['b=2\n', 'b']
-                        },
-                        {
-                            cell_type: 'code',
-                            execution_count: 3,
-                            metadata: {},
-                            outputs: [
-                                {
-                                    data: {
-                                        'text/plain': ['3']
-                                    },
-                                    output_type: 'execute_result',
-                                    execution_count: 3,
-                                    metadata: {}
-                                }
-                            ],
-                            source: ['c=3\n', 'c']
-                        }
-                    ],
-                    metadata: {
-                        orig_nbformat: 4,
-                        kernelspec: {
-                            display_name: 'JUNK',
-                            name: 'JUNK'
-                        },
-                        language_info: {
-                            name: 'python',
-                            version: '1.2.3'
-                        }
-                    }
-                };
-
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this, JSON.stringify(oldJson));
             });
@@ -1766,91 +1797,92 @@ for _ in range(50):
             setup(async function() {
                 initIoc();
                 // tslint:disable-next-line: no-invalid-this
-                await setupFunction.call(this);
+                await setupFunction.call(this, JSON.stringify(oldJson));
             });
 
-            // function verifyExecutionCount(cellIndex: number, executionCountContent: string) {
-            //     const foundResult = wrapper.find('NativeCell');
-            //     assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
-            //     const targetCell = foundResult.at(cellIndex);
-            //     assert.ok(targetCell!, 'Target cell doesn\'t exist');
+            function verifyExecutionCount(cellIndex: number, executionCountContent: string) {
+                assert.equal(
+                    wrapper
+                        .find(ExecutionCount)
+                        .at(cellIndex)
+                        .props().count,
+                    executionCountContent
+                );
+            }
 
-            //     const sliced = executionCountContent.substr(0, min([executionCountContent.length, 100]));
-            //     const output = targetCell!.find('div.execution-count');
-            //     assert.ok(output.length > 0, 'No output cell found');
-            //     const outHtml = output.html();
-            //     assert.ok(outHtml.includes(sliced), `${outHtml} does not contain ${sliced}`);
-            // }
-
-            // This test always times out in the Azure Pipeline, even though it works locally.
-            // test('Clear Outputs in HTML', async () => {
-            //     // Run all Cells
-            //     const baseFile2 = [ {id: 'NotebookImport#0', data: {source: 'a=1\na'}},
-            //     {id: 'NotebookImport#1', data: {source: 'b=2\nb'}},
-            //     {id: 'NotebookImport#2', data: {source: 'c=3\nc'}}];
-            //     const runAllCells =  baseFile2.map(cell => {
-            //         return createFileCell(cell, cell.data);
-            //     });
-
-            //     const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
-            //     await openEditor(ioc, JSON.stringify(notebook));
-
-            //     const runAllButton = findButton(wrapper, NativeEditor, 0);
-            //     await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-
-            //     await waitForUpdate(wrapper, NativeEditor, 15);
-
-            //     verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
-            //     verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 1);
-            //     verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 2);
-
-            //     // After adding the cells, clear them
-            //     const clearAllOutputButton = findButton(wrapper, NativeEditor, 6);
-            //     await waitForMessageResponse(ioc, () => clearAllOutputButton!.simulate('click'));
-
-            //     await sleep(1000);
-
-            //     verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 0);
-            //     verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 1);
-            //     verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 2);
-
-            //     verifyExecutionCount(0, '-');
-            //     verifyExecutionCount(1, '-');
-            //     verifyExecutionCount(2, '-');
-            // });
-
-            test('Clear Outputs in File', async () => {
-                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                const editor = notebookProvider.editors[0];
-                assert.ok(editor, 'No editor when saving');
-                let savedPromise = createDeferred();
-                let disp = editor.saved(() => savedPromise.resolve());
-
-                // add cells, run them and save
-                await addCell(wrapper, ioc, 'a=1\na');
+            test('Clear Outputs in WebView', async () => {
                 const runAllButton = findButton(wrapper, NativeEditor, 0);
+                const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, { numberOfTimes: 3 });
                 await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-                simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
+                await threeCellsUpdated;
 
-                await savedPromise.promise;
-                disp.dispose();
+                verifyExecutionCount(0, '1');
+                verifyExecutionCount(1, '2');
+                verifyExecutionCount(2, '3');
 
-                // the file has output and execution count
-                const fileContent = await fs.readFile(notebookFile.filePath, 'utf8');
-
-                savedPromise = createDeferred();
-                disp = editor.saved(() => savedPromise.resolve());
-
-                // press clear all outputs, and save
+                // Press clear all outputs
+                const clearAllOutput = waitForMessage(ioc, InteractiveWindowMessages.ClearAllOutputs);
                 const clearAllOutputButton = findButton(wrapper, NativeEditor, 6);
                 await waitForMessageResponse(ioc, () => clearAllOutputButton!.simulate('click'));
+                await clearAllOutput;
+
+                verifyExecutionCount(0, '-');
+                verifyExecutionCount(1, '-');
+                verifyExecutionCount(2, '-');
+            });
+
+            test('Clear execution_count and outputs in notebook', async () => {
+                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const editor = notebookProvider.editors[0];
+                const metadataUpdatedPromise = createDeferred();
+                const disposeMetadataUpdated = editor.metadataUpdated(() => metadataUpdatedPromise.resolve());
+
+                // add cells, run them and save
+                // await addCell(wrapper, ioc, 'a=1\na');
+                const runAllButton = findButton(wrapper, NativeEditor, 0);
+                const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, { numberOfTimes: 3 });
+                await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
+                await threeCellsUpdated;
+
+                // Make sure metadata has updated before we save
+                await metadataUpdatedPromise.promise;
+                disposeMetadataUpdated.dispose();
+
+                let savedPromise = createDeferred();
+                let disposeSaved = editor.saved(() => savedPromise.resolve());
                 simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
-
                 await savedPromise.promise;
+                disposeSaved.dispose();
 
-                // the file now shouldn't have outputs or execution count
-                const newFileContent = await fs.readFile(notebookFile.filePath, 'utf8');
-                assert.notEqual(newFileContent, fileContent, 'File did not change.');
+                // Verify extension count is in the cells.
+                let nb = JSON.parse(await fs.readFile(notebookFile.filePath, 'utf8')) as nbformat.INotebookContent;
+                assert.equal(nb.cells[0].execution_count, 1);
+                assert.equal(nb.cells[1].execution_count, 2);
+                assert.equal(nb.cells[2].execution_count, 3);
+                expect(nb.cells[0].outputs).to.be.lengthOf(1);
+                expect(nb.cells[1].outputs).to.be.lengthOf(1);
+                expect(nb.cells[2].outputs).to.be.lengthOf(1);
+
+                // Press clear all outputs
+                const clearAllOutput = waitForMessage(ioc, InteractiveWindowMessages.ClearAllOutputs);
+                const clearAllOutputButton = findButton(wrapper, NativeEditor, 6);
+                await waitForMessageResponse(ioc, () => clearAllOutputButton!.simulate('click'));
+                await clearAllOutput;
+
+                // Save, at this point.
+                savedPromise = createDeferred();
+                disposeSaved = editor.saved(() => savedPromise.resolve());
+                simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
+                await savedPromise.promise;
+                disposeSaved.dispose();
+
+                nb = JSON.parse(await fs.readFile(notebookFile.filePath, 'utf8')) as nbformat.INotebookContent;
+                assert.equal(nb.cells[0].execution_count, null);
+                assert.equal(nb.cells[1].execution_count, null);
+                assert.equal(nb.cells[2].execution_count, null);
+                expect(nb.cells[0].outputs).to.be.lengthOf(0);
+                expect(nb.cells[1].outputs).to.be.lengthOf(0);
+                expect(nb.cells[2].outputs).to.be.lengthOf(0);
             });
         });
     });

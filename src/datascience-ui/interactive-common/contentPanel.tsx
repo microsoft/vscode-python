@@ -14,13 +14,13 @@ const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 export interface IContentPanelProps {
     baseTheme: string;
     cellVMs: ICellViewModel[];
-    newCellVM?: ICellViewModel;
     history?: InputHistory;
     testMode?: boolean;
     codeTheme: string;
     submittedText: boolean;
     skipNextScroll: boolean;
     editable: boolean;
+    scrollBeyondLastLine: boolean;
     renderCell(cellVM: ICellViewModel, index: number): JSX.Element | null;
     scrollToBottom(div: HTMLDivElement): void;
 }
@@ -41,13 +41,21 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         this.scrollToBottom();
     }
 
+    public computeIsAtBottom(parent: HTMLDivElement): boolean {
+        if (this.bottomRef.current) {
+            // if the bottom div is on the screen, the content is at the bottom
+            return this.bottomRef.current.offsetTop - parent.offsetTop - 2 < parent.clientHeight + parent.scrollTop;
+        }
+        return false;
+    }
+
     public render() {
+        const className = `${this.props.scrollBeyondLastLine ? 'content-panel-scrollBeyondLastLine' : ''}`;
         return (
-            <div id="content-panel-div" ref={this.containerRef}>
+            <div id="content-panel-div" ref={this.containerRef} className={className}>
                 <div id="cell-table">
                     <div id="cell-table-body" role="list">
                         {this.renderCells()}
-                        {this.renderEdit()}
                     </div>
                 </div>
                 <div ref={this.bottomRef} />
@@ -59,14 +67,6 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) => {
             return this.props.renderCell(cellVM, index);
         });
-    };
-
-    private renderEdit = () => {
-        if (this.props.editable && this.props.newCellVM) {
-            return this.props.renderCell(this.props.newCellVM, 0);
-        } else {
-            return null;
-        }
     };
 
     private scrollIntoView() {

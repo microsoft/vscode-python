@@ -24,6 +24,7 @@ type InteractiveReducerFunc<T> = ReducerFunc<IMainState, CommonActionType, T>;
 export type InteractiveReducerArg<T = never | undefined> = ReducerArg<IMainState, CommonActionType, T>;
 
 export class IInteractiveActionMapping {
+    public [CommonActionType.FOCUS_INPUT]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.RESTART_KERNEL]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.SELECT_KERNEL]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.SELECT_SERVER]: InteractiveReducerFunc<never | undefined>;

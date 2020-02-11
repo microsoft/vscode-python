@@ -277,7 +277,8 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             skipNextScroll: this.props.skipNextScroll ? true : false,
             editable: true,
             renderCell: this.renderCell,
-            scrollToBottom: this.scrollDiv
+            scrollToBottom: this.scrollDiv,
+            scrollBeyondLastLine: this.props.settings ? this.props.settings.extraSettings.editor.scrollBeyondLastLine : false
         };
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
@@ -396,7 +397,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                         editorOptions={this.props.editorOptions}
                         enableGather={this.props.settings.enableGather}
                         themeMatplotlibPlots={this.props.settings.themeMatplotlibPlots}
-                        focusPending={this.props.activateCount}
+                        focusPending={this.props.focusPending}
                     />
                 </ErrorBoundary>
                 {lastLine}

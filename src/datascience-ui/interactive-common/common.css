@@ -44,6 +44,10 @@ body, html {
     overflow: hidden;
 }
 
+#content-panel-div.content-panel-scrollBeyondLastLine {
+    margin-bottom: 100vh;
+}
+
 .hide {
     display: none;
 }
@@ -79,6 +83,7 @@ body, html {
 }
 
 .cell-wrapper:focus {
+    outline-width: 0px;
     outline-color:var(--override-selection-background, var(--vscode-editor-selectionBackground));
 }
 
@@ -96,6 +101,13 @@ body, html {
     content: "";
     clear: both;
     display: block;
+}
+
+.edit-panel-colorized .cell-wrapper:focus {
+    outline-width: 0px;
+}
+.edit-panel .cell-wrapper:focus {
+    outline-width: 0px;
 }
 
 .cell-outer {
@@ -252,10 +264,14 @@ body, html {
 .code-watermark {
     position: absolute;
     top: 3px;
-    left: 30px;
+    left: 3px;
     z-index: 500;
     font-style: italic;
     color: var(--override-watermark-color, var(--vscode-panelTitle-inactiveForeground));
+}
+
+.code-watermark:focus {
+    outline-width: 0;
 }
 
 .collapse-input-svg-rotate {

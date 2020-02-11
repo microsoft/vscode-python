@@ -126,6 +126,8 @@ export interface IRawFileSystem {
 
     // Create the directory and any missing parent directories.
     mkdirp(dirname: string): Promise<void>;
+    // Delete the directory if empty.
+    rmdir(dirname: string): Promise<void>;
     // Delete the directory and everything in it.
     rmtree(dirname: string): Promise<void>;
     // Return the contents of the directory.
@@ -134,6 +136,8 @@ export interface IRawFileSystem {
     //***********************
     // not async
 
+    // Get information about a file (resolve symlinks).
+    statSync(filename: string): FileStat;
     // Return the text of the given file (decoded from UTF-8).
     readTextSync(filename: string): string;
     // Create a streaming wrappr around an open file (for reading).
