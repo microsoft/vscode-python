@@ -10,7 +10,14 @@ import { InteractiveWindowProvider } from '../../client/datascience/interactive-
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { JupyterServerWrapper } from '../../client/datascience/jupyter/jupyterServerWrapper';
-import { ICodeCssGenerator, IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution, INotebookImporter, INotebookServer } from '../../client/datascience/types';
+import {
+    ICodeCssGenerator,
+    IInteractiveWindow,
+    IInteractiveWindowProvider,
+    IJupyterExecution,
+    INotebookImporter,
+    INotebookServer
+} from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/testing/common/constants';
 import { TestContextService } from '../../client/testing/common/services/contextService';
@@ -72,12 +79,18 @@ export class UnitTestIocContainer extends IocContainer {
     public registerTestVisitors() {
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestFlatteningVisitor, 'TestFlatteningVisitor');
         this.serviceManager.add<ITestVisitor>(ITestVisitor, TestResultResetVisitor, 'TestResultResetVisitor');
-        this.serviceManager.addSingleton<ITestsStatusUpdaterService>(ITestsStatusUpdaterService, TestsStatusUpdaterService);
+        this.serviceManager.addSingleton<ITestsStatusUpdaterService>(
+            ITestsStatusUpdaterService,
+            TestsStatusUpdaterService
+        );
         this.serviceManager.addSingleton<ITestContextService>(ITestContextService, TestContextService);
     }
 
     public registerTestStorage() {
-        this.serviceManager.addSingleton<ITestCollectionStorageService>(ITestCollectionStorageService, TestCollectionStorageService);
+        this.serviceManager.addSingleton<ITestCollectionStorageService>(
+            ITestCollectionStorageService,
+            TestCollectionStorageService
+        );
     }
 
     public registerTestsHelper() {
@@ -94,9 +107,21 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerTestDiscoveryServices() {
-        this.serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, UnitTestTestDiscoveryService, UNITTEST_PROVIDER);
-        this.serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, PytestTestDiscoveryService, PYTEST_PROVIDER);
-        this.serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, NoseTestDiscoveryService, NOSETEST_PROVIDER);
+        this.serviceManager.add<ITestDiscoveryService>(
+            ITestDiscoveryService,
+            UnitTestTestDiscoveryService,
+            UNITTEST_PROVIDER
+        );
+        this.serviceManager.add<ITestDiscoveryService>(
+            ITestDiscoveryService,
+            PytestTestDiscoveryService,
+            PYTEST_PROVIDER
+        );
+        this.serviceManager.add<ITestDiscoveryService>(
+            ITestDiscoveryService,
+            NoseTestDiscoveryService,
+            NOSETEST_PROVIDER
+        );
         this.serviceManager.add<ITestDiscoveryService>(ITestDiscoveryService, TestsDiscoveryService, 'common');
         this.serviceManager.add<ITestDiscoveredTestParser>(ITestDiscoveredTestParser, TestDiscoveredTestParser);
     }
@@ -144,7 +169,10 @@ export class UnitTestIocContainer extends IocContainer {
 
     public registerDataScienceTypes() {
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
-        this.serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, InteractiveWindowProvider);
+        this.serviceManager.addSingleton<IInteractiveWindowProvider>(
+            IInteractiveWindowProvider,
+            InteractiveWindowProvider
+        );
         this.serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
         this.serviceManager.add<INotebookImporter>(INotebookImporter, JupyterImporter);
         this.serviceManager.add<INotebookServer>(INotebookServer, JupyterServerWrapper);

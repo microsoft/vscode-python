@@ -103,7 +103,13 @@ Object.keys(newValuesAndKeys).forEach(key => {
     CTagKinMapping.set(key, (newValuesAndKeys as any)[key]);
 });
 
-export function parseTags(workspaceFolder: string, tagFile: string, query: string, token: vscode.CancellationToken, fs: IFileSystem): Promise<ITag[]> {
+export function parseTags(
+    workspaceFolder: string,
+    tagFile: string,
+    query: string,
+    token: vscode.CancellationToken,
+    fs: IFileSystem
+): Promise<ITag[]> {
     return fs.fileExists(tagFile).then(exists => {
         if (!exists) {
             return Promise.resolve([]);

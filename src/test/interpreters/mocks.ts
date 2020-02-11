@@ -20,7 +20,12 @@ export class MockRegistry implements IRegistry {
 
         return items ? Promise.resolve(items.values) : Promise.resolve([]);
     }
-    public async getValue(key: string, hive: RegistryHive, arch?: Architecture, name?: string): Promise<string | undefined | null> {
+    public async getValue(
+        key: string,
+        hive: RegistryHive,
+        arch?: Architecture,
+        name?: string
+    ): Promise<string | undefined | null> {
         const items = this.values.find(item => {
             if (item.key !== key || item.hive !== hive) {
                 return false;
@@ -41,7 +46,11 @@ export class MockRegistry implements IRegistry {
 // tslint:disable-next-line:max-classes-per-file
 @injectable()
 export class MockInterpreterVersionProvider implements IInterpreterVersionService {
-    constructor(private displayName: string, private useDefaultDisplayName: boolean = false, private pipVersionPromise?: Promise<string>) {}
+    constructor(
+        private displayName: string,
+        private useDefaultDisplayName: boolean = false,
+        private pipVersionPromise?: Promise<string>
+    ) {}
     public async getVersion(_pythonPath: string, defaultDisplayName: string): Promise<string> {
         return this.useDefaultDisplayName ? Promise.resolve(defaultDisplayName) : Promise.resolve(this.displayName);
     }

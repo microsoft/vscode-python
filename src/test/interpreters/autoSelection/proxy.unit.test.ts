@@ -21,7 +21,10 @@ suite('Interpreters - Auto Selection Proxy', () => {
         public getAutoSelectedInterpreter(_resource: Uri): PythonInterpreter {
             return { path: this.pythonPath } as any;
         }
-        public async setWorkspaceInterpreter(_resource: Uri, _interpreter: PythonInterpreter | undefined): Promise<void> {
+        public async setWorkspaceInterpreter(
+            _resource: Uri,
+            _interpreter: PythonInterpreter | undefined
+        ): Promise<void> {
             return;
         }
     }

@@ -61,18 +61,31 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         // Mocks.
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
+            IInterpreterService,
+            instance(mock(InterpreterService))
+        );
 
         ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(
+            InterpeterHashProviderFactory,
+            InterpeterHashProviderFactory
+        );
         ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
 
     async function injectTestDiscoveryOutput(output: string) {
-        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
+        const procService = (await ioc.serviceContainer
+            .get<IProcessServiceFactory>(IProcessServiceFactory)
+            .create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
-            if (args.length > 1 && args[0] === '-c' && args[1].includes('import unittest') && args[1].includes('loader = unittest.TestLoader()')) {
+            if (
+                args.length > 1 &&
+                args[0] === '-c' &&
+                args[1].includes('import unittest') &&
+                args[1].includes('loader = unittest.TestLoader()')
+            ) {
                 callback({
                     // Ensure any spaces added during code formatting or the like are removed.
                     out: output
@@ -105,7 +118,9 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
             'Test File not found'
         );
         assert.equal(
-            tests.testFunctions.some(t => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'),
+            tests.testFunctions.some(
+                t => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'
+            ),
             true,
             'Test File not found'
         );
@@ -142,12 +157,20 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
             'Test File not found'
         );
         assert.equal(
-            tests.testFunctions.some(t => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_unittest_one.Test_test1.test_A'),
+            tests.testFunctions.some(
+                t =>
+                    t.testFunction.name === 'test_A' &&
+                    t.testFunction.nameToRun === 'test_unittest_one.Test_test1.test_A'
+            ),
             true,
             'Test File not found'
         );
         assert.equal(
-            tests.testFunctions.some(t => t.testFunction.name === 'test_A2' && t.testFunction.nameToRun === 'test_unittest_two.Test_test2.test_A2'),
+            tests.testFunctions.some(
+                t =>
+                    t.testFunction.name === 'test_A2' &&
+                    t.testFunction.nameToRun === 'test_unittest_two.Test_test2.test_A2'
+            ),
             true,
             'Test File not found'
         );
@@ -172,7 +195,11 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
             'Test File not found'
         );
         assert.equal(
-            tests.testFunctions.some(t => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'unittest_three_test.Test_test3.test_A'),
+            tests.testFunctions.some(
+                t =>
+                    t.testFunction.name === 'test_A' &&
+                    t.testFunction.nameToRun === 'unittest_three_test.Test_test3.test_A'
+            ),
             true,
             'Test File not found'
         );

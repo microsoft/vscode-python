@@ -10,56 +10,356 @@ import { Product } from '../../client/common/installer/productInstaller';
 import { ProductNames } from '../../client/common/installer/productNames';
 import { ProductService } from '../../client/common/installer/productService';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService, IPythonToolExecutionService } from '../../client/common/process/types';
+import {
+    IPythonExecutionFactory,
+    IPythonExecutionService,
+    IPythonToolExecutionService
+} from '../../client/common/process/types';
 import { ProductType } from '../../client/common/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import { ILintMessage, LintMessageSeverity } from '../../client/linters/types';
 import { BaseTestFixture, getLinterID, getProductName, linterMessageAsLine, throwUnknownProduct } from './common';
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
-    { line: 24, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
-    { line: 30, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
-    { line: 34, column: 0, severity: LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: 'warning' },
-    { line: 40, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
-    { line: 44, column: 0, severity: LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: 'warning' },
-    { line: 55, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
-    { line: 59, column: 0, severity: LintMessageSeverity.Information, code: 'I0012', message: 'Locally enabling no-member (E1101)', provider: '', type: 'warning' },
-    { line: 62, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling undefined-variable (E0602)', provider: '', type: 'warning' },
-    { line: 70, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
-    { line: 84, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
-    { line: 87, column: 0, severity: LintMessageSeverity.Hint, code: 'C0304', message: 'Final newline missing', provider: '', type: 'warning' },
-    { line: 11, column: 20, severity: LintMessageSeverity.Warning, code: 'W0613', message: "Unused argument 'arg'", provider: '', type: 'warning' },
-    { line: 26, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blop' member", provider: '', type: 'warning' },
-    { line: 36, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
-    { line: 46, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
-    { line: 61, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
-    { line: 72, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
-    { line: 75, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
-    { line: 77, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
-    { line: 83, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' }
+    {
+        line: 24,
+        column: 0,
+        severity: LintMessageSeverity.Information,
+        code: 'I0011',
+        message: 'Locally disabling no-member (E1101)',
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 30,
+        column: 0,
+        severity: LintMessageSeverity.Information,
+        code: 'I0011',
+        message: 'Locally disabling no-member (E1101)',
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 34,
+        column: 0,
+        severity: LintMessageSeverity.Information,
+        code: 'I0012',
+        message: 'Locally enabling no-member (E1101)',
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 40,
+        column: 0,
+        severity: LintMessageSeverity.Information,
+        code: 'I0011',
+        message: 'Locally disabling no-member (E1101)',
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 44,
+        column: 0,
+        severity: LintMessageSeverity.Information,
+        code: 'I0012',
+        message: 'Locally enabling no-member (E1101)',
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 55,
+        column: 0,
+        severity: LintMessageSeverity.Information,
+        code: 'I0011',
+        message: 'Locally disabling no-member (E1101)',
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 59,
+        column: 0,
+        severity: LintMessageSeverity.Information,
+        code: 'I0012',
+        message: 'Locally enabling no-member (E1101)',
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 62,
+        column: 0,
+        severity: LintMessageSeverity.Information,
+        code: 'I0011',
+        message: 'Locally disabling undefined-variable (E0602)',
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 70,
+        column: 0,
+        severity: LintMessageSeverity.Information,
+        code: 'I0011',
+        message: 'Locally disabling no-member (E1101)',
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 84,
+        column: 0,
+        severity: LintMessageSeverity.Information,
+        code: 'I0011',
+        message: 'Locally disabling no-member (E1101)',
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 87,
+        column: 0,
+        severity: LintMessageSeverity.Hint,
+        code: 'C0304',
+        message: 'Final newline missing',
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 11,
+        column: 20,
+        severity: LintMessageSeverity.Warning,
+        code: 'W0613',
+        message: "Unused argument 'arg'",
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 26,
+        column: 14,
+        severity: LintMessageSeverity.Error,
+        code: 'E1101',
+        message: "Instance of 'Foo' has no 'blop' member",
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 36,
+        column: 14,
+        severity: LintMessageSeverity.Error,
+        code: 'E1101',
+        message: "Instance of 'Foo' has no 'blip' member",
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 46,
+        column: 18,
+        severity: LintMessageSeverity.Error,
+        code: 'E1101',
+        message: "Instance of 'Foo' has no 'blip' member",
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 61,
+        column: 18,
+        severity: LintMessageSeverity.Error,
+        code: 'E1101',
+        message: "Instance of 'Foo' has no 'blip' member",
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 72,
+        column: 18,
+        severity: LintMessageSeverity.Error,
+        code: 'E1101',
+        message: "Instance of 'Foo' has no 'blip' member",
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 75,
+        column: 18,
+        severity: LintMessageSeverity.Error,
+        code: 'E1101',
+        message: "Instance of 'Foo' has no 'blip' member",
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 77,
+        column: 14,
+        severity: LintMessageSeverity.Error,
+        code: 'E1101',
+        message: "Instance of 'Foo' has no 'blip' member",
+        provider: '',
+        type: 'warning'
+    },
+    {
+        line: 83,
+        column: 14,
+        severity: LintMessageSeverity.Error,
+        code: 'E1101',
+        message: "Instance of 'Foo' has no 'blip' member",
+        provider: '',
+        type: 'warning'
+    }
 ];
 const flake8MessagesToBeReturned: ILintMessage[] = [
-    { line: 5, column: 1, severity: LintMessageSeverity.Error, code: 'E302', message: 'expected 2 blank lines, found 1', provider: '', type: 'E' },
-    { line: 19, column: 15, severity: LintMessageSeverity.Error, code: 'E127', message: 'continuation line over-indented for visual indent', provider: '', type: 'E' },
-    { line: 24, column: 23, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
-    { line: 62, column: 30, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
-    { line: 70, column: 22, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
-    { line: 80, column: 5, severity: LintMessageSeverity.Error, code: 'E303', message: 'too many blank lines (2)', provider: '', type: 'E' },
-    { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: 'E' }
+    {
+        line: 5,
+        column: 1,
+        severity: LintMessageSeverity.Error,
+        code: 'E302',
+        message: 'expected 2 blank lines, found 1',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 19,
+        column: 15,
+        severity: LintMessageSeverity.Error,
+        code: 'E127',
+        message: 'continuation line over-indented for visual indent',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 24,
+        column: 23,
+        severity: LintMessageSeverity.Error,
+        code: 'E261',
+        message: 'at least two spaces before inline comment',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 62,
+        column: 30,
+        severity: LintMessageSeverity.Error,
+        code: 'E261',
+        message: 'at least two spaces before inline comment',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 70,
+        column: 22,
+        severity: LintMessageSeverity.Error,
+        code: 'E261',
+        message: 'at least two spaces before inline comment',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 80,
+        column: 5,
+        severity: LintMessageSeverity.Error,
+        code: 'E303',
+        message: 'too many blank lines (2)',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 87,
+        column: 24,
+        severity: LintMessageSeverity.Warning,
+        code: 'W292',
+        message: 'no newline at end of file',
+        provider: '',
+        type: 'E'
+    }
 ];
 const pycodestyleMessagesToBeReturned: ILintMessage[] = [
-    { line: 5, column: 1, severity: LintMessageSeverity.Error, code: 'E302', message: 'expected 2 blank lines, found 1', provider: '', type: 'E' },
-    { line: 19, column: 15, severity: LintMessageSeverity.Error, code: 'E127', message: 'continuation line over-indented for visual indent', provider: '', type: 'E' },
-    { line: 24, column: 23, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
-    { line: 62, column: 30, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
-    { line: 70, column: 22, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
-    { line: 80, column: 5, severity: LintMessageSeverity.Error, code: 'E303', message: 'too many blank lines (2)', provider: '', type: 'E' },
-    { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: 'E' }
+    {
+        line: 5,
+        column: 1,
+        severity: LintMessageSeverity.Error,
+        code: 'E302',
+        message: 'expected 2 blank lines, found 1',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 19,
+        column: 15,
+        severity: LintMessageSeverity.Error,
+        code: 'E127',
+        message: 'continuation line over-indented for visual indent',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 24,
+        column: 23,
+        severity: LintMessageSeverity.Error,
+        code: 'E261',
+        message: 'at least two spaces before inline comment',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 62,
+        column: 30,
+        severity: LintMessageSeverity.Error,
+        code: 'E261',
+        message: 'at least two spaces before inline comment',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 70,
+        column: 22,
+        severity: LintMessageSeverity.Error,
+        code: 'E261',
+        message: 'at least two spaces before inline comment',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 80,
+        column: 5,
+        severity: LintMessageSeverity.Error,
+        code: 'E303',
+        message: 'too many blank lines (2)',
+        provider: '',
+        type: 'E'
+    },
+    {
+        line: 87,
+        column: 24,
+        severity: LintMessageSeverity.Warning,
+        code: 'W292',
+        message: 'no newline at end of file',
+        provider: '',
+        type: 'E'
+    }
 ];
 const pydocstyleMessagesToBeReturned: ILintMessage[] = [
-    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'e')", column: 0, line: 1, type: '', provider: 'pydocstyle' },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 't')", column: 0, line: 5, type: '', provider: 'pydocstyle' },
-    { code: 'D102', severity: LintMessageSeverity.Information, message: 'Missing docstring in public method', column: 4, line: 8, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D400',
+        severity: LintMessageSeverity.Information,
+        message: "First line should end with a period (not 'e')",
+        column: 0,
+        line: 1,
+        type: '',
+        provider: 'pydocstyle'
+    },
+    {
+        code: 'D400',
+        severity: LintMessageSeverity.Information,
+        message: "First line should end with a period (not 't')",
+        column: 0,
+        line: 5,
+        type: '',
+        provider: 'pydocstyle'
+    },
+    {
+        code: 'D102',
+        severity: LintMessageSeverity.Information,
+        message: 'Missing docstring in public method',
+        column: 4,
+        line: 8,
+        type: '',
+        provider: 'pydocstyle'
+    },
     {
         code: 'D401',
         severity: LintMessageSeverity.Information,
@@ -78,7 +378,15 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         type: '',
         provider: 'pydocstyle'
     },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'e')", column: 4, line: 11, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D400',
+        severity: LintMessageSeverity.Information,
+        message: "First line should end with a period (not 'e')",
+        column: 4,
+        line: 11,
+        type: '',
+        provider: 'pydocstyle'
+    },
     {
         code: 'D403',
         severity: LintMessageSeverity.Information,
@@ -88,7 +396,15 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         type: '',
         provider: 'pydocstyle'
     },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 't')", column: 4, line: 15, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D400',
+        severity: LintMessageSeverity.Information,
+        message: "First line should end with a period (not 't')",
+        column: 4,
+        line: 15,
+        type: '',
+        provider: 'pydocstyle'
+    },
     {
         code: 'D403',
         severity: LintMessageSeverity.Information,
@@ -98,7 +414,15 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         type: '',
         provider: 'pydocstyle'
     },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 21, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D400',
+        severity: LintMessageSeverity.Information,
+        message: "First line should end with a period (not 'g')",
+        column: 4,
+        line: 21,
+        type: '',
+        provider: 'pydocstyle'
+    },
     {
         code: 'D403',
         severity: LintMessageSeverity.Information,
@@ -108,7 +432,15 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         type: '',
         provider: 'pydocstyle'
     },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 28, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D400',
+        severity: LintMessageSeverity.Information,
+        message: "First line should end with a period (not 'g')",
+        column: 4,
+        line: 28,
+        type: '',
+        provider: 'pydocstyle'
+    },
     {
         code: 'D403',
         severity: LintMessageSeverity.Information,
@@ -118,7 +450,15 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         type: '',
         provider: 'pydocstyle'
     },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 38, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D400',
+        severity: LintMessageSeverity.Information,
+        message: "First line should end with a period (not 'g')",
+        column: 4,
+        line: 38,
+        type: '',
+        provider: 'pydocstyle'
+    },
     {
         code: 'D403',
         severity: LintMessageSeverity.Information,
@@ -128,7 +468,15 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         type: '',
         provider: 'pydocstyle'
     },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 53, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D400',
+        severity: LintMessageSeverity.Information,
+        message: "First line should end with a period (not 'g')",
+        column: 4,
+        line: 53,
+        type: '',
+        provider: 'pydocstyle'
+    },
     {
         code: 'D403',
         severity: LintMessageSeverity.Information,
@@ -138,7 +486,15 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         type: '',
         provider: 'pydocstyle'
     },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 68, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D400',
+        severity: LintMessageSeverity.Information,
+        message: "First line should end with a period (not 'g')",
+        column: 4,
+        line: 68,
+        type: '',
+        provider: 'pydocstyle'
+    },
     {
         code: 'D403',
         severity: LintMessageSeverity.Information,
@@ -148,7 +504,15 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         type: '',
         provider: 'pydocstyle'
     },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 80, type: '', provider: 'pydocstyle' }
+    {
+        code: 'D400',
+        severity: LintMessageSeverity.Information,
+        message: "First line should end with a period (not 'g')",
+        column: 4,
+        line: 80,
+        type: '',
+        provider: 'pydocstyle'
+    }
 ];
 
 class TestFixture extends BaseTestFixture {
@@ -161,9 +525,22 @@ class TestFixture extends BaseTestFixture {
     constructor(workspaceDir = '.', printLogs = false) {
         const platformService = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
         const filesystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
-        const pythonToolExecService = TypeMoq.Mock.ofType<IPythonToolExecutionService>(undefined, TypeMoq.MockBehavior.Strict);
+        const pythonToolExecService = TypeMoq.Mock.ofType<IPythonToolExecutionService>(
+            undefined,
+            TypeMoq.MockBehavior.Strict
+        );
         const pythonExecFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>(undefined, TypeMoq.MockBehavior.Strict);
-        super(platformService.object, filesystem.object, pythonToolExecService.object, pythonExecFactory.object, undefined, undefined, true, workspaceDir, printLogs);
+        super(
+            platformService.object,
+            filesystem.object,
+            pythonToolExecService.object,
+            pythonExecFactory.object,
+            undefined,
+            undefined,
+            true,
+            workspaceDir,
+            printLogs
+        );
 
         this.platformService = platformService;
         this.filesystem = filesystem;
@@ -177,7 +554,9 @@ class TestFixture extends BaseTestFixture {
         this.pythonExecService.setup((s: any) => s.then).returns(() => undefined);
         this.pythonExecService.setup(s => s.isModuleInstalled(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
 
-        this.pythonExecFactory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(this.pythonExecService.object));
+        this.pythonExecFactory
+            .setup(f => f.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(this.pythonExecService.object));
     }
 
     public makeDocument(product: Product, filename: string): TextDocument {
@@ -236,7 +615,9 @@ class TestFixture extends BaseTestFixture {
     }
 
     public setStdout(stdout: string) {
-        this.pythonToolExecService.setup(s => s.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: stdout }));
+        this.pythonToolExecService
+            .setup(s => s.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: stdout }));
     }
 }
 
@@ -252,9 +633,16 @@ suite('Linting Scenarios', () => {
         fixture.setDefaultMessages(product);
         const linter = await fixture.getEnabledLinter(product);
 
-        const messages = await linter.lint(fixture.makeDocument(product, 'spam.py'), new CancellationTokenSource().token);
+        const messages = await linter.lint(
+            fixture.makeDocument(product, 'spam.py'),
+            new CancellationTokenSource().token
+        );
 
-        assert.equal(messages.length, 0, `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`);
+        assert.equal(
+            messages.length,
+            0,
+            `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`
+        );
     });
 
     test('No linting with Pylint disabled (and Flake8 enabled)', async () => {
@@ -265,9 +653,16 @@ suite('Linting Scenarios', () => {
         fixture.setDefaultMessages(Product.pylint);
         const linter = await fixture.getDisabledLinter(product);
 
-        const messages = await linter.lint(fixture.makeDocument(product, 'spam.py'), new CancellationTokenSource().token);
+        const messages = await linter.lint(
+            fixture.makeDocument(product, 'spam.py'),
+            new CancellationTokenSource().token
+        );
 
-        assert.equal(messages.length, 0, `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`);
+        assert.equal(
+            messages.length,
+            0,
+            `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`
+        );
     });
 
     async function testEnablingDisablingOfLinter(fixture: TestFixture, product: Product, enabled: boolean) {
@@ -278,12 +673,23 @@ suite('Linting Scenarios', () => {
         }
         const linter = await fixture.getLinter(product, enabled);
 
-        const messages = await linter.lint(fixture.makeDocument(product, 'spam.py'), new CancellationTokenSource().token);
+        const messages = await linter.lint(
+            fixture.makeDocument(product, 'spam.py'),
+            new CancellationTokenSource().token
+        );
 
         if (enabled) {
-            assert.notEqual(messages.length, 0, `Expected linter errors when linter is enabled, Output - ${fixture.output}`);
+            assert.notEqual(
+                messages.length,
+                0,
+                `Expected linter errors when linter is enabled, Output - ${fixture.output}`
+            );
         } else {
-            assert.equal(messages.length, 0, `Unexpected linter errors when linter is disabled, Output - ${fixture.output}`);
+            assert.equal(
+                messages.length,
+                0,
+                `Unexpected linter errors when linter is disabled, Output - ${fixture.output}`
+            );
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
@@ -303,7 +709,9 @@ suite('Linting Scenarios', () => {
     }
     for (const useMinimal of [true, false]) {
         for (const enabled of [true, false]) {
-            test(`PyLint ${enabled ? 'enabled' : 'disabled'} with${useMinimal ? '' : 'out'} minimal checkers`, async () => {
+            test(`PyLint ${enabled ? 'enabled' : 'disabled'} with${
+                useMinimal ? '' : 'out'
+            } minimal checkers`, async () => {
                 const fixture = new TestFixture();
                 fixture.lintingSettings.pylintUseMinimalCheckers = useMinimal;
                 await testEnablingDisablingOfLinter(fixture, Product.pylint, enabled);
@@ -315,7 +723,10 @@ suite('Linting Scenarios', () => {
         const messagesToBeReceived = fixture.setDefaultMessages(product);
         const linter = await fixture.getEnabledLinter(product);
 
-        const messages = await linter.lint(fixture.makeDocument(product, 'spam.py'), new CancellationTokenSource().token);
+        const messages = await linter.lint(
+            fixture.makeDocument(product, 'spam.py'),
+            new CancellationTokenSource().token
+        );
 
         if (messagesToBeReceived.length === 0) {
             assert.equal(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
@@ -345,9 +756,16 @@ suite('Linting Scenarios', () => {
         fixture.setDefaultMessages(product);
         const linter = await fixture.getEnabledLinter(product);
 
-        const messages = await linter.lint(fixture.makeDocument(product, 'spam.py'), new CancellationTokenSource().token);
+        const messages = await linter.lint(
+            fixture.makeDocument(product, 'spam.py'),
+            new CancellationTokenSource().token
+        );
 
-        assert.equal(messages.length, messageCountToBeReceived, `Expected number of lint errors does not match lint error count, Output - ${fixture.output}`);
+        assert.equal(
+            messages.length,
+            messageCountToBeReceived,
+            `Expected number of lint errors does not match lint error count, Output - ${fixture.output}`
+        );
     }
     test('Three line output counted as one message (Pylint)', async () => {
         const maxErrors = 5;

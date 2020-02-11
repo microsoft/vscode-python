@@ -30,9 +30,9 @@ suite('FileSystem - Path Utils', () => {
     let utils: FileSystemPathUtils;
     setup(() => {
         deps = TypeMoq.Mock.ofType<IUtilsDeps>(undefined, TypeMoq.MockBehavior.Strict);
-        // prettier-ignore
         utils = new FileSystemPathUtils(
             'my-home',
+            // It's simpler to just use one mock for all 3 dependencies.
             deps.object,
             deps.object,
             deps.object
@@ -50,20 +50,20 @@ suite('FileSystem - Path Utils', () => {
                 const osType = item.value;
 
                 function setNormCase(filename: string, numCalls = 1): string {
-                    // prettier-ignore
-                    const norm = (osType === OSType.Windows)
-                        ? path.normalize(filename).toUpperCase()
-                        : filename;
+                    let norm = filename;
+                    if (osType === OSType.Windows) {
+                        norm = path.normalize(filename).toUpperCase();
+                    }
                     deps.setup(d => d.normCase(filename))
                         .returns(() => norm)
                         .verifiable(TypeMoq.Times.exactly(numCalls));
                     return filename;
                 }
 
-                // prettier-ignore
                 [
-                    'c:\\users\\Peter Smith\\my documents\\test.txt',
-
+                    // no upper-case
+                    'c:\\users\\peter smith\\my documents\\test.txt',
+                    // some upper-case
                     'c:\\USERS\\Peter Smith\\my documents\\test.TXT'
                 ].forEach(path1 => {
                     test(`True if paths are identical (type: ${item.name}) - ${path1}`, () => {

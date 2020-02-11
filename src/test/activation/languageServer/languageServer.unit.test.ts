@@ -79,7 +79,11 @@ suite('Language Server - LanguageServer', () => {
             .setup(c => c.start())
             .returns(() => startDisposable.object)
             .verifiable(typemoq.Times.once());
-        client.setup(c => c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))).returns(() => Promise.resolve(undefined) as any);
+        client
+            .setup(c =>
+                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))
+            )
+            .returns(() => Promise.resolve(undefined) as any);
 
         expect(() => server.loadExtension(loadExtensionArgs)).not.throw();
         client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());
@@ -125,7 +129,11 @@ suite('Language Server - LanguageServer', () => {
             .setup(c => c.start())
             .returns(() => startDisposable.object)
             .verifiable(typemoq.Times.once());
-        client.setup(c => c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))).returns(() => Promise.resolve(undefined) as any);
+        client
+            .setup(c =>
+                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))
+            )
+            .returns(() => Promise.resolve(undefined) as any);
 
         expect(() => server.loadExtension(loadExtensionArgs)).not.throw();
         client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());

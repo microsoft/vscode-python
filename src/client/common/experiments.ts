@@ -15,7 +15,14 @@ import { IApplicationEnvironment, IWorkspaceService } from './application/types'
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from './constants';
 import { traceDecorators, traceError } from './logger';
 import { IFileSystem } from './platform/types';
-import { ABExperiments, ICryptoUtils, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory } from './types';
+import {
+    ABExperiments,
+    ICryptoUtils,
+    IExperimentsManager,
+    IOutputChannel,
+    IPersistentState,
+    IPersistentStateFactory
+} from './types';
 import { sleep } from './utils/async';
 import { swallowExceptions } from './utils/decorators';
 import { Experiments } from './utils/localize';
@@ -89,9 +96,18 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @optional() private experimentEffortTimeout: number = EXPERIMENTS_EFFORT_TIMEOUT_MS
     ) {
-        this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isDownloadedStorageValidKey, false, EXPIRY_DURATION_MS);
-        this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined);
-        this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(downloadedExperimentStorageKey, undefined);
+        this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(
+            isDownloadedStorageValidKey,
+            false,
+            EXPIRY_DURATION_MS
+        );
+        this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(
+            experimentStorageKey,
+            undefined
+        );
+        this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<
+            ABExperiments | undefined
+        >(downloadedExperimentStorageKey, undefined);
         const settings = configurationService.getSettings(undefined);
         this.enabled = settings.experiments.enabled;
         this._experimentsOptedInto = settings.experiments.optInto;
@@ -135,12 +151,22 @@ export class ExperimentsManager implements IExperimentsManager {
         if (Array.isArray(this.experimentStorage.value)) {
             for (const experiment of this.experimentStorage.value) {
                 try {
-                    if (this._experimentsOptedOutFrom.includes('All') || this._experimentsOptedOutFrom.includes(experiment.name)) {
-                        sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, { expNameOptedOutOf: experiment.name });
+                    if (
+                        this._experimentsOptedOutFrom.includes('All') ||
+                        this._experimentsOptedOutFrom.includes(experiment.name)
+                    ) {
+                        sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
+                            expNameOptedOutOf: experiment.name
+                        });
                         continue;
                     }
-                    if (this._experimentsOptedInto.includes('All') || this._experimentsOptedInto.includes(experiment.name)) {
-                        sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, { expNameOptedInto: experiment.name });
+                    if (
+                        this._experimentsOptedInto.includes('All') ||
+                        this._experimentsOptedInto.includes(experiment.name)
+                    ) {
+                        sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
+                            expNameOptedInto: experiment.name
+                        });
                         this.userExperiments.push(experiment);
                     } else if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
                         this.userExperiments.push(experiment);
@@ -175,7 +201,9 @@ export class ExperimentsManager implements IExperimentsManager {
      * @param storage The storage to store the experiments in. By default, downloaded storage for the next session is used.
      */
     @traceDecorators.error('Failed to download and store experiments')
-    public async downloadAndStoreExperiments(storage: IPersistentState<ABExperiments | undefined> = this.downloadedExperimentsStorage): Promise<void> {
+    public async downloadAndStoreExperiments(
+        storage: IPersistentState<ABExperiments | undefined> = this.downloadedExperimentsStorage
+    ): Promise<void> {
         const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
         if (!this.areExperimentsValid(downloadedExperiments)) {
             return;
@@ -280,7 +308,12 @@ export class ExperimentsManager implements IExperimentsManager {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
             return success;
         } catch (ex) {
-            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success: false, error: 'Downloading experiments failed with error' }, ex);
+            sendTelemetryEvent(
+                EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE,
+                undefined,
+                { success: false, error: 'Downloading experiments failed with error' },
+                ex
+            );
             traceError('Effort to download experiments within timeout failed with error', ex);
             return false;
         }

@@ -1,4 +1,11 @@
-import { CancellationToken, FormattingOptions, OnTypeFormattingEditProvider, Position, TextDocument, TextEdit } from 'vscode';
+import {
+    CancellationToken,
+    FormattingOptions,
+    OnTypeFormattingEditProvider,
+    Position,
+    TextDocument,
+    TextEdit
+} from 'vscode';
 import { CodeBlockFormatProvider } from './codeBlockFormatProvider';
 import {
     ASYNC_DEF_REGEX,
@@ -21,7 +28,15 @@ export class BlockFormatProviders implements OnTypeFormattingEditProvider {
         this.providers = [];
         const boundaryBlocks = [DEF_REGEX, ASYNC_DEF_REGEX, CLASS_REGEX];
 
-        const elseParentBlocks = [IF_REGEX, ELIF_REGEX, FOR_IN_REGEX, ASYNC_FOR_IN_REGEX, WHILE_REGEX, TRY_REGEX, EXCEPT_REGEX];
+        const elseParentBlocks = [
+            IF_REGEX,
+            ELIF_REGEX,
+            FOR_IN_REGEX,
+            ASYNC_FOR_IN_REGEX,
+            WHILE_REGEX,
+            TRY_REGEX,
+            EXCEPT_REGEX
+        ];
         this.providers.push(new CodeBlockFormatProvider(ELSE_REGEX, elseParentBlocks, boundaryBlocks));
 
         const elifParentBlocks = [IF_REGEX, ELIF_REGEX];
@@ -34,7 +49,13 @@ export class BlockFormatProviders implements OnTypeFormattingEditProvider {
         this.providers.push(new CodeBlockFormatProvider(FINALLY_REGEX, finallyParentBlocks, boundaryBlocks));
     }
 
-    public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, _token: CancellationToken): TextEdit[] {
+    public provideOnTypeFormattingEdits(
+        document: TextDocument,
+        position: Position,
+        ch: string,
+        options: FormattingOptions,
+        _token: CancellationToken
+    ): TextEdit[] {
         if (position.line === 0) {
             return [];
         }

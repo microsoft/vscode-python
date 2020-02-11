@@ -42,16 +42,34 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
     // tslint:disable-next-line: no-empty
     public deactivate(): void {}
 
-    public provideRenameEdits(_document: TextDocument, _position: Position, _newName: string, _token: CancellationToken): ProviderResult<WorkspaceEdit> {
+    public provideRenameEdits(
+        _document: TextDocument,
+        _position: Position,
+        _newName: string,
+        _token: CancellationToken
+    ): ProviderResult<WorkspaceEdit> {
         return null;
     }
-    public provideDefinition(_document: TextDocument, _position: Position, _token: CancellationToken): ProviderResult<Location | Location[] | LocationLink[]> {
+    public provideDefinition(
+        _document: TextDocument,
+        _position: Position,
+        _token: CancellationToken
+    ): ProviderResult<Location | Location[] | LocationLink[]> {
         return null;
     }
-    public provideHover(_document: TextDocument, _position: Position, _token: CancellationToken): ProviderResult<Hover> {
+    public provideHover(
+        _document: TextDocument,
+        _position: Position,
+        _token: CancellationToken
+    ): ProviderResult<Hover> {
         return null;
     }
-    public provideReferences(_document: TextDocument, _position: Position, _context: ReferenceContext, _token: CancellationToken): ProviderResult<Location[]> {
+    public provideReferences(
+        _document: TextDocument,
+        _position: Position,
+        _context: ReferenceContext,
+        _token: CancellationToken
+    ): ProviderResult<Location[]> {
         return null;
     }
     public provideCompletionItems(
@@ -65,10 +83,18 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
     public provideCodeLenses(_document: TextDocument, _token: CancellationToken): ProviderResult<CodeLens[]> {
         return null;
     }
-    public provideDocumentSymbols(_document: TextDocument, _token: CancellationToken): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
+    public provideDocumentSymbols(
+        _document: TextDocument,
+        _token: CancellationToken
+    ): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
         return null;
     }
-    public provideSignatureHelp(_document: TextDocument, _position: Position, _token: CancellationToken, _context: SignatureHelpContext): ProviderResult<SignatureHelp> {
+    public provideSignatureHelp(
+        _document: TextDocument,
+        _position: Position,
+        _token: CancellationToken,
+        _context: SignatureHelpContext
+    ): ProviderResult<SignatureHelp> {
         return null;
     }
 }

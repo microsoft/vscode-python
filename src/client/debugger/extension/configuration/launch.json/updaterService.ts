@@ -25,7 +25,11 @@ export class LaunchJsonUpdaterServiceHelper {
         private readonly configurationProvider: IDebugConfigurationService
     ) {}
     @captureTelemetry(EventName.DEBUGGER_CONFIGURATION_PROMPTS_IN_LAUNCH_JSON)
-    public async selectAndInsertDebugConfig(document: TextDocument, position: Position, token: CancellationToken): Promise<void> {
+    public async selectAndInsertDebugConfig(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken
+    ): Promise<void> {
         if (this.documentManager.activeTextEditor && this.documentManager.activeTextEditor.document === document) {
             const folder = this.workspace.getWorkspaceFolder(document.uri);
             const configs = await this.configurationProvider.provideDebugConfigurations!(folder, token);
@@ -45,7 +49,11 @@ export class LaunchJsonUpdaterServiceHelper {
      * @returns {Promise<void>}
      * @memberof LaunchJsonCompletionItemProvider
      */
-    public async insertDebugConfiguration(document: TextDocument, position: Position, config: DebugConfiguration): Promise<void> {
+    public async insertDebugConfiguration(
+        document: TextDocument,
+        position: Position,
+        config: DebugConfiguration
+    ): Promise<void> {
         const cursorPosition = this.getCursorPositionInConfigurationsArray(document, position);
         if (!cursorPosition) {
             return;
@@ -66,7 +74,11 @@ export class LaunchJsonUpdaterServiceHelper {
      * @returns
      * @memberof LaunchJsonCompletionItemProvider
      */
-    public getTextForInsertion(config: DebugConfiguration, cursorPosition: PositionOfCursor, commaPosition?: PositionOfComma) {
+    public getTextForInsertion(
+        config: DebugConfiguration,
+        cursorPosition: PositionOfCursor,
+        commaPosition?: PositionOfComma
+    ) {
         const json = JSON.stringify(config);
         if (cursorPosition === 'AfterItem') {
             // If we already have a comma immediatley before the cursor, then no need of adding a comma.
@@ -77,7 +89,10 @@ export class LaunchJsonUpdaterServiceHelper {
         }
         return json;
     }
-    public getCursorPositionInConfigurationsArray(document: TextDocument, position: Position): PositionOfCursor | undefined {
+    public getCursorPositionInConfigurationsArray(
+        document: TextDocument,
+        position: Position
+    ): PositionOfCursor | undefined {
         if (this.isConfigurationArrayEmpty(document)) {
             return 'InsideEmptyArray';
         }
@@ -92,8 +107,12 @@ export class LaunchJsonUpdaterServiceHelper {
         }
     }
     public isConfigurationArrayEmpty(document: TextDocument): boolean {
-        const configuration = parse(document.getText(), [], { allowTrailingComma: true, disallowComments: false }) as { configurations: [] };
-        return !configuration || !Array.isArray(configuration.configurations) || configuration.configurations.length === 0;
+        const configuration = parse(document.getText(), [], { allowTrailingComma: true, disallowComments: false }) as {
+            configurations: [];
+        };
+        return (
+            !configuration || !Array.isArray(configuration.configurations) || configuration.configurations.length === 0
+        );
     }
     public isCommaImmediatelyBeforeCursor(document: TextDocument, position: Position) {
         const line = document.lineAt(position.line);
@@ -135,7 +154,18 @@ export class LaunchJsonUpdaterService implements IExtensionSingleActivationServi
         @inject(IDebugConfigurationService) private readonly configurationProvider: IDebugConfigurationService
     ) {}
     public async activate(): Promise<void> {
-        const handler = new LaunchJsonUpdaterServiceHelper(this.commandManager, this.workspace, this.documentManager, this.configurationProvider);
-        this.disposableRegistry.push(this.commandManager.registerCommand('python.SelectAndInsertDebugConfiguration', handler.selectAndInsertDebugConfig, handler));
+        const handler = new LaunchJsonUpdaterServiceHelper(
+            this.commandManager,
+            this.workspace,
+            this.documentManager,
+            this.configurationProvider
+        );
+        this.disposableRegistry.push(
+            this.commandManager.registerCommand(
+                'python.SelectAndInsertDebugConfiguration',
+                handler.selectAndInsertDebugConfig,
+                handler
+            )
+        );
     }
 }

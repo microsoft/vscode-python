@@ -5,32 +5,24 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IPathUtils, IsWindows } from '../types';
 import { OSType } from '../utils/platform';
-// prettier-ignore
-import {
-    Executables,
-    FileSystemPaths,
-    FileSystemPathUtils
-} from './fs-paths';
+import { Executables, FileSystemPaths, FileSystemPathUtils } from './fs-paths';
 // tslint:disable-next-line:no-var-requires no-require-imports
 const untildify = require('untildify');
 
 @injectable()
 export class PathUtils implements IPathUtils {
     private readonly utils: FileSystemPathUtils;
-    // prettier-ignore
     constructor(
+        // "true" if targeting a Windows host.
         @inject(IsWindows) isWindows: boolean
     ) {
+        const osType = isWindows ? OSType.Windows : OSType.Unknown;
         // We cannot just use FileSystemPathUtils.withDefaults() because
         // of the isWindows arg.
-        // prettier-ignore
         this.utils = new FileSystemPathUtils(
             untildify('~'),
             FileSystemPaths.withDefaults(),
-            new Executables(
-                path.delimiter,
-                isWindows ? OSType.Windows : OSType.Unknown
-            ),
+            new Executables(path.delimiter, osType),
             path
         );
     }

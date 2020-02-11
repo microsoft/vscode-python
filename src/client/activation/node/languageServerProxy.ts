@@ -53,7 +53,11 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
 
     @traceDecorators.error('Failed to start language server')
     @captureTelemetry(EventName.PYTHON_NODE_SERVER_ENABLED, undefined, true)
-    public async start(resource: Resource, interpreter: PythonInterpreter | undefined, options: LanguageClientOptions): Promise<void> {
+    public async start(
+        resource: Resource,
+        interpreter: PythonInterpreter | undefined,
+        options: LanguageClientOptions
+    ): Promise<void> {
         if (!this.languageClient) {
             this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
             this.disposables.push(this.languageClient!.start());

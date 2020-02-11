@@ -6,7 +6,11 @@ import * as vsls from 'vsls/vscode';
 
 // tslint:disable:no-any unified-signatures
 export class ServiceProxy implements vsls.SharedService {
-    constructor(private realService: vsls.SharedService, private guestsResponding: () => Promise<boolean>, private forceShutdown: () => void) {}
+    constructor(
+        private realService: vsls.SharedService,
+        private guestsResponding: () => Promise<boolean>,
+        private forceShutdown: () => void
+    ) {}
     public get isServiceAvailable(): boolean {
         return this.realService.isServiceAvailable;
     }

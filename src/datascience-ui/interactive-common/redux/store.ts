@@ -14,11 +14,21 @@ import { combineReducers, createQueueableActionMiddleware, QueuableAction } from
 import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { forceLoad } from '../transforms';
-import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
+import {
+    AllowedMessages,
+    createPostableAction,
+    generatePostOfficeSendReducer,
+    IncomingMessageActions
+} from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
-function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
+function generateDefaultState(
+    skipDefault: boolean,
+    testMode: boolean,
+    baseTheme: string,
+    editable: boolean
+): IMainState {
     if (!skipDefault) {
         return generateTestState('', editable);
     } else {
@@ -56,7 +66,13 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
     }
 }
 
-function generateMainReducer<M>(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean, reducerMap: M): Redux.Reducer<IMainState, QueuableAction<M>> {
+function generateMainReducer<M>(
+    skipDefault: boolean,
+    testMode: boolean,
+    baseTheme: string,
+    editable: boolean,
+    reducerMap: M
+): Redux.Reducer<IMainState, QueuableAction<M>> {
     // First create our default state.
     const defaultState = generateDefaultState(skipDefault, testMode, baseTheme, editable);
 
@@ -137,9 +153,17 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // Special case for rendering complete
-        const prevFinished = prevState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
-        const afterFinished = afterState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
-        if (afterFinished.length > prevFinished.length || (afterFinished.length !== prevFinished.length && afterState.main.cellVMs.length !== prevState.main.cellVMs.length)) {
+        const prevFinished = prevState.main.cellVMs
+            .filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+            .map(c => c.cell.id);
+        const afterFinished = afterState.main.cellVMs
+            .filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+            .map(c => c.cell.id);
+        if (
+            afterFinished.length > prevFinished.length ||
+            (afterFinished.length !== prevFinished.length &&
+                afterState.main.cellVMs.length !== prevState.main.cellVMs.length)
+        ) {
             const diff = afterFinished.filter(r => prevFinished.indexOf(r) < 0);
             // Send async so happens after the render is actually finished.
             sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
@@ -162,7 +186,11 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
 
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
-    const actionsWithLargePayload = [IncomingMessageActions.LOADONIGASMASSEMBLYRESPONSE, IncomingMessageActions.GETCSSRESPONSE, IncomingMessageActions.LOADTMLANGUAGERESPONSE];
+    const actionsWithLargePayload = [
+        IncomingMessageActions.LOADONIGASMASSEMBLYRESPONSE,
+        IncomingMessageActions.GETCSSRESPONSE,
+        IncomingMessageActions.LOADTMLANGUAGERESPONSE
+    ];
     const logger = createLogger({
         // tslint:disable-next-line: no-any
         stateTransformer: (state: any) => {
@@ -196,7 +224,10 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
             return action;
         }
     });
-    const loggerMiddleware = process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode) ? logger : undefined;
+    const loggerMiddleware =
+        process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode)
+            ? logger
+            : undefined;
 
     const results: Redux.Middleware<{}, IStore>[] = [];
     results.push(queueableActions);
@@ -222,7 +253,13 @@ export interface IMainWithVariables extends IMainState {
     variableState: IVariableState;
 }
 
-export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, editable: boolean, reducerMap: M) {
+export function createStore<M>(
+    skipDefault: boolean,
+    baseTheme: string,
+    testMode: boolean,
+    editable: boolean,
+    reducerMap: M
+) {
     // Create a post office to listen to store dispatches and allow reducers to
     // send messages
     const postOffice = new PostOffice();

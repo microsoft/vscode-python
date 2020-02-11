@@ -6,7 +6,12 @@ import { Uri } from 'vscode';
 import { traceError } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterHelper, InterpreterType, IVirtualEnvironmentsSearchPathProvider, PythonInterpreter } from '../../contracts';
+import {
+    IInterpreterHelper,
+    InterpreterType,
+    IVirtualEnvironmentsSearchPathProvider,
+    PythonInterpreter
+} from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -35,7 +40,9 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
     }
     private async suggestionsFromKnownVenvs(resource?: Uri) {
         const searchPaths = await this.searchPathsProvider.getSearchPaths(resource);
-        return Promise.all(searchPaths.map(dir => this.lookForInterpretersInVenvs(dir, resource))).then(listOfInterpreters => flatten(listOfInterpreters));
+        return Promise.all(
+            searchPaths.map(dir => this.lookForInterpretersInVenvs(dir, resource))
+        ).then(listOfInterpreters => flatten(listOfInterpreters));
     }
     private async lookForInterpretersInVenvs(pathToCheck: string, resource?: Uri) {
         return this.fileSystem
@@ -44,7 +51,9 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             .then(dirs => dirs.filter(dir => dir.length > 0))
             .then(dirs => Promise.all(dirs.map(d => lookForInterpretersInDirectory(d, this.fileSystem))))
             .then(pathsWithInterpreters => flatten(pathsWithInterpreters))
-            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getVirtualEnvDetails(interpreter, resource))))
+            .then(interpreters =>
+                Promise.all(interpreters.map(interpreter => this.getVirtualEnvDetails(interpreter, resource)))
+            )
             .then(interpreters => interpreters.filter(interpreter => !!interpreter).map(interpreter => interpreter!))
             .catch(err => {
                 traceError('Python Extension (lookForInterpretersInVenvs):', err);

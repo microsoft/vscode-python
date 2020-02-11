@@ -36,7 +36,10 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         const { command, args: executableArgs } = await super.getExecutableInfo(resource, args);
 
         const workspaceUri = resource ? this.workspace.getWorkspaceFolder(resource) : undefined;
-        const defaultWorkspace = Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0 ? this.workspace.workspaceFolders[0].uri.fsPath : '';
+        const defaultWorkspace =
+            Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0
+                ? this.workspace.workspaceFolders[0].uri.fsPath
+                : '';
         const workspaceRoot = workspaceUri ? workspaceUri.uri.fsPath : defaultWorkspace;
         const managePyPath = workspaceRoot.length === 0 ? 'manage.py' : path.join(workspaceRoot, 'manage.py');
 

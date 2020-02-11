@@ -20,7 +20,11 @@ export const maxMajorVersion = 0;
 @injectable()
 export abstract class LanguageServerPackageService implements ILanguageServerPackageService {
     public maxMajorVersion: number = maxMajorVersion;
-    constructor(protected readonly serviceContainer: IServiceContainer, protected readonly appEnv: IApplicationEnvironment, protected readonly platform: IPlatformService) {}
+    constructor(
+        protected readonly serviceContainer: IServiceContainer,
+        protected readonly appEnv: IApplicationEnvironment,
+        protected readonly platform: IPlatformService
+    ) {}
 
     public abstract getNugetPackageName(): string;
 
@@ -74,7 +78,9 @@ export abstract class LanguageServerPackageService implements ILanguageServerPac
         return {
             version: new SemVer(minimumVersion),
             package: LanguageServerDownloadChannel.stable,
-            uri: `${azureCDNBlobStorageAccount}/${LanguageServerDownloadChannel.stable}/${this.getNugetPackageName()}.${minimumVersion}.nupkg`
+            uri: `${azureCDNBlobStorageAccount}/${
+                LanguageServerDownloadChannel.stable
+            }/${this.getNugetPackageName()}.${minimumVersion}.nupkg`
         };
     }
 }

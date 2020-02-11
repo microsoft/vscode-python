@@ -1,7 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { CancellationToken, FormattingOptions, OnTypeFormattingEditProvider, Position, TextDocument, TextEdit } from 'vscode';
+import {
+    CancellationToken,
+    FormattingOptions,
+    OnTypeFormattingEditProvider,
+    Position,
+    TextDocument,
+    TextEdit
+} from 'vscode';
 import { LineFormatter } from '../formatters/lineFormatter';
 import { TokenizerMode, TokenType } from '../language/types';
 import { getDocumentTokens } from '../providers/providerUtilities';
@@ -9,7 +16,13 @@ import { getDocumentTokens } from '../providers/providerUtilities';
 export class OnEnterFormatter implements OnTypeFormattingEditProvider {
     private readonly formatter = new LineFormatter();
 
-    public provideOnTypeFormattingEdits(document: TextDocument, position: Position, _ch: string, _options: FormattingOptions, _cancellationToken: CancellationToken): TextEdit[] {
+    public provideOnTypeFormattingEdits(
+        document: TextDocument,
+        position: Position,
+        _ch: string,
+        _options: FormattingOptions,
+        _cancellationToken: CancellationToken
+    ): TextEdit[] {
         if (position.line === 0) {
             return [];
         }

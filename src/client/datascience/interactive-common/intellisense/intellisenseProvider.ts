@@ -7,7 +7,16 @@ import { inject, injectable } from 'inversify';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, CompletionItem, Event, EventEmitter, SignatureHelpContext, TextDocumentContentChangeEvent, Uri } from 'vscode';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    CompletionItem,
+    Event,
+    EventEmitter,
+    SignatureHelpContext,
+    TextDocumentContentChangeEvent,
+    Uri
+} from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient';
 import { concatMultilineStringInput } from '../../../../datascience-ui/common';
 import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
@@ -54,7 +63,10 @@ import { IntellisenseDocument } from './intellisenseDocument';
 export class IntellisenseProvider implements IInteractiveWindowListener {
     private documentPromise: Deferred<IntellisenseDocument> | undefined;
     private temporaryFile: TemporaryFile | undefined;
-    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
+    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
+        message: string;
+        payload: any;
+    }>();
     private cancellationSources: Map<string, CancellationTokenSource> = new Map<string, CancellationTokenSource>();
     private notebookIdentity: Uri | undefined;
     private potentialResource: Uri | undefined;
@@ -152,14 +164,22 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
     protected async getLanguageServer(): Promise<ILanguageServer | undefined> {
         // Resource should be our potential resource if its set. Otherwise workspace root
-        const resource = this.potentialResource || (this.workspaceService.rootPath ? Uri.parse(this.workspaceService.rootPath) : undefined);
+        const resource =
+            this.potentialResource ||
+            (this.workspaceService.rootPath ? Uri.parse(this.workspaceService.rootPath) : undefined);
 
         // Interpreter should be the interpreter currently active in the notebook
         const activeNotebook = await this.getNotebook();
-        const interpreter = activeNotebook ? activeNotebook.getMatchingInterpreter() : await this.interpreterService.getActiveInterpreter(resource);
+        const interpreter = activeNotebook
+            ? activeNotebook.getMatchingInterpreter()
+            : await this.interpreterService.getActiveInterpreter(resource);
 
         // See if the resource or the interpreter are different
-        if (resource?.toString() !== this.resource?.toString() || interpreter?.path !== this.interpreter?.path || this.languageServer === undefined) {
+        if (
+            resource?.toString() !== this.resource?.toString() ||
+            interpreter?.path !== this.interpreter?.path ||
+            this.languageServer === undefined
+        ) {
             this.resource = resource;
             this.interpreter = interpreter;
 
@@ -239,7 +259,11 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             incomplete: false
         };
     }
-    protected async provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.Hover> {
+    protected async provideHover(
+        position: monacoEditor.Position,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.Hover> {
         const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
@@ -262,7 +286,12 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
-            const result = await languageServer.provideSignatureHelp(document, docPos, token, context as SignatureHelpContext);
+            const result = await languageServer.provideSignatureHelp(
+                document,
+                docPos,
+                token,
+                context as SignatureHelpContext
+            );
             if (result) {
                 return convertToMonacoSignatureHelp(result);
             }
@@ -300,7 +329,10 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         return item;
     }
 
-    protected async handleChanges(document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]): Promise<void> {
+    protected async handleChanges(
+        document: IntellisenseDocument,
+        changes: TextDocumentContentChangeEvent[]
+    ): Promise<void> {
         // For the dot net language server, we have to send extra data to the language server
         if (document) {
             // Broadcast an update to the language server
@@ -316,7 +348,11 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         }
     }
 
-    private dispatchMessage<M extends IInteractiveWindowMapping, T extends keyof M>(_message: T, payload: any, handler: (args: M[T]) => void) {
+    private dispatchMessage<M extends IInteractiveWindowMapping, T extends keyof M>(
+        _message: T,
+        payload: any,
+        handler: (args: M[T]) => void
+    ) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }
@@ -354,8 +390,18 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 suggestions: []
             };
 
-            const lsCompletions = this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token);
-            const jupyterCompletions = this.provideJupyterCompletionItems(request.position, request.context, request.cellId, cancelSource.token);
+            const lsCompletions = this.provideCompletionItems(
+                request.position,
+                request.context,
+                request.cellId,
+                cancelSource.token
+            );
+            const jupyterCompletions = this.provideJupyterCompletionItems(
+                request.position,
+                request.context,
+                request.cellId,
+                cancelSource.token
+            );
 
             // Capture telemetry for each of the two providers.
             // Telemetry will be used to improve how we handle intellisense to improve response times for code completion.
@@ -404,13 +450,17 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private handleHoverRequest(request: IProvideHoverRequest) {
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
-        this.postTimedResponse([this.provideHover(request.position, request.cellId, cancelSource.token)], InteractiveWindowMessages.ProvideHoverResponse, h => {
-            if (h && h[0]) {
-                return { hover: h[0]!, requestId: request.requestId };
-            } else {
-                return { hover: { contents: [] }, requestId: request.requestId };
+        this.postTimedResponse(
+            [this.provideHover(request.position, request.cellId, cancelSource.token)],
+            InteractiveWindowMessages.ProvideHoverResponse,
+            h => {
+                if (h && h[0]) {
+                    return { hover: h[0]!, requestId: request.requestId };
+                } else {
+                    return { hover: { contents: [] }, requestId: request.requestId };
+                }
             }
-        });
+        );
     }
 
     private async provideJupyterCompletionItems(
@@ -449,7 +499,11 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                             endColumn: endPosition.character + 1
                         };
                         return {
-                            suggestions: convertStringsToSuggestions(jupyterResults.matches, range, jupyterResults.metadata),
+                            suggestions: convertStringsToSuggestions(
+                                jupyterResults.matches,
+                                range,
+                                jupyterResults.metadata
+                            ),
                             incomplete: false
                         };
                     }
@@ -467,7 +521,11 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         };
     }
 
-    private postTimedResponse<R, M extends IInteractiveWindowMapping, T extends keyof M>(promises: Promise<R>[], message: T, formatResponse: (val: (R | null)[]) => M[T]) {
+    private postTimedResponse<R, M extends IInteractiveWindowMapping, T extends keyof M>(
+        promises: Promise<R>[],
+        message: T,
+        formatResponse: (val: (R | null)[]) => M[T]
+    ) {
         // Time all of the promises to make sure they don't take too long.
         // Even if LS or Jupyter doesn't complete within e.g. 30s, then we should return an empty response (no point waiting that long).
         const timed = promises.map(p => waitForPromise(p, Settings.MaxIntellisenseTimeout));
@@ -481,11 +539,16 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         });
     }
 
-    private combineCompletions(list: (monacoEditor.languages.CompletionList | null)[]): monacoEditor.languages.CompletionList {
+    private combineCompletions(
+        list: (monacoEditor.languages.CompletionList | null)[]
+    ): monacoEditor.languages.CompletionList {
         // Note to self. We're eliminating duplicates ourselves. The alternative would be to
         // have more than one intellisense provider at the monaco editor level and return jupyter
         // results independently. Maybe we switch to this when jupyter resides on the react side.
-        const uniqueSuggestions: Map<string, monacoEditor.languages.CompletionItem> = new Map<string, monacoEditor.languages.CompletionItem>();
+        const uniqueSuggestions: Map<string, monacoEditor.languages.CompletionItem> = new Map<
+            string,
+            monacoEditor.languages.CompletionItem
+        >();
         list.forEach(c => {
             if (c) {
                 c.suggestions.forEach(s => {
@@ -512,7 +575,10 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 if (s && s[0]) {
                     return { signatureHelp: s[0]!, requestId: request.requestId };
                 } else {
-                    return { signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 }, requestId: request.requestId };
+                    return {
+                        signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 },
+                        requestId: request.requestId
+                    };
                 }
             }
         );
@@ -525,7 +591,9 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         }
 
         // Get the document and then pass onto the sub class
-        const document = await this.getDocument(request.cell.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.cell.file));
+        const document = await this.getDocument(
+            request.cell.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.cell.file)
+        );
         if (document) {
             const changes = document.addCell(request.fullText, request.currentText, request.cell.id);
             return this.handleChanges(document, changes);
@@ -612,7 +680,9 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
     private async getNotebook(): Promise<INotebook | undefined> {
         // First get the active server
-        const activeServer = await this.jupyterExecution.getServer(await this.interactiveWindowProvider.getNotebookOptions());
+        const activeServer = await this.jupyterExecution.getServer(
+            await this.interactiveWindowProvider.getNotebookOptions()
+        );
 
         // If that works, see if there's a matching notebook running
         if (activeServer && this.notebookIdentity) {

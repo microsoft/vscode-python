@@ -19,7 +19,12 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
     private sessionChangedEmitter = new vscode.EventEmitter<void>();
     private _role: vsls.Role = vsls.Role.None;
 
-    constructor(private liveShare: ILiveShareApi, private hostCtor: CtorType, private guestCtor: CtorType, ...args: ConstructorParameters<CtorType>) {
+    constructor(
+        private liveShare: ILiveShareApi,
+        private hostCtor: CtorType,
+        private guestCtor: CtorType,
+        ...args: ConstructorParameters<CtorType>
+    ) {
         this.ctorArgs = args;
         this.createPromise = this.createBasedOnRole(); // We need to start creation immediately or one side may call before we init.
     }
@@ -77,7 +82,10 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
             this.firstTime = false;
             api.onDidChangeSession(_a => {
                 // Dispose the object if the role changes
-                const newRole = api !== null && api.session && api.session.role === vsls.Role.Guest ? vsls.Role.Guest : vsls.Role.Host;
+                const newRole =
+                    api !== null && api.session && api.session.role === vsls.Role.Guest
+                        ? vsls.Role.Guest
+                        : vsls.Role.Host;
                 if (newRole !== role) {
                     obj.dispose().ignoreErrors();
                 }

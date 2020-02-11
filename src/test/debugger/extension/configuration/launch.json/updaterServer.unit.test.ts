@@ -13,7 +13,10 @@ import { DocumentManager } from '../../../../../client/common/application/docume
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../../client/common/application/workspace';
 import { PythonDebugConfigurationService } from '../../../../../client/debugger/extension/configuration/debugConfigurationService';
-import { LaunchJsonUpdaterService, LaunchJsonUpdaterServiceHelper } from '../../../../../client/debugger/extension/configuration/launch.json/updaterService';
+import {
+    LaunchJsonUpdaterService,
+    LaunchJsonUpdaterServiceHelper
+} from '../../../../../client/debugger/extension/configuration/launch.json/updaterService';
 import { IDebugConfigurationService } from '../../../../../client/debugger/extension/types';
 
 type LaunchJsonSchema = {
@@ -35,13 +38,30 @@ suite('Debugging - launch.json Updater Service', () => {
         documentManager = mock(DocumentManager);
         debugConfigService = mock(PythonDebugConfigurationService);
         sandbox.stub(LaunchJsonUpdaterServiceHelper.prototype, 'isCommaImmediatelyBeforeCursor').returns(false);
-        helper = new LaunchJsonUpdaterServiceHelper(instance(commandManager), instance(workspace), instance(documentManager), instance(debugConfigService));
+        helper = new LaunchJsonUpdaterServiceHelper(
+            instance(commandManager),
+            instance(workspace),
+            instance(documentManager),
+            instance(debugConfigService)
+        );
     });
     teardown(() => sandbox.restore());
     test('Activation will register the required commands', async () => {
-        const service = new LaunchJsonUpdaterService(instance(commandManager), [], instance(workspace), instance(documentManager), instance(debugConfigService));
+        const service = new LaunchJsonUpdaterService(
+            instance(commandManager),
+            [],
+            instance(workspace),
+            instance(documentManager),
+            instance(debugConfigService)
+        );
         await service.activate();
-        verify(commandManager.registerCommand('python.SelectAndInsertDebugConfiguration', helper.selectAndInsertDebugConfig, helper));
+        verify(
+            commandManager.registerCommand(
+                'python.SelectAndInsertDebugConfiguration',
+                helper.selectAndInsertDebugConfig,
+                helper
+            )
+        );
     });
 
     test('Configuration Array is detected as being empty', async () => {

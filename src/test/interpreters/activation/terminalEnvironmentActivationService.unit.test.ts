@@ -43,7 +43,11 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
         when(terminalFactory.getTerminalService(anything())).thenReturn(instance(terminal));
         when(fs.createTemporaryFile(anything())).thenResolve({ dispose: noop, filePath: jsonFile });
         when(terminal.sendCommand(anything(), anything(), anything(), anything())).thenResolve();
-        envActivationService = new TerminalEnvironmentActivationService(instance(terminalFactory), instance(fs), instance(envVarsProvider));
+        envActivationService = new TerminalEnvironmentActivationService(
+            instance(terminalFactory),
+            instance(fs),
+            instance(envVarsProvider)
+        );
     });
 
     [undefined, Uri.file('some Resource')].forEach(resource => {
@@ -96,7 +100,14 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                         await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
 
                         const cmd = interpreter?.path || 'python';
-                        verify(terminal.sendCommand(cmd, deepEqual([pyFile.fileToCommandArgument(), jsonFile.fileToCommandArgument()]), anything(), false)).once();
+                        verify(
+                            terminal.sendCommand(
+                                cmd,
+                                deepEqual([pyFile.fileToCommandArgument(), jsonFile.fileToCommandArgument()]),
+                                anything(),
+                                false
+                            )
+                        ).once();
                     });
                     test('Should return activated environment variables', async () => {
                         when(envVarsProvider.getCustomEnvironmentVariables(resource)).thenResolve(undefined);

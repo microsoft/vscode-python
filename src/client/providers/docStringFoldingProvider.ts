@@ -3,18 +3,35 @@
 
 'use strict';
 
-import { CancellationToken, FoldingContext, FoldingRange, FoldingRangeKind, FoldingRangeProvider, ProviderResult, Range, TextDocument } from 'vscode';
+import {
+    CancellationToken,
+    FoldingContext,
+    FoldingRange,
+    FoldingRangeKind,
+    FoldingRangeProvider,
+    ProviderResult,
+    Range,
+    TextDocument
+} from 'vscode';
 import { IterableTextRange } from '../language/iterableTextRange';
 import { IToken, TokenizerMode, TokenType } from '../language/types';
 import { getDocumentTokens } from './providerUtilities';
 
 export class DocStringFoldingProvider implements FoldingRangeProvider {
-    public provideFoldingRanges(document: TextDocument, _context: FoldingContext, _token: CancellationToken): ProviderResult<FoldingRange[]> {
+    public provideFoldingRanges(
+        document: TextDocument,
+        _context: FoldingContext,
+        _token: CancellationToken
+    ): ProviderResult<FoldingRange[]> {
         return this.getFoldingRanges(document);
     }
 
     private getFoldingRanges(document: TextDocument) {
-        const tokenCollection = getDocumentTokens(document, document.lineAt(document.lineCount - 1).range.end, TokenizerMode.CommentsAndStrings);
+        const tokenCollection = getDocumentTokens(
+            document,
+            document.lineAt(document.lineCount - 1).range.end,
+            TokenizerMode.CommentsAndStrings
+        );
         const tokens = new IterableTextRange(tokenCollection);
 
         const docStringRanges: FoldingRange[] = [];

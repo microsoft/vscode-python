@@ -4,7 +4,13 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugConfiguration, DebugSession, ProviderResult } from 'vscode';
+import {
+    DebugAdapterTracker,
+    DebugAdapterTrackerFactory,
+    DebugConfiguration,
+    DebugSession,
+    ProviderResult
+} from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
 import { IFileSystem, WriteStream } from '../../../common/platform/types';

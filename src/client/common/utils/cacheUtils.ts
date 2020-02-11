@@ -32,14 +32,19 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'))
     }
     const globalPythonPath = section.inspect<string>('pythonPath')!.globalValue || 'python';
     // Get the workspace related to this resource.
-    if (!resource || !Array.isArray(vscode.workspace.workspaceFolders) || vscode.workspace.workspaceFolders.length === 0) {
+    if (
+        !resource ||
+        !Array.isArray(vscode.workspace.workspaceFolders) ||
+        vscode.workspace.workspaceFolders.length === 0
+    ) {
         return globalPythonPath;
     }
     const folder = resource ? vscode.workspace.getWorkspaceFolder(resource) : vscode.workspace.workspaceFolders[0];
     if (!folder) {
         return globalPythonPath;
     }
-    const workspacePythonPath = vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
+    const workspacePythonPath =
+        vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
     return `${folder.uri.fsPath}-${workspacePythonPath}`;
 }
 /**
@@ -142,7 +147,12 @@ export class InMemoryInterpreterSpecificCache<T> extends InMemoryCache<T> {
     protected get store() {
         return getCacheStore(this.resource, this.vscode);
     }
-    constructor(keyPrefix: string, expiryDurationMs: number, args: [Uri | undefined, ...any[]], private readonly vscode: VSCodeType = require('vscode')) {
+    constructor(
+        keyPrefix: string,
+        expiryDurationMs: number,
+        args: [Uri | undefined, ...any[]],
+        private readonly vscode: VSCodeType = require('vscode')
+    ) {
         super(expiryDurationMs, getCacheKeyFromFunctionArgs(keyPrefix, args.slice(1)));
         this.resource = args[0];
     }

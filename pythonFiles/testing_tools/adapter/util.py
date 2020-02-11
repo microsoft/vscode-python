@@ -43,11 +43,7 @@ def group_attr_names(attrnames):
 
 
 if sys.version_info < (3,):
-
-    def _str_to_lower(value):
-        return value.decode().lower()
-
-
+    _str_to_lower = lambda val: val.decode().lower()
 else:
     _str_to_lower = str.lower
 
@@ -66,7 +62,11 @@ IS_ABS_PATH = _os_path.isabs
 PATH_JOIN = _os_path.join
 
 
-def fix_path(path, _pathsep=PATH_SEP):  # *,
+def fix_path(
+    path,
+    # *,
+    _pathsep=PATH_SEP,
+):
     """Return a platform-appropriate path for the given path."""
     if not path:
         return "."
@@ -74,7 +74,11 @@ def fix_path(path, _pathsep=PATH_SEP):  # *,
 
 
 def fix_relpath(
-    path, _fix_path=fix_path, _path_isabs=IS_ABS_PATH, _pathsep=PATH_SEP  # *,
+    path,
+    # *,
+    _fix_path=fix_path,
+    _path_isabs=IS_ABS_PATH,
+    _pathsep=PATH_SEP,
 ):
     """Return a ./-prefixed, platform-appropriate path for the given path."""
     path = _fix_path(path)
@@ -88,7 +92,8 @@ def fix_relpath(
 
 def _resolve_relpath(
     path,
-    rootdir=None,  # *,
+    rootdir=None,
+    # *,
     _path_isabs=IS_ABS_PATH,
     _normcase=NORMCASE,
     _pathsep=PATH_SEP,
@@ -119,7 +124,8 @@ def _resolve_relpath(
 
 def fix_fileid(
     fileid,
-    rootdir=None,  # *,
+    rootdir=None,
+    # *,
     normalize=False,
     strictpathsep=None,
     _pathsep=PATH_SEP,
@@ -140,7 +146,13 @@ def fix_fileid(
     # from pytest use "/" as the path separator by default.
     _fileid = fileid.replace(_pathsep, "/")
 
-    relpath = _resolve_relpath(_fileid, rootdir, _pathsep=_pathsep, **kwargs)
+    relpath = _resolve_relpath(
+        _fileid,
+        rootdir,
+        _pathsep=_pathsep,
+        # ...
+        **kwargs
+    )
     if relpath:  # Note that we treat "" here as an absolute path.
         _fileid = "./" + relpath
 

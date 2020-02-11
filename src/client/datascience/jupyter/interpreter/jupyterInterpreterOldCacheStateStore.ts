@@ -20,9 +20,14 @@ type CacheInfo = {
 export class JupyterInterpreterOldCacheStateStore {
     private readonly workspaceJupyterInterpreter: CacheInfo;
     private readonly globalJupyterInterpreter: CacheInfo;
-    constructor(@inject(IWorkspaceService) private readonly workspace: IWorkspaceService, @inject(IPersistentStateFactory) persistentStateFactory: IPersistentStateFactory) {
+    constructor(
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IPersistentStateFactory) persistentStateFactory: IPersistentStateFactory
+    ) {
         // Cache stores to keep track of jupyter interpreters found.
-        const workspaceState = persistentStateFactory.createWorkspacePersistentState<string>('DS-VSC-JupyterInterpreter');
+        const workspaceState = persistentStateFactory.createWorkspacePersistentState<string>(
+            'DS-VSC-JupyterInterpreter'
+        );
         const globalState = persistentStateFactory.createGlobalPersistentState<string>('DS-VSC-JupyterInterpreter');
         this.workspaceJupyterInterpreter = { state: workspaceState };
         this.globalJupyterInterpreter = { state: globalState };

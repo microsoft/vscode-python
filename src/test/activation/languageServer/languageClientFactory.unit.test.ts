@@ -114,7 +114,12 @@ suite('Language Server - LanguageClient Factory', () => {
         rewiremock.enable();
 
         class MockClass {
-            constructor(language: string, name: string, serverOptions: ServerOptions, clientOptions: LanguageClientOptions) {
+            constructor(
+                language: string,
+                name: string,
+                serverOptions: ServerOptions,
+                clientOptions: LanguageClientOptions
+            ) {
                 expect(language).to.be.equal('python');
                 expect(name).to.be.equal(languageClientName);
                 expect(clientOptions).to.be.deep.equal(options);
@@ -145,12 +150,21 @@ suite('Language Server - LanguageClient Factory', () => {
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, engineDllName);
         const expectedServerOptions = {
             run: { command: dotNetCommand, args: [serverModule], options: { stdio: 'pipe', env: { FOO: 'bar' } } },
-            debug: { command: dotNetCommand, args: [serverModule, '--debug'], options: { stdio: 'pipe', env: { FOO: 'bar' } } }
+            debug: {
+                command: dotNetCommand,
+                args: [serverModule, '--debug'],
+                options: { stdio: 'pipe', env: { FOO: 'bar' } }
+            }
         };
         rewiremock.enable();
 
         class MockClass {
-            constructor(language: string, name: string, serverOptions: ServerOptions, clientOptions: LanguageClientOptions) {
+            constructor(
+                language: string,
+                name: string,
+                serverOptions: ServerOptions,
+                clientOptions: LanguageClientOptions
+            ) {
                 expect(language).to.be.equal('python');
                 expect(name).to.be.equal(languageClientName);
                 expect(clientOptions).to.be.deep.equal(options);

@@ -22,7 +22,10 @@ REPORTERS = {
 
 
 def parse_args(
-    argv=sys.argv[1:], prog=sys.argv[0],
+    # the args to parse
+    argv=sys.argv[1:],
+    # the program name
+    prog=sys.argv[0],
 ):
     """
     Return the subcommand & tool to run, along with its args.
@@ -30,7 +33,9 @@ def parse_args(
     This defines the standard CLI for the different testing frameworks.
     """
     parser = argparse.ArgumentParser(
-        description="Run Python testing operations.", prog=prog,
+        description="Run Python testing operations.",
+        prog=prog,
+        # ...
     )
     cmdsubs = parser.add_subparsers(dest="cmd")
 
@@ -72,7 +77,15 @@ def parse_args(
     return tool, cmd, ns, toolargs
 
 
-def main(toolname, cmdname, subargs, toolargs, _tools=TOOLS, _reporters=REPORTERS):
+def main(
+    toolname,
+    cmdname,
+    subargs,
+    toolargs,
+    # internal args (for testing):
+    _tools=TOOLS,
+    _reporters=REPORTERS,
+):
     try:
         tool = _tools[toolname]
     except KeyError:

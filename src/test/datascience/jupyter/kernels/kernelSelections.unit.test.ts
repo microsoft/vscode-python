@@ -29,33 +29,88 @@ suite('Data Science - KernelSelections', () => {
     let pathUtils: IPathUtils;
     let fs: IFileSystem;
     let sessionManager: IJupyterSessionManager;
-    const activePython1KernelModel = { lastActivityTime: new Date(2011, 11, 10, 12, 15, 0, 0), numberOfConnections: 10, name: 'py1' };
-    const activeJuliaKernelModel = { lastActivityTime: new Date(2001, 1, 1, 12, 15, 0, 0), numberOfConnections: 10, name: 'julia' };
-    const python1KernelSpecModel = { argv: [], display_name: 'Python display name', language: PYTHON_LANGUAGE, name: 'py1', path: 'somePath', metadata: {} };
-    const python3KernelSpecModel = { argv: [], display_name: 'Python3', language: PYTHON_LANGUAGE, name: 'py3', path: 'somePath3', metadata: {} };
-    const juliaKernelSpecModel = { argv: [], display_name: 'Julia display name', language: 'julia', name: 'julia', path: 'j', metadata: {} };
+    const activePython1KernelModel = {
+        lastActivityTime: new Date(2011, 11, 10, 12, 15, 0, 0),
+        numberOfConnections: 10,
+        name: 'py1'
+    };
+    const activeJuliaKernelModel = {
+        lastActivityTime: new Date(2001, 1, 1, 12, 15, 0, 0),
+        numberOfConnections: 10,
+        name: 'julia'
+    };
+    const python1KernelSpecModel = {
+        argv: [],
+        display_name: 'Python display name',
+        language: PYTHON_LANGUAGE,
+        name: 'py1',
+        path: 'somePath',
+        metadata: {}
+    };
+    const python3KernelSpecModel = {
+        argv: [],
+        display_name: 'Python3',
+        language: PYTHON_LANGUAGE,
+        name: 'py3',
+        path: 'somePath3',
+        metadata: {}
+    };
+    const juliaKernelSpecModel = {
+        argv: [],
+        display_name: 'Julia display name',
+        language: 'julia',
+        name: 'julia',
+        path: 'j',
+        metadata: {}
+    };
     const rKernelSpecModel = { argv: [], display_name: 'R', language: 'r', name: 'r', path: 'r', metadata: {} };
 
-    const allSpecs: IJupyterKernelSpec[] = [python1KernelSpecModel, python3KernelSpecModel, juliaKernelSpecModel, rKernelSpecModel];
+    const allSpecs: IJupyterKernelSpec[] = [
+        python1KernelSpecModel,
+        python3KernelSpecModel,
+        juliaKernelSpecModel,
+        rKernelSpecModel
+    ];
 
     const allInterpreters: IInterpreterQuickPickItem[] = [
         {
             label: 'Hello1',
-            interpreter: { architecture: Architecture.Unknown, path: 'p1', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello1' },
+            interpreter: {
+                architecture: Architecture.Unknown,
+                path: 'p1',
+                sysPrefix: '',
+                sysVersion: '',
+                type: InterpreterType.Conda,
+                displayName: 'Hello1'
+            },
             path: 'p1',
             detail: '<user friendly path>',
             description: ''
         },
         {
             label: 'Hello1',
-            interpreter: { architecture: Architecture.Unknown, path: 'p2', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello2' },
+            interpreter: {
+                architecture: Architecture.Unknown,
+                path: 'p2',
+                sysPrefix: '',
+                sysVersion: '',
+                type: InterpreterType.Conda,
+                displayName: 'Hello2'
+            },
             path: 'p1',
             detail: '<user friendly path>',
             description: ''
         },
         {
             label: 'Hello1',
-            interpreter: { architecture: Architecture.Unknown, path: 'p3', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello3' },
+            interpreter: {
+                architecture: Architecture.Unknown,
+                path: 'p3',
+                sysPrefix: '',
+                sysVersion: '',
+                type: InterpreterType.Conda,
+                displayName: 'Hello3'
+            },
             path: 'p1',
             detail: '<user friendly path>',
             description: ''
@@ -70,7 +125,12 @@ suite('Data Science - KernelSelections', () => {
         pathUtils = mock(PathUtils);
         when(pathUtils.getDisplayName(anything())).thenReturn('<user friendly path>');
         when(pathUtils.getDisplayName(anything(), anything())).thenReturn('<user friendly path>');
-        kernelSelectionProvider = new KernelSelectionProvider(instance(kernelService), instance(interpreterSelector), instance(fs), instance(pathUtils));
+        kernelSelectionProvider = new KernelSelectionProvider(
+            instance(kernelService),
+            instance(interpreterSelector),
+            instance(fs),
+            instance(pathUtils)
+        );
     });
 
     test('Should return an empty list for remote kernels if there are none', async () => {
@@ -148,13 +208,15 @@ suite('Data Science - KernelSelections', () => {
         // - kernel spec display name
         // - selection = kernel model + kernel spec
         // - description = last activity and # of connections.
-        const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(item => {
-            return {
-                label: item.display_name,
-                detail: '<user friendly path>',
-                selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
-            };
-        });
+        const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(
+            item => {
+                return {
+                    label: item.display_name,
+                    detail: '<user friendly path>',
+                    selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
+                };
+            }
+        );
         const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map(item => {
             return {
                 ...item,

@@ -11,7 +11,10 @@ import '../../../common/extensions';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { JupyterInterpreterDependencyResponse, JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService';
+import {
+    JupyterInterpreterDependencyResponse,
+    JupyterInterpreterDependencyService
+} from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from './jupyterInterpreterOldCacheStateStore';
 import { JupyterInterpreterSelector } from './jupyterInterpreterSelector';
 import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
@@ -26,10 +29,12 @@ export class JupyterInterpreterService {
     }
 
     constructor(
-        @inject(JupyterInterpreterOldCacheStateStore) private readonly oldVersionCacheStateStore: JupyterInterpreterOldCacheStateStore,
+        @inject(JupyterInterpreterOldCacheStateStore)
+        private readonly oldVersionCacheStateStore: JupyterInterpreterOldCacheStateStore,
         @inject(JupyterInterpreterStateStore) private readonly interpreterSelectionState: JupyterInterpreterStateStore,
         @inject(JupyterInterpreterSelector) private readonly jupyterInterpreterSelector: JupyterInterpreterSelector,
-        @inject(JupyterInterpreterDependencyService) private readonly interpreterConfiguration: JupyterInterpreterDependencyService,
+        @inject(JupyterInterpreterDependencyService)
+        private readonly interpreterConfiguration: JupyterInterpreterDependencyService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
     /**
@@ -44,10 +49,17 @@ export class JupyterInterpreterService {
             return this._selectedInterpreter;
         }
 
-        const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: undefined, token });
+        const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
+            cancelAction: 'resolve',
+            defaultValue: undefined,
+            token
+        });
         // For backwards compatiblity check if we have a cached interpreter (older version of extension).
         // If that interpreter has everything we need then use that.
-        let interpreter = await Promise.race([this.getInterpreterFromChangeOfOlderVersionOfExtension(), resolveToUndefinedWhenCancelled]);
+        let interpreter = await Promise.race([
+            this.getInterpreterFromChangeOfOlderVersionOfExtension(),
+            resolveToUndefinedWhenCancelled
+        ]);
         if (interpreter) {
             return interpreter;
         }
@@ -68,7 +80,10 @@ export class JupyterInterpreterService {
             return;
         }
 
-        const interpreterDetails = await Promise.race([this.interpreterService.getInterpreterDetails(pythonPath, undefined), resolveToUndefinedWhenCancelled]);
+        const interpreterDetails = await Promise.race([
+            this.interpreterService.getInterpreterDetails(pythonPath, undefined),
+            resolveToUndefinedWhenCancelled
+        ]);
         if (interpreterDetails) {
             this._selectedInterpreter = interpreterDetails;
         }
@@ -84,8 +99,15 @@ export class JupyterInterpreterService {
      * @memberof JupyterInterpreterService
      */
     public async selectInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
-        const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: undefined, token });
-        const interpreter = await Promise.race([this.jupyterInterpreterSelector.selectInterpreter(), resolveToUndefinedWhenCancelled]);
+        const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
+            cancelAction: 'resolve',
+            defaultValue: undefined,
+            token
+        });
+        const interpreter = await Promise.race([
+            this.jupyterInterpreterSelector.selectInterpreter(),
+            resolveToUndefinedWhenCancelled
+        ]);
         if (!interpreter) {
             sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'notSelected' });
             return;

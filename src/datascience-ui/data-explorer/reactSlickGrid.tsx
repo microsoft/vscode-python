@@ -154,7 +154,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         if (this.containerRef.current) {
             // Compute font size. Default to 15 if not found.
-            let fontSize = parseInt(getComputedStyle(this.containerRef.current).getPropertyValue('--code-font-size'), 10);
+            let fontSize = parseInt(
+                getComputedStyle(this.containerRef.current).getPropertyValue('--code-font-size'),
+                10
+            );
             if (isNaN(fontSize)) {
                 fontSize = 15;
             }
@@ -292,7 +295,12 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
 
         return (
             <div className="outer-container">
-                <button className="react-grid-filter-button" tabIndex={0} title={this.props.filterRowsTooltip} onClick={this.clickFilterButton}>
+                <button
+                    className="react-grid-filter-button"
+                    tabIndex={0}
+                    title={this.props.filterRowsTooltip}
+                    onClick={this.clickFilterButton}
+                >
                     <span>{this.props.filterRowsText}</span>
                 </button>
                 <div className="react-grid-container" style={style} ref={this.containerRef}></div>
@@ -395,7 +403,9 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             const document = this.containerRef.current.ownerDocument;
             if (document) {
                 const cssOverrideNode = document.createElement('style');
-                const rule = `.${gridName} .slick-cell {height: ${this.getAppropiateRowHeight(this.state.fontSize)}px;}`;
+                const rule = `.${gridName} .slick-cell {height: ${this.getAppropiateRowHeight(
+                    this.state.fontSize
+                )}px;}`;
                 cssOverrideNode.setAttribute('type', 'text/css');
                 cssOverrideNode.setAttribute('rel', 'stylesheet');
                 cssOverrideNode.appendChild(document.createTextNode(rule));

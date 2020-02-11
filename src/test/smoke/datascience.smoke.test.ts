@@ -28,7 +28,14 @@ suite('Smoke Test: Interactive Window', () => {
     teardown(closeActiveWindows);
 
     test('Run Cell in interactive window', async () => {
-        const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'datascience', 'simple_note_book.py');
+        const file = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'pythonFiles',
+            'datascience',
+            'simple_note_book.py'
+        );
         const outputFile = path.join(path.dirname(file), 'ds.log');
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
@@ -44,10 +51,19 @@ suite('Smoke Test: Interactive Window', () => {
     }).timeout(timeoutForCellToRun);
 
     test('Run Cell in native editor', async () => {
-        const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'datascience', 'simple_nb.ipynb');
+        const file = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'test',
+            'pythonFiles',
+            'datascience',
+            'simple_nb.ipynb'
+        );
         const fileContents = await fs.readFile(file, { encoding: 'utf-8' });
         const outputFile = path.join(path.dirname(file), 'ds_n.log');
-        await fs.writeFile(file, fileContents.replace("'ds_n.log'", `'${outputFile.replace(/\\/g, '/')}'`), { encoding: 'utf-8' });
+        await fs.writeFile(file, fileContents.replace("'ds_n.log'", `'${outputFile.replace(/\\/g, '/')}'`), {
+            encoding: 'utf-8'
+        });
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }

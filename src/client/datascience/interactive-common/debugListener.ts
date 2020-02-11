@@ -14,7 +14,10 @@ import { InteractiveWindowMessages } from './interactiveWindowTypes';
 // tslint:disable: no-any
 @injectable()
 export class DebugListener implements IInteractiveWindowListener {
-    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
+    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
+        message: string;
+        payload: any;
+    }>();
     constructor(@inject(IDebugService) private debugService: IDebugService) {
         this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this));
     }

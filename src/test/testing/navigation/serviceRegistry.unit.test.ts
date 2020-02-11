@@ -15,7 +15,12 @@ import { TestNavigatorHelper } from '../../../client/testing/navigation/helper';
 import { registerTypes } from '../../../client/testing/navigation/serviceRegistry';
 import { TestSuiteCodeNavigator } from '../../../client/testing/navigation/suiteNavigator';
 import { TestFileSymbolProvider } from '../../../client/testing/navigation/symbolProvider';
-import { ITestCodeNavigator, ITestCodeNavigatorCommandHandler, ITestNavigatorHelper, NavigableItemType } from '../../../client/testing/navigation/types';
+import {
+    ITestCodeNavigator,
+    ITestCodeNavigatorCommandHandler,
+    ITestNavigatorHelper,
+    NavigableItemType
+} from '../../../client/testing/navigation/types';
 
 use(chaisAsPromised);
 
@@ -27,10 +32,33 @@ suite('Unit Tests - Navigation Service Registry', () => {
         registerTypes(instance(serviceManager));
 
         verify(serviceManager.addSingleton<ITestNavigatorHelper>(ITestNavigatorHelper, TestNavigatorHelper)).once();
-        verify(serviceManager.addSingleton<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler, TestCodeNavigatorCommandHandler)).once();
-        verify(serviceManager.addSingleton<ITestCodeNavigator>(ITestCodeNavigator, TestFileCodeNavigator, NavigableItemType.testFile)).once();
-        verify(serviceManager.addSingleton<ITestCodeNavigator>(ITestCodeNavigator, TestFunctionCodeNavigator, NavigableItemType.testFunction)).once();
-        verify(serviceManager.addSingleton<ITestCodeNavigator>(ITestCodeNavigator, TestSuiteCodeNavigator, NavigableItemType.testSuite)).once();
+        verify(
+            serviceManager.addSingleton<ITestCodeNavigatorCommandHandler>(
+                ITestCodeNavigatorCommandHandler,
+                TestCodeNavigatorCommandHandler
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<ITestCodeNavigator>(
+                ITestCodeNavigator,
+                TestFileCodeNavigator,
+                NavigableItemType.testFile
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<ITestCodeNavigator>(
+                ITestCodeNavigator,
+                TestFunctionCodeNavigator,
+                NavigableItemType.testFunction
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<ITestCodeNavigator>(
+                ITestCodeNavigator,
+                TestSuiteCodeNavigator,
+                NavigableItemType.testSuite
+            )
+        ).once();
         verify(serviceManager.addSingleton<IDocumentSymbolProvider>(anything(), TestFileSymbolProvider, 'test')).once();
     });
 });

@@ -54,7 +54,9 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             this.getInterpretersImplementation(resource)
                 .then(async items => {
                     await this.cacheInterpreters(items, resource);
-                    traceVerbose(`Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`);
+                    traceVerbose(
+                        `Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`
+                    );
                     traceVerbose(`Interpreters returned by ${this.name} are ${JSON.stringify(items)}`);
                     sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
                         locator: this.name,
@@ -63,13 +65,20 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                     deferred!.resolve(items);
                 })
                 .catch(ex => {
-                    sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, { locator: this.name }, ex);
+                    sendTelemetryEvent(
+                        EventName.PYTHON_INTERPRETER_DISCOVERY,
+                        stopWatch.elapsedTime,
+                        { locator: this.name },
+                        ex
+                    );
                     deferred!.reject(ex);
                 });
 
             this.locating.fire(deferred.promise);
         }
-        deferred.promise.then(items => this._hasInterpreters.resolve(items.length > 0)).catch(_ => this._hasInterpreters.resolve(false));
+        deferred.promise
+            .then(items => this._hasInterpreters.resolve(items.length > 0))
+            .catch(_ => this._hasInterpreters.resolve(false));
 
         if (deferred.completed) {
             return deferred.promise;

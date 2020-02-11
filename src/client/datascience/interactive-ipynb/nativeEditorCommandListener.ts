@@ -25,17 +25,36 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     ) {}
 
     public register(commandManager: ICommandManager): void {
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorUndoCells, () => this.undoCells()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRedoCells, () => this.redoCells()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, () => this.interruptKernel()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel()));
         this.disposableRegistry.push(
-            commandManager.registerCommand(Commands.OpenNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.openNotebook(file))
+            commandManager.registerCommand(Commands.NotebookEditorUndoCells, () => this.undoCells())
         );
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRunAllCells, () => this.runAllCells()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRunSelectedCell, () => this.runSelectedCell()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow()));
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.NotebookEditorRedoCells, () => this.redoCells())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, () => this.interruptKernel())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(
+                Commands.OpenNotebook,
+                (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.openNotebook(file)
+            )
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.NotebookEditorRunAllCells, () => this.runAllCells())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.NotebookEditorRunSelectedCell, () => this.runSelectedCell())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow())
+        );
     }
 
     private runAllCells() {

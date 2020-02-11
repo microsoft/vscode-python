@@ -14,7 +14,10 @@ import { PythonExecutionService } from '../../../../client/common/process/python
 import { IPythonExecutionService } from '../../../../client/common/process/types';
 import { JupyterCommands } from '../../../../client/datascience/constants';
 import { InterpreterJupyterNotebookCommand } from '../../../../client/datascience/jupyter/interpreter/jupyterCommand';
-import { JupyterCommandFinder, ModuleExistsStatus } from '../../../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
+import {
+    JupyterCommandFinder,
+    ModuleExistsStatus
+} from '../../../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
 import { JupyterCommandFinderInterpreterExecutionService } from '../../../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterExecutionService';
 import { IJupyterCommand, IJupyterSubCommandExecutionService } from '../../../../client/datascience/types';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
@@ -39,7 +42,10 @@ suite('Data Science - Jupyter CommandInterpreterExecutionService', () => {
         when(execFactory.create(anything())).thenResolve(instance(execService));
         // tslint:disable-next-line: no-any
         (instance(execService) as any).then = undefined;
-        when(cmdFinder.findBestCommand(JupyterCommands.KernelSpecCommand)).thenResolve({ status: ModuleExistsStatus.Found, command: instance(kernelSpecCmd) });
+        when(cmdFinder.findBestCommand(JupyterCommands.KernelSpecCommand)).thenResolve({
+            status: ModuleExistsStatus.Found,
+            command: instance(kernelSpecCmd)
+        });
 
         jupyterInterpreterExecutionService = new JupyterCommandFinderInterpreterExecutionService(
             instance(cmdFinder),
@@ -59,14 +65,26 @@ suite('Data Science - Jupyter CommandInterpreterExecutionService', () => {
         const kernelSpecs = {
             K1: {
                 resource_dir: 'dir1',
-                spec: { argv: [], display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } }
+                spec: {
+                    argv: [],
+                    display_name: 'disp1',
+                    language: PYTHON_LANGUAGE,
+                    metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } }
+                }
             },
             K2: {
                 resource_dir: 'dir2',
-                spec: { argv: [], display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } }
+                spec: {
+                    argv: [],
+                    display_name: 'disp2',
+                    language: PYTHON_LANGUAGE,
+                    metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } }
+                }
             }
         };
-        when(kernelSpecCmd.exec(deepEqual(['list', '--json']), anything())).thenResolve({ stdout: JSON.stringify({ kernelspecs: kernelSpecs }) });
+        when(kernelSpecCmd.exec(deepEqual(['list', '--json']), anything())).thenResolve({
+            stdout: JSON.stringify({ kernelspecs: kernelSpecs })
+        });
         when(fs.fileExists(path.join('dir1', 'kernel.json'))).thenResolve(false);
         when(fs.fileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
         const specs = await jupyterInterpreterExecutionService.getKernelSpecs();

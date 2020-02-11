@@ -33,7 +33,11 @@ suite('DataScience - PreWarm Env Vars', () => {
         envActivationService = mock(EnvironmentActivationService);
         jupyterInterpreter = mock(JupyterInterpreterService);
         when(jupyterInterpreter.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
-        activationService = new PreWarmActivatedJupyterEnvironmentVariables(instance(envActivationService), instance(jupyterInterpreter), []);
+        activationService = new PreWarmActivatedJupyterEnvironmentVariables(
+            instance(envActivationService),
+            instance(jupyterInterpreter),
+            []
+        );
     });
     test('Should not pre-warm env variables if there is no jupyter interpreter', async () => {
         const envActivated = createDeferred<string>();

@@ -169,7 +169,10 @@ export namespace vscMockExtHostedTypes {
         translate(change: { lineDelta?: number; characterDelta?: number }): Position;
         // @ts-ignore
         translate(lineDelta?: number, characterDelta?: number): Position;
-        translate(lineDeltaOrChange: number | { lineDelta?: number; characterDelta?: number }, characterDelta: number = 0): Position {
+        translate(
+            lineDeltaOrChange: number | { lineDelta?: number; characterDelta?: number },
+            characterDelta: number = 0
+        ): Position {
             if (lineDeltaOrChange === null || characterDelta === null) {
                 throw illegalArgument();
             }
@@ -181,7 +184,8 @@ export namespace vscMockExtHostedTypes {
                 lineDelta = lineDeltaOrChange;
             } else {
                 lineDelta = typeof lineDeltaOrChange.lineDelta === 'number' ? lineDeltaOrChange.lineDelta : 0;
-                characterDelta = typeof lineDeltaOrChange.characterDelta === 'number' ? lineDeltaOrChange.characterDelta : 0;
+                characterDelta =
+                    typeof lineDeltaOrChange.characterDelta === 'number' ? lineDeltaOrChange.characterDelta : 0;
             }
 
             if (lineDelta === 0 && characterDelta === 0) {
@@ -193,7 +197,10 @@ export namespace vscMockExtHostedTypes {
         with(change: { line?: number; character?: number }): Position;
         // @ts-ignore
         with(line?: number, character?: number): Position;
-        with(lineOrChange: number | { line?: number; character?: number }, character: number = this.character): Position {
+        with(
+            lineOrChange: number | { line?: number; character?: number },
+            character: number = this.character
+        ): Position {
             if (lineOrChange === null || character === null) {
                 throw illegalArgument();
             }
@@ -243,11 +250,21 @@ export namespace vscMockExtHostedTypes {
 
         constructor(start: Position, end: Position);
         constructor(startLine: number, startColumn: number, endLine: number, endColumn: number);
-        constructor(startLineOrStart: number | Position, startColumnOrEnd: number | Position, endLine?: number, endColumn?: number) {
+        constructor(
+            startLineOrStart: number | Position,
+            startColumnOrEnd: number | Position,
+            endLine?: number,
+            endColumn?: number
+        ) {
             let start: Position;
             let end: Position;
 
-            if (typeof startLineOrStart === 'number' && typeof startColumnOrEnd === 'number' && typeof endLine === 'number' && typeof endColumn === 'number') {
+            if (
+                typeof startLineOrStart === 'number' &&
+                typeof startColumnOrEnd === 'number' &&
+                typeof endLine === 'number' &&
+                typeof endColumn === 'number'
+            ) {
                 start = new Position(startLineOrStart, startColumnOrEnd);
                 end = new Position(endLine, endColumn);
             } else if (startLineOrStart instanceof Position && startColumnOrEnd instanceof Position) {
@@ -378,11 +395,21 @@ export namespace vscMockExtHostedTypes {
 
         constructor(anchor: Position, active: Position);
         constructor(anchorLine: number, anchorColumn: number, activeLine: number, activeColumn: number);
-        constructor(anchorLineOrAnchor: number | Position, anchorColumnOrActive: number | Position, activeLine?: number, activeColumn?: number) {
+        constructor(
+            anchorLineOrAnchor: number | Position,
+            anchorColumnOrActive: number | Position,
+            activeLine?: number,
+            activeColumn?: number
+        ) {
             let anchor: Position;
             let active: Position;
 
-            if (typeof anchorLineOrAnchor === 'number' && typeof anchorColumnOrActive === 'number' && typeof activeLine === 'number' && typeof activeColumn === 'number') {
+            if (
+                typeof anchorLineOrAnchor === 'number' &&
+                typeof anchorColumnOrActive === 'number' &&
+                typeof activeLine === 'number' &&
+                typeof activeColumn === 'number'
+            ) {
                 anchor = new Position(anchorLineOrAnchor, anchorColumnOrActive);
                 active = new Position(activeLine, activeColumn);
             } else if (anchorLineOrAnchor instanceof Position && anchorColumnOrActive instanceof Position) {
@@ -530,7 +557,11 @@ export namespace vscMockExtHostedTypes {
         deleteFile(_uri: vscode.Uri, _options?: { recursive?: boolean; ignoreIfNotExists?: boolean }): void {
             throw new Error('Method not implemented.');
         }
-        renameFile(_oldUri: vscode.Uri, _newUri: vscode.Uri, _options?: { overwrite?: boolean; ignoreIfExists?: boolean }): void {
+        renameFile(
+            _oldUri: vscode.Uri,
+            _newUri: vscode.Uri,
+            _options?: { overwrite?: boolean; ignoreIfExists?: boolean }
+        ): void {
             throw new Error('Method not implemented.');
         }
 
@@ -647,7 +678,10 @@ export namespace vscMockExtHostedTypes {
             return this;
         }
 
-        appendPlaceholder(value: string | ((snippet: SnippetString) => any), number: number = this._tabstop++): SnippetString {
+        appendPlaceholder(
+            value: string | ((snippet: SnippetString) => any),
+            number: number = this._tabstop++
+        ): SnippetString {
             if (typeof value === 'function') {
                 const nested = new SnippetString();
                 nested._tabstop = this._tabstop;
@@ -805,7 +839,10 @@ export namespace vscMockExtHostedTypes {
         public contents: vscode.MarkdownString[] | vscode.MarkedString[];
         public range: Range;
 
-        constructor(contents: vscode.MarkdownString | vscode.MarkedString | vscode.MarkdownString[] | vscode.MarkedString[], range?: Range) {
+        constructor(
+            contents: vscode.MarkdownString | vscode.MarkedString | vscode.MarkdownString[] | vscode.MarkedString[],
+            range?: Range
+        ) {
             if (!contents) {
                 throw new Error('Illegal argument, contents must be defined');
             }
@@ -882,7 +919,13 @@ export namespace vscMockExtHostedTypes {
 
         constructor(name: string, kind: SymbolKind, containerName: string, location: Location);
         constructor(name: string, kind: SymbolKind, range: Range, uri?: vscUri.URI, containerName?: string);
-        constructor(name: string, kind: SymbolKind, rangeOrContainer: string | Range, locationOrUri?: Location | vscUri.URI, containerName?: string) {
+        constructor(
+            name: string,
+            kind: SymbolKind,
+            rangeOrContainer: string | Range,
+            locationOrUri?: Location | vscUri.URI,
+            containerName?: string
+        ) {
             this.name = name;
             this.kind = kind;
             // @ts-ignore
@@ -962,7 +1005,9 @@ export namespace vscMockExtHostedTypes {
         }
 
         public contains(other: CodeActionKind): boolean {
-            return this.value === other.value || vscMockStrings.startsWith(other.value, this.value + CodeActionKind.sep);
+            return (
+                this.value === other.value || vscMockStrings.startsWith(other.value, this.value + CodeActionKind.sep)
+            );
         }
     }
 
@@ -1366,7 +1411,11 @@ export namespace vscMockExtHostedTypes {
 
         constructor(process: string, options?: vscode.ProcessExecutionOptions);
         constructor(process: string, args: string[], options?: vscode.ProcessExecutionOptions);
-        constructor(process: string, varg1?: string[] | vscode.ProcessExecutionOptions, varg2?: vscode.ProcessExecutionOptions) {
+        constructor(
+            process: string,
+            varg1?: string[] | vscode.ProcessExecutionOptions,
+            varg2?: vscode.ProcessExecutionOptions
+        ) {
             if (typeof process !== 'string') {
                 throw illegalArgument('process');
             }
@@ -1443,8 +1492,16 @@ export namespace vscMockExtHostedTypes {
         private _options: vscode.ShellExecutionOptions;
 
         constructor(commandLine: string, options?: vscode.ShellExecutionOptions);
-        constructor(command: string | vscode.ShellQuotedString, args: (string | vscode.ShellQuotedString)[], options?: vscode.ShellExecutionOptions);
-        constructor(arg0: string | vscode.ShellQuotedString, arg1?: vscode.ShellExecutionOptions | (string | vscode.ShellQuotedString)[], arg2?: vscode.ShellExecutionOptions) {
+        constructor(
+            command: string | vscode.ShellQuotedString,
+            args: (string | vscode.ShellQuotedString)[],
+            options?: vscode.ShellExecutionOptions
+        );
+        constructor(
+            arg0: string | vscode.ShellQuotedString,
+            arg1?: vscode.ShellExecutionOptions | (string | vscode.ShellQuotedString)[],
+            arg2?: vscode.ShellExecutionOptions
+        ) {
             if (Array.isArray(arg1)) {
                 if (!arg0) {
                     throw illegalArgument("command can't be undefined or null");
@@ -1553,7 +1610,13 @@ export namespace vscMockExtHostedTypes {
         private _presentationOptions: vscode.TaskPresentationOptions;
         private _runOptions: vscode.RunOptions;
 
-        constructor(definition: vscode.TaskDefinition, name: string, source: string, execution?: ProcessExecution | ShellExecution, problemMatchers?: string | string[]);
+        constructor(
+            definition: vscode.TaskDefinition,
+            name: string,
+            source: string,
+            execution?: ProcessExecution | ShellExecution,
+            problemMatchers?: string | string[]
+        );
         constructor(
             definition: vscode.TaskDefinition,
             scope: vscode.TaskScope.Global | vscode.TaskScope.Workspace | vscode.WorkspaceFolder,
@@ -1788,7 +1851,10 @@ export namespace vscMockExtHostedTypes {
 
         constructor(label: string, collapsibleState?: vscode.TreeItemCollapsibleState);
         constructor(resourceUri: vscUri.URI, collapsibleState?: vscode.TreeItemCollapsibleState);
-        constructor(arg1: string | vscUri.URI, public collapsibleState: vscode.TreeItemCollapsibleState = TreeItemCollapsibleState.None) {
+        constructor(
+            arg1: string | vscUri.URI,
+            public collapsibleState: vscode.TreeItemCollapsibleState = TreeItemCollapsibleState.None
+        ) {
             if (arg1 instanceof vscUri.URI) {
                 this.resourceUri = arg1;
             } else {
@@ -1877,7 +1943,13 @@ export namespace vscMockExtHostedTypes {
     export class SourceBreakpoint extends Breakpoint {
         readonly location: Location;
 
-        constructor(location: Location, enabled?: boolean, condition?: string, hitCondition?: string, logMessage?: string) {
+        constructor(
+            location: Location,
+            enabled?: boolean,
+            condition?: string,
+            hitCondition?: string,
+            logMessage?: string
+        ) {
             super(enabled, condition, hitCondition, logMessage);
             if (location === null) {
                 throw illegalArgument('location');
@@ -1889,7 +1961,13 @@ export namespace vscMockExtHostedTypes {
     export class FunctionBreakpoint extends Breakpoint {
         readonly functionName: string;
 
-        constructor(functionName: string, enabled?: boolean, condition?: string, hitCondition?: string, logMessage?: string) {
+        constructor(
+            functionName: string,
+            enabled?: boolean,
+            condition?: string,
+            hitCondition?: string,
+            logMessage?: string
+        ) {
             super(enabled, condition, hitCondition, logMessage);
             if (!functionName) {
                 throw illegalArgument('functionName');

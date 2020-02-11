@@ -34,7 +34,12 @@ suite('Terminal', () => {
             when(manager.onDidOpenTerminal).thenReturn(onDidOpenTerminalEventEmitter.event);
             when(activator.activateEnvironmentInTerminal(anything(), anything())).thenResolve();
 
-            autoActivation = new TerminalAutoActivation(instance(manager), [], instance(activator), instance(resourceService));
+            autoActivation = new TerminalAutoActivation(
+                instance(manager),
+                [],
+                instance(activator),
+                instance(resourceService)
+            );
 
             terminal = {
                 dispose: noop,

@@ -7,7 +7,12 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { RegistryImplementation } from '../../../client/common/platform/registry';
 import { IRegistry } from '../../../client/common/platform/types';
-import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import {
+    IInterpreterLocatorService,
+    INTERPRETER_LOCATOR_SERVICE,
+    InterpreterType,
+    PythonInterpreter
+} from '../../../client/interpreter/contracts';
 import { getOSType, OSType } from '../../common';
 import { TEST_TIMEOUT } from '../../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../../initialize';
@@ -21,7 +26,10 @@ suite('Python interpreter locator service', () => {
         this.timeout(getOSType() === OSType.Windows ? TEST_TIMEOUT * 7 : TEST_TIMEOUT * 2);
         await initialize();
         initializeDI();
-        const locator = ioc.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
+        const locator = ioc.serviceContainer.get<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            INTERPRETER_LOCATOR_SERVICE
+        );
         interpreters = await locator.getInterpreters();
     });
 
@@ -48,7 +56,9 @@ suite('Python interpreter locator service', () => {
 
     test('Ensure we are getting conda environment created using command `conda create -n "test_env1" -y python`', async () => {
         // Created in CI using command `conda create -n "test_env1" -y python`
-        const filteredInterpreters = interpreters.filter(i => i.envName === 'test_env1' && i.type === InterpreterType.Conda);
+        const filteredInterpreters = interpreters.filter(
+            i => i.envName === 'test_env1' && i.type === InterpreterType.Conda
+        );
         expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment test_env1 not found');
     });
     test('Ensure we are getting conda environment created using command `conda create -p "./test_env2`"', async () => {
@@ -76,7 +86,9 @@ suite('Python interpreter locator service', () => {
 
     test('Ensure we are getting the base conda environment', async () => {
         // Base conda environment in CI
-        const filteredInterpreters = interpreters.filter(i => (i.envName === 'base' || i.envName === 'miniconda') && i.type === InterpreterType.Conda);
+        const filteredInterpreters = interpreters.filter(
+            i => (i.envName === 'base' || i.envName === 'miniconda') && i.type === InterpreterType.Conda
+        );
         expect(filteredInterpreters.length).to.be.greaterThan(0, 'Base environment not found');
     });
 });

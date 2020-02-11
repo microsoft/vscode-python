@@ -13,7 +13,10 @@ import { Common, Interpreters } from '../../common/utils/localize';
 @injectable()
 export class InterpreterSelectionTip implements IExtensionSingleActivationService {
     private readonly storage: IPersistentState<boolean>;
-    constructor(@inject(IApplicationShell) private readonly shell: IApplicationShell, @inject(IPersistentStateFactory) private readonly factory: IPersistentStateFactory) {
+    constructor(
+        @inject(IApplicationShell) private readonly shell: IApplicationShell,
+        @inject(IPersistentStateFactory) private readonly factory: IPersistentStateFactory
+    ) {
         this.storage = this.factory.createGlobalPersistentState('InterpreterSelectionTip', false);
     }
     public async activate(): Promise<void> {

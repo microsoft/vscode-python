@@ -14,7 +14,13 @@ import { Disposable, Uri } from 'vscode';
 
 import { Identifiers } from '../../client/datascience/constants';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
-import { IDataViewer, IDataViewerProvider, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../client/datascience/types';
+import {
+    IDataViewer,
+    IDataViewerProvider,
+    IInteractiveWindowProvider,
+    IJupyterExecution,
+    INotebook
+} from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 import { noop } from '../core';
@@ -75,7 +81,19 @@ suite('DataScience DataViewer tests', () => {
     });
 
     async function createDataViewer(variable: string, type: string): Promise<IDataViewer> {
-        return dataProvider.create({ name: variable, value: '', supportsDataExplorer: true, type, size: 0, truncated: true, shape: '', count: 0 }, notebook!);
+        return dataProvider.create(
+            {
+                name: variable,
+                value: '',
+                supportsDataExplorer: true,
+                type,
+                size: 0,
+                truncated: true,
+                shape: '',
+                count: 0
+            },
+            notebook!
+        );
     }
 
     async function injectCode(code: string): Promise<void> {
@@ -102,7 +120,10 @@ suite('DataScience DataViewer tests', () => {
     }
 
     // tslint:disable-next-line:no-any
-    function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
+    function runMountedTest(
+        name: string,
+        testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>
+    ) {
         test(name, async () => {
             const wrapper = mountWebView();
             try {
@@ -116,7 +137,11 @@ suite('DataScience DataViewer tests', () => {
         });
     }
 
-    function sortRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, sortCol: string, sortAsc: boolean): void {
+    function sortRows(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+        sortCol: string,
+        sortAsc: boolean
+    ): void {
         // Cause our sort
         const mainPanelWrapper = wrapper.find(MainPanel);
         assert.ok(mainPanelWrapper && mainPanelWrapper.length > 0, 'Grid not found to sort on');
@@ -128,7 +153,12 @@ suite('DataScience DataViewer tests', () => {
             const cols = reactGrid.state.grid.getColumns();
             const col = cols.find(c => c.field === sortCol);
             assert.ok(col, `${sortCol} is not a column of the grid`);
-            reactGrid.sort(new Slick.EventData(), { sortCol: col, sortAsc, multiColumnSort: false, grid: reactGrid.state.grid });
+            reactGrid.sort(new Slick.EventData(), {
+                sortCol: col,
+                sortAsc,
+                multiColumnSort: false,
+                grid: reactGrid.state.grid
+            });
         }
     }
 

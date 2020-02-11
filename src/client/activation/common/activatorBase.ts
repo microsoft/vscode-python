@@ -31,7 +31,12 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../interpreter/contracts';
-import { ILanguageServerActivator, ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
+import {
+    ILanguageServerActivator,
+    ILanguageServerDownloader,
+    ILanguageServerFolderService,
+    ILanguageServerManager
+} from '../types';
 
 /**
  * Starts the language server managers per workspaces (currently one for first workspace).
@@ -79,7 +84,10 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
     public handleOpen(document: TextDocument): void {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
-            languageClient.sendNotification(vscodeLanguageClient.DidOpenTextDocumentNotification.type, languageClient.code2ProtocolConverter.asOpenTextDocumentParams(document));
+            languageClient.sendNotification(
+                vscodeLanguageClient.DidOpenTextDocumentNotification.type,
+                languageClient.code2ProtocolConverter.asOpenTextDocumentParams(document)
+            );
         }
     }
 
@@ -93,11 +101,20 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         }
     }
 
-    public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
+    public provideRenameEdits(
+        document: TextDocument,
+        position: Position,
+        newName: string,
+        token: CancellationToken
+    ): ProviderResult<WorkspaceEdit> {
         return this.handleProvideRenameEdits(document, position, newName, token);
     }
 
-    public provideDefinition(document: TextDocument, position: Position, token: CancellationToken): ProviderResult<Location | Location[] | LocationLink[]> {
+    public provideDefinition(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken
+    ): ProviderResult<Location | Location[] | LocationLink[]> {
         return this.handleProvideDefinition(document, position, token);
     }
 
@@ -105,7 +122,12 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         return this.handleProvideHover(document, position, token);
     }
 
-    public provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): ProviderResult<Location[]> {
+    public provideReferences(
+        document: TextDocument,
+        position: Position,
+        context: ReferenceContext,
+        token: CancellationToken
+    ): ProviderResult<Location[]> {
         return this.handleProvideReferences(document, position, context, token);
     }
 
@@ -122,15 +144,26 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         return this.handleProvideCodeLenses(document, token);
     }
 
-    public provideDocumentSymbols(document: TextDocument, token: CancellationToken): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
+    public provideDocumentSymbols(
+        document: TextDocument,
+        token: CancellationToken
+    ): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
         return this.handleProvideDocumentSymbols(document, token);
     }
 
-    public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken, context: SignatureHelpContext): ProviderResult<SignatureHelp> {
+    public provideSignatureHelp(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        context: SignatureHelpContext
+    ): ProviderResult<SignatureHelp> {
         return this.handleProvideSignatureHelp(document, position, token, context);
     }
 
-    protected async ensureLanguageServerFileIsAvailable(resource: Resource, fileName: string): Promise<string | undefined> {
+    protected async ensureLanguageServerFileIsAvailable(
+        resource: Resource,
+        fileName: string
+    ): Promise<string | undefined> {
         const settings = this.configurationService.getSettings(resource);
         if (!settings.downloadLanguageServer) {
             return;
@@ -151,7 +184,12 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         }
     }
 
-    private async handleProvideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): Promise<WorkspaceEdit | undefined> {
+    private async handleProvideRenameEdits(
+        document: TextDocument,
+        position: Position,
+        newName: string,
+        token: CancellationToken
+    ): Promise<WorkspaceEdit | undefined> {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
             const args: vscodeLanguageClient.RenameParams = {
@@ -166,7 +204,11 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         }
     }
 
-    private async handleProvideDefinition(document: TextDocument, position: Position, token: CancellationToken): Promise<Location | Location[] | LocationLink[] | undefined> {
+    private async handleProvideDefinition(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken
+    ): Promise<Location | Location[] | LocationLink[] | undefined> {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
             const args: vscodeLanguageClient.TextDocumentPositionParams = {
@@ -180,7 +222,11 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         }
     }
 
-    private async handleProvideHover(document: TextDocument, position: Position, token: CancellationToken): Promise<Hover | undefined> {
+    private async handleProvideHover(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken
+    ): Promise<Hover | undefined> {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
             const args: vscodeLanguageClient.TextDocumentPositionParams = {
@@ -194,7 +240,12 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         }
     }
 
-    private async handleProvideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): Promise<Location[] | undefined> {
+    private async handleProvideReferences(
+        document: TextDocument,
+        position: Position,
+        context: ReferenceContext,
+        token: CancellationToken
+    ): Promise<Location[] | undefined> {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
             const args: vscodeLanguageClient.ReferenceParams = {
@@ -213,7 +264,10 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         }
     }
 
-    private async handleProvideCodeLenses(document: TextDocument, token: CancellationToken): Promise<CodeLens[] | undefined> {
+    private async handleProvideCodeLenses(
+        document: TextDocument,
+        token: CancellationToken
+    ): Promise<CodeLens[] | undefined> {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
             const args: vscodeLanguageClient.CodeLensParams = {
@@ -242,13 +296,20 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         }
     }
 
-    private async handleProvideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[] | DocumentSymbol[] | undefined> {
+    private async handleProvideDocumentSymbols(
+        document: TextDocument,
+        token: CancellationToken
+    ): Promise<SymbolInformation[] | DocumentSymbol[] | undefined> {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
             const args: vscodeLanguageClient.DocumentSymbolParams = {
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document)
             };
-            const result = await languageClient.sendRequest(vscodeLanguageClient.DocumentSymbolRequest.type, args, token);
+            const result = await languageClient.sendRequest(
+                vscodeLanguageClient.DocumentSymbolRequest.type,
+                args,
+                token
+            );
             if (result && result.length) {
                 // tslint:disable-next-line: no-any
                 if ((result[0] as any).range) {
@@ -276,7 +337,11 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
                 position: languageClient.code2ProtocolConverter.asPosition(position)
             };
-            const result = await languageClient.sendRequest(vscodeLanguageClient.SignatureHelpRequest.type, args, token);
+            const result = await languageClient.sendRequest(
+                vscodeLanguageClient.SignatureHelpRequest.type,
+                args,
+                token
+            );
             if (result) {
                 return languageClient.protocol2CodeConverter.asSignatureHelp(result);
             }

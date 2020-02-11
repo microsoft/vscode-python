@@ -36,7 +36,10 @@ export class LinterManager implements ILinterManager {
     private configService: IConfigurationService;
     private checkedForInstalledLinters = new Set<string>();
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer, @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+    ) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         // Note that we use unit tests to ensure all the linters are here.
         this.linters = [
@@ -104,7 +107,12 @@ export class LinterManager implements ILinterManager {
         }
     }
 
-    public async createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer, resource?: Uri): Promise<ILinter> {
+    public async createLinter(
+        product: Product,
+        outputChannel: OutputChannel,
+        serviceContainer: IServiceContainer,
+        resource?: Uri
+    ): Promise<ILinter> {
         if (!(await this.isLintingEnabled(true, resource))) {
             return new DisabledLinter(this.configService);
         }

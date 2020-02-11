@@ -6,13 +6,23 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
 import { Identifiers } from '../../client/datascience/constants';
 import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
-import { ICell, IJupyterKernelSpec, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../client/datascience/types';
+import {
+    ICell,
+    IJupyterKernelSpec,
+    INotebook,
+    INotebookCompletion,
+    INotebookExecutionLogger,
+    INotebookServer,
+    InterruptResult
+} from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { noop } from '../core';
 
 export class MockJupyterNotebook implements INotebook {
-    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>().event;
+    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
+        IJupyterKernelSpec | LiveKernelModel
+    >().event;
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
     constructor(private owner: INotebookServer) {
         noop();
@@ -37,7 +47,11 @@ export class MockJupyterNotebook implements INotebook {
         return Promise.resolve({});
     }
 
-    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken): Promise<INotebookCompletion> {
+    public async getCompletion(
+        _cellCode: string,
+        _offsetInCode: number,
+        _cancelToken?: CancellationToken
+    ): Promise<INotebookCompletion> {
         throw new Error('Method not implemented');
     }
     public execute(_code: string, _f: string, _line: number): Promise<ICell[]> {

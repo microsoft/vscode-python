@@ -25,7 +25,9 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
-        @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner
+        @inject(IPythonExtensionBanner)
+        @named(BANNER_NAME_LS_SURVEY)
+        private readonly surveyBanner: IPythonExtensionBanner
     ) {}
 
     public dispose() {

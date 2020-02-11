@@ -108,7 +108,10 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
 
         // Log telemetry about number of rows
         try {
-            sendTelemetryEvent(Telemetry.ShowDataViewer, 0, { rows: output.rowCount ? output.rowCount : 0, columns: output.columns ? output.columns.length : 0 });
+            sendTelemetryEvent(Telemetry.ShowDataViewer, 0, {
+                rows: output.rowCount ? output.rowCount : 0,
+                columns: output.columns ? output.columns.length : 0
+            });
 
             // Count number of rows to fetch so can send telemetry on how long it took.
             this.pendingRowsCount = output.rowCount ? output.rowCount : 0;
@@ -122,7 +125,12 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
     private async getAllRows() {
         return this.wrapRequest(async () => {
             if (this.variable && this.variable.rowCount && this.notebook) {
-                const allRows = await this.variableManager.getDataFrameRows(this.variable, this.notebook, 0, this.variable.rowCount);
+                const allRows = await this.variableManager.getDataFrameRows(
+                    this.variable,
+                    this.notebook,
+                    0,
+                    this.variable.rowCount
+                );
                 this.pendingRowsCount = 0;
                 return this.postMessage(DataViewerMessages.GetAllRowsResponse, allRows);
             }
@@ -132,8 +140,17 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
     private getRowChunk(request: IGetRowsRequest) {
         return this.wrapRequest(async () => {
             if (this.variable && this.variable.rowCount && this.notebook) {
-                const rows = await this.variableManager.getDataFrameRows(this.variable, this.notebook, request.start, Math.min(request.end, this.variable.rowCount));
-                return this.postMessage(DataViewerMessages.GetRowsResponse, { rows, start: request.start, end: request.end });
+                const rows = await this.variableManager.getDataFrameRows(
+                    this.variable,
+                    this.notebook,
+                    request.start,
+                    Math.min(request.end, this.variable.rowCount)
+                );
+                return this.postMessage(DataViewerMessages.GetRowsResponse, {
+                    rows,
+                    start: request.start,
+                    end: request.end
+                });
             }
         });
     }

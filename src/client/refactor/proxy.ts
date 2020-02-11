@@ -21,7 +21,12 @@ export class RefactorProxy extends Disposable {
     private _commandResolve?: (value?: any | PromiseLike<any>) => void;
     private _commandReject!: (reason?: any) => void;
     private initialized!: Deferred<void>;
-    constructor(extensionDir: string, _pythonSettings: IPythonSettings, private workspaceRoot: string, private serviceContainer: IServiceContainer) {
+    constructor(
+        extensionDir: string,
+        _pythonSettings: IPythonSettings,
+        private workspaceRoot: string,
+        private serviceContainer: IServiceContainer
+    ) {
         super(() => {});
         this._extensionDir = extensionDir;
     }
@@ -46,7 +51,13 @@ export class RefactorProxy extends Disposable {
 
         return offset - winEols;
     }
-    public rename<T>(document: TextDocument, name: string, filePath: string, range: Range, options?: TextEditorOptions): Promise<T> {
+    public rename<T>(
+        document: TextDocument,
+        name: string,
+        filePath: string,
+        range: Range,
+        options?: TextEditorOptions
+    ): Promise<T> {
         if (!options) {
             options = window.activeTextEditor!.options;
         }
@@ -61,7 +72,13 @@ export class RefactorProxy extends Disposable {
 
         return this.sendCommand<T>(JSON.stringify(command));
     }
-    public extractVariable<T>(document: TextDocument, name: string, filePath: string, range: Range, options?: TextEditorOptions): Promise<T> {
+    public extractVariable<T>(
+        document: TextDocument,
+        name: string,
+        filePath: string,
+        range: Range,
+        options?: TextEditorOptions
+    ): Promise<T> {
         if (!options) {
             options = window.activeTextEditor!.options;
         }
@@ -76,12 +93,21 @@ export class RefactorProxy extends Disposable {
         };
         return this.sendCommand<T>(JSON.stringify(command));
     }
-    public extractMethod<T>(document: TextDocument, name: string, filePath: string, range: Range, options?: TextEditorOptions): Promise<T> {
+    public extractMethod<T>(
+        document: TextDocument,
+        name: string,
+        filePath: string,
+        range: Range,
+        options?: TextEditorOptions
+    ): Promise<T> {
         if (!options) {
             options = window.activeTextEditor!.options;
         }
         // Ensure last line is an empty line
-        if (!document.lineAt(document.lineCount - 1).isEmptyOrWhitespace && range.start.line === document.lineCount - 1) {
+        if (
+            !document.lineAt(document.lineCount - 1).isEmptyOrWhitespace &&
+            range.start.line === document.lineCount - 1
+        ) {
             return Promise.reject<T>('Missing blank line at the end of document (PEP8).');
         }
         const command = {
@@ -106,7 +132,9 @@ export class RefactorProxy extends Disposable {
         });
     }
     private async initialize(): Promise<void> {
-        const pythonProc = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(this.workspaceRoot) });
+        const pythonProc = await this.serviceContainer
+            .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+            .create({ resource: Uri.file(this.workspaceRoot) });
         this.initialized = createDeferred<void>();
         const args = ['refactor.py', this.workspaceRoot];
         const cwd = path.join(this._extensionDir, 'pythonFiles');

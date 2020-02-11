@@ -40,7 +40,9 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         dataScienceSettings.setup(d => d.enabled).returns(() => true);
         pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-        commandManager.setup(c => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve());
+        commandManager
+            .setup(c => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve());
         debugService.setup(d => d.activeDebugSession).returns(() => undefined);
 
         codeLensProvider = new DataScienceCodeLensProvider(
@@ -130,7 +132,9 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
             .setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher)))
             .returns(() => targetCodeWatcher.object)
             .verifiable(TypeMoq.Times.exactly(3));
-        documentManager.setup(d => d.textDocuments).returns(() => [document.object, document2.object, document3.object]);
+        documentManager
+            .setup(d => d.textDocuments)
+            .returns(() => [document.object, document2.object, document3.object]);
 
         codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         codeLensProvider.provideCodeLenses(document2.object, tokenSource.token);

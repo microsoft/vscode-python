@@ -9,7 +9,12 @@ import { deepEqual, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { CancellationTokenSource, OutputChannel, Uri, ViewColumn } from 'vscode';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
-import { ExecutionFactoryCreateWithEnvironmentOptions, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../../../client/common/process/types';
+import {
+    ExecutionFactoryCreateWithEnvironmentOptions,
+    IPythonExecutionFactory,
+    IPythonExecutionService,
+    SpawnOptions
+} from '../../../../client/common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { TestDiscoveredTestParser } from '../../../../client/testing/common/services/discoveredTestParser';
 import { TestsDiscoveryService } from '../../../../client/testing/common/services/discovery';
@@ -74,7 +79,9 @@ suite('Unit Tests - Common Discovery', () => {
 
         when(executionFactory.createActivatedEnvironment(deepEqual(creationOptions))).thenResolve(execService.object);
         const executionResult = { stdout: discoveredTests };
-        execService.setup(e => e.exec(typemoq.It.isValue([pythonFile, ...options.args]), typemoq.It.isValue(spawnOptions))).returns(() => Promise.resolve(executionResult));
+        execService
+            .setup(e => e.exec(typemoq.It.isValue([pythonFile, ...options.args]), typemoq.It.isValue(spawnOptions)))
+            .returns(() => Promise.resolve(executionResult));
 
         const result = await discovery.exec(options);
 

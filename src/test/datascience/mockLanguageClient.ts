@@ -47,7 +47,12 @@ export class MockLanguageClient extends LanguageClient {
     private code2Protocol: MockCode2ProtocolConverter;
     private protocol2Code: MockProtocol2CodeConverter;
 
-    public constructor(name: string, serverOptions: ServerOptions, clientOptions: LanguageClientOptions, forceDebug?: boolean) {
+    public constructor(
+        name: string,
+        serverOptions: ServerOptions,
+        clientOptions: LanguageClientOptions,
+        forceDebug?: boolean
+    ) {
         (LanguageClient.prototype as any).checkVersion = noop;
         super(name, serverOptions, clientOptions, forceDebug);
         this.contents = '';
@@ -79,7 +84,11 @@ export class MockLanguageClient extends LanguageClient {
         throw new Error('Method not implemented.');
     }
     public sendRequest<R, E, RO>(type: RequestType0<R, E, RO>, token?: CancellationToken | undefined): Thenable<R>;
-    public sendRequest<P, R, E, RO>(type: RequestType<P, R, E, RO>, params: P, token?: CancellationToken | undefined): Thenable<R>;
+    public sendRequest<P, R, E, RO>(
+        type: RequestType<P, R, E, RO>,
+        params: P,
+        token?: CancellationToken | undefined
+    ): Thenable<R>;
     public sendRequest<R>(method: string, token?: CancellationToken | undefined): Thenable<R>;
     public sendRequest<R>(method: string, param: any, token?: CancellationToken | undefined): Thenable<R>;
     public sendRequest(_method: any, _param?: any, _token?: any): Thenable<any> {
@@ -238,7 +247,11 @@ export class MockLanguageClient extends LanguageClient {
     }
 
     private createTextLine(line: string, index: number, prevLine: IntellisenseLine | undefined): IntellisenseLine {
-        return new IntellisenseLine(line, index, prevLine ? prevLine.offset + prevLine.rangeIncludingLineBreak.end.character : 0);
+        return new IntellisenseLine(
+            line,
+            index,
+            prevLine ? prevLine.offset + prevLine.rangeIncludingLineBreak.end.character : 0
+        );
     }
 
     private getOffset(position: Position): number {

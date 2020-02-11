@@ -43,7 +43,8 @@ suite('Formatting - OnEnter provider', () => {
 
     test('Formatting line with unknown neighboring tokens', () => testFormattingAtPosition(10, 0, 'if 1 <= x:'));
 
-    test('Formatting method definition with arguments', () => testFormattingAtPosition(11, 0, 'def __init__(self, age=23)'));
+    test('Formatting method definition with arguments', () =>
+        testFormattingAtPosition(11, 0, 'def __init__(self, age=23)'));
 
     test('Formatting space after open brace', () => testFormattingAtPosition(12, 0, 'while (1)'));
 
@@ -51,13 +52,25 @@ suite('Formatting - OnEnter provider', () => {
 
     function testFormattingAtPosition(line: number, character: number, expectedFormattedString?: string): void {
         const token = new CancellationTokenSource().token;
-        const edits = formatter.provideOnTypeFormattingEdits(document, new Position(line, character), '\n', { insertSpaces: true, tabSize: 2 }, token);
+        const edits = formatter.provideOnTypeFormattingEdits(
+            document,
+            new Position(line, character),
+            '\n',
+            { insertSpaces: true, tabSize: 2 },
+            token
+        );
         expect(edits).to.be.lengthOf(1);
         expect(edits[0].newText).to.be.equal(expectedFormattedString);
     }
     function doesNotFormat(line: number, character: number): void {
         const token = new CancellationTokenSource().token;
-        const edits = formatter.provideOnTypeFormattingEdits(document, new Position(line, character), '\n', { insertSpaces: true, tabSize: 2 }, token);
+        const edits = formatter.provideOnTypeFormattingEdits(
+            document,
+            new Position(line, character),
+            '\n',
+            { insertSpaces: true, tabSize: 2 },
+            token
+        );
         expect(edits).to.be.lengthOf(0);
     }
 });

@@ -66,13 +66,19 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     public asCloseTextDocumentParams(_textDocument: code.TextDocument): proto.DidCloseTextDocumentParams {
         throw new Error('Method not implemented.');
     }
-    public asSaveTextDocumentParams(_textDocument: code.TextDocument, _includeContent?: boolean | undefined): proto.DidSaveTextDocumentParams {
+    public asSaveTextDocumentParams(
+        _textDocument: code.TextDocument,
+        _includeContent?: boolean | undefined
+    ): proto.DidSaveTextDocumentParams {
         throw new Error('Method not implemented.');
     }
     public asWillSaveTextDocumentParams(_event: code.TextDocumentWillSaveEvent): proto.WillSaveTextDocumentParams {
         throw new Error('Method not implemented.');
     }
-    public asTextDocumentPositionParams(_textDocument: code.TextDocument, _position: code.Position): proto.TextDocumentPositionParams {
+    public asTextDocumentPositionParams(
+        _textDocument: code.TextDocument,
+        _position: code.Position
+    ): proto.TextDocumentPositionParams {
         return {
             textDocument: {
                 uri: _textDocument.uri.fsPath
@@ -83,7 +89,11 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
             }
         };
     }
-    public asCompletionParams(_textDocument: code.TextDocument, _position: code.Position, _context: code.CompletionContext): proto.CompletionParams {
+    public asCompletionParams(
+        _textDocument: code.TextDocument,
+        _position: code.Position,
+        _context: code.CompletionContext
+    ): proto.CompletionParams {
         const triggerKind = _context.triggerKind as number;
         return {
             textDocument: {
@@ -131,7 +141,11 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     public asTextEdit(_edit: code.TextEdit): proto.TextEdit {
         throw new Error('Method not implemented.');
     }
-    public asReferenceParams(_textDocument: code.TextDocument, _position: code.Position, _options: { includeDeclaration: boolean }): proto.ReferenceParams {
+    public asReferenceParams(
+        _textDocument: code.TextDocument,
+        _position: code.Position,
+        _options: { includeDeclaration: boolean }
+    ): proto.ReferenceParams {
         throw new Error('Method not implemented.');
     }
     public asCodeActionContext(_context: code.CodeActionContext): proto.CodeActionContext {

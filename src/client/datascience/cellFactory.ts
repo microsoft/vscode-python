@@ -13,7 +13,13 @@ import { noop } from '../common/utils/misc';
 import { CellMatcher } from './cellMatcher';
 import { CellState, ICell } from './types';
 
-function generateCodeCell(code: string[], file: string, line: number, id: string, magicCommandsAsComments: boolean): ICell {
+function generateCodeCell(
+    code: string[],
+    file: string,
+    line: number,
+    id: string,
+    magicCommandsAsComments: boolean
+): ICell {
     // Code cells start out with just source and no outputs.
     return {
         data: createCodeCell(code, magicCommandsAsComments),
@@ -34,7 +40,14 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
     };
 }
 
-export function generateCells(settings: IDataScienceSettings | undefined, code: string, file: string, line: number, splitMarkdown: boolean, id: string): ICell[] {
+export function generateCells(
+    settings: IDataScienceSettings | undefined,
+    code: string,
+    file: string,
+    line: number,
+    splitMarkdown: boolean,
+    id: string
+): ICell[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
     const split = code.splitLines({ trim: false });
     const firstLine = split[0];
@@ -58,7 +71,13 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
             // Make sure if we split, the second cell has a new id. It's a new submission.
             return [
                 generateMarkdownCell(split.slice(0, firstNonMarkdown), file, line, id),
-                generateCodeCell(split.slice(firstNonMarkdown), file, line + firstNonMarkdown, uuid(), magicCommandsAsComments)
+                generateCodeCell(
+                    split.slice(firstNonMarkdown),
+                    file,
+                    line + firstNonMarkdown,
+                    uuid(),
+                    magicCommandsAsComments
+                )
             ];
         } else {
             // Just a single markdown cell

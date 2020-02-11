@@ -22,7 +22,8 @@ interface IStyleInjectorState {
     knownDark?: boolean;
 }
 
-export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleInjectorState> implements IMessageHandler {
+export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleInjectorState>
+    implements IMessageHandler {
     constructor(props: IStyleInjectorProps) {
         super(props);
         this.state = { rootCss: undefined, theme: undefined };

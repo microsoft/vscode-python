@@ -6,7 +6,11 @@
 import { inject, injectable } from 'inversify';
 import { IWorkspaceService } from '../../common/application/types';
 import { IServiceContainer } from '../../ioc/types';
-import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, StableLanguageServerPackageRepository } from '../common/packageRepository';
+import {
+    BetaLanguageServerPackageRepository,
+    DailyLanguageServerPackageRepository,
+    StableLanguageServerPackageRepository
+} from '../common/packageRepository';
 
 @injectable()
 export class StableNodeLanguageServerPackageRepository extends StableLanguageServerPackageRepository {

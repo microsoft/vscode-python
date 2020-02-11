@@ -11,7 +11,12 @@ export function activateCodeLenses(
     serviceContainer: IServiceContainer
 ): vscode.Disposable {
     const disposables: vscode.Disposable[] = [];
-    const codeLensProvider = new TestFileCodeLensProvider(onDidChange, symbolProvider, testCollectionStorage, serviceContainer);
+    const codeLensProvider = new TestFileCodeLensProvider(
+        onDidChange,
+        symbolProvider,
+        testCollectionStorage,
+        serviceContainer
+    );
     disposables.push(vscode.languages.registerCodeLensProvider(PYTHON, codeLensProvider));
 
     return {

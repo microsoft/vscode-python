@@ -14,8 +14,18 @@ import { IApplicationShell, ICommandManager, IDocumentManager } from '../../clie
 import { Commands, EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
 import { ProcessService } from '../../client/common/process/proc';
-import { IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
-import { IConfigurationService, IDisposableRegistry, IEditorUtils, IPythonSettings, ISortImportSettings } from '../../client/common/types';
+import {
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService
+} from '../../client/common/process/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IEditorUtils,
+    IPythonSettings,
+    ISortImportSettings
+} from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { IServiceContainer } from '../../client/ioc/types';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
@@ -61,7 +71,13 @@ suite('Import Sort Provider', () => {
 
     test('Ensure command is registered', () => {
         commandManager
-            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Sort_Imports), TypeMoq.It.isAny(), TypeMoq.It.isValue(sortProvider)))
+            .setup(c =>
+                c.registerCommand(
+                    TypeMoq.It.isValue(Commands.Sort_Imports),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isValue(sortProvider)
+                )
+            )
             .verifiable(TypeMoq.Times.once());
 
         sortProvider.registerCommands();
@@ -306,12 +322,24 @@ suite('Import Sort Provider', () => {
 
         const expectedArgs = [tmpFile.filePath, '--diff', '1', '2'];
         processService
-            .setup(p => p.exec(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined })))
+            .setup(p =>
+                p.exec(
+                    TypeMoq.It.isValue('CUSTOM_ISORT'),
+                    TypeMoq.It.isValue(expectedArgs),
+                    TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined })
+                )
+            )
             .returns(() => Promise.resolve({ stdout: 'DIFF' }))
             .verifiable(TypeMoq.Times.once());
         const expectedEdit = new WorkspaceEdit();
         editorUtils
-            .setup(e => e.getWorkspaceEditsFromPatch(TypeMoq.It.isValue('Hello'), TypeMoq.It.isValue('DIFF'), TypeMoq.It.isAny()))
+            .setup(e =>
+                e.getWorkspaceEditsFromPatch(
+                    TypeMoq.It.isValue('Hello'),
+                    TypeMoq.It.isValue('DIFF'),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => expectedEdit)
             .verifiable(TypeMoq.Times.once());
 
@@ -372,12 +400,20 @@ suite('Import Sort Provider', () => {
         const importScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'sortImports.py');
         const expectedArgs = [importScript, tmpFile.filePath, '--diff', '1', '2'];
         processExeService
-            .setup(p => p.exec(TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined })))
+            .setup(p =>
+                p.exec(TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined }))
+            )
             .returns(() => Promise.resolve({ stdout: 'DIFF' }))
             .verifiable(TypeMoq.Times.once());
         const expectedEdit = new WorkspaceEdit();
         editorUtils
-            .setup(e => e.getWorkspaceEditsFromPatch(TypeMoq.It.isValue('Hello'), TypeMoq.It.isValue('DIFF'), TypeMoq.It.isAny()))
+            .setup(e =>
+                e.getWorkspaceEditsFromPatch(
+                    TypeMoq.It.isValue('Hello'),
+                    TypeMoq.It.isValue('DIFF'),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => expectedEdit)
             .verifiable(TypeMoq.Times.once());
 

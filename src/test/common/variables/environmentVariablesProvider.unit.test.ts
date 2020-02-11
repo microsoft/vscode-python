@@ -42,7 +42,14 @@ suite('Multiroot Environment Variables Provider', () => {
 
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         when(workspace.onDidChangeConfiguration).thenReturn(noop as any);
-        provider = new EnvironmentVariablesProvider(instance(envVarsService), [], instance(platform), instance(workspace), instance(configuration), instance(currentProcess));
+        provider = new EnvironmentVariablesProvider(
+            instance(envVarsService),
+            [],
+            instance(platform),
+            instance(workspace),
+            instance(configuration),
+            instance(currentProcess)
+        );
 
         clearCache();
     });

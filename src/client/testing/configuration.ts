@@ -11,7 +11,12 @@ import { EventName } from '../telemetry/constants';
 import { TestConfiguringTelemetry, TestTool } from '../telemetry/types';
 import { BufferedTestConfigSettingsService } from './common/services/configSettingService';
 import { ITestsHelper, UnitTestProduct } from './common/types';
-import { ITestConfigSettingsService, ITestConfigurationManager, ITestConfigurationManagerFactory, ITestConfigurationService } from './types';
+import {
+    ITestConfigSettingsService,
+    ITestConfigurationManager,
+    ITestConfigurationManagerFactory,
+    ITestConfigurationService
+} from './types';
 
 @injectable()
 export class UnitTestConfigurationService implements ITestConfigurationService {
@@ -29,10 +34,17 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
         enabledCount += settings.testing.nosetestsEnabled ? 1 : 0;
         enabledCount += settings.testing.unittestEnabled ? 1 : 0;
         if (enabledCount > 1) {
-            return this._promptToEnableAndConfigureTestFramework(wkspace, 'Enable only one of the test frameworks (unittest, pytest or nosetest).', true);
+            return this._promptToEnableAndConfigureTestFramework(
+                wkspace,
+                'Enable only one of the test frameworks (unittest, pytest or nosetest).',
+                true
+            );
         } else {
             const option = 'Enable and configure a Test Framework';
-            const item = await this.appShell.showInformationMessage('No test framework configured (unittest, pytest or nosetest)', option);
+            const item = await this.appShell.showInformationMessage(
+                'No test framework configured (unittest, pytest or nosetest)',
+                option
+            );
             if (item === option) {
                 return this._promptToEnableAndConfigureTestFramework(wkspace);
             }
@@ -114,7 +126,9 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
             const helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
             telemetryProps.tool = helper.parseProviderName(selectedTestRunner) as TestTool;
             const delayed = new BufferedTestConfigSettingsService();
-            const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory);
+            const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(
+                ITestConfigurationManagerFactory
+            );
             const configMgr = factory.create(wkspace, selectedTestRunner, delayed);
             if (enableOnly) {
                 await configMgr.enable();

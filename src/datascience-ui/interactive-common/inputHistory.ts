@@ -40,7 +40,10 @@ export class InputHistory {
 
         // Only skip adding a dupe if it's the same as the top item. Otherwise
         // add it as normal.
-        this.historyStack = this.last === 0 && this.historyStack.length > 0 && this.historyStack[this.last] === code ? this.historyStack : [code, ...this.historyStack];
+        this.historyStack =
+            this.last === 0 && this.historyStack.length > 0 && this.historyStack[this.last] === code
+                ? this.historyStack
+                : [code, ...this.historyStack];
 
         // Position is more complicated. If we typed something start over
         if (typed) {

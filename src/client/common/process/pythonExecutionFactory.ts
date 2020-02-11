@@ -47,18 +47,27 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
     ) {}
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
-        const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
+        const pythonPath = options.pythonPath
+            ? options.pythonPath
+            : this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
-            return new WindowsStorePythonProcess(this.serviceContainer, processService, pythonPath, this.windowsStoreInterpreter);
+            return new WindowsStorePythonProcess(
+                this.serviceContainer,
+                processService,
+                pythonPath,
+                this.windowsStoreInterpreter
+            );
         }
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
-        const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
+        const pythonPath = options.pythonPath
+            ? options.pythonPath
+            : this.configService.getSettings(options.resource).pythonPath;
         const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
         const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -84,7 +93,13 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true)
             ]);
 
-            const daemon = new PythonDaemonExecutionServicePool(logger, disposables, { ...options, pythonPath }, activatedProc!, activatedEnvVars);
+            const daemon = new PythonDaemonExecutionServicePool(
+                logger,
+                disposables,
+                { ...options, pythonPath },
+                activatedProc!,
+                activatedEnvVars
+            );
             await daemon.initialize();
             disposables.push(daemon);
             return daemon;
@@ -104,14 +119,25 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return activatedProcPromise;
         });
     }
-    public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
-        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter, options.allowEnvironmentFetchExceptions);
+    public async createActivatedEnvironment(
+        options: ExecutionFactoryCreateWithEnvironmentOptions
+    ): Promise<IPythonExecutionService> {
+        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(
+            options.resource,
+            options.interpreter,
+            options.allowEnvironmentFetchExceptions
+        );
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
         if (!hasEnvVars) {
-            return this.create({ resource: options.resource, pythonPath: options.interpreter ? options.interpreter.path : undefined });
+            return this.create({
+                resource: options.resource,
+                pythonPath: options.interpreter ? options.interpreter.path : undefined
+            });
         }
-        const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
+        const pythonPath = options.interpreter
+            ? options.interpreter.path
+            : this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
@@ -121,8 +147,14 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
     // Not using this function for now because there are breaking issues with conda run (conda 4.8, PVSC 2020.1).
     // See https://github.com/microsoft/vscode-python/issues/9490
-    public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
-        const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
+    public async createCondaExecutionService(
+        pythonPath: string,
+        processService?: IProcessService,
+        resource?: Uri
+    ): Promise<CondaExecutionService | undefined> {
+        const processServicePromise = processService
+            ? Promise.resolve(processService)
+            : this.processServiceFactory.create(resource);
         const [condaVersion, condaEnvironment, condaFile, procService] = await Promise.all([
             this.condaService.getCondaVersion(),
             this.condaService.getCondaEnvironment(pythonPath),
@@ -137,7 +169,13 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 procService.on('exec', processLogger.logProcess.bind(processLogger));
                 this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procService);
             }
-            return new CondaExecutionService(this.serviceContainer, procService, pythonPath, condaFile, condaEnvironment);
+            return new CondaExecutionService(
+                this.serviceContainer,
+                procService,
+                pythonPath,
+                condaFile,
+                condaEnvironment
+            );
         }
 
         return Promise.resolve(undefined);

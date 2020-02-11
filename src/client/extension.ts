@@ -69,11 +69,25 @@ import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
-import { IDebugAdapterDescriptorFactory, IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
+import {
+    IDebugAdapterDescriptorFactory,
+    IDebugConfigurationService,
+    IDebuggerBanner
+} from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
+import {
+    AutoSelectionRule,
+    IInterpreterAutoSelectionRule,
+    IInterpreterAutoSelectionService
+} from './interpreter/autoSelection/types';
 import { IInterpreterSelector } from './interpreter/configuration/types';
-import { ICondaService, IInterpreterLocatorProgressHandler, IInterpreterLocatorProgressService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
+import {
+    ICondaService,
+    IInterpreterLocatorProgressHandler,
+    IInterpreterLocatorProgressService,
+    IInterpreterService,
+    PythonInterpreter
+} from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
@@ -141,7 +155,10 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     if (!isTestExecution()) {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: Move this down to right before durations.endActivateTime is set.
-        sendStartupTelemetry(Promise.all([activationDeferred.promise, activationPromise]), serviceContainer).ignoreErrors();
+        sendStartupTelemetry(
+            Promise.all([activationDeferred.promise, activationPromise]),
+            serviceContainer
+        ).ignoreErrors();
     }
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -178,7 +195,11 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     await terminalProvider.initialize(window.activeTerminal);
     context.subscriptions.push(terminalProvider);
 
-    context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), { providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports] }));
+    context.subscriptions.push(
+        languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {
+            providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports]
+        })
+    );
 
     serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach(debugConfigProvider => {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider));
@@ -221,7 +242,11 @@ function displayProgress(promise: Promise<any>) {
     window.withProgress(progressOptions, () => promise);
 }
 
-function registerServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
+function registerServices(
+    context: ExtensionContext,
+    serviceManager: ServiceManager,
+    serviceContainer: ServiceContainer
+) {
     serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
     serviceManager.addSingletonInstance<IServiceManager>(IServiceManager, serviceManager);
     serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, context.subscriptions);
@@ -257,7 +282,11 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     activationRegisterTypes(serviceManager, languageServerType);
 }
 
-async function initializeServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {
+async function initializeServices(
+    context: ExtensionContext,
+    serviceManager: ServiceManager,
+    serviceContainer: ServiceContainer
+) {
     const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     await abExperiments.activate();
     const selector = serviceContainer.get<IInterpreterSelector>(IInterpreterSelector);
@@ -316,7 +345,10 @@ function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IService
 }
 
 function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: IServiceContainer) {
-    const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, AutoSelectionRule.workspaceVirtualEnvs);
+    const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(
+        IInterpreterAutoSelectionRule,
+        AutoSelectionRule.workspaceVirtualEnvs
+    );
     const interpreter = workspaceInterpreterSelector.getPreviouslyAutoSelectedInterpreter(resource);
     return interpreter ? interpreter.path : undefined;
 }
@@ -338,7 +370,9 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-    const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
+    const mainWorkspaceUri = workspaceService.hasWorkspaceFolders
+        ? workspaceService.workspaceFolders![0].uri
+        : undefined;
     const settings = configurationService.getSettings(mainWorkspaceUri);
     const [condaVersion, interpreter, interpreters] = await Promise.all([
         condaLocator
@@ -357,7 +391,8 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const usingAutoSelectedWorkspaceInterpreter = preferredWorkspaceInterpreter
         ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer)
         : false;
-    const hasPython3 = interpreters!.filter(item => (item && item.version ? item.version.major === 3 : false)).length > 0;
+    const hasPython3 =
+        interpreters!.filter(item => (item && item.version ? item.version.major === 3 : false)).length > 0;
 
     return {
         condaVersion,
@@ -376,7 +411,9 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
 // error handling
 
 function handleError(ex: Error) {
-    notifyUser("Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information.");
+    notifyUser(
+        "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
+    );
     traceError('extension activation failed', ex);
     sendErrorTelemetry(ex).ignoreErrors();
 }

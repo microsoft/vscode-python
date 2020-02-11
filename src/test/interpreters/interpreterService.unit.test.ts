@@ -17,11 +17,20 @@ import { IDocumentManager, IWorkspaceService } from '../../client/common/applica
 import { getArchitectureDisplayName } from '../../client/common/platform/registry';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
-import { IConfigurationService, IDisposableRegistry, IPersistentState, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IPersistentState,
+    IPersistentStateFactory,
+    IPythonSettings
+} from '../../client/common/types';
 import * as EnumEx from '../../client/common/utils/enum';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
-import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
+import {
+    IInterpreterAutoSelectionService,
+    IInterpreterAutoSeletionProxyService
+} from '../../client/interpreter/autoSelection/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
     IInterpreterDisplay,
@@ -84,7 +93,9 @@ suite('Interpreters service', () => {
 
         pythonExecutionService.setup((p: any) => p.then).returns(() => undefined);
         workspace.setup(x => x.getConfiguration('python', TypeMoq.It.isAny())).returns(() => config.object);
-        pythonExecutionFactory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
+        pythonExecutionFactory
+            .setup(f => f.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(pythonExecutionService.object));
         fileSystem.setup(fs => fs.getFileHash(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
         persistentStateFactory
             .setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -97,17 +108,42 @@ suite('Interpreters service', () => {
 
         serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, []);
         serviceManager.addSingletonInstance<IInterpreterHelper>(IInterpreterHelper, helper.object);
-        serviceManager.addSingletonInstance<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager, updater.object);
+        serviceManager.addSingletonInstance<IPythonPathUpdaterServiceManager>(
+            IPythonPathUpdaterServiceManager,
+            updater.object
+        );
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
-        serviceManager.addSingletonInstance<IInterpreterLocatorService>(IInterpreterLocatorService, locator.object, INTERPRETER_LOCATOR_SERVICE);
+        serviceManager.addSingletonInstance<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            locator.object,
+            INTERPRETER_LOCATOR_SERVICE
+        );
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
         serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
-        serviceManager.addSingletonInstance<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, virtualEnvMgr.object);
-        serviceManager.addSingletonInstance<IPersistentStateFactory>(IPersistentStateFactory, persistentStateFactory.object);
-        serviceManager.addSingletonInstance<IPythonExecutionFactory>(IPythonExecutionFactory, pythonExecutionFactory.object);
-        serviceManager.addSingletonInstance<IPythonExecutionService>(IPythonExecutionService, pythonExecutionService.object);
-        serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingletonInstance<IVirtualEnvironmentManager>(
+            IVirtualEnvironmentManager,
+            virtualEnvMgr.object
+        );
+        serviceManager.addSingletonInstance<IPersistentStateFactory>(
+            IPersistentStateFactory,
+            persistentStateFactory.object
+        );
+        serviceManager.addSingletonInstance<IPythonExecutionFactory>(
+            IPythonExecutionFactory,
+            pythonExecutionFactory.object
+        );
+        serviceManager.addSingletonInstance<IPythonExecutionService>(
+            IPythonExecutionService,
+            pythonExecutionService.object
+        );
+        serviceManager.addSingleton<IInterpreterAutoSelectionService>(
+            IInterpreterAutoSelectionService,
+            MockAutoSelectionService
+        );
+        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
+            IInterpreterAutoSeletionProxyService,
+            MockAutoSelectionService
+        );
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configService.object);
     }
     suite('Misc', () => {
@@ -294,88 +330,124 @@ suite('Interpreters service', () => {
         [undefined, Uri.file('xyz')].forEach(resource => {
             [undefined, new SemVer('1.2.3-alpha')].forEach(version => {
                 // Forced cast to ignore TS warnings.
-                (EnumEx.getNamesAndValues<Architecture>(Architecture) as ({ name: string; value: Architecture } | undefined)[]).concat(undefined).forEach(arch => {
-                    [undefined, path.join('a', 'b', 'c', 'd', 'bin', 'python')].forEach(pythonPath => {
-                        // Forced cast to ignore TS warnings.
-                        (EnumEx.getNamesAndValues<InterpreterType>(InterpreterType) as ({ name: string; value: InterpreterType } | undefined)[])
-                            .concat(undefined)
-                            .forEach(interpreterType => {
-                                [undefined, 'my env name'].forEach(envName => {
-                                    ['', 'my pipenv name'].forEach(pipEnvName => {
-                                        const testName = [
-                                            `${resource ? 'With' : 'Without'} a workspace`,
-                                            `${version ? 'with' : 'without'} version information`,
-                                            `${arch ? arch.name : 'without'} architecture`,
-                                            `${pythonPath ? 'with' : 'without'} python Path`,
-                                            `${interpreterType ? `${interpreterType.name} interpreter type` : 'without interpreter type'}`,
-                                            `${envName ? 'with' : 'without'} environment name`,
-                                            `${pipEnvName ? 'with' : 'without'} pip environment`
-                                        ].join(', ');
+                (EnumEx.getNamesAndValues<Architecture>(Architecture) as (
+                    | { name: string; value: Architecture }
+                    | undefined
+                )[])
+                    .concat(undefined)
+                    .forEach(arch => {
+                        [undefined, path.join('a', 'b', 'c', 'd', 'bin', 'python')].forEach(pythonPath => {
+                            // Forced cast to ignore TS warnings.
+                            (EnumEx.getNamesAndValues<InterpreterType>(InterpreterType) as (
+                                | { name: string; value: InterpreterType }
+                                | undefined
+                            )[])
+                                .concat(undefined)
+                                .forEach(interpreterType => {
+                                    [undefined, 'my env name'].forEach(envName => {
+                                        ['', 'my pipenv name'].forEach(pipEnvName => {
+                                            const testName = [
+                                                `${resource ? 'With' : 'Without'} a workspace`,
+                                                `${version ? 'with' : 'without'} version information`,
+                                                `${arch ? arch.name : 'without'} architecture`,
+                                                `${pythonPath ? 'with' : 'without'} python Path`,
+                                                `${
+                                                    interpreterType
+                                                        ? `${interpreterType.name} interpreter type`
+                                                        : 'without interpreter type'
+                                                }`,
+                                                `${envName ? 'with' : 'without'} environment name`,
+                                                `${pipEnvName ? 'with' : 'without'} pip environment`
+                                            ].join(', ');
 
-                                        test(testName, async () => {
-                                            const interpreterInfo: Partial<PythonInterpreter> = {
-                                                version,
-                                                architecture: arch ? arch.value : undefined,
-                                                envName,
-                                                type: interpreterType ? interpreterType.value : undefined,
-                                                path: pythonPath
-                                            };
+                                            test(testName, async () => {
+                                                const interpreterInfo: Partial<PythonInterpreter> = {
+                                                    version,
+                                                    architecture: arch ? arch.value : undefined,
+                                                    envName,
+                                                    type: interpreterType ? interpreterType.value : undefined,
+                                                    path: pythonPath
+                                                };
 
-                                            if (interpreterInfo.path && interpreterType && interpreterType.value === InterpreterType.Pipenv) {
-                                                virtualEnvMgr
-                                                    .setup(v => v.getEnvironmentName(TypeMoq.It.isValue(interpreterInfo.path!), TypeMoq.It.isAny()))
-                                                    .returns(() => Promise.resolve(pipEnvName));
+                                                if (
+                                                    interpreterInfo.path &&
+                                                    interpreterType &&
+                                                    interpreterType.value === InterpreterType.Pipenv
+                                                ) {
+                                                    virtualEnvMgr
+                                                        .setup(v =>
+                                                            v.getEnvironmentName(
+                                                                TypeMoq.It.isValue(interpreterInfo.path!),
+                                                                TypeMoq.It.isAny()
+                                                            )
+                                                        )
+                                                        .returns(() => Promise.resolve(pipEnvName));
+                                                }
+                                                if (interpreterType) {
+                                                    helper
+                                                        .setup(h =>
+                                                            h.getInterpreterTypeDisplayName(
+                                                                TypeMoq.It.isValue(interpreterType.value)
+                                                            )
+                                                        )
+                                                        .returns(() => `${interpreterType!.name}_display`);
+                                                }
+
+                                                const service = new InterpreterService(
+                                                    serviceContainer,
+                                                    hashProviderFactory.object
+                                                );
+                                                const expectedDisplayName = buildDisplayName(interpreterInfo);
+
+                                                const displayName = await service.getDisplayName(
+                                                    interpreterInfo,
+                                                    resource
+                                                );
+                                                expect(displayName).to.equal(expectedDisplayName);
+                                            });
+
+                                            function buildDisplayName(interpreterInfo: Partial<PythonInterpreter>) {
+                                                const displayNameParts: string[] = ['Python'];
+                                                const envSuffixParts: string[] = [];
+
+                                                if (interpreterInfo.version) {
+                                                    displayNameParts.push(
+                                                        `${interpreterInfo.version.major}.${interpreterInfo.version.minor}.${interpreterInfo.version.patch}`
+                                                    );
+                                                }
+                                                if (interpreterInfo.architecture) {
+                                                    displayNameParts.push(
+                                                        getArchitectureDisplayName(interpreterInfo.architecture)
+                                                    );
+                                                }
+                                                if (
+                                                    !interpreterInfo.envName &&
+                                                    interpreterInfo.path &&
+                                                    interpreterInfo.type &&
+                                                    interpreterInfo.type === InterpreterType.Pipenv &&
+                                                    pipEnvName
+                                                ) {
+                                                    // If we do not have the name of the environment, then try to get it again.
+                                                    // This can happen based on the context (i.e. resource).
+                                                    // I.e. we can determine if an environment is PipEnv only when giving it the right workspacec path (i.e. resource).
+                                                    interpreterInfo.envName = pipEnvName;
+                                                }
+                                                if (interpreterInfo.envName && interpreterInfo.envName.length > 0) {
+                                                    envSuffixParts.push(`'${interpreterInfo.envName}'`);
+                                                }
+                                                if (interpreterInfo.type) {
+                                                    envSuffixParts.push(`${interpreterType!.name}_display`);
+                                                }
+
+                                                const envSuffix =
+                                                    envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
+                                                return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
                                             }
-                                            if (interpreterType) {
-                                                helper
-                                                    .setup(h => h.getInterpreterTypeDisplayName(TypeMoq.It.isValue(interpreterType.value)))
-                                                    .returns(() => `${interpreterType!.name}_display`);
-                                            }
-
-                                            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
-                                            const expectedDisplayName = buildDisplayName(interpreterInfo);
-
-                                            const displayName = await service.getDisplayName(interpreterInfo, resource);
-                                            expect(displayName).to.equal(expectedDisplayName);
                                         });
-
-                                        function buildDisplayName(interpreterInfo: Partial<PythonInterpreter>) {
-                                            const displayNameParts: string[] = ['Python'];
-                                            const envSuffixParts: string[] = [];
-
-                                            if (interpreterInfo.version) {
-                                                displayNameParts.push(`${interpreterInfo.version.major}.${interpreterInfo.version.minor}.${interpreterInfo.version.patch}`);
-                                            }
-                                            if (interpreterInfo.architecture) {
-                                                displayNameParts.push(getArchitectureDisplayName(interpreterInfo.architecture));
-                                            }
-                                            if (
-                                                !interpreterInfo.envName &&
-                                                interpreterInfo.path &&
-                                                interpreterInfo.type &&
-                                                interpreterInfo.type === InterpreterType.Pipenv &&
-                                                pipEnvName
-                                            ) {
-                                                // If we do not have the name of the environment, then try to get it again.
-                                                // This can happen based on the context (i.e. resource).
-                                                // I.e. we can determine if an environment is PipEnv only when giving it the right workspacec path (i.e. resource).
-                                                interpreterInfo.envName = pipEnvName;
-                                            }
-                                            if (interpreterInfo.envName && interpreterInfo.envName.length > 0) {
-                                                envSuffixParts.push(`'${interpreterInfo.envName}'`);
-                                            }
-                                            if (interpreterInfo.type) {
-                                                envSuffixParts.push(`${interpreterType!.name}_display`);
-                                            }
-
-                                            const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
-                                            return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
-                                        }
                                     });
                                 });
-                            });
+                        });
                     });
-                });
             });
         });
     });

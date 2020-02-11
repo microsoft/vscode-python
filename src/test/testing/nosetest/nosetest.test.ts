@@ -13,13 +13,25 @@ import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'noseFiles');
-const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'single');
-const filesToDelete = [path.join(UNITTEST_TEST_FILES_PATH, '.noseids'), path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')];
+const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
+    EXTENSION_ROOT_DIR,
+    'src',
+    'test',
+    'pythonFiles',
+    'testFiles',
+    'single'
+);
+const filesToDelete = [
+    path.join(UNITTEST_TEST_FILES_PATH, '.noseids'),
+    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')
+];
 
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - nose - discovery against actual python process', () => {
     let ioc: UnitTestIocContainer;
-    const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
+    const configTarget = IS_MULTI_ROOT_TEST
+        ? vscode.ConfigurationTarget.WorkspaceFolder
+        : vscode.ConfigurationTarget.Workspace;
 
     suiteSetup(async () => {
         filesToDelete.forEach(file => {

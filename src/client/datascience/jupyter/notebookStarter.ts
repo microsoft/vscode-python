@@ -38,7 +38,8 @@ import { JupyterInstallError } from './jupyterInstallError';
 export class NotebookStarter implements Disposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
-        @inject(IJupyterSubCommandExecutionService) private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
+        @inject(IJupyterSubCommandExecutionService)
+        private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel
@@ -57,7 +58,11 @@ export class NotebookStarter implements Disposable {
     }
     // tslint:disable-next-line: max-func-body-length
     @reportAction(ReportableAction.NotebookStart)
-    public async start(useDefaultConfig: boolean, customCommandLine: string | undefined, cancelToken?: CancellationToken): Promise<IConnection> {
+    public async start(
+        useDefaultConfig: boolean,
+        customCommandLine: string | undefined,
+        cancelToken?: CancellationToken
+    ): Promise<IConnection> {
         traceInfo('Starting Notebook');
         // Now actually launch it
         let exitCode: number | null = 0;
@@ -78,7 +83,11 @@ export class NotebookStarter implements Disposable {
             traceInfo('Starting Jupyter Notebook');
             const stopWatch = new StopWatch();
             const [launchResult, tempDir] = await Promise.all([
-                this.jupyterInterpreterService.startNotebook(args || [], { throwOnStdErr: false, encoding: 'utf8', token: cancelToken }),
+                this.jupyterInterpreterService.startNotebook(args || [], {
+                    throwOnStdErr: false,
+                    encoding: 'utf8',
+                    token: cancelToken
+                }),
                 tempDirPromise
             ]);
 
@@ -110,7 +119,11 @@ export class NotebookStarter implements Disposable {
             }
             const connection = await Promise.race([
                 starter.waitForConnection(),
-                createPromiseFromCancellation({ cancelAction: 'reject', defaultValue: new CancellationError(), token: cancelToken })
+                createPromiseFromCancellation({
+                    cancelAction: 'reject',
+                    defaultValue: new CancellationError(),
+                    token: cancelToken
+                })
             ]);
 
             if (connection instanceof CancellationError) {
@@ -145,7 +158,10 @@ export class NotebookStarter implements Disposable {
         }
     }
 
-    private async generateDefaultArguments(useDefaultConfig: boolean, tempDirPromise: Promise<TemporaryDirectory>): Promise<string[]> {
+    private async generateDefaultArguments(
+        useDefaultConfig: boolean,
+        tempDirPromise: Promise<TemporaryDirectory>
+    ): Promise<string[]> {
         // Parallelize as much as possible.
         const promisedArgs: Promise<string>[] = [];
         promisedArgs.push(Promise.resolve('--no-browser'));
@@ -177,7 +193,11 @@ export class NotebookStarter implements Disposable {
         return [...requiredArgs, ...customArgs];
     }
 
-    private async generateArguments(useDefaultConfig: boolean, customCommandLine: string | undefined, tempDirPromise: Promise<TemporaryDirectory>): Promise<string[]> {
+    private async generateArguments(
+        useDefaultConfig: boolean,
+        customCommandLine: string | undefined,
+        tempDirPromise: Promise<TemporaryDirectory>
+    ): Promise<string[]> {
         if (!customCommandLine) {
             return this.generateDefaultArguments(useDefaultConfig, tempDirPromise);
         }

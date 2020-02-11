@@ -1,7 +1,15 @@
 'use strict';
 
 import { EOL } from 'os';
-import { CancellationToken, ParameterInformation, Position, SignatureHelp, SignatureHelpProvider, SignatureInformation, TextDocument } from 'vscode';
+import {
+    CancellationToken,
+    ParameterInformation,
+    Position,
+    SignatureHelp,
+    SignatureHelpProvider,
+    SignatureInformation,
+    TextDocument
+} from 'vscode';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -60,7 +68,8 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
                 // Some functions do not come with parameter docs
                 let label: string;
                 let documentation: string;
-                const validParamInfo = def.params && def.params.length > 0 && def.docstring && def.docstring.startsWith(`${def.name}(`);
+                const validParamInfo =
+                    def.params && def.params.length > 0 && def.docstring && def.docstring.startsWith(`${def.name}(`);
 
                 if (validParamInfo) {
                     const docLines = def.docstring.splitLines();
@@ -103,7 +112,11 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
         return new SignatureHelp();
     }
     @captureTelemetry(EventName.SIGNATURE)
-    public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken): Thenable<SignatureHelp> {
+    public provideSignatureHelp(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken
+    ): Thenable<SignatureHelp> {
         // early exit if we're in a string or comment (or in an undefined position)
         if (position.character <= 0 || isPositionInsideStringOrComment(document, position)) {
             return Promise.resolve(new SignatureHelp());

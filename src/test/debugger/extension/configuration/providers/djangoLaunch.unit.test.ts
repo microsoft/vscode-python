@@ -42,7 +42,11 @@ suite('Debugging - Configuration Provider Django', () => {
         workspaceService = mock(WorkspaceService);
         pathUtils = mock(PathUtils);
         input = mock<MultiStepInput<DebugConfigurationState>>(MultiStepInput);
-        provider = new TestDjangoLaunchDebugConfigurationProvider(instance(fs), instance(workspaceService), instance(pathUtils));
+        provider = new TestDjangoLaunchDebugConfigurationProvider(
+            instance(fs),
+            instance(workspaceService),
+            instance(pathUtils)
+        );
     });
     test("getManagePyPath should return undefined if file doesn't exist", async () => {
         const folder = { uri: Uri.parse(path.join('one', 'two')), name: '1', index: 0 };

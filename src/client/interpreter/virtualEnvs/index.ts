@@ -31,7 +31,9 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
     public async getEnvironmentName(pythonPath: string, resource?: Uri): Promise<string> {
-        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders![0].uri : undefined;
+        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders
+            ? this.workspaceService.workspaceFolders![0].uri
+            : undefined;
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
         const grandParentDirName = path.basename(path.dirname(path.dirname(pythonPath)));
@@ -77,7 +79,9 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         return pyEnvRoot && pythonPath.startsWith(pyEnvRoot);
     }
     public async isPipEnvironment(pythonPath: string, resource?: Uri) {
-        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders![0].uri : undefined;
+        const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders
+            ? this.workspaceService.workspaceFolders![0].uri
+            : undefined;
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
         if (workspaceUri && (await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath))) {
@@ -126,6 +130,9 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
     private getTerminalActivationProviderForVirtualEnvs(): ITerminalActivationCommandProvider {
         const isWindows = this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows;
         const serviceName = isWindows ? 'commandPromptAndPowerShell' : 'bashCShellFish';
-        return this.serviceContainer.get<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, serviceName);
+        return this.serviceContainer.get<ITerminalActivationCommandProvider>(
+            ITerminalActivationCommandProvider,
+            serviceName
+        );
     }
 }

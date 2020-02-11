@@ -31,7 +31,10 @@ suite('Data Science JupyterUtils', () => {
         assert.equal(expandWorkingDir('${relativeFileDirname}', 'test/xyz/bip/foo.baz', inst), relativeFileDir);
         assert.equal(expandWorkingDir('${cwd}', 'test/xyz/bip/foo.baz', inst), Uri.file('test/bar').fsPath);
         assert.equal(expandWorkingDir('${workspaceFolder}', 'test/xyz/bip/foo.baz', inst), Uri.file('test/bar').fsPath);
-        assert.equal(expandWorkingDir('${cwd}-${file}', 'bar/bip/foo.baz', inst), `${Uri.file('test/bar').fsPath}-${Uri.file('bar/bip/foo.baz').fsPath}`);
+        assert.equal(
+            expandWorkingDir('${cwd}-${file}', 'bar/bip/foo.baz', inst),
+            `${Uri.file('test/bar').fsPath}-${Uri.file('bar/bip/foo.baz').fsPath}`
+        );
     });
 
     test('modifying traceback', () => {
@@ -43,7 +46,11 @@ suite('Data Science JupyterUtils', () => {
         ];
         const file1 = 'foo.py';
         // Use a join after to make the assert show the results
-        assert.equal(after1.join('\n'), modifyTraceback(file1, 'footastic.py', 2, trace1).join('\n'), 'Syntax error failure');
+        assert.equal(
+            after1.join('\n'),
+            modifyTraceback(file1, 'footastic.py', 2, trace1).join('\n'),
+            'Syntax error failure'
+        );
         const trace2 = [
             '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
             '\u001b[1;31mException\u001b[0m                                 Traceback (most recent call last)',
@@ -72,6 +79,10 @@ suite('Data Science JupyterUtils', () => {
         ];
         const file3 = '/home/rich/Test/manualTestFile.py';
         const display3 = '~/Test/manualTestFile.py';
-        assert.equal(after3.join('\n'), modifyTraceback(file3, display3, 20, trace3).join('\n'), 'Exception unix failure');
+        assert.equal(
+            after3.join('\n'),
+            modifyTraceback(file3, display3, 20, trace3).join('\n'),
+            'Exception unix failure'
+        );
     });
 });

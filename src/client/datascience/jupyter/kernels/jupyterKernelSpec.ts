@@ -42,7 +42,9 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
 export async function parseKernelSpecs(stdout: string, fs: IFileSystem, token?: CancellationToken) {
     traceInfo('Parsing kernelspecs from jupyter');
     // This should give us back a key value pair we can parse
-    const jsOut = JSON.parse(stdout.trim()) as { kernelspecs: Record<string, { resource_dir: string; spec: Omit<Kernel.ISpecModel, 'name'> }> };
+    const jsOut = JSON.parse(stdout.trim()) as {
+        kernelspecs: Record<string, { resource_dir: string; spec: Omit<Kernel.ISpecModel, 'name'> }>;
+    };
     const kernelSpecs = jsOut.kernelspecs;
 
     const specs = await Promise.race([

@@ -89,7 +89,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     constructor(props: IMonacoEditorProps) {
         super(props);
-        this.state = { editor: undefined, model: null, visibleLineCount: -1, attached: false, widgetsReparented: false };
+        this.state = {
+            editor: undefined,
+            model: null,
+            visibleLineCount: -1,
+            attached: false,
+            widgetsReparented: false
+        };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureWidthRef = React.createRef<HTMLDivElement>();
         this.debouncedUpdateEditorSize = debounce(this.updateEditorSize.bind(this), 150);
@@ -172,10 +178,18 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 editor.onContextMenu(e => {
                     if (this.state.editor) {
                         const domNode = this.state.editor.getDomNode();
-                        const contextMenuElement = domNode ? (domNode.querySelector('.monaco-menu-container') as HTMLElement) : null;
+                        const contextMenuElement = domNode
+                            ? (domNode.querySelector('.monaco-menu-container') as HTMLElement)
+                            : null;
                         if (contextMenuElement) {
-                            const posY = e.event.posy + contextMenuElement.clientHeight > window.outerHeight ? e.event.posy - contextMenuElement.clientHeight : e.event.posy;
-                            const posX = e.event.posx + contextMenuElement.clientWidth > window.outerWidth ? e.event.posx - contextMenuElement.clientWidth : e.event.posx;
+                            const posY =
+                                e.event.posy + contextMenuElement.clientHeight > window.outerHeight
+                                    ? e.event.posy - contextMenuElement.clientHeight
+                                    : e.event.posy;
+                            const posX =
+                                e.event.posx + contextMenuElement.clientWidth > window.outerWidth
+                                    ? e.event.posx - contextMenuElement.clientWidth
+                                    : e.event.posx;
                             contextMenuElement.style.position = 'fixed';
                             contextMenuElement.style.top = `${Math.max(0, Math.floor(posY))}px`;
                             contextMenuElement.style.left = `${Math.max(0, Math.floor(posX))}px`;
@@ -286,7 +300,11 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 }
                 this.state.editor.updateOptions(this.props.options);
             }
-            if (prevProps.value !== this.props.value && this.state.model && this.state.model.getValue() !== this.props.value) {
+            if (
+                prevProps.value !== this.props.value &&
+                this.state.model &&
+                this.state.model.getValue() !== this.props.value
+            ) {
                 this.state.model.setValue(this.props.value);
             }
         }
@@ -303,8 +321,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.updateBackgroundStyle();
         }
     }
-    // tslint:disable-next-line: no-any
-    public shouldComponentUpdate(nextProps: Readonly<IMonacoEditorProps>, nextState: Readonly<IMonacoEditorState>, _nextContext: any): boolean {
+    public shouldComponentUpdate(
+        nextProps: Readonly<IMonacoEditorProps>,
+        nextState: Readonly<IMonacoEditorState>,
+        // tslint:disable-next-line: no-any
+        _nextContext: any
+    ): boolean {
         if (!fastDeepEqual(nextProps, this.props)) {
             return true;
         }
@@ -320,7 +342,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         return false;
     }
     public render() {
-        const measureWidthClassName = this.props.measureWidthClassName ? this.props.measureWidthClassName : 'measure-width-div';
+        const measureWidthClassName = this.props.measureWidthClassName
+            ? this.props.measureWidthClassName
+            : 'measure-width-div';
         return (
             <div className="monaco-editor-outer-container" ref={this.containerRef}>
                 <div className={measureWidthClassName} ref={this.measureWidthRef} />
@@ -333,7 +357,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (this.widgetParent && this.widgetParent.firstChild && this.widgetParent.firstChild.childNodes.length >= 2) {
             const htmlFirstChild = this.widgetParent.firstChild as HTMLElement;
             const suggestWidget = htmlFirstChild.getElementsByClassName('suggest-widget')[0] as HTMLDivElement;
-            const signatureHelpWidget = htmlFirstChild.getElementsByClassName('parameter-hints-widget')[0] as HTMLDivElement;
+            const signatureHelpWidget = htmlFirstChild.getElementsByClassName(
+                'parameter-hints-widget'
+            )[0] as HTMLDivElement;
             return this.isElementVisible(suggestWidget) || this.isElementVisible(signatureHelpWidget);
         }
         return false;
@@ -469,7 +495,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                     this.lastOffsetLeft = rect.left;
                     this.lastOffsetTop = rect.top;
 
-                    this.widgetParent.setAttribute('style', `position: absolute; left: ${rect.left}px; top: ${rect.top}px; width:${width ? width : rect.width}px`);
+                    this.widgetParent.setAttribute(
+                        'style',
+                        `position: absolute; left: ${rect.left}px; top: ${rect.top}px; width:${
+                            width ? width : rect.width
+                        }px`
+                    );
                 }
             }
         } else {
@@ -496,13 +527,22 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
             const currLineCount = Math.max(container.childElementCount, this.state.model.getLineCount());
             const lineHeightPx =
-                container.firstChild && (container.firstChild as HTMLElement).style.height ? (container.firstChild as HTMLElement).style.height : `${LINE_HEIGHT}px`;
-            const lineHeight = lineHeightPx && lineHeightPx.endsWith('px') ? parseInt(lineHeightPx.substr(0, lineHeightPx.length - 2), 10) : LINE_HEIGHT;
+                container.firstChild && (container.firstChild as HTMLElement).style.height
+                    ? (container.firstChild as HTMLElement).style.height
+                    : `${LINE_HEIGHT}px`;
+            const lineHeight =
+                lineHeightPx && lineHeightPx.endsWith('px')
+                    ? parseInt(lineHeightPx.substr(0, lineHeightPx.length - 2), 10)
+                    : LINE_HEIGHT;
             const height = currLineCount * lineHeight + 3; // Fudge factor
             const width = this.measureWidthRef.current.clientWidth - grandParent.offsetLeft - 15; // Leave room for the scroll bar in regular cell table
 
             const layoutInfo = this.state.editor.getLayoutInfo();
-            if (layoutInfo.height !== height || layoutInfo.width !== width || currLineCount !== this.state.visibleLineCount) {
+            if (
+                layoutInfo.height !== height ||
+                layoutInfo.width !== width ||
+                currLineCount !== this.state.visibleLineCount
+            ) {
                 // Make sure to attach to a real dom node.
                 if (!this.state.attached && this.state.editor && this.monacoContainer) {
                     this.containerRef.current.appendChild(this.monacoContainer);
@@ -585,7 +625,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         // Its possible the parameter widget is one of them.
         const hoverElements: Element[] = Array.prototype.slice.call(document.querySelectorAll(':hover'));
         // Find all parameter widgets related to this monaco editor that are currently displayed.
-        const visibleParameterHintsWidgets: Element[] = Array.prototype.slice.call(this.widgetParent.querySelectorAll('.parameter-hints-widget.visible'));
+        const visibleParameterHintsWidgets: Element[] = Array.prototype.slice.call(
+            this.widgetParent.querySelectorAll('.parameter-hints-widget.visible')
+        );
         if (hoverElements.length === 0 && visibleParameterHintsWidgets.length === 0) {
             // If user is not hovering over anything and there are no visible parameter widgets,
             // then, we have nothing to do but get out of here.
@@ -593,7 +635,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
 
         // Find all parameter widgets related to this monaco editor.
-        const knownParameterHintsWidgets: HTMLDivElement[] = Array.prototype.slice.call(this.widgetParent.querySelectorAll(WidgetCSSSelector.Parameters));
+        const knownParameterHintsWidgets: HTMLDivElement[] = Array.prototype.slice.call(
+            this.widgetParent.querySelectorAll(WidgetCSSSelector.Parameters)
+        );
 
         // Lets not assume we'll have the exact same DOM for parameter widgets.
         // So, just remove the event handler, and add it again later.
@@ -690,10 +734,14 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (!root || !this.widgetParent) {
             return;
         }
-        const widgetParents: HTMLDivElement[] = Array.prototype.slice.call(root.querySelectorAll('div.monaco-editor-pretend-parent'));
+        const widgetParents: HTMLDivElement[] = Array.prototype.slice.call(
+            root.querySelectorAll('div.monaco-editor-pretend-parent')
+        );
         widgetParents
             .filter(widgetParent => widgetParent !== this.widgetParent)
-            .forEach(widgetParent => this.hideWidgets(widgetParent, [WidgetCSSSelector.Parameters, WidgetCSSSelector.Hover]));
+            .forEach(widgetParent =>
+                this.hideWidgets(widgetParent, [WidgetCSSSelector.Parameters, WidgetCSSSelector.Hover])
+            );
     }
     private updateMargin(editor: monacoEditor.editor.IStandaloneCodeEditor) {
         const editorNode = editor.getDomNode();
@@ -746,7 +794,10 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                             if (root) {
                                 // We need to create a dummy 'monaco-editor' div so that the content widgets get the same styles.
                                 this.widgetParent = document.createElement('div', {});
-                                this.widgetParent.setAttribute('class', `${editorNode.className} monaco-editor-pretend-parent`);
+                                this.widgetParent.setAttribute(
+                                    'class',
+                                    `${editorNode.className} monaco-editor-pretend-parent`
+                                );
 
                                 root.appendChild(this.widgetParent);
                                 this.widgetParent.appendChild(contentWidgets);
@@ -758,7 +809,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                                 // mean the mouse has left the editor.
                                 // tslint:disable-next-line: no-any
                                 const hover = editor.getContribution('editor.contrib.hover') as any;
-                                if (hover._toUnhook && hover._toUnhook._toDispose && hover._toUnhook._toDispose && hover.contentWidget) {
+                                if (
+                                    hover._toUnhook &&
+                                    hover._toUnhook._toDispose &&
+                                    hover._toUnhook._toDispose &&
+                                    hover.contentWidget
+                                ) {
                                     // This should mean our 5th element is the event handler for mouse leave. Remove it.
                                     const set = hover._toUnhook._toDispose as Set<IDisposable>;
                                     if (set.size === HOVER_DISPOSABLE_EVENT_COUNT) {
@@ -768,7 +824,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                                         set.delete(array[HOVER_DISPOSABLE_LEAVE_INDEX]);
 
                                         // Instead listen to mouse leave for our hover widget
-                                        const hoverWidget = this.widgetParent.getElementsByClassName('monaco-editor-hover')[0] as HTMLElement;
+                                        const hoverWidget = this.widgetParent.getElementsByClassName(
+                                            'monaco-editor-hover'
+                                        )[0] as HTMLElement;
                                         if (hoverWidget) {
                                             hoverWidget.addEventListener('mouseenter', this.onHoverEnter);
                                             hoverWidget.addEventListener('mouseleave', this.onHoverLeave);

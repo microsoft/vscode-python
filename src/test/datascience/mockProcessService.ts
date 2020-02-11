@@ -4,12 +4,23 @@
 import { Observable } from 'rxjs/Observable';
 
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
-import { ExecutionResult, IProcessService, ObservableExecutionResult, Output, ShellOptions, SpawnOptions } from '../../client/common/process/types';
+import {
+    ExecutionResult,
+    IProcessService,
+    ObservableExecutionResult,
+    Output,
+    ShellOptions,
+    SpawnOptions
+} from '../../client/common/process/types';
 import { noop, sleep } from '../core';
 
 export class MockProcessService implements IProcessService {
     private execResults: { file: string; args: (string | RegExp)[]; result(): Promise<ExecutionResult<string>> }[] = [];
-    private execObservableResults: { file: string; args: (string | RegExp)[]; result(): ObservableExecutionResult<string> }[] = [];
+    private execObservableResults: {
+        file: string;
+        args: (string | RegExp)[];
+        result(): ObservableExecutionResult<string>;
+    }[] = [];
     private timeDelay: number | undefined;
 
     public execObservable(file: string, args: string[], _options: SpawnOptions): ObservableExecutionResult<string> {
@@ -50,7 +61,11 @@ export class MockProcessService implements IProcessService {
         this.execResults.splice(0, 0, { file: file, args: args, result: result });
     }
 
-    public addExecObservableResult(file: string, args: (string | RegExp)[], result: () => ObservableExecutionResult<string>) {
+    public addExecObservableResult(
+        file: string,
+        args: (string | RegExp)[],
+        result: () => ObservableExecutionResult<string>
+    ) {
         this.execObservableResults.splice(0, 0, { file: file, args: args, result: result });
     }
 

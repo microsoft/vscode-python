@@ -31,14 +31,21 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         }
         // Activate using `pipenv shell` only if the current folder relates pipenv environment.
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-        if (workspaceFolder && interpreter.pipEnvWorkspaceFolder && !this.fs.arePathsSame(workspaceFolder.uri.fsPath, interpreter.pipEnvWorkspaceFolder)) {
+        if (
+            workspaceFolder &&
+            interpreter.pipEnvWorkspaceFolder &&
+            !this.fs.arePathsSame(workspaceFolder.uri.fsPath, interpreter.pipEnvWorkspaceFolder)
+        ) {
             return;
         }
         const execName = this.pipenvService.executable;
         return [`${execName.fileToCommandArgument()} shell`];
     }
 
-    public async getActivationCommandsForInterpreter(pythonPath: string, _targetShell: TerminalShellType): Promise<string[] | undefined> {
+    public async getActivationCommandsForInterpreter(
+        pythonPath: string,
+        _targetShell: TerminalShellType
+    ): Promise<string[] | undefined> {
         const interpreter = await this.interpreterService.getInterpreterDetails(pythonPath);
         if (!interpreter || interpreter.type !== InterpreterType.Pipenv) {
             return;

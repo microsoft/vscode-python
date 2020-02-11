@@ -56,7 +56,13 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
     }
 
     test('Running tests should not stop existing discovery', async () => {
-        const mockTestManager = new MockTestManagerWithRunningTests(UNITTEST_PROVIDER, Product.unittest, Uri.file(testFilesPath), testFilesPath, ioc.serviceContainer);
+        const mockTestManager = new MockTestManagerWithRunningTests(
+            UNITTEST_PROVIDER,
+            Product.unittest,
+            Uri.file(testFilesPath),
+            testFilesPath,
+            ioc.serviceContainer
+        );
         ioc.serviceManager.addSingletonInstance<ITestDiscoveryService>(
             ITestDiscoveryService,
             new MockDiscoveryService(mockTestManager.discoveryDeferred.promise),
@@ -69,7 +75,9 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
         const deferred = createDeferred<string>();
 
         // This promise should never resolve nor reject.
-        runningPromise.then(() => Promise.reject("Debugger stopped when it shouldn't have")).catch(error => deferred.reject(error));
+        runningPromise
+            .then(() => Promise.reject("Debugger stopped when it shouldn't have"))
+            .catch(error => deferred.reject(error));
 
         discoveryPromise
             .then(result => {
@@ -85,7 +93,13 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
     });
 
     test('Discovering tests should stop running tests', async () => {
-        const mockTestManager = new MockTestManagerWithRunningTests(UNITTEST_PROVIDER, Product.unittest, Uri.file(testFilesPath), testFilesPath, ioc.serviceContainer);
+        const mockTestManager = new MockTestManagerWithRunningTests(
+            UNITTEST_PROVIDER,
+            Product.unittest,
+            Uri.file(testFilesPath),
+            testFilesPath,
+            ioc.serviceContainer
+        );
         ioc.serviceManager.addSingletonInstance<ITestDiscoveryService>(
             ITestDiscoveryService,
             new MockDiscoveryService(mockTestManager.discoveryDeferred.promise),

@@ -34,7 +34,11 @@ suite('WebPanelServer', () => {
 
     test('Server responds with html when given valid input', done => {
         chai.request(server)
-            .get(`/${uuid()}?token=${token}&scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}`)
+            .get(
+                `/${uuid()}?token=${token}&scripts=${encodeURIComponent(
+                    path.basename(historyBundle)
+                )}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}`
+            )
             .end((e, r) => {
                 // tslint:disable-next-line: no-unused-expression
                 chai.expect(e, 'Error is not null').to.be.null;
@@ -46,7 +50,11 @@ suite('WebPanelServer', () => {
 
     test('Server responds with 404 when given invalid input', done => {
         chai.request(server)
-            .get(`/${uuid()}?scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}`)
+            .get(
+                `/${uuid()}?scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(
+                    path.dirname(historyBundle)
+                )}`
+            )
             .end((_e, r) => {
                 // tslint:disable-next-line: no-unused-expression
                 chai.expect(r, 'Response status is not 404').to.have.status(404);
@@ -57,7 +65,11 @@ suite('WebPanelServer', () => {
     test('Server responds with 404 when given file not found', done => {
         const agent = chai.request(server).keepOpen();
         agent
-            .get(`/${uuid()}?token=${token}&scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}`)
+            .get(
+                `/${uuid()}?token=${token}&scripts=${encodeURIComponent(
+                    path.basename(historyBundle)
+                )}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}`
+            )
             .end((_e, r) => {
                 // tslint:disable-next-line: no-unused-expression
                 chai.expect(r, 'Response status is not 200 on first request').to.have.status(200);
@@ -74,7 +86,11 @@ suite('WebPanelServer', () => {
         // https://www.chaijs.com/plugins/chai-http/ and search 'Retaining cookies with each request'
         const agent = chai.request.agent(server);
         agent
-            .get(`/${uuid()}?token=${token}&scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}`)
+            .get(
+                `/${uuid()}?token=${token}&scripts=${encodeURIComponent(
+                    path.basename(historyBundle)
+                )}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}`
+            )
             .end((_e, r) => {
                 // tslint:disable-next-line: no-unused-expression
                 chai.expect(r, 'Response status is not 200 on first request').to.have.status(200);
@@ -91,9 +107,11 @@ suite('WebPanelServer', () => {
         const agent = chai.request.agent(server);
         agent
             .get(
-                `/${uuid()}?token=${token}&scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(
-                    path.dirname(historyBundle)
-                )}&cwd=${encodeURIComponent(EXTENSION_ROOT_DIR)}`
+                `/${uuid()}?token=${token}&scripts=${encodeURIComponent(
+                    path.basename(historyBundle)
+                )}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}&cwd=${encodeURIComponent(
+                    EXTENSION_ROOT_DIR
+                )}`
             )
             .end((_e, r) => {
                 // tslint:disable-next-line: no-unused-expression
@@ -111,9 +129,11 @@ suite('WebPanelServer', () => {
         const agent = chai.request.agent(server);
         agent
             .get(
-                `/${uuid()}?token=${token}&scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(
-                    path.dirname(historyBundle)
-                )}&cwd=${encodeURIComponent(EXTENSION_ROOT_DIR)}`
+                `/${uuid()}?token=${token}&scripts=${encodeURIComponent(
+                    path.basename(historyBundle)
+                )}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}&cwd=${encodeURIComponent(
+                    EXTENSION_ROOT_DIR
+                )}`
             )
             .end((_e, r) => {
                 // tslint:disable-next-line: no-unused-expression

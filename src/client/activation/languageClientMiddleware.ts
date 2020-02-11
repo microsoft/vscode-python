@@ -69,14 +69,25 @@ export class LanguageClientMiddleware implements Middleware {
         this.connected = false;
     }
 
-    public provideCompletionItem(document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) {
+    public provideCompletionItem(
+        document: TextDocument,
+        position: Position,
+        context: CompletionContext,
+        token: CancellationToken,
+        next: ProvideCompletionItemsSignature
+    ) {
         if (this.connected) {
             this.surveyBanner.showBanner().ignoreErrors();
             return next(document, position, context, token);
         }
     }
 
-    public provideHover(document: TextDocument, position: Position, token: CancellationToken, next: ProvideHoverSignature) {
+    public provideHover(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        next: ProvideHoverSignature
+    ) {
         if (this.connected) {
             return next(document, position, token);
         }
@@ -93,12 +104,21 @@ export class LanguageClientMiddleware implements Middleware {
         }
     }
 
-    public resolveCompletionItem(item: CompletionItem, token: CancellationToken, next: ResolveCompletionItemSignature): ProviderResult<CompletionItem> {
+    public resolveCompletionItem(
+        item: CompletionItem,
+        token: CancellationToken,
+        next: ResolveCompletionItemSignature
+    ): ProviderResult<CompletionItem> {
         if (this.connected) {
             return next(item, token);
         }
     }
-    public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken, next: ProvideSignatureHelpSignature): ProviderResult<SignatureHelp> {
+    public provideSignatureHelp(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        next: ProvideSignatureHelpSignature
+    ): ProviderResult<SignatureHelp> {
         if (this.connected) {
             return next(document, position, token);
         }
@@ -136,12 +156,20 @@ export class LanguageClientMiddleware implements Middleware {
             return next(document, position, token);
         }
     }
-    public provideDocumentSymbols(document: TextDocument, token: CancellationToken, next: ProvideDocumentSymbolsSignature): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
+    public provideDocumentSymbols(
+        document: TextDocument,
+        token: CancellationToken,
+        next: ProvideDocumentSymbolsSignature
+    ): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
         if (this.connected) {
             return next(document, token);
         }
     }
-    public provideWorkspaceSymbols(query: string, token: CancellationToken, next: ProvideWorkspaceSymbolsSignature): ProviderResult<SymbolInformation[]> {
+    public provideWorkspaceSymbols(
+        query: string,
+        token: CancellationToken,
+        next: ProvideWorkspaceSymbolsSignature
+    ): ProviderResult<SymbolInformation[]> {
         if (this.connected) {
             return next(query, token);
         }
@@ -157,12 +185,20 @@ export class LanguageClientMiddleware implements Middleware {
             return next(document, range, context, token);
         }
     }
-    public provideCodeLenses(document: TextDocument, token: CancellationToken, next: ProvideCodeLensesSignature): ProviderResult<CodeLens[]> {
+    public provideCodeLenses(
+        document: TextDocument,
+        token: CancellationToken,
+        next: ProvideCodeLensesSignature
+    ): ProviderResult<CodeLens[]> {
         if (this.connected) {
             return next(document, token);
         }
     }
-    public resolveCodeLens(codeLens: CodeLens, token: CancellationToken, next: ResolveCodeLensSignature): ProviderResult<CodeLens> {
+    public resolveCodeLens(
+        codeLens: CodeLens,
+        token: CancellationToken,
+        next: ResolveCodeLensSignature
+    ): ProviderResult<CodeLens> {
         if (this.connected) {
             return next(codeLens, token);
         }
@@ -227,12 +263,20 @@ export class LanguageClientMiddleware implements Middleware {
             return next(document, position, token);
         }
     }
-    public provideDocumentLinks(document: TextDocument, token: CancellationToken, next: ProvideDocumentLinksSignature): ProviderResult<DocumentLink[]> {
+    public provideDocumentLinks(
+        document: TextDocument,
+        token: CancellationToken,
+        next: ProvideDocumentLinksSignature
+    ): ProviderResult<DocumentLink[]> {
         if (this.connected) {
             return next(document, token);
         }
     }
-    public resolveDocumentLink(link: DocumentLink, token: CancellationToken, next: ResolveDocumentLinkSignature): ProviderResult<DocumentLink> {
+    public resolveDocumentLink(
+        link: DocumentLink,
+        token: CancellationToken,
+        next: ResolveDocumentLinkSignature
+    ): ProviderResult<DocumentLink> {
         if (this.connected) {
             return next(link, token);
         }

@@ -21,7 +21,11 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
     ) {}
 
-    public async createLanguageClient(resource: Resource, _interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
+    public async createLanguageClient(
+        resource: Resource,
+        _interpreter: PythonInterpreter | undefined,
+        clientOptions: LanguageClientOptions
+    ): Promise<LanguageClient> {
         const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
         const bundlePath = path.join(EXTENSION_ROOT_DIR, languageServerFolder, 'server.bundle.js');
         const nonBundlePath = path.join(EXTENSION_ROOT_DIR, languageServerFolder, 'server.js');
@@ -40,6 +44,11 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
             }
         };
         const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');
-        return new vscodeLanguageClient.LanguageClient(PYTHON_LANGUAGE, languageClientName, serverOptions, clientOptions);
+        return new vscodeLanguageClient.LanguageClient(
+            PYTHON_LANGUAGE,
+            languageClientName,
+            serverOptions,
+            clientOptions
+        );
     }
 }

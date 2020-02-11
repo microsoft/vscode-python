@@ -81,10 +81,14 @@ export class TestMessageService implements ITestMessageService {
      *
      * @param testFunction The FlattenedTestFunction with the traceback that we need to parse.
      */
-    private async getLocationStack(rootDirectory: string, testFunction: FlattenedTestFunction): Promise<ILocationStackFrameDetails[]> {
+    private async getLocationStack(
+        rootDirectory: string,
+        testFunction: FlattenedTestFunction
+    ): Promise<ILocationStackFrameDetails[]> {
         const locationStack: ILocationStackFrameDetails[] = [];
         if (testFunction.testFunction.traceback) {
-            const fileMatches = testFunction.testFunction.traceback.match(/^((\.\.[\\\/])*.+\.py)\:(\d+)\:.*$/gim) || [];
+            const fileMatches =
+                testFunction.testFunction.traceback.match(/^((\.\.[\\\/])*.+\.py)\:(\d+)\:.*$/gim) || [];
             for (const fileDetailsMatch of fileMatches) {
                 const fileDetails = fileDetailsMatch.split(':');
                 let filePath = fileDetails[0];
@@ -95,15 +99,23 @@ export class TestMessageService implements ITestMessageService {
                 const line = file.lineAt(fileLineNum - 1);
                 const location = new Location(
                     fileUri,
-                    new Range(new Position(fileLineNum - 1, line.firstNonWhitespaceCharacterIndex), new Position(fileLineNum - 1, line.text.length))
+                    new Range(
+                        new Position(fileLineNum - 1, line.firstNonWhitespaceCharacterIndex),
+                        new Position(fileLineNum - 1, line.text.length)
+                    )
                 );
-                const stackFrame: ILocationStackFrameDetails = { location: location, lineText: file.getText(location.range) };
+                const stackFrame: ILocationStackFrameDetails = {
+                    location: location,
+                    lineText: file.getText(location.range)
+                };
                 locationStack.push(stackFrame);
             }
         }
         // Find where the file the test was defined.
         let testSourceFilePath = testFunction.testFunction.file!;
-        testSourceFilePath = path.isAbsolute(testSourceFilePath) ? testSourceFilePath : path.resolve(rootDirectory, testSourceFilePath);
+        testSourceFilePath = path.isAbsolute(testSourceFilePath)
+            ? testSourceFilePath
+            : path.resolve(rootDirectory, testSourceFilePath);
         const testSourceFileUri = Uri.file(testSourceFilePath);
         const testSourceFile = await workspace.openTextDocument(testSourceFileUri);
         let testDefLine: TextLine | null = null;
@@ -145,7 +157,12 @@ export class TestMessageService implements ITestMessageService {
         if (testFunction.parentTestSuite !== undefined) {
             // This could be an imported test method
             const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-            if (!fs.arePathsSame(Uri.file(testFunction.parentTestFile.fullPath).fsPath, locationStack[0].location.uri.fsPath)) {
+            if (
+                !fs.arePathsSame(
+                    Uri.file(testFunction.parentTestFile.fullPath).fsPath,
+                    locationStack[0].location.uri.fsPath
+                )
+            ) {
                 // test method was imported, so reference class declaration line.
                 // this should be the first thing in the stack to show where the failure/error originated.
                 locationStack.unshift(await this.getParentSuiteLocation(testFunction));

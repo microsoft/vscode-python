@@ -13,7 +13,10 @@ import { InteractiveWindowMessages } from './interactiveWindowTypes';
 // tslint:disable: no-any
 @injectable()
 export class ShowPlotListener implements IInteractiveWindowListener {
-    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
+    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
+        message: string;
+        payload: any;
+    }>();
     constructor(@inject(IPlotViewerProvider) private provider: IPlotViewerProvider) {
         noop();
     }

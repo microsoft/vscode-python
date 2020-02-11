@@ -106,7 +106,13 @@ suite('Terminal Service (synchronous)', () => {
             verify(
                 terminalService.sendCommand(
                     'python',
-                    deepEqual([shellExecFile.fileToCommandArgument(), 'cmd'.fileToCommandArgument(), '1', '2', tmpFile.filePath.fileToCommandArgument()])
+                    deepEqual([
+                        shellExecFile.fileToCommandArgument(),
+                        'cmd'.fileToCommandArgument(),
+                        '1',
+                        '2',
+                        tmpFile.filePath.fileToCommandArgument()
+                    ])
                 )
             ).once();
         }).timeout(1_000);
@@ -142,7 +148,13 @@ suite('Terminal Service (synchronous)', () => {
             verify(
                 terminalService.sendCommand(
                     'python',
-                    deepEqual([shellExecFile.fileToCommandArgument(), 'cmd'.fileToCommandArgument(), '1', '2', tmpFile.filePath.fileToCommandArgument()])
+                    deepEqual([
+                        shellExecFile.fileToCommandArgument(),
+                        'cmd'.fileToCommandArgument(),
+                        '1',
+                        '2',
+                        tmpFile.filePath.fileToCommandArgument()
+                    ])
                 )
             ).once();
         }).timeout(2_000);

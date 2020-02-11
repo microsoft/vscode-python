@@ -47,7 +47,13 @@ suite('Interpreters display version', () => {
         const pythonPath = path.join('a', 'b', 'python');
         const pipVersion = '1.2.3';
         processService
-            .setup(p => p.exec(typeMoq.It.isValue(pythonPath), typeMoq.It.isValue(['-m', 'pip', '--version']), typeMoq.It.isAny()))
+            .setup(p =>
+                p.exec(
+                    typeMoq.It.isValue(pythonPath),
+                    typeMoq.It.isValue(['-m', 'pip', '--version']),
+                    typeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve({ stdout: pipVersion }))
             .verifiable(typeMoq.Times.once());
 
@@ -57,7 +63,13 @@ suite('Interpreters display version', () => {
     test('Must throw an exception when pip version cannot be determined', async () => {
         const pythonPath = path.join('a', 'b', 'python');
         processService
-            .setup(p => p.exec(typeMoq.It.isValue(pythonPath), typeMoq.It.isValue(['-m', 'pip', '--version']), typeMoq.It.isAny()))
+            .setup(p =>
+                p.exec(
+                    typeMoq.It.isValue(pythonPath),
+                    typeMoq.It.isValue(['-m', 'pip', '--version']),
+                    typeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.reject('error'))
             .verifiable(typeMoq.Times.once());
 

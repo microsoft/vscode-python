@@ -14,7 +14,11 @@ import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationPro
 
 @injectable()
 export class PidAttachDebugConfigurationProvider implements IDebugConfigurationProvider {
-    @captureTelemetry(EventName.DEBUGGER_CONFIGURATION_PROMPTS, { configurationType: DebugConfigurationType.pidAttach }, false)
+    @captureTelemetry(
+        EventName.DEBUGGER_CONFIGURATION_PROMPTS,
+        { configurationType: DebugConfigurationType.pidAttach },
+        false
+    )
     public async buildConfiguration(_input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const config: Partial<AttachRequestArguments> = {
             name: DebugConfigStrings.attachPid.snippet.name(),

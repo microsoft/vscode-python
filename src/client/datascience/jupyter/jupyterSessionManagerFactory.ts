@@ -22,7 +22,12 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
      * @param failOnPassword - whether or not to fail the creation if a password is required.
      */
     public async create(connInfo: IConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager> {
-        const result = new JupyterSessionManager(this.jupyterPasswordConnect, this.config, failOnPassword, this.kernelSelector);
+        const result = new JupyterSessionManager(
+            this.jupyterPasswordConnect,
+            this.config,
+            failOnPassword,
+            this.kernelSelector
+        );
         await result.initialize(connInfo);
         return result;
     }

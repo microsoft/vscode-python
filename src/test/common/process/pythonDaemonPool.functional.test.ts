@@ -18,7 +18,14 @@ import { createMessageConnection, StreamMessageReader, StreamMessageWriter } fro
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
-import { IProcessLogger, IPythonDaemonExecutionService, IPythonExecutionService, ObservableExecutionResult, Output, PythonVersionInfo } from '../../../client/common/process/types';
+import {
+    IProcessLogger,
+    IPythonDaemonExecutionService,
+    IPythonExecutionService,
+    ObservableExecutionResult,
+    Output,
+    PythonVersionInfo
+} from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
@@ -33,7 +40,12 @@ use(chaiPromised);
 // tslint:disable: max-func-body-length
 suite('Daemon - Python Daemon Pool', () => {
     // Set PYTHONPATH to pickup our module and the jsonrpc modules.
-    const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')}`;
+    const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(
+        EXTENSION_ROOT_DIR,
+        'pythonFiles',
+        'lib',
+        'python'
+    )}`;
     const env = { PYTHONPATH: envPythonPath, PYTHONUNBUFFERED: '1' };
     let fullyQualifiedPythonPath: string = PYTHON_PATH;
     let pythonDaemonPool: PythonDaemonExecutionServicePool;
@@ -65,14 +77,22 @@ suite('Daemon - Python Daemon Pool', () => {
         pythonExecutionService = mock(PythonExecutionService);
         when(pythonExecutionService.execModuleObservable('datascience.daemon', anything(), anything())).thenCall(() => {
             const pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'datascience.daemon'], { env });
-            const connection = createMessageConnection(new StreamMessageReader(pythonProc.stdout), new StreamMessageWriter(pythonProc.stdin));
+            const connection = createMessageConnection(
+                new StreamMessageReader(pythonProc.stdout),
+                new StreamMessageWriter(pythonProc.stdin)
+            );
             connection.listen();
             disposables.push({ dispose: () => pythonProc.kill() });
             disposables.push({ dispose: () => connection.dispose() });
             // tslint:disable-next-line: no-any
             return { proc: pythonProc, dispose: noop, out: undefined as any };
         });
-        const options = { pythonPath: fullyQualifiedPythonPath, daemonModule: PythonDaemonModule, daemonCount: 2, observableDaemonCount: 1 };
+        const options = {
+            pythonPath: fullyQualifiedPythonPath,
+            daemonModule: PythonDaemonModule,
+            daemonCount: 2,
+            observableDaemonCount: 1
+        };
         pythonDaemonPool = new DaemonPool(logger, [], options, instance(pythonExecutionService), {}, 100);
         await pythonDaemonPool.initialize();
         disposables.push(pythonDaemonPool);
@@ -101,13 +121,21 @@ suite('Daemon - Python Daemon Pool', () => {
     }
 
     test('Interpreter Information', async () => {
-        type InterpreterInfo = { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
+        type InterpreterInfo = {
+            versionInfo: PythonVersionInfo;
+            sysPrefix: string;
+            sysVersion: string;
+            is64Bit: boolean;
+        };
         const json: InterpreterInfo = JSON.parse(
             spawnSync(fullyQualifiedPythonPath, [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'interpreterInfo.py')])
                 .stdout.toString()
                 .trim()
         );
-        const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
+        const versionValue =
+            json.versionInfo.length === 4
+                ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}`
+                : json.versionInfo.join('.');
         const expectedVersion = {
             architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
             path: fullyQualifiedPythonPath,
@@ -133,7 +161,8 @@ suite('Daemon - Python Daemon Pool', () => {
 
     test("'pip' module is installed", async () => testModuleInstalled('pip', true));
     test("'unittest' module is installed", async () => testModuleInstalled('unittest', true));
-    test("'VSCode-Python-Rocks' module is not Installed", async () => testModuleInstalled('VSCode-Python-Rocks', false));
+    test("'VSCode-Python-Rocks' module is not Installed", async () =>
+        testModuleInstalled('VSCode-Python-Rocks', false));
 
     test('Execute a file and capture stdout (with unicode)', async () => {
         const source = dedent`
@@ -304,7 +333,11 @@ suite('Daemon - Python Daemon Pool', () => {
         // These two will use a python execution service.
         const output2 = pythonDaemonPool.execObservable([fileToExecute], {});
         const output3 = pythonDaemonPool.execObservable([fileToExecute], {});
-        const [result1, result2, result3] = await Promise.all([getStdOutFromObservable(output1), getStdOutFromObservable(output2), getStdOutFromObservable(output3)]);
+        const [result1, result2, result3] = await Promise.all([
+            getStdOutFromObservable(output1),
+            getStdOutFromObservable(output2),
+            getStdOutFromObservable(output3)
+        ]);
 
         // Two process ids are used to run the code (one process for a daemon, another for bogus puthon process).
         expect(result1).to.not.equal('mypid');
@@ -343,7 +376,10 @@ suite('Daemon - Python Daemon Pool', () => {
         `;
         const fileToExecute = await createPythonFile(source);
 
-        const [output1, output2] = await Promise.all([pythonDaemonPool.exec([fileToExecute], {}), pythonDaemonPool.exec([fileToExecute], {})]);
+        const [output1, output2] = await Promise.all([
+            pythonDaemonPool.exec([fileToExecute], {}),
+            pythonDaemonPool.exec([fileToExecute], {})
+        ]);
 
         // The pid for both processes will be different.
         // This means we're running both in two separate daemons.
@@ -400,7 +436,11 @@ suite('Daemon - Python Daemon Pool', () => {
         expect(processesUsedToRunCode.size).to.equal(2);
 
         // Wait for a new daemon to be created.
-        await waitForCondition(async () => createDaemonServicesSpy.callCount - daemonsCreated === 1, 5_000, 'Failed to create a new daemon');
+        await waitForCondition(
+            async () => createDaemonServicesSpy.callCount - daemonsCreated === 1,
+            5_000,
+            'Failed to create a new daemon'
+        );
 
         // Confirm we have two daemons by checking the Pids again.
         // One of them will be new.

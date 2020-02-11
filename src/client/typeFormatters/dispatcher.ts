@@ -3,7 +3,15 @@
 
 'use strict';
 
-import { CancellationToken, FormattingOptions, OnTypeFormattingEditProvider, Position, ProviderResult, TextDocument, TextEdit } from 'vscode';
+import {
+    CancellationToken,
+    FormattingOptions,
+    OnTypeFormattingEditProvider,
+    Position,
+    ProviderResult,
+    TextDocument,
+    TextEdit
+} from 'vscode';
 
 export class OnTypeFormattingDispatcher implements OnTypeFormattingEditProvider {
     private readonly providers: Record<string, OnTypeFormattingEditProvider>;

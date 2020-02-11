@@ -124,7 +124,9 @@ suite('DataScience Code Watcher Unit Tests', () => {
         dataScienceErrorHandler = TypeMoq.Mock.ofType<IDataScienceErrorHandler>();
 
         // Setup our active history instance
-        interactiveWindowProvider.setup(h => h.getOrCreateActive()).returns(() => Promise.resolve(activeInteractiveWindow.object));
+        interactiveWindowProvider
+            .setup(h => h.getOrCreateActive())
+            .returns(() => Promise.resolve(activeInteractiveWindow.object));
 
         // Setup our active text editor
         documentManager.setup(dm => dm.activeTextEditor).returns(() => textEditor.object);
@@ -163,39 +165,78 @@ suite('DataScience Code Watcher Unit Tests', () => {
         return result;
     }
 
-    function verifyCodeLensesAtPosition(codeLenses: CodeLens[], startLensIndex: number, targetRange: Range, firstCell: boolean = false, markdownCell: boolean = false) {
+    function verifyCodeLensesAtPosition(
+        codeLenses: CodeLens[],
+        startLensIndex: number,
+        targetRange: Range,
+        firstCell: boolean = false,
+        markdownCell: boolean = false
+    ) {
         if (codeLenses[startLensIndex].command) {
-            expect(codeLenses[startLensIndex].command!.command).to.be.equal(Commands.RunCell, 'Run Cell code lens command incorrect');
+            expect(codeLenses[startLensIndex].command!.command).to.be.equal(
+                Commands.RunCell,
+                'Run Cell code lens command incorrect'
+            );
         }
         expect(codeLenses[startLensIndex].range).to.be.deep.equal(targetRange, 'Run Cell code lens range incorrect');
 
         if (!firstCell) {
             if (codeLenses[startLensIndex + 1].command) {
-                expect(codeLenses[startLensIndex + 1].command!.command).to.be.equal(Commands.RunAllCellsAbove, 'Run Above code lens command incorrect');
+                expect(codeLenses[startLensIndex + 1].command!.command).to.be.equal(
+                    Commands.RunAllCellsAbove,
+                    'Run Above code lens command incorrect'
+                );
             }
-            expect(codeLenses[startLensIndex + 1].range).to.be.deep.equal(targetRange, 'Run Above code lens range incorrect');
+            expect(codeLenses[startLensIndex + 1].range).to.be.deep.equal(
+                targetRange,
+                'Run Above code lens range incorrect'
+            );
         }
 
         if (!markdownCell) {
             const indexAdd = 2;
             if (codeLenses[startLensIndex + indexAdd].command) {
-                expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(Commands.DebugCell, 'Debug command incorrect');
+                expect(codeLenses[startLensIndex + indexAdd].command!.command).to.be.equal(
+                    Commands.DebugCell,
+                    'Debug command incorrect'
+                );
             }
-            expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
+            expect(codeLenses[startLensIndex + indexAdd].range).to.be.deep.equal(
+                targetRange,
+                'Debug code lens range incorrect'
+            );
 
             // Debugger mode commands
             if (codeLenses[startLensIndex + indexAdd + 1].command) {
-                expect(codeLenses[startLensIndex + indexAdd + 1].command!.command).to.be.equal(Commands.DebugContinue, 'Debug command incorrect');
+                expect(codeLenses[startLensIndex + indexAdd + 1].command!.command).to.be.equal(
+                    Commands.DebugContinue,
+                    'Debug command incorrect'
+                );
             }
-            expect(codeLenses[startLensIndex + indexAdd + 1].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
+            expect(codeLenses[startLensIndex + indexAdd + 1].range).to.be.deep.equal(
+                targetRange,
+                'Debug code lens range incorrect'
+            );
             if (codeLenses[startLensIndex + indexAdd + 2].command) {
-                expect(codeLenses[startLensIndex + indexAdd + 2].command!.command).to.be.equal(Commands.DebugStop, 'Debug command incorrect');
+                expect(codeLenses[startLensIndex + indexAdd + 2].command!.command).to.be.equal(
+                    Commands.DebugStop,
+                    'Debug command incorrect'
+                );
             }
-            expect(codeLenses[startLensIndex + indexAdd + 2].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
+            expect(codeLenses[startLensIndex + indexAdd + 2].range).to.be.deep.equal(
+                targetRange,
+                'Debug code lens range incorrect'
+            );
             if (codeLenses[startLensIndex + indexAdd + 3].command) {
-                expect(codeLenses[startLensIndex + indexAdd + 3].command!.command).to.be.equal(Commands.DebugStepOver, 'Debug command incorrect');
+                expect(codeLenses[startLensIndex + indexAdd + 3].command!.command).to.be.equal(
+                    Commands.DebugStepOver,
+                    'Debug command incorrect'
+                );
             }
-            expect(codeLenses[startLensIndex + indexAdd + 3].range).to.be.deep.equal(targetRange, 'Debug code lens range incorrect');
+            expect(codeLenses[startLensIndex + indexAdd + 3].range).to.be.deep.equal(
+                targetRange,
+                'Debug code lens range incorrect'
+            );
         }
     }
 
@@ -396,7 +437,15 @@ testing2`;
         // Set up our expected calls to add code
         // RunFileInteractive should run the entire file in one block, not cell by cell like RunAllCells
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue(inputText), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(0), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue(inputText),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(0),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
@@ -421,12 +470,28 @@ testing2`;
 
         // Set up our expected calls to add code
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue('testing0\n#%%\ntesting1'), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(0), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue('testing0\n#%%\ntesting1'),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(0),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting2'), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(3), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting2'),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(3),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
@@ -495,12 +560,28 @@ testing3`;
 
         // Set up our expected calls to add code
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue(targetText1), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(2), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue(targetText1),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(2),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue(targetText2), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(4), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue(targetText2),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(4),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
@@ -534,12 +615,28 @@ testing2`;
 
         // Set up our expected calls to add code
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue(targetText1), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(1), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue(targetText1),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(1),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue(targetText2), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(3), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue(targetText2),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(3),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
@@ -568,7 +665,15 @@ testing1`;
 
         // Set up our expected calls to add code
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue(targetText), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(0), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue(targetText),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(0),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
@@ -596,7 +701,15 @@ print('testing')`;
             .returns(() => Promise.resolve(activeInteractiveWindow.object))
             .verifiable(TypeMoq.Times.never());
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isAny(), TypeMoq.It.isValue(fileName), TypeMoq.It.isAnyNumber(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isAnyNumber(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.never());
 
@@ -628,7 +741,15 @@ testing3`;
 
         // Set up our expected calls to add code
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue(targetText), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(2), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue(targetText),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(2),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
 
@@ -809,12 +930,28 @@ testing2`;
 
         // Set up our expected calls to add code
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue(targetText1), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(0), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue(targetText1),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(0),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue(targetText2), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(2), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue(targetText2),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(2),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.never());
 
@@ -838,12 +975,28 @@ testing2`; // Command tests override getText, so just need the ranges here
 
         // Set up our expected calls to add code
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting1'), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(0), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting1'),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(0),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow
-            .setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting2'), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(2), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting2'),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(2),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.never());
 

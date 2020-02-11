@@ -18,7 +18,8 @@ export class InterpreterLocatorProgressStatubarHandler implements IInterpreterLo
     private isFirstTimeLoadingInterpreters = true;
     constructor(
         @inject(IApplicationShell) private readonly shell: IApplicationShell,
-        @inject(IInterpreterLocatorProgressService) private readonly progressService: IInterpreterLocatorProgressService,
+        @inject(IInterpreterLocatorProgressService)
+        private readonly progressService: IInterpreterLocatorProgressService,
         @inject(IDisposableRegistry) private readonly disposables: Disposable[]
     ) {}
     public register() {

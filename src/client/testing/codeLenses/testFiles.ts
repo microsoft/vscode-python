@@ -22,7 +22,14 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import * as constants from '../../common/constants';
 import { CommandSource } from '../common/constants';
-import { ITestCollectionStorageService, TestFile, TestFunction, TestStatus, TestsToRun, TestSuite } from '../common/types';
+import {
+    ITestCollectionStorageService,
+    TestFile,
+    TestFunction,
+    TestStatus,
+    TestsToRun,
+    TestSuite
+} from '../common/types';
 
 type FunctionsAndSuites = {
     functions: TestFunction[];
@@ -90,7 +97,11 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         return tests.testFiles.find(item => this.fileSystem.arePathsSame(item.fullPath, document.uri.fsPath));
     }
 
-    private async getCodeLenses(document: TextDocument, token: CancellationToken, symbolProvider: DocumentSymbolProvider) {
+    private async getCodeLenses(
+        document: TextDocument,
+        token: CancellationToken,
+        symbolProvider: DocumentSymbolProvider
+    ) {
         const file = this.getTestFileWhichNeedsCodeLens(document);
         if (!file) {
             return [];
@@ -103,13 +114,28 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
                 return [];
             }
             return symbols
-                .filter(symbol => symbol.kind === SymbolKind.Function || symbol.kind === SymbolKind.Method || symbol.kind === SymbolKind.Class)
+                .filter(
+                    symbol =>
+                        symbol.kind === SymbolKind.Function ||
+                        symbol.kind === SymbolKind.Method ||
+                        symbol.kind === SymbolKind.Class
+                )
                 .map(symbol => {
                     // This is bloody crucial, if the start and end columns are the same
                     // then vscode goes bonkers when ever you edit a line (start scrolling magically).
-                    const range = new Range(symbol.location.range.start, new Position(symbol.location.range.end.line, symbol.location.range.end.character + 1));
+                    const range = new Range(
+                        symbol.location.range.start,
+                        new Position(symbol.location.range.end.line, symbol.location.range.end.character + 1)
+                    );
 
-                    return this.getCodeLens(document.uri, allFuncsAndSuites, range, symbol.name, symbol.kind, symbol.containerName);
+                    return this.getCodeLens(
+                        document.uri,
+                        allFuncsAndSuites,
+                        range,
+                        symbol.name,
+                        symbol.kind,
+                        symbol.containerName
+                    );
                 })
                 .reduce((previous, current) => previous.concat(current), [])
                 .filter(codeLens => codeLens !== null);
@@ -121,7 +147,14 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         }
     }
 
-    private getCodeLens(file: Uri, allFuncsAndSuites: FunctionsAndSuites, range: Range, symbolName: string, symbolKind: SymbolKind, symbolContainer: string): CodeLens[] {
+    private getCodeLens(
+        file: Uri,
+        allFuncsAndSuites: FunctionsAndSuites,
+        range: Range,
+        symbolName: string,
+        symbolKind: SymbolKind,
+        symbolContainer: string
+    ): CodeLens[] {
         switch (symbolKind) {
             case SymbolKind.Function:
             case SymbolKind.Method: {
@@ -193,7 +226,13 @@ function getTestStatusIcons(fns: TestFunction[]): string {
 
     return statuses.join(' ');
 }
-function getFunctionCodeLens(file: Uri, functionsAndSuites: FunctionsAndSuites, symbolName: string, range: Range, symbolContainer: string): CodeLens[] {
+function getFunctionCodeLens(
+    file: Uri,
+    functionsAndSuites: FunctionsAndSuites,
+    symbolName: string,
+    range: Range,
+    symbolContainer: string
+): CodeLens[] {
     let fn: TestFunction | undefined;
     if (symbolContainer.length === 0) {
         fn = functionsAndSuites.functions.find(func => func.name === symbolName);
@@ -226,7 +265,9 @@ function getFunctionCodeLens(file: Uri, functionsAndSuites: FunctionsAndSuites, 
 
     // Ok, possible we're dealing with parameterized unit tests.
     // If we have [ in the name, then this is a parameterized function.
-    const functions = functionsAndSuites.functions.filter(func => func.name.startsWith(`${symbolName}[`) && func.name.endsWith(']'));
+    const functions = functionsAndSuites.functions.filter(
+        func => func.name.startsWith(`${symbolName}[`) && func.name.endsWith(']')
+    );
     if (functions.length === 0) {
         return [];
     }

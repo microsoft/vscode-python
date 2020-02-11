@@ -16,7 +16,14 @@ import { ConfigurationService } from '../../client/common/configuration/service'
 import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { PythonToolExecutionService } from '../../client/common/process/pythonToolService';
 import { IPythonToolExecutionService } from '../../client/common/process/types';
-import { ExecutionInfo, IConfigurationService, IDisposableRegistry, IFormattingSettings, IOutputChannel, IPythonSettings } from '../../client/common/types';
+import {
+    ExecutionInfo,
+    IConfigurationService,
+    IDisposableRegistry,
+    IFormattingSettings,
+    IOutputChannel,
+    IPythonSettings
+} from '../../client/common/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BaseFormatter } from '../../client/formatters/baseFormatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
@@ -79,16 +86,23 @@ suite('Formatting - Test Arguments', () => {
 
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(workspace.getWorkspaceFolder(anything())).thenReturn({ name: '', index: 0, uri: workspaceUri });
-        when(container.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL)).thenReturn(instance(outputChannel));
+        when(container.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL)).thenReturn(
+            instance(outputChannel)
+        );
         when(container.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
         when(container.get<IFormatterHelper>(IFormatterHelper)).thenReturn(formatterHelper);
         when(container.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspace));
         when(container.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
-        when(container.get<IPythonToolExecutionService>(IPythonToolExecutionService)).thenReturn(instance(pythonToolExecutionService));
+        when(container.get<IPythonToolExecutionService>(IPythonToolExecutionService)).thenReturn(
+            instance(pythonToolExecutionService)
+        );
         when(container.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
     });
 
-    async function setupFormatter(formatter: BaseFormatter, formattingSettings: IFormattingSettings): Promise<ExecutionInfo> {
+    async function setupFormatter(
+        formatter: BaseFormatter,
+        formattingSettings: IFormattingSettings
+    ): Promise<ExecutionInfo> {
         const token = new CancellationTokenSource().token;
         when(settings.formatting).thenReturn(formattingSettings);
         when(pythonToolExecutionService.exec(anything(), anything(), anything())).thenResolve({ stdout: '' });
@@ -105,7 +119,10 @@ suite('Formatting - Test Arguments', () => {
 
         assert.equal(execInfo.execPath, formattingSettingsWithPath.blackPath);
         assert.equal(execInfo.moduleName, undefined);
-        assert.deepEqual(execInfo.args, formattingSettingsWithPath.blackArgs.concat(['--diff', '--quiet', docUri.fsPath]));
+        assert.deepEqual(
+            execInfo.args,
+            formattingSettingsWithPath.blackArgs.concat(['--diff', '--quiet', docUri.fsPath])
+        );
     });
     test('Ensure black modulename and args used to launch the formatter', async () => {
         const formatter = new BlackFormatter(instance(container));
@@ -114,7 +131,10 @@ suite('Formatting - Test Arguments', () => {
 
         assert.equal(execInfo.execPath, formattingSettingsWithModuleName.blackPath);
         assert.equal(execInfo.moduleName, formattingSettingsWithModuleName.blackPath);
-        assert.deepEqual(execInfo.args, formattingSettingsWithPath.blackArgs.concat(['--diff', '--quiet', docUri.fsPath]));
+        assert.deepEqual(
+            execInfo.args,
+            formattingSettingsWithPath.blackArgs.concat(['--diff', '--quiet', docUri.fsPath])
+        );
     });
     test('Ensure autopep8path and args used to launch the formatter', async () => {
         const formatter = new AutoPep8Formatter(instance(container));

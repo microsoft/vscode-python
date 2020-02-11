@@ -13,7 +13,12 @@ import { IServiceContainer } from '../../../../client/ioc/types';
 import { PYTEST_PROVIDER } from '../../../../client/testing/common/constants';
 import { TestsDiscoveryService } from '../../../../client/testing/common/services/discovery';
 import { TestsHelper } from '../../../../client/testing/common/testUtils';
-import { ITestDiscoveryService, ITestsHelper, TestDiscoveryOptions, Tests } from '../../../../client/testing/common/types';
+import {
+    ITestDiscoveryService,
+    ITestsHelper,
+    TestDiscoveryOptions,
+    Tests
+} from '../../../../client/testing/common/types';
 import { ArgumentsService } from '../../../../client/testing/pytest/services/argsService';
 import { TestDiscoveryService } from '../../../../client/testing/pytest/services/discoveryService';
 import { IArgumentsService, TestFilter } from '../../../../client/testing/types';
@@ -38,7 +43,9 @@ suite('Unit Tests - PyTest - Discovery', () => {
         helper = mock(TestsHelper);
         argsService = mock(ArgumentsService);
 
-        when(serviceContainer.get<IArgumentsService>(IArgumentsService, PYTEST_PROVIDER)).thenReturn(instance(argsService));
+        when(serviceContainer.get<IArgumentsService>(IArgumentsService, PYTEST_PROVIDER)).thenReturn(
+            instance(argsService)
+        );
         when(serviceContainer.get<ITestsHelper>(ITestsHelper)).thenReturn(instance(helper));
         discoveryService = new DiscoveryService(instance(serviceContainer));
     });
@@ -163,7 +170,9 @@ suite('Unit Tests - PyTest - Discovery', () => {
 
         const commonDiscoveryService = mock(TestsDiscoveryService);
         const discoveredTests = ('Hello' as any) as Tests;
-        when(serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, 'common')).thenReturn(instance(commonDiscoveryService));
+        when(serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, 'common')).thenReturn(
+            instance(commonDiscoveryService)
+        );
         when(commonDiscoveryService.discoverTests(deepEqual(discoveryOptions))).thenResolve(discoveredTests);
 
         const tests = await discoveryService.discoverTestsInTestDirectory(options);

@@ -50,7 +50,15 @@ suite('Python Settings', async () => {
 
     function initializeConfig(sourceSettings: PythonSettings) {
         // string settings
-        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel']) {
+        for (const name of [
+            'pythonPath',
+            'venvPath',
+            'condaPath',
+            'pipenvPath',
+            'envFile',
+            'poetryPath',
+            'insidersChannel'
+        ]) {
             config
                 .setup(c => c.get<string>(name))
                 // tslint:disable-next-line:no-any
@@ -98,7 +106,9 @@ suite('Python Settings', async () => {
         config.setup(c => c.get<ISortImportSettings>('sortImports')).returns(() => sourceSettings.sortImports);
         config.setup(c => c.get<IFormattingSettings>('formatting')).returns(() => sourceSettings.formatting);
         config.setup(c => c.get<IAutoCompleteSettings>('autoComplete')).returns(() => sourceSettings.autoComplete);
-        config.setup(c => c.get<IWorkspaceSymbolSettings>('workspaceSymbols')).returns(() => sourceSettings.workspaceSymbols);
+        config
+            .setup(c => c.get<IWorkspaceSymbolSettings>('workspaceSymbols'))
+            .returns(() => sourceSettings.workspaceSymbols);
         config.setup(c => c.get<ITestingSettings>('testing')).returns(() => sourceSettings.testing);
         config.setup(c => c.get<ITerminalSettings>('terminal')).returns(() => sourceSettings.terminal);
         config.setup(c => c.get<IDataScienceSettings>('dataScience')).returns(() => sourceSettings.datascience);
@@ -119,15 +129,19 @@ suite('Python Settings', async () => {
     }
 
     suite('String settings', async () => {
-        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(async settingName => {
-            testIfValueIsUpdated(settingName, 'stringValue');
-        });
+        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(
+            async settingName => {
+                testIfValueIsUpdated(settingName, 'stringValue');
+            }
+        );
     });
 
     suite('Boolean settings', async () => {
-        ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(async settingName => {
-            testIfValueIsUpdated(settingName, true);
-        });
+        ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(
+            async settingName => {
+                testIfValueIsUpdated(settingName, true);
+            }
+        );
     });
 
     suite('Number settings', async () => {

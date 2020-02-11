@@ -69,7 +69,9 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
             cmd.source = document.getText();
         }
 
-        const data = await this.jediFactory.getJediProxyHandler<proxy.IReferenceResult>(document.uri).sendCommand(cmd, token);
+        const data = await this.jediFactory
+            .getJediProxyHandler<proxy.IReferenceResult>(document.uri)
+            .sendCommand(cmd, token);
         return data ? PythonReferenceProvider.parseData(data) : undefined;
     }
 }

@@ -16,13 +16,21 @@ import { JupyterInstallError } from '../jupyterInstallError';
 
 @injectable()
 export class JupyterCommandInterpreterDependencyService implements IJupyterInterpreterDependencyManager {
-    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell, @inject(IInstallationChannelManager) protected channels: IInstallationChannelManager) {}
+    constructor(
+        @inject(IApplicationShell) private applicationShell: IApplicationShell,
+        @inject(IInstallationChannelManager) protected channels: IInstallationChannelManager
+    ) {}
     public async installMissingDependencies(err?: JupyterInstallError): Promise<void> {
         if (!err) {
             return;
         }
         sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
-        const response = await this.applicationShell.showInformationMessage(err.message, DataScience.jupyterInstall(), DataScience.notebookCheckForImportNo(), err.actionTitle);
+        const response = await this.applicationShell.showInformationMessage(
+            err.message,
+            DataScience.jupyterInstall(),
+            DataScience.notebookCheckForImportNo(),
+            err.actionTitle
+        );
         if (response === DataScience.jupyterInstall()) {
             const installers = await this.channels.getInstallationChannels();
             if (installers) {
@@ -32,9 +40,17 @@ export class JupyterCommandInterpreterDependencyService implements IJupyterInter
 
                 if (installer && product) {
                     sendTelemetryEvent(Telemetry.UserInstalledJupyter);
-                    installer.installModule(product).catch(e => this.applicationShell.showErrorMessage(e.message, DataScience.pythonInteractiveHelpLink()));
+                    installer
+                        .installModule(product)
+                        .catch(e =>
+                            this.applicationShell.showErrorMessage(e.message, DataScience.pythonInteractiveHelpLink())
+                        );
                 } else if (installers[0] && product) {
-                    installers[0].installModule(product).catch(e => this.applicationShell.showErrorMessage(e.message, DataScience.pythonInteractiveHelpLink()));
+                    installers[0]
+                        .installModule(product)
+                        .catch(e =>
+                            this.applicationShell.showErrorMessage(e.message, DataScience.pythonInteractiveHelpLink())
+                        );
                 }
             }
         } else if (response === DataScience.notebookCheckForImportNo()) {

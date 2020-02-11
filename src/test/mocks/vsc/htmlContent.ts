@@ -57,12 +57,19 @@ export namespace vscMockHtmlContent {
         if (thing instanceof MarkdownString) {
             return true;
         } else if (thing && typeof thing === 'object') {
-            return typeof (<IMarkdownString>thing).value === 'string' && (typeof (<IMarkdownString>thing).isTrusted === 'boolean' || (<IMarkdownString>thing).isTrusted === void 0);
+            return (
+                typeof (<IMarkdownString>thing).value === 'string' &&
+                (typeof (<IMarkdownString>thing).isTrusted === 'boolean' ||
+                    (<IMarkdownString>thing).isTrusted === void 0)
+            );
         }
         return false;
     }
 
-    export function markedStringsEquals(a: IMarkdownString | IMarkdownString[], b: IMarkdownString | IMarkdownString[]): boolean {
+    export function markedStringsEquals(
+        a: IMarkdownString | IMarkdownString[],
+        b: IMarkdownString | IMarkdownString[]
+    ): boolean {
         if (!a && !b) {
             return true;
         } else if (!a || !b) {

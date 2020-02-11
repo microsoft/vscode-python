@@ -8,7 +8,12 @@ import { Memento } from 'vscode';
 import { GLOBAL_MEMENTO, IMemento, IPersistentState, IPersistentStateFactory, WORKSPACE_MEMENTO } from './types';
 
 export class PersistentState<T> implements IPersistentState<T> {
-    constructor(private storage: Memento, private key: string, private defaultValue?: T, private expiryDurationMs?: number) {}
+    constructor(
+        private storage: Memento,
+        private key: string,
+        private defaultValue?: T,
+        private expiryDurationMs?: number
+    ) {}
 
     public get value(): T {
         if (this.expiryDurationMs) {
@@ -34,11 +39,22 @@ export class PersistentState<T> implements IPersistentState<T> {
 
 @injectable()
 export class PersistentStateFactory implements IPersistentStateFactory {
-    constructor(@inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento, @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento) {}
-    public createGlobalPersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T> {
+    constructor(
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
+        @inject(IMemento) @named(WORKSPACE_MEMENTO) private workspaceState: Memento
+    ) {}
+    public createGlobalPersistentState<T>(
+        key: string,
+        defaultValue?: T,
+        expiryDurationMs?: number
+    ): IPersistentState<T> {
         return new PersistentState<T>(this.globalState, key, defaultValue, expiryDurationMs);
     }
-    public createWorkspacePersistentState<T>(key: string, defaultValue?: T, expiryDurationMs?: number): IPersistentState<T> {
+    public createWorkspacePersistentState<T>(
+        key: string,
+        defaultValue?: T,
+        expiryDurationMs?: number
+    ): IPersistentState<T> {
         return new PersistentState<T>(this.workspaceState, key, defaultValue, expiryDurationMs);
     }
 }

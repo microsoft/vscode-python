@@ -13,7 +13,11 @@ import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { LanguageServerDownloader } from '../../../client/activation/common/downloader';
 import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
-import { ILanguageServerFolderService, ILanguageServerOutputChannel, IPlatformData } from '../../../client/activation/types';
+import {
+    ILanguageServerFolderService,
+    ILanguageServerOutputChannel,
+    IPlatformData
+} from '../../../client/activation/types';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -290,7 +294,9 @@ suite('Language Server Activation - Downloader', () => {
             folderService.setup(f => f.getLatestLanguageServerVersion(resource)).returns(() => Promise.resolve(pkg));
             output.setup(o => o.appendLine(LanguageService.downloadFailedOutputMessage()));
             output.setup(o => o.appendLine((failure as unknown) as string));
-            appShell.setup(a => a.showErrorMessage(LanguageService.lsFailedToDownload(), Common.openOutputPanel())).returns(() => Promise.resolve(undefined));
+            appShell
+                .setup(a => a.showErrorMessage(LanguageService.lsFailedToDownload(), Common.openOutputPanel()))
+                .returns(() => Promise.resolve(undefined));
 
             let actualFailure: Error | undefined;
             try {
@@ -311,7 +317,9 @@ suite('Language Server Activation - Downloader', () => {
             folderService.setup(f => f.getLatestLanguageServerVersion(resource)).returns(() => Promise.resolve(pkg));
             output.setup(o => o.appendLine(LanguageService.extractionFailedOutputMessage()));
             output.setup(o => o.appendLine((failure as unknown) as string));
-            appShell.setup(a => a.showErrorMessage(LanguageService.lsFailedToExtract(), Common.openOutputPanel())).returns(() => Promise.resolve(undefined));
+            appShell
+                .setup(a => a.showErrorMessage(LanguageService.lsFailedToExtract(), Common.openOutputPanel()))
+                .returns(() => Promise.resolve(undefined));
 
             let actualFailure: Error | undefined;
             try {

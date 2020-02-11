@@ -38,10 +38,18 @@ suite('Unit Test Configuration Manager (unit)', () => {
                 const outputChannel = TypeMoq.Mock.ofType<OutputChannel>().object;
                 const installer = TypeMoq.Mock.ofType<IInstaller>().object;
                 const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(TEST_OUTPUT_CHANNEL))).returns(() => outputChannel);
-                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ITestConfigSettingsService))).returns(() => configService.object);
+                serviceContainer
+                    .setup(s => s.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(TEST_OUTPUT_CHANNEL)))
+                    .returns(() => outputChannel);
+                serviceContainer
+                    .setup(s => s.get(TypeMoq.It.isValue(ITestConfigSettingsService)))
+                    .returns(() => configService.object);
                 serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IInstaller))).returns(() => installer);
-                manager = new MockTestConfigurationManager(workspaceUri, product as UnitTestProduct, serviceContainer.object);
+                manager = new MockTestConfigurationManager(
+                    workspaceUri,
+                    product as UnitTestProduct,
+                    serviceContainer.object
+                );
             });
 
             test('Enabling a test product shoud disable other products', async () => {

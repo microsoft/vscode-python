@@ -7,10 +7,7 @@ import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import { TemporaryFileSystem } from '../../../client/common/platform/fs-temp';
 import { TemporaryFile } from '../../../client/common/platform/types';
-// prettier-ignore
-import {
-    assertDoesNotExist, assertExists, FSFixture, WINDOWS
-} from './utils';
+import { assertDoesNotExist, assertExists, FSFixture, WINDOWS } from './utils';
 
 suite('FileSystem - TemporaryFileSystem', () => {
     let tmpfs: TemporaryFileSystem;

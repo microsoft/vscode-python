@@ -20,7 +20,10 @@ export class DebugStreamProvider implements IDebugStreamProvider {
             this.server.close();
         }
     }
-    public async getInputAndOutputStreams(): Promise<{ input: NodeJS.ReadStream | Socket; output: NodeJS.WriteStream | Socket }> {
+    public async getInputAndOutputStreams(): Promise<{
+        input: NodeJS.ReadStream | Socket;
+        output: NodeJS.WriteStream | Socket;
+    }> {
         const debugPort = this.getDebugPort();
         let debugSocket: Promise<Socket> | undefined;
 

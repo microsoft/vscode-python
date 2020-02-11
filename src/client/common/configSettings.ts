@@ -2,7 +2,16 @@
 
 import * as child_process from 'child_process';
 import * as path from 'path';
-import { ConfigurationChangeEvent, ConfigurationTarget, DiagnosticSeverity, Disposable, Event, EventEmitter, Uri, WorkspaceConfiguration } from 'vscode';
+import {
+    ConfigurationChangeEvent,
+    ConfigurationTarget,
+    DiagnosticSeverity,
+    Disposable,
+    Event,
+    EventEmitter,
+    Uri,
+    WorkspaceConfiguration
+} from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import '../common/extensions';
 import { IInterpreterAutoSeletionProxyService } from '../interpreter/autoSelection/types';
@@ -73,13 +82,21 @@ export class PythonSettings implements IPythonSettings {
         return this.changed.event;
     }
 
-    constructor(workspaceFolder: Resource, private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService, workspace?: IWorkspaceService) {
+    constructor(
+        workspaceFolder: Resource,
+        private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+        workspace?: IWorkspaceService
+    ) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
         this.initialize();
     }
     // tslint:disable-next-line:function-name
-    public static getInstance(resource: Uri | undefined, interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService, workspace?: IWorkspaceService): PythonSettings {
+    public static getInstance(
+        resource: Uri | undefined,
+        interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+        workspace?: IWorkspaceService
+    ): PythonSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
         const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.fsPath : '';
@@ -91,7 +108,9 @@ export class PythonSettings implements IPythonSettings {
             // tslint:disable-next-line:no-any
             const config = workspace.getConfiguration('editor', resource ? resource : (null as any));
             const formatOnType = config ? config.get('formatOnType', false) : false;
-            sendTelemetryEvent(EventName.COMPLETION_ADD_BRACKETS, undefined, { enabled: settings.autoComplete ? settings.autoComplete.addBrackets : false });
+            sendTelemetryEvent(EventName.COMPLETION_ADD_BRACKETS, undefined, {
+                enabled: settings.autoComplete ? settings.autoComplete.addBrackets : false
+            });
             sendTelemetryEvent(EventName.FORMAT_ON_TYPE, undefined, { enabled: formatOnType });
         }
         // tslint:disable-next-line:no-non-null-assertion
@@ -99,7 +118,10 @@ export class PythonSettings implements IPythonSettings {
     }
 
     // tslint:disable-next-line:type-literal-delimiter
-    public static getSettingsUriAndTarget(resource: Uri | undefined, workspace?: IWorkspaceService): { uri: Uri | undefined; target: ConfigurationTarget } {
+    public static getSettingsUriAndTarget(
+        resource: Uri | undefined,
+        workspace?: IWorkspaceService
+    ): { uri: Uri | undefined; target: ConfigurationTarget } {
         workspace = workspace || new WorkspaceService();
         const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
         let workspaceFolderUri: Uri | undefined = workspaceFolder ? workspaceFolder.uri : undefined;
@@ -135,9 +157,13 @@ export class PythonSettings implements IPythonSettings {
         this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
         // If user has defined a custom value, use it else try to get the best interpreter ourselves.
         if (this.pythonPath.length === 0 || this.pythonPath === 'python') {
-            const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(this.workspaceRoot);
+            const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
+                this.workspaceRoot
+            );
             if (autoSelectedPythonInterpreter) {
-                this.interpreterAutoSelectionService.setWorkspaceInterpreter(this.workspaceRoot, autoSelectedPythonInterpreter).ignoreErrors();
+                this.interpreterAutoSelectionService
+                    .setWorkspaceInterpreter(this.workspaceRoot, autoSelectedPythonInterpreter)
+                    .ignoreErrors();
             }
             this.pythonPath = autoSelectedPythonInterpreter ? autoSelectedPythonInterpreter.path : this.pythonPath;
         }
@@ -152,9 +178,13 @@ export class PythonSettings implements IPythonSettings {
         const poetryPath = systemVariables.resolveAny(pythonSettings.get<string>('poetryPath'))!;
         this.poetryPath = poetryPath && poetryPath.length > 0 ? getAbsolutePath(poetryPath, workspaceRoot) : poetryPath;
 
-        this.downloadLanguageServer = systemVariables.resolveAny(pythonSettings.get<boolean>('downloadLanguageServer', true))!;
+        this.downloadLanguageServer = systemVariables.resolveAny(
+            pythonSettings.get<boolean>('downloadLanguageServer', true)
+        )!;
         this.jediEnabled = systemVariables.resolveAny(pythonSettings.get<boolean>('jediEnabled', true))!;
-        this.autoUpdateLanguageServer = systemVariables.resolveAny(pythonSettings.get<boolean>('autoUpdateLanguageServer', true))!;
+        this.autoUpdateLanguageServer = systemVariables.resolveAny(
+            pythonSettings.get<boolean>('autoUpdateLanguageServer', true)
+        )!;
         if (this.jediEnabled) {
             // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
             this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
@@ -266,10 +296,19 @@ export class PythonSettings implements IPythonSettings {
               };
         this.linting.pylintPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylintPath), workspaceRoot);
         this.linting.flake8Path = getAbsolutePath(systemVariables.resolveAny(this.linting.flake8Path), workspaceRoot);
-        this.linting.pycodestylePath = getAbsolutePath(systemVariables.resolveAny(this.linting.pycodestylePath), workspaceRoot);
+        this.linting.pycodestylePath = getAbsolutePath(
+            systemVariables.resolveAny(this.linting.pycodestylePath),
+            workspaceRoot
+        );
         this.linting.pylamaPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylamaPath), workspaceRoot);
-        this.linting.prospectorPath = getAbsolutePath(systemVariables.resolveAny(this.linting.prospectorPath), workspaceRoot);
-        this.linting.pydocstylePath = getAbsolutePath(systemVariables.resolveAny(this.linting.pydocstylePath), workspaceRoot);
+        this.linting.prospectorPath = getAbsolutePath(
+            systemVariables.resolveAny(this.linting.prospectorPath),
+            workspaceRoot
+        );
+        this.linting.pydocstylePath = getAbsolutePath(
+            systemVariables.resolveAny(this.linting.pydocstylePath),
+            workspaceRoot
+        );
         this.linting.mypyPath = getAbsolutePath(systemVariables.resolveAny(this.linting.mypyPath), workspaceRoot);
         this.linting.banditPath = getAbsolutePath(systemVariables.resolveAny(this.linting.banditPath), workspaceRoot);
 
@@ -292,12 +331,20 @@ export class PythonSettings implements IPythonSettings {
                   yapfArgs: [],
                   yapfPath: 'yapf'
               };
-        this.formatting.autopep8Path = getAbsolutePath(systemVariables.resolveAny(this.formatting.autopep8Path), workspaceRoot);
+        this.formatting.autopep8Path = getAbsolutePath(
+            systemVariables.resolveAny(this.formatting.autopep8Path),
+            workspaceRoot
+        );
         this.formatting.yapfPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.yapfPath), workspaceRoot);
-        this.formatting.blackPath = getAbsolutePath(systemVariables.resolveAny(this.formatting.blackPath), workspaceRoot);
+        this.formatting.blackPath = getAbsolutePath(
+            systemVariables.resolveAny(this.formatting.blackPath),
+            workspaceRoot
+        );
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        const autoCompleteSettings = systemVariables.resolveAny(pythonSettings.get<IAutoCompleteSettings>('autoComplete'))!;
+        const autoCompleteSettings = systemVariables.resolveAny(
+            pythonSettings.get<IAutoCompleteSettings>('autoComplete')
+        )!;
         if (this.autoComplete) {
             Object.assign<IAutoCompleteSettings, IAutoCompleteSettings>(this.autoComplete, autoCompleteSettings);
         } else {
@@ -314,9 +361,14 @@ export class PythonSettings implements IPythonSettings {
               };
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        const workspaceSymbolsSettings = systemVariables.resolveAny(pythonSettings.get<IWorkspaceSymbolSettings>('workspaceSymbols'))!;
+        const workspaceSymbolsSettings = systemVariables.resolveAny(
+            pythonSettings.get<IWorkspaceSymbolSettings>('workspaceSymbols')
+        )!;
         if (this.workspaceSymbols) {
-            Object.assign<IWorkspaceSymbolSettings, IWorkspaceSymbolSettings>(this.workspaceSymbols, workspaceSymbolsSettings);
+            Object.assign<IWorkspaceSymbolSettings, IWorkspaceSymbolSettings>(
+                this.workspaceSymbols,
+                workspaceSymbolsSettings
+            );
         } else {
             this.workspaceSymbols = workspaceSymbolsSettings;
         }
@@ -331,7 +383,10 @@ export class PythonSettings implements IPythonSettings {
                   rebuildOnStart: true,
                   tagFilePath: path.join(workspaceRoot, 'tags')
               };
-        this.workspaceSymbols.tagFilePath = getAbsolutePath(systemVariables.resolveAny(this.workspaceSymbols.tagFilePath), workspaceRoot);
+        this.workspaceSymbols.tagFilePath = getAbsolutePath(
+            systemVariables.resolveAny(this.workspaceSymbols.tagFilePath),
+            workspaceRoot
+        );
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const testSettings = systemVariables.resolveAny(pythonSettings.get<ITestingSettings>('testing'))!;
@@ -375,7 +430,10 @@ export class PythonSettings implements IPythonSettings {
                   autoTestDiscoverOnSaveEnabled: true
               };
         this.testing.pytestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pytestPath), workspaceRoot);
-        this.testing.nosetestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.nosetestPath), workspaceRoot);
+        this.testing.nosetestPath = getAbsolutePath(
+            systemVariables.resolveAny(this.testing.nosetestPath),
+            workspaceRoot
+        );
         if (this.testing.cwd) {
             this.testing.cwd = getAbsolutePath(systemVariables.resolveAny(this.testing.cwd), workspaceRoot);
         }
@@ -421,7 +479,9 @@ export class PythonSettings implements IPythonSettings {
                   optOutFrom: []
               };
 
-        const dataScienceSettings = systemVariables.resolveAny(pythonSettings.get<IDataScienceSettings>('dataScience'))!;
+        const dataScienceSettings = systemVariables.resolveAny(
+            pythonSettings.get<IDataScienceSettings>('dataScience')
+        )!;
         if (this.datascience) {
             Object.assign<IDataScienceSettings, IDataScienceSettings>(this.datascience, dataScienceSettings);
         } else {
@@ -470,7 +530,9 @@ export class PythonSettings implements IPythonSettings {
             this.debounceChangeNotification();
         };
         this.disposables.push(this.workspace.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
-        this.disposables.push(this.interpreterAutoSelectionService.onDidChangeAutoSelectedInterpreter(onDidChange.bind(this)));
+        this.disposables.push(
+            this.interpreterAutoSelectionService.onDidChangeAutoSelectedInterpreter(onDidChange.bind(this))
+        );
         this.disposables.push(
             this.workspace.onDidChangeConfiguration((event: ConfigurationChangeEvent) => {
                 if (event.affectsConfiguration('python')) {
@@ -507,7 +569,11 @@ function getPythonExecutable(pythonPath: string): string {
     pythonPath = untildify(pythonPath) as string;
 
     // If only 'python'.
-    if (pythonPath === 'python' || pythonPath.indexOf(path.sep) === -1 || path.basename(pythonPath) === path.dirname(pythonPath)) {
+    if (
+        pythonPath === 'python' ||
+        pythonPath.indexOf(path.sep) === -1 ||
+        path.basename(pythonPath) === path.dirname(pythonPath)
+    ) {
         return pythonPath;
     }
 

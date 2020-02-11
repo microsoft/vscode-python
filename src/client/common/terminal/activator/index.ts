@@ -11,12 +11,22 @@ import { BaseTerminalActivator } from './base';
 @injectable()
 export class TerminalActivator implements ITerminalActivator {
     protected baseActivator!: ITerminalActivator;
-    constructor(@inject(ITerminalHelper) readonly helper: ITerminalHelper, @multiInject(ITerminalActivationHandler) private readonly handlers: ITerminalActivationHandler[]) {
+    constructor(
+        @inject(ITerminalHelper) readonly helper: ITerminalHelper,
+        @multiInject(ITerminalActivationHandler) private readonly handlers: ITerminalActivationHandler[]
+    ) {
         this.initialize();
     }
-    public async activateEnvironmentInTerminal(terminal: Terminal, options?: TerminalActivationOptions): Promise<boolean> {
+    public async activateEnvironmentInTerminal(
+        terminal: Terminal,
+        options?: TerminalActivationOptions
+    ): Promise<boolean> {
         const activated = await this.baseActivator.activateEnvironmentInTerminal(terminal, options);
-        this.handlers.forEach(handler => handler.handleActivation(terminal, options?.resource, options?.preserveFocus === true, activated).ignoreErrors());
+        this.handlers.forEach(handler =>
+            handler
+                .handleActivation(terminal, options?.resource, options?.preserveFocus === true, activated)
+                .ignoreErrors()
+        );
         return activated;
     }
     protected initialize() {

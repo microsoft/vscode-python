@@ -38,7 +38,9 @@ suite('Language Server - Language Server Extension', () => {
         extension.clearLoadExtensionArgs();
     });
     test('Must register command handler', async () => {
-        when(cmdManager.registerCommand(loadExtensionCommand, anything())).thenReturn(commandRegistrationDisposable.object);
+        when(cmdManager.registerCommand(loadExtensionCommand, anything())).thenReturn(
+            commandRegistrationDisposable.object
+        );
         await extension.register();
         verify(cmdManager.registerCommand(loadExtensionCommand, anything())).once();
         extension.dispose();

@@ -79,6 +79,8 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
         }
         const workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const workspaceFolder = diagnostic.resource ? workspace.getWorkspaceFolder(diagnostic.resource) : undefined;
-        return `${diagnostic.code}dbe75733-0407-4124-a1b2-ca769dc30523${workspaceFolder ? workspaceFolder.uri.fsPath : ''}`;
+        return `${diagnostic.code}dbe75733-0407-4124-a1b2-ca769dc30523${
+            workspaceFolder ? workspaceFolder.uri.fsPath : ''
+        }`;
     }
 }

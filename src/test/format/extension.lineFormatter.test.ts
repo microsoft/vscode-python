@@ -33,13 +33,19 @@ suite('Formatting - line formatter', () => {
         testFormatLine('spam ( ham[ 1 :3], {eggs : 2})', 'spam(ham[1:3], {eggs: 2})');
     });
     test('Colon slices with double colon', () => {
-        testFormatLine('ham [1:9 ], ham[ 1: 9:   3], ham[: 9 :3], ham[1: :3], ham [ 1: 9:]', 'ham[1:9], ham[1:9:3], ham[:9:3], ham[1::3], ham[1:9:]');
+        testFormatLine(
+            'ham [1:9 ], ham[ 1: 9:   3], ham[: 9 :3], ham[1: :3], ham [ 1: 9:]',
+            'ham[1:9], ham[1:9:3], ham[:9:3], ham[1::3], ham[1:9:]'
+        );
     });
     test('Colon slices with operators', () => {
         testFormatLine('ham [lower+ offset :upper+offset]', 'ham[lower + offset:upper + offset]');
     });
     test('Colon slices with functions', () => {
-        testFormatLine('ham[ : upper_fn ( x) : step_fn(x )], ham[ :: step_fn(x)]', 'ham[:upper_fn(x):step_fn(x)], ham[::step_fn(x)]');
+        testFormatLine(
+            'ham[ : upper_fn ( x) : step_fn(x )], ham[ :: step_fn(x)]',
+            'ham[:upper_fn(x):step_fn(x)], ham[::step_fn(x)]'
+        );
     });
     test('Colon in for loop', () => {
         testFormatLine('for index in  range( len(fruits) ): ', 'for index in range(len(fruits)):');
@@ -127,7 +133,11 @@ suite('Formatting - line formatter', () => {
         testFormatLine('if(True) :', 'if (True):');
     });
     test('lambda arguments', () => {
-        testFormatMultiline('l4= lambda x =lambda y =lambda z= 1: z: y(): x()', 0, 'l4 = lambda x=lambda y=lambda z=1: z: y(): x()');
+        testFormatMultiline(
+            'l4= lambda x =lambda y =lambda z= 1: z: y(): x()',
+            0,
+            'l4 = lambda x=lambda y=lambda z=1: z: y(): x()'
+        );
     });
     test('star in multiline arguments', () => {
         testFormatMultiline('x = [\n  * param1,\n  * param2\n]', 1, '  *param1,');
@@ -155,7 +165,11 @@ suite('Formatting - line formatter', () => {
             '        "http://127.0.0.1:8000/", headers=cookie) as ws:  # add unwanted spaces'
         );
         testFormatMultiline('def pos0key1(*, key): return key\npos0key1(key= 100)', 1, 'pos0key1(key=100)');
-        testFormatMultiline('def test_string_literals(self):\n  x= 1; y =2; self.assertTrue(len(x) == 0 and x == y)', 1, '  x = 1; y = 2; self.assertTrue(len(x) == 0 and x == y)');
+        testFormatMultiline(
+            'def test_string_literals(self):\n  x= 1; y =2; self.assertTrue(len(x) == 0 and x == y)',
+            1,
+            '  x = 1; y = 2; self.assertTrue(len(x) == 0 and x == y)'
+        );
     });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');
