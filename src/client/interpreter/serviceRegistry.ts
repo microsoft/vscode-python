@@ -103,6 +103,7 @@ import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
  * See use case in `src\test\serviceRegistry.ts` for details
  * @param serviceManager
  */
+// tslint:disable-next-line: max-func-body-length
 export function registerInterpreterTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IKnownSearchPathsForInterpreters>(
         IKnownSearchPathsForInterpreters,

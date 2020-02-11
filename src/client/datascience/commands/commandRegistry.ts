@@ -76,10 +76,10 @@ export class CommandRegistry implements IDisposable {
     public dispose() {
         this.disposables.forEach(d => d.dispose());
     }
-    // tslint:disable-next-line: no-any
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
         U extends ICommandNameArgumentTypeMapping[E]
+        // tslint:disable-next-line: no-any
     >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);
@@ -222,7 +222,6 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    // tslint:disable-next-line:no-any
     private async runSelectionOrLine(): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 

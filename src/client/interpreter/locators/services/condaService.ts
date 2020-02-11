@@ -232,9 +232,9 @@ export class CondaService implements ICondaService {
     @traceDecorators.verbose('Get Conda environments')
     public async getCondaEnvironments(ignoreCache: boolean): Promise<CondaEnvironmentInfo[] | undefined> {
         // Global cache.
-        // tslint:disable-next-line:no-any
         const globalPersistence = this.persistentStateFactory.createGlobalPersistentState<{
             data: CondaEnvironmentInfo[] | undefined;
+            // tslint:disable-next-line:no-any
         }>('CONDA_ENVIRONMENTS', undefined as any);
         if (!ignoreCache && globalPersistence.value) {
             return globalPersistence.value.data;

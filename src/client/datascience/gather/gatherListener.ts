@@ -28,6 +28,7 @@ export class GatherListener implements IInteractiveWindowListener {
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
+        // tslint:disable-next-line: no-any
         payload: any;
     }>();
     private gatherLogger: GatherLogger;
@@ -76,9 +77,9 @@ export class GatherListener implements IInteractiveWindowListener {
         }
     }
 
-    // tslint:disable:no-any
     private handleMessage<M extends IInteractiveWindowMapping, T extends keyof M>(
         _message: T,
+        // tslint:disable:no-any
         payload: any,
         handler: (args: M[T]) => void
     ) {

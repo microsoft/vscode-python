@@ -53,6 +53,7 @@ function logToFile(logLevel: LogLevel, ...args: any[]) {
  *   To do this we need to monkey patch the console methods.
  *   This is optional (generally done when running tests on CI).
  */
+// tslint:disable-next-line: max-func-body-length
 function initializeConsoleLogger() {
     const logMethods = {
         log: Symbol.for('log'),

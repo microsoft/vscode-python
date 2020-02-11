@@ -944,8 +944,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const message2 = localize.DataScience.dirtyNotebookMessage2();
         const yes = localize.DataScience.dirtyNotebookYes();
         const no = localize.DataScience.dirtyNotebookNo();
-        // tslint:disable-next-line: messages-must-be-localized
         const result = await this.applicationShell.showInformationMessage(
+            // tslint:disable-next-line: messages-must-be-localized
             `${message1}\n${message2}`,
             { modal: true },
             yes,

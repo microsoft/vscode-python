@@ -60,7 +60,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private static get ansiToHtmlClass(): ClassType<any> {
         if (!CellOutput.ansiToHtmlClass_ctor) {
             // ansiToHtml is different between the tests running and webpack. figure out which one
-            // tslint:disable-next-line: no-any
             if (ansiToHtml instanceof Function) {
                 CellOutput.ansiToHtmlClass_ctor = ansiToHtml;
             } else {
@@ -127,10 +126,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return null;
     }
 
-    // tslint:disable-next-line: no-any
     public shouldComponentUpdate(
         nextProps: Readonly<ICellOutputProps>,
         _nextState: Readonly<ICellOutputProps>,
+        // tslint:disable-next-line: no-any
         _nextContext: any
     ): boolean {
         if (nextProps === this.props) {

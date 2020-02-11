@@ -261,8 +261,8 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
         type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
-        // tslint:disable-next-line: no-any
         const request = new RequestType<
+            // tslint:disable-next-line: no-any
             { file_name: string; args: string[]; cwd?: string; env?: any },
             ExecResponse,
             void,
@@ -283,8 +283,8 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
         type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
-        // tslint:disable-next-line: no-any
         const request = new RequestType<
+            // tslint:disable-next-line: no-any
             { module_name: string; args: string[]; cwd?: string; env?: any },
             ExecResponse,
             void,
@@ -309,8 +309,8 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
             let response: ExecResponse;
             if ('fileName' in moduleOrFile) {
-                // tslint:disable-next-line: no-any
                 const request = new RequestType<
+                    // tslint:disable-next-line: no-any
                     { file_name: string; args: string[]; cwd?: string; env?: any },
                     ExecResponse,
                     void,
@@ -323,8 +323,8 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
                     env: options.env
                 });
             } else {
-                // tslint:disable-next-line: no-any
                 const request = new RequestType<
+                    // tslint:disable-next-line: no-any
                     { module_name: string; args: string[]; cwd?: string; env?: any },
                     ExecResponse,
                     void,

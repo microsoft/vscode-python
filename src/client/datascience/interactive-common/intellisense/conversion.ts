@@ -306,10 +306,10 @@ export function convertToMonacoHover(
     };
 }
 
-// tslint:disable-next-line: no-any
 export function convertStringsToSuggestions(
     strings: ReadonlyArray<string>,
     range: monacoEditor.IRange,
+    // tslint:disable-next-line: no-any
     metadata: any
 ): monacoEditor.languages.CompletionItem[] {
     // Try to compute kind from the metadata.

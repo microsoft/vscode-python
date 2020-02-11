@@ -321,10 +321,10 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.updateBackgroundStyle();
         }
     }
-    // tslint:disable-next-line: no-any
     public shouldComponentUpdate(
         nextProps: Readonly<IMonacoEditorProps>,
         nextState: Readonly<IMonacoEditorState>,
+        // tslint:disable-next-line: no-any
         _nextContext: any
     ): boolean {
         if (!fastDeepEqual(nextProps, this.props)) {

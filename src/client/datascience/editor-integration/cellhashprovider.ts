@@ -40,6 +40,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
+        // tslint:disable-next-line: no-any
         payload: any;
     }>();
     // Map of file to Map of start line to actual hash

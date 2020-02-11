@@ -668,9 +668,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         return super.postMessage(type, payload);
     }
 
-    // tslint:disable-next-line:no-any
     protected handleMessage<M extends IInteractiveWindowMapping, T extends keyof M>(
         _message: T,
+        // tslint:disable-next-line:no-any
         payload: any,
         handler: (args: M[T]) => void
     ) {
@@ -690,7 +690,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
 
             try {
-                // tslint:disable-next-line: no-any
                 const contents = JSON.stringify(notebook);
                 await this.fileSystem.writeFile(file, contents, { encoding: 'utf8', flag: 'w' });
                 const openQuestion1 = localize.DataScience.exportOpenQuestion1();
@@ -921,7 +920,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    // tslint:disable-next-line:no-any
     private onAddedSysInfo(sysInfo: IAddedSysInfo) {
         // See if this is from us or not.
         if (sysInfo.id !== this.id) {
@@ -954,7 +952,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    // tslint:disable-next-line:no-any
     private async onRemoteAddedCode(args: IRemoteAddCode) {
         // Make sure this is valid
         if (args && args.id && args.file && args.originator !== this.id) {

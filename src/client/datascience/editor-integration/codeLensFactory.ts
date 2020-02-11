@@ -20,6 +20,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
+        // tslint:disable-next-line: no-any
         payload: any;
     }>();
     private cellExecutionCounts: Map<string, string> = new Map<string, string>();

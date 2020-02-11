@@ -207,11 +207,11 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         serverSettings = {
             ...serverSettings,
             init: requestInit,
-            // tslint:disable-next-line:no-any
             WebSocket: createJupyterWebSocket(
                 this.config.getSettings().datascience.verboseLogging,
                 cookieString,
                 allowUnauthorized
+                // tslint:disable-next-line:no-any
             ) as any
         };
 

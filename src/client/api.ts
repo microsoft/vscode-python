@@ -35,8 +35,8 @@ export interface IExtensionApi {
     };
 }
 
-// tslint:disable-next-line:no-any
 export function buildApi(
+    // tslint:disable-next-line:no-any
     ready: Promise<any>,
     experimentsManager: IExperimentsManager,
     debugFactory: IDebugAdapterDescriptorFactory

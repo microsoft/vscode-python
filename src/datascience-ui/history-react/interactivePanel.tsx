@@ -92,6 +92,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         this.props.focusInput();
     };
 
+    // tslint:disable-next-line: max-func-body-length
     private renderToolbarPanel() {
         const variableExplorerTooltip = this.props.variableState.visible
             ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')

@@ -73,6 +73,7 @@ import {
     LanguageServerType
 } from './types';
 
+// tslint:disable-next-line: max-func-body-length
 export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType) {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);

@@ -9,9 +9,9 @@ interface IRawTempFS {
     // TODO (https://github.com/microsoft/vscode/issues/84517)
     //   This functionality has been requested for the
     //   VS Code FS API (vscode.workspace.fs.*).
-    // tslint:disable-next-line:no-any
     file(
         config: tmp.Options,
+        // tslint:disable-next-line:no-any
         callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void
     ): void;
 }
