@@ -68,7 +68,9 @@ suite('Process - Python tool execution service', () => {
         when(processFactory.create(anything())).thenResolve(instance(processService));
 
         const serviceContainer = mock(ServiceContainer);
-        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(instance(executionFactory));
+        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
+            instance(executionFactory)
+        );
         when(serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)).thenReturn(instance(processFactory));
 
         executionService = new PythonToolExecutionService(instance(serviceContainer));

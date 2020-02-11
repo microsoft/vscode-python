@@ -14,7 +14,12 @@ import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/hel
 import { ReplProvider } from '../../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExecution/terminalCodeExecution';
 import { registerTypes } from '../../../client/terminals/serviceRegistry';
-import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService, ITerminalAutoActivation } from '../../../client/terminals/types';
+import {
+    ICodeExecutionHelper,
+    ICodeExecutionManager,
+    ICodeExecutionService,
+    ITerminalAutoActivation
+} from '../../../client/terminals/types';
 
 suite('Common Terminal Service Registry', () => {
     let serviceManager: IServiceManager;
@@ -29,12 +34,31 @@ suite('Common Terminal Service Registry', () => {
 
         verify(serviceManager.addSingleton<ICodeExecutionManager>(ICodeExecutionManager, CodeExecutionManager)).once();
 
-        verify(serviceManager.addSingleton<ICodeExecutionService>(ICodeExecutionService, DjangoShellCodeExecutionProvider, 'djangoShell')).once();
-        verify(serviceManager.addSingleton<ICodeExecutionService>(ICodeExecutionService, TerminalCodeExecutionProvider, 'standard')).once();
+        verify(
+            serviceManager.addSingleton<ICodeExecutionService>(
+                ICodeExecutionService,
+                DjangoShellCodeExecutionProvider,
+                'djangoShell'
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<ICodeExecutionService>(
+                ICodeExecutionService,
+                TerminalCodeExecutionProvider,
+                'standard'
+            )
+        ).once();
         verify(serviceManager.addSingleton<ICodeExecutionService>(ICodeExecutionService, ReplProvider, 'repl')).once();
 
-        verify(serviceManager.addSingleton<ITerminalAutoActivation>(ITerminalAutoActivation, TerminalAutoActivation)).once();
+        verify(
+            serviceManager.addSingleton<ITerminalAutoActivation>(ITerminalAutoActivation, TerminalAutoActivation)
+        ).once();
 
-        verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionActivationForTerminalActivation)).once();
+        verify(
+            serviceManager.addSingleton<IExtensionSingleActivationService>(
+                IExtensionSingleActivationService,
+                ExtensionActivationForTerminalActivation
+            )
+        ).once();
     });
 });

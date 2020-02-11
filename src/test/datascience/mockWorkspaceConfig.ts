@@ -19,10 +19,22 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
     }
     public inspect<T>(
         _section: string
-    ): { key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined; workspaceFolderValue?: T | undefined } | undefined {
+    ):
+        | {
+              key: string;
+              defaultValue?: T | undefined;
+              globalValue?: T | undefined;
+              workspaceValue?: T | undefined;
+              workspaceFolderValue?: T | undefined;
+          }
+        | undefined {
         return;
     }
-    public update(_section: string, _value: any, _configurationTarget?: boolean | ConfigurationTarget | undefined): Promise<void> {
+    public update(
+        _section: string,
+        _value: any,
+        _configurationTarget?: boolean | ConfigurationTarget | undefined
+    ): Promise<void> {
         return Promise.resolve();
     }
 }

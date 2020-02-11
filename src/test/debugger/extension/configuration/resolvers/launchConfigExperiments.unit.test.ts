@@ -69,8 +69,10 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
         const configurationService = mock(ConfigurationService);
         const fs = mock(FileSystem);
 
-        // tslint:disable-next-line: no-any
-        when(configurationService.getSettings(undefined)).thenReturn(({ experiments: { enabled: true } } as any) as IPythonSettings);
+        when(configurationService.getSettings(undefined)).thenReturn(({
+            experiments: { enabled: true }
+            // tslint:disable-next-line: no-any
+        } as any) as IPythonSettings);
         experimentsManager = new ExperimentsManager(
             instance(persistentStateFactory),
             instance(workspaceService),
@@ -105,7 +107,10 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
     function getExperimentsData(testConfig: TestConfiguration) {
         return [
             {
-                name: testConfig.newDebuggerExperiment === 'experiment' ? DebugAdapterNewPtvsd.experiment : DebugAdapterNewPtvsd.control,
+                name:
+                    testConfig.newDebuggerExperiment === 'experiment'
+                        ? DebugAdapterNewPtvsd.experiment
+                        : DebugAdapterNewPtvsd.control,
                 salt: 'DebugAdapterDescriptorFactory',
                 min: 0,
                 max: 0
@@ -151,11 +156,15 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
         // Figure out if we need to expect modification to the debug config. Debug config should be modified
         // only if the user is in debug adapter descriptor experiment, new ptvsd experiment, the reload experiment
         // and finally one of the following web app frameworks (django, flask, pyramid, jinja)
-        const inExperiment = testConfig.newDebuggerExperiment === 'experiment' && testConfig.reloadExperiment === 'experiment';
+        const inExperiment =
+            testConfig.newDebuggerExperiment === 'experiment' && testConfig.reloadExperiment === 'experiment';
         const knownWebFramework = ['django', 'flask', 'jinja', 'pyramid'].includes(testConfig.framework);
 
         // Args should only be modified if they meet the 'modification' conditions above AND they have a reload argument
-        const argsModified = inExperiment && knownWebFramework && (testConfig.args.includes('--no-reload') || testConfig.args.includes('--noreload'));
+        const argsModified =
+            inExperiment &&
+            knownWebFramework &&
+            (testConfig.args.includes('--no-reload') || testConfig.args.includes('--noreload'));
         // SubProcess field should only be modified if they meet the 'modification' conditions above AND subProcess is not set.
         const subProcModified = inExperiment && knownWebFramework && !testConfig.subProcess;
 
@@ -207,7 +216,10 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
 
                     if (['django', 'flask', 'jinja', 'pyramid'].includes(testConfig.framework)) {
                         expectedEvents.push(EventName.PYTHON_WEB_APP_RELOAD);
-                        expectedProperties.push({ subProcessModified: `${subProcModified}`, argsModified: `${argsModified}` });
+                        expectedProperties.push({
+                            subProcessModified: `${subProcModified}`,
+                            argsModified: `${argsModified}`
+                        });
                     } else {
                         // Don't add any event
                     }

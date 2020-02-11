@@ -35,7 +35,13 @@ suite('Data Science - Jupyter Interpreter Picker', () => {
         // tslint:disable-next-line: no-any
         dsSettings = {} as any;
         when(pythonSettings.datascience).thenReturn(dsSettings);
-        picker = new JupyterInterpreterSelector(instance(interpreterSelector), instance(appShell), instance(interpreterSelectionState), instance(workspace), instance(pathUtils));
+        picker = new JupyterInterpreterSelector(
+            instance(interpreterSelector),
+            instance(appShell),
+            instance(interpreterSelectionState),
+            instance(workspace),
+            instance(pathUtils)
+        );
     });
 
     test('Should display the list of interpreters', async () => {

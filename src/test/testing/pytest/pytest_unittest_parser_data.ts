@@ -28,9 +28,13 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '< 3.7',
         platform: PytestDataPlatformType.NonWindows,
-        description: 'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: '/home/user/test/pytest_scenario',
-        test_functions: ['src/test_things.py::test_things_major', 'test/this/is/deep/testing/test_very_deeply.py::test_math_works'],
+        test_functions: [
+            'src/test_things.py::test_things_major',
+            'test/this/is/deep/testing/test_very_deeply.py::test_math_works'
+        ],
         functionCount: 9,
         stdout: [
             '============================= test session starts ==============================',
@@ -60,9 +64,13 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 3.7 < 4.1',
         platform: PytestDataPlatformType.NonWindows,
-        description: 'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: '/home/user/test/pytest_scenario',
-        test_functions: ['src/test_things.py::test_things_major', 'test/this/is/deep/testing/test_very_deeply.py::test_math_works'],
+        test_functions: [
+            'src/test_things.py::test_things_major',
+            'test/this/is/deep/testing/test_very_deeply.py::test_math_works'
+        ],
         functionCount: 9,
         stdout: [
             '============================= test session starts ==============================',
@@ -92,9 +100,13 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 4.1',
         platform: PytestDataPlatformType.NonWindows,
-        description: 'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: '/home/user/test/pytest_scenario',
-        test_functions: ['src/test_things.py::test_things_major', 'test/this/is/deep/testing/test_very_deeply.py::test_math_works'],
+        test_functions: [
+            'src/test_things.py::test_things_major',
+            'test/this/is/deep/testing/test_very_deeply.py::test_math_works'
+        ],
         functionCount: 9,
         stdout: [
             '============================= test session starts ==============================',
@@ -394,7 +406,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '< 3.7',
         platform: PytestDataPlatformType.NonWindows,
-        description: 'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: '/home/user/test/pytest_scenario',
         test_functions: [
             'test_basic_root.py::test_basic_major',
@@ -438,7 +451,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 3.7 < 4.1',
         platform: PytestDataPlatformType.NonWindows,
-        description: 'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: '/home/user/test/pytest_scenario',
         test_functions: [
             'test_basic_root.py::test_basic_major',
@@ -491,7 +505,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 4.1',
         platform: PytestDataPlatformType.NonWindows,
-        description: 'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: '/home/user/test/pytest_scenario',
         test_functions: [
             'test_basic_root.py::test_basic_major',
@@ -544,9 +559,13 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '< 3.7',
         platform: PytestDataPlatformType.NonWindows,
-        description: 'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
+        description:
+            'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
         rootdir: '/home/user/test/pytest_scenario',
-        test_functions: ['test/test_other_basic.py::test_basic_major_minor_internal', 'test/subdir/test_other_basic_sub.py::test_basic_major_minor'],
+        test_functions: [
+            'test/test_other_basic.py::test_basic_major_minor_internal',
+            'test/subdir/test_other_basic_sub.py::test_basic_major_minor'
+        ],
         functionCount: 12,
         stdout: [
             '============================= test session starts ==============================',
@@ -578,9 +597,13 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 3.7 < 4.1',
         platform: PytestDataPlatformType.NonWindows,
-        description: 'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
+        description:
+            'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
         rootdir: '/home/user/test/pytest_scenario',
-        test_functions: ['test/test_other_basic.py::test_basic_major_minor_internal', 'test/subdir/test_other_basic_sub.py::test_basic_major_minor'],
+        test_functions: [
+            'test/test_other_basic.py::test_basic_major_minor_internal',
+            'test/subdir/test_other_basic_sub.py::test_basic_major_minor'
+        ],
         functionCount: 12,
         stdout: [
             '============================= test session starts ==============================',
@@ -615,9 +638,13 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 4.1',
         platform: PytestDataPlatformType.NonWindows,
-        description: 'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
+        description:
+            'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
         rootdir: '/home/user/test/pytest_scenario',
-        test_functions: ['test/test_other_basic.py::test_basic_major_minor_internal', 'test/subdir/test_other_basic_sub.py::test_basic_major_minor'],
+        test_functions: [
+            'test/test_other_basic.py::test_basic_major_minor_internal',
+            'test/subdir/test_other_basic_sub.py::test_basic_major_minor'
+        ],
         functionCount: 12,
         stdout: [
             '============================= test session starts ==============================',
@@ -654,7 +681,10 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         platform: PytestDataPlatformType.NonWindows,
         description: 'Package-based source, 2+ test modules in root folder and two more in one (direct) subfolder.',
         rootdir: '/home/user/test/pytest_scenario',
-        test_functions: ['test_other_basic_root.py::test_basic_major_minor_internal', 'test/test_other_basic_sub.py::test_basic_major_minor'],
+        test_functions: [
+            'test_other_basic_root.py::test_basic_major_minor_internal',
+            'test/test_other_basic_sub.py::test_basic_major_minor'
+        ],
         functionCount: 12,
         stdout: [
             '============================= test session starts ==============================',
@@ -688,7 +718,11 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         platform: PytestDataPlatformType.NonWindows,
         description: 'Package-based source, 2+ test modules in root folder and two more in one (direct) subfolder.',
         rootdir: '/home/user/test/pytest_scenario',
-        test_functions: ['test_other_basic_root.py::test_basic_major_minor_internal', 'test/test_basic_sub.py::test_basic_major', 'test/test_basic_sub.py::test_basic_minor'],
+        test_functions: [
+            'test_other_basic_root.py::test_basic_major_minor_internal',
+            'test/test_basic_sub.py::test_basic_major',
+            'test/test_basic_sub.py::test_basic_minor'
+        ],
         functionCount: 12,
         stdout: [
             '============================= test session starts ==============================',
@@ -724,7 +758,11 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         platform: PytestDataPlatformType.NonWindows,
         description: 'Package-based source, 2+ test modules in root folder and two more in one (direct) subfolder.',
         rootdir: '/home/user/test/pytest_scenario',
-        test_functions: ['test_other_basic_root.py::test_basic_major_minor_internal', 'test/test_basic_sub.py::test_basic_major', 'test/test_basic_sub.py::test_basic_minor'],
+        test_functions: [
+            'test_other_basic_root.py::test_basic_major_minor_internal',
+            'test/test_basic_sub.py::test_basic_major',
+            'test/test_basic_sub.py::test_basic_minor'
+        ],
         functionCount: 12,
         stdout: [
             '============================= test session starts ==============================',
@@ -998,7 +1036,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '< 3.7',
         platform: PytestDataPlatformType.Windows,
-        description: 'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
         test_functions: [
             'other_tests/test_base_stuff.py::test_do_other_test',
@@ -1033,7 +1072,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 3.7 < 4.1',
         platform: PytestDataPlatformType.Windows,
-        description: 'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
         test_functions: [
             'other_tests/test_base_stuff.py::test_do_other_test',
@@ -1073,7 +1113,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 4.1',
         platform: PytestDataPlatformType.Windows,
-        description: 'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Package-based source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
         test_functions: [
             'other_tests/test_base_stuff.py::test_do_other_test',
@@ -1113,7 +1154,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '< 3.7',
         platform: PytestDataPlatformType.Windows,
-        description: 'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
         test_functions: [
             'other_tests/test_base_stuff.py::test_do_other_test',
@@ -1148,7 +1190,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 3.7 < 4.1',
         platform: PytestDataPlatformType.Windows,
-        description: 'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
         test_functions: [
             'other_tests/test_base_stuff.py::test_do_other_test',
@@ -1183,7 +1226,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 4.1',
         platform: PytestDataPlatformType.Windows,
-        description: 'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
+        description:
+            'Non-package source, tests throughout a deeper tree, including 2 distinct folder paths at different levels.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
         test_functions: [
             'other_tests/test_base_stuff.py::test_do_other_test',
@@ -1218,7 +1262,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '< 3.7',
         platform: PytestDataPlatformType.Windows,
-        description: 'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
+        description:
+            'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
         test_functions: [
             'tests/test_base_stuff.py::test_do_test',
@@ -1253,7 +1298,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 3.7 < 4.1',
         platform: PytestDataPlatformType.Windows,
-        description: 'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
+        description:
+            'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
         test_functions: [
             'tests/test_base_stuff.py::test_do_test',
@@ -1291,7 +1337,8 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
     {
         pytest_version_spec: '>= 4.1',
         platform: PytestDataPlatformType.Windows,
-        description: 'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
+        description:
+            'Package-based source, 2 test modules in subfolders of root, and 2 more in one (direct) subfolder.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
         test_functions: [
             'tests/test_base_stuff.py::test_do_test',
@@ -1858,7 +1905,12 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         platform: PytestDataPlatformType.Windows,
         description: 'Package-based source, 2+ modules at the topmost level.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
-        test_functions: ['test_base_stuff.py::test_do_test', 'test_base_stuff.py::test_do_other_test', 'test_multiply.py::test_times_10', 'test_multiply.py::test_times_2'],
+        test_functions: [
+            'test_base_stuff.py::test_do_test',
+            'test_base_stuff.py::test_do_other_test',
+            'test_multiply.py::test_times_10',
+            'test_multiply.py::test_times_2'
+        ],
         functionCount: 4,
         stdout: [
             '============================= test session starts =============================',
@@ -1880,7 +1932,12 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         platform: PytestDataPlatformType.Windows,
         description: 'Package-based source, 2+ modules at the topmost level.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
-        test_functions: ['test_base_stuff.py::test_do_test', 'test_base_stuff.py::test_do_other_test', 'test_multiply.py::test_times_10', 'test_multiply.py::test_times_2'],
+        test_functions: [
+            'test_base_stuff.py::test_do_test',
+            'test_base_stuff.py::test_do_other_test',
+            'test_multiply.py::test_times_10',
+            'test_multiply.py::test_times_2'
+        ],
         functionCount: 4,
         stdout: [
             '============================= test session starts =============================',
@@ -1903,7 +1960,12 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         platform: PytestDataPlatformType.Windows,
         description: 'Package-based source, 2+ modules at the topmost level.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
-        test_functions: ['test_base_stuff.py::test_do_test', 'test_base_stuff.py::test_do_other_test', 'test_multiply.py::test_times_10', 'test_multiply.py::test_times_2'],
+        test_functions: [
+            'test_base_stuff.py::test_do_test',
+            'test_base_stuff.py::test_do_other_test',
+            'test_multiply.py::test_times_10',
+            'test_multiply.py::test_times_2'
+        ],
         functionCount: 4,
         stdout: [
             '============================= test session starts =============================',
@@ -1926,7 +1988,12 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         platform: PytestDataPlatformType.Windows,
         description: 'Non-package source, 2 modules at the topmost level.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
-        test_functions: ['test_base_stuff.py::test_do_test', 'test_base_stuff.py::test_do_other_test', 'test_multiply.py::test_times_10', 'test_multiply.py::test_times_2'],
+        test_functions: [
+            'test_base_stuff.py::test_do_test',
+            'test_base_stuff.py::test_do_other_test',
+            'test_multiply.py::test_times_10',
+            'test_multiply.py::test_times_2'
+        ],
         functionCount: 4,
         stdout: [
             '============================= test session starts =============================',
@@ -1948,7 +2015,12 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         platform: PytestDataPlatformType.Windows,
         description: 'Non-package source, 2 modules at the topmost level.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
-        test_functions: ['test_base_stuff.py::test_do_test', 'test_base_stuff.py::test_do_other_test', 'test_multiply.py::test_times_10', 'test_multiply.py::test_times_2'],
+        test_functions: [
+            'test_base_stuff.py::test_do_test',
+            'test_base_stuff.py::test_do_other_test',
+            'test_multiply.py::test_times_10',
+            'test_multiply.py::test_times_2'
+        ],
         functionCount: 4,
         stdout: [
             '============================= test session starts =============================',
@@ -1970,7 +2042,12 @@ export const pytestScenarioData: PytestDiscoveryScenario[] = [
         platform: PytestDataPlatformType.Windows,
         description: 'Non-package source, 2 modules at the topmost level.',
         rootdir: 'e:\\user\\test\\pytest_scenario',
-        test_functions: ['test_base_stuff.py::test_do_test', 'test_base_stuff.py::test_do_other_test', 'test_multiply.py::test_times_10', 'test_multiply.py::test_times_2'],
+        test_functions: [
+            'test_base_stuff.py::test_do_test',
+            'test_base_stuff.py::test_do_other_test',
+            'test_multiply.py::test_times_10',
+            'test_multiply.py::test_times_2'
+        ],
         functionCount: 4,
         stdout: [
             '============================= test session starts =============================',

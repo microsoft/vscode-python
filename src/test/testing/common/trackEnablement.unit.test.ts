@@ -70,7 +70,11 @@ suite('Unit Tests - Track Enablement', () => {
         assert.ok(affectsConfiguration.callCount > 0);
     });
     test('Check whether unitest, pytest and nose settings have been enabled', async () => {
-        const expectedSettingsChecked = ['python.testing.nosetestEnabled', 'python.testing.unittestEnabled', 'python.testing.pytestEnabled'];
+        const expectedSettingsChecked = [
+            'python.testing.nosetestEnabled',
+            'python.testing.unittestEnabled',
+            'python.testing.pytestEnabled'
+        ];
 
         const telemetryReporter = sandbox.stub(EnablementTracker.prototype, 'sendTelemetry');
         telemetryReporter.callsFake(noop);
@@ -86,12 +90,24 @@ suite('Unit Tests - Track Enablement', () => {
         verify(workspaceService.getConfiguration(anything(), anything())).never();
         assert.ok(telemetryReporter.notCalled);
         assert.ok(affectsConfiguration.callCount > 0);
-        const settingsChecked = [affectsConfiguration.args[0][0], affectsConfiguration.args[1][0], affectsConfiguration.args[2][0]];
+        const settingsChecked = [
+            affectsConfiguration.args[0][0],
+            affectsConfiguration.args[1][0],
+            affectsConfiguration.args[2][0]
+        ];
         assert.deepEqual(settingsChecked.sort(), expectedSettingsChecked.sort());
     });
     test('Check settings related to unitest, pytest and nose', async () => {
-        const expectedSettingsChecked = ['python.testing.nosetestEnabled', 'python.testing.unittestEnabled', 'python.testing.pytestEnabled'];
-        const expectedSettingsRetrieved = ['testing.nosetestEnabled', 'testing.unittestEnabled', 'testing.pytestEnabled'];
+        const expectedSettingsChecked = [
+            'python.testing.nosetestEnabled',
+            'python.testing.unittestEnabled',
+            'python.testing.pytestEnabled'
+        ];
+        const expectedSettingsRetrieved = [
+            'testing.nosetestEnabled',
+            'testing.unittestEnabled',
+            'testing.pytestEnabled'
+        ];
 
         const telemetryReporter = sandbox.stub(EnablementTracker.prototype, 'sendTelemetry');
         telemetryReporter.callsFake(noop);
@@ -111,20 +127,38 @@ suite('Unit Tests - Track Enablement', () => {
         verify(workspaceService.getConfiguration(anything(), anything())).atLeast(3);
         assert.ok(telemetryReporter.notCalled);
         assert.ok(affectsConfiguration.callCount > 0);
-        const settingsChecked = [affectsConfiguration.args[0][0], affectsConfiguration.args[1][0], affectsConfiguration.args[2][0]];
+        const settingsChecked = [
+            affectsConfiguration.args[0][0],
+            affectsConfiguration.args[1][0],
+            affectsConfiguration.args[2][0]
+        ];
         assert.deepEqual(settingsChecked.sort(), expectedSettingsChecked.sort());
 
-        const settingsRetrieved = [getConfigSettings.args[0][0], getConfigSettings.args[1][0], getConfigSettings.args[2][0]];
+        const settingsRetrieved = [
+            getConfigSettings.args[0][0],
+            getConfigSettings.args[1][0],
+            getConfigSettings.args[2][0]
+        ];
         assert.deepEqual(settingsRetrieved.sort(), expectedSettingsRetrieved.sort());
     });
     function testSendingTelemetry(sendForProvider: TestProvider) {
-        const expectedSettingsChecked = ['python.testing.nosetestEnabled', 'python.testing.unittestEnabled', 'python.testing.pytestEnabled'];
-        const expectedSettingsRetrieved = ['testing.nosetestEnabled', 'testing.unittestEnabled', 'testing.pytestEnabled'];
+        const expectedSettingsChecked = [
+            'python.testing.nosetestEnabled',
+            'python.testing.unittestEnabled',
+            'python.testing.pytestEnabled'
+        ];
+        const expectedSettingsRetrieved = [
+            'testing.nosetestEnabled',
+            'testing.unittestEnabled',
+            'testing.pytestEnabled'
+        ];
 
         const telemetryReporter = sandbox.stub(EnablementTracker.prototype, 'sendTelemetry');
         telemetryReporter.callsFake(noop);
         const affectsConfiguration = sinon.stub().returns(true);
-        const getConfigSettings = sinon.stub<[string], boolean>().callsFake(setting => setting.includes(sendForProvider));
+        const getConfigSettings = sinon
+            .stub<[string], boolean>()
+            .callsFake(setting => setting.includes(sendForProvider));
 
         when(workspaceService.workspaceFolders).thenReturn([]);
         // tslint:disable-next-line: no-any
@@ -140,10 +174,18 @@ suite('Unit Tests - Track Enablement', () => {
         assert.equal(telemetryReporter.callCount, 1);
         assert.deepEqual(telemetryReporter.args[0][0], { [sendForProvider]: true });
         assert.ok(affectsConfiguration.callCount > 0);
-        const settingsChecked = [affectsConfiguration.args[0][0], affectsConfiguration.args[1][0], affectsConfiguration.args[2][0]];
+        const settingsChecked = [
+            affectsConfiguration.args[0][0],
+            affectsConfiguration.args[1][0],
+            affectsConfiguration.args[2][0]
+        ];
         assert.deepEqual(settingsChecked.sort(), expectedSettingsChecked.sort());
 
-        const settingsRetrieved = [getConfigSettings.args[0][0], getConfigSettings.args[1][0], getConfigSettings.args[2][0]];
+        const settingsRetrieved = [
+            getConfigSettings.args[0][0],
+            getConfigSettings.args[1][0],
+            getConfigSettings.args[2][0]
+        ];
         assert.deepEqual(settingsRetrieved.sort(), expectedSettingsRetrieved.sort());
     }
     test('Send telemetry for unitest', () => testSendingTelemetry('unittest'));

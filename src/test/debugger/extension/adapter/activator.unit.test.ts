@@ -15,7 +15,10 @@ import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/exten
 import { DebugSessionLoggingFactory } from '../../../../client/debugger/extension/adapter/logging';
 import { AttachProcessProviderFactory } from '../../../../client/debugger/extension/attachQuickPick/factory';
 import { IAttachProcessProviderFactory } from '../../../../client/debugger/extension/attachQuickPick/types';
-import { IDebugAdapterDescriptorFactory, IDebugSessionLoggingFactory } from '../../../../client/debugger/extension/types';
+import {
+    IDebugAdapterDescriptorFactory,
+    IDebugSessionLoggingFactory
+} from '../../../../client/debugger/extension/types';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
 import { noop } from '../../../core';
 
@@ -31,15 +34,23 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
     setup(() => {
         const configurationService = mock(ConfigurationService);
 
-        // tslint:disable-next-line: no-any
-        when(configurationService.getSettings(undefined)).thenReturn(({ experiments: { enabled: true } } as any) as IPythonSettings);
+        when(configurationService.getSettings(undefined)).thenReturn(({
+            experiments: { enabled: true }
+            // tslint:disable-next-line: no-any
+        } as any) as IPythonSettings);
         attachFactory = mock(AttachProcessProviderFactory);
 
         debugService = mock(DebugService);
         descriptorFactory = mock(DebugAdapterDescriptorFactory);
         loggingFactory = mock(DebugSessionLoggingFactory);
         disposableRegistry = [];
-        activator = new DebugAdapterActivator(instance(debugService), instance(descriptorFactory), instance(loggingFactory), disposableRegistry, instance(attachFactory));
+        activator = new DebugAdapterActivator(
+            instance(debugService),
+            instance(descriptorFactory),
+            instance(loggingFactory),
+            disposableRegistry,
+            instance(attachFactory)
+        );
     });
 
     teardown(() => {

@@ -26,7 +26,10 @@ suite('Linter Info - Pylint', () => {
         const workspaceService = mock(WorkspaceService);
         const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);
 
-        when(config.getSettings(anything())).thenReturn({ linting: { pylintEnabled: false }, jediEnabled: true } as any);
+        when(config.getSettings(anything())).thenReturn({
+            linting: { pylintEnabled: false },
+            jediEnabled: true
+        } as any);
 
         expect(linterInfo.isEnabled()).to.be.false;
     });
@@ -48,7 +51,10 @@ suite('Linter Info - Pylint', () => {
         const pythonConfig = {
             inspect: () => inspection
         };
-        when(config.getSettings(anything())).thenReturn({ linting: { pylintEnabled: true }, jediEnabled: false } as any);
+        when(config.getSettings(anything())).thenReturn({
+            linting: { pylintEnabled: true },
+            jediEnabled: false
+        } as any);
         when(workspaceService.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 
         expect(linterInfo.isEnabled()).to.be.false;
@@ -78,7 +84,10 @@ suite('Linter Info - Pylint', () => {
                 const pythonConfig = {
                     inspect: () => testParams.inspection
                 };
-                when(config.getSettings(anything())).thenReturn({ linting: { pylintEnabled: true }, jediEnabled: false } as any);
+                when(config.getSettings(anything())).thenReturn({
+                    linting: { pylintEnabled: true },
+                    jediEnabled: false
+                } as any);
                 when(workspaceService.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 
                 expect(linterInfo.isEnabled()).to.be.true;

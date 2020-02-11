@@ -20,7 +20,11 @@ export class MockJupyterServer implements INotebookServer {
             this.launchInfo = launchInfo;
 
             // Validate connection info and kernel spec
-            if (launchInfo.connectionInfo.baseUrl && launchInfo.kernelSpec.name && /[a-z,A-Z,0-9,-,.,_]+/.test(launchInfo.kernelSpec.name)) {
+            if (
+                launchInfo.connectionInfo.baseUrl &&
+                launchInfo.kernelSpec.name &&
+                /[a-z,A-Z,0-9,-,.,_]+/.test(launchInfo.kernelSpec.name)
+            ) {
                 return Promise.resolve();
             }
         }

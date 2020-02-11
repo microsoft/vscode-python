@@ -25,7 +25,9 @@ suite('Interpreters Display Helper', () => {
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         hashProviderFactory = TypeMoq.Mock.ofType<IInterpreterHashProviderFactory>();
 
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspaceService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDocumentManager))).returns(() => documentManager.object);
 
         helper = new InterpreterHelper(serviceContainer.object, hashProviderFactory.object);

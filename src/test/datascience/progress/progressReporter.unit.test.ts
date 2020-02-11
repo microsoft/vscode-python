@@ -12,7 +12,10 @@ import { getUserMessageForAction } from '../../../client/datascience/progress/me
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { ReportableAction } from '../../../client/datascience/progress/types';
 import { noop, sleep } from '../../core';
-type Task<R> = (progress: VSCProgress<{ message?: string; increment?: number }>, token: CancellationToken) => Promise<R>;
+type Task<R> = (
+    progress: VSCProgress<{ message?: string; increment?: number }>,
+    token: CancellationToken
+) => Promise<R>;
 
 // tslint:disable-next-line: max-func-body-length
 suite('Data Science - Progress Reporter', () => {
@@ -87,7 +90,9 @@ suite('Data Science - Progress Reporter', () => {
         const progressMessages: string[] = [];
         const expectedProgressMessages: string[] = [];
 
-        when(vscodeProgressReporter.report(anything())).thenCall((msg: { message: string }) => progressMessages.push(msg.message));
+        when(vscodeProgressReporter.report(anything())).thenCall((msg: { message: string }) =>
+            progressMessages.push(msg.message)
+        );
         // Perform an action and ensure that we display the message.
 
         //1. Start notebook & ensure we display notebook stating message.

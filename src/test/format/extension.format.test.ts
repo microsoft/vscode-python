@@ -46,7 +46,9 @@ suite('Formatting - General', () => {
             fs.copySync(originalUnformattedFile, file, { overwrite: true });
         });
         fs.ensureDirSync(path.dirname(autoPep8FileToFormat));
-        const pythonProcess = await ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(workspaceRootPath) });
+        const pythonProcess = await ioc.serviceContainer
+            .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+            .create({ resource: Uri.file(workspaceRootPath) });
         const yapf = pythonProcess.execModule('yapf', [originalUnformattedFile], { cwd: workspaceRootPath });
         const autoPep8 = pythonProcess.execModule('autopep8', [originalUnformattedFile], { cwd: workspaceRootPath });
         const formatters = [yapf, autoPep8];
@@ -68,7 +70,9 @@ suite('Formatting - General', () => {
     });
 
     async function formattingTestIsBlackSupported(): Promise<boolean> {
-        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(Uri.file(workspaceRootPath));
+        const processService = await ioc.serviceContainer
+            .get<IProcessServiceFactory>(IProcessServiceFactory)
+            .create(Uri.file(workspaceRootPath));
         return !(await isPythonVersionInProcess(processService, '2', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5'));
     }
 
@@ -98,7 +102,10 @@ suite('Formatting - General', () => {
 
         ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(
+            InterpeterHashProviderFactory,
+            InterpeterHashProviderFactory
+        );
         ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
 
@@ -108,7 +115,9 @@ suite('Formatting - General', () => {
     }
 
     async function injectFormatOutput(outputFileName: string) {
-        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
+        const procService = (await ioc.serviceContainer
+            .get<IProcessServiceFactory>(IProcessServiceFactory)
+            .create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
             if (args.indexOf('--diff') >= 0) {
                 callback({
@@ -119,10 +128,18 @@ suite('Formatting - General', () => {
         });
     }
 
-    async function testFormatting(formatter: AutoPep8Formatter | BlackFormatter | YapfFormatter, formattedContents: string, fileToFormat: string, outputFileName: string) {
+    async function testFormatting(
+        formatter: AutoPep8Formatter | BlackFormatter | YapfFormatter,
+        formattedContents: string,
+        fileToFormat: string,
+        outputFileName: string
+    ) {
         const textDocument = await workspace.openTextDocument(fileToFormat);
         const textEditor = await window.showTextDocument(textDocument);
-        const options = { insertSpaces: textEditor.options.insertSpaces! as boolean, tabSize: textEditor.options.tabSize! as number };
+        const options = {
+            insertSpaces: textEditor.options.insertSpaces! as boolean,
+            tabSize: textEditor.options.tabSize! as number
+        };
 
         await injectFormatOutput(outputFileName);
 
@@ -134,7 +151,12 @@ suite('Formatting - General', () => {
     }
 
     test('AutoPep8', async () => {
-        await testFormatting(new AutoPep8Formatter(ioc.serviceContainer), formattedAutoPep8, autoPep8FileToFormat, 'autopep8.output');
+        await testFormatting(
+            new AutoPep8Formatter(ioc.serviceContainer),
+            formattedAutoPep8,
+            autoPep8FileToFormat,
+            'autopep8.output'
+        );
     });
     // tslint:disable-next-line:no-function-expression
     test('Black', async function() {
@@ -143,9 +165,15 @@ suite('Formatting - General', () => {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
-        await testFormatting(new BlackFormatter(ioc.serviceContainer), formattedBlack, blackFileToFormat, 'black.output');
+        await testFormatting(
+            new BlackFormatter(ioc.serviceContainer),
+            formattedBlack,
+            blackFileToFormat,
+            'black.output'
+        );
     });
-    test('Yapf', async () => testFormatting(new YapfFormatter(ioc.serviceContainer), formattedYapf, yapfFileToFormat, 'yapf.output'));
+    test('Yapf', async () =>
+        testFormatting(new YapfFormatter(ioc.serviceContainer), formattedYapf, yapfFileToFormat, 'yapf.output'));
 
     test('Yapf on dirty file', async () => {
         const sourceDir = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'formatting');

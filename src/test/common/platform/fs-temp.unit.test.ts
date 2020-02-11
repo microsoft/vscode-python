@@ -9,8 +9,11 @@ import { TemporaryFileSystem } from '../../../client/common/platform/fs-temp';
 
 interface IDeps {
     // tmp module
-    // tslint:disable-next-line:no-any
-    file(config: { postfix?: string }, callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void): void;
+    file(
+        config: { postfix?: string },
+        // tslint:disable-next-line:no-any
+        callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void
+    ): void;
 }
 
 suite('FileSystem - temp files', () => {

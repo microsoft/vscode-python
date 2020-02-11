@@ -18,7 +18,9 @@ suite('Pip installer', async () => {
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory))).returns(() => pythonExecutionFactory.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
+            .returns(() => pythonExecutionFactory.object);
         pipInstaller = new PipInstaller(serviceContainer.object);
     });
 
@@ -76,7 +78,9 @@ suite('Pip installer', async () => {
     test('Method isSupported() returns true if pip module is installed', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const resource = Uri.parse('a');
-        pythonExecutionFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
+        pythonExecutionFactory
+            .setup(p => p.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(pythonExecutionService.object));
         pythonExecutionService
             // tslint:disable-next-line: no-any
             .setup(p => (p as any).then)
@@ -91,7 +95,9 @@ suite('Pip installer', async () => {
     test('Method isSupported() returns false if pip module is not installed', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const resource = Uri.parse('a');
-        pythonExecutionFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
+        pythonExecutionFactory
+            .setup(p => p.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(pythonExecutionService.object));
         pythonExecutionService
             // tslint:disable-next-line: no-any
             .setup(p => (p as any).then)
@@ -106,12 +112,16 @@ suite('Pip installer', async () => {
     test('Method isSupported() returns false if checking if pip module is installed fails with error', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const resource = Uri.parse('a');
-        pythonExecutionFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
+        pythonExecutionFactory
+            .setup(p => p.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(pythonExecutionService.object));
         pythonExecutionService
             // tslint:disable-next-line: no-any
             .setup(p => (p as any).then)
             .returns(() => undefined);
-        pythonExecutionService.setup(p => p.isModuleInstalled('pip')).returns(() => Promise.reject('Unable to check if module is installed'));
+        pythonExecutionService
+            .setup(p => p.isModuleInstalled('pip'))
+            .returns(() => Promise.reject('Unable to check if module is installed'));
 
         const expected = await pipInstaller.isSupported(resource);
 

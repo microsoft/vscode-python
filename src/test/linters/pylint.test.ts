@@ -11,7 +11,10 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IPythonToolExecutionService } from '../../client/common/process/types';
 import { ExecutionInfo, IConfigurationService, IInstaller, IPythonSettings } from '../../client/common/types';
-import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
+import {
+    IInterpreterAutoSelectionService,
+    IInterpreterAutoSeletionProxyService
+} from '../../client/interpreter/autoSelection/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { LinterManager } from '../../client/linters/linterManager';
@@ -35,7 +38,9 @@ suite('Linting - Pylint', () => {
 
     setup(() => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        fileSystem.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns((a, b) => a === b);
+        fileSystem
+            .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .returns((a, b) => a === b);
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         platformService.setup(x => x.isWindows).returns(() => false);
@@ -49,10 +54,19 @@ suite('Linting - Pylint', () => {
 
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fileSystem.object);
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
-        serviceManager.addSingletonInstance<IPythonToolExecutionService>(IPythonToolExecutionService, execService.object);
+        serviceManager.addSingletonInstance<IPythonToolExecutionService>(
+            IPythonToolExecutionService,
+            execService.object
+        );
         serviceManager.addSingletonInstance<IPlatformService>(IPlatformService, platformService.object);
-        serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingleton<IInterpreterAutoSelectionService>(
+            IInterpreterAutoSelectionService,
+            MockAutoSelectionService
+        );
+        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
+            IInterpreterAutoSeletionProxyService,
+            MockAutoSelectionService
+        );
         config = TypeMoq.Mock.ofType<IConfigurationService>();
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
         const linterManager = new LinterManager(serviceContainer, workspace.object);
@@ -211,7 +225,9 @@ suite('Linting - Pylint', () => {
             '1,1,convention,C0111:Missing module docstring',
             '3,-1,error,E1305:Too many arguments for format string'
         ].join(os.EOL);
-        execService.setup(x => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: linterOutput, stderr: '' }));
+        execService
+            .setup(x => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: linterOutput, stderr: '' }));
 
         const lintSettings = new MockLintingSettings();
         lintSettings.pylintUseMinimalCheckers = false;

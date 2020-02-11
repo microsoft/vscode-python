@@ -71,7 +71,10 @@ export class MockEditor implements TextEditor {
     public get viewColumn(): ViewColumn | undefined {
         return undefined;
     }
-    public edit(callback: (editBuilder: TextEditorEdit) => void, _options?: { undoStopBefore: boolean; undoStopAfter: boolean } | undefined): Thenable<boolean> {
+    public edit(
+        callback: (editBuilder: TextEditorEdit) => void,
+        _options?: { undoStopBefore: boolean; undoStopAfter: boolean } | undefined
+    ): Thenable<boolean> {
         return new Promise(r => {
             const editor = new MockEditorEdit(this._documentManager, this._document);
             callback(editor);
@@ -85,7 +88,10 @@ export class MockEditor implements TextEditor {
     ): Thenable<boolean> {
         throw new Error('Method not implemented.');
     }
-    public setDecorations(_decorationType: TextEditorDecorationType, _rangesOrOptions: Range[] | DecorationOptions[]): void {
+    public setDecorations(
+        _decorationType: TextEditorDecorationType,
+        _rangesOrOptions: Range[] | DecorationOptions[]
+    ): void {
         throw new Error('Method not implemented.');
     }
     public revealRange(_range: Range, _revealType?: TextEditorRevealType | undefined): void {

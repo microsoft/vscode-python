@@ -158,7 +158,8 @@ suite('Data Science - Native Editor Provider', () => {
         expect(notebookEditor.editors).to.be.lengthOf(1);
     }
     test('Show the notebook editor when an opening the same ipynb file', async () => openSameIPynbFile(false));
-    test('Show the notebook editor when an opening the same ipynb file (after opening some other random file)', async () => openSameIPynbFile(true));
+    test('Show the notebook editor when an opening the same ipynb file (after opening some other random file)', async () =>
+        openSameIPynbFile(true));
 
     test('Do not open the notebook editor when a txt file is opened', async () => {
         await testAutomaticallyOpeningNotebookEditorWhenOpeningFiles(Uri.file('some text file.txt'), false);

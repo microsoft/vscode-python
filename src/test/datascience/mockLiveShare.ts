@@ -3,7 +3,15 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, Disposable, Event, EventEmitter, TreeDataProvider, Uri } from 'vscode';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    Disposable,
+    Event,
+    EventEmitter,
+    TreeDataProvider,
+    Uri
+} from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareTestingApi } from '../../client/common/application/types';
@@ -345,7 +353,10 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
     public registerTreeDataProvider<T>(_viewId: vsls.View, _treeDataProvider: TreeDataProvider<T>): Disposable {
         throw new Error('Method not implemented.');
     }
-    public registerContactServiceProvider(_name: string, _contactServiceProvider: vsls.ContactServiceProvider): Disposable {
+    public registerContactServiceProvider(
+        _name: string,
+        _contactServiceProvider: vsls.ContactServiceProvider
+    ): Disposable {
         throw new Error('Method not implemented.');
     }
     public shareServer(_server: vsls.Server): Promise<Disposable> {
@@ -384,7 +395,11 @@ export class MockLiveShareApi implements ILiveShareTestingApi {
         // Force a role on our live share api
         if (role !== this.currentRole) {
             this.internalApi = new MockLiveShare(role);
-            this.externalProxy = new LiveShareProxy(this.appShell, this.config.getSettings().datascience.liveShareConnectionTimeout, this.internalApi);
+            this.externalProxy = new LiveShareProxy(
+                this.appShell,
+                this.config.getSettings().datascience.liveShareConnectionTimeout,
+                this.internalApi
+            );
             this.internalApi.onDidChangeSession(this.onInternalSessionChanged, this);
             this.currentRole = role;
             this.disposables.push(this.internalApi);

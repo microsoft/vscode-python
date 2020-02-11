@@ -18,7 +18,10 @@ export function compareFiles(expectedContent: string, actualContent: string) {
         expect(e, `Difference at line ${i}`).to.be.equal(a);
     }
 
-    expect(actualLines.length, expectedLines.length > actualLines.length ? 'Actual contains more lines than expected' : 'Expected contains more lines than the actual').to.be.equal(
-        expectedLines.length
-    );
+    expect(
+        actualLines.length,
+        expectedLines.length > actualLines.length
+            ? 'Actual contains more lines than expected'
+            : 'Expected contains more lines than the actual'
+    ).to.be.equal(expectedLines.length);
 }

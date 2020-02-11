@@ -55,19 +55,37 @@ export class MockLanguageServer implements ILanguageServer {
         noop();
     }
 
-    public provideRenameEdits(_document: TextDocument, _position: Position, _newName: string, _token: CancellationToken): ProviderResult<WorkspaceEdit> {
+    public provideRenameEdits(
+        _document: TextDocument,
+        _position: Position,
+        _newName: string,
+        _token: CancellationToken
+    ): ProviderResult<WorkspaceEdit> {
         this.resolveNotificationPromise();
         return null;
     }
-    public provideDefinition(_document: TextDocument, _position: Position, _token: CancellationToken): ProviderResult<Location | Location[] | LocationLink[]> {
+    public provideDefinition(
+        _document: TextDocument,
+        _position: Position,
+        _token: CancellationToken
+    ): ProviderResult<Location | Location[] | LocationLink[]> {
         this.resolveNotificationPromise();
         return null;
     }
-    public provideHover(_document: TextDocument, _position: Position, _token: CancellationToken): ProviderResult<Hover> {
+    public provideHover(
+        _document: TextDocument,
+        _position: Position,
+        _token: CancellationToken
+    ): ProviderResult<Hover> {
         this.resolveNotificationPromise();
         return null;
     }
-    public provideReferences(_document: TextDocument, _position: Position, _context: ReferenceContext, _token: CancellationToken): ProviderResult<Location[]> {
+    public provideReferences(
+        _document: TextDocument,
+        _position: Position,
+        _context: ReferenceContext,
+        _token: CancellationToken
+    ): ProviderResult<Location[]> {
         this.resolveNotificationPromise();
         return null;
     }
@@ -84,11 +102,19 @@ export class MockLanguageServer implements ILanguageServer {
         this.resolveNotificationPromise();
         return null;
     }
-    public provideDocumentSymbols(_document: TextDocument, _token: CancellationToken): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
+    public provideDocumentSymbols(
+        _document: TextDocument,
+        _token: CancellationToken
+    ): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
         this.resolveNotificationPromise();
         return null;
     }
-    public provideSignatureHelp(_document: TextDocument, _position: Position, _token: CancellationToken, _context: SignatureHelpContext): ProviderResult<SignatureHelp> {
+    public provideSignatureHelp(
+        _document: TextDocument,
+        _position: Position,
+        _token: CancellationToken,
+        _context: SignatureHelpContext
+    ): ProviderResult<SignatureHelp> {
         this.resolveNotificationPromise();
         return null;
     }

@@ -54,11 +54,18 @@ suite('Unit Tests re-discovery', () => {
         ioc.registerVariableTypes();
         ioc.registerUnitTestTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
+            IInterpreterService,
+            instance(mock(InterpreterService))
+        );
     }
 
     async function discoverUnitTests(testProvider: TestProvider) {
-        const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(testProvider, rootWorkspaceUri!, testFilesPath);
+        const testManager = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory)(
+            testProvider,
+            rootWorkspaceUri!,
+            testFilesPath
+        );
         let tests = await testManager.discoverTests(CommandSource.ui, true, true);
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');

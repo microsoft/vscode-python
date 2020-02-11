@@ -7,11 +7,18 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
-import { InvalidLaunchJsonDebuggerDiagnostic, InvalidLaunchJsonDebuggerService } from '../../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
+import {
+    InvalidLaunchJsonDebuggerDiagnostic,
+    InvalidLaunchJsonDebuggerService
+} from '../../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
 import { IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import { MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
-import { IDiagnostic, IDiagnosticHandlerService, IDiagnosticsService } from '../../../../client/application/diagnostics/types';
+import {
+    IDiagnostic,
+    IDiagnosticHandlerService,
+    IDiagnosticsService
+} from '../../../../client/application/diagnostics/types';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { IFileSystem } from '../../../../client/common/platform/types';
 import { Diagnostics } from '../../../../client/common/utils/localize';
@@ -35,7 +42,9 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
         messageHandler = TypeMoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         baseWorkspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => baseWorkspaceService.object);
+        serviceContainer
+            .setup(s => s.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .returns(() => baseWorkspaceService.object);
 
         diagnosticService = new (class extends InvalidLaunchJsonDebuggerService {
             public _clear() {
@@ -51,7 +60,11 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
     });
 
     test('Can handle all InvalidLaunchJsonDebugger diagnostics', async () => {
-        for (const code of [DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic, DiagnosticCodes.ConsoleTypeDiagnostic]) {
+        for (const code of [
+            DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
+            DiagnosticCodes.JustMyCodeDiagnostic,
+            DiagnosticCodes.ConsoleTypeDiagnostic
+        ]) {
             const diagnostic = TypeMoq.Mock.ofType<IDiagnostic>();
             diagnostic
                 .setup(d => d.code)
@@ -147,7 +160,10 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
             .returns(() => Promise.resolve(fileContents))
             .verifiable(TypeMoq.Times.once());
         const diagnostics = await diagnosticService.diagnose(undefined);
-        expect(diagnostics).to.be.deep.equal([new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.InvalidDebuggerTypeDiagnostic, undefined)], 'not the same');
+        expect(diagnostics).to.be.deep.equal(
+            [new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.InvalidDebuggerTypeDiagnostic, undefined)],
+            'not the same'
+        );
         workspaceService.verifyAll();
         fs.verifyAll();
     });
@@ -169,7 +185,10 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
             .returns(() => Promise.resolve(fileContents))
             .verifiable(TypeMoq.Times.once());
         const diagnostics = await diagnosticService.diagnose(undefined);
-        expect(diagnostics).to.be.deep.equal([new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.JustMyCodeDiagnostic, undefined)], 'not the same');
+        expect(diagnostics).to.be.deep.equal(
+            [new InvalidLaunchJsonDebuggerDiagnostic(DiagnosticCodes.JustMyCodeDiagnostic, undefined)],
+            'not the same'
+        );
         workspaceService.verifyAll();
         fs.verifyAll();
     });
@@ -203,7 +222,11 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
     });
 
     test('All InvalidLaunchJsonDebugger diagnostics should display 2 options to with one command', async () => {
-        for (const code of [DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic, DiagnosticCodes.ConsoleTypeDiagnostic]) {
+        for (const code of [
+            DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
+            DiagnosticCodes.JustMyCodeDiagnostic,
+            DiagnosticCodes.ConsoleTypeDiagnostic
+        ]) {
             const diagnostic = TypeMoq.Mock.ofType<IDiagnostic>();
             let options: MessageCommandPrompt | undefined;
             diagnostic
@@ -232,7 +255,11 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
     });
 
     test('All InvalidLaunchJsonDebugger diagnostics should display message twice if invoked twice', async () => {
-        for (const code of [DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic, DiagnosticCodes.ConsoleTypeDiagnostic]) {
+        for (const code of [
+            DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
+            DiagnosticCodes.JustMyCodeDiagnostic,
+            DiagnosticCodes.ConsoleTypeDiagnostic
+        ]) {
             const diagnostic = TypeMoq.Mock.ofType<IDiagnostic>();
             diagnostic
                 .setup(d => d.code)
@@ -243,7 +270,9 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
                 .returns(() => 'always')
                 .verifiable(TypeMoq.Times.atLeastOnce());
             messageHandler.reset();
-            messageHandler.setup(m => m.handle(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.exactly(2));
+            messageHandler
+                .setup(m => m.handle(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .verifiable(TypeMoq.Times.exactly(2));
             baseWorkspaceService
                 .setup(c => c.getWorkspaceFolder(TypeMoq.It.isAny()))
                 .returns(() => workspaceFolder)
@@ -260,7 +289,11 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
     });
 
     test('Function fixLaunchJson() returns if there are no workspace folders', async () => {
-        for (const code of [DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic, DiagnosticCodes.ConsoleTypeDiagnostic]) {
+        for (const code of [
+            DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
+            DiagnosticCodes.JustMyCodeDiagnostic,
+            DiagnosticCodes.ConsoleTypeDiagnostic
+        ]) {
             workspaceService
                 .setup(w => w.hasWorkspaceFolders)
                 .returns(() => false)
@@ -275,7 +308,11 @@ suite('Application Diagnostics - Checks if launch.json is invalid', () => {
     });
 
     test('Function fixLaunchJson() returns if file launch.json does not exist', async () => {
-        for (const code of [DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic, DiagnosticCodes.ConsoleTypeDiagnostic]) {
+        for (const code of [
+            DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
+            DiagnosticCodes.JustMyCodeDiagnostic,
+            DiagnosticCodes.ConsoleTypeDiagnostic
+        ]) {
             workspaceService
                 .setup(w => w.hasWorkspaceFolders)
                 .returns(() => true)

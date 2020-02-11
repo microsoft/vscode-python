@@ -26,7 +26,10 @@ suite('Debugging - Configuration Service', () => {
 
     class TestPythonDebugConfigurationService extends PythonDebugConfigurationService {
         // tslint:disable-next-line:no-unnecessary-override
-        public async pickDebugConfiguration(input: IMultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
+        public async pickDebugConfiguration(
+            input: IMultiStepInput<DebugConfigurationState>,
+            state: DebugConfigurationState
+        ) {
             return super.pickDebugConfiguration(input, state);
         }
     }
@@ -35,7 +38,12 @@ suite('Debugging - Configuration Service', () => {
         launchResolver = typemoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
         multiStepFactory = typemoq.Mock.ofType<IMultiStepInputFactory>();
         providerFactory = mock(DebugConfigurationProviderFactory);
-        configService = new TestPythonDebugConfigurationService(attachResolver.object, launchResolver.object, instance(providerFactory), multiStepFactory.object);
+        configService = new TestPythonDebugConfigurationService(
+            attachResolver.object,
+            launchResolver.object,
+            instance(providerFactory),
+            multiStepFactory.object
+        );
     });
     test('Should use attach resolver when passing attach config', async () => {
         const config = ({
@@ -45,10 +53,14 @@ suite('Debugging - Configuration Service', () => {
         const expectedConfig = { yay: 1 };
 
         attachResolver
-            .setup(a => a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue(config), typemoq.It.isAny()))
+            .setup(a =>
+                a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue(config), typemoq.It.isAny())
+            )
             .returns(() => Promise.resolve(expectedConfig as any))
             .verifiable(typemoq.Times.once());
-        launchResolver.setup(a => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny())).verifiable(typemoq.Times.never());
+        launchResolver
+            .setup(a => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .verifiable(typemoq.Times.never());
 
         const resolvedConfig = await configService.resolveDebugConfiguration(folder, config as any);
 
@@ -62,10 +74,18 @@ suite('Debugging - Configuration Service', () => {
             const expectedConfig = { yay: 1 };
 
             launchResolver
-                .setup(a => a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue((config as any) as LaunchRequestArguments), typemoq.It.isAny()))
+                .setup(a =>
+                    a.resolveDebugConfiguration(
+                        typemoq.It.isValue(folder),
+                        typemoq.It.isValue((config as any) as LaunchRequestArguments),
+                        typemoq.It.isAny()
+                    )
+                )
                 .returns(() => Promise.resolve(expectedConfig as any))
                 .verifiable(typemoq.Times.once());
-            attachResolver.setup(a => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny())).verifiable(typemoq.Times.never());
+            attachResolver
+                .setup(a => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+                .verifiable(typemoq.Times.never());
 
             const resolvedConfig = await configService.resolveDebugConfiguration(folder, config as any);
 

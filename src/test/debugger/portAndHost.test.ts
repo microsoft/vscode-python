@@ -49,7 +49,13 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
         } catch (ex) {}
     });
 
-    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, port?: number, host?: string, showReturnValue: boolean = true): LaunchRequestArguments {
+    function buildLaunchArgs(
+        pythonFile: string,
+        stopOnEntry: boolean = false,
+        port?: number,
+        host?: string,
+        showReturnValue: boolean = true
+    ): LaunchRequestArguments {
         return {
             program: path.join(debugFilesPath, pythonFile),
             cwd: debugFilesPath,
@@ -111,7 +117,9 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
     });
     test('Confirm debuggig fails when provided port is in use', async () => {
         const server = net.createServer(noop);
-        const port = await new Promise<number>(resolve => server.listen({ host: 'localhost', port: 0 }, () => resolve((server.address() as net.AddressInfo).port)));
+        const port = await new Promise<number>(resolve =>
+            server.listen({ host: 'localhost', port: 0 }, () => resolve((server.address() as net.AddressInfo).port))
+        );
         let exception: Error | undefined;
         try {
             await testDebuggingWithProvidedPort(port);

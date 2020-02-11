@@ -38,7 +38,9 @@ suite('ArgsService: Common', () => {
 
                 const argsHelper = new ArgumentsHelper();
 
-                serviceContainer.setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny())).returns(() => argsHelper);
+                serviceContainer
+                    .setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny()))
+                    .returns(() => argsHelper);
 
                 switch (product) {
                     case Product.unittest: {
@@ -83,14 +85,28 @@ suite('ArgsService: Common', () => {
             });
             test('Test getting value for an option with a single value', () => {
                 for (const option of expectedWithArgs) {
-                    const args = ['--some-option-with-a-value', '1234', '--another-value-with-inline=1234', option, 'abcd'];
+                    const args = [
+                        '--some-option-with-a-value',
+                        '1234',
+                        '--another-value-with-inline=1234',
+                        option,
+                        'abcd'
+                    ];
                     const value = argumentsService.getOptionValue(args, option);
                     expect(value).to.equal('abcd');
                 }
             });
             test('Test getting value for an option with a multiple value', () => {
                 for (const option of expectedWithArgs) {
-                    const args = ['--some-option-with-a-value', '1234', '--another-value-with-inline=1234', option, 'abcd', option, 'xyz'];
+                    const args = [
+                        '--some-option-with-a-value',
+                        '1234',
+                        '--another-value-with-inline=1234',
+                        option,
+                        'abcd',
+                        option,
+                        'xyz'
+                    ];
                     const value = argumentsService.getOptionValue(args, option);
                     expect(value).to.deep.equal(['abcd', 'xyz']);
                 }
@@ -167,5 +183,7 @@ function getMatches(pattern: any, str: string) {
         matches.push(result[1].trim());
         result = regex.exec(str);
     }
-    return matches.sort().reduce<string[]>((items, item) => (items.indexOf(item) === -1 ? items.concat([item]) : items), []);
+    return matches
+        .sort()
+        .reduce<string[]>((items, item) => (items.indexOf(item) === -1 ? items.concat([item]) : items), []);
 }

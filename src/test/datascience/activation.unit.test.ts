@@ -44,7 +44,13 @@ suite('Data Science - Activation', () => {
         when(jupyterInterpreterService.onDidChangeInterpreter).thenReturn(interpreterEventEmitter.event);
         when(executionFactory.createDaemon(anything())).thenResolve();
         when(contextService.activate()).thenResolve();
-        activator = new Activation(instance(notebookProvider), instance(jupyterInterpreterService), instance(executionFactory), [], instance(contextService));
+        activator = new Activation(
+            instance(notebookProvider),
+            instance(jupyterInterpreterService),
+            instance(executionFactory),
+            [],
+            instance(contextService)
+        );
         when(jupyterInterpreterService.getSelectedInterpreter()).thenResolve(interpreter);
         when(jupyterInterpreterService.getSelectedInterpreter(anything())).thenResolve(interpreter);
         await activator.activate();
@@ -61,7 +67,9 @@ suite('Data Science - Activation', () => {
         await fakeTimer.wait();
 
         verify(executionFactory.createDaemon(anything())).once();
-        verify(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path }))).once();
+        verify(
+            executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path }))
+        ).once();
     }
 
     test('Create a daemon when a notebook is opened', async () => testCreatingDaemonWhenOpeningANotebook());
@@ -75,7 +83,9 @@ suite('Data Science - Activation', () => {
         // Wait for debounce to complete.
         await fakeTimer.wait();
 
-        verify(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path }))).twice();
+        verify(
+            executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path }))
+        ).twice();
     });
     test('Changing interpreter without opening a notebook does not result in a daemon being created', async () => {
         // Trigger changes to interpreter.

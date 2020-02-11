@@ -29,7 +29,13 @@ suite('CondaExecutionService', () => {
         return this.skip();
 
         const environment = { name: 'foo', path: 'bar' };
-        executionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, environment);
+        executionService = new CondaExecutionService(
+            serviceContainer.object,
+            processService.object,
+            pythonPath,
+            condaFile,
+            environment
+        );
 
         const result = executionService.getExecutionInfo(args);
 
@@ -41,7 +47,13 @@ suite('CondaExecutionService', () => {
         return this.skip();
 
         const environment = { name: '', path: 'bar' };
-        executionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, environment);
+        executionService = new CondaExecutionService(
+            serviceContainer.object,
+            processService.object,
+            pythonPath,
+            condaFile,
+            environment
+        );
 
         const result = executionService.getExecutionInfo(args);
 

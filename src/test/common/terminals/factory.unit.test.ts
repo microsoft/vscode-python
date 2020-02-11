@@ -24,17 +24,27 @@ suite('Terminal Service Factory', () => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         fs = TypeMoq.Mock.ofType<IFileSystem>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
+            .returns(() => interpreterService.object);
         disposables = [];
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposables);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
+            .returns(() => disposables);
         const terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalHelper), TypeMoq.It.isAny())).returns(() => terminalHelper.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ITerminalHelper), TypeMoq.It.isAny()))
+            .returns(() => terminalHelper.object);
         const terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalManager), TypeMoq.It.isAny())).returns(() => terminalManager.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ITerminalManager), TypeMoq.It.isAny()))
+            .returns(() => terminalManager.object);
         factory = new TerminalServiceFactory(serviceContainer.object, fs.object, interpreterService.object);
 
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny())).returns(() => workspaceService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
+            .returns(() => workspaceService.object);
     });
     teardown(() => {
         disposables.forEach(disposable => {
@@ -46,7 +56,8 @@ suite('Terminal Service Factory', () => {
 
     test('Ensure same instance of terminal service is returned', () => {
         const instance = factory.getTerminalService() as SynchronousTerminalService;
-        const sameInstance = (factory.getTerminalService() as SynchronousTerminalService).terminalService === instance.terminalService;
+        const sameInstance =
+            (factory.getTerminalService() as SynchronousTerminalService).terminalService === instance.terminalService;
         expect(sameInstance).to.equal(true, 'Instances are not the same');
 
         const differentInstance = factory.getTerminalService(undefined, 'New Title');
@@ -56,13 +67,18 @@ suite('Terminal Service Factory', () => {
 
     test('Ensure different instance of terminal service is returned when title is provided', () => {
         const defaultInstance = factory.getTerminalService();
-        expect(defaultInstance instanceof SynchronousTerminalService).to.equal(true, 'Not an instance of Terminal service');
+        expect(defaultInstance instanceof SynchronousTerminalService).to.equal(
+            true,
+            'Not an instance of Terminal service'
+        );
 
         const notSameAsDefaultInstance = factory.getTerminalService(undefined, 'New Title') === defaultInstance;
         expect(notSameAsDefaultInstance).to.not.equal(true, 'Instances are the same as default instance');
 
         const instance = factory.getTerminalService(undefined, 'New Title') as SynchronousTerminalService;
-        const sameInstance = (factory.getTerminalService(undefined, 'New Title') as SynchronousTerminalService).terminalService === instance.terminalService;
+        const sameInstance =
+            (factory.getTerminalService(undefined, 'New Title') as SynchronousTerminalService).terminalService ===
+            instance.terminalService;
         expect(sameInstance).to.equal(true, 'Instances are not the same');
 
         const differentInstance = factory.getTerminalService(undefined, 'Another New Title');
@@ -97,9 +113,15 @@ suite('Terminal Service Factory', () => {
         const workspaceFolderB = TypeMoq.Mock.ofType<WorkspaceFolder>();
         workspaceFolderB.setup(w => w.uri).returns(() => workspaceUriB);
 
-        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(file1A))).returns(() => workspaceFolderA.object);
-        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(file2A))).returns(() => workspaceFolderA.object);
-        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(fileB))).returns(() => workspaceFolderB.object);
+        workspaceService
+            .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(file1A)))
+            .returns(() => workspaceFolderA.object);
+        workspaceService
+            .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(file2A)))
+            .returns(() => workspaceFolderA.object);
+        workspaceService
+            .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(fileB)))
+            .returns(() => workspaceFolderB.object);
 
         const terminalForFile1A = factory.getTerminalService(file1A) as SynchronousTerminalService;
         const terminalForFile2A = factory.getTerminalService(file2A) as SynchronousTerminalService;
@@ -108,7 +130,11 @@ suite('Terminal Service Factory', () => {
         const terminalsAreSameForWorkspaceA = terminalForFile1A.terminalService === terminalForFile2A.terminalService;
         expect(terminalsAreSameForWorkspaceA).to.equal(true, 'Instances are not the same for Workspace A');
 
-        const terminalsForWorkspaceABAreDifferent = terminalForFile1A.terminalService === terminalForFileB.terminalService;
-        expect(terminalsForWorkspaceABAreDifferent).to.equal(false, 'Instances should be different for different workspaces');
+        const terminalsForWorkspaceABAreDifferent =
+            terminalForFile1A.terminalService === terminalForFileB.terminalService;
+        expect(terminalsForWorkspaceABAreDifferent).to.equal(
+            false,
+            'Instances should be different for different workspaces'
+        );
     });
 });

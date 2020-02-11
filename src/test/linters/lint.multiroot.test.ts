@@ -57,12 +57,36 @@ suite('Multiroot Linting', () => {
         ioc.registerMockInterpreterTypes();
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, FormatterProductPathService, ProductType.Formatter);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience);
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            CTagsProductPathService,
+            ProductType.WorkspaceSymbols
+        );
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            FormatterProductPathService,
+            ProductType.Formatter
+        );
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            LinterProductPathService,
+            ProductType.Linter
+        );
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            TestFrameworkProductPathService,
+            ProductType.TestFramework
+        );
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            RefactoringLibraryProductPathService,
+            ProductType.RefactoringLibrary
+        );
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            DataScienceProductPathService,
+            ProductType.DataScience
+        );
     }
 
     async function createLinter(product: Product): Promise<ILinter> {
@@ -70,7 +94,11 @@ suite('Multiroot Linting', () => {
         const lm = ioc.serviceContainer.get<ILinterManager>(ILinterManager);
         return lm.createLinter(product, mockOutputChannel, ioc.serviceContainer);
     }
-    async function testLinterInWorkspaceFolder(product: Product, workspaceFolderRelativePath: string, mustHaveErrors: boolean): Promise<void> {
+    async function testLinterInWorkspaceFolder(
+        product: Product,
+        workspaceFolderRelativePath: string,
+        mustHaveErrors: boolean
+    ): Promise<void> {
         const fileToLint = path.join(multirootPath, workspaceFolderRelativePath, 'file.py');
         const cancelToken = new CancellationTokenSource();
         const document = await workspace.openTextDocument(fileToLint);
@@ -110,7 +138,9 @@ suite('Multiroot Linting', () => {
         ]);
         await testLinterInWorkspaceFolder(product, 'workspace1', wks);
         await Promise.all(
-            [ConfigurationTarget.Global, ConfigurationTarget.Workspace].map(configTarget => config.updateSetting(setting, undefined, Uri.file(multirootPath), configTarget))
+            [ConfigurationTarget.Global, ConfigurationTarget.Workspace].map(configTarget =>
+                config.updateSetting(setting, undefined, Uri.file(multirootPath), configTarget)
+            )
         );
     }
 });

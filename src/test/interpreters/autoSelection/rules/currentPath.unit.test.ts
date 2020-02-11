@@ -18,7 +18,11 @@ import { InterpreterAutoSelectionService } from '../../../../client/interpreter/
 import { NextAction } from '../../../../client/interpreter/autoSelection/rules/baseRule';
 import { CurrentPathInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/currentPath';
 import { IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
-import { IInterpreterHelper, IInterpreterLocatorService, PythonInterpreter } from '../../../../client/interpreter/contracts';
+import {
+    IInterpreterHelper,
+    IInterpreterLocatorService,
+    PythonInterpreter
+} from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { KnownPathsService } from '../../../../client/interpreter/locators/services/KnownPathsService';
 
@@ -30,10 +34,16 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
     let locator: IInterpreterLocatorService;
     let helper: IInterpreterHelper;
     class CurrentPathInterpretersAutoSelectionRuleTest extends CurrentPathInterpretersAutoSelectionRule {
-        public async setGlobalInterpreter(interpreter?: PythonInterpreter, manager?: IInterpreterAutoSelectionService): Promise<boolean> {
+        public async setGlobalInterpreter(
+            interpreter?: PythonInterpreter,
+            manager?: IInterpreterAutoSelectionService
+        ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
-        public async onAutoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<NextAction> {
+        public async onAutoSelectInterpreter(
+            resource: Resource,
+            manager?: IInterpreterAutoSelectionService
+        ): Promise<NextAction> {
             return super.onAutoSelectInterpreter(resource, manager);
         }
     }
@@ -44,8 +54,15 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
         helper = mock(InterpreterHelper);
         locator = mock(KnownPathsService);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(instance(state));
-        rule = new CurrentPathInterpretersAutoSelectionRuleTest(instance(fs), instance(helper), instance(stateFactory), instance(locator));
+        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+            instance(state)
+        );
+        rule = new CurrentPathInterpretersAutoSelectionRuleTest(
+            instance(fs),
+            instance(helper),
+            instance(stateFactory),
+            instance(locator)
+        );
     });
 
     test('Invoke next rule if there are no interpreters in the current path', async () => {

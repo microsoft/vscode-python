@@ -185,7 +185,12 @@ suite('Unit Tests - Tests Status Updater', () => {
                 updatedItems.push(item);
             }
         };
-        const failedItems = [tests.testFunctions[2].testFunction, tests.testFunctions[3].testFunction, tests.testSuites[1].testSuite, tests.testSuites[2].testSuite];
+        const failedItems = [
+            tests.testFunctions[2].testFunction,
+            tests.testFunctions[3].testFunction,
+            tests.testSuites[1].testSuite,
+            tests.testSuites[2].testSuite
+        ];
         failedItems.forEach(failedItem => visitRecursive(tests, failedItem, visitor));
 
         for (const item of updatedItems) {

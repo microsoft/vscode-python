@@ -3,7 +3,14 @@ import 'rxjs/add/observable/of';
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
 
-import { ExecutionResult, IProcessService, ObservableExecutionResult, Output, ShellOptions, SpawnOptions } from '../../client/common/process/types';
+import {
+    ExecutionResult,
+    IProcessService,
+    ObservableExecutionResult,
+    Output,
+    ShellOptions,
+    SpawnOptions
+} from '../../client/common/process/types';
 import { noop } from '../core';
 
 type ExecObservableCallback = (result: Observable<Output<string>> | Output<string>) => void;
@@ -15,7 +22,9 @@ export class MockProcessService extends EventEmitter implements IProcessService 
     constructor(private procService: IProcessService) {
         super();
     }
-    public onExecObservable(handler: (file: string, args: string[], options: SpawnOptions, callback: ExecObservableCallback) => void) {
+    public onExecObservable(
+        handler: (file: string, args: string[], options: SpawnOptions, callback: ExecObservableCallback) => void
+    ) {
         this.on('execObservable', handler);
     }
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {

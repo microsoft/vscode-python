@@ -32,9 +32,16 @@ suite('Code lenses - Test files', () => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         symbolProvider = mock(LanguageServerSymbolProvider);
         onDidChange = new EventEmitter<void>();
-        serviceContainer.setup(c => c.get(typemoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+        serviceContainer
+            .setup(c => c.get(typemoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspaceService.object);
         serviceContainer.setup(c => c.get(typemoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
-        codeLensProvider = new TestFileCodeLensProvider(onDidChange, symbolProvider, testCollectionStorage.object, serviceContainer.object);
+        codeLensProvider = new TestFileCodeLensProvider(
+            onDidChange,
+            symbolProvider,
+            testCollectionStorage.object,
+            serviceContainer.object
+        );
     });
 
     teardown(() => {
@@ -136,8 +143,12 @@ suite('Code lenses - Test files', () => {
             .setup(w => w.getTests(typemoq.It.isValue(workspaceUri)))
             .returns(() => tests as any)
             .verifiable(typemoq.Times.once());
-        fileSystem.setup(f => f.arePathsSame(Uri.file('/path/to/document1').fsPath, Uri.file('/path/to/document2').fsPath)).returns(() => false);
-        fileSystem.setup(f => f.arePathsSame(Uri.file('/path/to/document2').fsPath, Uri.file('/path/to/document2').fsPath)).returns(() => true);
+        fileSystem
+            .setup(f => f.arePathsSame(Uri.file('/path/to/document1').fsPath, Uri.file('/path/to/document2').fsPath))
+            .returns(() => false);
+        fileSystem
+            .setup(f => f.arePathsSame(Uri.file('/path/to/document2').fsPath, Uri.file('/path/to/document2').fsPath))
+            .returns(() => true);
         const files = codeLensProvider.getTestFileWhichNeedsCodeLens(document as any);
         assert.deepEqual(files, testFile2 as any);
         workspaceService.verifyAll();

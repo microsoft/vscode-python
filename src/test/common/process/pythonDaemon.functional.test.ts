@@ -11,7 +11,13 @@ import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
-import { createMessageConnection, MessageConnection, RequestType, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
+import {
+    createMessageConnection,
+    MessageConnection,
+    RequestType,
+    StreamMessageReader,
+    StreamMessageWriter
+} from 'vscode-jsonrpc';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import { IPythonExecutionService, PythonVersionInfo } from '../../../client/common/process/types';
@@ -26,7 +32,12 @@ use(chaiPromised);
 // tslint:disable-next-line: max-func-body-length
 suite('Daemon', () => {
     // Set PYTHONPATH to pickup our module and the jsonrpc modules.
-    const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')}`;
+    const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(
+        EXTENSION_ROOT_DIR,
+        'pythonFiles',
+        'lib',
+        'python'
+    )}`;
     const env = { PYTHONPATH: envPythonPath, PYTHONUNBUFFERED: '1' };
     let pythonProc: ChildProcess;
     let connection: MessageConnection;
@@ -50,10 +61,18 @@ suite('Daemon', () => {
         // Enable the following to log everything going on at pyton end.
         // pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'datascience.daemon', '-v', `--log-file=${path.join(EXTENSION_ROOT_DIR, 'test.log')}`], { env });
         pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'datascience.daemon'], { env });
-        connection = createMessageConnection(new StreamMessageReader(pythonProc.stdout), new StreamMessageWriter(pythonProc.stdin));
+        connection = createMessageConnection(
+            new StreamMessageReader(pythonProc.stdout),
+            new StreamMessageWriter(pythonProc.stdin)
+        );
         connection.listen();
         pythonExecutionService = mock(PythonExecutionService);
-        pythonDaemon = new PythonDaemonExecutionService(instance(pythonExecutionService), fullyQualifiedPythonPath, pythonProc, connection);
+        pythonDaemon = new PythonDaemonExecutionService(
+            instance(pythonExecutionService),
+            fullyQualifiedPythonPath,
+            pythonProc,
+            connection
+        );
     });
     teardown(() => {
         pythonProc.kill();
@@ -87,13 +106,21 @@ suite('Daemon', () => {
     });
 
     test('Interpreter Information', async () => {
-        type InterpreterInfo = { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
+        type InterpreterInfo = {
+            versionInfo: PythonVersionInfo;
+            sysPrefix: string;
+            sysVersion: string;
+            is64Bit: boolean;
+        };
         const json: InterpreterInfo = JSON.parse(
             spawnSync(fullyQualifiedPythonPath, [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'interpreterInfo.py')])
                 .stdout.toString()
                 .trim()
         );
-        const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
+        const versionValue =
+            json.versionInfo.length === 4
+                ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}`
+                : json.versionInfo.join('.');
         const expectedVersion = {
             architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
             path: fullyQualifiedPythonPath,
@@ -119,7 +146,8 @@ suite('Daemon', () => {
 
     test("'pip' module is installed", async () => testModuleInstalled('pip', true));
     test("'unittest' module is installed", async () => testModuleInstalled('unittest', true));
-    test("'VSCode-Python-Rocks' module is not Installed", async () => testModuleInstalled('VSCode-Python-Rocks', false));
+    test("'VSCode-Python-Rocks' module is not Installed", async () =>
+        testModuleInstalled('VSCode-Python-Rocks', false));
 
     test('Execute a file and capture stdout (with unicode)', async () => {
         const source = dedent`

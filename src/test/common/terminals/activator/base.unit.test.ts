@@ -33,7 +33,11 @@ suite('Terminal Base Activator', () => {
         const titleSuffix = `(${item.commandCount} activation command, and preserve focus in terminal is ${item.preserveFocus})`;
         const activationCommands = item.commandCount === 1 ? ['CMD1'] : ['CMD1', 'CMD2'];
         test(`Terminal is activated ${titleSuffix}`, async () => {
-            helper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(activationCommands));
+            helper
+                .setup(h =>
+                    h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                )
+                .returns(() => Promise.resolve(activationCommands));
             const terminal = TypeMoq.Mock.ofType<Terminal>();
 
             terminal
@@ -52,7 +56,11 @@ suite('Terminal Base Activator', () => {
             terminal.verifyAll();
         });
         test(`Terminal is activated only once ${titleSuffix}`, async () => {
-            helper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(activationCommands));
+            helper
+                .setup(h =>
+                    h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                )
+                .returns(() => Promise.resolve(activationCommands));
             const terminal = TypeMoq.Mock.ofType<Terminal>();
 
             terminal
@@ -73,7 +81,11 @@ suite('Terminal Base Activator', () => {
             terminal.verifyAll();
         });
         test(`Terminal is activated only once ${titleSuffix} (even when not waiting)`, async () => {
-            helper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(activationCommands));
+            helper
+                .setup(h =>
+                    h.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                )
+                .returns(() => Promise.resolve(activationCommands));
             const terminal = TypeMoq.Mock.ofType<Terminal>();
 
             terminal

@@ -66,21 +66,32 @@ suite('Shell Detectors', () => {
         expect(new TerminalNameShellDetector().priority).to.equal(4);
         expect(new VSCEnvironmentShellDetector(instance(appEnv)).priority).to.equal(3);
         expect(new SettingsShellDetector(instance(workspaceService), instance(platformService)).priority).to.equal(2);
-        expect(new UserEnvironmentShellDetector(instance(currentProcess), instance(platformService)).priority).to.equal(1);
+        expect(new UserEnvironmentShellDetector(instance(currentProcess), instance(platformService)).priority).to.equal(
+            1
+        );
     });
     test('Test identification of Terminal Shells (base class method)', async () => {
         const shellDetector = new TerminalNameShellDetector();
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
-            expect(shellDetector.identifyShellFromShellPath(shellPath)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
+            expect(shellDetector.identifyShellFromShellPath(shellPath)).to.equal(
+                shellType,
+                `Incorrect Shell Type for path '${shellPath}'`
+            );
         });
     });
     test('Identify shell based on name of terminal', async () => {
         const shellDetector = new TerminalNameShellDetector();
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
-            expect(shellDetector.identify(telemetryProperties, { name: shellPath } as any)).to.equal(shellType, `Incorrect Shell Type for name '${shellPath}'`);
+            expect(shellDetector.identify(telemetryProperties, { name: shellPath } as any)).to.equal(
+                shellType,
+                `Incorrect Shell Type for name '${shellPath}'`
+            );
         });
 
-        expect(shellDetector.identify(telemetryProperties, undefined)).to.equal(undefined, 'Should be undefined when there is no temrinal');
+        expect(shellDetector.identify(telemetryProperties, undefined)).to.equal(
+            undefined,
+            'Should be undefined when there is no temrinal'
+        );
     });
     test('Identify shell based on VSC Environment', async () => {
         const shellDetector = new VSCEnvironmentShellDetector(instance(appEnv));
@@ -93,14 +104,20 @@ suite('Shell Detectors', () => {
         });
 
         when(appEnv.shell).thenReturn(undefined as any);
-        expect(shellDetector.identify(telemetryProperties, undefined)).to.equal(undefined, 'Should be undefined when vscode.env.shell is undefined');
+        expect(shellDetector.identify(telemetryProperties, undefined)).to.equal(
+            undefined,
+            'Should be undefined when vscode.env.shell is undefined'
+        );
     });
     test('Identify shell based on VSC Settings', async () => {
         const shellDetector = new SettingsShellDetector(instance(workspaceService), instance(platformService));
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             // Assume the same paths are stored in user settings, we should still be able to identify the shell.
             shellDetector.getTerminalShellPath = () => shellPath;
-            expect(shellDetector.identify(telemetryProperties, {} as any)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
+            expect(shellDetector.identify(telemetryProperties, {} as any)).to.equal(
+                shellType,
+                `Incorrect Shell Type for path '${shellPath}'`
+            );
         });
     });
     getNamesAndValues<OSType>(OSType).forEach(os => {
@@ -127,7 +144,10 @@ suite('Shell Detectors', () => {
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             // Assume the same paths are defined in user environment variables, we should still be able to identify the shell.
             shellDetector.getDefaultPlatformShell = () => shellPath;
-            expect(shellDetector.identify(telemetryProperties, {} as any)).to.equal(shellType, `Incorrect Shell Type for path '${shellPath}'`);
+            expect(shellDetector.identify(telemetryProperties, {} as any)).to.equal(
+                shellType,
+                `Incorrect Shell Type for path '${shellPath}'`
+            );
         });
     });
     test('Default shell on Windows < 10 is cmd.exe', () => {

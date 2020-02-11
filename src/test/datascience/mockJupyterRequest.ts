@@ -26,7 +26,11 @@ class SimpleMessageProducer implements IMessageProducer {
     private result: any;
     private channel: string = 'iopub';
 
-    constructor(type: KernelMessage.IOPubMessageType | KernelMessage.ShellMessageType, result: any, channel: string = 'iopub') {
+    constructor(
+        type: KernelMessage.IOPubMessageType | KernelMessage.ShellMessageType,
+        result: any,
+        channel: string = 'iopub'
+    ) {
         this.type = type;
         this.result = result;
         this.channel = channel;
@@ -63,7 +67,10 @@ class SimpleMessageProducer implements IMessageProducer {
         };
     }
 
-    protected generateShellMessage(msgType: KernelMessage.ShellMessageType, result: any): KernelMessage.IShellControlMessage {
+    protected generateShellMessage(
+        msgType: KernelMessage.ShellMessageType,
+        result: any
+    ): KernelMessage.IShellControlMessage {
         return {
             channel: 'shell',
             header: {
@@ -136,7 +143,9 @@ class OutputMessageProducer extends SimpleMessageProducer {
         // to generate output.
         if (this.output.output_type === 'generator') {
             const resultEntry = <any>this.output.resultGenerator;
-            const resultGenerator = resultEntry as (t: CancellationToken) => Promise<{ result: nbformat.IStream; haveMore: boolean }>;
+            const resultGenerator = resultEntry as (
+                t: CancellationToken
+            ) => Promise<{ result: nbformat.IStream; haveMore: boolean }>;
             if (resultGenerator) {
                 const streamResult = await resultGenerator(this.cancelToken);
                 return {
@@ -266,12 +275,17 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
 
         // Create message producers for output first.
         const outputs = this.cell.data.outputs as nbformat.IOutput[];
-        const outputProducers = outputs.map(o => new OutputMessageProducer({ ...o, execution_count: this.executionCount }, this.cancelToken));
+        const outputProducers = outputs.map(
+            o => new OutputMessageProducer({ ...o, execution_count: this.executionCount }, this.cancelToken)
+        );
 
         // Then combine those into an array of producers for the rest of the messages
         const producers = [
             new SimpleMessageProducer('status', { execution_state: 'busy' }),
-            new SimpleMessageProducer('execute_input', { code: concatMultilineStringInput(this.cell.data.source), execution_count: this.executionCount }),
+            new SimpleMessageProducer('execute_input', {
+                code: concatMultilineStringInput(this.cell.data.source),
+                execution_count: this.executionCount
+            }),
             ...outputProducers,
             new SimpleMessageProducer('status', { execution_state: 'idle' })
         ];
@@ -312,7 +326,11 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
         } else {
             this.currentProducer = undefined;
             // No more messages, send the execute reply message
-            const replyProducer = new SimpleMessageProducer('execute_reply', { execution_count: this.executionCount }, 'shell');
+            const replyProducer = new SimpleMessageProducer(
+                'execute_reply',
+                { execution_count: this.executionCount },
+                'shell'
+            );
             replyProducer
                 .produceNextMessage()
                 .then(r => {

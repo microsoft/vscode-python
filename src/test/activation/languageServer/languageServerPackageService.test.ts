@@ -36,17 +36,28 @@ suite('Language Server Package Service', () => {
         workspace.setup(w => w.getConfiguration('http', undefined)).returns(() => cfg.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
         const defaultStorageChannel = 'python-language-server-daily';
-        const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, azureBlobStorageAccount, defaultStorageChannel, azureCDNBlobStorageAccount);
+        const nugetRepo = new AzureBlobStoreNugetRepository(
+            serviceContainer.object,
+            azureBlobStorageAccount,
+            defaultStorageChannel,
+            azureCDNBlobStorageAccount
+        );
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
         const packageJson = { languageServerVersion: '0.0.1' };
         appEnv.setup(e => e.packageJson).returns(() => packageJson);
         const platform = typeMoq.Mock.ofType<IPlatformService>();
-        const lsPackageService = new DotNetLanguageServerPackageService(serviceContainer.object, appEnv.object, platform.object);
+        const lsPackageService = new DotNetLanguageServerPackageService(
+            serviceContainer.object,
+            appEnv.object,
+            platform.object
+        );
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await nugetRepo.getPackages(packageName, undefined);
 
-        const latestReleases = packages.filter(item => nugetService.isReleaseVersion(item.version)).sort((a, b) => a.version.compare(b.version));
+        const latestReleases = packages
+            .filter(item => nugetService.isReleaseVersion(item.version))
+            .sort((a, b) => a.version.compare(b.version));
         const latestRelease = latestReleases[latestReleases.length - 1];
 
         expect(packages).to.be.length.greaterThan(0, 'No packages returned.');

@@ -37,7 +37,10 @@ class MockSocketCallbackHandler extends SocketCallbackHandler {
         this.SendRawCommand(Commands.PingBytes);
 
         const stringBuffer = new Buffer(message);
-        const buffer = Buffer.concat([Buffer.concat([new Buffer('U'), uint64be.encode(stringBuffer.byteLength)]), stringBuffer]);
+        const buffer = Buffer.concat([
+            Buffer.concat([new Buffer('U'), uint64be.encode(stringBuffer.byteLength)]),
+            stringBuffer
+        ]);
         this.stream.Write(buffer);
     }
     protected handleHandshake(): boolean {
@@ -132,7 +135,10 @@ class MockSocketClient {
                     this.SocketStream.Write(new Buffer(ResponseCommands.Error));
 
                     const errorMessage = `Received unknown command '${cmdId}'`;
-                    const errorBuffer = Buffer.concat([Buffer.concat([new Buffer('A'), uint64be.encode(errorMessage.length)]), new Buffer(errorMessage)]);
+                    const errorBuffer = Buffer.concat([
+                        Buffer.concat([new Buffer('A'), uint64be.encode(errorMessage.length)]),
+                        new Buffer(errorMessage)
+                    ]);
                     this.SocketStream.Write(errorBuffer);
                     return;
                 }
@@ -140,13 +146,19 @@ class MockSocketClient {
                 this.SocketStream.Write(new Buffer(ResponseCommands.Pong));
 
                 const messageBuffer = new Buffer(message);
-                const pongBuffer = Buffer.concat([Buffer.concat([new Buffer('U'), uint64be.encode(messageBuffer.byteLength)]), messageBuffer]);
+                const pongBuffer = Buffer.concat([
+                    Buffer.concat([new Buffer('U'), uint64be.encode(messageBuffer.byteLength)]),
+                    messageBuffer
+                ]);
                 this.SocketStream.Write(pongBuffer);
             } catch (ex) {
                 this.SocketStream.Write(new Buffer(ResponseCommands.Error));
 
                 const errorMessage = `Fatal error in handling data at socket client. Error: ${ex.message}`;
-                const errorBuffer = Buffer.concat([Buffer.concat([new Buffer('A'), uint64be.encode(errorMessage.length)]), new Buffer(errorMessage)]);
+                const errorBuffer = Buffer.concat([
+                    Buffer.concat([new Buffer('A'), uint64be.encode(errorMessage.length)]),
+                    new Buffer(errorMessage)
+                ]);
                 this.SocketStream.Write(errorBuffer);
             }
         });
@@ -301,7 +313,9 @@ suite('SocketCallbackHandler', () => {
         await def.promise;
     });
     test('Succesful Handshake with specific port', async () => {
-        const availablePort = await new Promise<number>((resolve, reject) => getFreePort({ host: 'localhost' }).then(resolve, reject));
+        const availablePort = await new Promise<number>((resolve, reject) =>
+            getFreePort({ host: 'localhost' }).then(resolve, reject)
+        );
         const port = await socketServer.Start({ port: availablePort, host: 'localhost' });
 
         expect(port).to.be.equal(availablePort, 'Server is not listening on the provided port number');

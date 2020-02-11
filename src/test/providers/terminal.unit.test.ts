@@ -39,12 +39,20 @@ suite('Terminal Provider', () => {
 
     test('Ensure command is registered', () => {
         terminalProvider = new TerminalProvider(serviceContainer.object);
-        commandManager.verify(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.once());
+        commandManager.verify(
+            c =>
+                c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.once()
+        );
     });
 
     test('Ensure command handler is disposed', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => disposable.object);
+        commandManager
+            .setup(c =>
+                c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+            )
+            .returns(() => disposable.object);
 
         terminalProvider = new TerminalProvider(serviceContainer.object);
         terminalProvider.dispose();
@@ -56,7 +64,9 @@ suite('Terminal Provider', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
         commandManager
-            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(c =>
+                c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+            )
             .returns((_cmd, callback) => {
                 commandHandler = callback;
                 return disposable.object;
@@ -71,9 +81,13 @@ suite('Terminal Provider', () => {
         expect(commandHandler).not.to.be.equal(undefined, 'Handler not set');
 
         const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory))).returns(() => terminalServiceFactory.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
+            .returns(() => terminalServiceFactory.object);
         const terminalService = TypeMoq.Mock.ofType<TerminalService>();
-        terminalServiceFactory.setup(t => t.createTerminalService(TypeMoq.It.isValue(resource), TypeMoq.It.isValue('Python'))).returns(() => terminalService.object);
+        terminalServiceFactory
+            .setup(t => t.createTerminalService(TypeMoq.It.isValue(resource), TypeMoq.It.isValue('Python')))
+            .returns(() => terminalService.object);
 
         commandHandler!.call(terminalProvider);
         activeResourceService.verifyAll();
@@ -90,7 +104,9 @@ suite('Terminal Provider', () => {
 
         setup(() => {
             configService = TypeMoq.Mock.ofType<IConfigurationService>();
-            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
+            serviceContainer
+                .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+                .returns(() => configService.object);
             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
             activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
 
@@ -98,8 +114,12 @@ suite('Terminal Provider', () => {
             pythonSettings.setup(s => s.terminal).returns(() => terminalSettings.object);
 
             terminalActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
-            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalActivator))).returns(() => terminalActivator.object);
-            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IActiveResourceService))).returns(() => activeResourceService.object);
+            serviceContainer
+                .setup(c => c.get(TypeMoq.It.isValue(ITerminalActivator)))
+                .returns(() => terminalActivator.object);
+            serviceContainer
+                .setup(c => c.get(TypeMoq.It.isValue(IActiveResourceService)))
+                .returns(() => activeResourceService.object);
 
             terminal = TypeMoq.Mock.ofType<Terminal>();
         });
@@ -118,7 +138,10 @@ suite('Terminal Provider', () => {
             terminalProvider = new TerminalProvider(serviceContainer.object);
             await terminalProvider.initialize(terminal.object);
 
-            terminalActivator.verify(a => a.activateEnvironmentInTerminal(terminal.object, TypeMoq.It.isAny()), TypeMoq.Times.once());
+            terminalActivator.verify(
+                a => a.activateEnvironmentInTerminal(terminal.object, TypeMoq.It.isAny()),
+                TypeMoq.Times.once()
+            );
             configService.verifyAll();
             activeResourceService.verifyAll();
         });
@@ -137,7 +160,10 @@ suite('Terminal Provider', () => {
             terminalProvider = new TerminalProvider(serviceContainer.object);
             await terminalProvider.initialize(terminal.object);
 
-            terminalActivator.verify(a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+            terminalActivator.verify(
+                a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                TypeMoq.Times.never()
+            );
             activeResourceService.verifyAll();
             configService.verifyAll();
         });
@@ -156,7 +182,10 @@ suite('Terminal Provider', () => {
             terminalProvider = new TerminalProvider(serviceContainer.object);
             await terminalProvider.initialize(undefined);
 
-            terminalActivator.verify(a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+            terminalActivator.verify(
+                a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                TypeMoq.Times.never()
+            );
             activeResourceService.verifyAll();
             configService.verifyAll();
         });

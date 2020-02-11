@@ -121,7 +121,11 @@ def download(url, filename):
         assert.equal(cells.length, 1, 'cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'code cell not generated');
         assert.equal(cells[0].data.source.length, 9, 'Lines for cell not emitted');
-        assert.equal(cells[0].data.source[3], '    """ utility function to download a file """\n', 'Lines for cell not emitted');
+        assert.equal(
+            cells[0].data.source[3],
+            '    """ utility function to download a file """\n',
+            'Lines for cell not emitted'
+        );
 
         // tslint:disable-next-line: no-multiline-string
         const multilineMarkdownWithCell = `#%% [markdown]

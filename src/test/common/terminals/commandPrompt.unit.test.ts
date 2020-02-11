@@ -7,7 +7,10 @@ import { expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget } from 'vscode';
-import { getCommandPromptLocation, useCommandPromptAsDefaultShell } from '../../../client/common/terminal/commandPrompt';
+import {
+    getCommandPromptLocation,
+    useCommandPromptAsDefaultShell
+} from '../../../client/common/terminal/commandPrompt';
 import { IConfigurationService, ICurrentProcess } from '../../../client/common/types';
 
 suite('Terminal Command Prompt', () => {

@@ -37,9 +37,20 @@ suite('Extension API Debugger', () => {
         when(debugAdapterFactory.useNewPtvsd(anyString())).thenResolve(true);
         when(debugAdapterFactory.getPtvsdPath()).thenReturn(ptvsdPath);
         if (wait) {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--host', host, '--port', port.toString(), '--wait']);
+            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+                '--host',
+                host,
+                '--port',
+                port.toString(),
+                '--wait'
+            ]);
         } else {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--host', host, '--port', port.toString()]);
+            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+                '--host',
+                host,
+                '--port',
+                port.toString()
+            ]);
         }
     }
 
@@ -47,9 +58,22 @@ suite('Extension API Debugger', () => {
         when(experimentsManager.inExperiment(anyString())).thenReturn(false);
         when(debugAdapterFactory.useNewPtvsd(anyString())).thenResolve(false);
         if (wait) {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', host, '--port', port.toString(), '--wait']);
+            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+                '--default',
+                '--host',
+                host,
+                '--port',
+                port.toString(),
+                '--wait'
+            ]);
         } else {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', host, '--port', port.toString()]);
+            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+                '--default',
+                '--host',
+                host,
+                '--port',
+                port.toString()
+            ]);
         }
     }
 
@@ -57,11 +81,11 @@ suite('Extension API Debugger', () => {
         const waitForAttach = false;
         mockNotInExperiment(ptvsdHost, ptvsdPort, waitForAttach);
 
-        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory)).debug.getRemoteLauncherCommand(
-            ptvsdHost,
-            ptvsdPort,
-            waitForAttach
-        );
+        const args = await buildApi(
+            Promise.resolve(),
+            instance(experimentsManager),
+            instance(debugAdapterFactory)
+        ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [expectedLauncherPath, '--default', '--host', ptvsdHost, '--port', ptvsdPort.toString()];
 
         expect(args).to.be.deep.equal(expectedArgs);
@@ -71,11 +95,11 @@ suite('Extension API Debugger', () => {
         const waitForAttach = false;
         mockInExperiment(ptvsdHost, ptvsdPort, waitForAttach);
 
-        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory)).debug.getRemoteLauncherCommand(
-            ptvsdHost,
-            ptvsdPort,
-            waitForAttach
-        );
+        const args = await buildApi(
+            Promise.resolve(),
+            instance(experimentsManager),
+            instance(debugAdapterFactory)
+        ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [ptvsdPath, '--host', ptvsdHost, '--port', ptvsdPort.toString()];
 
         expect(args).to.be.deep.equal(expectedArgs);
@@ -85,12 +109,20 @@ suite('Extension API Debugger', () => {
         const waitForAttach = true;
         mockNotInExperiment(ptvsdHost, ptvsdPort, waitForAttach);
 
-        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory)).debug.getRemoteLauncherCommand(
+        const args = await buildApi(
+            Promise.resolve(),
+            instance(experimentsManager),
+            instance(debugAdapterFactory)
+        ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
+        const expectedArgs = [
+            expectedLauncherPath,
+            '--default',
+            '--host',
             ptvsdHost,
-            ptvsdPort,
-            waitForAttach
-        );
-        const expectedArgs = [expectedLauncherPath, '--default', '--host', ptvsdHost, '--port', ptvsdPort.toString(), '--wait'];
+            '--port',
+            ptvsdPort.toString(),
+            '--wait'
+        ];
 
         expect(args).to.be.deep.equal(expectedArgs);
     });
@@ -99,11 +131,11 @@ suite('Extension API Debugger', () => {
         const waitForAttach = true;
         mockInExperiment(ptvsdHost, ptvsdPort, waitForAttach);
 
-        const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory)).debug.getRemoteLauncherCommand(
-            ptvsdHost,
-            ptvsdPort,
-            waitForAttach
-        );
+        const args = await buildApi(
+            Promise.resolve(),
+            instance(experimentsManager),
+            instance(debugAdapterFactory)
+        ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [ptvsdPath, '--host', ptvsdHost, '--port', ptvsdPort.toString(), '--wait'];
 
         expect(args).to.be.deep.equal(expectedArgs);
@@ -134,7 +166,10 @@ suite('Extension version tests', () => {
             return this.skip();
         }
 
-        return expect(version.endsWith('-dev'), 'When running a pipeline in the master branch, the extension version in package.json should have the -dev suffix').to.be.true;
+        return expect(
+            version.endsWith('-dev'),
+            'When running a pipeline in the master branch, the extension version in package.json should have the -dev suffix'
+        ).to.be.true;
     });
 
     test('If we are running a pipeline in the release branch, the extension version in `package.json` should not have the "-dev" suffix', async function() {
@@ -143,6 +178,9 @@ suite('Extension version tests', () => {
             return this.skip();
         }
 
-        return expect(version.endsWith('-dev'), 'When running a pipeline in the release branch, the extension version in package.json should not have the -dev suffix').to.be.false;
+        return expect(
+            version.endsWith('-dev'),
+            'When running a pipeline in the release branch, the extension version in package.json should not have the -dev suffix'
+        ).to.be.false;
     });
 });

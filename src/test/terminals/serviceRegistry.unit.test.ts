@@ -11,7 +11,12 @@ import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper
 import { ReplProvider } from '../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../client/terminals/codeExecution/terminalCodeExecution';
 import { registerTypes } from '../../client/terminals/serviceRegistry';
-import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService, ITerminalAutoActivation } from '../../client/terminals/types';
+import {
+    ICodeExecutionHelper,
+    ICodeExecutionManager,
+    ICodeExecutionService,
+    ITerminalAutoActivation
+} from '../../client/terminals/types';
 
 suite('Terminal - Service Registry', () => {
     test('Ensure all services get registered', () => {

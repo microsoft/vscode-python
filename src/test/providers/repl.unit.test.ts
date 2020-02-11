@@ -4,7 +4,12 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri } from 'vscode';
-import { IActiveResourceService, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import {
+    IActiveResourceService,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService
+} from '../../client/common/application/types';
 import { Commands } from '../../client/common/constants';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ReplProvider } from '../../client/providers/replProvider';
@@ -28,7 +33,9 @@ suite('REPL Provider', () => {
         activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
         serviceContainer.setup(c => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspace.object);
-        serviceContainer.setup(c => c.get(ICodeExecutionService, TypeMoq.It.isValue('repl'))).returns(() => codeExecutionService.object);
+        serviceContainer
+            .setup(c => c.get(ICodeExecutionService, TypeMoq.It.isValue('repl')))
+            .returns(() => codeExecutionService.object);
         serviceContainer.setup(c => c.get(IDocumentManager)).returns(() => documentManager.object);
         serviceContainer.setup(c => c.get(IActiveResourceService)).returns(() => activeResourceService.object);
     });
@@ -41,12 +48,19 @@ suite('REPL Provider', () => {
 
     test('Ensure command is registered', () => {
         replProvider = new ReplProvider(serviceContainer.object);
-        commandManager.verify(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.once());
+        commandManager.verify(
+            c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.once()
+        );
     });
 
     test('Ensure command handler is disposed', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => disposable.object);
+        commandManager
+            .setup(c =>
+                c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+            )
+            .returns(() => disposable.object);
 
         replProvider = new ReplProvider(serviceContainer.object);
         replProvider.dispose();
@@ -59,7 +73,9 @@ suite('REPL Provider', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
         commandManager
-            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(c =>
+                c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+            )
             .returns((_cmd, callback) => {
                 commandHandler = callback;
                 return disposable.object;
@@ -73,7 +89,10 @@ suite('REPL Provider', () => {
         expect(commandHandler).not.to.be.equal(undefined, 'Handler not set');
         commandHandler!.call(replProvider);
 
-        serviceContainer.verify(c => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('repl')), TypeMoq.Times.once());
+        serviceContainer.verify(
+            c => c.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('repl')),
+            TypeMoq.Times.once()
+        );
         codeExecutionService.verify(c => c.initializeRepl(TypeMoq.It.isValue(resource)), TypeMoq.Times.once());
     });
 });

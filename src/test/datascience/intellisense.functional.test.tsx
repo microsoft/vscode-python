@@ -61,12 +61,17 @@ suite('DataScience Intellisense tests', () => {
         return innerTexts;
     }
 
-    function verifyIntellisenseVisible(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedSpan: string) {
+    function verifyIntellisenseVisible(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+        expectedSpan: string
+    ) {
         const innerTexts = getIntellisenseTextLines(wrapper);
         assert.ok(innerTexts.includes(expectedSpan), 'Intellisense row not matching');
     }
 
-    function waitForSuggestion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): { disposable: IDisposable; promise: Promise<void> } {
+    function waitForSuggestion(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
+    ): { disposable: IDisposable; promise: Promise<void> } {
         const editorEnzyme = getInteractiveEditor(wrapper);
         const reactEditor = editorEnzyme.instance() as MonacoEditor;
         const editor = reactEditor.state.editor;

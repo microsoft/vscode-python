@@ -67,18 +67,32 @@ suite('Terminal - Code Execution', () => {
 
             switch (testSuiteName) {
                 case 'Terminal Execution': {
-                    executor = new TerminalCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, disposables, platform.object);
+                    executor = new TerminalCodeExecutionProvider(
+                        terminalFactory.object,
+                        configService.object,
+                        workspace.object,
+                        disposables,
+                        platform.object
+                    );
                     break;
                 }
                 case 'Repl Execution': {
-                    executor = new ReplProvider(terminalFactory.object, configService.object, workspace.object, disposables, platform.object);
+                    executor = new ReplProvider(
+                        terminalFactory.object,
+                        configService.object,
+                        workspace.object,
+                        disposables,
+                        platform.object
+                    );
                     expectedTerminalTitle = 'REPL';
                     break;
                 }
                 case 'Django Execution': {
                     isDjangoRepl = true;
                     workspace
-                        .setup(w => w.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .setup(w =>
+                            w.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                        )
                         .returns(() => {
                             return { dispose: noop };
                         });
@@ -103,10 +117,16 @@ suite('Terminal - Code Execution', () => {
 
         suite(`${testSuiteName} (validation of title)`, () => {
             setup(() => {
-                terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isValue(expectedTerminalTitle))).returns(() => terminalService.object);
+                terminalFactory
+                    .setup(f => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isValue(expectedTerminalTitle)))
+                    .returns(() => terminalService.object);
             });
 
-            async function ensureTerminalIsCreatedUponInvokingInitializeRepl(isWindows: boolean, isOsx: boolean, isLinux: boolean): Promise<void> {
+            async function ensureTerminalIsCreatedUponInvokingInitializeRepl(
+                isWindows: boolean,
+                isOsx: boolean,
+                isLinux: boolean
+            ): Promise<void> {
                 platform.setup(p => p.isWindows).returns(() => isWindows);
                 platform.setup(p => p.isMac).returns(() => isOsx);
                 platform.setup(p => p.isLinux).returns(() => isLinux);
@@ -133,7 +153,9 @@ suite('Terminal - Code Execution', () => {
             // tslint:disable-next-line:no-invalid-this
             this.timeout(5000); // Activation of terminals take some time (there's a delay in the code to account for VSC Terminal issues).
             setup(() => {
-                terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => terminalService.object);
+                terminalFactory
+                    .setup(f => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .returns(() => terminalService.object);
             });
 
             async function ensureWeSetCurrentDirectoryBeforeExecutingAFile(_isWindows: boolean): Promise<void> {
@@ -147,7 +169,11 @@ suite('Terminal - Code Execution', () => {
 
                 await executor.executeFile(file);
 
-                terminalService.verify(async t => t.sendText(TypeMoq.It.isValue(`cd ${path.dirname(file.fsPath).fileToCommandArgument()}`)), TypeMoq.Times.once());
+                terminalService.verify(
+                    async t =>
+                        t.sendText(TypeMoq.It.isValue(`cd ${path.dirname(file.fsPath).fileToCommandArgument()}`)),
+                    TypeMoq.Times.once()
+                );
             }
             test('Ensure we set current directory before executing file (non windows)', async () => {
                 await ensureWeSetCurrentDirectoryBeforeExecutingAFile(false);
@@ -178,11 +204,15 @@ suite('Terminal - Code Execution', () => {
                 await ensureWeWetCurrentDirectoryAndQuoteBeforeExecutingFile(true);
             });
 
-            async function ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(isWindows: boolean): Promise<void> {
+            async function ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(
+                isWindows: boolean
+            ): Promise<void> {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
-                workspaceFolder.setup(w => w.uri).returns(() => Uri.file(path.join('c', 'path', 'to', 'file with spaces in path')));
+                workspaceFolder
+                    .setup(w => w.uri)
+                    .returns(() => Uri.file(path.join('c', 'path', 'to', 'file with spaces in path')));
                 platform.setup(p => p.isWindows).returns(() => isWindows);
                 settings.setup(s => s.pythonPath).returns(() => PYTHON_PATH);
                 terminalSettings.setup(t => t.launchArgs).returns(() => []);
@@ -198,7 +228,9 @@ suite('Terminal - Code Execution', () => {
                 await ensureWeDoNotSetCurrentDirectoryBeforeExecutingFileInSameDirectory(true);
             });
 
-            async function ensureWeSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(isWindows: boolean): Promise<void> {
+            async function ensureWeSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(
+                isWindows: boolean
+            ): Promise<void> {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file with spaces in path', 'one.py'));
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => true);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
@@ -217,20 +249,30 @@ suite('Terminal - Code Execution', () => {
                 await ensureWeSetCurrentDirectoryBeforeExecutingFileNotInSameDirectory(true);
             });
 
-            async function testFileExecution(isWindows: boolean, pythonPath: string, terminalArgs: string[], file: Uri): Promise<void> {
+            async function testFileExecution(
+                isWindows: boolean,
+                pythonPath: string,
+                terminalArgs: string[],
+                file: Uri
+            ): Promise<void> {
                 platform.setup(p => p.isWindows).returns(() => isWindows);
                 settings.setup(s => s.pythonPath).returns(() => pythonPath);
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => false);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
                 pythonExecutionFactory
-                    .setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .setup(p =>
+                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    )
                     .returns(() => Promise.resolve(undefined));
 
                 await executor.executeFile(file);
                 const expectedPythonPath = isWindows ? pythonPath.replace(/\\/g, '/') : pythonPath;
                 const expectedArgs = terminalArgs.concat(file.fsPath.fileToCommandArgument());
-                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
+                terminalService.verify(
+                    async t => t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)),
+                    TypeMoq.Times.once()
+                );
             }
 
             test('Ensure python file execution script is sent to terminal on windows', async () => {
@@ -253,7 +295,12 @@ suite('Terminal - Code Execution', () => {
                 await testFileExecution(false, PYTHON_PATH, ['-a', '-b', '-c'], file);
             });
 
-            async function testCondaFileExecution(pythonPath: string, terminalArgs: string[], file: Uri, condaEnv: { name: string; path: string }): Promise<void> {
+            async function testCondaFileExecution(
+                pythonPath: string,
+                terminalArgs: string[],
+                file: Uri,
+                condaEnv: { name: string; path: string }
+            ): Promise<void> {
                 settings.setup(s => s.pythonPath).returns(() => pythonPath);
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => false);
@@ -262,31 +309,55 @@ suite('Terminal - Code Execution', () => {
                 const condaFile = 'conda';
                 const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const processService = TypeMoq.Mock.ofType<IProcessService>();
-                const condaExecutionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, condaEnv);
+                const condaExecutionService = new CondaExecutionService(
+                    serviceContainer.object,
+                    processService.object,
+                    pythonPath,
+                    condaFile,
+                    condaEnv
+                );
                 pythonExecutionFactory
-                    .setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .setup(p =>
+                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    )
                     .returns(() => Promise.resolve(condaExecutionService));
 
                 await executor.executeFile(file);
 
                 const expectedArgs = [...terminalArgs, file.fsPath.fileToCommandArgument()];
 
-                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
+                terminalService.verify(
+                    async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedArgs)),
+                    TypeMoq.Times.once()
+                );
             }
 
             test('Ensure conda args with conda env name are sent to terminal if there is a conda environment with a name', async () => {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
-                await testCondaFileExecution(PYTHON_PATH, ['-a', '-b', '-c'], file, { name: 'foo-env', path: 'path/to/foo-env' });
+                await testCondaFileExecution(PYTHON_PATH, ['-a', '-b', '-c'], file, {
+                    name: 'foo-env',
+                    path: 'path/to/foo-env'
+                });
             });
 
             test('Ensure conda args with conda env path are sent to terminal if there is a conda environment without a name', async () => {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
-                await testCondaFileExecution(PYTHON_PATH, ['-a', '-b', '-c'], file, { name: '', path: 'path/to/foo-env' });
+                await testCondaFileExecution(PYTHON_PATH, ['-a', '-b', '-c'], file, {
+                    name: '',
+                    path: 'path/to/foo-env'
+                });
             });
 
-            async function testReplCommandArguments(isWindows: boolean, pythonPath: string, expectedPythonPath: string, terminalArgs: string[]) {
+            async function testReplCommandArguments(
+                isWindows: boolean,
+                pythonPath: string,
+                expectedPythonPath: string,
+                terminalArgs: string[]
+            ) {
                 pythonExecutionFactory
-                    .setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .setup(p =>
+                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    )
                     .returns(() => Promise.resolve(undefined));
                 platform.setup(p => p.isWindows).returns(() => isWindows);
                 settings.setup(s => s.pythonPath).returns(() => pythonPath);
@@ -334,16 +405,28 @@ suite('Terminal - Code Execution', () => {
                 await testReplCommandArguments(false, pythonPath, pythonPath, terminalArgs);
             });
 
-            async function testReplCondaCommandArguments(pythonPath: string, terminalArgs: string[], condaEnv: { name: string; path: string }) {
+            async function testReplCondaCommandArguments(
+                pythonPath: string,
+                terminalArgs: string[],
+                condaEnv: { name: string; path: string }
+            ) {
                 settings.setup(s => s.pythonPath).returns(() => pythonPath);
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
 
                 const condaFile = 'conda';
                 const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const processService = TypeMoq.Mock.ofType<IProcessService>();
-                const condaExecutionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, condaEnv);
+                const condaExecutionService = new CondaExecutionService(
+                    serviceContainer.object,
+                    processService.object,
+                    pythonPath,
+                    condaFile,
+                    condaEnv
+                );
                 pythonExecutionFactory
-                    .setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .setup(p =>
+                        p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                    )
                     .returns(() => Promise.resolve(condaExecutionService));
 
                 const djangoArgs = isDjangoRepl ? ['manage.py', 'shell'] : [];
@@ -357,11 +440,17 @@ suite('Terminal - Code Execution', () => {
             }
 
             test('Ensure conda args with env name are returned when building repl args with a conda env with a name', async () => {
-                await testReplCondaCommandArguments(PYTHON_PATH, ['-a', 'b', 'c'], { name: 'foo-env', path: 'path/to/foo-env' });
+                await testReplCondaCommandArguments(PYTHON_PATH, ['-a', 'b', 'c'], {
+                    name: 'foo-env',
+                    path: 'path/to/foo-env'
+                });
             });
 
             test('Ensure conda args with env path are returned when building repl args with a conda env without a name', async () => {
-                await testReplCondaCommandArguments(PYTHON_PATH, ['-a', 'b', 'c'], { name: '', path: 'path/to/foo-env' });
+                await testReplCondaCommandArguments(PYTHON_PATH, ['-a', 'b', 'c'], {
+                    name: '',
+                    path: 'path/to/foo-env'
+                });
             });
 
             test('Ensure nothing happens when blank text is sent to the terminal', async () => {
@@ -370,7 +459,10 @@ suite('Terminal - Code Execution', () => {
                 // tslint:disable-next-line:no-any
                 await executor.execute((undefined as any) as string);
 
-                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+                terminalService.verify(
+                    async t => t.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                    TypeMoq.Times.never()
+                );
                 terminalService.verify(async t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
             });
 
@@ -387,7 +479,10 @@ suite('Terminal - Code Execution', () => {
                 await executor.execute('cmd3');
 
                 const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
-                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
+                terminalService.verify(
+                    async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
+                    TypeMoq.Times.once()
+                );
             });
 
             test('Ensure repl is re-initialized when terminal is closed', async () => {
@@ -414,15 +509,24 @@ suite('Terminal - Code Execution', () => {
                 const expectedTerminalArgs = isDjangoRepl ? terminalArgs.concat(['manage.py', 'shell']) : terminalArgs;
 
                 expect(closeTerminalCallback).not.to.be.an('undefined', 'Callback not initialized');
-                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.once());
+                terminalService.verify(
+                    async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
+                    TypeMoq.Times.once()
+                );
 
                 closeTerminalCallback!.call(terminalService.object);
                 await executor.execute('cmd4');
-                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.exactly(2));
+                terminalService.verify(
+                    async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
+                    TypeMoq.Times.exactly(2)
+                );
 
                 closeTerminalCallback!.call(terminalService.object);
                 await executor.execute('cmd5');
-                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)), TypeMoq.Times.exactly(3));
+                terminalService.verify(
+                    async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedTerminalArgs)),
+                    TypeMoq.Times.exactly(3)
+                );
             });
 
             test('Ensure code is sent to terminal', async () => {

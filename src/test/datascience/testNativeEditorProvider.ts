@@ -11,7 +11,12 @@ import { InteractiveWindowMessageListener } from '../../client/datascience/inter
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import { IDataScienceErrorHandler, INotebookEditor, INotebookEditorProvider, INotebookServerOptions } from '../../client/datascience/types';
+import {
+    IDataScienceErrorHandler,
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookServerOptions
+} from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 @injectable()

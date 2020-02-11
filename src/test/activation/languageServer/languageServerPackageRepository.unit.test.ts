@@ -53,12 +53,21 @@ suite('Language Server Download Channels', () => {
         return [instance.storageAccount, instance.storageContainer];
     }
     test('Stable', () => {
-        expect(getPackageInfo(LanguageServerDownloadChannel.stable)).to.be.deep.equal(['https://pvsc.azureedge.net', 'python-language-server-stable']);
+        expect(getPackageInfo(LanguageServerDownloadChannel.stable)).to.be.deep.equal([
+            'https://pvsc.azureedge.net',
+            'python-language-server-stable'
+        ]);
     });
     test('Beta', () => {
-        expect(getPackageInfo(LanguageServerDownloadChannel.beta)).to.be.deep.equal(['https://pvsc.azureedge.net', 'python-language-server-beta']);
+        expect(getPackageInfo(LanguageServerDownloadChannel.beta)).to.be.deep.equal([
+            'https://pvsc.azureedge.net',
+            'python-language-server-beta'
+        ]);
     });
     test('Daily', () => {
-        expect(getPackageInfo(LanguageServerDownloadChannel.daily)).to.be.deep.equal(['https://pvsc.azureedge.net', 'python-language-server-daily']);
+        expect(getPackageInfo(LanguageServerDownloadChannel.daily)).to.be.deep.equal([
+            'https://pvsc.azureedge.net',
+            'python-language-server-daily'
+        ]);
     });
 });

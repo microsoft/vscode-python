@@ -15,7 +15,13 @@ import { PythonSettings } from '../../../../client/common/configSettings';
 import { ConfigurationService } from '../../../../client/common/configuration/service';
 import { ModuleNotInstalledError } from '../../../../client/common/errors/moduleNotInstalledError';
 import { ProductInstaller } from '../../../../client/common/installer/productInstaller';
-import { IConfigurationService, IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings } from '../../../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IInstaller,
+    IOutputChannel,
+    IPythonSettings
+} from '../../../../client/common/types';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { CommandSource, TEST_OUTPUT_CHANNEL } from '../../../../client/testing/common/constants';
@@ -87,22 +93,42 @@ suite('Unit Tests - Base Test Manager', () => {
                 const runner = mock(TestManagerRunner);
                 const messageService = mock(TestMessageService);
 
-                when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
+                when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
+                    instance(configService)
+                );
                 when(serviceContainer.get<Disposable[]>(IDisposableRegistry)).thenReturn([]);
-                when(serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL)).thenReturn(instance(outputChannel));
-                when(serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(instance(storageService));
-                when(serviceContainer.get<ITestResultsService>(ITestResultsService)).thenReturn(instance(resultsService));
+                when(serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL)).thenReturn(
+                    instance(outputChannel)
+                );
+                when(serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(
+                    instance(storageService)
+                );
+                when(serviceContainer.get<ITestResultsService>(ITestResultsService)).thenReturn(
+                    instance(resultsService)
+                );
                 when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
-                when(serviceContainer.get<ITestDiagnosticService>(ITestDiagnosticService)).thenReturn(instance(diagnosticService));
-                when(serviceContainer.get<ITestsStatusUpdaterService>(ITestsStatusUpdaterService)).thenReturn(instance(statusUpdater));
+                when(serviceContainer.get<ITestDiagnosticService>(ITestDiagnosticService)).thenReturn(
+                    instance(diagnosticService)
+                );
+                when(serviceContainer.get<ITestsStatusUpdaterService>(ITestsStatusUpdaterService)).thenReturn(
+                    instance(statusUpdater)
+                );
                 when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(commandManager));
 
-                when(serviceContainer.get<IArgumentsService>(IArgumentsService, anything())).thenReturn(instance(argsService));
+                when(serviceContainer.get<IArgumentsService>(IArgumentsService, anything())).thenReturn(
+                    instance(argsService)
+                );
                 when(serviceContainer.get<ITestsHelper>(ITestsHelper)).thenReturn(instance(testsHelper));
-                when(serviceContainer.get<ITestManagerRunner>(ITestManagerRunner, anything())).thenReturn(instance(runner));
-                when(serviceContainer.get<ITestMessageService>(ITestMessageService, anything())).thenReturn(instance(messageService));
+                when(serviceContainer.get<ITestManagerRunner>(ITestManagerRunner, anything())).thenReturn(
+                    instance(runner)
+                );
+                when(serviceContainer.get<ITestMessageService>(ITestMessageService, anything())).thenReturn(
+                    instance(messageService)
+                );
 
-                when(serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, anything())).thenReturn(instance(testDiscoveryService));
+                when(serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, anything())).thenReturn(
+                    instance(testDiscoveryService)
+                );
                 when(serviceContainer.get<IInstaller>(IInstaller)).thenReturn(instance(installer));
 
                 when(configService.getSettings(anything())).thenReturn(instance(settings));

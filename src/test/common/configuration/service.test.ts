@@ -19,7 +19,9 @@ suite('Configuration Service', () => {
 
     test('Ensure same instance of settings return', () => {
         const workspaceUri = workspace.workspaceFolders![0].uri;
-        const settings = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(workspaceUri);
+        const settings = ioc.serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(workspaceUri);
         const instanceIsSame = settings === getExtensionSettings(workspaceUri);
         expect(instanceIsSame).to.be.equal(true, 'Incorrect settings');
     });

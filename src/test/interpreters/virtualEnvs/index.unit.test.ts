@@ -44,14 +44,20 @@ suite('Virtual Environment Manager', () => {
 
         processService.setup(p => (p as any).then).returns(() => undefined);
         processFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory))).returns(() => processFactory.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory)))
+            .returns(() => processFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => process.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fs.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPipEnvService))).returns(() => pipEnvService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalActivationCommandProvider), TypeMoq.It.isAny())).returns(() => terminalActivation.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ITerminalActivationCommandProvider), TypeMoq.It.isAny()))
+            .returns(() => terminalActivation.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
+            .returns(() => platformService.object);
 
         virtualEnvMgr = new VirtualEnvironmentManager(serviceContainer.object);
     });

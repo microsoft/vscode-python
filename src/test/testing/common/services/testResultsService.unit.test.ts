@@ -6,7 +6,17 @@
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { TestResultsService } from '../../../../client/testing/common/services/testResultsService';
-import { FlattenedTestFunction, FlattenedTestSuite, ITestVisitor, TestFile, TestFolder, TestFunction, Tests, TestStatus, TestSuite } from '../../../../client/testing/common/types';
+import {
+    FlattenedTestFunction,
+    FlattenedTestSuite,
+    ITestVisitor,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestStatus,
+    TestSuite
+} from '../../../../client/testing/common/types';
 import { TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 
@@ -162,7 +172,19 @@ suite('Unit Tests - Tests Results Service', () => {
             summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
             testFiles: [file1, file2, file3, file4, file5],
             testFolders: [folder1, folder2, folder3, folder4, folder5],
-            testFunctions: [flattendFn1, flattendFn2, flattendFn3, flattendFn4, flattendFn5, flattendFn6, flattendFn7, flattendFn8, flattendFn9, flattendFn10, flattendFn11],
+            testFunctions: [
+                flattendFn1,
+                flattendFn2,
+                flattendFn3,
+                flattendFn4,
+                flattendFn5,
+                flattendFn6,
+                flattendFn7,
+                flattendFn8,
+                flattendFn9,
+                flattendFn10,
+                flattendFn11
+            ],
             testSuites: [flattendSuite1, flattendSuite2, flattendSuite3, flattendSuite4, flattendSuite5]
         };
         testResultsService = new TestResultsService(resultResetVisitor.object);
