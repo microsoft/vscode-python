@@ -406,3 +406,36 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: node ./out/test/smokeTest.js
+
+  reports:
+    name: Coverage reports upload
+    runs-on: ubuntu-latest
+    # if: github.repository == 'microsoft/vscode-python'
+    needs: [tests]
+    steps:
+      - name: Checkout
+      uses: actions/checkout@v2
+
+      # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
+      # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
+      # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
+      - name: Download Ubuntu test coverage artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: Linux-${{env.COVERAGE_REPORTS}}
+
+      - name: Extract Ubuntu coverage artifacts to ./nyc_output
+        run: |
+          mkdir .nyc_output
+          mv Linux-${{env.COVERAGE_REPORTS}}/* .nyc_output
+          rm -r Linux-${{env.COVERAGE_REPORTS}}
+
+      - name: Generate coverage reports
+        run: npm run test:cover:report
+        continue-on-error: true         
+        
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v1
+        with:
+          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+          file: ./coverage/cobertura-coverage.xml
