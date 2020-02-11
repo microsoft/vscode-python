@@ -69,7 +69,7 @@ export function getMessageForLibrariesNotInstalled(products: Product[], interpre
             return '';
         case 1:
             return interpreterName
-                ? DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter().format(interpreterName, names[0])
+                ? DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(interpreterName, names[0])
                 : DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(names[0]);
         default: {
             const lastItem = names.pop();

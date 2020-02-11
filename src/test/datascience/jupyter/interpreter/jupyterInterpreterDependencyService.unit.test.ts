@@ -56,7 +56,9 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
 
         const response = await configuration.installMissingDependencies(pythonInterpreter);
 
-        verify(appShell.showErrorMessage(anything(), DataScience.jupyterInstall(), DataScience.selectDifferentJupyterInterpreter(), Common.cancel())).once();
+        verify(
+            appShell.showErrorMessage(anything(), DataScience.jupyterInstall(), DataScience.selectDifferentJupyterInterpreter(), DataScience.pythonInteractiveHelpLink())
+        ).once();
         assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
     }
     test('Prompt to install if Jupyter is not installed', async () => testPromptIfModuleNotInstalled(false, true));
