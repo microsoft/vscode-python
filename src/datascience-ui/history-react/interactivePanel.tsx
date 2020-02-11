@@ -297,6 +297,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             this.internalScrollCount += 1;
             // Force auto here as smooth scrolling can be canceled by updates to the window
             // from elsewhere (and keeping track of these would make this hard to maintain)
+            // tslint:disable: no-any
             if ((div as any).scrollIntoViewIfNeeded) {
                 (div as any).scrollIntoViewIfNeeded(false);
             } else if (div && div.scrollIntoView) {
