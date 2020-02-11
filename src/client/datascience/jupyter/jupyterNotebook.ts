@@ -153,6 +153,7 @@ export class JupyterNotebookBase implements INotebook {
     private kernelChanged = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
+    private trimmedMessageSent = false;
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -1151,6 +1152,11 @@ export class JupyterNotebookBase implements INotebook {
             return outputString;
         }
 
+        // The first time it happens, let the user know his ouput is incomplete and how to chenge it.
+        if (!this.trimmedMessageSent) {
+            this.applicationService.showInformationMessage(localize.DataScience.trimmedOutput());
+            this.trimmedMessageSent = true;
+        }
         return outputString.substr(outputString.length - outputLimit);
     }
 }

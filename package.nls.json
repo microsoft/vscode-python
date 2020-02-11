@@ -429,5 +429,6 @@
     "DataScience.gettingListOfKernelsForRemoteConnection": "Fetching Kernels",
     "DataScience.gettingListOfKernelSpecs": "Fetching Kernel specs",
     "DataScience.startingJupyterNotebook": "Starting Jupyter Notebook",
-    "DataScience.registeringKernel": "Registering Kernel"
+    "DataScience.registeringKernel": "Registering Kernel",
+    "DataScience.trimmedOutput": "Output was trimmed for performance reasons.\nTo change this go to Settings -> Python -> Data Science -> Text Output Limit."
 }

@@ -490,6 +490,10 @@ export namespace DataScience {
     export const gettingListOfKernelSpecs = localize('DataScience.gettingListOfKernelSpecs', 'Fetching Kernel specs');
     export const startingJupyterNotebook = localize('DataScience.startingJupyterNotebook', 'Starting Jupyter Notebook');
     export const registeringKernel = localize('DataScience.registeringKernel', 'Registering Kernel');
+    export const trimmedOutput = localize(
+        'DataScience.trimmedOutput',
+        'Output was trimmed for performance reasons.\nTo change this go to Settings -> Python -> Data Science -> Text Output Limit.'
+    );
 }
 
 export namespace DebugConfigStrings {
