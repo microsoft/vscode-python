@@ -316,7 +316,7 @@ jobs:
       - name: Upload unit test coverage reports
         uses: actions/upload-artifact@v1
         with:
-          name: ${{runner.os}}-${{COVERAGE_REPORTS}}
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: ms-python-insiders.vsix
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
