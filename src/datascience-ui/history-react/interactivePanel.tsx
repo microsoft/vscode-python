@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { Identifiers } from '../../client/datascience/constants';
@@ -236,9 +235,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             submittedText: this.props.submittedText,
             skipNextScroll: this.props.skipNextScroll ? true : false,
             editable: false,
-            newCellVM: undefined,
             renderCell: this.renderCell,
-            scrollToBottom: this.scrollDiv
+            scrollToBottom: this.scrollDiv,
+            scrollBeyondLastLine: this.props.settings ? this.props.settings.extraSettings.editor.scrollBeyondLastLine : false
         };
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
@@ -298,8 +297,10 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             this.internalScrollCount += 1;
             // Force auto here as smooth scrolling can be canceled by updates to the window
             // from elsewhere (and keeping track of these would make this hard to maintain)
-            if (div.scrollIntoView) {
-                div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+            if ((div as any).scrollIntoViewIfNeeded) {
+                (div as any).scrollIntoViewIfNeeded(false);
+            } else if (div && div.scrollIntoView) {
+                div.scrollIntoView(false);
             }
         }
     };
@@ -307,9 +308,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     private handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
         if (this.internalScrollCount > 0) {
             this.internalScrollCount -= 1;
-        } else {
-            const currentHeight = e.currentTarget.scrollHeight - e.currentTarget.scrollTop;
-            const isAtBottom = currentHeight < e.currentTarget.clientHeight + 2 && currentHeight > e.currentTarget.clientHeight - 2;
+        } else if (this.contentPanelRef.current) {
+            const isAtBottom = this.contentPanelRef.current.computeIsAtBottom(e.currentTarget);
+            window.console.log(`Scrolling: ${isAtBottom}`);
             this.props.scroll(isAtBottom);
         }
     };

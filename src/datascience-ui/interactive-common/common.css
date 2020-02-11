@@ -44,6 +44,10 @@ body, html {
     overflow: hidden;
 }
 
+#content-panel-div.content-panel-scrollBeyondLastLine {
+    margin-bottom: 100vh;
+}
+
 .hide {
     display: none;
 }

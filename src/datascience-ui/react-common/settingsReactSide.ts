@@ -38,7 +38,8 @@ export function getDefaultSettings() {
                 autoClosingQuotes: 'languageDefined',
                 autoSurround: 'languageDefined',
                 autoIndent: false,
-                fontLigatures: false
+                fontLigatures: false,
+                scrollBeyondLastLine: true
             },
             fontSize: 14,
             fontFamily: "Consolas, 'Courier New', monospace",
