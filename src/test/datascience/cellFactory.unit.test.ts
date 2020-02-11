@@ -3,7 +3,7 @@
 'use strict';
 import { assert } from 'chai';
 import { generateCells } from '../../client/datascience/cellFactory';
-import { stripComments } from '../../datascience-ui/common';
+import { removeLinesFromFrontAndBack, stripComments } from '../../datascience-ui/common';
 
 // tslint:disable: max-func-body-length
 suite('Data Science CellFactory', () => {
@@ -149,5 +149,52 @@ class Pizza(object):
         assert.equal(nonComments, '', 'Multline comment is not being stripped');
         nonComments = stripComments(multilineQuoteInFunc);
         assert.equal(nonComments.splitLines().length, 6, 'Splitting quote in func wrong number of lines');
+    });
+
+    test('Line removal', () => {
+        const entry1 = `# %% CELL
+
+first line`;
+        const expected1 = `# %% CELL
+first line`;
+        const entry2 = `# %% CELL
+
+first line
+
+`;
+        const expected2 = `# %% CELL
+first line`;
+        const entry3 = `# %% CELL
+
+first line
+
+second line
+
+`;
+        const expected3 = `# %% CELL
+first line
+
+second line`;
+
+        const entry4 = `
+
+if (foo):
+    print('stuff')
+
+print('some more')
+
+`;
+        const expected4 = `if (foo):
+    print('stuff')
+
+print('some more')`;
+        let removed = removeLinesFromFrontAndBack(entry1);
+        assert.equal(removed, expected1);
+        removed = removeLinesFromFrontAndBack(entry2);
+        assert.equal(removed, expected2);
+        removed = removeLinesFromFrontAndBack(entry3);
+        assert.equal(removed, expected3);
+        removed = removeLinesFromFrontAndBack(entry4);
+        assert.equal(removed, expected4);
     });
 });
