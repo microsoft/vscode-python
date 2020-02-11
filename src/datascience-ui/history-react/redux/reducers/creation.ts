@@ -28,7 +28,12 @@ export namespace Creation {
         return removeLinesFromFrontAndBack(text);
     }
 
-    export function alterCellVM(cellVM: ICellViewModel, settings?: IDataScienceExtraSettings, visible?: boolean, expanded?: boolean): ICellViewModel {
+    export function alterCellVM(
+        cellVM: ICellViewModel,
+        settings?: IDataScienceExtraSettings,
+        visible?: boolean,
+        expanded?: boolean
+    ): ICellViewModel {
         if (cellVM.cell.data.cell_type === 'code') {
             // If we are already in the correct state, return back our initial cell vm
             if (cellVM.inputBlockShow === visible && cellVM.inputBlockOpen === expanded) {

@@ -161,7 +161,11 @@ export function generateMarkdownFromCodeLines(lines: string[]) {
 }
 
 // tslint:disable-next-line: cyclomatic-complexity
-export function parseForComments(lines: string[], foundCommentLine: (s: string, i: number) => void, foundNonCommentLine: (s: string, i: number) => void) {
+export function parseForComments(
+    lines: string[],
+    foundCommentLine: (s: string, i: number) => void,
+    foundNonCommentLine: (s: string, i: number) => void
+) {
     // Check for either multiline or single line comments
     let insideMultilineComment: string | undefined;
     let insideMultilineQuote: string | undefined;
@@ -169,8 +173,16 @@ export function parseForComments(lines: string[], foundCommentLine: (s: string, 
     for (const l of lines) {
         const trim = l.trim();
         // Multiline is triple quotes of either kind
-        const isMultilineComment = trim.startsWith(SingleQuoteMultiline) ? SingleQuoteMultiline : trim.startsWith(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
-        const isMultilineQuote = trim.includes(SingleQuoteMultiline) ? SingleQuoteMultiline : trim.includes(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
+        const isMultilineComment = trim.startsWith(SingleQuoteMultiline)
+            ? SingleQuoteMultiline
+            : trim.startsWith(DoubleQuoteMultiline)
+            ? DoubleQuoteMultiline
+            : undefined;
+        const isMultilineQuote = trim.includes(SingleQuoteMultiline)
+            ? SingleQuoteMultiline
+            : trim.includes(DoubleQuoteMultiline)
+            ? DoubleQuoteMultiline
+            : undefined;
 
         // Check for ending quotes of multiline string
         if (insideMultilineQuote) {

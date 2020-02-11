@@ -55,7 +55,8 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
 
     public render() {
         const readOnly = this.props.readOnly;
-        const waterMarkClass = this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';
+        const waterMarkClass =
+            this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';
         const classes = readOnly ? 'code-area' : 'code-area code-area-editable';
 
         return (
@@ -113,7 +114,10 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         return getLocString('DataScience.inputWatermark', 'Type code here and press shift-enter to run');
     };
 
-    private onModelChanged = (changes: monacoEditor.editor.IModelContentChange[], model: monacoEditor.editor.ITextModel) => {
+    private onModelChanged = (
+        changes: monacoEditor.editor.IModelContentChange[],
+        model: monacoEditor.editor.ITextModel
+    ) => {
         if (!this.props.readOnly && model) {
             this.setState({ allowWatermark: model.getValueLength() === 0 });
         }

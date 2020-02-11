@@ -11,14 +11,26 @@ import { createCellFrom } from '../../../common/cellFactory';
 import { CursorPos, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { CommonActionType, ICellAction, IChangeCellTypeAction, ICodeAction, IExecuteAction } from '../../../interactive-common/redux/reducers/types';
+import {
+    CommonActionType,
+    ICellAction,
+    IChangeCellTypeAction,
+    ICodeAction,
+    IExecuteAction
+} from '../../../interactive-common/redux/reducers/types';
 import { QueueAnotherFunc } from '../../../react-common/reduxUtils';
 import { NativeEditorReducerArg } from '../mapping';
 import { Creation } from './creation';
 import { Effects } from './effects';
 
 export namespace Execution {
-    function executeRange(prevState: IMainState, start: number, end: number, codes: string[], queueAction: QueueAnotherFunc<CommonActionType>): IMainState {
+    function executeRange(
+        prevState: IMainState,
+        start: number,
+        end: number,
+        codes: string[],
+        queueAction: QueueAnotherFunc<CommonActionType>
+    ): IMainState {
         const newVMs = [...prevState.cellVMs];
         for (let pos = start; pos <= end; pos += 1) {
             const orig = prevState.cellVMs[pos];
@@ -39,10 +51,16 @@ export namespace Execution {
                     });
 
                     // Send a message if a code cell
-                    queueAction(createPostableAction(InteractiveWindowMessages.ReExecuteCell, { code, id: orig.cell.id }));
+                    queueAction(
+                        createPostableAction(InteractiveWindowMessages.ReExecuteCell, { code, id: orig.cell.id })
+                    );
                 } else {
                     // Update our input to be our new code
-                    newVMs[pos] = Helpers.asCellViewModel({ ...orig, inputBlockText: code, cell: { ...orig.cell, data: clonedCell } });
+                    newVMs[pos] = Helpers.asCellViewModel({
+                        ...orig,
+                        inputBlockText: code,
+                        cell: { ...orig.cell, data: clonedCell }
+                    });
                 }
             }
         }
@@ -56,7 +74,9 @@ export namespace Execution {
     export function executeAbove(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index > 0) {
-            const codes = arg.prevState.cellVMs.filter((_c, i) => i < index).map(c => concatMultilineStringInput(c.cell.data.source));
+            const codes = arg.prevState.cellVMs
+                .filter((_c, i) => i < index)
+                .map(c => concatMultilineStringInput(c.cell.data.source));
             return executeRange(arg.prevState, 0, index - 1, codes, arg.queueAction);
         }
         return arg.prevState;
@@ -104,8 +124,16 @@ export namespace Execution {
     export function executeCellAndBelow(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index >= 0) {
-            const codes = arg.prevState.cellVMs.filter((_c, i) => i > index).map(c => concatMultilineStringInput(c.cell.data.source));
-            return executeRange(arg.prevState, index, index + codes.length, [arg.payload.code, ...codes], arg.queueAction);
+            const codes = arg.prevState.cellVMs
+                .filter((_c, i) => i > index)
+                .map(c => concatMultilineStringInput(c.cell.data.source));
+            return executeRange(
+                arg.prevState,
+                index,
+                index + codes.length,
+                [arg.payload.code, ...codes],
+                arg.queueAction
+            );
         }
         return arg.prevState;
     }
@@ -114,7 +142,13 @@ export namespace Execution {
         // This is the same thing as executing the first cell and all below
         const firstCell = arg.prevState.cellVMs.length > 0 ? arg.prevState.cellVMs[0].cell.id : undefined;
         if (firstCell) {
-            return executeCellAndBelow({ ...arg, payload: { cellId: firstCell, code: concatMultilineStringInput(arg.prevState.cellVMs[0].cell.data.source) } });
+            return executeCellAndBelow({
+                ...arg,
+                payload: {
+                    cellId: firstCell,
+                    code: concatMultilineStringInput(arg.prevState.cellVMs[0].cell.data.source)
+                }
+            });
         }
 
         return arg.prevState;
@@ -126,7 +160,11 @@ export namespace Execution {
         if (arg.prevState.selectedCellId && index >= 0) {
             return executeCell({
                 ...arg,
-                payload: { cellId: arg.prevState.selectedCellId, code: concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source), moveOp: 'none' }
+                payload: {
+                    cellId: arg.prevState.selectedCellId,
+                    code: concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source),
+                    moveOp: 'none'
+                }
             });
         }
 
@@ -135,7 +173,10 @@ export namespace Execution {
 
     export function clearAllOutputs(arg: NativeEditorReducerArg): IMainState {
         const newList = arg.prevState.cellVMs.map(cellVM => {
-            return Helpers.asCellViewModel({ ...cellVM, cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } } });
+            return Helpers.asCellViewModel({
+                ...cellVM,
+                cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } }
+            });
         });
 
         arg.queueAction(createPostableAction(InteractiveWindowMessages.ClearAllOutputs));

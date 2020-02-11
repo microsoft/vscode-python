@@ -24,7 +24,9 @@ export type ReducerArg<S, AT, T> = T extends null | undefined
 
 export type ReducerFunc<S, AT, T> = (args: ReducerArg<S, AT, T>) => S;
 
-export type ActionWithPayload<T, K> = T extends null | undefined ? TypedAnyAction<K> : TypedAnyAction<K> & { payload: T };
+export type ActionWithPayload<T, K> = T extends null | undefined
+    ? TypedAnyAction<K>
+    : TypedAnyAction<K> & { payload: T };
 
 /**
  * CombineReducers takes in a map of action.type to func and creates a reducer that will call the appropriate function for

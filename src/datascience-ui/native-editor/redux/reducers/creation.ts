@@ -3,9 +3,19 @@
 'use strict';
 import * as uuid from 'uuid/v4';
 
-import { ILoadAllCells, InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    ILoadAllCells,
+    InteractiveWindowMessages
+} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
-import { createCellVM, createEmptyCell, CursorPos, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
+import {
+    createCellVM,
+    createEmptyCell,
+    CursorPos,
+    extractInputText,
+    ICellViewModel,
+    IMainState
+} from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICellAction } from '../../../interactive-common/redux/reducers/types';
@@ -58,7 +68,12 @@ export namespace Creation {
 
         // Send a messsage that we inserted a cell
         arg.queueAction(
-            createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index: position, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) })
+            createPostableAction(InteractiveWindowMessages.InsertCell, {
+                cell: newVM.cell,
+                index: position,
+                code: '',
+                codeCellAboveId: findFirstCodeCellAbove(newList, position)
+            })
         );
 
         // Queue up an action to set focus to the cell we're inserting
@@ -93,7 +108,12 @@ export namespace Creation {
 
         // Send a messsage that we inserted a cell
         arg.queueAction(
-            createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) })
+            createPostableAction(InteractiveWindowMessages.InsertCell, {
+                cell: newVM.cell,
+                index,
+                code: '',
+                codeCellAboveId: findFirstCodeCellAbove(newList, position)
+            })
         );
 
         // Queue up an action to set focus to the cell we're inserting
@@ -148,7 +168,14 @@ export namespace Creation {
             scrollCount: 0
         };
 
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, code: '', index: 0, codeCellAboveId: undefined }));
+        arg.queueAction(
+            createPostableAction(InteractiveWindowMessages.InsertCell, {
+                cell: newVM.cell,
+                code: '',
+                index: 0,
+                codeCellAboveId: undefined
+            })
+        );
 
         return {
             ...arg.prevState,
@@ -180,7 +207,14 @@ export namespace Creation {
             // Send messages to other side to indicate the new add
             arg.queueAction(createPostableAction(InteractiveWindowMessages.DeleteCell));
             arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell, { id: arg.payload.cellId }));
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, code: '', index: 0, codeCellAboveId: undefined }));
+            arg.queueAction(
+                createPostableAction(InteractiveWindowMessages.InsertCell, {
+                    cell: newVM.cell,
+                    code: '',
+                    index: 0,
+                    codeCellAboveId: undefined
+                })
+            );
 
             return {
                 ...arg.prevState,
@@ -199,9 +233,16 @@ export namespace Creation {
                 let newFocused = arg.prevState.focusedCellId;
                 const newVMs = [...arg.prevState.cellVMs.filter(c => c.cell.id !== arg.payload.cellId)];
                 const nextOrPrev = index === arg.prevState.cellVMs.length - 1 ? index - 1 : index;
-                if (arg.prevState.selectedCellId === arg.payload.cellId || arg.prevState.focusedCellId === arg.payload.cellId) {
+                if (
+                    arg.prevState.selectedCellId === arg.payload.cellId ||
+                    arg.prevState.focusedCellId === arg.payload.cellId
+                ) {
                     if (nextOrPrev >= 0) {
-                        newVMs[nextOrPrev] = { ...newVMs[nextOrPrev], selected: true, focused: arg.prevState.focusedCellId === arg.payload.cellId };
+                        newVMs[nextOrPrev] = {
+                            ...newVMs[nextOrPrev],
+                            selected: true,
+                            focused: arg.prevState.focusedCellId === arg.payload.cellId
+                        };
                         newSelection = newVMs[nextOrPrev].cell.id;
                         newFocused = newVMs[nextOrPrev].focused ? newVMs[nextOrPrev].cell.id : undefined;
                     }

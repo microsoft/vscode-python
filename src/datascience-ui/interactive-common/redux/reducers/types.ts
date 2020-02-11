@@ -3,7 +3,10 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
-import { IShowDataViewer, NativeCommandType } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    IShowDataViewer,
+    NativeCommandType
+} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ActionWithPayload, ReducerArg } from '../../../react-common/reduxUtils';
 import { CursorPos, IMainState } from '../../mainState';
 

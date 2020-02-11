@@ -16,7 +16,9 @@ import { Creation } from './creation';
 export namespace Effects {
     export function expandAll(arg: InteractiveReducerArg): IMainState {
         if (arg.prevState.settings?.showCellInputCode) {
-            const newVMs = arg.prevState.cellVMs.map(c => Creation.alterCellVM({ ...c }, arg.prevState.settings, true, true));
+            const newVMs = arg.prevState.cellVMs.map(c =>
+                Creation.alterCellVM({ ...c }, arg.prevState.settings, true, true)
+            );
             return {
                 ...arg.prevState,
                 cellVMs: newVMs
@@ -27,7 +29,9 @@ export namespace Effects {
 
     export function collapseAll(arg: InteractiveReducerArg): IMainState {
         if (arg.prevState.settings?.showCellInputCode) {
-            const newVMs = arg.prevState.cellVMs.map(c => Creation.alterCellVM({ ...c }, arg.prevState.settings, true, false));
+            const newVMs = arg.prevState.cellVMs.map(c =>
+                Creation.alterCellVM({ ...c }, arg.prevState.settings, true, false)
+            );
             return {
                 ...arg.prevState,
                 cellVMs: newVMs
@@ -55,11 +59,17 @@ export namespace Effects {
         const newSettingsJSON = JSON.parse(arg.payload);
         const newSettings = <IDataScienceExtraSettings>newSettingsJSON;
         const newEditorOptions = computeEditorOptions(newSettings);
-        const newFontFamily = newSettings.extraSettings ? newSettings.extraSettings.fontFamily : arg.prevState.font.family;
+        const newFontFamily = newSettings.extraSettings
+            ? newSettings.extraSettings.fontFamily
+            : arg.prevState.font.family;
         const newFontSize = newSettings.extraSettings ? newSettings.extraSettings.fontSize : arg.prevState.font.size;
 
         // Ask for new theme data if necessary
-        if (newSettings && newSettings.extraSettings && newSettings.extraSettings.theme !== arg.prevState.vscodeThemeName) {
+        if (
+            newSettings &&
+            newSettings.extraSettings &&
+            newSettings.extraSettings.theme !== arg.prevState.vscodeThemeName
+        ) {
             const knownDark = Helpers.computeKnownDark(newSettings);
             // User changed the current theme. Rerender
             arg.queueAction(createPostableAction(CssMessages.GetCssRequest, { isDark: knownDark }));
@@ -69,7 +79,14 @@ export namespace Effects {
         // Update our input cell state if the user changed this setting
         let newVMs = arg.prevState.cellVMs;
         if (newSettings.showCellInputCode !== arg.prevState.settings?.showCellInputCode) {
-            newVMs = arg.prevState.cellVMs.map(c => Creation.alterCellVM(c, newSettings, newSettings.showCellInputCode, !newSettings.collapseCellInputCodeByDefault));
+            newVMs = arg.prevState.cellVMs.map(c =>
+                Creation.alterCellVM(
+                    c,
+                    newSettings,
+                    newSettings.showCellInputCode,
+                    !newSettings.collapseCellInputCodeByDefault
+                )
+            );
         }
 
         return {
@@ -110,7 +127,11 @@ export namespace Effects {
     }
 
     export function clickCell(arg: InteractiveReducerArg<ICellAction>): IMainState {
-        if (arg.payload.cellId === Identifiers.EditCellId && arg.prevState.editCellVM && !arg.prevState.editCellVM.focused) {
+        if (
+            arg.payload.cellId === Identifiers.EditCellId &&
+            arg.prevState.editCellVM &&
+            !arg.prevState.editCellVM.focused
+        ) {
             return {
                 ...arg.prevState,
                 editCellVM: {
@@ -132,7 +153,11 @@ export namespace Effects {
     }
 
     export function unfocusCell(arg: InteractiveReducerArg<ICellAction>): IMainState {
-        if (arg.payload.cellId === Identifiers.EditCellId && arg.prevState.editCellVM && arg.prevState.editCellVM.focused) {
+        if (
+            arg.payload.cellId === Identifiers.EditCellId &&
+            arg.prevState.editCellVM &&
+            arg.prevState.editCellVM.focused
+        ) {
             return {
                 ...arg.prevState,
                 editCellVM: {
