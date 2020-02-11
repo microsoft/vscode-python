@@ -295,7 +295,6 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
         handleMessage(message: string, payload?: any): boolean {
             // Double check this is one of our messages. React will actually post messages here too during development
             if (isAllowedMessage(message)) {
-                debugger;
                 const basePayload: BaseReduxActionPayload = { data: payload };
                 if (message === InteractiveWindowMessages.Sync) {
                     // This is a message that has been sent from extension purely for synchronization purposes.

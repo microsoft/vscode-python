@@ -194,7 +194,6 @@ export function checkToPostBasedOnOriginalMessageType(messageType?: MessageType)
 }
 
 export function shouldRebroadcast(message: keyof IInteractiveWindowMapping): [boolean, MessageType] {
-    console.error(messageWithMessageTypes);
     // Get the configured type for this message (whether it should be re-broadcasted or not).
     const messageType: MessageType | undefined = messageWithMessageTypes[message];
     // Support for liveshare is turned off for now, we can enable that later.
