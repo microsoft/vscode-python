@@ -74,8 +74,13 @@ export function getMessageForLibrariesNotInstalled(products: Product[], interpre
         default: {
             const lastItem = names.pop();
             return interpreterName
-                ? DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter().format(interpreterName, `${names.join(', ')} ${Common.and()} ${lastItem}`)
-                : DataScience.librariesRequiredToLaunchJupyterNotInstalled().format(`${names.join(', ')} ${Common.and()} ${lastItem}`);
+                ? DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter().format(
+                      interpreterName,
+                      `${names.join(', ')} ${Common.and()} ${lastItem}`
+                  )
+                : DataScience.librariesRequiredToLaunchJupyterNotInstalled().format(
+                      `${names.join(', ')} ${Common.and()} ${lastItem}`
+                  );
         }
     }
 }
@@ -160,7 +165,10 @@ export class JupyterInterpreterDependencyService {
                 });
                 while (productToInstall) {
                     // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
-                    const response = await Promise.race([this.installer.install(productToInstall, interpreter, wrapCancellationTokens(token)), cancellatonPromise]);
+                    const response = await Promise.race([
+                        this.installer.install(productToInstall, interpreter, wrapCancellationTokens(token)),
+                        cancellatonPromise
+                    ]);
                     if (response === InstallerResponse.Installed) {
                         productToInstall = productsToInstall.shift();
                         continue;
@@ -230,7 +238,10 @@ export class JupyterInterpreterDependencyService {
      * @returns {Promise<Product[]>}
      * @memberof JupyterInterpreterConfigurationService
      */
-    public async getDependenciesNotInstalled(interpreter: PythonInterpreter, token?: CancellationToken): Promise<Product[]> {
+    public async getDependenciesNotInstalled(
+        interpreter: PythonInterpreter,
+        token?: CancellationToken
+    ): Promise<Product[]> {
         // If we know that all modules were available at one point in time, then use that cache.
         if (this.dependenciesInstalledInInterpreter.has(interpreter.path)) {
             return [];
@@ -239,8 +250,12 @@ export class JupyterInterpreterDependencyService {
         const notInstalled: Product[] = [];
         await Promise.race([
             Promise.all([
-                this.installer.isInstalled(Product.jupyter, interpreter).then(installed => (installed ? noop() : notInstalled.push(Product.jupyter))),
-                this.installer.isInstalled(Product.notebook, interpreter).then(installed => (installed ? noop() : notInstalled.push(Product.notebook)))
+                this.installer
+                    .isInstalled(Product.jupyter, interpreter)
+                    .then(installed => (installed ? noop() : notInstalled.push(Product.jupyter))),
+                this.installer
+                    .isInstalled(Product.notebook, interpreter)
+                    .then(installed => (installed ? noop() : notInstalled.push(Product.notebook)))
             ]),
             createPromiseFromCancellation<void>({ cancelAction: 'resolve', defaultValue: undefined, token })
         ]);
@@ -252,7 +267,9 @@ export class JupyterInterpreterDependencyService {
             return [];
         }
         // Perform this check only if jupyter & notebook modules are installed.
-        const products = await this.isKernelSpecAvailable(interpreter, token).then(installed => (installed ? [] : [Product.kernelspec]));
+        const products = await this.isKernelSpecAvailable(interpreter, token).then(installed =>
+            installed ? [] : [Product.kernelspec]
+        );
         if (products.length === 0) {
             this.dependenciesInstalledInInterpreter.add(interpreter.path);
         }
@@ -295,7 +312,10 @@ export class JupyterInterpreterDependencyService {
      * @returns {Promise<JupyterInterpreterDependencyResponse>}
      * @memberof JupyterInterpreterConfigurationService
      */
-    private async checkKernelSpecAvailability(interpreter: PythonInterpreter, token?: CancellationToken): Promise<JupyterInterpreterDependencyResponse> {
+    private async checkKernelSpecAvailability(
+        interpreter: PythonInterpreter,
+        token?: CancellationToken
+    ): Promise<JupyterInterpreterDependencyResponse> {
         if (await this.isKernelSpecAvailable(interpreter)) {
             sendTelemetryEvent(Telemetry.JupyterInstalledButNotKernelSpecModule);
             return JupyterInterpreterDependencyResponse.ok;
