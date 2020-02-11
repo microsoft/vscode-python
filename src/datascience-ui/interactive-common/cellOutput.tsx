@@ -237,6 +237,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             isText = true;
             isError = false;
             renderWithScrollbars = true;
+            // NOSONAR - Sonar is wrong, TS won't compile without this AS
             const stream = output as nbformat.IStream;
             const formatted = concatMultilineStringOutput(stream.text);
             input = {
@@ -261,6 +262,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             isText = true;
             isError = true;
             renderWithScrollbars = true;
+            // NOSONAR - Sonar is wrong, TS won't compile without this AS
             const error = output as nbformat.IError;
             try {
                 const converter = new CellOutput.ansiToHtmlClass(CellOutput.getAnsiToHtmlOptions());
