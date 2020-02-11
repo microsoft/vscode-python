@@ -7,7 +7,7 @@ import { EventEmitter, Extension, Terminal } from 'vscode';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import { IActiveResourceService, ICommandManager, ITerminalManager } from '../../client/common/application/types';
-import { CODE_RUNNER_EXTENSION_ID, terminalNamePrefixNotToAutoActivate } from '../../client/common/constants';
+import { CODE_RUNNER_EXTENSION_ID } from '../../client/common/constants';
 import { TerminalActivator } from '../../client/common/terminal/activator';
 import { ITerminalActivator } from '../../client/common/terminal/types';
 import { IExtensions } from '../../client/common/types';
@@ -40,6 +40,7 @@ suite('Terminal', () => {
                 dispose: noop,
                 hide: noop,
                 name: 'Some Name',
+                creationOptions: {},
                 processId: Promise.resolve(0),
                 sendText: noop,
                 show: noop
@@ -47,7 +48,8 @@ suite('Terminal', () => {
             nonActivatedTerminal = {
                 dispose: noop,
                 hide: noop,
-                name: `${terminalNamePrefixNotToAutoActivate}Something`,
+                creationOptions: { hideFromUser: true },
+                name: 'Something',
                 processId: Promise.resolve(0),
                 sendText: noop,
                 show: noop
