@@ -12,6 +12,7 @@ import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import { ICodeWatcher, IDataScienceCodeLensProvider, IDataScienceCommandListener, INotebookEditorProvider } from '../types';
+import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { KernelSwitcherCommand } from './kernelSwitcher';
 import { JupyterServerSelectorCommand } from './serverSelector';
 
@@ -25,6 +26,7 @@ export class CommandRegistry implements IDisposable {
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelectorCommand) private readonly serverSelectedCommand: JupyterServerSelectorCommand,
         @inject(KernelSwitcherCommand) private readonly kernelSwitcherCommand: KernelSwitcherCommand,
+        @inject(JupyterCommandLineSelectorCommand) private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
         @inject(IPythonExtensionBanner) @named(BANNER_NAME_DS_SURVEY) private readonly dataScienceSurveyBanner: IPythonExtensionBanner,
         @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider,
         @inject(IDebugService) private debugService: IDebugService,
@@ -34,6 +36,7 @@ export class CommandRegistry implements IDisposable {
         this.disposables.push(this.kernelSwitcherCommand);
     }
     public register() {
+        this.commandLineCommand.register();
         this.serverSelectedCommand.register();
         this.kernelSwitcherCommand.register();
         this.registerCommand(Commands.RunAllCells, this.runAllCells);

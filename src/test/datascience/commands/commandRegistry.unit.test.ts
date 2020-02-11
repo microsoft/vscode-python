@@ -6,6 +6,7 @@ import { DebugService } from '../../../client/common/application/debugService';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { IPythonExtensionBanner } from '../../../client/common/types';
+import { JupyterCommandLineSelectorCommand } from '../../../client/datascience/commands/commandLineSelector';
 import { CommandRegistry } from '../../../client/datascience/commands/commandRegistry';
 import { KernelSwitcherCommand } from '../../../client/datascience/commands/kernelSwitcher';
 import { JupyterServerSelectorCommand } from '../../../client/datascience/commands/serverSelector';
@@ -19,12 +20,14 @@ import { MockOutputChannel } from '../../mockClasses';
 suite('Data Science - Commands', () => {
     let kernelSwitcherCommand: KernelSwitcherCommand;
     let serverSelectorCommand: JupyterServerSelectorCommand;
+    let commandLineCommand: JupyterCommandLineSelectorCommand;
     let surveyBanner: IPythonExtensionBanner;
     let commandRegistry: CommandRegistry;
     let commandManager: ICommandManager;
     setup(() => {
         kernelSwitcherCommand = mock(KernelSwitcherCommand);
         serverSelectorCommand = mock(JupyterServerSelectorCommand);
+        commandLineCommand = mock(JupyterCommandLineSelectorCommand);
         surveyBanner = mock(DataScienceSurveyBanner);
 
         const codeLensProvider = mock(DataScienceCodeLensProvider);
@@ -40,6 +43,7 @@ suite('Data Science - Commands', () => {
             instance(commandManager),
             instance(serverSelectorCommand),
             instance(kernelSwitcherCommand),
+            instance(commandLineCommand),
             instance(surveyBanner),
             instance(notebookProvider),
             instance(debugService),

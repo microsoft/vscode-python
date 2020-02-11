@@ -278,7 +278,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         if (!options || !options.uri) {
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
             const useDefaultConfig = options && options.useDefaultConfig ? true : false;
-            const connection = await this.startNotebookServer(useDefaultConfig, cancelToken);
+            const connection = await this.startNotebookServer(useDefaultConfig, this.configuration.getSettings().datascience.jupyterCommandLine, cancelToken);
             if (connection) {
                 return connection;
             } else {
@@ -296,8 +296,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
-    private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<IConnection> {
-        return this.notebookStarter.start(useDefaultConfig, cancelToken);
+    private async startNotebookServer(useDefaultConfig: boolean, customCommandLine: string | undefined, cancelToken?: CancellationToken): Promise<IConnection> {
+        return this.notebookStarter.start(useDefaultConfig, customCommandLine, cancelToken);
     }
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values

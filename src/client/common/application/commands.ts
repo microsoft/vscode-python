@@ -51,6 +51,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.ExecSelectionInInteractiveWindow]: [];
     [DSCommands.SelectJupyterURI]: [];
+    [DSCommands.SelectJupyterCommandLine]: [];
     [DSCommands.ShowHistoryPane]: [];
     [DSCommands.UndoCells]: [];
     [DSCommands.RedoCells]: [];

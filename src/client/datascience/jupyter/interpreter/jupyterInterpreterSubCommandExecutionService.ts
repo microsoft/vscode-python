@@ -92,7 +92,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
     }
     public async startNotebook(notebookArgs: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(options.token);
-        this.jupyterOutputChannel.appendLine(DataScience.startingJupyterLogMessage().format(this.pathUtils.getDisplayName(interpreter.path)));
+        this.jupyterOutputChannel.appendLine(DataScience.startingJupyterLogMessage().format(this.pathUtils.getDisplayName(interpreter.path), notebookArgs.join(' ')));
         const executionService = await this.pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), options);
     }

@@ -619,7 +619,8 @@ suite('Jupyter Execution', async () => {
             enablePlotViewer: true,
             runStartupCommands: '',
             debugJustMyCode: true,
-            variableQueries: []
+            variableQueries: [],
+            jupyterCommandLine: ''
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
