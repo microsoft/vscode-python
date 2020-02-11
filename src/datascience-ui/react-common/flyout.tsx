@@ -28,7 +28,9 @@ export class Flyout extends React.Component<IFlyoutProps, IFlyoutState> {
         const innerFilter = this.props.disabled ? 'flyout-inner-disabled-filter' : '';
         const ariaDisabled = this.props.disabled ? 'true' : 'false';
         const buttonClassName = this.props.buttonClassName;
-        const flyoutClassName = this.state.visible ? `flyout-children-visible ${this.props.flyoutContainerName}` : `flyout-children-hidden ${this.props.flyoutContainerName}`;
+        const flyoutClassName = this.state.visible
+            ? `flyout-children-visible ${this.props.flyoutContainerName}`
+            : `flyout-children-hidden ${this.props.flyoutContainerName}`;
 
         return (
             <div className="flyout-container" onMouseLeave={this.mouseLeave}>

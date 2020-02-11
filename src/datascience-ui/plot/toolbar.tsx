@@ -41,13 +41,25 @@ export class Toolbar extends React.Component<IToolbarProps> {
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Next} />
                 </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={this.pan} tooltip={getLocString('DataScience.panPlot', 'Pan')}>
+                <ImageButton
+                    baseTheme={this.props.baseTheme}
+                    onClick={this.pan}
+                    tooltip={getLocString('DataScience.panPlot', 'Pan')}
+                >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Pan} />
                 </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={this.zoomIn} tooltip={getLocString('DataScience.zoomInPlot', 'Zoom in')}>
+                <ImageButton
+                    baseTheme={this.props.baseTheme}
+                    onClick={this.zoomIn}
+                    tooltip={getLocString('DataScience.zoomInPlot', 'Zoom in')}
+                >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Zoom} />
                 </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={this.zoomOut} tooltip={getLocString('DataScience.zoomOutPlot', 'Zoom out')}>
+                <ImageButton
+                    baseTheme={this.props.baseTheme}
+                    onClick={this.zoomOut}
+                    tooltip={getLocString('DataScience.zoomOutPlot', 'Zoom out')}
+                >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ZoomOut} />
                 </ImageButton>
                 {/* This isn't possible until VS Code supports copying images to the clipboard. See https://github.com/microsoft/vscode/issues/217

@@ -118,7 +118,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         return (
             <div className="main-panel" ref={this.container}>
-                <StyleInjector onReady={this.saveReadyState} settings={this.state.settings} expectingDark={this.props.baseTheme !== 'vscode-light'} postOffice={this.postOffice} />
+                <StyleInjector
+                    onReady={this.saveReadyState}
+                    settings={this.state.settings}
+                    expectingDark={this.props.baseTheme !== 'vscode-light'}
+                    postOffice={this.postOffice}
+                />
                 {progressBar}
                 {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
             </div>
