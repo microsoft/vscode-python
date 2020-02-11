@@ -152,6 +152,42 @@ $$
 X^TX\\omega = X^TT
 $$`;
 
+    const output6 = `$$
+\\begin{aligned}
+\\frac{\\partial}{\\partial\\omega_j}C(\\omega) &= \\frac1m\\sum_{i=1}^m\\varphi_j\\left(x^i\\right)\\left(\\varphi^T\\left(x^i\\right)\\omega-t^i\\right)
+= 0
+\\end{aligned}
+$$
+$$
+\\begin{pmatrix}
+\\varphi_j\\left(x^1\\right) & \\dots & \\varphi_j\\left(x^m\\right)
+\\end{pmatrix}
+\\begin{pmatrix}
+\\varphi_1\\left(x^1\\right) & \\dots & \\varphi_n\\left(x^1\\right)\\\\
+\\vdots & \\ddots & \\vdots\\\\
+\\varphi_1\\left(x^m\\right) & \\dots & \\varphi_n\\left(x^m\\right)
+\\end{pmatrix}
+\\begin{pmatrix}
+\\omega_1\\\\
+\\vdots\\\\
+\\omega_n
+\\end{pmatrix}
+=
+\\begin{pmatrix}
+\\varphi_j\\left(x^1\\right) & \\dots & \\varphi_j\\left(x^m\\right)
+\\end{pmatrix}
+\\begin{pmatrix}
+t^1\\\\
+\\vdots\\\\
+t^m
+\\end{pmatrix}
+$$
+
+Assuming that $$T = (t^1, t^2, ..., t^m)^T$$，$$X = \\left(\\varphi(x^1), \\varphi(x^2), ..., \\varphi(x^m)\\right)^T$$, then
+$$
+X^TX\\omega = X^TT
+$$`;
+
     test("Latex - Equations don't have $$", () => {
         const result = fixLatexEquations(markdown1);
         expect(result).to.be.equal(output1, 'Result is incorrect');
@@ -191,7 +227,7 @@ $$`;
     });
 
     test('Latex - Multiple /begins inside $$', () => {
-        const result = fixLatexEquations(markdown6);
-        expect(result).to.be.equal(markdown6, 'Result should not have changed');
+        const result = fixLatexEquations(markdown6, true);
+        expect(result).to.be.equal(output6, 'Result is incorrect');
     });
 });
