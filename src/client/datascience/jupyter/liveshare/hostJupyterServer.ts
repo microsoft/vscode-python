@@ -12,7 +12,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
@@ -48,6 +48,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         private workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[],
         private appService: IApplicationShell,
+        private persistentStateFactory: IPersistentStateFactory,
         private fs: IFileSystem,
         private readonly kernelSelector: KernelSelector
     ) {
@@ -204,6 +205,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 this.getDisposedError.bind(this),
                 this.workspaceService,
                 this.appService,
+                this.persistentStateFactory,
                 this.fs
             );
 

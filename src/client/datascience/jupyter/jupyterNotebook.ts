@@ -6,7 +6,7 @@ import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
-import { Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
@@ -14,7 +14,7 @@ import { CancellationError, createPromiseFromCancellation } from '../../common/c
 import '../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -42,6 +42,8 @@ import { LiveKernelModel } from './kernels/types';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput, concatMultilineStringOutput, formatStreamText } from '../../../datascience-ui/common';
+
+const doNotDisplayOutputTrimPromt = 'MESSAGE_KEY_FOR_OUTPUT_TRIM_PROMPT';
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
@@ -153,7 +155,6 @@ export class JupyterNotebookBase implements INotebook {
     private kernelChanged = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
-    private trimmedMessageSent = false;
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -167,6 +168,7 @@ export class JupyterNotebookBase implements INotebook {
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
         private applicationService: IApplicationShell,
+        private persistentStateFactory: IPersistentStateFactory,
         private fs: IFileSystem
     ) {
         this.sessionStartTime = Date.now();
@@ -768,22 +770,22 @@ export class JupyterNotebookBase implements INotebook {
         }
     };
 
-    private handleIOPub(subscriber: CellSubscriber, silent: boolean | undefined, clearState: Map<string, boolean>, msg: KernelMessage.IIOPubMessage) {
+    private async handleIOPub(subscriber: CellSubscriber, silent: boolean | undefined, clearState: Map<string, boolean>, msg: KernelMessage.IIOPubMessage) {
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         // Create a trimming function. Only trim user output. Silent output requires the full thing
-        const trimFunc = silent ? (s: string) => s : this.trimOutput.bind(this);
+        const trimFunc = silent ? async (s: string) => s : this.trimOutput.bind(this);
 
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, subscriber.cell, trimFunc);
+                await this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, subscriber.cell, trimFunc);
             } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
                 this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState, subscriber.cell);
             } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
                 this.handleStatusMessage(msg as KernelMessage.IStatusMsg, clearState, subscriber.cell);
             } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, subscriber.cell, trimFunc);
+                await this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, subscriber.cell, trimFunc);
             } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
                 this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState, subscriber.cell);
             } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
@@ -835,7 +837,7 @@ export class JupyterNotebookBase implements INotebook {
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         // Create a trimming function. Only trim user output. Silent output requires the full thing
-        const trimFunc = silent ? (s: string) => s : this.trimOutput.bind(this);
+        const trimFunc = silent ? async (s: string) => s : this.trimOutput.bind(this);
 
         if (jupyterLab.KernelMessage.isExecuteReplyMsg(msg)) {
             this.handleExecuteReply(msg, clearState, subscriber.cell, trimFunc);
@@ -1000,10 +1002,10 @@ export class JupyterNotebookBase implements INotebook {
 
     // See this for docs on the messages:
     // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
-    private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
+    private async handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => Promise<string>) {
         // Check our length on text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
-            msg.content.data['text/plain'] = trimFunc(msg.content.data['text/plain'] as string);
+            msg.content.data['text/plain'] = await trimFunc(msg.content.data['text/plain'] as string);
         }
 
         this.addToCellData(
@@ -1013,14 +1015,14 @@ export class JupyterNotebookBase implements INotebook {
         );
     }
 
-    private handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
+    private handleExecuteReply(msg: KernelMessage.IExecuteReplyMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => Promise<string>) {
         const reply = msg.content as KernelMessage.IExecuteReply;
         if (reply.payload) {
-            reply.payload.forEach(o => {
+            reply.payload.forEach(async o => {
                 if (o.data && o.data.hasOwnProperty('text/plain')) {
                     // tslint:disable-next-line: no-any
                     const str = (o.data as any)['text/plain'].toString();
-                    const data = trimFunc(str) as string;
+                    const data = (await trimFunc(str)) as string;
                     this.addToCellData(
                         cell,
                         {
@@ -1045,7 +1047,7 @@ export class JupyterNotebookBase implements INotebook {
         traceInfo(`Kernel switching to ${msg.content.execution_state}`);
     }
 
-    private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
+    private async handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => Promise<string>) {
         // Might already have a stream message. If so, just add on to it.
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
         const existing = data.outputs.length > 0 && data.outputs[data.outputs.length - 1].output_type === 'stream' ? data.outputs[data.outputs.length - 1] : undefined;
@@ -1057,14 +1059,14 @@ export class JupyterNotebookBase implements INotebook {
             } else {
                 // tslint:disable-next-line:restrict-plus-operands
                 existing.text = existing.text + msg.content.text;
-                existing.text = trimFunc(formatStreamText(concatMultilineStringOutput(existing.text)));
+                existing.text = await trimFunc(formatStreamText(concatMultilineStringOutput(existing.text)));
             }
         } else {
             // Create a new stream entry
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: trimFunc(formatStreamText(concatMultilineStringOutput(msg.content.text)))
+                text: await trimFunc(formatStreamText(concatMultilineStringOutput(msg.content.text)))
             };
             this.addToCellData(cell, output, clearState);
         }
@@ -1145,18 +1147,41 @@ export class JupyterNotebookBase implements INotebook {
 
     // We have a set limit for the number of output text characters that we display by default
     // trim down strings to that limit, assuming at this point we have compressed down to a single string
-    private trimOutput(outputString: string): string {
+    private async trimOutput(outputString: string): Promise<string> {
         const outputLimit = this.configService.getSettings().datascience.textOutputLimit;
 
         if (!outputLimit || outputLimit === 0 || outputString.length <= outputLimit) {
             return outputString;
         }
 
-        // The first time it happens, let the user know his ouput is incomplete and how to chenge it.
-        if (!this.trimmedMessageSent) {
-            this.applicationService.showInformationMessage(localize.DataScience.trimmedOutput());
-            this.trimmedMessageSent = true;
+        if (await this.promptToChangeOutputTrimSetting()) {
+            return outputString;
         }
+
         return outputString.substr(outputString.length - outputLimit);
+    }
+
+    private async promptToChangeOutputTrimSetting(): Promise<boolean> {
+        const notificationPromptEnabled = this.persistentStateFactory.createWorkspacePersistentState(doNotDisplayOutputTrimPromt, true);
+        if (!notificationPromptEnabled.value) {
+            return false;
+        }
+
+        const optButtons = [localize.Common.gotIt(), localize.Diagnostics.updateSettings(), localize.Common.doNotShowAgain()];
+        const pick = await this.applicationService.showInformationMessage(localize.DataScience.trimmedOutput(), ...optButtons);
+
+        const telemetrySelections: ['gotIt', 'changeSetting', 'disablePrompt'] = ['gotIt', 'changeSetting', 'disablePrompt'];
+        sendTelemetryEvent(Telemetry.RemoveTextOutputLimit, undefined, {
+            action: pick ? telemetrySelections[optButtons.indexOf(pick)] : undefined
+        });
+
+        if (pick === optButtons[1]) {
+            await this.configService.updateSetting('dataScience.textOutputLimit', 0, undefined, ConfigurationTarget.Workspace);
+            return true;
+        } else if (pick === optButtons[2]) {
+            await notificationPromptEnabled.updateValue(false);
+        }
+
+        return false;
     }
 }

@@ -243,7 +243,8 @@ export enum Telemetry {
     OpenedInteractiveWindow = 'DATASCIENCE.OPENED_INTERACTIVE',
     FindKernelForLocalConnection = 'DS_INTERNAL.FIND_KERNEL_FOR_LOCAL_CONNECTION',
     CompletionTimeFromLS = 'DS_INTERNAL.COMPLETION_TIME_FROM_LS',
-    CompletionTimeFromJupyter = 'DS_INTERNAL.COMPLETION_TIME_FROM_JUPYTER'
+    CompletionTimeFromJupyter = 'DS_INTERNAL.COMPLETION_TIME_FROM_JUPYTER',
+    RemoveTextOutputLimit = 'DATASCIENCE.REMOVE_TEXT_OUTPUT_LIMIT'
 }
 
 export enum NativeKeyboardCommandTelemetry {

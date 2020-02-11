@@ -9,7 +9,7 @@ import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../co
 import '../../../common/extensions';
 import { traceError } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { Identifiers, LiveShare, LiveShareCommands } from '../../constants';
 import { IExecuteInfo } from '../../interactive-common/interactiveWindowTypes';
@@ -43,9 +43,10 @@ export class HostJupyterNotebook extends LiveShareParticipantHost(JupyterNoteboo
         getDisposedError: () => Error,
         workspace: IWorkspaceService,
         appService: IApplicationShell,
+        persistentStateFactory: IPersistentStateFactory,
         fs: IFileSystem
     ) {
-        super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError, workspace, appService, fs);
+        super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError, workspace, appService, persistentStateFactory, fs);
     }
 
     public dispose = async (): Promise<void> => {

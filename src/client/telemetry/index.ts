@@ -1722,4 +1722,10 @@ export interface IEventNamePropertyMapping {
      * @memberof IEventNamePropertyMapping
      */
     [Telemetry.CompletionTimeFromJupyter]: undefined | never;
+    /**
+     * Telemetry event sent to capture user selection when his cell ouputs are trimmed.
+     */
+    [Telemetry.RemoveTextOutputLimit]: {
+        action: string | undefined;
+    };
 }
