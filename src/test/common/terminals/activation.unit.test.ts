@@ -30,6 +30,7 @@ suite('Terminal Auto Activation', () => {
             dispose: noop,
             hide: noop,
             name: 'Python',
+            creationOptions: {},
             processId: Promise.resolve(0),
             sendText: noop,
             show: noop
