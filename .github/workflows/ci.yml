@@ -395,9 +395,9 @@ jobs:
       # then delete the download folder and compile the source code.
       - name: Prepare for smoke tests
         run: |
-           mv ${{env.ARTIFACT_NAME_VSIX}}/* .
-           rm -r ${{env.ARTIFACT_NAME_VSIX}}
-           npx tsc -p ./
+          mv ${{env.ARTIFACT_NAME_VSIX}}/* .
+          rm -r ${{env.ARTIFACT_NAME_VSIX}}
+          npx tsc -p ./
         shell: bash
 
       - name: Run smoke tests
@@ -414,7 +414,7 @@ jobs:
     needs: [tests]
     steps:
       - name: Checkout
-      uses: actions/checkout@v2
+        uses: actions/checkout@v2
 
       # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
       # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
@@ -432,8 +432,8 @@ jobs:
 
       - name: Generate coverage reports
         run: npm run test:cover:report
-        continue-on-error: true         
-        
+        continue-on-error: true
+
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1
         with:
