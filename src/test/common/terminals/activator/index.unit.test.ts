@@ -6,7 +6,11 @@
 import * as TypeMoq from 'typemoq';
 import { Terminal } from 'vscode';
 import { TerminalActivator } from '../../../../client/common/terminal/activator';
-import { ITerminalActivationHandler, ITerminalActivator, ITerminalHelper } from '../../../../client/common/terminal/types';
+import {
+    ITerminalActivationHandler,
+    ITerminalActivator,
+    ITerminalHelper
+} from '../../../../client/common/terminal/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Terminal Activator', () => {
@@ -31,11 +35,25 @@ suite('Terminal Activator', () => {
             .returns(() => Promise.resolve(activationSuccessful))
             .verifiable(TypeMoq.Times.once());
         handler1
-            .setup(h => h.handleActivation(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isValue(activationSuccessful)))
+            .setup(h =>
+                h.handleActivation(
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isValue(activationSuccessful)
+                )
+            )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
         handler2
-            .setup(h => h.handleActivation(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isValue(activationSuccessful)))
+            .setup(h =>
+                h.handleActivation(
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isValue(activationSuccessful)
+                )
+            )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 

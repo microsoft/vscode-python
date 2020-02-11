@@ -16,11 +16,19 @@ export class ConfigurationService implements IConfigurationService {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
     public getSettings(resource?: Uri): IPythonSettings {
-        const InterpreterAutoSelectionService = this.serviceContainer.get<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService);
+        const InterpreterAutoSelectionService = this.serviceContainer.get<IInterpreterAutoSeletionProxyService>(
+            IInterpreterAutoSeletionProxyService
+        );
         return PythonSettings.getInstance(resource, InterpreterAutoSelectionService, this.workspaceService);
     }
 
-    public async updateSectionSetting(section: string, setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
+    public async updateSectionSetting(
+        section: string,
+        setting: string,
+        value?: {},
+        resource?: Uri,
+        configTarget?: ConfigurationTarget
+    ): Promise<void> {
         const defaultSetting = {
             uri: resource,
             target: configTarget || ConfigurationTarget.WorkspaceFolder
@@ -37,7 +45,8 @@ export class ConfigurationService implements IConfigurationService {
             currentValue !== undefined &&
             ((settingsInfo.target === ConfigurationTarget.Global && currentValue.globalValue === value) ||
                 (settingsInfo.target === ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
-                (settingsInfo.target === ConfigurationTarget.WorkspaceFolder && currentValue.workspaceFolderValue === value))
+                (settingsInfo.target === ConfigurationTarget.WorkspaceFolder &&
+                    currentValue.workspaceFolderValue === value))
         ) {
             return;
         }
@@ -46,7 +55,12 @@ export class ConfigurationService implements IConfigurationService {
         await this.verifySetting(configSection, settingsInfo.target, setting, value);
     }
 
-    public async updateSetting(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void> {
+    public async updateSetting(
+        setting: string,
+        value?: {},
+        resource?: Uri,
+        configTarget?: ConfigurationTarget
+    ): Promise<void> {
         return this.updateSectionSetting('python', setting, value, resource, configTarget);
     }
 
@@ -54,7 +68,12 @@ export class ConfigurationService implements IConfigurationService {
         return process.env.VSC_PYTHON_CI_TEST === '1';
     }
 
-    private async verifySetting(configSection: WorkspaceConfiguration, target: ConfigurationTarget, settingName: string, value?: {}): Promise<void> {
+    private async verifySetting(
+        configSection: WorkspaceConfiguration,
+        target: ConfigurationTarget,
+        settingName: string,
+        value?: {}
+    ): Promise<void> {
         if (this.isTestExecution()) {
             let retries = 0;
             do {

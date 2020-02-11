@@ -6,6 +6,10 @@ import * as localize from '../../common/utils/localize';
 
 export class InvalidNotebookFileError extends Error {
     constructor(file?: string) {
-        super(file ? localize.DataScience.invalidNotebookFileErrorFormat().format(file) : localize.DataScience.invalidNotebookFileError());
+        super(
+            file
+                ? localize.DataScience.invalidNotebookFileErrorFormat().format(file)
+                : localize.DataScience.invalidNotebookFileError()
+        );
     }
 }

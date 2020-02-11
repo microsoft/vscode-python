@@ -6,7 +6,13 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
+import {
+    IAsyncDisposable,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel
+} from '../../common/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
@@ -42,7 +48,9 @@ type JupyterExecutionClassType = {
 export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposable {
     private executionFactory: RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>;
     private sessionChangedEventEmitter: EventEmitter<void> = new EventEmitter<void>();
-    private serverStartedEventEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
+    private serverStartedEventEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<
+        INotebookServerOptions
+    >();
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -116,7 +124,10 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         const execution = await this.executionFactory.get();
         return execution.isSpawnSupported(cancelToken);
     }
-    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
+    public async connectToNotebookServer(
+        options?: INotebookServerOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookServer | undefined> {
         const execution = await this.executionFactory.get();
         const server = await execution.connectToNotebookServer(options, cancelToken);
         if (server) {

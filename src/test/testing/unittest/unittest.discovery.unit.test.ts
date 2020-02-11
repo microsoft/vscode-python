@@ -14,7 +14,15 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { TestsHelper } from '../../../client/testing/common/testUtils';
 import { TestFlatteningVisitor } from '../../../client/testing/common/testVisitors/flatteningVisitor';
-import { ITestDiscoveryService, ITestRunner, ITestsParser, Options, TestDiscoveryOptions, Tests, UnitTestParserOptions } from '../../../client/testing/common/types';
+import {
+    ITestDiscoveryService,
+    ITestRunner,
+    ITestsParser,
+    Options,
+    TestDiscoveryOptions,
+    Tests,
+    UnitTestParserOptions
+} from '../../../client/testing/common/types';
 import { IArgumentsHelper } from '../../../client/testing/types';
 import { TestDiscoveryService } from '../../../client/testing/unittest/services/discoveryService';
 import { TestsParser } from '../../../client/testing/unittest/services/parserService';
@@ -35,8 +43,12 @@ suite('Unit Tests - Unittest - Discovery', () => {
         testParser = typeMoq.Mock.ofType<ITestsParser>();
         runner = typeMoq.Mock.ofType<ITestRunner>();
 
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny())).returns(() => argsHelper.object);
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ITestRunner), typeMoq.It.isAny())).returns(() => runner.object);
+        serviceContainer
+            .setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny()))
+            .returns(() => argsHelper.object);
+        serviceContainer
+            .setup(s => s.get(typeMoq.It.isValue(ITestRunner), typeMoq.It.isAny()))
+            .returns(() => runner.object);
 
         discoveryService = new TestDiscoveryService(serviceContainer.object, testParser.object);
     });
@@ -572,7 +584,13 @@ suite('Unit Tests - Unittest - Discovery', () => {
         opts.setup(o => o.cwd).returns(() => '/home/user/dev');
         opts.setup(o => o.startDirectory).returns(() => './tests');
 
-        const discoveryOutput: string = ['a;lskdjfa', 'allikbrilkpdbfkdfbalk;nfm', '', ';;h,spmn,nlikmslkjls.bmnl;klkjna;jdfngad,lmvnjkldfhb', ''].join('\n');
+        const discoveryOutput: string = [
+            'a;lskdjfa',
+            'allikbrilkpdbfkdfbalk;nfm',
+            '',
+            ';;h,spmn,nlikmslkjls.bmnl;klkjna;jdfngad,lmvnjkldfhb',
+            ''
+        ].join('\n');
 
         const tests: Tests = testsParser.parse(discoveryOutput, opts.object);
 

@@ -13,7 +13,13 @@ import { IPlatformService } from '../platform/types';
 import { IConfigurationService, Resource } from '../types';
 import { OSType } from '../utils/platform';
 import { ShellDetector } from './shellDetector';
-import { IShellDetector, ITerminalActivationCommandProvider, ITerminalHelper, TerminalActivationProviders, TerminalShellType } from './types';
+import {
+    IShellDetector,
+    ITerminalActivationCommandProvider,
+    ITerminalHelper,
+    TerminalActivationProviders,
+    TerminalShellType
+} from './types';
 
 @injectable()
 export class TerminalHelper implements ITerminalHelper {
@@ -24,13 +30,21 @@ export class TerminalHelper implements ITerminalHelper {
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.conda) private readonly conda: ITerminalActivationCommandProvider,
-        @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.bashCShellFish) private readonly bashCShellFish: ITerminalActivationCommandProvider,
+        @inject(ITerminalActivationCommandProvider)
+        @named(TerminalActivationProviders.conda)
+        private readonly conda: ITerminalActivationCommandProvider,
+        @inject(ITerminalActivationCommandProvider)
+        @named(TerminalActivationProviders.bashCShellFish)
+        private readonly bashCShellFish: ITerminalActivationCommandProvider,
         @inject(ITerminalActivationCommandProvider)
         @named(TerminalActivationProviders.commandPromptAndPowerShell)
         private readonly commandPromptAndPowerShell: ITerminalActivationCommandProvider,
-        @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pyenv) private readonly pyenv: ITerminalActivationCommandProvider,
-        @inject(ITerminalActivationCommandProvider) @named(TerminalActivationProviders.pipenv) private readonly pipenv: ITerminalActivationCommandProvider,
+        @inject(ITerminalActivationCommandProvider)
+        @named(TerminalActivationProviders.pyenv)
+        private readonly pyenv: ITerminalActivationCommandProvider,
+        @inject(ITerminalActivationCommandProvider)
+        @named(TerminalActivationProviders.pipenv)
+        private readonly pipenv: ITerminalActivationCommandProvider,
         @multiInject(IShellDetector) shellDetectors: IShellDetector[]
     ) {
         this.shellDetector = new ShellDetector(this.platform, shellDetectors);
@@ -43,27 +57,52 @@ export class TerminalHelper implements ITerminalHelper {
     }
 
     public buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]) {
-        const isPowershell = terminalShellType === TerminalShellType.powershell || terminalShellType === TerminalShellType.powershellCore;
+        const isPowershell =
+            terminalShellType === TerminalShellType.powershell ||
+            terminalShellType === TerminalShellType.powershellCore;
         const commandPrefix = isPowershell ? '& ' : '';
         return `${commandPrefix}${command.fileToCommandArgument()} ${args.join(' ')}`.trim();
     }
-    public async getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri, interpreter?: PythonInterpreter): Promise<string[] | undefined> {
+    public async getEnvironmentActivationCommands(
+        terminalShellType: TerminalShellType,
+        resource?: Uri,
+        interpreter?: PythonInterpreter
+    ): Promise<string[] | undefined> {
         const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
         const promise = this.getActivationCommands(resource || undefined, interpreter, terminalShellType, providers);
-        this.sendTelemetry(resource, terminalShellType, EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL, promise).ignoreErrors();
+        this.sendTelemetry(
+            resource,
+            terminalShellType,
+            EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL,
+            promise
+        ).ignoreErrors();
         return promise;
     }
-    public async getEnvironmentActivationShellCommands(resource: Resource, shell: TerminalShellType, interpreter?: PythonInterpreter): Promise<string[] | undefined> {
+    public async getEnvironmentActivationShellCommands(
+        resource: Resource,
+        shell: TerminalShellType,
+        interpreter?: PythonInterpreter
+    ): Promise<string[] | undefined> {
         if (this.platform.osType === OSType.Unknown) {
             return;
         }
         const providers = [this.bashCShellFish, this.commandPromptAndPowerShell];
         const promise = this.getActivationCommands(resource, interpreter, shell, providers);
-        this.sendTelemetry(resource, shell, EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_RUNNING_CODE, promise).ignoreErrors();
+        this.sendTelemetry(
+            resource,
+            shell,
+            EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_RUNNING_CODE,
+            promise
+        ).ignoreErrors();
         return promise;
     }
     @traceDecorators.error('Failed to capture telemetry')
-    protected async sendTelemetry(resource: Resource, terminalShellType: TerminalShellType, eventName: EventName, promise: Promise<string[] | undefined>): Promise<void> {
+    protected async sendTelemetry(
+        resource: Resource,
+        terminalShellType: TerminalShellType,
+        eventName: EventName,
+        promise: Promise<string[] | undefined>
+    ): Promise<void> {
         let hasCommands = false;
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         let failed = false;
@@ -93,7 +132,9 @@ export class TerminalHelper implements ITerminalHelper {
         }
 
         // If we have a conda environment, then use that.
-        const isCondaEnvironment = interpreter ? interpreter.type === InterpreterType.Conda : await this.condaService.isCondaEnvironment(settings.pythonPath);
+        const isCondaEnvironment = interpreter
+            ? interpreter.type === InterpreterType.Conda
+            : await this.condaService.isCondaEnvironment(settings.pythonPath);
         if (isCondaEnvironment) {
             const activationCommands = interpreter
                 ? await this.conda.getActivationCommandsForInterpreter(interpreter.path, terminalShellType)

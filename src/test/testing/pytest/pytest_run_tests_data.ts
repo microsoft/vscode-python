@@ -106,8 +106,10 @@ export const allTestDetails: ITestDetails[] = [
         status: TestStatus.Fail
     },
     {
-        className: 'tests.test_foreign_nested_tests.TestNestedForeignTests.TestInheritingHere.().TestExtraNestedForeignTests.()',
-        nameToRun: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests::test_super_deep_foreign',
+        className:
+            'tests.test_foreign_nested_tests.TestNestedForeignTests.TestInheritingHere.().TestExtraNestedForeignTests.()',
+        nameToRun:
+            './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests::test_super_deep_foreign',
         simpleClassName: 'TestInheritingHere',
         fileName: path.join(...'tests/test_foreign_nested_tests.py'.split('/')),
         testName: 'test_super_deep_foreign',
@@ -123,7 +125,8 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_foreign_nested_tests.TestNestedForeignTests.TestInheritingHere.()',
-        nameToRun: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_foreign_test',
+        nameToRun:
+            './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_foreign_test',
         simpleClassName: 'TestInheritingHere',
         fileName: path.join(...'tests/test_foreign_nested_tests.py'.split('/')),
         testName: 'test_foreign_test',
@@ -139,7 +142,8 @@ export const allTestDetails: ITestDetails[] = [
     },
     {
         className: 'tests.test_foreign_nested_tests.TestNestedForeignTests.TestInheritingHere.()',
-        nameToRun: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_nested_normal',
+        nameToRun:
+            './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_nested_normal',
         fileName: path.join(...'tests/test_foreign_nested_tests.py'.split('/')),
         testName: 'test_nested_normal',
         sourceTestName: 'test_nested_normal',

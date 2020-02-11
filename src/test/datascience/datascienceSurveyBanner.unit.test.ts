@@ -16,7 +16,8 @@ suite('Data Science Survey Banner', () => {
     let browser: typemoq.IMock<IBrowserService>;
     const targetUri: string = 'https://microsoft.com';
 
-    const message = 'Can you please take 2 minutes to tell us how the Python Data Science features are working for you?';
+    const message =
+        'Can you please take 2 minutes to tell us how the Python Data Science features are working for you?';
     const yes = 'Yes, take survey now';
     const no = 'No, thanks';
 
@@ -27,7 +28,14 @@ suite('Data Science Survey Banner', () => {
     test('Data science banner should be enabled after we hit our command execution count', async () => {
         const enabledValue: boolean = true;
         const attemptCounter: number = 1000;
-        const testBanner: DataScienceSurveyBanner = preparePopup(attemptCounter, enabledValue, 0, appShell.object, browser.object, targetUri);
+        const testBanner: DataScienceSurveyBanner = preparePopup(
+            attemptCounter,
+            enabledValue,
+            0,
+            appShell.object,
+            browser.object,
+            targetUri
+        );
         const expectedUri: string = targetUri;
         let receivedUri: string = '';
         browser
@@ -50,17 +58,39 @@ suite('Data Science Survey Banner', () => {
         browser.reset();
     });
     test('Do not show data science banner when it is disabled', () => {
-        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))).verifiable(typemoq.Times.never());
+        appShell
+            .setup(a =>
+                a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
+            )
+            .verifiable(typemoq.Times.never());
         const enabledValue: boolean = false;
         const attemptCounter: number = 0;
-        const testBanner: DataScienceSurveyBanner = preparePopup(attemptCounter, enabledValue, 0, appShell.object, browser.object, targetUri);
+        const testBanner: DataScienceSurveyBanner = preparePopup(
+            attemptCounter,
+            enabledValue,
+            0,
+            appShell.object,
+            browser.object,
+            targetUri
+        );
         testBanner.showBanner().ignoreErrors();
     });
     test('Do not show data science banner if we have not hit our command count', () => {
-        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))).verifiable(typemoq.Times.never());
+        appShell
+            .setup(a =>
+                a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
+            )
+            .verifiable(typemoq.Times.never());
         const enabledValue: boolean = true;
         const attemptCounter: number = 100;
-        const testBanner: DataScienceSurveyBanner = preparePopup(attemptCounter, enabledValue, 1000, appShell.object, browser.object, targetUri);
+        const testBanner: DataScienceSurveyBanner = preparePopup(
+            attemptCounter,
+            enabledValue,
+            1000,
+            appShell.object,
+            browser.object,
+            targetUri
+        );
         testBanner.showBanner().ignoreErrors();
     });
 });
@@ -100,17 +130,26 @@ function preparePopup(
     attemptCountState.setup(a => a.value).returns(() => commandCounter);
 
     myfactory
-        .setup(a => a.createGlobalPersistentState(typemoq.It.isValue(DSSurveyStateKeys.ShowBanner), typemoq.It.isValue(true)))
+        .setup(a =>
+            a.createGlobalPersistentState(typemoq.It.isValue(DSSurveyStateKeys.ShowBanner), typemoq.It.isValue(true))
+        )
         .returns(() => {
             return enabledValState.object;
         });
     myfactory
-        .setup(a => a.createGlobalPersistentState(typemoq.It.isValue(DSSurveyStateKeys.ShowBanner), typemoq.It.isValue(false)))
+        .setup(a =>
+            a.createGlobalPersistentState(typemoq.It.isValue(DSSurveyStateKeys.ShowBanner), typemoq.It.isValue(false))
+        )
         .returns(() => {
             return enabledValState.object;
         });
     myfactory
-        .setup(a => a.createGlobalPersistentState(typemoq.It.isValue(DSSurveyStateKeys.ShowAttemptCounter), typemoq.It.isAnyNumber()))
+        .setup(a =>
+            a.createGlobalPersistentState(
+                typemoq.It.isValue(DSSurveyStateKeys.ShowAttemptCounter),
+                typemoq.It.isAnyNumber()
+            )
+        )
         .returns(() => {
             return attemptCountState.object;
         });

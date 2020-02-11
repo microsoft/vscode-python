@@ -12,7 +12,12 @@ import { Uri } from 'vscode';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { ICommandManager } from '../../../client/common/application/types';
 import { PVSC_EXTENSION_ID } from '../../../client/common/constants';
-import { developmentBuildUri, InsidersBuildInstaller, StableBuildInstaller, vsixFileExtension } from '../../../client/common/installer/extensionBuildInstaller';
+import {
+    developmentBuildUri,
+    InsidersBuildInstaller,
+    StableBuildInstaller,
+    vsixFileExtension
+} from '../../../client/common/installer/extensionBuildInstaller';
 import { FileDownloader } from '../../../client/common/net/fileDownloader';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
@@ -32,7 +37,9 @@ suite('Extension build installer - Stable build installer', async () => {
     test('Installing stable build logs progress and installs stable', async () => {
         when(output.append(ExtensionChannels.installingStableMessage())).thenReturn();
         when(output.appendLine(ExtensionChannels.installationCompleteMessage())).thenReturn();
-        when(cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID)).thenResolve(undefined);
+        when(cmdManager.executeCommand('workbench.extensions.installExtension', PVSC_EXTENSION_ID)).thenResolve(
+            undefined
+        );
         await stableBuildInstaller.install();
         verify(output.append(ExtensionChannels.installingStableMessage())).once();
         verify(output.appendLine(ExtensionChannels.installationCompleteMessage())).once();
@@ -51,7 +58,12 @@ suite('Extension build installer - Insiders build installer', async () => {
         fileDownloader = mock(FileDownloader);
         fs = mock(FileSystem);
         cmdManager = mock(CommandManager);
-        insidersBuildInstaller = new InsidersBuildInstaller(instance(output), instance(fileDownloader), instance(fs), instance(cmdManager));
+        insidersBuildInstaller = new InsidersBuildInstaller(
+            instance(output),
+            instance(fileDownloader),
+            instance(fs),
+            instance(cmdManager)
+        );
     });
     test('Installing Insiders build downloads and installs Insiders', async () => {
         const vsixFilePath = 'path/to/vsix';
@@ -64,11 +76,13 @@ suite('Extension build installer - Insiders build installer', async () => {
         when(output.appendLine(ExtensionChannels.startingDownloadOutputMessage())).thenReturn();
         when(output.appendLine(ExtensionChannels.downloadCompletedOutputMessage())).thenReturn();
         when(output.appendLine(ExtensionChannels.installationCompleteMessage())).thenReturn();
-        when(fileDownloader.downloadFile(developmentBuildUri, anything())).thenCall((_, downloadOptions: DownloadOptions) => {
-            expect(downloadOptions.extension).to.equal(options.extension, 'Incorrect file extension');
-            expect(downloadOptions.progressMessagePrefix).to.equal(options.progressMessagePrefix);
-            return Promise.resolve(vsixFilePath);
-        });
+        when(fileDownloader.downloadFile(developmentBuildUri, anything())).thenCall(
+            (_, downloadOptions: DownloadOptions) => {
+                expect(downloadOptions.extension).to.equal(options.extension, 'Incorrect file extension');
+                expect(downloadOptions.progressMessagePrefix).to.equal(options.progressMessagePrefix);
+                return Promise.resolve(vsixFilePath);
+            }
+        );
         when(cmdManager.executeCommand('workbench.extensions.installExtension', anything())).thenCall((_, cb) => {
             assert.deepEqual(cb, Uri.file(vsixFilePath), 'Wrong VSIX installed');
         });

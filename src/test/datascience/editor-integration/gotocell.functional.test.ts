@@ -13,7 +13,14 @@ import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { traceError } from '../../../client/common/logger';
 import { Commands, Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICell, ICodeLensFactory, IDataScienceCodeLensProvider, IInteractiveWindowListener, IJupyterExecution, INotebook } from '../../../client/datascience/types';
+import {
+    ICell,
+    ICodeLensFactory,
+    IDataScienceCodeLensProvider,
+    IInteractiveWindowListener,
+    IJupyterExecution,
+    INotebook
+} from '../../../client/datascience/types';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { MockDocumentManager } from '../mockDocumentManager';
 
@@ -67,11 +74,21 @@ suite('DataScience gotocell tests', () => {
         });
     }
 
-    async function createNotebook(useDefaultConfig: boolean, expectFailure?: boolean, usingDarkTheme?: boolean, purpose?: string): Promise<INotebook | undefined> {
+    async function createNotebook(
+        useDefaultConfig: boolean,
+        expectFailure?: boolean,
+        usingDarkTheme?: boolean,
+        purpose?: string
+    ): Promise<INotebook | undefined> {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
             const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-            const server = await jupyterExecution.connectToNotebookServer({ usingDarkTheme, useDefaultConfig, workingDir: testDir, purpose: purpose ? purpose : '1' });
+            const server = await jupyterExecution.connectToNotebookServer({
+                usingDarkTheme,
+                useDefaultConfig,
+                workingDir: testDir,
+                purpose: purpose ? purpose : '1'
+            });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
@@ -143,7 +160,9 @@ suite('DataScience gotocell tests', () => {
         const codeLenses = getCodeLenses();
 
         // There should be one with the ScrollTo command
-        const scrollTo = codeLenses.find(c => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine);
+        const scrollTo = codeLenses.find(
+            c => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine
+        );
         assert.equal(scrollTo, undefined, 'Goto cell code lens should not be found');
     }
 
@@ -152,7 +171,9 @@ suite('DataScience gotocell tests', () => {
         const codeLenses = getCodeLenses();
 
         // There should be one with the ScrollTo command
-        const scrollTo = codeLenses.find(c => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine);
+        const scrollTo = codeLenses.find(
+            c => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine
+        );
         assert.ok(scrollTo, 'Goto cell code lens not found');
 
         // It should have the same number as the execution count

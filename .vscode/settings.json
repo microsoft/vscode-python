@@ -41,7 +41,7 @@
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
     "typescriptHero.imports.stringQuoteStyle": "'",
-    "prettier.printWidth": 180,
+    "prettier.printWidth": 120,
     "prettier.singleQuote": true,
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true,
@@ -54,7 +54,8 @@
     "python.linting.flake8Enabled": true,
     "cucumberautocomplete.skipDocStringsFormat": true,
     "python.linting.flake8Args": [
-        "--max-line-length=120"
+        // Match what black does.
+        "--max-line-length=88"
     ],
     "typescript.preferences.importModuleSpecifier": "relative"
 }

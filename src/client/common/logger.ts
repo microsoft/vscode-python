@@ -53,6 +53,7 @@ function logToFile(logLevel: LogLevel, ...args: any[]) {
  *   To do this we need to monkey patch the console methods.
  *   This is optional (generally done when running tests on CI).
  */
+// tslint:disable-next-line: max-func-body-length
 function initializeConsoleLogger() {
     const logMethods = {
         log: Symbol.for('log'),
@@ -141,7 +142,9 @@ function initializeConsoleLogger() {
     const consoleFormatter = format.printf(({ level, message, label, timestamp }) => {
         // If we're on CI server, no need for the label (prefix)
         // Pascal casing og log level, so log files get highlighted when viewing in VSC and other editors.
-        const prefix = `${level.substring(0, 1).toUpperCase()}${level.substring(1)} ${process.env.TF_BUILD ? '' : label}`;
+        const prefix = `${level.substring(0, 1).toUpperCase()}${level.substring(1)} ${
+            process.env.TF_BUILD ? '' : label
+        }`;
         return `${prefix.trim()} ${timestamp}: ${message}`;
     });
     const consoleFormat = format.combine(
@@ -173,7 +176,9 @@ function initializeFileLogger() {
         }),
         fileFormatter
     );
-    const logFilePath = path.isAbsolute(process.env.VSC_PYTHON_LOG_FILE) ? process.env.VSC_PYTHON_LOG_FILE : path.join(EXTENSION_ROOT_DIR, process.env.VSC_PYTHON_LOG_FILE);
+    const logFilePath = path.isAbsolute(process.env.VSC_PYTHON_LOG_FILE)
+        ? process.env.VSC_PYTHON_LOG_FILE
+        : path.join(EXTENSION_ROOT_DIR, process.env.VSC_PYTHON_LOG_FILE);
     const logFileSink = new transports.File({
         format: fileFormat,
         filename: logFilePath,

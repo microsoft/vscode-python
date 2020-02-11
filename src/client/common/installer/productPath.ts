@@ -37,7 +37,9 @@ export abstract class BaseProductPathsService implements IProductPathService {
         // User may have customized the module name or provided the fully qualifieid path.
         const executableName = this.getExecutableNameFromSettings(product, resource);
 
-        return typeof moduleName === 'string' && moduleName.length > 0 && path.basename(executableName) === executableName;
+        return (
+            typeof moduleName === 'string' && moduleName.length > 0 && path.basename(executableName) === executableName
+        );
     }
 }
 

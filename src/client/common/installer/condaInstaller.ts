@@ -60,7 +60,9 @@ export class CondaInstaller extends ModuleInstaller {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
         const condaFile = await condaService.getCondaFile();
 
-        const pythonPath = isResource(resource) ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath : resource.path;
+        const pythonPath = isResource(resource)
+            ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
+            : resource.path;
         const info = await condaService.getCondaEnvironment(pythonPath);
         const args = ['install'];
 
@@ -86,7 +88,9 @@ export class CondaInstaller extends ModuleInstaller {
      */
     private async isCurrentEnvironmentACondaEnvironment(resource?: InterpreterUri): Promise<boolean> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
-        const pythonPath = isResource(resource) ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath : resource.path;
+        const pythonPath = isResource(resource)
+            ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath
+            : resource.path;
         return condaService.isCondaEnvironment(pythonPath);
     }
 }

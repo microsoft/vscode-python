@@ -65,14 +65,22 @@ export class InterpreterHelper implements IInterpreterHelper {
                 traceError(`Failed to create File hash for interpreter ${pythonPath}`, ex);
                 return '';
             });
-        const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(`${pythonPath}.v3`, undefined, EXPITY_DURATION);
+        const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(
+            `${pythonPath}.v3`,
+            undefined,
+            EXPITY_DURATION
+        );
         if (store.value && fileHash && store.value.fileHash === fileHash) {
             return store.value;
         }
-        const processService = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ pythonPath });
+        const processService = await this.serviceContainer
+            .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+            .create({ pythonPath });
 
         try {
-            const info = await processService.getInterpreterInformation().catch<InterpreterInfomation | undefined>(() => undefined);
+            const info = await processService
+                .getInterpreterInformation()
+                .catch<InterpreterInfomation | undefined>(() => undefined);
             if (!info) {
                 return;
             }

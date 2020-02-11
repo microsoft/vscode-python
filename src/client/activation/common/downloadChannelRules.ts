@@ -29,7 +29,11 @@ export class DownloadBetaChannelRule implements IDownloadChannelRule {
     public async shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean> {
         // For beta, we do this only once a day.
         const stateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        const globalState = stateFactory.createGlobalPersistentState<boolean>(lastCheckedForLSDateTimeCacheKey, true, frequencyForBetalLSDownloadCheck);
+        const globalState = stateFactory.createGlobalPersistentState<boolean>(
+            lastCheckedForLSDateTimeCacheKey,
+            true,
+            frequencyForBetalLSDownloadCheck
+        );
 
         // If we have checked it in the last 24 hours, then ensure we don't do it again.
         if (globalState.value) {

@@ -8,7 +8,15 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterPasswordConnectInfo, IJupyterSession, IJupyterSessionManager } from '../types';
+import {
+    IConnection,
+    IJupyterKernel,
+    IJupyterKernelSpec,
+    IJupyterPasswordConnect,
+    IJupyterPasswordConnectInfo,
+    IJupyterSession,
+    IJupyterSessionManager
+} from '../types';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
@@ -93,12 +101,22 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             });
     }
 
-    public async startNew(kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
+    public async startNew(
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterSession> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager || !this.serverSettings) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
         // Create a new session and attempt to connect to it
-        const session = new JupyterSession(this.connInfo, this.serverSettings, kernelSpec, this.sessionManager, this.contentsManager, this.kernelSelector);
+        const session = new JupyterSession(
+            this.connInfo,
+            this.serverSettings,
+            kernelSpec,
+            this.sessionManager,
+            this.contentsManager,
+            this.kernelSelector
+        );
         try {
             await session.connect(cancelToken);
         } finally {
@@ -118,7 +136,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             await this.sessionManager.refreshSpecs();
 
             // Enumerate all of the kernel specs, turning each into a JupyterKernelSpec
-            const kernelspecs = this.sessionManager.specs && this.sessionManager.specs.kernelspecs ? this.sessionManager.specs.kernelspecs : {};
+            const kernelspecs =
+                this.sessionManager.specs && this.sessionManager.specs.kernelspecs
+                    ? this.sessionManager.specs.kernelspecs
+                    : {};
             const keys = Object.keys(kernelspecs);
             return keys.map(k => {
                 const spec = kernelspecs[k];
@@ -154,7 +175,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 throw new Error('Password request not allowed.');
             }
             serverSettings = { ...serverSettings, token: '' };
-            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl, connInfo.allowUnauthorized ? true : false);
+            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(
+                connInfo.baseUrl,
+                connInfo.allowUnauthorized ? true : false
+            );
             if (pwSettings && !pwSettings.emptyPassword) {
                 cookieString = this.getSessionCookieString(pwSettings);
                 const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
@@ -183,8 +207,12 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         serverSettings = {
             ...serverSettings,
             init: requestInit,
-            // tslint:disable-next-line:no-any
-            WebSocket: createJupyterWebSocket(this.config.getSettings().datascience.verboseLogging, cookieString, allowUnauthorized) as any
+            WebSocket: createJupyterWebSocket(
+                this.config.getSettings().datascience.verboseLogging,
+                cookieString,
+                allowUnauthorized
+                // tslint:disable-next-line:no-any
+            ) as any
         };
 
         return ServerConnection.makeSettings(serverSettings);

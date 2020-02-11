@@ -54,6 +54,37 @@ export function splitMultilineString(source: nbformat.MultilineString): string[]
     return [];
 }
 
+export function removeLinesFromFrontAndBack(code: string): string {
+    const lines = code.splitLines({ trim: false, removeEmptyEntries: false });
+    let foundNonEmptyLine = false;
+    let lastNonEmptyLine = -1;
+    let result: string[] = [];
+    parseForComments(
+        lines,
+        (_s, i) => {
+            result.push(lines[i]);
+            lastNonEmptyLine = i;
+        },
+        (s, i) => {
+            const trimmed = s.trim();
+            if (foundNonEmptyLine || trimmed) {
+                result.push(lines[i]);
+                foundNonEmptyLine = true;
+            }
+            if (trimmed) {
+                lastNonEmptyLine = i;
+            }
+        }
+    );
+
+    // Remove empty lines off the bottom too
+    if (lastNonEmptyLine < lines.length - 1) {
+        result = result.slice(0, result.length - (lines.length - 1 - lastNonEmptyLine));
+    }
+
+    return result.join('\n');
+}
+
 // Strip out comment lines from code
 export function stripComments(str: string): string {
     let result: string = '';
@@ -130,7 +161,11 @@ export function generateMarkdownFromCodeLines(lines: string[]) {
 }
 
 // tslint:disable-next-line: cyclomatic-complexity
-export function parseForComments(lines: string[], foundCommentLine: (s: string, i: number) => void, foundNonCommentLine: (s: string, i: number) => void) {
+export function parseForComments(
+    lines: string[],
+    foundCommentLine: (s: string, i: number) => void,
+    foundNonCommentLine: (s: string, i: number) => void
+) {
     // Check for either multiline or single line comments
     let insideMultilineComment: string | undefined;
     let insideMultilineQuote: string | undefined;
@@ -138,8 +173,16 @@ export function parseForComments(lines: string[], foundCommentLine: (s: string, 
     for (const l of lines) {
         const trim = l.trim();
         // Multiline is triple quotes of either kind
-        const isMultilineComment = trim.startsWith(SingleQuoteMultiline) ? SingleQuoteMultiline : trim.startsWith(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
-        const isMultilineQuote = trim.includes(SingleQuoteMultiline) ? SingleQuoteMultiline : trim.includes(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
+        const isMultilineComment = trim.startsWith(SingleQuoteMultiline)
+            ? SingleQuoteMultiline
+            : trim.startsWith(DoubleQuoteMultiline)
+            ? DoubleQuoteMultiline
+            : undefined;
+        const isMultilineQuote = trim.includes(SingleQuoteMultiline)
+            ? SingleQuoteMultiline
+            : trim.includes(DoubleQuoteMultiline)
+            ? DoubleQuoteMultiline
+            : undefined;
 
         // Check for ending quotes of multiline string
         if (insideMultilineQuote) {

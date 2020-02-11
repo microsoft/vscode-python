@@ -5,14 +5,28 @@ import * as assert from 'assert';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
-import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService
+} from '../../client/common/application/types';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
-import { IInterpreterComparer, IInterpreterQuickPickItem, IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
-import { IInterpreterService, InterpreterType, IShebangCodeLensProvider, PythonInterpreter } from '../../client/interpreter/contracts';
+import {
+    IInterpreterComparer,
+    IInterpreterQuickPickItem,
+    IPythonPathUpdaterServiceManager
+} from '../../client/interpreter/configuration/types';
+import {
+    IInterpreterService,
+    InterpreterType,
+    IShebangCodeLensProvider,
+    PythonInterpreter
+} from '../../client/interpreter/contracts';
 
 const info: PythonInterpreter = {
     architecture: Architecture.Unknown,
@@ -55,7 +69,10 @@ suite('Interpreters - selector', () => {
 
     class TestInterpreterSelector extends InterpreterSelector {
         // tslint:disable-next-line:no-unnecessary-override
-        public async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<IInterpreterQuickPickItem> {
+        public async suggestionToQuickPickItem(
+            suggestion: PythonInterpreter,
+            workspaceUri?: Uri
+        ): Promise<IInterpreterQuickPickItem> {
             return super.suggestionToQuickPickItem(suggestion, workspaceUri);
         }
         // tslint:disable-next-line:no-unnecessary-override
@@ -80,7 +97,9 @@ suite('Interpreters - selector', () => {
 
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        fileSystem.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns((a: string, b: string) => a === b);
+        fileSystem
+            .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .returns((a: string, b: string) => a === b);
         configurationService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
         comparer.setup(c => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => 0);
@@ -111,7 +130,9 @@ suite('Interpreters - selector', () => {
             ].map(item => {
                 return { ...info, ...item };
             });
-            interpreterService.setup(x => x.getInterpreters(TypeMoq.It.isAny())).returns(() => new Promise(resolve => resolve(initial)));
+            interpreterService
+                .setup(x => x.getInterpreters(TypeMoq.It.isAny()))
+                .returns(() => new Promise(resolve => resolve(initial)));
 
             const actual = await selector.getSuggestions(undefined);
 
@@ -126,8 +147,16 @@ suite('Interpreters - selector', () => {
 
             assert.equal(actual.length, expected.length, 'Suggestion lengths are different.');
             for (let i = 0; i < expected.length; i += 1) {
-                assert.equal(actual[i].label, expected[i].label, `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${actual[i].label}'.`);
-                assert.equal(actual[i].path, expected[i].path, `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${actual[i].path}'.`);
+                assert.equal(
+                    actual[i].label,
+                    expected[i].label,
+                    `Suggestion label is different at ${i}: exected '${expected[i].label}', found '${actual[i].label}'.`
+                );
+                assert.equal(
+                    actual[i].path,
+                    expected[i].path,
+                    `Suggestion path is different at ${i}: exected '${expected[i].path}', found '${actual[i].path}'.`
+                );
             }
         });
     });
@@ -164,7 +193,12 @@ suite('Interpreters - selector', () => {
             .verifiable(TypeMoq.Times.once());
         pythonPathUpdater
             .setup(p =>
-                p.updatePythonPath(TypeMoq.It.isValue(selectedItem.path), TypeMoq.It.isValue(ConfigurationTarget.Global), TypeMoq.It.isValue('ui'), TypeMoq.It.isValue(undefined))
+                p.updatePythonPath(
+                    TypeMoq.It.isValue(selectedItem.path),
+                    TypeMoq.It.isValue(ConfigurationTarget.Global),
+                    TypeMoq.It.isValue('ui'),
+                    TypeMoq.It.isValue(undefined)
+                )
             )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
@@ -315,7 +349,9 @@ suite('Interpreters - selector', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         pythonPathUpdater
-            .setup(p => p.updatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(p =>
+                p.updatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+            )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 

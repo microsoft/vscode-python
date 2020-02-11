@@ -47,7 +47,12 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
         }
 
         // Decorate terminal service with the synchronous service.
-        return new SynchronousTerminalService(this.fs, this.interpreterService, this.terminalServices.get(id)!, interpreter);
+        return new SynchronousTerminalService(
+            this.fs,
+            this.interpreterService,
+            this.terminalServices.get(id)!,
+            interpreter
+        );
     }
     public createTerminalService(resource?: Uri, title?: string): ITerminalService {
         title = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
@@ -57,7 +62,9 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
         if (!resource && !interpreter) {
             return title;
         }
-        const workspaceFolder = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource || undefined);
+        const workspaceFolder = this.serviceContainer
+            .get<IWorkspaceService>(IWorkspaceService)
+            .getWorkspaceFolder(resource || undefined);
         return `${title}:${workspaceFolder?.uri.fsPath || ''}:${interpreter?.path}`;
     }
 }

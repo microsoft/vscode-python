@@ -11,7 +11,12 @@ import { BANNER_NAME_DS_SURVEY, IDisposable, IOutputChannel, IPythonExtensionBan
 import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
-import { ICodeWatcher, IDataScienceCodeLensProvider, IDataScienceCommandListener, INotebookEditorProvider } from '../types';
+import {
+    ICodeWatcher,
+    IDataScienceCodeLensProvider,
+    IDataScienceCommandListener,
+    INotebookEditorProvider
+} from '../types';
 import { KernelSwitcherCommand } from './kernelSwitcher';
 import { JupyterServerSelectorCommand } from './serverSelector';
 
@@ -21,11 +26,15 @@ export class CommandRegistry implements IDisposable {
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
-        @multiInject(IDataScienceCommandListener) @optional() private commandListeners: IDataScienceCommandListener[] | undefined,
+        @multiInject(IDataScienceCommandListener)
+        @optional()
+        private commandListeners: IDataScienceCommandListener[] | undefined,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(JupyterServerSelectorCommand) private readonly serverSelectedCommand: JupyterServerSelectorCommand,
         @inject(KernelSwitcherCommand) private readonly kernelSwitcherCommand: KernelSwitcherCommand,
-        @inject(IPythonExtensionBanner) @named(BANNER_NAME_DS_SURVEY) private readonly dataScienceSurveyBanner: IPythonExtensionBanner,
+        @inject(IPythonExtensionBanner)
+        @named(BANNER_NAME_DS_SURVEY)
+        private readonly dataScienceSurveyBanner: IPythonExtensionBanner,
         @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel
@@ -67,8 +76,11 @@ export class CommandRegistry implements IDisposable {
     public dispose() {
         this.disposables.forEach(d => d.dispose());
     }
-    // tslint:disable-next-line: no-any
-    private registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, callback: (...args: U) => any) {
+    private registerCommand<
+        E extends keyof ICommandNameArgumentTypeMapping,
+        U extends ICommandNameArgumentTypeMapping[E]
+        // tslint:disable-next-line: no-any
+    >(command: E, callback: (...args: U) => any) {
         const disposable = this.commandManager.registerCommand(command, callback, this);
         this.disposables.push(disposable);
     }
@@ -128,7 +140,13 @@ export class CommandRegistry implements IDisposable {
 
     // Note: see codewatcher.ts where the runcell command args are attached. The reason we don't have any
     // objects for parameters is because they can't be recreated when passing them through the LiveShare API
-    private async runCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {
+    private async runCell(
+        file: string,
+        startLine: number,
+        startChar: number,
+        endLine: number,
+        endChar: number
+    ): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
         const codeWatcher = this.getCodeWatcher(file);
         if (codeWatcher) {
@@ -204,7 +222,6 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    // tslint:disable-next-line:no-any
     private async runSelectionOrLine(): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
@@ -216,7 +233,13 @@ export class CommandRegistry implements IDisposable {
         }
     }
 
-    private async debugCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {
+    private async debugCell(
+        file: string,
+        startLine: number,
+        startChar: number,
+        endLine: number,
+        endChar: number
+    ): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();
 
         if (file) {
@@ -283,7 +306,10 @@ export class CommandRegistry implements IDisposable {
         if (currentCodeLens) {
             const activeCodeWatcher = this.getCurrentCodeWatcher();
             if (activeCodeWatcher) {
-                return activeCodeWatcher.runAllCellsAbove(currentCodeLens.range.start.line, currentCodeLens.range.start.character);
+                return activeCodeWatcher.runAllCellsAbove(
+                    currentCodeLens.range.start.line,
+                    currentCodeLens.range.start.character
+                );
             }
         } else {
             return Promise.resolve();
@@ -297,7 +323,10 @@ export class CommandRegistry implements IDisposable {
         if (currentCodeLens) {
             const activeCodeWatcher = this.getCurrentCodeWatcher();
             if (activeCodeWatcher) {
-                return activeCodeWatcher.runCellAndAllBelow(currentCodeLens.range.start.line, currentCodeLens.range.start.character);
+                return activeCodeWatcher.runCellAndAllBelow(
+                    currentCodeLens.range.start.line,
+                    currentCodeLens.range.start.character
+                );
             }
         } else {
             return Promise.resolve();
@@ -331,7 +360,10 @@ export class CommandRegistry implements IDisposable {
         if (activeEditor && activeCodeWatcher) {
             // Find the cell that matches
             return activeCodeWatcher.getCodeLenses().find((c: CodeLens) => {
-                if (c.range.end.line >= activeEditor.selection.anchor.line && c.range.start.line <= activeEditor.selection.anchor.line) {
+                if (
+                    c.range.end.line >= activeEditor.selection.anchor.line &&
+                    c.range.start.line <= activeEditor.selection.anchor.line
+                ) {
                     return true;
                 }
                 return false;

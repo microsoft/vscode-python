@@ -5,7 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
-import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, StableLanguageServerPackageRepository } from '../common/packageRepository';
+import {
+    BetaLanguageServerPackageRepository,
+    DailyLanguageServerPackageRepository,
+    StableLanguageServerPackageRepository
+} from '../common/packageRepository';
 
 const languageServerPackageName = 'python-language-server';
 

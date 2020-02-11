@@ -38,7 +38,12 @@ export function matchNamedRegEx(data: string, regex: string): IRegexGroup | unde
     return undefined;
 }
 
-export function parseLine(line: string, regex: string, linterID: LinterId, colOffset: number = 0): ILintMessage | undefined {
+export function parseLine(
+    line: string,
+    regex: string,
+    linterID: LinterId,
+    colOffset: number = 0
+): ILintMessage | undefined {
     const match = matchNamedRegEx(line, regex)!;
     if (!match) {
         return;
@@ -94,10 +99,14 @@ export abstract class BaseLinter implements ILinter {
 
     protected getWorkspaceRootPath(document: vscode.TextDocument): string {
         const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
-        const workspaceRootPath = workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string' ? workspaceFolder.uri.fsPath : undefined;
+        const workspaceRootPath =
+            workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string' ? workspaceFolder.uri.fsPath : undefined;
         return typeof workspaceRootPath === 'string' ? workspaceRootPath : path.dirname(document.uri.fsPath);
     }
-    protected abstract runLinter(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]>;
+    protected abstract runLinter(
+        document: vscode.TextDocument,
+        cancellation: vscode.CancellationToken
+    ): Promise<ILintMessage[]>;
 
     // tslint:disable-next-line:no-any
     protected parseMessagesSeverity(error: string, categorySeverity: any): LintMessageSeverity {
@@ -123,15 +132,26 @@ export abstract class BaseLinter implements ILinter {
         return LintMessageSeverity.Information;
     }
 
-    protected async run(args: string[], document: vscode.TextDocument, cancellation: vscode.CancellationToken, regEx: string = REGEX): Promise<ILintMessage[]> {
+    protected async run(
+        args: string[],
+        document: vscode.TextDocument,
+        cancellation: vscode.CancellationToken,
+        regEx: string = REGEX
+    ): Promise<ILintMessage[]> {
         if (!this.info.isEnabled(document.uri)) {
             return [];
         }
         const executionInfo = this.info.getExecutionInfo(args, document.uri);
         const cwd = this.getWorkspaceRootPath(document);
-        const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
+        const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(
+            IPythonToolExecutionService
+        );
         try {
-            const result = await pythonToolsExecutionService.exec(executionInfo, { cwd, token: cancellation, mergeStdOutErr: false }, document.uri);
+            const result = await pythonToolsExecutionService.exec(
+                executionInfo,
+                { cwd, token: cancellation, mergeStdOutErr: false },
+                document.uri
+            );
             this.displayLinterResultHeader(result.stdout);
             return await this.parseMessages(result.stdout, document, cancellation, regEx);
         } catch (error) {
@@ -140,7 +160,12 @@ export abstract class BaseLinter implements ILinter {
         }
     }
 
-    protected async parseMessages(output: string, _document: vscode.TextDocument, _token: vscode.CancellationToken, regEx: string) {
+    protected async parseMessages(
+        output: string,
+        _document: vscode.TextDocument,
+        _token: vscode.CancellationToken,
+        regEx: string
+    ) {
         const outputLines = output.splitLines({ removeEmptyEntries: false, trim: false });
         return this.parseLines(outputLines, regEx);
     }

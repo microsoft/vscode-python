@@ -8,7 +8,10 @@
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
-import { azureCDNBlobStorageAccount, LanguageServerDownloadChannel } from '../../../client/activation/common/packageRepository';
+import {
+    azureCDNBlobStorageAccount,
+    LanguageServerDownloadChannel
+} from '../../../client/activation/common/packageRepository';
 import { DotNetLanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { PlatformName } from '../../../client/activation/types';
 import { IApplicationEnvironment } from '../../../client/common/application/types';
@@ -30,7 +33,11 @@ suite('Language Server - Package Service', () => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         platform = typeMoq.Mock.ofType<IPlatformService>();
         appVersion = typeMoq.Mock.ofType<IApplicationEnvironment>();
-        lsPackageService = new DotNetLanguageServerPackageService(serviceContainer.object, appVersion.object, platform.object);
+        lsPackageService = new DotNetLanguageServerPackageService(
+            serviceContainer.object,
+            appVersion.object,
+            platform.object
+        );
         lsPackageService.getLanguageServerDownloadChannel = () => 'stable';
     });
     function setMinVersionOfLs(version: string) {
@@ -42,7 +49,9 @@ suite('Language Server - Package Service', () => {
         test(`Get Package name for Windows (${bitness})`, async () => {
             platform.setup(p => p.osType).returns(() => OSType.Windows);
             platform.setup(p => p.is64bit).returns(() => is64Bit);
-            const expectedName = is64Bit ? `${downloadBaseFileName}-${PlatformName.Windows64Bit}` : `${downloadBaseFileName}-${PlatformName.Windows32Bit}`;
+            const expectedName = is64Bit
+                ? `${downloadBaseFileName}-${PlatformName.Windows64Bit}`
+                : `${downloadBaseFileName}-${PlatformName.Windows32Bit}`;
 
             const name = lsPackageService.getNugetPackageName();
 
@@ -82,7 +91,9 @@ suite('Language Server - Package Service', () => {
         const expectedPackage = packages[1];
         const repo = typeMoq.Mock.ofType<INugetRepository>();
         const nuget = typeMoq.Mock.ofType<INugetService>();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny())).returns(() => repo.object);
+        serviceContainer
+            .setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny()))
+            .returns(() => repo.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget.object);
 
         repo.setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
@@ -113,7 +124,9 @@ suite('Language Server - Package Service', () => {
         const expectedPackage = packages[0];
         const repo = typeMoq.Mock.ofType<INugetRepository>();
         const nuget = new NugetService();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny())).returns(() => repo.object);
+        serviceContainer
+            .setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny()))
+            .returns(() => repo.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
 
         repo.setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
@@ -137,7 +150,9 @@ suite('Language Server - Package Service', () => {
         ];
         const repo = typeMoq.Mock.ofType<INugetRepository>();
         const nuget = new NugetService();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny())).returns(() => repo.object);
+        serviceContainer
+            .setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny()))
+            .returns(() => repo.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
 
         repo.setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
@@ -167,7 +182,11 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
         appVersion = typeMoq.Mock.ofType<IApplicationEnvironment>();
         configService = typeMoq.Mock.ofType<IConfigurationService>();
         serviceContainer.setup(s => s.get(IConfigurationService)).returns(() => configService.object);
-        lsPackageService = new DotNetLanguageServerPackageService(serviceContainer.object, appVersion.object, platform.object);
+        lsPackageService = new DotNetLanguageServerPackageService(
+            serviceContainer.object,
+            appVersion.object,
+            platform.object
+        );
         lsPackageService.isAlphaVersionOfExtension = () => true;
     });
     test("If 'python.analysis.downloadChannel' setting is specified, return the value of the setting", async () => {

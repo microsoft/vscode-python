@@ -5,7 +5,13 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugAdapterServer, DebugSession, WorkspaceFolder } from 'vscode';
+import {
+    DebugAdapterDescriptor,
+    DebugAdapterExecutable,
+    DebugAdapterServer,
+    DebugSession,
+    WorkspaceFolder
+} from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
 import { traceVerbose } from '../../../common/logger';
@@ -27,7 +33,10 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {}
-    public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
+    public async createDebugAdapterDescriptor(
+        session: DebugSession,
+        executable: DebugAdapterExecutable | undefined
+    ): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as LaunchRequestArguments | AttachRequestArguments;
 
         if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
@@ -60,10 +69,18 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
 
                     if (await this.useNewPtvsd(pythonPath)) {
                         sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
-                        return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'wheels', 'ptvsd', 'adapter'), ...logArgs]);
+                        return new DebugAdapterExecutable(pythonPath, [
+                            path.join(ptvsdPathToUse, 'wheels', 'ptvsd', 'adapter'),
+                            ...logArgs
+                        ]);
                     } else {
-                        sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: false });
-                        return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'no_wheels', 'ptvsd', 'adapter'), ...logArgs]);
+                        sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, {
+                            usingWheels: false
+                        });
+                        return new DebugAdapterExecutable(pythonPath, [
+                            path.join(ptvsdPathToUse, 'no_wheels', 'ptvsd', 'adapter'),
+                            ...logArgs
+                        ]);
                     }
                 }
             }
@@ -104,7 +121,14 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             return ['--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString(), ...waitArgs];
         }
-        return ['--default', '--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString(), ...waitArgs];
+        return [
+            '--default',
+            '--host',
+            remoteDebugOptions.host,
+            '--port',
+            remoteDebugOptions.port.toString(),
+            ...waitArgs
+        ];
     }
 
     /**
@@ -118,7 +142,10 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      * @returns {Promise<string>} Path to the python interpreter for this workspace.
      * @memberof DebugAdapterDescriptorFactory
      */
-    private async getPythonPath(configuration: LaunchRequestArguments | AttachRequestArguments, workspaceFolder?: WorkspaceFolder): Promise<string> {
+    private async getPythonPath(
+        configuration: LaunchRequestArguments | AttachRequestArguments,
+        workspaceFolder?: WorkspaceFolder
+    ): Promise<string> {
         if (configuration.pythonPath) {
             return configuration.pythonPath;
         }
@@ -148,7 +175,9 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      * @memberof DebugAdapterDescriptorFactory
      */
     private async notifySelectInterpreter() {
-        // tslint:disable-next-line: messages-must-be-localized
-        await this.appShell.showErrorMessage('Please install Python or select a Python Interpreter to use the debugger.');
+        await this.appShell.showErrorMessage(
+            // tslint:disable-next-line: messages-must-be-localized
+            'Please install Python or select a Python Interpreter to use the debugger.'
+        );
     }
 }

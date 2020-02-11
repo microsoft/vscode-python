@@ -21,13 +21,25 @@ import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'noseFiles');
-const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'single');
-const filesToDelete = [path.join(UNITTEST_TEST_FILES_PATH, '.noseids'), path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')];
+const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
+    EXTENSION_ROOT_DIR,
+    'src',
+    'test',
+    'pythonFiles',
+    'testFiles',
+    'single'
+);
+const filesToDelete = [
+    path.join(UNITTEST_TEST_FILES_PATH, '.noseids'),
+    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')
+];
 
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - nose - run against actual python process', () => {
     let ioc: UnitTestIocContainer;
-    const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
+    const configTarget = IS_MULTI_ROOT_TEST
+        ? vscode.ConfigurationTarget.WorkspaceFolder
+        : vscode.ConfigurationTarget.Workspace;
 
     suiteSetup(async () => {
         filesToDelete.forEach(file => {
@@ -67,18 +79,26 @@ suite('Unit Tests - nose - run against actual python process', () => {
 
         ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(
+            InterpeterHashProviderFactory,
+            InterpeterHashProviderFactory
+        );
         ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
 
     async function injectTestDiscoveryOutput(outputFileName: string) {
-        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
+        const procService = (await ioc.serviceContainer
+            .get<IProcessServiceFactory>(IProcessServiceFactory)
+            .create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
             if (args.indexOf('--collect-only') >= 0) {
                 callback({
                     out: fs
                         .readFileSync(path.join(UNITTEST_TEST_FILES_PATH, outputFileName), 'utf8')
-                        .replace(/\/Users\/donjayamanne\/.vscode\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles\/noseFiles/g, UNITTEST_TEST_FILES_PATH),
+                        .replace(
+                            /\/Users\/donjayamanne\/.vscode\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles\/noseFiles/g,
+                            UNITTEST_TEST_FILES_PATH
+                        ),
                     source: 'stdout'
                 });
             }
@@ -86,7 +106,9 @@ suite('Unit Tests - nose - run against actual python process', () => {
     }
 
     async function injectTestRunOutput(outputFileName: string, failedOutput: boolean = false) {
-        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
+        const procService = (await ioc.serviceContainer
+            .get<IProcessServiceFactory>(IProcessServiceFactory)
+            .create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
             if (failedOutput && args.indexOf('--failed') === -1) {
                 return;
@@ -163,7 +185,12 @@ suite('Unit Tests - nose - run against actual python process', () => {
         const testSuiteToRun = tests.testSuites.find(s => s.xmlClassName === 'test_root.Test_Root_test1');
         assert.ok(testSuiteToRun, 'Test suite not found');
         // tslint:disable-next-line:no-non-null-assertion
-        const testSuite: TestsToRun = { testFile: [], testFolder: [], testFunction: [], testSuite: [testSuiteToRun!.testSuite] };
+        const testSuite: TestsToRun = {
+            testFile: [],
+            testFolder: [],
+            testFunction: [],
+            testSuite: [testSuiteToRun!.testSuite]
+        };
         const results = await testManager.runTest(CommandSource.ui, testSuite);
         assert.equal(results.summary.errors, 0, 'Errors');
         assert.equal(results.summary.failures, 1, 'Failures');
@@ -181,7 +208,12 @@ suite('Unit Tests - nose - run against actual python process', () => {
         const testFnToRun = tests.testFunctions.find(f => f.xmlClassName === 'test_root.Test_Root_test1');
         assert.ok(testFnToRun, 'Test function not found');
         // tslint:disable-next-line:no-non-null-assertion
-        const testFn: TestsToRun = { testFile: [], testFolder: [], testFunction: [testFnToRun!.testFunction], testSuite: [] };
+        const testFn: TestsToRun = {
+            testFile: [],
+            testFolder: [],
+            testFunction: [testFnToRun!.testFunction],
+            testSuite: []
+        };
         const results = await testManager.runTest(CommandSource.ui, testFn);
         assert.equal(results.summary.errors, 0, 'Errors');
         assert.equal(results.summary.failures, 1, 'Failures');

@@ -28,7 +28,10 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
     }
 
     public render() {
-        const serverTextSize = getLocString('DataScience.jupyterServer', 'Jupyter Server').length + this.props.kernel.localizedUri.length + 4; // plus 4 for the icon
+        const serverTextSize =
+            getLocString('DataScience.jupyterServer', 'Jupyter Server').length +
+            this.props.kernel.localizedUri.length +
+            4; // plus 4 for the icon
         const displayNameTextSize = this.props.kernel.displayName.length + this.props.kernel.jupyterServerStatus.length;
         const dynamicFont: React.CSSProperties = {
             fontSize: this.props.font.size > 2 ? this.props.font.size - 2 : this.props.font.size,
@@ -48,7 +51,11 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
                     <div className="kernel-status-text" title={this.props.kernel.localizedUri}>
                         {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.localizedUri}
                     </div>
-                    <Image baseTheme={this.props.baseTheme} class="image-button-image kernel-status-icon" image={this.getIcon()} />
+                    <Image
+                        baseTheme={this.props.baseTheme}
+                        class="image-button-image kernel-status-icon"
+                        image={this.getIcon()}
+                    />
                 </div>
                 <div className="kernel-status-divider" />
                 {this.renderKernelStatus(displayNameTextWidth)}
@@ -59,7 +66,12 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
     private renderKernelStatus(displayNameTextWidth: React.CSSProperties) {
         if (this.isKernelSelectionAllowed) {
             return (
-                <div className="kernel-status-section kernel-status-section-hoverable kernel-status-status" style={displayNameTextWidth} onClick={this.selectKernel} role="button">
+                <div
+                    className="kernel-status-section kernel-status-section-hoverable kernel-status-status"
+                    style={displayNameTextWidth}
+                    onClick={this.selectKernel}
+                    role="button"
+                >
                     {this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}
                 </div>
             );
@@ -78,7 +90,9 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
         }
     }
     private getIcon(): ImageName {
-        return this.props.kernel.jupyterServerStatus === ServerStatus.NotStarted ? ImageName.JupyterServerDisconnected : ImageName.JupyterServerConnected;
+        return this.props.kernel.jupyterServerStatus === ServerStatus.NotStarted
+            ? ImageName.JupyterServerDisconnected
+            : ImageName.JupyterServerConnected;
     }
 
     private getMaxWidth(charLenght: number): string {

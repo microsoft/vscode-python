@@ -75,12 +75,18 @@ suite('Environment Variables Service', () => {
         });
 
         test('Simple variable substitution is supported', async () => {
-            const vars = await variablesService.parseFile(path.join(envFilesFolderPath, '.env6'), { BINDIR: '/usr/bin' });
+            const vars = await variablesService.parseFile(path.join(envFilesFolderPath, '.env6'), {
+                BINDIR: '/usr/bin'
+            });
 
             expect(vars).to.not.equal(undefined, 'Variables is undefiend');
             expect(Object.keys(vars!)).lengthOf(3, 'Incorrect number of variables');
             expect(vars).to.have.property('REPO', '/home/user/git/foobar', 'value is invalid');
-            expect(vars).to.have.property('PYTHONPATH', '/home/user/git/foobar/foo:/home/user/git/foobar/bar', 'value is invalid');
+            expect(vars).to.have.property(
+                'PYTHONPATH',
+                '/home/user/git/foobar/foo:/home/user/git/foobar/bar',
+                'value is invalid'
+            );
             expect(vars).to.have.property('PYTHON', '/usr/bin/python3', 'value is invalid');
         });
     });

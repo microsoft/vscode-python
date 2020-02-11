@@ -27,7 +27,10 @@ import { FileSettings, IInteractiveWindowListener, INotebookEditor, INotebookEdi
  */
 @injectable()
 export class AutoSaveService implements IInteractiveWindowListener {
-    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
+    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
+        message: string;
+        payload: any;
+    }>();
     private disposables: IDisposable[] = [];
     private notebookUri?: Uri;
     private timeout?: ReturnType<typeof setTimeout>;
@@ -54,7 +57,11 @@ export class AutoSaveService implements IInteractiveWindowListener {
         if (message === InteractiveWindowMessages.LoadAllCellsComplete) {
             const notebook = this.getNotebook();
             if (!notebook) {
-                traceError(`Received message ${message}, but there is no notebook for ${this.notebookUri ? this.notebookUri.fsPath : undefined}`);
+                traceError(
+                    `Received message ${message}, but there is no notebook for ${
+                        this.notebookUri ? this.notebookUri.fsPath : undefined
+                    }`
+                );
                 return;
             }
             this.disposables.push(notebook.modified(this.onNotebookModified, this, this.disposables));
@@ -92,7 +99,10 @@ export class AutoSaveService implements IInteractiveWindowListener {
         };
     }
     private onSettingsChanded(e: ConfigurationChangeEvent) {
-        if (e.affectsConfiguration('files.autoSave', this.notebookUri) || e.affectsConfiguration('files.autoSaveDelay', this.notebookUri)) {
+        if (
+            e.affectsConfiguration('files.autoSave', this.notebookUri) ||
+            e.affectsConfiguration('files.autoSaveDelay', this.notebookUri)
+        ) {
             // Reset the timer, as we may have increased it, turned it off or other.
             this.clearTimeout();
             this.setTimer();

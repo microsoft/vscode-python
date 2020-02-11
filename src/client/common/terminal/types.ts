@@ -43,7 +43,12 @@ export interface ITerminalService extends IDisposable {
      * @returns {Promise<void>}
      * @memberof ITerminalService
      */
-    sendCommand(command: string, args: string[], cancel?: CancellationToken, swallowExceptions?: boolean): Promise<void>;
+    sendCommand(
+        command: string,
+        args: string[],
+        cancel?: CancellationToken,
+        swallowExceptions?: boolean
+    ): Promise<void>;
     sendText(text: string): Promise<void>;
     show(preserveFocus?: boolean): Promise<void>;
 }
@@ -109,8 +114,16 @@ export interface ITerminalHelper {
     createTerminal(title?: string): Terminal;
     identifyTerminalShell(terminal?: Terminal): TerminalShellType;
     buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]): string;
-    getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri, interpreter?: PythonInterpreter): Promise<string[] | undefined>;
-    getEnvironmentActivationShellCommands(resource: Resource, shell: TerminalShellType, interpreter?: PythonInterpreter): Promise<string[] | undefined>;
+    getEnvironmentActivationCommands(
+        terminalShellType: TerminalShellType,
+        resource?: Uri,
+        interpreter?: PythonInterpreter
+    ): Promise<string[] | undefined>;
+    getEnvironmentActivationShellCommands(
+        resource: Resource,
+        shell: TerminalShellType,
+        interpreter?: PythonInterpreter
+    ): Promise<string[] | undefined>;
 }
 
 export const ITerminalActivator = Symbol('ITerminalActivator');
@@ -134,12 +147,20 @@ export const ITerminalActivationCommandProvider = Symbol('ITerminalActivationCom
 export interface ITerminalActivationCommandProvider {
     isShellSupported(targetShell: TerminalShellType): boolean;
     getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined>;
-    getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined>;
+    getActivationCommandsForInterpreter(
+        pythonPath: string,
+        targetShell: TerminalShellType
+    ): Promise<string[] | undefined>;
 }
 
 export const ITerminalActivationHandler = Symbol('ITerminalActivationHandler');
 export interface ITerminalActivationHandler {
-    handleActivation(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean, activated: boolean): Promise<void>;
+    handleActivation(
+        terminal: Terminal,
+        resource: Uri | undefined,
+        preserveFocus: boolean,
+        activated: boolean
+    ): Promise<void>;
 }
 
 export type ShellIdentificationTelemetry = IEventNamePropertyMapping['TERMINAL_SHELL_IDENTIFICATION'];

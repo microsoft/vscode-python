@@ -75,7 +75,12 @@ suite('Terminal - Code Execution Manager', () => {
         executionManager.registerCommands();
 
         const sorted = registered.sort();
-        expect(sorted).to.deep.equal([Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon, Commands.Exec_Selection_In_Django_Shell, Commands.Exec_Selection_In_Terminal]);
+        expect(sorted).to.deep.equal([
+            Commands.Exec_In_Terminal,
+            Commands.Exec_In_Terminal_Icon,
+            Commands.Exec_Selection_In_Django_Shell,
+            Commands.Exec_Selection_In_Terminal
+        ]);
     });
 
     test('Ensure executeFileInterTerminal will do nothing if no file is avialble', async () => {
@@ -121,7 +126,9 @@ suite('Terminal - Code Execution Manager', () => {
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
 
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
-        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard'))).returns(() => executionService.object);
+        serviceContainer
+            .setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')))
+            .returns(() => executionService.object);
 
         const fileToExecute = Uri.file('x');
         await commandHandler!(fileToExecute);
@@ -150,7 +157,9 @@ suite('Terminal - Code Execution Manager', () => {
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
         helper.setup(async h => h.getFileToExecute()).returns(() => Promise.resolve(fileToExecute));
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
-        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard'))).returns(() => executionService.object);
+        serviceContainer
+            .setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue('standard')))
+            .returns(() => executionService.object);
 
         await commandHandler!(fileToExecute);
         executionService.verify(async e => e.executeFile(TypeMoq.It.isValue(fileToExecute)), TypeMoq.Times.once());
@@ -175,7 +184,9 @@ suite('Terminal - Code Execution Manager', () => {
         const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
-        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionSericeId))).returns(() => executionService.object);
+        serviceContainer
+            .setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionSericeId)))
+            .returns(() => executionService.object);
         documentManager.setup(d => d.activeTextEditor).returns(() => undefined);
 
         await commandHandler!();
@@ -210,7 +221,9 @@ suite('Terminal - Code Execution Manager', () => {
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
         helper.setup(h => h.getSelectedTextToExecute).returns(() => () => Promise.resolve(''));
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
-        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionServiceId))).returns(() => executionService.object);
+        serviceContainer
+            .setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionServiceId)))
+            .returns(() => executionService.object);
         documentManager
             .setup(d => d.activeTextEditor)
             .returns(() => {
@@ -255,7 +268,9 @@ suite('Terminal - Code Execution Manager', () => {
             .returns(() => () => Promise.resolve(textSelected))
             .verifiable(TypeMoq.Times.once());
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
-        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionServiceId))).returns(() => executionService.object);
+        serviceContainer
+            .setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionServiceId)))
+            .returns(() => executionService.object);
         const document = TypeMoq.Mock.ofType<TextDocument>();
         document.setup(d => d.uri).returns(() => activeDocumentUri);
         const activeEditor = TypeMoq.Mock.ofType<TextEditor>();
@@ -263,7 +278,10 @@ suite('Terminal - Code Execution Manager', () => {
         documentManager.setup(d => d.activeTextEditor).returns(() => activeEditor.object);
 
         await commandHandler!();
-        executionService.verify(async e => e.execute(TypeMoq.It.isValue(textSelected), TypeMoq.It.isValue(activeDocumentUri)), TypeMoq.Times.once());
+        executionService.verify(
+            async e => e.execute(TypeMoq.It.isValue(textSelected), TypeMoq.It.isValue(activeDocumentUri)),
+            TypeMoq.Times.once()
+        );
         helper.verifyAll();
     }
     test('Ensure executeSelectionInTerminal will normalize selected text and send it to the terminal', async () => {

@@ -11,7 +11,12 @@ import { EventEmitter, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
 import { DocumentManager } from '../../client/common/application/documentManager';
-import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService
+} from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
@@ -90,13 +95,19 @@ suite('Workspace symbols main', () => {
             return mockDisposable;
         });
 
-        when(serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL)).thenReturn(instance(outputChannel));
+        when(serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL)).thenReturn(
+            instance(outputChannel)
+        );
         when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(commandManager));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
         when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
-        when(serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)).thenReturn(instance(processServiceFactory));
+        when(serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)).thenReturn(
+            instance(processServiceFactory)
+        );
         when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(applicationShell));
-        when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configurationService));
+        when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
+            instance(configurationService)
+        );
         when(serviceContainer.get<IDocumentManager>(IDocumentManager)).thenReturn(instance(documentManager));
     });
 
@@ -106,7 +117,9 @@ suite('Workspace symbols main', () => {
 
     test('Should not rebuild on start if the setting is disabled', () => {
         when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
-        when(configurationService.getSettings(anything())).thenReturn({ workspaceSymbols: { rebuildOnStart: false } } as any);
+        when(configurationService.getSettings(anything())).thenReturn({
+            workspaceSymbols: { rebuildOnStart: false }
+        } as any);
 
         workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
 
@@ -115,7 +128,9 @@ suite('Workspace symbols main', () => {
 
     test("Should not rebuild on start if we don't have a workspace folder", () => {
         when(workspaceService.workspaceFolders).thenReturn([]);
-        when(configurationService.getSettings(anything())).thenReturn({ workspaceSymbols: { rebuildOnStart: false } } as any);
+        when(configurationService.getSettings(anything())).thenReturn({
+            workspaceSymbols: { rebuildOnStart: false }
+        } as any);
 
         workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
 
@@ -180,7 +195,9 @@ suite('Workspace symbols main', () => {
             return mockDisposable;
         });
         reset(applicationShell);
-        when(applicationShell.setStatusBarMessage(anyString(), anything())).thenThrow(new Error('Generating workspace tags failed with Error'));
+        when(applicationShell.setStatusBarMessage(anyString(), anything())).thenThrow(
+            new Error('Generating workspace tags failed with Error')
+        );
 
         workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
         expect(buildWorkspaceSymbolsHandler).to.not.equal(undefined, 'Handler not registered');

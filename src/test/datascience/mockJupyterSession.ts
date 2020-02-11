@@ -69,7 +69,11 @@ export class MockJupyterSession implements IJupyterSession {
     public prolongRestarts() {
         this.forceRestartTimeout = true;
     }
-    public requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture<any, any> {
+    public requestExecute(
+        content: KernelMessage.IExecuteRequestMsg['content'],
+        _disposeOnDone?: boolean,
+        _metadata?: JSONObject
+    ): Kernel.IFuture<any, any> {
         // Content should have the code
         const cell = this.findCell(content.code);
         if (cell) {
@@ -94,7 +98,9 @@ export class MockJupyterSession implements IJupyterSession {
         return request;
     }
 
-    public requestInspect(_content: KernelMessage.IInspectRequestMsg['content']): Promise<KernelMessage.IInspectReplyMsg> {
+    public requestInspect(
+        _content: KernelMessage.IInspectRequestMsg['content']
+    ): Promise<KernelMessage.IInspectReplyMsg> {
         return Promise.resolve({
             content: {
                 status: 'ok',
@@ -129,7 +135,9 @@ export class MockJupyterSession implements IJupyterSession {
         }
     }
 
-    public async requestComplete(_content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+    public async requestComplete(
+        _content: KernelMessage.ICompleteRequestMsg['content']
+    ): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
         await sleep(this.completionTimeout);
 
         return {

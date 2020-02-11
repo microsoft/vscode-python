@@ -45,7 +45,11 @@ suite('Autocomplete PEP 484', () => {
         await vscode.window.showTextDocument(textDocument);
         assert(vscode.window.activeTextEditor, 'No active editor');
         const position = new vscode.Position(2, 27);
-        const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+        const list = await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            textDocument.uri,
+            position
+        );
         assert.notEqual(list!.items.filter(item => item.label === 'capitalize').length, 0, 'capitalize not found');
         assert.notEqual(list!.items.filter(item => item.label === 'upper').length, 0, 'upper not found');
         assert.notEqual(list!.items.filter(item => item.label === 'lower').length, 0, 'lower not found');
@@ -56,7 +60,11 @@ suite('Autocomplete PEP 484', () => {
         await vscode.window.showTextDocument(textDocument);
         assert(vscode.window.activeTextEditor, 'No active editor');
         const position = new vscode.Position(8, 6);
-        const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+        const list = await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            textDocument.uri,
+            position
+        );
         assert.notEqual(list!.items.filter(item => item.label === 'bit_length').length, 0, 'bit_length not found');
         assert.notEqual(list!.items.filter(item => item.label === 'from_bytes').length, 0, 'from_bytes not found');
     });

@@ -12,7 +12,12 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
-import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerManager, ILanguageServerProxy } from '../types';
+import {
+    ILanguageServerAnalysisOptions,
+    ILanguageServerExtension,
+    ILanguageServerManager,
+    ILanguageServerProxy
+} from '../types';
 
 @injectable()
 export class DotNetLanguageServerManager implements ILanguageServerManager {
@@ -26,7 +31,9 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension,
-        @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner
+        @inject(IPythonExtensionBanner)
+        @named(BANNER_NAME_LS_SURVEY)
+        private readonly surveyBanner: IPythonExtensionBanner
     ) {}
     public dispose() {
         if (this.languageProxy) {

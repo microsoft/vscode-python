@@ -3,7 +3,12 @@
 'use strict';
 import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEvent, TextLine, Uri } from 'vscode';
 
-import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from '../../client/datascience/interactive-common/intellisense/wordHelper';
+import {
+    DefaultWordPattern,
+    ensureValidWordDefinition,
+    getWordAtText,
+    regExpLeadsToEndlessLoop
+} from '../../client/datascience/interactive-common/intellisense/wordHelper';
 
 class MockLine implements TextLine {
     private _range: Range;
@@ -133,11 +138,18 @@ export class MockDocument implements TextDocument {
             regexp = DefaultWordPattern;
         } else if (regExpLeadsToEndlessLoop(regexp)) {
             // use default when custom-regexp is bad
-            console.warn(`[getWordRangeAtPosition]: ignoring custom regexp '${regexp.source}' because it matches the empty string.`);
+            console.warn(
+                `[getWordRangeAtPosition]: ignoring custom regexp '${regexp.source}' because it matches the empty string.`
+            );
             regexp = DefaultWordPattern;
         }
 
-        const wordAtText = getWordAtText(position.character + 1, ensureValidWordDefinition(regexp), this._lines[position.line].text, 0);
+        const wordAtText = getWordAtText(
+            position.character + 1,
+            ensureValidWordDefinition(regexp),
+            this._lines[position.line].text,
+            0
+        );
 
         if (wordAtText) {
             return new Range(position.line, wordAtText.startColumn - 1, position.line, wordAtText.endColumn - 1);
@@ -170,12 +182,19 @@ export class MockDocument implements TextDocument {
     }
 
     private createTextLine(line: string, index: number, prevLine: MockLine | undefined): MockLine {
-        return new MockLine(line, index, prevLine ? prevLine.offset + prevLine.rangeIncludingLineBreak.end.character : 0);
+        return new MockLine(
+            line,
+            index,
+            prevLine ? prevLine.offset + prevLine.rangeIncludingLineBreak.end.character : 0
+        );
     }
 
     private convertToOffset(pos: Position): number {
         if (pos.line < this._lines.length) {
-            return this._lines[pos.line].offset + Math.min(this._lines[pos.line].rangeIncludingLineBreak.end.character, pos.character);
+            return (
+                this._lines[pos.line].offset +
+                Math.min(this._lines[pos.line].rangeIncludingLineBreak.end.character, pos.character)
+            );
         }
         return this._contents.length;
     }

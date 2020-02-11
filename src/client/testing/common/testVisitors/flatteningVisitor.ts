@@ -1,6 +1,14 @@
 import { injectable } from 'inversify';
 import { convertFileToPackage } from '../testUtils';
-import { FlattenedTestFunction, FlattenedTestSuite, ITestVisitor, TestFile, TestFolder, TestFunction, TestSuite } from '../types';
+import {
+    FlattenedTestFunction,
+    FlattenedTestSuite,
+    ITestVisitor,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    TestSuite
+} from '../types';
 
 @injectable()
 export class TestFlatteningVisitor implements ITestVisitor {
@@ -32,12 +40,21 @@ export class TestFlatteningVisitor implements ITestVisitor {
         testSuite.suites.forEach(suite => this.visitTestSuiteOfAFile(suite, parentTestFile));
         this.addTestSuite(testSuite, parentTestFile);
     }
-    private visitTestFunctionOfASuite(testFunction: TestFunction, parentTestSuite: TestSuite, parentTestFile: TestFile) {
+    private visitTestFunctionOfASuite(
+        testFunction: TestFunction,
+        parentTestSuite: TestSuite,
+        parentTestFile: TestFile
+    ) {
         const key = `Function:${testFunction.name},Suite:${parentTestSuite.name},SuiteXmlName:${parentTestSuite.xmlName},ParentFile:${parentTestFile.fullPath}`;
         if (this._flattenedTestSuites.has(key)) {
             return;
         }
-        const flattenedFunction = { testFunction, xmlClassName: parentTestSuite.xmlName, parentTestFile, parentTestSuite };
+        const flattenedFunction = {
+            testFunction,
+            xmlClassName: parentTestSuite.xmlName,
+            parentTestFile,
+            parentTestSuite
+        };
         this._flattedTestFunctions.set(key, flattenedFunction);
     }
     private addTestSuite(testSuite: TestSuite, parentTestFile: TestFile) {

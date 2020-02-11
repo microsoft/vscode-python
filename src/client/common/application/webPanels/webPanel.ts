@@ -93,7 +93,9 @@ export class WebPanel implements IWebPanel {
             if (localFilesExist.every(exists => exists === true)) {
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
-                this.panel.webview.html = this.options.startHttpServer ? this.generateServerReactHtml(this.panel.webview) : await this.generateLocalReactHtml(this.panel.webview);
+                this.panel.webview.html = this.options.startHttpServer
+                    ? this.generateServerReactHtml(this.panel.webview)
+                    : await this.generateLocalReactHtml(this.panel.webview);
 
                 // Reset when the current panel is closed
                 this.disposableRegistry.push(
@@ -135,7 +137,9 @@ export class WebPanel implements IWebPanel {
 
         // This method must be called so VSC is aware of files that can be pulled.
         // Allow js and js.map files to be loaded by webpack in the webview.
-        testFiles.filter(f => f.toLowerCase().endsWith('.js') || f.toLowerCase().endsWith('.js.map')).forEach(f => webView.asWebviewUri(Uri.file(f)));
+        testFiles
+            .filter(f => f.toLowerCase().endsWith('.js') || f.toLowerCase().endsWith('.js.map'))
+            .forEach(f => webView.asWebviewUri(Uri.file(f)));
 
         const rootPath = webView.asWebviewUri(Uri.file(this.options.rootPath)).toString();
         return `<!doctype html>
@@ -174,7 +178,9 @@ export class WebPanel implements IWebPanel {
     private generateServerReactHtml(webView: Webview) {
         const uriBase = webView.asWebviewUri(Uri.file(this.options.rootPath));
         const relativeScripts = this.options.scripts.map(s => `.${s.substr(this.options.rootPath.length)}`);
-        const encoded = relativeScripts.map(s => encodeURIComponent(s.replace(/\\/g, '/').replace('index_bundle.js', 'index_chunked_bundle.js')));
+        const encoded = relativeScripts.map(s =>
+            encodeURIComponent(s.replace(/\\/g, '/').replace('index_bundle.js', 'index_chunked_bundle.js'))
+        );
 
         return `<!doctype html>
         <html lang="en">
@@ -196,7 +202,9 @@ export class WebPanel implements IWebPanel {
                             const bodyClass = document.body.className;
                             const defaultStyles = document.getElementById('_defaultStyles').innerText;
                             window.console.log('posting styles to frame ');
-                            hostFrame.contentWindow.postMessage({ type: '${SharedMessages.StyleUpdate}', payload: { styleText, bodyClass, defaultStyles } }, '*');
+                            hostFrame.contentWindow.postMessage({ type: '${
+                                SharedMessages.StyleUpdate
+                            }', payload: { styleText, bodyClass, defaultStyles } }, '*');
                         }
                     };
                     const vscodeApi = acquireVsCodeApi ? acquireVsCodeApi() : undefined;
@@ -229,9 +237,11 @@ export class WebPanel implements IWebPanel {
                     });
                     document.addEventListener('DOMContentLoaded', () => {
                         styleObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
-                        const newSrc = 'http://localhost:${RemappedPort}/${this.id}?scripts=${encoded.join('%')}&cwd=${encodeURIComponent(
-            this.options.cwd
-        )}&rootPath=${encodeURIComponent(this.options.rootPath)}&token=${this.token}&baseTheme=' + document.body.className;
+                        const newSrc = 'http://localhost:${RemappedPort}/${this.id}?scripts=${encoded.join(
+            '%'
+        )}&cwd=${encodeURIComponent(this.options.cwd)}&rootPath=${encodeURIComponent(this.options.rootPath)}&token=${
+            this.token
+        }&baseTheme=' + document.body.className;
                         const hostFrame = document.getElementById('hostframe');
                         if (hostFrame) {
                             hostFrame.src = newSrc;

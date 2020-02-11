@@ -12,7 +12,15 @@ import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { IConnection, IDataScience, IJupyterSessionManagerFactory, INotebook, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo } from '../types';
+import {
+    IConnection,
+    IDataScience,
+    IJupyterSessionManagerFactory,
+    INotebook,
+    INotebookExecutionLogger,
+    INotebookServer,
+    INotebookServerLaunchInfo
+} from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
@@ -98,7 +106,11 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         return server.connect(launchInfo, cancelToken);
     }
 
-    public async createNotebook(resource: Uri, notebookMetadata?: nbformat.INotebookMetadata, cancelToken?: CancellationToken): Promise<INotebook> {
+    public async createNotebook(
+        resource: Uri,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        cancelToken?: CancellationToken
+    ): Promise<INotebook> {
         const server = await this.serverFactory.get();
         return server.createNotebook(resource, notebookMetadata, cancelToken);
     }

@@ -12,7 +12,12 @@ import { DiagnosticSeverity } from 'vscode';
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
 import { EnvironmentPathVariableDiagnosticsService } from '../../../client/application/diagnostics/checks/envPathVariable';
 import { InvalidPythonInterpreterService } from '../../../client/application/diagnostics/checks/pythonInterpreter';
-import { DiagnosticScope, IDiagnostic, IDiagnosticsService, ISourceMapSupportService } from '../../../client/application/diagnostics/types';
+import {
+    DiagnosticScope,
+    IDiagnostic,
+    IDiagnosticsService,
+    ISourceMapSupportService
+} from '../../../client/application/diagnostics/types';
 import { IApplicationDiagnostics } from '../../../client/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
 import { IOutputChannel } from '../../../client/common/types';
@@ -47,7 +52,9 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         serviceContainer
             .setup(d => d.getAll(typemoq.It.isValue(IDiagnosticsService)))
             .returns(() => [envHealthCheck.object, lsNotSupportedCheck.object, pythonInterpreterCheck.object]);
-        serviceContainer.setup(d => d.get(typemoq.It.isValue(IOutputChannel), typemoq.It.isValue(STANDARD_OUTPUT_CHANNEL))).returns(() => outputChannel.object);
+        serviceContainer
+            .setup(d => d.get(typemoq.It.isValue(IOutputChannel), typemoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
+            .returns(() => outputChannel.object);
 
         appDiagnostics = new ApplicationDiagnostics(serviceContainer.object, outputChannel.object);
     });
@@ -61,7 +68,9 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         const sourceMapService = typemoq.Mock.ofType<ISourceMapSupportService>();
         sourceMapService.setup(s => s.register()).verifiable(typemoq.Times.once());
 
-        serviceContainer.setup(d => d.get(typemoq.It.isValue(ISourceMapSupportService), typemoq.It.isAny())).returns(() => sourceMapService.object);
+        serviceContainer
+            .setup(d => d.get(typemoq.It.isValue(ISourceMapSupportService), typemoq.It.isAny()))
+            .returns(() => sourceMapService.object);
 
         appDiagnostics.register();
 
@@ -212,7 +221,10 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         const foreGroundDeferred = createDeferred<IDiagnostic[]>();
         const backgroundGroundDeferred = createDeferred<IDiagnostic[]>();
 
-        when(svcContainer.getAll<IDiagnosticsService>(IDiagnosticsService)).thenReturn([instance(foreGroundService), instance(backGroundService)]);
+        when(svcContainer.getAll<IDiagnosticsService>(IDiagnosticsService)).thenReturn([
+            instance(foreGroundService),
+            instance(backGroundService)
+        ]);
         when(foreGroundService.runInBackground).thenReturn(false);
         when(backGroundService.runInBackground).thenReturn(true);
 

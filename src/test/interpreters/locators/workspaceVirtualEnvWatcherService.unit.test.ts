@@ -40,7 +40,12 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         const workspaceService = mock(WorkspaceService);
         const platformService = mock(PlatformService);
         const execFactory = mock(PythonExecutionFactory);
-        const watcher = new WorkspaceVirtualEnvWatcherService([], instance(workspaceService), instance(platformService), instance(execFactory));
+        const watcher = new WorkspaceVirtualEnvWatcherService(
+            [],
+            instance(workspaceService),
+            instance(platformService),
+            instance(execFactory)
+        );
 
         when(platformService.isWindows).thenReturn(os === OSType.Windows);
         when(platformService.isLinux).thenReturn(os === OSType.Linux);
@@ -60,7 +65,9 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         }
 
         const fsWatcher = mock(FSWatcher);
-        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(instance((fsWatcher as any) as FileSystemWatcher));
+        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(
+            instance((fsWatcher as any) as FileSystemWatcher)
+        );
 
         await watcher.register(resource);
 
@@ -69,7 +76,9 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
     }
     for (const uri of [undefined, Uri.file('abc')]) {
         for (const hasWorkspaceFolder of [true, false]) {
-            const uriSuffix = uri ? ` (with resource & ${hasWorkspaceFolder ? 'with' : 'without'} workspace folder)` : '';
+            const uriSuffix = uri
+                ? ` (with resource & ${hasWorkspaceFolder ? 'with' : 'without'} workspace folder)`
+                : '';
             test(`Register for file changes on windows ${uriSuffix}`, async () => {
                 await checkForFileChanges(OSType.Windows, uri, hasWorkspaceFolder);
             });
@@ -85,7 +94,12 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         const workspaceService = mock(WorkspaceService);
         const platformService = mock(PlatformService);
         const execFactory = mock(PythonExecutionFactory);
-        const watcher = new WorkspaceVirtualEnvWatcherService(disposables, instance(workspaceService), instance(platformService), instance(execFactory));
+        const watcher = new WorkspaceVirtualEnvWatcherService(
+            disposables,
+            instance(workspaceService),
+            instance(platformService),
+            instance(execFactory)
+        );
 
         when(platformService.isWindows).thenReturn(os === OSType.Windows);
         when(platformService.isLinux).thenReturn(os === OSType.Linux);

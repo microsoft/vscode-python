@@ -2,7 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugSession, Event, EventEmitter, ProviderResult } from 'vscode';
+import {
+    DebugAdapterTracker,
+    DebugAdapterTrackerFactory,
+    DebugSession,
+    Event,
+    EventEmitter,
+    ProviderResult
+} from 'vscode';
 
 import { IDebugService } from '../common/application/types';
 import { IDisposableRegistry } from '../common/types';
@@ -15,7 +22,10 @@ export class DebugLocationTrackerFactory implements IDebugLocationTracker, Debug
     private activeTrackers: Map<string, DebugLocationTracker> = new Map<string, DebugLocationTracker>();
     private updatedEmitter: EventEmitter<void> = new EventEmitter<void>();
 
-    constructor(@inject(IDebugService) debugService: IDebugService, @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry) {
+    constructor(
+        @inject(IDebugService) debugService: IDebugService,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+    ) {
         disposableRegistry.push(debugService.registerDebugAdapterTrackerFactory('python', this));
     }
 

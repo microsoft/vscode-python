@@ -9,7 +9,6 @@ import { Terminal, Uri } from 'vscode';
 import { ActiveResourceService } from '../../../client/common/application/activeResource';
 import { TerminalManager } from '../../../client/common/application/terminalManager';
 import { IActiveResourceService, ITerminalManager } from '../../../client/common/application/types';
-import { terminalNamePrefixNotToAutoActivate } from '../../../client/common/constants';
 import { TerminalActivator } from '../../../client/common/terminal/activator';
 import { ITerminalActivator } from '../../../client/common/terminal/types';
 import { IDisposable } from '../../../client/common/types';
@@ -31,6 +30,7 @@ suite('Terminal Auto Activation', () => {
             dispose: noop,
             hide: noop,
             name: 'Python',
+            creationOptions: {},
             processId: Promise.resolve(0),
             sendText: noop,
             show: noop
@@ -39,7 +39,12 @@ suite('Terminal Auto Activation', () => {
         activator = mock(TerminalActivator);
         activeResourceService = mock(ActiveResourceService);
 
-        terminalAutoActivation = new TerminalAutoActivation(instance(terminalManager), [], instance(activator), instance(activeResourceService));
+        terminalAutoActivation = new TerminalAutoActivation(
+            instance(terminalManager),
+            [],
+            instance(activator),
+            instance(activeResourceService)
+        );
     });
 
     test('New Terminals should be activated', async () => {
@@ -62,11 +67,12 @@ suite('Terminal Auto Activation', () => {
 
         verify(activator.activateEnvironmentInTerminal(terminal, anything())).once();
     });
-    test('New Terminals should not be activated if name starts with a special prefix', async () => {
+    test('New Terminals should not be activated if hidden from user', async () => {
         terminal = {
             dispose: noop,
             hide: noop,
-            name: `${terminalNamePrefixNotToAutoActivate}Python`,
+            name: 'Python',
+            creationOptions: { hideFromUser: true },
             processId: Promise.resolve(0),
             sendText: noop,
             show: noop

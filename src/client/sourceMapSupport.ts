@@ -45,8 +45,18 @@ export class SourceMapSupport {
     }
     protected async enableSourceMaps(enable: boolean) {
         const extensionSourceFile = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'extension.js');
-        const debuggerSourceFile = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'debugger', 'debugAdapter', 'main.js');
-        await Promise.all([this.enableSourceMap(enable, extensionSourceFile), this.enableSourceMap(enable, debuggerSourceFile)]);
+        const debuggerSourceFile = path.join(
+            EXTENSION_ROOT_DIR,
+            'out',
+            'client',
+            'debugger',
+            'debugAdapter',
+            'main.js'
+        );
+        await Promise.all([
+            this.enableSourceMap(enable, extensionSourceFile),
+            this.enableSourceMap(enable, debuggerSourceFile)
+        ]);
     }
     protected async enableSourceMap(enable: boolean, sourceFile: string) {
         const sourceMapFile = `${sourceFile}.map`;

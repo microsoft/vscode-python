@@ -10,7 +10,10 @@ import { IDisposableRegistry } from '../../../common/types';
 
 @injectable()
 export class DebuggerProcessServiceFactory implements IProcessServiceFactory {
-    constructor(@inject(IBufferDecoder) private readonly decoder: IBufferDecoder, @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry) {}
+    constructor(
+        @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
+    ) {}
     public create(): Promise<IProcessService> {
         const processService = new ProcessService(this.decoder, process.env);
         this.disposableRegistry.push(processService);

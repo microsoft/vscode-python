@@ -9,11 +9,16 @@ import { convertStat, FileSystem, FileSystemUtils, RawFileSystem } from '../../.
 import { FileSystemPaths, FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
 import { FileType } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
-// prettier-ignore
 import {
-    assertDoesNotExist, DOES_NOT_EXIST,
-    fixPath, FSFixture, OSX,
-    SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS, WINDOWS
+    assertDoesNotExist,
+    assertFileText,
+    DOES_NOT_EXIST,
+    fixPath,
+    FSFixture,
+    OSX,
+    SUPPORTS_SOCKETS,
+    SUPPORTS_SYMLINKS,
+    WINDOWS
 } from './utils';
 
 // tslint:disable:no-require-imports no-var-requires
@@ -43,11 +48,8 @@ suite('FileSystem - raw', () => {
             }
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
-            // prettier-ignore
-            const expected = convertStat(
-                await fs.lstat(symlink),
-                FileType.SymbolicLink
-            );
+            const rawStat = await fs.lstat(symlink);
+            const expected = convertStat(rawStat, FileType.SymbolicLink);
 
             const stat = await fileSystem.lstat(symlink);
 
@@ -59,11 +61,8 @@ suite('FileSystem - raw', () => {
             // Ideally we would compare to the result of
             // fileSystem.stat().  However, we do not have access
             // to the VS Code API here.
-            // prettier-ignore
-            const expected = convertStat(
-                await fs.lstat(filename),
-                FileType.File
-            );
+            const rawStat = await fs.lstat(filename);
+            const expected = convertStat(rawStat, FileType.File);
 
             const stat = await fileSystem.lstat(filename);
 
@@ -182,11 +181,8 @@ suite('FileSystem - raw', () => {
             // Ideally we would compare to the result of
             // fileSystem.stat().  However, we do not have access
             // to the VS Code API here.
-            // prettier-ignore
-            const expected = convertStat(
-                await fs.stat(filename),
-                FileType.File
-            );
+            const rawStat = await fs.stat(filename);
+            const expected = convertStat(rawStat, FileType.File);
 
             const stat = fileSystem.statSync(filename);
 
@@ -200,11 +196,8 @@ suite('FileSystem - raw', () => {
             }
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
-            // prettier-ignore
-            const expected = convertStat(
-                await fs.stat(filename),
-                FileType.SymbolicLink | FileType.File
-            );
+            const rawStat = await fs.stat(filename);
+            const expected = convertStat(rawStat, FileType.SymbolicLink | FileType.File);
 
             const stat = fileSystem.statSync(symlink);
 
@@ -283,10 +276,7 @@ suite('FileSystem - raw', () => {
             stream.write(data);
             stream.destroy();
 
-            // prettier-ignore
-            const actual = await fs.readFile(filename)
-                .then(buffer => buffer.toString());
-            expect(actual).to.equal(data);
+            await assertFileText(filename, data);
         });
 
         test('always UTF-8', async () => {
@@ -297,10 +287,7 @@ suite('FileSystem - raw', () => {
             stream.write(data);
             stream.destroy();
 
-            // prettier-ignore
-            const actual = await fs.readFile(filename)
-                .then(buffer => buffer.toString());
-            expect(actual).to.equal(data);
+            await assertFileText(filename, data);
         });
 
         test('overwrites existing file', async function() {
@@ -319,10 +306,7 @@ suite('FileSystem - raw', () => {
             stream.write(data);
             stream.destroy();
 
-            // prettier-ignore
-            const actual = await fs.readFile(filename)
-                .then(buffer => buffer.toString());
-            expect(actual).to.equal(data);
+            await assertFileText(filename, data);
         });
     });
 });
@@ -331,7 +315,6 @@ suite('FileSystem - utils', () => {
     let utils: FileSystemUtils;
     let fix: FSFixture;
     setup(async () => {
-        // prettier-ignore
         utils = FileSystemUtils.withDefaults();
         fix = new FSFixture();
 
@@ -496,7 +479,6 @@ suite('FileSystem', () => {
     let fileSystem: FileSystem;
     let fix: FSFixture;
     setup(async () => {
-        // prettier-ignore
         fileSystem = new FileSystem();
         fix = new FSFixture();
 

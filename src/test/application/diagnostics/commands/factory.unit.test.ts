@@ -22,7 +22,10 @@ suite('Application Diagnostics - Commands Factory', () => {
     test('Test creation of Ignore Command', async () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
 
-        const command = commandFactory.createCommand(diagnostic.object, { type: 'ignore', options: DiagnosticScope.Global });
+        const command = commandFactory.createCommand(diagnostic.object, {
+            type: 'ignore',
+            options: DiagnosticScope.Global
+        });
         expect(command).to.be.instanceOf(IgnoreDiagnosticCommand);
     });
 

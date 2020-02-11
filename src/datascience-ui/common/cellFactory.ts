@@ -56,7 +56,9 @@ export function createCodeCell(code?: string | string[], options?: boolean | nbf
     code = code || '';
     // If we get a string, then no need to append line feeds. Leave as is (to preserve existing functionality).
     // If we get an array, the append a linefeed.
-    const source = Array.isArray(code) ? appendLineFeed(code, magicCommandsAsComments ? uncommentMagicCommands : undefined) : code;
+    const source = Array.isArray(code)
+        ? appendLineFeed(code, magicCommandsAsComments ? uncommentMagicCommands : undefined)
+        : code;
     return {
         cell_type: 'code',
         execution_count: null,
@@ -123,7 +125,10 @@ export function cloneCell<T extends nbformat.IBaseCell>(cell: T): T {
     }
 }
 
-export function createCellFrom(source: nbformat.IBaseCell, target: nbformat.CellType): nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell {
+export function createCellFrom(
+    source: nbformat.IBaseCell,
+    target: nbformat.CellType
+): nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell {
     // If we're creating a new cell from the same base type, then ensure we preserve the metadata.
     const baseCell: nbformat.IBaseCell =
         source.cell_type === target

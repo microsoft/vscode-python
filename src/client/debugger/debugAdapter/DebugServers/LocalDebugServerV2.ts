@@ -15,7 +15,11 @@ import { BaseDebugServer } from './BaseDebugServer';
 export class LocalDebugServerV2 extends BaseDebugServer {
     private socketServer?: ISocketServer;
 
-    constructor(debugSession: DebugSession, private args: LaunchRequestArguments, private serviceContainer: IServiceContainer) {
+    constructor(
+        debugSession: DebugSession,
+        private args: LaunchRequestArguments,
+        private serviceContainer: IServiceContainer
+    ) {
         super(debugSession);
         this.clientSocket = createDeferred<net.Socket>();
     }
@@ -31,7 +35,10 @@ export class LocalDebugServerV2 extends BaseDebugServer {
     }
 
     public async Start(): Promise<IDebugServer> {
-        const host = typeof this.args.host === 'string' && this.args.host.trim().length > 0 ? this.args.host!.trim() : 'localhost';
+        const host =
+            typeof this.args.host === 'string' && this.args.host.trim().length > 0
+                ? this.args.host!.trim()
+                : 'localhost';
         const socketServer = (this.socketServer = this.serviceContainer.get<ISocketServer>(ISocketServer));
         const port = await socketServer.Start({ port: this.args.port, host });
         socketServer.client

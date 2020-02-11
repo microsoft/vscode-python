@@ -7,7 +7,16 @@ import { expect, use } from 'chai';
 import * as chaisAsPromised from 'chai-as-promised';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { Location, Range, SymbolInformation, SymbolKind, TextDocument, TextEditor, TextEditorRevealType, Uri } from 'vscode';
+import {
+    Location,
+    Range,
+    SymbolInformation,
+    SymbolKind,
+    TextDocument,
+    TextEditor,
+    TextEditorRevealType,
+    Uri
+} from 'vscode';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { IDocumentManager } from '../../../client/common/application/types';
 import { TestCollectionStorageService } from '../../../client/testing/common/services/storageService';
@@ -77,7 +86,9 @@ suite('Unit Tests - Navigation Function', () => {
         verify(helper.findSymbol(doc.object, anything(), anything())).once();
         expect(capture(helper.openFile).first()[0]!.fsPath).to.equal(filePath.fsPath);
         if (focusCode) {
-            verify(docManager.showTextDocument(doc.object, deepEqual({ preserveFocus: false, selection: range }))).once();
+            verify(
+                docManager.showTextDocument(doc.object, deepEqual({ preserveFocus: false, selection: range }))
+            ).once();
         } else {
             editor.verify(e => e.revealRange(typemoq.It.isAny(), TextEditorRevealType.Default), typemoq.Times.once());
         }

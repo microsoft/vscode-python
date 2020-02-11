@@ -23,7 +23,11 @@ FILE_ID_RE = re.compile(
 
 
 def fix_nodeid(
-    nodeid, kind, rootdir=None, _fix_fileid=fix_fileid,  # *,
+    nodeid,
+    kind,
+    rootdir=None,
+    # *,
+    _fix_fileid=fix_fileid,
 ):
     if not nodeid:
         raise ValueError("missing nodeid")
@@ -58,7 +62,9 @@ class DiscoveredTests(object):
     @property
     def parents(self):
         return sorted(
-            self._parents.values(), key=lambda p: (NORMCASE(p.root or p.name), p.id),
+            self._parents.values(),
+            # Sort by (name, id).
+            key=lambda p: (NORMCASE(p.root or p.name), p.id),
         )
 
     def reset(self):
@@ -73,12 +79,18 @@ class DiscoveredTests(object):
         # provided test and parents (from the test collector) are
         # properly generated.  However, we play it safe here.
         test = test._replace(
-            id=fix_nodeid(test.id, "test", test.path.root), parentid=parentid,
+            # Clean up the ID.
+            id=fix_nodeid(test.id, "test", test.path.root),
+            parentid=parentid,
         )
         self._tests.append(test)
 
     def _ensure_parent(
-        self, path, parents, _dirname=DIRNAME,  # *,
+        self,
+        path,
+        parents,
+        # *,
+        _dirname=DIRNAME,
     ):
         rootdir = path.root
         relpath = path.relfile

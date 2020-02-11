@@ -29,8 +29,14 @@ suite('Interpreters - Windows Store Interpreter', () => {
         persistanceStateFactory = mock(PersistentStateFactory);
         executionFactory = mock(PythonExecutionFactory);
         serviceContainer = mock(ServiceContainer);
-        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(instance(executionFactory));
-        windowsStoreInterpreter = new WindowsStoreInterpreter(instance(serviceContainer), instance(persistanceStateFactory), instance(fs));
+        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
+            instance(executionFactory)
+        );
+        windowsStoreInterpreter = new WindowsStoreInterpreter(
+            instance(serviceContainer),
+            instance(persistanceStateFactory),
+            instance(fs)
+        );
     });
     const windowsStoreInterpreters = [
         '\\\\Program Files\\WindowsApps\\Something\\Python.exe',
@@ -48,14 +54,31 @@ suite('Interpreters - Windows Store Interpreter', () => {
             expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(true, 'Must be true');
         });
         test(`${interpreter.toLowerCase()} must be identified as a windows store interpter (ignoring case)`, () => {
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toLowerCase())).to.equal(true, 'Must be true');
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(true, 'Must be true');
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toLowerCase())).to.equal(
+                true,
+                'Must be true'
+            );
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
+                true,
+                'Must be true'
+            );
         });
-        test(`D${interpreter.substring(1)} must be identified as a windows store interpter (ignoring driver letter)`, () => {
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(true, 'Must be true');
+        test(`D${interpreter.substring(
+            1
+        )} must be identified as a windows store interpter (ignoring driver letter)`, () => {
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
+                true,
+                'Must be true'
+            );
         });
-        test(`${interpreter.replace(/\\/g, '/')} must be identified as a windows store interpter (ignoring path separator)`, () => {
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(true, 'Must be true');
+        test(`${interpreter.replace(
+            /\\/g,
+            '/'
+        )} must be identified as a windows store interpter (ignoring path separator)`, () => {
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
+                true,
+                'Must be true'
+            );
         });
     }
     const nonWindowsStoreInterpreters = [
@@ -75,12 +98,27 @@ suite('Interpreters - Windows Store Interpreter', () => {
     for (const interpreter of nonWindowsStoreInterpreters) {
         test(`${interpreter} must not be identified as a windows store interpter`, () => {
             expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter)).to.equal(false, 'Must be false');
-            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(false, 'Must be false');
+            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
+                false,
+                'Must be false'
+            );
             expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter)).to.equal(false, 'Must be false');
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(false, 'Must be false');
-            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toLowerCase())).to.equal(false, 'Must be false');
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(false, 'Must be false');
-            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(false, 'Must be false');
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.replace(/\\/g, '/'))).to.equal(
+                false,
+                'Must be false'
+            );
+            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toLowerCase())).to.equal(
+                false,
+                'Must be false'
+            );
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(interpreter.toUpperCase())).to.equal(
+                false,
+                'Must be false'
+            );
+            expect(windowsStoreInterpreter.isWindowsStoreInterpreter(`D${interpreter.substring(1)}`)).to.equal(
+                false,
+                'Must be false'
+            );
         });
     }
     const windowsStoreHiddenInterpreters = [
@@ -94,14 +132,26 @@ suite('Interpreters - Windows Store Interpreter', () => {
             expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter)).to.equal(true, 'Must be true');
         });
         test(`${interpreter.toLowerCase()} must be identified as a windows store (hidden) interpter (ignoring case)`, () => {
-            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toLowerCase())).to.equal(true, 'Must be true');
-            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toUpperCase())).to.equal(true, 'Must be true');
+            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toLowerCase())).to.equal(
+                true,
+                'Must be true'
+            );
+            expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter.toUpperCase())).to.equal(
+                true,
+                'Must be true'
+            );
         });
         test(`${interpreter} must be identified as a windows store (hidden) interpter (ignoring driver letter)`, () => {
-            expect(windowsStoreInterpreter.isHiddenInterpreter(`D${interpreter.substring(1)}`)).to.equal(true, 'Must be true');
+            expect(windowsStoreInterpreter.isHiddenInterpreter(`D${interpreter.substring(1)}`)).to.equal(
+                true,
+                'Must be true'
+            );
         });
     }
-    const nonWindowsStoreHiddenInterpreters = ['C:\\Microsofts\\WindowsApps\\Something\\Python.exe', 'C:\\Microsoft\\WindowsAppss\\Python.exe'];
+    const nonWindowsStoreHiddenInterpreters = [
+        'C:\\Microsofts\\WindowsApps\\Something\\Python.exe',
+        'C:\\Microsoft\\WindowsAppss\\Python.exe'
+    ];
     for (const interpreter of nonWindowsStoreHiddenInterpreters) {
         test(`${interpreter} must not be identified as a windows store (hidden) interpter`, () => {
             expect(windowsStoreInterpreter.isHiddenInterpreter(interpreter)).to.equal(false, 'Must be true');
@@ -118,7 +168,9 @@ suite('Interpreters - Windows Store Interpreter', () => {
         (pythonServiceInstance as any).then = undefined;
         const oneHour = 60 * 60 * 1000;
 
-        when(persistanceStateFactory.createGlobalPersistentState<string | undefined>(key, undefined, oneHour)).thenReturn(instance(stateStore));
+        when(
+            persistanceStateFactory.createGlobalPersistentState<string | undefined>(key, undefined, oneHour)
+        ).thenReturn(instance(stateStore));
         when(stateStore.value).thenReturn();
         when(executionFactory.create(deepEqual({ pythonPath }))).thenResolve(pythonServiceInstance);
         when(pythonService.getExecutablePath()).thenResolve('FullyQualifiedPathToPythonExec');
@@ -143,7 +195,9 @@ suite('Interpreters - Windows Store Interpreter', () => {
         const key = `WINDOWS_STORE_INTERPRETER_HASH_${pythonPath}`;
         const oneHour = 60 * 60 * 1000;
 
-        when(persistanceStateFactory.createGlobalPersistentState<string | undefined>(key, undefined, oneHour)).thenReturn(instance(stateStore));
+        when(
+            persistanceStateFactory.createGlobalPersistentState<string | undefined>(key, undefined, oneHour)
+        ).thenReturn(instance(stateStore));
         when(stateStore.value).thenReturn('fileHash');
         const hash = await windowsStoreInterpreter.getInterpreterHash(pythonPath);
 

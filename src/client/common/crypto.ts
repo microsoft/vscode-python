@@ -14,7 +14,11 @@ import { ICryptoUtils, IHashFormat } from './types';
  */
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
-    public createHash<E extends keyof IHashFormat>(data: string, hashFormat: E, algorithm: 'SHA512' | 'SHA256' | 'FNV' = 'FNV'): IHashFormat[E] {
+    public createHash<E extends keyof IHashFormat>(
+        data: string,
+        hashFormat: E,
+        algorithm: 'SHA512' | 'SHA256' | 'FNV' = 'FNV'
+    ): IHashFormat[E] {
         let hash: string;
         if (algorithm === 'FNV') {
             // tslint:disable-next-line:no-require-imports

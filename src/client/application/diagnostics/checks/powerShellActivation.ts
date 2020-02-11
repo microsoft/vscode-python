@@ -34,14 +34,26 @@ export class PowershellActivationNotAvailableDiagnostic extends BaseDiagnostic {
     }
 }
 
-export const PowerShellActivationHackDiagnosticsServiceId = 'EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic';
+export const PowerShellActivationHackDiagnosticsServiceId =
+    'EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic';
 
 @injectable()
 export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsService {
     protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer, @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry) {
-        super([DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic], serviceContainer, disposableRegistry, true);
-        this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+    ) {
+        super(
+            [DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic],
+            serviceContainer,
+            disposableRegistry,
+            true
+        );
+        this.messageService = serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
+            IDiagnosticHandlerService,
+            DiagnosticCommandPromptHandlerServiceId
+        );
     }
     public async diagnose(_resource: Resource): Promise<IDiagnostic[]> {
         return [];
@@ -68,7 +80,9 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
                         sendTelemetryEvent(EventName.DIAGNOSTICS_ACTION, undefined, {
                             action: 'switchToCommandPrompt'
                         });
-                        useCommandPromptAsDefaultShell(currentProcess, configurationService).catch(ex => traceError('Use Command Prompt as default shell', ex));
+                        useCommandPromptAsDefaultShell(currentProcess, configurationService).catch(ex =>
+                            traceError('Use Command Prompt as default shell', ex)
+                        );
                     }
                 }
             },

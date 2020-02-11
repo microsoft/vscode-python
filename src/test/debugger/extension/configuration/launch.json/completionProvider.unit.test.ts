@@ -6,7 +6,15 @@
 import * as assert from 'assert';
 import { deepEqual, instance, mock, verify } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { CancellationTokenSource, CompletionItem, CompletionItemKind, Position, SnippetString, TextDocument, Uri } from 'vscode';
+import {
+    CancellationTokenSource,
+    CompletionItem,
+    CompletionItemKind,
+    Position,
+    SnippetString,
+    TextDocument,
+    Uri
+} from 'vscode';
 import { LanguageService } from '../../../../../client/common/application/languageService';
 import { ILanguageService } from '../../../../../client/common/application/types';
 import { DebugConfigStrings } from '../../../../../client/common/utils/localize';
@@ -23,8 +31,12 @@ suite('Debugging - launch.json Completion Provider', () => {
     });
     test('Activation will register the completion provider', async () => {
         await completionProvider.activate();
-        verify(languageService.registerCompletionItemProvider(deepEqual({ language: 'json' }), completionProvider)).once();
-        verify(languageService.registerCompletionItemProvider(deepEqual({ language: 'jsonc' }), completionProvider)).once();
+        verify(
+            languageService.registerCompletionItemProvider(deepEqual({ language: 'json' }), completionProvider)
+        ).once();
+        verify(
+            languageService.registerCompletionItemProvider(deepEqual({ language: 'jsonc' }), completionProvider)
+        ).once();
     });
     test('Cannot provide completions for non launch.json files', () => {
         const document = typemoq.Mock.ofType<TextDocument>();

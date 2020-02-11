@@ -14,13 +14,20 @@ import { Product } from '../../../../client/common/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 import { IServiceContainer } from '../../../../client/ioc/types';
 import { UNIT_TEST_PRODUCTS } from '../../../../client/testing/common/constants';
-import { BufferedTestConfigSettingsService, TestConfigSettingsService } from '../../../../client/testing/common/services/configSettingService';
+import {
+    BufferedTestConfigSettingsService,
+    TestConfigSettingsService
+} from '../../../../client/testing/common/services/configSettingService';
 import { UnitTestProduct } from '../../../../client/testing/common/types';
 import { ITestConfigSettingsService } from '../../../../client/testing/types';
 
 use(chaiPromise);
 
-const updateMethods: (keyof Omit<ITestConfigSettingsService, 'getTestEnablingSetting'>)[] = ['updateTestArgs', 'disable', 'enable'];
+const updateMethods: (keyof Omit<ITestConfigSettingsService, 'getTestEnablingSetting'>)[] = [
+    'updateTestArgs',
+    'disable',
+    'enable'
+];
 
 suite('Unit Tests - ConfigSettingsService', () => {
     UNIT_TEST_PRODUCTS.forEach(product => {
@@ -35,7 +42,9 @@ suite('Unit Tests - ConfigSettingsService', () => {
                     const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
                     workspaceService = typeMoq.Mock.ofType<IWorkspaceService>();
 
-                    serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+                    serviceContainer
+                        .setup(c => c.get(typeMoq.It.isValue(IWorkspaceService)))
+                        .returns(() => workspaceService.object);
                     testConfigSettingsService = new TestConfigSettingsService(serviceContainer.object);
                 });
                 function getTestArgSetting(prod: UnitTestProduct) {
@@ -219,7 +228,13 @@ suite('Unit Tests - BufferedTestConfigSettingsService', () => {
         const testDir = '/my/project';
         const newArgs: string[] = ['-x', '--spam=42'];
         const cfg = typeMoq.Mock.ofType<ITestConfigSettingsService>(undefined, typeMoq.MockBehavior.Strict);
-        cfg.setup(c => c.updateTestArgs(typeMoq.It.isValue(testDir), typeMoq.It.isValue(Product.pytest), typeMoq.It.isValue(newArgs)))
+        cfg.setup(c =>
+            c.updateTestArgs(
+                typeMoq.It.isValue(testDir),
+                typeMoq.It.isValue(Product.pytest),
+                typeMoq.It.isValue(newArgs)
+            )
+        )
             .returns(() => Promise.resolve())
             .verifiable(typeMoq.Times.once());
         cfg.setup(c => c.disable(typeMoq.It.isValue(testDir), typeMoq.It.isValue(Product.unittest)))

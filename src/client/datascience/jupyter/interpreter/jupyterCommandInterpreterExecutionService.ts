@@ -43,11 +43,17 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
     }
     public async isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command notebook
-        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.NotebookCommand, cancelToken), cancelToken);
+        return Cancellation.race(
+            () => this.isCommandSupported(JupyterCommands.NotebookCommand, cancelToken),
+            cancelToken
+        );
     }
     public async isExportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command nbconvert
-        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.ConvertCommand, cancelToken), cancelToken);
+        return Cancellation.race(
+            () => this.isCommandSupported(JupyterCommands.ConvertCommand, cancelToken),
+            cancelToken
+        );
     }
     public async getReasonForJupyterNotebookNotBeingSupported(): Promise<string> {
         const notebook = await this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand);
@@ -62,7 +68,10 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
 
         return undefined;
     }
-    public async startNotebook(notebookArgs: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> {
+    public async startNotebook(
+        notebookArgs: string[],
+        options: SpawnOptions
+    ): Promise<ObservableExecutionResult<string>> {
         // First we find a way to start a notebook server
         const notebookCommand = await this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand);
         this.checkNotebookCommand(notebookCommand);
@@ -70,7 +79,10 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
     }
 
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
-        const [interpreter, activeInterpreter] = await Promise.all([this.getSelectedInterpreter(token), this.interpreterService.getActiveInterpreter()]);
+        const [interpreter, activeInterpreter] = await Promise.all([
+            this.getSelectedInterpreter(token),
+            this.interpreterService.getActiveInterpreter()
+        ]);
         if (!interpreter) {
             return;
         }
@@ -78,8 +90,15 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
         // We dont' want to create daemons for all interpreters.
         const isActiveInterpreter = activeInterpreter ? activeInterpreter.path === interpreter.path : false;
         const daemon = await (isActiveInterpreter
-            ? this.pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path })
-            : this.pythonExecutionFactory.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, interpreter, bypassCondaExecution: true }));
+            ? this.pythonExecutionFactory.createDaemon({
+                  daemonModule: PythonDaemonModule,
+                  pythonPath: interpreter.path
+              })
+            : this.pythonExecutionFactory.createActivatedEnvironment({
+                  allowEnvironmentFetchExceptions: true,
+                  interpreter,
+                  bypassCondaExecution: true
+              }));
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: token };
@@ -104,8 +123,12 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
         }
 
         // Wait for the nbconvert to finish
-        const args = template ? [file, '--to', 'python', '--stdout', '--template', template] : [file, '--to', 'python', '--stdout'];
-        return convert.command.exec(args, { throwOnStdErr: false, encoding: 'utf8', token }).then(output => output.stdout);
+        const args = template
+            ? [file, '--to', 'python', '--stdout', '--template', template]
+            : [file, '--to', 'python', '--stdout'];
+        return convert.command
+            .exec(args, { throwOnStdErr: false, encoding: 'utf8', token })
+            .then(output => output.stdout);
     }
     public async openNotebook(notebookFile: string): Promise<void> {
         // First we find a way to start a notebook server
@@ -120,7 +143,9 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
 
     public async getKernelSpecs(token?: CancellationToken): Promise<JupyterKernelSpec[]> {
         // Ignore errors if there are no kernels.
-        const kernelSpecCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelSpecCommand).catch(noop);
+        const kernelSpecCommand = await this.commandFinder
+            .findBestCommand(JupyterCommands.KernelSpecCommand)
+            .catch(noop);
 
         if (!kernelSpecCommand || !kernelSpecCommand.command) {
             return [];
@@ -132,7 +157,10 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
             traceInfo('Asking for kernelspecs from jupyter');
 
             // Ask for our current list.
-            const output = await kernelSpecCommand.command.exec(['list', '--json'], { throwOnStdErr: true, encoding: 'utf8' });
+            const output = await kernelSpecCommand.command.exec(['list', '--json'], {
+                throwOnStdErr: true,
+                encoding: 'utf8'
+            });
 
             return parseKernelSpecs(output.stdout, this.fs, token).catch(parserError => {
                 traceError('Failed to parse kernelspecs', parserError);
@@ -148,7 +176,10 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
     private checkNotebookCommand(notebook: IFindCommandResult) {
         if (!notebook.command) {
             const errorMessage = notebook.error ? notebook.error : DataScience.notebookNotFound();
-            throw new JupyterInstallError(DataScience.jupyterNotSupported().format(errorMessage), DataScience.pythonInteractiveHelpLink());
+            throw new JupyterInstallError(
+                DataScience.jupyterNotSupported().format(errorMessage),
+                DataScience.pythonInteractiveHelpLink()
+            );
         }
     }
     private async isCommandSupported(command: JupyterCommands, cancelToken?: CancellationToken): Promise<boolean> {

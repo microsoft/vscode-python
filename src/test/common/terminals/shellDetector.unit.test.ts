@@ -63,7 +63,10 @@ suite('Shell Detector', () => {
             const nameDetector = new TerminalNameShellDetector();
             const vscEnvDetector = new VSCEnvironmentShellDetector(instance(mock(ApplicationEnvironment)));
             const userEnvDetector = new UserEnvironmentShellDetector(mock(MockProcess), instance(platformService));
-            const settingsDetector = new SettingsShellDetector(instance(mock(WorkspaceService)), instance(platformService));
+            const settingsDetector = new SettingsShellDetector(
+                instance(mock(WorkspaceService)),
+                instance(platformService)
+            );
             const detectors = [settingsDetector, userEnvDetector, nameDetector, vscEnvDetector];
             const shellDetector = new ShellDetector(instance(platformService), detectors);
 
@@ -125,7 +128,11 @@ suite('Shell Detector', () => {
             when(detector1.identify(anything(), anything())).thenReturn(TerminalShellType.tcshell);
             when(detector2.identify(anything(), anything())).thenReturn(detectedShell);
             when(detector3.identify(anything(), anything())).thenReturn(TerminalShellType.fish);
-            const shellDetector = new ShellDetector(instance(platformService), [instance(detector1), instance(detector2), instance(detector3)]);
+            const shellDetector = new ShellDetector(instance(platformService), [
+                instance(detector1),
+                instance(detector2),
+                instance(detector3)
+            ]);
 
             const shell = shellDetector.identifyTerminalShell();
 
@@ -149,7 +156,12 @@ suite('Shell Detector', () => {
             when(detector2.identify(anything(), anything())).thenReturn(detectedShell);
             when(detector3.identify(anything(), anything())).thenReturn(undefined);
             when(detector4.identify(anything(), anything())).thenReturn(undefined);
-            const shellDetector = new ShellDetector(instance(platformService), [instance(detector1), instance(detector2), instance(detector3), instance(detector4)]);
+            const shellDetector = new ShellDetector(instance(platformService), [
+                instance(detector1),
+                instance(detector2),
+                instance(detector3),
+                instance(detector4)
+            ]);
 
             const shell = shellDetector.identifyTerminalShell();
 
@@ -174,7 +186,12 @@ suite('Shell Detector', () => {
             when(detector2.identify(anything(), anything())).thenReturn(detectedShell);
             when(detector3.identify(anything(), anything())).thenReturn(TerminalShellType.other);
             when(detector4.identify(anything(), anything())).thenReturn(TerminalShellType.other);
-            const shellDetector = new ShellDetector(instance(platformService), [instance(detector1), instance(detector2), instance(detector3), instance(detector4)]);
+            const shellDetector = new ShellDetector(instance(platformService), [
+                instance(detector1),
+                instance(detector2),
+                instance(detector3),
+                instance(detector4)
+            ]);
 
             const shell = shellDetector.identifyTerminalShell();
 

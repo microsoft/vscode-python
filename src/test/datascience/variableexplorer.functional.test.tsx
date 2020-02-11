@@ -106,19 +106,50 @@ value = 'hello world'`;
 
             // We should show a string and show an int, the modules should be hidden
             let targetVariables: IJupyterVariable[] = [
-                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                {
+                    name: 'a',
+                    value: '1',
+                    supportsDataExplorer: false,
+                    type: 'int',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
                 // tslint:disable-next-line:quotemark
-                { name: 'value', value: 'hello world', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+                {
+                    name: 'value',
+                    value: 'hello world',
+                    supportsDataExplorer: false,
+                    type: 'str',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
 
             // Update our exclude list to exclude strings
-            ioc.getSettings().datascience.variableExplorerExclude = `${ioc.getSettings().datascience.variableExplorerExclude};str`;
+            ioc.getSettings().datascience.variableExplorerExclude = `${
+                ioc.getSettings().datascience.variableExplorerExclude
+            };str`;
 
             // Add another string and check our vars, strings should be hidden
             await addCodeImpartial(wrapper, basicCode2, true);
 
-            targetVariables = [{ name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false }];
+            targetVariables = [
+                {
+                    name: 'a',
+                    value: '1',
+                    supportsDataExplorer: false,
+                    type: 'int',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                }
+            ];
             verifyVariables(wrapper, targetVariables);
         },
         () => {
@@ -137,15 +168,44 @@ value = 'hello world'`;
             await addCodeImpartial(wrapper, 'a=1\na');
 
             // Check that we have just the 'a' variable
-            let targetVariables: IJupyterVariable[] = [{ name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false }];
+            let targetVariables: IJupyterVariable[] = [
+                {
+                    name: 'a',
+                    value: '1',
+                    supportsDataExplorer: false,
+                    type: 'int',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                }
+            ];
             verifyVariables(wrapper, targetVariables);
 
             // Add another variable and check it
             await addCodeImpartial(wrapper, basicCode, true);
 
             targetVariables = [
-                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'value', value: 'hello world', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+                {
+                    name: 'a',
+                    value: '1',
+                    supportsDataExplorer: false,
+                    type: 'int',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
+                {
+                    name: 'value',
+                    value: 'hello world',
+                    supportsDataExplorer: false,
+                    type: 'str',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
 
@@ -153,10 +213,37 @@ value = 'hello world'`;
             await addCodeImpartial(wrapper, basicCode2, true);
 
             targetVariables = [
-                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'value', value: 'hello world', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
+                {
+                    name: 'a',
+                    value: '1',
+                    supportsDataExplorer: false,
+                    type: 'int',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
+                {
+                    name: 'value',
+                    value: 'hello world',
+                    supportsDataExplorer: false,
+                    type: 'str',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
                 // tslint:disable-next-line:quotemark
-                { name: 'value2', value: 'hello world 2', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+                {
+                    name: 'value2',
+                    value: 'hello world 2',
+                    supportsDataExplorer: false,
+                    type: 'str',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
         },
@@ -179,12 +266,48 @@ myDict = {'a': 1}`;
             await addCodeImpartial(wrapper, basicCode, true);
 
             const targetVariables: IJupyterVariable[] = [
-                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                {
+                    name: 'a',
+                    value: '1',
+                    supportsDataExplorer: false,
+                    type: 'int',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
                 // tslint:disable-next-line:quotemark
-                { name: 'myDict', value: "{'a': 1}", supportsDataExplorer: true, type: 'dict', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'myList', value: '[1, 2, 3]', supportsDataExplorer: true, type: 'list', size: 54, shape: '', count: 0, truncated: false },
+                {
+                    name: 'myDict',
+                    value: "{'a': 1}",
+                    supportsDataExplorer: true,
+                    type: 'dict',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
+                {
+                    name: 'myList',
+                    value: '[1, 2, 3]',
+                    supportsDataExplorer: true,
+                    type: 'list',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
                 // Set can vary between python versions, so just don't both to check the value, just see that we got it
-                { name: 'mySet', value: undefined, supportsDataExplorer: true, type: 'set', size: 54, shape: '', count: 0, truncated: false }
+                {
+                    name: 'mySet',
+                    value: undefined,
+                    supportsDataExplorer: true,
+                    type: 'set',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
         },
@@ -213,8 +336,26 @@ myTuple = 1,2,3,4,5,6,7,8,9
             await addCodeImpartial(wrapper, basicCode, true, 2);
 
             const targetVariables: IJupyterVariable[] = [
-                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'myComplex', value: '(1+1j)', supportsDataExplorer: false, type: 'complex', size: 54, shape: '', count: 0, truncated: false },
+                {
+                    name: 'a',
+                    value: '1',
+                    supportsDataExplorer: false,
+                    type: 'int',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
+                {
+                    name: 'myComplex',
+                    value: '(1+1j)',
+                    supportsDataExplorer: false,
+                    type: 'complex',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
                 {
                     name: 'myDataframe',
                     value: `0
@@ -228,8 +369,26 @@ myTuple = 1,2,3,4,5,6,7,8,9
                     count: 0,
                     truncated: false
                 },
-                { name: 'myFloat', value: '9999.9999', supportsDataExplorer: false, type: 'float', size: 58, shape: '', count: 0, truncated: false },
-                { name: 'myInt', value: '99999999', supportsDataExplorer: false, type: 'int', size: 56, shape: '', count: 0, truncated: false },
+                {
+                    name: 'myFloat',
+                    value: '9999.9999',
+                    supportsDataExplorer: false,
+                    type: 'float',
+                    size: 58,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
+                {
+                    name: 'myInt',
+                    value: '99999999',
+                    supportsDataExplorer: false,
+                    type: 'int',
+                    size: 56,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
                 // tslint:disable:no-trailing-whitespace
                 {
                     name: 'mySeries',
@@ -244,8 +403,26 @@ Name: 0, dtype: float64`,
                     count: 0,
                     truncated: false
                 },
-                { name: 'myTuple', value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)', supportsDataExplorer: false, type: 'tuple', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'mynpArray', value: '[1. 2. 3.]', supportsDataExplorer: true, type: 'ndarray', size: 54, shape: '', count: 0, truncated: false }
+                {
+                    name: 'myTuple',
+                    value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)',
+                    supportsDataExplorer: false,
+                    type: 'tuple',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
+                {
+                    name: 'mynpArray',
+                    value: '[1. 2. 3.]',
+                    supportsDataExplorer: true,
+                    type: 'ndarray',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
         },
@@ -324,14 +501,20 @@ function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
 }
 
 // Verify a set of rows versus a set of expected variables
-function verifyVariables(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, targetVariables: IJupyterVariable[]) {
+function verifyVariables(
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    targetVariables: IJupyterVariable[]
+) {
     // Force an update so we render whatever the current state is
     wrapper.update();
 
     // Then search for results.
     const foundRows = wrapper.find('div.react-grid-Row');
 
-    expect(foundRows.length).to.be.equal(targetVariables.length, 'Different number of variable explorer rows and target variables');
+    expect(foundRows.length).to.be.equal(
+        targetVariables.length,
+        'Different number of variable explorer rows and target variables'
+    );
 
     foundRows.forEach((row, index) => {
         verifyRow(row, targetVariables[index]);
@@ -369,5 +552,8 @@ function verifyCell(cellWrapper: ReactWrapper<any, Readonly<{}>, React.Component
     const actualValueNormalized = match![1].replace(/^\s*|\s(?=\s)|\s*$/g, '').replace(/\r\n/g, '\n');
     const expectedValueNormalized = value.replace(/^\s*|\s(?=\s)|\s*$/g, '').replace(/\r\n/g, '\n');
 
-    expect(actualValueNormalized).to.be.equal(expectedValueNormalized, `${targetName} has an unexpected value ${cellHTML.innerHTML} in variable explorer cell`);
+    expect(actualValueNormalized).to.be.equal(
+        expectedValueNormalized,
+        `${targetName} has an unexpected value ${cellHTML.innerHTML} in variable explorer cell`
+    );
 }

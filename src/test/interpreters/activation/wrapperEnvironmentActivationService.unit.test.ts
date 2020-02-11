@@ -76,7 +76,9 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                             when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(onDidChangeEnvVars.event);
                             when(fs.readFile(anything())).thenReject(new Error('kaboom'));
                             // Generate a unique key based on resource.
-                            when(workspace.getWorkspaceFolderIdentifier(anything())).thenCall((identifier: Resource) => identifier?.fsPath || '');
+                            when(workspace.getWorkspaceFolderIdentifier(anything())).thenCall(
+                                (identifier: Resource) => identifier?.fsPath || ''
+                            );
                             envActivationService = new WrapperEnvironmentActivationService(
                                 instance(procActivation),
                                 instance(termActivation),
@@ -94,84 +96,171 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                         suite(interpreter ? 'With an interpreter' : 'Without an interpreter', () => {
                             test('Environment variables returned by process provider should be used if terminal provider crashes', async () => {
                                 const expectedVars = { WOW: '1' };
-                                when(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenReject(new Error('kaboom'));
-                                when(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve(expectedVars);
+                                when(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenReject(new Error('kaboom'));
+                                when(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenResolve(expectedVars);
 
-                                const vars = await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
+                                const vars = await envActivationService.getActivatedEnvironmentVariables(
+                                    resource,
+                                    interpreter
+                                );
 
                                 assert.deepEqual(vars, expectedVars);
-                                verify(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
-                                verify(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
+                                verify(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
+                                verify(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
                             });
                             test('Use cached variables returned by process provider should be used if terminal provider crashes', async () => {
                                 const expectedVars = { WOW: '1' };
-                                when(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenReject(new Error('kaboom'));
-                                when(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve(expectedVars);
+                                when(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenReject(new Error('kaboom'));
+                                when(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenResolve(expectedVars);
 
-                                let vars = await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
+                                let vars = await envActivationService.getActivatedEnvironmentVariables(
+                                    resource,
+                                    interpreter
+                                );
 
                                 assert.deepEqual(vars, expectedVars);
-                                verify(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
-                                verify(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
+                                verify(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
+                                verify(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
 
-                                vars = await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
+                                vars = await envActivationService.getActivatedEnvironmentVariables(
+                                    resource,
+                                    interpreter
+                                );
                                 assert.deepEqual(vars, expectedVars);
-                                verify(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
-                                verify(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
+                                verify(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
+                                verify(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
                             });
                             test('Environment variables returned by terminal provider should be used if that returns any variables', async () => {
                                 const expectedVars = { WOW: '1' };
-                                when(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve(expectedVars);
-                                when(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({ somethingElse: '1' });
+                                when(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenResolve(expectedVars);
+                                when(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenResolve({ somethingElse: '1' });
 
-                                const vars = await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
+                                const vars = await envActivationService.getActivatedEnvironmentVariables(
+                                    resource,
+                                    interpreter
+                                );
 
                                 assert.deepEqual(vars, expectedVars);
-                                verify(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
-                                verify(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
+                                verify(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
+                                verify(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
                             });
                             test('Environment variables returned by terminal provider should be used if that returns any variables', async () => {
                                 const expectedVars = { WOW: '1' };
-                                when(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve(expectedVars);
-                                when(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({ somethingElse: '1' });
+                                when(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenResolve(expectedVars);
+                                when(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenResolve({ somethingElse: '1' });
 
-                                let vars = await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
+                                let vars = await envActivationService.getActivatedEnvironmentVariables(
+                                    resource,
+                                    interpreter
+                                );
 
                                 assert.deepEqual(vars, expectedVars);
-                                verify(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
-                                verify(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
+                                verify(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
+                                verify(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
 
-                                vars = await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
+                                vars = await envActivationService.getActivatedEnvironmentVariables(
+                                    resource,
+                                    interpreter
+                                );
                                 assert.deepEqual(vars, expectedVars);
-                                verify(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
-                                verify(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
+                                verify(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
+                                verify(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
                             });
                             test('Will not use cached info, if passing different resource or interpreter', async () => {
                                 const expectedVars = { WOW: '1' };
-                                when(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve(expectedVars);
-                                when(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve({ somethingElse: '1' });
+                                when(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenResolve(expectedVars);
+                                when(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenResolve({ somethingElse: '1' });
 
-                                let vars = await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
+                                let vars = await envActivationService.getActivatedEnvironmentVariables(
+                                    resource,
+                                    interpreter
+                                );
 
                                 assert.deepEqual(vars, expectedVars);
-                                verify(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
-                                verify(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
+                                verify(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
+                                verify(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
 
                                 // Same resource, hence return cached info.
-                                vars = await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
+                                vars = await envActivationService.getActivatedEnvironmentVariables(
+                                    resource,
+                                    interpreter
+                                );
                                 assert.deepEqual(vars, expectedVars);
-                                verify(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
-                                verify(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).once();
+                                verify(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
+                                verify(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).once();
 
                                 // Invoke again with a different resource.
                                 const newResource = Uri.file('New Resource');
-                                when(termActivation.getActivatedEnvironmentVariables(newResource, anything(), anything())).thenResolve(undefined);
-                                when(procActivation.getActivatedEnvironmentVariables(newResource, anything(), anything())).thenResolve({ NewVars: '1' });
+                                when(
+                                    termActivation.getActivatedEnvironmentVariables(newResource, anything(), anything())
+                                ).thenResolve(undefined);
+                                when(
+                                    procActivation.getActivatedEnvironmentVariables(newResource, anything(), anything())
+                                ).thenResolve({ NewVars: '1' });
 
-                                vars = await envActivationService.getActivatedEnvironmentVariables(newResource, undefined);
+                                vars = await envActivationService.getActivatedEnvironmentVariables(
+                                    newResource,
+                                    undefined
+                                );
                                 assert.deepEqual(vars, { NewVars: '1' });
-                                verify(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).twice();
-                                verify(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).twice();
+                                verify(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).twice();
+                                verify(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).twice();
 
                                 // Invoke again with a different python interpreter.
                                 const newInterpreter: PythonInterpreter = {
@@ -181,13 +270,32 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                     sysVersion: '',
                                     type: InterpreterType.Pipenv
                                 };
-                                when(termActivation.getActivatedEnvironmentVariables(anything(), newInterpreter, anything())).thenResolve({ NewPythonVars: '1' });
-                                when(procActivation.getActivatedEnvironmentVariables(anything(), newInterpreter, anything())).thenResolve(undefined);
+                                when(
+                                    termActivation.getActivatedEnvironmentVariables(
+                                        anything(),
+                                        newInterpreter,
+                                        anything()
+                                    )
+                                ).thenResolve({ NewPythonVars: '1' });
+                                when(
+                                    procActivation.getActivatedEnvironmentVariables(
+                                        anything(),
+                                        newInterpreter,
+                                        anything()
+                                    )
+                                ).thenResolve(undefined);
 
-                                vars = await envActivationService.getActivatedEnvironmentVariables(newResource, newInterpreter);
+                                vars = await envActivationService.getActivatedEnvironmentVariables(
+                                    newResource,
+                                    newInterpreter
+                                );
                                 assert.deepEqual(vars, { NewPythonVars: '1' });
-                                verify(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thrice();
-                                verify(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thrice();
+                                verify(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thrice();
+                                verify(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thrice();
                             });
                             test('Use variables from file cache', async function() {
                                 if (!storagePath) {
@@ -195,11 +303,18 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                     return this.skip();
                                 }
                                 const expectedVars = { WOW: '1' };
-                                when(termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve(undefined);
-                                when(procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve(undefined);
+                                when(
+                                    termActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenResolve(undefined);
+                                when(
+                                    procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
+                                ).thenResolve(undefined);
                                 when(fs.readFile(anything())).thenResolve(JSON.stringify({ env: expectedVars }));
 
-                                const vars = await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
+                                const vars = await envActivationService.getActivatedEnvironmentVariables(
+                                    resource,
+                                    interpreter
+                                );
 
                                 assert.deepEqual(vars, expectedVars);
                             });

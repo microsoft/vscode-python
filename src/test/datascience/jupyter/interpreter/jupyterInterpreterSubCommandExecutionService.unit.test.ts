@@ -31,7 +31,8 @@ import { MockOutputChannel } from '../../../mockClasses';
 import { createPythonInterpreter } from '../../../utils/interpreters';
 use(chaiPromise);
 
-// tslint:disable-next-line: max-func-body-length
+// tslint:disable: max-func-body-length
+
 suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
     let jupyterInterpreter: JupyterInterpreterService;
     let interperterService: IInterpreterService;
@@ -70,8 +71,10 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
             instance(pathUtils)
         );
 
-        // tslint:disable-next-line: no-any
-        when(execService.execModuleObservable('jupyter', anything(), anything())).thenResolve(notebookStartResult as any);
+        when(execService.execModuleObservable('jupyter', anything(), anything())).thenResolve(
+            // tslint:disable-next-line: no-any
+            notebookStartResult as any
+        );
         when(interperterService.getActiveInterpreter()).thenResolve(activePythonInterpreter);
         when(interperterService.getActiveInterpreter(undefined)).thenResolve(activePythonInterpreter);
     });
@@ -263,10 +266,32 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
         test('Return list of running jupyter servers', async () => {
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
             const expectedServers: JupyterServerInfo[] = [
-                { base_url: '1', hostname: '111', notebook_dir: 'a', password: true, pid: 1, port: 1243, secure: false, token: 'wow', url: 'url' },
-                { base_url: '2', hostname: '22', notebook_dir: 'b', password: false, pid: 13, port: 4444, secure: true, token: 'wow2', url: 'url2' }
+                {
+                    base_url: '1',
+                    hostname: '111',
+                    notebook_dir: 'a',
+                    password: true,
+                    pid: 1,
+                    port: 1243,
+                    secure: false,
+                    token: 'wow',
+                    url: 'url'
+                },
+                {
+                    base_url: '2',
+                    hostname: '22',
+                    notebook_dir: 'b',
+                    password: false,
+                    pid: 13,
+                    port: 4444,
+                    secure: true,
+                    token: 'wow2',
+                    url: 'url2'
+                }
             ];
-            when(execService.exec(deepEqual([file]), anything())).thenResolve({ stdout: JSON.stringify(expectedServers) });
+            when(execService.exec(deepEqual([file]), anything())).thenResolve({
+                stdout: JSON.stringify(expectedServers)
+            });
 
             const servers = await jupyterInterpreterExecutionService.getRunningJupyterServers(undefined);
 
@@ -276,11 +301,21 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
             const kernelSpecs = {
                 K1: {
                     resource_dir: 'dir1',
-                    spec: { argv: [], display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } }
+                    spec: {
+                        argv: [],
+                        display_name: 'disp1',
+                        language: PYTHON_LANGUAGE,
+                        metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } }
+                    }
                 },
                 K2: {
                     resource_dir: 'dir2',
-                    spec: { argv: [], display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } }
+                    spec: {
+                        argv: [],
+                        display_name: 'disp2',
+                        language: PYTHON_LANGUAGE,
+                        metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } }
+                    }
                 }
             };
             when(fs.fileExists(anything())).thenResolve(true);
@@ -299,16 +334,28 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
             const kernelSpecs = {
                 K1: {
                     resource_dir: 'dir1',
-                    spec: { argv: [], display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } }
+                    spec: {
+                        argv: [],
+                        display_name: 'disp1',
+                        language: PYTHON_LANGUAGE,
+                        metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } }
+                    }
                 },
                 K2: {
                     resource_dir: 'dir2',
-                    spec: { argv: [], display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } }
+                    spec: {
+                        argv: [],
+                        display_name: 'disp2',
+                        language: PYTHON_LANGUAGE,
+                        metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } }
+                    }
                 }
             };
             when(fs.fileExists(anything())).thenResolve(true);
             when(execService.execModule('jupyter', deepEqual(['kernelspec', 'list', '--json']), anything())).thenReject(new Error('kaboom'));
-            when(execService.exec(anything(), anything())).thenResolve({ stdout: JSON.stringify({ kernelspecs: kernelSpecs }) });
+            when(execService.exec(anything(), anything())).thenResolve({
+                stdout: JSON.stringify({ kernelspecs: kernelSpecs })
+            });
 
             const specs = await jupyterInterpreterExecutionService.getKernelSpecs(undefined);
 

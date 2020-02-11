@@ -58,7 +58,9 @@ export class CondaEnvFileService extends CacheableLocatorService {
         }
         return this.fileSystem
             .fileExists(this.condaService.condaEnvironmentsFile!)
-            .then(exists => (exists ? this.getEnvironmentsFromFile(this.condaService.condaEnvironmentsFile!) : Promise.resolve([])));
+            .then(exists =>
+                exists ? this.getEnvironmentsFromFile(this.condaService.condaEnvironmentsFile!) : Promise.resolve([])
+            );
     }
 
     /**
@@ -72,14 +74,18 @@ export class CondaEnvFileService extends CacheableLocatorService {
                 .map(environmentPath => environmentPath.trim())
                 .filter(environmentPath => environmentPath.length > 0);
 
-            const interpreters = (await Promise.all(environmentPaths.map(environmentPath => this.getInterpreterDetails(environmentPath))))
+            const interpreters = (
+                await Promise.all(environmentPaths.map(environmentPath => this.getInterpreterDetails(environmentPath)))
+            )
                 .filter(item => !!item)
                 .map(item => item!);
 
             const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
                 interpreters.forEach(interpreter => {
-                    const environment = environments.find(item => this.fileSystem.arePathsSame(item.path, interpreter!.envPath!));
+                    const environment = environments.find(item =>
+                        this.fileSystem.arePathsSame(item.path, interpreter!.envPath!)
+                    );
                     if (environment) {
                         interpreter.envName = environment!.name;
                     }

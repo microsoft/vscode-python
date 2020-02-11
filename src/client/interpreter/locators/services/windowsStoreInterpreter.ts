@@ -92,7 +92,11 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
     @traceDecorators.error('Get Windows Store Interpreter Hash')
     public async getInterpreterHash(pythonPath: string): Promise<string> {
         const key = `WINDOWS_STORE_INTERPRETER_HASH_${pythonPath}`;
-        const stateStore = this.persistentFactory.createGlobalPersistentState<string | undefined>(key, undefined, 60 * 60 * 1000);
+        const stateStore = this.persistentFactory.createGlobalPersistentState<string | undefined>(
+            key,
+            undefined,
+            60 * 60 * 1000
+        );
 
         if (stateStore.value) {
             return stateStore.value;
@@ -102,7 +106,9 @@ export class WindowsStoreInterpreter implements IWindowsStoreInterpreter, IInter
         const executablePath = await pythonService.getExecutablePath();
         // If we are unable to get file hash of executable, then get hash of parent directory.
         // Its likely it will fail for the executable (fails during development, but try nevertheless - in case things start working).
-        const hash = await this.fs.getFileHash(executablePath).catch(() => this.fs.getFileHash(path.dirname(executablePath)));
+        const hash = await this.fs
+            .getFileHash(executablePath)
+            .catch(() => this.fs.getFileHash(path.dirname(executablePath)));
         await stateStore.updateValue(hash);
 
         return hash;

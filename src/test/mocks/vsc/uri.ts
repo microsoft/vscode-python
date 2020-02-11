@@ -54,11 +54,15 @@ export namespace vscUri {
         if (ret.path) {
             if (ret.authority) {
                 if (!_singleSlashStart.test(ret.path)) {
-                    throw new Error('[UriError]: If a URI contains an authority component, then the path component must either be empty or begin with a slash ("/") character');
+                    throw new Error(
+                        '[UriError]: If a URI contains an authority component, then the path component must either be empty or begin with a slash ("/") character'
+                    );
                 }
             } else {
                 if (_doubleSlashStart.test(ret.path)) {
-                    throw new Error('[UriError]: If a URI does not contain an authority component, then the path cannot begin with two slash characters ("//")');
+                    throw new Error(
+                        '[UriError]: If a URI does not contain an authority component, then the path cannot begin with two slash characters ("//")'
+                    );
                 }
             }
         }
@@ -169,7 +173,14 @@ export namespace vscUri {
         /**
          * @internal
          */
-        protected constructor(scheme: string, authority?: string, path?: string, query?: string, fragment?: string, _strict?: boolean);
+        protected constructor(
+            scheme: string,
+            authority?: string,
+            path?: string,
+            query?: string,
+            fragment?: string,
+            _strict?: boolean
+        );
 
         /**
          * @internal
@@ -179,7 +190,14 @@ export namespace vscUri {
         /**
          * @internal
          */
-        protected constructor(schemeOrData: string | UriComponents, authority?: string, path?: string, query?: string, fragment?: string, _strict: boolean = false) {
+        protected constructor(
+            schemeOrData: string | UriComponents,
+            authority?: string,
+            path?: string,
+            query?: string,
+            fragment?: string,
+            _strict: boolean = false
+        ) {
             if (typeof schemeOrData === 'object') {
                 this.scheme = schemeOrData.scheme || _empty;
                 this.authority = schemeOrData.authority || _empty;
@@ -235,7 +253,13 @@ export namespace vscUri {
 
         // ---- modify to new -------------------------
 
-        with(change: { scheme?: string; authority?: string | null; path?: string | null; query?: string | null; fragment?: string | null }): URI {
+        with(change: {
+            scheme?: string;
+            authority?: string | null;
+            path?: string | null;
+            query?: string | null;
+            fragment?: string | null;
+        }): URI {
             if (!change) {
                 return this;
             }
@@ -267,7 +291,13 @@ export namespace vscUri {
                 fragment = _empty;
             }
 
-            if (scheme === this.scheme && authority === this.authority && path === this.path && query === this.query && fragment === this.fragment) {
+            if (
+                scheme === this.scheme &&
+                authority === this.authority &&
+                path === this.path &&
+                query === this.query &&
+                fragment === this.fragment
+            ) {
                 return this;
             }
 
@@ -344,8 +374,20 @@ export namespace vscUri {
             return new _URI('file', authority, path, _empty, _empty);
         }
 
-        static from(components: { scheme: string; authority?: string; path?: string; query?: string; fragment?: string }): URI {
-            return new _URI(components.scheme, components.authority, components.path, components.query, components.fragment);
+        static from(components: {
+            scheme: string;
+            authority?: string;
+            path?: string;
+            query?: string;
+            fragment?: string;
+        }): URI {
+            return new _URI(
+                components.scheme,
+                components.authority,
+                components.path,
+                components.query,
+                components.fragment
+            );
         }
 
         // ---- printing/externalize ---------------------------
@@ -408,7 +450,14 @@ export namespace vscUri {
     class _URI extends URI {
         _formatted: string | null = null;
         _fsPath: string | null = null;
-        constructor(schemeOrData: string | UriComponents, authority?: string, path?: string, query?: string, fragment?: string, _strict: boolean = false) {
+        constructor(
+            schemeOrData: string | UriComponents,
+            authority?: string,
+            path?: string,
+            query?: string,
+            fragment?: string,
+            _strict: boolean = false
+        ) {
             super(schemeOrData as any, authority, path, query, fragment, _strict);
             this._fsPath = this.fsPath;
         }
@@ -576,7 +625,8 @@ export namespace vscUri {
             value = `//${uri.authority}${uri.path}`;
         } else if (
             uri.path.charCodeAt(0) === CharCode.Slash &&
-            ((uri.path.charCodeAt(1) >= CharCode.A && uri.path.charCodeAt(1) <= CharCode.Z) || (uri.path.charCodeAt(1) >= CharCode.a && uri.path.charCodeAt(1) <= CharCode.z)) &&
+            ((uri.path.charCodeAt(1) >= CharCode.A && uri.path.charCodeAt(1) <= CharCode.Z) ||
+                (uri.path.charCodeAt(1) >= CharCode.a && uri.path.charCodeAt(1) <= CharCode.z)) &&
             uri.path.charCodeAt(2) === CharCode.Colon
         ) {
             // windows drive letter: file:///c:/far/boo

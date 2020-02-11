@@ -181,7 +181,9 @@ export class ThemeFinder implements IThemeFinder {
                 for (const t of grammars) {
                     if (t.hasOwnProperty('language') && t.language === language) {
                         // Path is relative to the package.json file.
-                        const rootFile = t.hasOwnProperty('path') ? path.join(path.dirname(packageJson), t.path.toString()) : '';
+                        const rootFile = t.hasOwnProperty('path')
+                            ? path.join(path.dirname(packageJson), t.path.toString())
+                            : '';
                         return this.fs.readFile(rootFile);
                     }
                 }
@@ -202,10 +204,15 @@ export class ThemeFinder implements IThemeFinder {
                 const themes = contributes.themes as any[];
                 // Go through each theme, seeing if the label matches our theme name
                 for (const t of themes) {
-                    if ((t.hasOwnProperty('label') && t.label === themeName) || (t.hasOwnProperty('id') && t.id === themeName)) {
+                    if (
+                        (t.hasOwnProperty('label') && t.label === themeName) ||
+                        (t.hasOwnProperty('id') && t.id === themeName)
+                    ) {
                         const isDark = t.hasOwnProperty('uiTheme') && t.uiTheme === 'vs-dark';
                         // Path is relative to the package.json file.
-                        const rootFile = t.hasOwnProperty('path') ? path.join(path.dirname(packageJson), t.path.toString()) : '';
+                        const rootFile = t.hasOwnProperty('path')
+                            ? path.join(path.dirname(packageJson), t.path.toString())
+                            : '';
 
                         return { isDark, rootFile };
                     }

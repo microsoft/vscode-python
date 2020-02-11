@@ -37,7 +37,11 @@ export class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
         @unmanaged()
-        messageListenerCtor: (callback: (message: string, payload: {}) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
+        messageListenerCtor: (
+            callback: (message: string, payload: {}) => void,
+            viewChanged: (panel: IWebPanel) => void,
+            disposed: () => void
+        ) => IWebPanelMessageListener,
         @unmanaged() private rootPath: string,
         @unmanaged() private scripts: string[],
         @unmanaged() private title: string,
@@ -45,13 +49,19 @@ export class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() private readonly useWebViewServer: boolean
     ) {
         // Create our message listener for our web panel.
-        this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.webPanelViewStateChanged.bind(this), this.dispose.bind(this));
+        this.messageListener = messageListenerCtor(
+            this.onMessage.bind(this),
+            this.webPanelViewStateChanged.bind(this),
+            this.dispose.bind(this)
+        );
 
         // Listen for settings changes from vscode.
         this.themeChangeHandler = this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this);
 
         // Listen for settings changes
-        this.settingsChangeHandler = this.configService.getSettings().onDidChange(this.onDataScienceSettingsChanged.bind(this));
+        this.settingsChangeHandler = this.configService
+            .getSettings()
+            .onDidChange(this.onDataScienceSettingsChanged.bind(this));
 
         // Send the first settings message
         this.onDataScienceSettingsChanged();
@@ -278,9 +288,15 @@ export class WebViewHost<IMapping> implements IDisposable {
         const settings = this.generateDataScienceExtraSettings();
         const requestIsDark = settings.ignoreVscodeTheme ? false : request.isDark;
         this.setTheme(requestIsDark);
-        const isDark = settings.ignoreVscodeTheme ? false : await this.themeFinder.isThemeDark(settings.extraSettings.theme);
+        const isDark = settings.ignoreVscodeTheme
+            ? false
+            : await this.themeFinder.isThemeDark(settings.extraSettings.theme);
         const css = await this.cssGenerator.generateThemeCss(requestIsDark, settings.extraSettings.theme);
-        return this.postMessageInternal(CssMessages.GetCssResponse, { css, theme: settings.extraSettings.theme, knownDark: isDark });
+        return this.postMessageInternal(CssMessages.GetCssResponse, {
+            css,
+            theme: settings.extraSettings.theme,
+            knownDark: isDark
+        });
     }
 
     @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)

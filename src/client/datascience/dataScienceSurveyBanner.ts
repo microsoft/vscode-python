@@ -24,7 +24,10 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
     private disabledInCurrentSession: boolean = false;
     private isInitialized: boolean = false;
     private bannerMessage: string = localize.DataScienceSurveyBanner.bannerMessage();
-    private bannerLabels: string[] = [localize.DataScienceSurveyBanner.bannerLabelYes(), localize.DataScienceSurveyBanner.bannerLabelNo()];
+    private bannerLabels: string[] = [
+        localize.DataScienceSurveyBanner.bannerLabelYes(),
+        localize.DataScienceSurveyBanner.bannerLabelNo()
+    ];
     private readonly commandThreshold: number;
     private readonly surveyLink: string;
 
@@ -92,7 +95,9 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
     }
 
     public async disable(): Promise<void> {
-        await this.persistentState.createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, false).updateValue(false);
+        await this.persistentState
+            .createGlobalPersistentState<boolean>(DSSurveyStateKeys.ShowBanner, false)
+            .updateValue(false);
     }
 
     public async launchSurvey(): Promise<void> {

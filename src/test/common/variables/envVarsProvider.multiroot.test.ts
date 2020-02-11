@@ -8,7 +8,11 @@ import { anything, instance, mock, when } from 'ts-mockito';
 import { ConfigurationTarget, Disposable, Uri, workspace } from 'vscode';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { IS_WINDOWS, NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../../../client/common/platform/constants';
+import {
+    IS_WINDOWS,
+    NON_WINDOWS_PATH_VARIABLE_NAME,
+    WINDOWS_PATH_VARIABLE_NAME
+} from '../../../client/common/platform/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
@@ -52,8 +56,13 @@ suite('Multiroot Environment Variables Provider', () => {
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
-        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve();
-        ioc.serviceManager.rebindInstance<IEnvironmentActivationService>(IEnvironmentActivationService, instance(mockEnvironmentActivationService));
+        when(
+            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())
+        ).thenResolve();
+        ioc.serviceManager.rebindInstance<IEnvironmentActivationService>(
+            IEnvironmentActivationService,
+            instance(mockEnvironmentActivationService)
+        );
         clearCache();
         return initializeTest();
     });
@@ -76,7 +85,14 @@ suite('Multiroot Environment Variables Provider', () => {
         ioc.serviceManager.addSingletonInstance(IInterpreterAutoSelectionService, new MockAutoSelectionService());
         const cfgService = new ConfigurationService(ioc.serviceContainer);
         const workspaceService = new WorkspaceService();
-        return new EnvironmentVariablesProvider(variablesService, disposables, new PlatformService(), workspaceService, cfgService, mockProcess);
+        return new EnvironmentVariablesProvider(
+            variablesService,
+            disposables,
+            new PlatformService(),
+            workspaceService,
+            cfgService,
+            mockProcess
+        );
     }
 
     test('Custom variables should not be undefined without an env file', async () => {
@@ -118,7 +134,10 @@ suite('Multiroot Environment Variables Provider', () => {
         Object.keys(processVariables).forEach(variable => {
             expect(vars).to.have.property(variable);
             // On CI, it was seen that processVariable[variable] can contain spaces at the end, which causes tests to fail. So trim the strings before comparing.
-            expect(vars[variable]?.trim()).to.equal(processVariables[variable]?.trim(), 'Value of the variable is incorrect');
+            expect(vars[variable]?.trim()).to.equal(
+                processVariables[variable]?.trim(),
+                'Value of the variable is incorrect'
+            );
         });
     });
 

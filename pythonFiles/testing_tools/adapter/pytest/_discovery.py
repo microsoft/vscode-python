@@ -12,7 +12,12 @@ from ._pytest_item import parse_item
 
 
 def discover(
-    pytestargs=None, hidestdio=False, _pytest_main=pytest.main, _plugin=None, **_ignored
+    pytestargs=None,
+    hidestdio=False,
+    # *,
+    _pytest_main=pytest.main,
+    _plugin=None,
+    **_ignored
 ):
     """Return the results of test discovery."""
     if _plugin is None:
@@ -29,7 +34,7 @@ def discover(
         pass
     elif ec != 0:
         print(
-            ("equivalent command: {} -m pytest {}").format(
+            "equivalent command: {} -m pytest {}".format(
                 sys.executable, util.shlex_unsplit(pytestargs)
             )
         )
@@ -39,7 +44,7 @@ def discover(
         raise Exception("pytest discovery failed (exit code {})".format(ec))
     if not _plugin._started:
         print(
-            ("equivalent command: {} -m pytest {}").format(
+            "equivalent command: {} -m pytest {}".format(
                 sys.executable, util.shlex_unsplit(pytestargs)
             )
         )

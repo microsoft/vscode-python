@@ -11,8 +11,16 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
-import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICell, IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import {
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages
+} from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    ICell,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
+    IJupyterExecution
+} from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { createEmptyCell, generateTestCells } from '../../datascience-ui/interactive-common/mainState';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
@@ -72,14 +80,21 @@ suite('DataScience Intellisense Unit Tests', () => {
         );
     });
 
-    function sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): Promise<void> {
+    function sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(
+        type: T,
+        payload?: M[T]
+    ): Promise<void> {
         const result = languageServerCache.getMockServer().waitForNotification();
         intellisenseProvider.onMessage(type.toString(), payload);
         return result;
     }
 
     function addCell(code: string, id: string): Promise<void> {
-        return sendMessage(InteractiveWindowMessages.AddCell, { fullText: code, currentText: code, cell: createEmptyCell(id, null) });
+        return sendMessage(InteractiveWindowMessages.AddCell, {
+            fullText: code,
+            currentText: code,
+            cell: createEmptyCell(id, null)
+        });
     }
 
     function updateCell(newCode: string, oldCode: string, id: string): Promise<void> {
@@ -147,7 +162,12 @@ suite('DataScience Intellisense Unit Tests', () => {
     }
 
     function insertCell(id: string, code: string, codeCellAbove?: string): Promise<void> {
-        return sendMessage(InteractiveWindowMessages.InsertCell, { cell: createEmptyCell(id, null), index: 0, code, codeCellAboveId: codeCellAbove });
+        return sendMessage(InteractiveWindowMessages.InsertCell, {
+            cell: createEmptyCell(id, null),
+            index: 0,
+            code,
+            codeCellAboveId: codeCellAbove
+        });
     }
 
     function loadAllCells(cells: ICell[]): Promise<void> {
@@ -302,7 +322,10 @@ suite('DataScience Intellisense Unit Tests', () => {
         await removeAllCells();
         expect(getDocumentContents()).to.be.eq('import sys\nimport foo\nimport bar\nsys', 'Removing all cells broken');
         await addCell('import baz', '3');
-        expect(getDocumentContents()).to.be.eq('import sys\nimport foo\nimport bar\nimport baz\nsys', 'Document not set');
+        expect(getDocumentContents()).to.be.eq(
+            'import sys\nimport foo\nimport bar\nimport baz\nsys',
+            'Document not set'
+        );
     });
 
     test('Load remove and insert', async () => {

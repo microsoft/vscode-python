@@ -16,14 +16,24 @@ import { traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory } from '../terminal/types';
-import { IConfigurationService, IInstaller, InstallerResponse, IOutputChannel, IPersistentStateFactory, ModuleNamePurpose, Product, ProductType } from '../types';
+import {
+    IConfigurationService,
+    IInstaller,
+    InstallerResponse,
+    IOutputChannel,
+    IPersistentStateFactory,
+    ModuleNamePurpose,
+    Product,
+    ProductType
+} from '../types';
 import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
 import { IInstallationChannelManager, InterpreterUri, IProductPathService, IProductService } from './types';
 
 export { Product } from '../types';
 
-export const CTagsInsllationScript = os.platform() === 'darwin' ? 'brew install ctags' : 'sudo apt-get install exuberant-ctags';
+export const CTagsInsllationScript =
+    os.platform() === 'darwin' ? 'brew install ctags' : 'sudo apt-get install exuberant-ctags';
 
 export abstract class BaseInstaller {
     private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
@@ -39,11 +49,16 @@ export abstract class BaseInstaller {
         this.productService = serviceContainer.get<IProductService>(IProductService);
     }
 
-    public promptToInstall(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse> {
+    public promptToInstall(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
         // If this method gets called twice, while previous promise has not been resolved, then return that same promise.
         // E.g. previous promise is not resolved as a message has been displayed to the user, so no point displaying
         // another message.
-        const workspaceFolder = resource && isResource(resource) ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
+        const workspaceFolder =
+            resource && isResource(resource) ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const key = `${product}${workspaceFolder ? workspaceFolder.uri.fsPath : ''}`;
         if (BaseInstaller.PromptPromises.has(key)) {
             return BaseInstaller.PromptPromises.get(key)!;
@@ -56,7 +71,11 @@ export abstract class BaseInstaller {
         return promise;
     }
 
-    public async install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse> {
+    public async install(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
         if (product === Product.unittest) {
             return InstallerResponse.Installed;
         }
@@ -68,9 +87,13 @@ export abstract class BaseInstaller {
         }
 
         const moduleName = translateProductToModule(product, ModuleNamePurpose.install);
-        await installer.installModule(moduleName, resource, cancel).catch(ex => traceError(`Error in installing the module '${moduleName}', ${ex}`));
+        await installer
+            .installModule(moduleName, resource, cancel)
+            .catch(ex => traceError(`Error in installing the module '${moduleName}', ${ex}`));
 
-        return this.isInstalled(product, resource).then(isInstalled => (isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore));
+        return this.isInstalled(product, resource).then(isInstalled =>
+            isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore
+        );
     }
 
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
@@ -97,7 +120,11 @@ export abstract class BaseInstaller {
         }
     }
 
-    protected abstract promptToInstallImplementation(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
+    protected abstract promptToInstallImplementation(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse>;
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
         const productType = this.productService.getProductType(product);
         const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService, productType);
@@ -119,26 +146,46 @@ export class CTagsInstaller extends BaseInstaller {
         if (this.serviceContainer.get<IPlatformService>(IPlatformService).isWindows) {
             this.outputChannel.appendLine('Install Universal Ctags Win32 to enable support for Workspace Symbols');
             this.outputChannel.appendLine('Download the CTags binary from the Universal CTags site.');
-            this.outputChannel.appendLine('Option 1: Extract ctags.exe from the downloaded zip to any folder within your PATH so that Visual Studio Code can run it.');
-            this.outputChannel.appendLine('Option 2: Extract to any folder and add the path to this folder to the command setting.');
+            this.outputChannel.appendLine(
+                'Option 1: Extract ctags.exe from the downloaded zip to any folder within your PATH so that Visual Studio Code can run it.'
+            );
+            this.outputChannel.appendLine(
+                'Option 2: Extract to any folder and add the path to this folder to the command setting.'
+            );
             this.outputChannel.appendLine(
                 'Option 3: Extract to any folder and define that path in the python.workspaceSymbols.ctagsPath setting of your user settings file (settings.json).'
             );
             this.outputChannel.show();
         } else {
-            const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(resource);
-            terminalService.sendCommand(CTagsInsllationScript, []).catch(ex => traceError(`Failed to install ctags. Script sent '${CTagsInsllationScript}', ${ex}`));
+            const terminalService = this.serviceContainer
+                .get<ITerminalServiceFactory>(ITerminalServiceFactory)
+                .getTerminalService(resource);
+            terminalService
+                .sendCommand(CTagsInsllationScript, [])
+                .catch(ex => traceError(`Failed to install ctags. Script sent '${CTagsInsllationScript}', ${ex}`));
         }
         return InstallerResponse.Ignore;
     }
-    protected async promptToInstallImplementation(product: Product, resource?: Uri, _cancel?: CancellationToken): Promise<InstallerResponse> {
-        const item = await this.appShell.showErrorMessage('Install CTags to enable Python workspace symbols?', 'Yes', 'No');
+    protected async promptToInstallImplementation(
+        product: Product,
+        resource?: Uri,
+        _cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
+        const item = await this.appShell.showErrorMessage(
+            'Install CTags to enable Python workspace symbols?',
+            'Yes',
+            'No'
+        );
         return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
 }
 
 export class FormatterInstaller extends BaseInstaller {
-    protected async promptToInstallImplementation(product: Product, resource?: Uri, cancel?: CancellationToken): Promise<InstallerResponse> {
+    protected async promptToInstallImplementation(
+        product: Product,
+        resource?: Uri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
         // Hard-coded on purpose because the UI won't necessarily work having
         // another formatter.
         const formatters = [Product.autopep8, Product.black, Product.yapf];
@@ -176,7 +223,11 @@ export class FormatterInstaller extends BaseInstaller {
 }
 
 export class LinterInstaller extends BaseInstaller {
-    protected async promptToInstallImplementation(product: Product, resource?: Uri, cancel?: CancellationToken): Promise<InstallerResponse> {
+    protected async promptToInstallImplementation(
+        product: Product,
+        resource?: Uri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
         const isPylint = product === Product.pylint;
 
         const productName = ProductNames.get(product)!;
@@ -200,11 +251,17 @@ export class LinterInstaller extends BaseInstaller {
         }
         const response = await this.appShell.showErrorMessage(message, ...options);
         if (response === install) {
-            sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'install' });
+            sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, {
+                tool: productName as LinterId,
+                action: 'install'
+            });
             return this.install(product, resource, cancel);
         } else if (response === disableInstallPrompt) {
             await this.setStoredResponse(disableLinterInstallPromptKey, true);
-            sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, { tool: productName as LinterId, action: 'disablePrompt' });
+            sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, {
+                tool: productName as LinterId,
+                action: 'disablePrompt'
+            });
             return InstallerResponse.Ignore;
         }
 
@@ -249,7 +306,11 @@ export class LinterInstaller extends BaseInstaller {
 }
 
 export class TestFrameworkInstaller extends BaseInstaller {
-    protected async promptToInstallImplementation(product: Product, resource?: Uri, cancel?: CancellationToken): Promise<InstallerResponse> {
+    protected async promptToInstallImplementation(
+        product: Product,
+        resource?: Uri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
 
         const options: string[] = [];
@@ -267,17 +328,33 @@ export class TestFrameworkInstaller extends BaseInstaller {
 }
 
 export class RefactoringLibraryInstaller extends BaseInstaller {
-    protected async promptToInstallImplementation(product: Product, resource?: Uri, cancel?: CancellationToken): Promise<InstallerResponse> {
+    protected async promptToInstallImplementation(
+        product: Product,
+        resource?: Uri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
-        const item = await this.appShell.showErrorMessage(`Refactoring library ${productName} is not installed. Install?`, 'Yes', 'No');
+        const item = await this.appShell.showErrorMessage(
+            `Refactoring library ${productName} is not installed. Install?`,
+            'Yes',
+            'No'
+        );
         return item === 'Yes' ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
     }
 }
 
 export class DataScienceInstaller extends BaseInstaller {
-    protected async promptToInstallImplementation(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse> {
+    protected async promptToInstallImplementation(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
-        const item = await this.appShell.showErrorMessage(localize.DataScience.libraryNotInstalled().format(productName), 'Yes', 'No');
+        const item = await this.appShell.showErrorMessage(
+            localize.DataScience.libraryNotInstalled().format(productName),
+            'Yes',
+            'No'
+        );
         return item === 'Yes' ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
     }
 }
@@ -297,14 +374,24 @@ export class ProductInstaller implements IInstaller {
 
     // tslint:disable-next-line:no-empty
     public dispose() {}
-    public async promptToInstall(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse> {
-        const currentInterpreter = isResource(resource) ? await this.interpreterService.getActiveInterpreter(resource) : resource;
+    public async promptToInstall(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
+        const currentInterpreter = isResource(resource)
+            ? await this.interpreterService.getActiveInterpreter(resource)
+            : resource;
         if (!currentInterpreter) {
             return InstallerResponse.Ignore;
         }
         return this.createInstaller(product).promptToInstall(product, resource, cancel);
     }
-    public async install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse> {
+    public async install(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse> {
         return this.createInstaller(product).install(product, resource, cancel);
     }
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {

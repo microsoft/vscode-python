@@ -24,17 +24,30 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
     ) {
-        this.hasUserBeenNotified = this.persistentStateFactory.createGlobalPersistentState(insidersPromptStateKey, false);
+        this.hasUserBeenNotified = this.persistentStateFactory.createGlobalPersistentState(
+            insidersPromptStateKey,
+            false
+        );
     }
 
     @traceDecorators.error('Error in prompting to install insiders')
     public async promptToInstallInsiders(): Promise<void> {
-        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
-        const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = ['Yes, weekly', 'Yes, daily', 'No, thanks'];
+        const prompts = [
+            ExtensionChannels.yesWeekly(),
+            ExtensionChannels.yesDaily(),
+            DataScienceSurveyBanner.bannerLabelNo()
+        ];
+        const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = [
+            'Yes, weekly',
+            'Yes, daily',
+            'No, thanks'
+        ];
         const selection = await this.appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts);
 
         await this.hasUserBeenNotified.updateValue(true);
-        sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
+        sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, {
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined
+        });
 
         if (!selection) {
             return;
@@ -48,8 +61,13 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
 
     @traceDecorators.error('Error in prompting to reload')
     public async promptToReload(): Promise<void> {
-        const selection = await this.appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload());
-        sendTelemetryEvent(EventName.INSIDERS_RELOAD_PROMPT, undefined, { selection: selection ? 'Reload' : undefined });
+        const selection = await this.appShell.showInformationMessage(
+            ExtensionChannels.reloadToUseInsidersMessage(),
+            Common.reload()
+        );
+        sendTelemetryEvent(EventName.INSIDERS_RELOAD_PROMPT, undefined, {
+            selection: selection ? 'Reload' : undefined
+        });
         if (selection === Common.reload()) {
             this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);
         }

@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationTokenSource } from 'vscode';
-import { EXTENSION_ROOT_DIR, terminalNamePrefixNotToAutoActivate } from '../../common/constants';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { LogOptions, traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
@@ -38,19 +38,25 @@ export class TerminalEnvironmentActivationService implements IEnvironmentActivat
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider
     ) {}
     @traceDecorators.verbose('getActivatedEnvironmentVariables', LogOptions.Arguments)
-    @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false, activatedInTerminal: true }, true)
+    @captureTelemetry(
+        EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES,
+        { failed: false, activatedInTerminal: true },
+        true
+    )
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonInterpreter | undefined,
         _allowExceptions?: boolean | undefined
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        const env = (await this.envVarsProvider.getCustomEnvironmentVariables(resource)) as { [key: string]: string | null } | undefined;
+        const env = (await this.envVarsProvider.getCustomEnvironmentVariables(resource)) as
+            | { [key: string]: string | null }
+            | undefined;
         const terminal = this.terminalFactory.getTerminalService({
             env,
             hideFromUser: true,
             interpreter,
             resource,
-            title: `${terminalNamePrefixNotToAutoActivate}${interpreter?.displayName}${new Date().getTime()}`
+            title: `${interpreter?.displayName}${new Date().getTime()}`
         });
 
         const command = interpreter?.path || 'python';
@@ -59,7 +65,12 @@ export class TerminalEnvironmentActivationService implements IEnvironmentActivat
         try {
             // Pass a cancellation token to ensure we wait until command has completed.
             // If there are any errors in executing in the terminal, throw them so they get logged and bubbled up.
-            await terminal.sendCommand(command, [pyFile.fileToCommandArgument(), jsonFile.filePath.fileToCommandArgument()], new CancellationTokenSource().token, false);
+            await terminal.sendCommand(
+                command,
+                [pyFile.fileToCommandArgument(), jsonFile.filePath.fileToCommandArgument()],
+                new CancellationTokenSource().token,
+                false
+            );
 
             const contents = await this.fs.readFile(jsonFile.filePath);
             return JSON.parse(contents);

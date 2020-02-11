@@ -11,7 +11,10 @@ import * as typemoq from 'typemoq';
 import { FolderVersionPair, ILanguageServerFolderService } from '../../../client/activation/types';
 import { IApplicationShell } from '../../../client/common/application/types';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
-import { LanguageServerSurveyBanner, LSSurveyStateKeys } from '../../../client/languageServices/languageServerSurveyBanner';
+import {
+    LanguageServerSurveyBanner,
+    LSSurveyStateKeys
+} from '../../../client/languageServices/languageServerSurveyBanner';
 
 suite('Language Server Survey Banner', () => {
     let appShell: typemoq.IMock<IApplicationShell>;
@@ -31,26 +34,64 @@ suite('Language Server Survey Banner', () => {
         const enabledValue: boolean = true;
         const attemptCounter: number = 0;
         const completionsCount: number = 0;
-        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 100, appShell.object, browser.object, lsService.object);
+        const testBanner: LanguageServerSurveyBanner = preparePopup(
+            attemptCounter,
+            completionsCount,
+            enabledValue,
+            0,
+            100,
+            appShell.object,
+            browser.object,
+            lsService.object
+        );
         expect(testBanner.enabled).to.be.equal(true, 'Sampling 100/100 should always enable the banner.');
     });
     test('Do not show banner when it is disabled', () => {
-        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))).verifiable(typemoq.Times.never());
+        appShell
+            .setup(a =>
+                a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
+            )
+            .verifiable(typemoq.Times.never());
         const enabledValue: boolean = true;
         const attemptCounter: number = 0;
         const completionsCount: number = 0;
-        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object, lsService.object);
+        const testBanner: LanguageServerSurveyBanner = preparePopup(
+            attemptCounter,
+            completionsCount,
+            enabledValue,
+            0,
+            0,
+            appShell.object,
+            browser.object,
+            lsService.object
+        );
         testBanner.showBanner().ignoreErrors();
     });
     test('shouldShowBanner must return false when Banner is implicitly disabled by sampling', () => {
         const enabledValue: boolean = true;
         const attemptCounter: number = 0;
         const completionsCount: number = 0;
-        const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object, lsService.object);
+        const testBanner: LanguageServerSurveyBanner = preparePopup(
+            attemptCounter,
+            completionsCount,
+            enabledValue,
+            0,
+            0,
+            appShell.object,
+            browser.object,
+            lsService.object
+        );
         expect(testBanner.enabled).to.be.equal(false, 'We implicitly disabled the banner, it should never show.');
     });
 
-    const languageServerVersions: string[] = ['1.2.3', '1.2.3-alpha', '0.0.1234567890', '1234567890.0.1', '1.0.1-alpha+2', '22.4.999-rc.6'];
+    const languageServerVersions: string[] = [
+        '1.2.3',
+        '1.2.3-alpha',
+        '0.0.1234567890',
+        '1234567890.0.1',
+        '1.0.1-alpha+2',
+        '22.4.999-rc.6'
+    ];
     languageServerVersions.forEach(async (languageServerVersion: string) => {
         test(`Survey URL is as expected for Language Server version '${languageServerVersion}'.`, async () => {
             const enabledValue: boolean = true;
@@ -60,7 +101,9 @@ suite('Language Server Survey Banner', () => {
             // the expected URI as provided in issue #2630
             // with mocked-up test replacement values
 
-            const expectedUri: string = `https://www.research.net/r/LJZV9BZ?n=${attemptCounter}&v=${encodeURIComponent(languageServerVersion)}`;
+            const expectedUri: string = `https://www.research.net/r/LJZV9BZ?n=${attemptCounter}&v=${encodeURIComponent(
+                languageServerVersion
+            )}`;
 
             const lsFolder: FolderVersionPair = {
                 path: '/some/path',
@@ -92,7 +135,16 @@ suite('Language Server Survey Banner', () => {
                 )
                 .verifiable(typemoq.Times.once());
 
-            const testBanner: LanguageServerSurveyBanner = preparePopup(attemptCounter, completionsCount, enabledValue, 0, 0, appShell.object, browser.object, lsService.object);
+            const testBanner: LanguageServerSurveyBanner = preparePopup(
+                attemptCounter,
+                completionsCount,
+                enabledValue,
+                0,
+                0,
+                appShell.object,
+                browser.object,
+                lsService.object
+            );
             await testBanner.launchSurvey();
 
             // This is technically not necessary, but it gives
@@ -122,7 +174,9 @@ function preparePopup(
     const myfactory: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
     const enabledValState: typemoq.IMock<IPersistentState<boolean>> = typemoq.Mock.ofType<IPersistentState<boolean>>();
     const attemptCountState: typemoq.IMock<IPersistentState<number>> = typemoq.Mock.ofType<IPersistentState<number>>();
-    const completionCountState: typemoq.IMock<IPersistentState<number>> = typemoq.Mock.ofType<IPersistentState<number>>();
+    const completionCountState: typemoq.IMock<IPersistentState<number>> = typemoq.Mock.ofType<
+        IPersistentState<number>
+    >();
     enabledValState
         .setup(a => a.updateValue(typemoq.It.isValue(true)))
         .returns(() => {
@@ -155,24 +209,45 @@ function preparePopup(
     completionCountState.setup(a => a.value).returns(() => completionsCount);
 
     myfactory
-        .setup(a => a.createGlobalPersistentState(typemoq.It.isValue(LSSurveyStateKeys.ShowBanner), typemoq.It.isValue(true)))
+        .setup(a =>
+            a.createGlobalPersistentState(typemoq.It.isValue(LSSurveyStateKeys.ShowBanner), typemoq.It.isValue(true))
+        )
         .returns(() => {
             return enabledValState.object;
         });
     myfactory
-        .setup(a => a.createGlobalPersistentState(typemoq.It.isValue(LSSurveyStateKeys.ShowBanner), typemoq.It.isValue(false)))
+        .setup(a =>
+            a.createGlobalPersistentState(typemoq.It.isValue(LSSurveyStateKeys.ShowBanner), typemoq.It.isValue(false))
+        )
         .returns(() => {
             return enabledValState.object;
         });
     myfactory
-        .setup(a => a.createGlobalPersistentState(typemoq.It.isValue(LSSurveyStateKeys.ShowAttemptCounter), typemoq.It.isAnyNumber()))
+        .setup(a =>
+            a.createGlobalPersistentState(
+                typemoq.It.isValue(LSSurveyStateKeys.ShowAttemptCounter),
+                typemoq.It.isAnyNumber()
+            )
+        )
         .returns(() => {
             return attemptCountState.object;
         });
     myfactory
-        .setup(a => a.createGlobalPersistentState(typemoq.It.isValue(LSSurveyStateKeys.ShowAfterCompletionCount), typemoq.It.isAnyNumber()))
+        .setup(a =>
+            a.createGlobalPersistentState(
+                typemoq.It.isValue(LSSurveyStateKeys.ShowAfterCompletionCount),
+                typemoq.It.isAnyNumber()
+            )
+        )
         .returns(() => {
             return completionCountState.object;
         });
-    return new LanguageServerSurveyBanner(appShell, myfactory.object, browser, lsService, minCompletionCount, maxCompletionCount);
+    return new LanguageServerSurveyBanner(
+        appShell,
+        myfactory.object,
+        browser,
+        lsService,
+        minCompletionCount,
+        maxCompletionCount
+    );
 }

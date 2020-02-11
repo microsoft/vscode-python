@@ -26,7 +26,13 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService
     ) {
-        this.realProvider = new InteractiveWindowProvider(liveShare, serviceContainer, asyncRegistry, disposables, configService);
+        this.realProvider = new InteractiveWindowProvider(
+            liveShare,
+            serviceContainer,
+            asyncRegistry,
+            disposables,
+            configService
+        );
 
         // During a test, the 'create' function will end up being called during a live share. We need to hook its result too
         // so just hook the 'create' function to fix all callers.

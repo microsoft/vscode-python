@@ -17,6 +17,8 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterInterpreterDependencyResponse, JupyterInterpreterDependencyService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 
+// tslint:disable: max-func-body-length
+
 suite('Data Science - Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
     let appShell: IApplicationShell;
@@ -37,7 +39,9 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonExecService));
         // tslint:disable-next-line: no-any
         instance(pythonExecService as any).then = undefined;
-        when(pythonExecService.execModule('jupyter', deepEqual(['kernelspec', '--version']), anything())).thenResolve({ stdout: '' });
+        when(pythonExecService.execModule('jupyter', deepEqual(['kernelspec', '--version']), anything())).thenResolve({
+            stdout: ''
+        });
 
         configuration = new JupyterInterpreterDependencyService(instance(appShell), instance(installer), instance(pythonExecFactory));
     });
@@ -68,8 +72,10 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
     async function testInstallationOfJupyter(installerResponse: InstallerResponse, expectedConfigurationReponse: JupyterInterpreterDependencyResponse): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
-        // tslint:disable-next-line: no-any
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(DataScience.jupyterInstall() as any);
+        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+            // tslint:disable-next-line: no-any
+            DataScience.jupyterInstall() as any
+        );
         when(installer.install(anything(), anything(), anything())).thenResolve(installerResponse);
 
         const response = await configuration.installMissingDependencies(pythonInterpreter);
@@ -84,8 +90,10 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
     ): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(false);
-        // tslint:disable-next-line: no-any
-        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(DataScience.jupyterInstall() as any);
+        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+            // tslint:disable-next-line: no-any
+            DataScience.jupyterInstall() as any
+        );
         when(installer.install(Product.jupyter, anything(), anything())).thenResolve(jupyterInstallerResponse);
         when(installer.install(Product.notebook, anything(), anything())).thenResolve(notebookInstallationResponse);
 

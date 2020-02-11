@@ -2,7 +2,13 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ErrorUtils } from '../../common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../common/errors/moduleNotInstalledError';
-import { IPythonExecutionFactory, IPythonExecutionService, IPythonToolExecutionService, ObservableExecutionResult, SpawnOptions } from '../../common/process/types';
+import {
+    IPythonExecutionFactory,
+    IPythonExecutionService,
+    IPythonToolExecutionService,
+    ObservableExecutionResult,
+    SpawnOptions
+} from '../../common/process/types';
 import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
@@ -17,8 +23,15 @@ export class TestRunner implements ITestRunner {
     }
 }
 
-export async function run(serviceContainer: IServiceContainer, testProvider: TestProvider, options: Options): Promise<string> {
-    const testExecutablePath = getExecutablePath(testProvider, serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(options.workspaceFolder));
+export async function run(
+    serviceContainer: IServiceContainer,
+    testProvider: TestProvider,
+    options: Options
+): Promise<string> {
+    const testExecutablePath = getExecutablePath(
+        testProvider,
+        serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(options.workspaceFolder)
+    );
     const moduleName = getTestModuleName(testProvider);
     const spawnOptions = options as SpawnOptions;
     let pythonExecutionServicePromise: Promise<IPythonExecutionService>;
@@ -42,10 +55,16 @@ export async function run(serviceContainer: IServiceContainer, testProvider: Tes
             .createActivatedEnvironment({ resource: options.workspaceFolder })
             .then(executionService => executionService.execObservable(options.args, { ...spawnOptions }));
     } else if (typeof executionInfo.moduleName === 'string' && executionInfo.moduleName.length > 0) {
-        pythonExecutionServicePromise = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).createActivatedEnvironment({ resource: options.workspaceFolder });
-        promise = pythonExecutionServicePromise.then(executionService => executionService.execModuleObservable(executionInfo.moduleName!, executionInfo.args, options));
+        pythonExecutionServicePromise = serviceContainer
+            .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+            .createActivatedEnvironment({ resource: options.workspaceFolder });
+        promise = pythonExecutionServicePromise.then(executionService =>
+            executionService.execModuleObservable(executionInfo.moduleName!, executionInfo.args, options)
+        );
     } else {
-        const pythonToolsExecutionService = serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
+        const pythonToolsExecutionService = serviceContainer.get<IPythonToolExecutionService>(
+            IPythonToolExecutionService
+        );
         promise = pythonToolsExecutionService.execObservable(executionInfo, spawnOptions, options.workspaceFolder);
     }
 
@@ -68,7 +87,11 @@ export async function run(serviceContainer: IServiceContainer, testProvider: Tes
                 reject,
                 async () => {
                     // If the test runner python module is not installed we'll have something in stderr.
-                    if (moduleName && pythonExecutionServicePromise && ErrorUtils.outputHasModuleNotInstalledError(moduleName, stdErr)) {
+                    if (
+                        moduleName &&
+                        pythonExecutionServicePromise &&
+                        ErrorUtils.outputHasModuleNotInstalledError(moduleName, stdErr)
+                    ) {
                         const pythonExecutionService = await pythonExecutionServicePromise;
                         const isInstalled = await pythonExecutionService.isModuleInstalled(moduleName);
                         if (!isInstalled) {

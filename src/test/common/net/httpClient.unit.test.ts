@@ -65,7 +65,8 @@ suite('Http Client', () => {
             }
         ].forEach(async testParams => {
             test(testParams.name, async () => {
-                const requestMock = (_uri: any, _requestOptions: any, callBackFn: Function) => callBackFn(...testParams.returnedArgs);
+                const requestMock = (_uri: any, _requestOptions: any, callBackFn: Function) =>
+                    callBackFn(...testParams.returnedArgs);
                 rewiremock.enable();
                 rewiremock('request').with(requestMock);
                 let rejected = true;
@@ -78,7 +79,10 @@ suite('Http Client', () => {
                         if (ex.message) {
                             ex = ex.message;
                         }
-                        expect(ex).to.equal(testParams.expectedErrorMessage, 'Promise rejected with the wrong error message');
+                        expect(ex).to.equal(
+                            testParams.expectedErrorMessage,
+                            'Promise rejected with the wrong error message'
+                        );
                     }
                 }
                 assert(rejected === true, 'Promise should be rejected');
@@ -87,7 +91,8 @@ suite('Http Client', () => {
 
         [
             {
-                name: "If strict is set to false, and jsonc parsing returns error codes, then log errors and don't throw, return json",
+                name:
+                    "If strict is set to false, and jsonc parsing returns error codes, then log errors and don't throw, return json",
                 returnedArgs: [undefined, { statusCode: 200 }, '[{ "strictJSON" : false,, }]'],
                 strict: false,
                 expectedJSON: [{ strictJSON: false }]
@@ -106,7 +111,8 @@ suite('Http Client', () => {
             }
         ].forEach(async testParams => {
             test(testParams.name, async () => {
-                const requestMock = (_uri: any, _requestOptions: any, callBackFn: Function) => callBackFn(...testParams.returnedArgs);
+                const requestMock = (_uri: any, _requestOptions: any, callBackFn: Function) =>
+                    callBackFn(...testParams.returnedArgs);
                 rewiremock.enable();
                 rewiremock('request').with(requestMock);
                 let json;

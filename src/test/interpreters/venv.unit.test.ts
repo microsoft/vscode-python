@@ -10,7 +10,10 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PlatformService } from '../../client/common/platform/platformService';
 import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../client/common/types';
-import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
+import {
+    IInterpreterAutoSelectionService,
+    IInterpreterAutoSeletionProxyService
+} from '../../client/interpreter/autoSelection/types';
 import { GlobalVirtualEnvironmentsSearchPathProvider } from '../../client/interpreter/locators/services/globalVirtualEnvService';
 import { WorkspaceVirtualEnvironmentsSearchPathProvider } from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
@@ -47,9 +50,18 @@ suite('Virtual environments', () => {
         serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, config.object);
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspace.object);
         serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, process.object);
-        serviceManager.addSingletonInstance<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, virtualEnvMgr.object);
-        serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingletonInstance<IVirtualEnvironmentManager>(
+            IVirtualEnvironmentManager,
+            virtualEnvMgr.object
+        );
+        serviceManager.addSingleton<IInterpreterAutoSelectionService>(
+            IInterpreterAutoSelectionService,
+            MockAutoSelectionService
+        );
+        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
+            IInterpreterAutoSeletionProxyService,
+            MockAutoSelectionService
+        );
     });
 
     test('Global search paths', async () => {
@@ -81,7 +93,10 @@ suite('Virtual environments', () => {
         settings.setup(x => x.venvFolders).returns(() => folders);
         const paths = await pathProvider.getSearchPaths();
 
-        expect([...new Set(paths)]).to.deep.equal(paths, 'Duplicates are not removed from the list of global search paths');
+        expect([...new Set(paths)]).to.deep.equal(
+            paths,
+            'Duplicates are not removed from the list of global search paths'
+        );
     });
 
     test('Global search paths with tilde path in the WORKON_HOME environment variable', async () => {
@@ -140,7 +155,9 @@ suite('Virtual environments', () => {
         const homedir = os.homedir();
         const isWindows = new PlatformService();
         const fixCase = (item: string) => (isWindows ? item.toUpperCase() : item);
-        const expected = [path.join(homedir, 'foo'), 'root', path.join('root', '.direnv')].map(item => Uri.file(item).fsPath).map(fixCase);
+        const expected = [path.join(homedir, 'foo'), 'root', path.join('root', '.direnv')]
+            .map(item => Uri.file(item).fsPath)
+            .map(fixCase);
         expect(paths.map(fixCase)).to.deep.equal(expected, 'Workspace venv folder search list does not match.');
     });
 });

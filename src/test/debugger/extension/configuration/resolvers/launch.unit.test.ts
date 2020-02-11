@@ -58,9 +58,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             helper = TypeMoq.Mock.ofType<IInterpreterHelper>();
             pythonExecutionService.setup((x: any) => x.then).returns(() => undefined);
             const factory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
-            factory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
+            factory
+                .setup(f => f.create(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(pythonExecutionService.object));
             helper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
-            diagnosticsService.setup(h => h.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
+            diagnosticsService
+                .setup(h => h.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(true));
 
             const settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup(s => s.pythonPath).returns(() => pythonPath);
@@ -110,7 +114,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {} as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(
+                workspaceFolder,
+                {} as DebugConfiguration
+            );
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('pythonPath', pythonPath);
@@ -132,7 +139,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath, workspaceFolder);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({ noDebug: true } as any) as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+                noDebug: true
+            } as any) as DebugConfiguration);
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('pythonPath', pythonPath);
@@ -240,7 +249,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
 
             const port = 12341234;
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({ port, request: 'launch' } as any) as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+                port,
+                request: 'launch'
+            } as any) as DebugConfiguration);
 
             expect(debugConfig).to.have.property('port', port);
         });
@@ -251,7 +263,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
 
             const localRoot = `Debug_PythonPath_${new Date().toString()}`;
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({ localRoot, request: 'launch' } as any) as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+                localRoot,
+                request: 'launch'
+            } as any) as DebugConfiguration);
 
             expect(debugConfig).to.have.property('localRoot', localRoot);
         });
@@ -262,7 +277,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
 
             const remoteRoot = `Debug_PythonPath_${new Date().toString()}`;
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({ remoteRoot, request: 'launch' } as any) as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+                remoteRoot,
+                request: 'launch'
+            } as any) as DebugConfiguration);
 
             expect(debugConfig).to.have.property('remoteRoot', remoteRoot);
         });
@@ -274,7 +292,11 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const localRoot = `Debug_PythonPath_Local_Root_${new Date().toString()}`;
             const remoteRoot = `Debug_PythonPath_Remote_Root_${new Date().toString()}`;
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({ localRoot, remoteRoot, request: 'launch' } as any) as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+                localRoot,
+                remoteRoot,
+                request: 'launch'
+            } as any) as DebugConfiguration);
 
             expect(debugConfig!.pathMappings).to.be.equal(undefined, 'unexpected pathMappings');
         });
@@ -470,7 +492,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({ pythonPath: '${config:python.pythonPath}' } as any) as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+                pythonPath: '${config:python.pythonPath}'
+            } as any) as DebugConfiguration);
 
             expect(debugConfig).to.have.property('pythonPath', pythonPath);
         });
@@ -484,7 +508,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
 
             const debugPythonPath = `Debug_PythonPath_${new Date().toString()}`;
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({ pythonPath: debugPythonPath } as any) as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+                pythonPath: debugPythonPath
+            } as any) as DebugConfiguration);
 
             expect(debugConfig).to.have.property('pythonPath', debugPythonPath);
         });
@@ -495,7 +521,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {} as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(
+                workspaceFolder,
+                {} as DebugConfiguration
+            );
 
             expect(debugConfig).to.have.property('console', 'integratedTerminal');
             expect(debugConfig).to.have.property('stopOnEntry', false);
@@ -517,7 +546,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {} as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(
+                workspaceFolder,
+                {} as DebugConfiguration
+            );
 
             expect(debugConfig).to.have.property('stopOnEntry', false);
             expect(debugConfig).to.have.property('showReturnValue', true);
@@ -531,7 +563,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: true, justMyCode: false } as LaunchRequestArguments);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
+                redirectOutput: true,
+                justMyCode: false
+            } as LaunchRequestArguments);
 
             expect(debugConfig).to.have.property('console', 'integratedTerminal');
             expect(debugConfig).to.have.property('stopOnEntry', false);
@@ -539,7 +574,11 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).to.have.property('redirectOutput', true);
             expect(debugConfig).to.have.property('justMyCode', false);
             expect(debugConfig).to.have.property('debugOptions');
-            const expectedOptions = [DebugOptions.DebugStdLib, DebugOptions.ShowReturnValue, DebugOptions.RedirectOutput];
+            const expectedOptions = [
+                DebugOptions.DebugStdLib,
+                DebugOptions.ShowReturnValue,
+                DebugOptions.RedirectOutput
+            ];
             if (osType === OSType.Windows) {
                 expectedOptions.push(DebugOptions.FixFilePathCase);
             }
@@ -678,7 +717,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {} as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(
+                workspaceFolder,
+                {} as DebugConfiguration
+            );
             if (osType === OSType.Windows) {
                 expect(debugConfig)
                     .to.have.property('debugOptions')
@@ -700,7 +742,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const options = { debugOptions: [DebugOptions.Pyramid], pyramid: true };
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, (options as any) as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(
+                workspaceFolder,
+                (options as any) as DebugConfiguration
+            );
             expect(debugConfig).to.have.property('debugOptions');
             expect((debugConfig as any).debugOptions).contains(DebugOptions.Jinja);
         });
@@ -711,7 +756,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({ module: 'flask' } as any) as DebugConfiguration);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
+                module: 'flask'
+            } as any) as DebugConfiguration);
 
             expect(debugConfig).to.have.property('debugOptions');
             expect((debugConfig as any).debugOptions).contains(DebugOptions.Jinja);
@@ -725,11 +772,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             diagnosticsService.reset();
             diagnosticsService
-                .setup(h => h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup(h =>
+                    h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                )
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.once());
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false, pythonPath } as LaunchRequestArguments);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
+                redirectOutput: false,
+                pythonPath
+            } as LaunchRequestArguments);
 
             diagnosticsService.verifyAll();
             expect(debugConfig).to.be.equal(undefined, 'Not undefined');
@@ -743,11 +795,16 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             diagnosticsService.reset();
             diagnosticsService
-                .setup(h => h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup(h =>
+                    h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                )
                 .returns(() => Promise.resolve(true))
                 .verifiable(TypeMoq.Times.once());
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false, pythonPath } as LaunchRequestArguments);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
+                redirectOutput: false,
+                pythonPath
+            } as LaunchRequestArguments);
 
             diagnosticsService.verifyAll();
             expect(debugConfig).to.not.be.equal(undefined, 'is undefined');
@@ -756,12 +813,18 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             const pythonFile = 'xyz.py';
-            const expectedEnvFilePath = `${workspaceFolder.uri.fsPath}${osType === OSType.Windows ? '\\' : '/'}${'wow.envFile'}`;
+            const expectedEnvFilePath = `${workspaceFolder.uri.fsPath}${
+                osType === OSType.Windows ? '\\' : '/'
+            }${'wow.envFile'}`;
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
             diagnosticsService.reset();
-            diagnosticsService.setup(h => h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
+            diagnosticsService
+                .setup(h =>
+                    h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                )
+                .returns(() => Promise.resolve(true));
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
                 redirectOutput: false,
@@ -771,9 +834,19 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(debugConfig!.envFile).to.be.equal(expectedEnvFilePath);
         });
-        async function testSetting(requestType: 'launch' | 'attach', settings: Record<string, boolean>, debugOptionName: DebugOptions, mustHaveDebugOption: boolean) {
+        async function testSetting(
+            requestType: 'launch' | 'attach',
+            settings: Record<string, boolean>,
+            debugOptionName: DebugOptions,
+            mustHaveDebugOption: boolean
+        ) {
             setupIoc('pythonPath');
-            const debugConfiguration: DebugConfiguration = { request: requestType, type: 'python', name: '', ...settings };
+            const debugConfiguration: DebugConfiguration = {
+                request: requestType,
+                type: 'python',
+                name: '',
+                ...settings
+            };
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, debugConfiguration);

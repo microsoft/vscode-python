@@ -19,6 +19,11 @@ suite('Common Providers Service Registry', () => {
 
     test('Ensure services are registered', async () => {
         registerTypes(instance(serviceManager));
-        verify(serviceManager.addSingleton<ISortImportsEditingProvider>(ISortImportsEditingProvider, SortImportsEditingProvider)).once();
+        verify(
+            serviceManager.addSingleton<ISortImportsEditingProvider>(
+                ISortImportsEditingProvider,
+                SortImportsEditingProvider
+            )
+        ).once();
     });
 });

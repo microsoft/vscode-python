@@ -77,12 +77,18 @@ export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     debugAdapterPath?: string;
 }
 // tslint:disable-next-line:interface-name
-export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, IKnownLaunchRequestArguments, DebugConfiguration {
+export interface LaunchRequestArguments
+    extends DebugProtocol.LaunchRequestArguments,
+        IKnownLaunchRequestArguments,
+        DebugConfiguration {
     type: typeof DebuggerTypeName;
 }
 
 // tslint:disable-next-line:interface-name
-export interface AttachRequestArguments extends DebugProtocol.AttachRequestArguments, IKnownAttachDebugArguments, DebugConfiguration {
+export interface AttachRequestArguments
+    extends DebugProtocol.AttachRequestArguments,
+        IKnownAttachDebugArguments,
+        DebugConfiguration {
     type: typeof DebuggerTypeName;
 }
 

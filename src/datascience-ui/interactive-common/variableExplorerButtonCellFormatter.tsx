@@ -36,10 +36,17 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
                     <div className={className}>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
-                            tooltip={getLocString('DataScience.showDataExplorerTooltip', 'Show variable in data viewer.')}
+                            tooltip={getLocString(
+                                'DataScience.showDataExplorerTooltip',
+                                'Show variable in data viewer.'
+                            )}
                             onClick={this.onDataExplorerClick}
                         >
-                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.OpenInNewWindow} />
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.OpenInNewWindow}
+                            />
                         </ImageButton>
                     </div>
                 );

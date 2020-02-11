@@ -50,10 +50,18 @@ suite('Language Server Output Channel', () => {
             .returns(() => output.object)
             .verifiable(TypeMoq.Times.once());
         commandManager
-            .setup(c => c.executeCommand(TypeMoq.It.isValue('setContext'), TypeMoq.It.isValue('python.hasLanguageServerOutputChannel'), TypeMoq.It.isValue(true)))
+            .setup(c =>
+                c.executeCommand(
+                    TypeMoq.It.isValue('setContext'),
+                    TypeMoq.It.isValue('python.hasLanguageServerOutputChannel'),
+                    TypeMoq.It.isValue(true)
+                )
+            )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue('python.viewLanguageServerOutput'), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.once());
+        commandManager
+            .setup(c => c.registerCommand(TypeMoq.It.isValue('python.viewLanguageServerOutput'), TypeMoq.It.isAny()))
+            .verifiable(TypeMoq.Times.once());
 
         // Doesn't matter how many times we access channel propery.
         let channel = languageServerOutputChannel.channel;
@@ -73,7 +81,13 @@ suite('Language Server Output Channel', () => {
             .returns(() => output.object)
             .verifiable(TypeMoq.Times.once());
         commandManager
-            .setup(c => c.executeCommand(TypeMoq.It.isValue('setContext'), TypeMoq.It.isValue('python.hasLanguageServerOutputChannel'), TypeMoq.It.isValue(true)))
+            .setup(c =>
+                c.executeCommand(
+                    TypeMoq.It.isValue('setContext'),
+                    TypeMoq.It.isValue('python.hasLanguageServerOutputChannel'),
+                    TypeMoq.It.isValue(true)
+                )
+            )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
         commandManager

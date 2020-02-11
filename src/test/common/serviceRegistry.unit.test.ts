@@ -34,11 +34,20 @@ import { CryptoUtils } from '../../client/common/crypto';
 import { EditorUtils } from '../../client/common/editor';
 import { ExperimentsManager } from '../../client/common/experiments';
 import { FeatureDeprecationManager } from '../../client/common/featureDeprecationManager';
-import { ExtensionInsidersDailyChannelRule, ExtensionInsidersOffChannelRule, ExtensionInsidersWeeklyChannelRule } from '../../client/common/insidersBuild/downloadChannelRules';
+import {
+    ExtensionInsidersDailyChannelRule,
+    ExtensionInsidersOffChannelRule,
+    ExtensionInsidersWeeklyChannelRule
+} from '../../client/common/insidersBuild/downloadChannelRules';
 import { ExtensionChannelService } from '../../client/common/insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from '../../client/common/insidersBuild/insidersExtensionPrompt';
 import { InsidersExtensionService } from '../../client/common/insidersBuild/insidersExtensionService';
-import { ExtensionChannel, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from '../../client/common/insidersBuild/types';
+import {
+    ExtensionChannel,
+    IExtensionChannelRule,
+    IExtensionChannelService,
+    IInsiderExtensionPrompt
+} from '../../client/common/insidersBuild/types';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { BrowserService } from '../../client/common/net/browser';
 import { HttpClient } from '../../client/common/net/httpClient';
@@ -126,7 +135,11 @@ suite('Common - Service Registry', () => {
             [ITerminalHelper, TerminalHelper],
             [ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, TerminalActivationProviders.pyenv],
             [ITerminalActivationCommandProvider, Bash, TerminalActivationProviders.bashCShellFish],
-            [ITerminalActivationCommandProvider, CommandPromptAndPowerShell, TerminalActivationProviders.commandPromptAndPowerShell],
+            [
+                ITerminalActivationCommandProvider,
+                CommandPromptAndPowerShell,
+                TerminalActivationProviders.commandPromptAndPowerShell
+            ],
             [ITerminalActivationCommandProvider, CondaActivationCommandProvider, TerminalActivationProviders.conda],
             [ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv],
             [IFeatureDeprecationManager, FeatureDeprecationManager],
@@ -155,7 +168,13 @@ suite('Common - Service Registry', () => {
                     .verifiable(typemoq.Times.atLeastOnce());
             } else {
                 serviceManager
-                    .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.isAny(), typemoq.It.isValue(mapping[2] as any)))
+                    .setup(s =>
+                        s.addSingleton(
+                            typemoq.It.isValue(mapping[0] as any),
+                            typemoq.It.isAny(),
+                            typemoq.It.isValue(mapping[2] as any)
+                        )
+                    )
                     .callback((_, cls) => expect(cls).to.equal(mapping[1]))
                     .verifiable(typemoq.Times.once());
             }

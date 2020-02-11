@@ -153,7 +153,11 @@ export class JupyterInterpreterDependencyService {
                 // Install jupyter, then notebook, then others in that order.
                 sortProductsInOrderForInstallation(productsToInstall);
                 let productToInstall = productsToInstall.shift();
-                const cancellatonPromise = createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: InstallerResponse.Ignore, token });
+                const cancellatonPromise = createPromiseFromCancellation({
+                    cancelAction: 'resolve',
+                    defaultValue: InstallerResponse.Ignore,
+                    token
+                });
                 while (productToInstall) {
                     // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
                     const response = await Promise.race([this.installer.install(productToInstall, interpreter, wrapCancellationTokens(token)), cancellatonPromise]);
@@ -265,7 +269,11 @@ export class JupyterInterpreterDependencyService {
      * @memberof JupyterInterpreterConfigurationService
      */
     private async isKernelSpecAvailable(interpreter: PythonInterpreter, token?: CancellationToken): Promise<boolean> {
-        const execService = await this.pythonExecFactory.createActivatedEnvironment({ interpreter, allowEnvironmentFetchExceptions: true, bypassCondaExecution: true });
+        const execService = await this.pythonExecFactory.createActivatedEnvironment({
+            interpreter,
+            allowEnvironmentFetchExceptions: true,
+            bypassCondaExecution: true
+        });
         if (Cancellation.isCanceled(token)) {
             return false;
         }

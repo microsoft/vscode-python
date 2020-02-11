@@ -49,7 +49,9 @@ function handleStarted(arg: MonacoReducerArg): IMonacoState {
     if (!arg.prevState.intellisenseProvider && arg.prevState.postOffice) {
         return {
             ...arg.prevState,
-            intellisenseProvider: new IntellisenseProvider(arg.prevState.postOffice.sendMessage.bind(arg.prevState.postOffice))
+            intellisenseProvider: new IntellisenseProvider(
+                arg.prevState.postOffice.sendMessage.bind(arg.prevState.postOffice)
+            )
         };
     }
 
@@ -182,7 +184,10 @@ const reducerMap: IMonacoActionMapping = {
     [CommonActionType.UNMOUNT]: handleUnmount
 };
 
-export function generateMonacoReducer(testMode: boolean, postOffice: PostOffice): Reducer<IMonacoState, QueuableAction<IMonacoActionMapping>> {
+export function generateMonacoReducer(
+    testMode: boolean,
+    postOffice: PostOffice
+): Reducer<IMonacoState, QueuableAction<IMonacoActionMapping>> {
     // First create our default state.
     const defaultState: IMonacoState = {
         onigasmData: undefined,

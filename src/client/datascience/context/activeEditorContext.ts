@@ -33,18 +33,35 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         disposables.push(this);
         this.nativeContext = new ContextKey(EditorContexts.IsNativeActive, this.commandManager);
         this.interactiveContext = new ContextKey(EditorContexts.IsInteractiveActive, this.commandManager);
-        this.interactiveOrNativeContext = new ContextKey(EditorContexts.IsInteractiveOrNativeActive, this.commandManager);
+        this.interactiveOrNativeContext = new ContextKey(
+            EditorContexts.IsInteractiveOrNativeActive,
+            this.commandManager
+        );
         this.pythonOrNativeContext = new ContextKey(EditorContexts.IsPythonOrNativeActive, this.commandManager);
-        this.pythonOrInteractiveContext = new ContextKey(EditorContexts.IsPythonOrInteractiveActive, this.commandManager);
-        this.pythonOrInteractiveOrNativeContext = new ContextKey(EditorContexts.IsPythonOrInteractiveOrNativeActive, this.commandManager);
+        this.pythonOrInteractiveContext = new ContextKey(
+            EditorContexts.IsPythonOrInteractiveActive,
+            this.commandManager
+        );
+        this.pythonOrInteractiveOrNativeContext = new ContextKey(
+            EditorContexts.IsPythonOrInteractiveOrNativeActive,
+            this.commandManager
+        );
     }
     public dispose() {
         this.disposables.forEach(item => item.dispose());
     }
     public async activate(): Promise<void> {
         this.docManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);
-        this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.onDidChangeActiveInteractiveWindow, this, this.disposables);
-        this.notebookProvider.onDidChangeActiveNotebookEditor(this.onDidChangeActiveNotebookEditor, this, this.disposables);
+        this.interactiveProvider.onDidChangeActiveInteractiveWindow(
+            this.onDidChangeActiveInteractiveWindow,
+            this,
+            this.disposables
+        );
+        this.notebookProvider.onDidChangeActiveNotebookEditor(
+            this.onDidChangeActiveNotebookEditor,
+            this,
+            this.disposables
+        );
     }
 
     private onDidChangeActiveInteractiveWindow(e?: IInteractiveWindow) {
@@ -60,11 +77,20 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         this.updateMergedContexts();
     }
     private updateMergedContexts() {
-        this.interactiveOrNativeContext.set(this.nativeContext.value === true && this.interactiveContext.value === true).ignoreErrors();
-        this.pythonOrNativeContext.set(this.nativeContext.value === true || this.isPythonFileActive === true).ignoreErrors();
-        this.pythonOrInteractiveContext.set(this.interactiveContext.value === true || this.isPythonFileActive === true).ignoreErrors();
+        this.interactiveOrNativeContext
+            .set(this.nativeContext.value === true && this.interactiveContext.value === true)
+            .ignoreErrors();
+        this.pythonOrNativeContext
+            .set(this.nativeContext.value === true || this.isPythonFileActive === true)
+            .ignoreErrors();
+        this.pythonOrInteractiveContext
+            .set(this.interactiveContext.value === true || this.isPythonFileActive === true)
+            .ignoreErrors();
         this.pythonOrInteractiveOrNativeContext
-            .set(this.nativeContext.value === true || (this.interactiveContext.value === true && this.isPythonFileActive === true))
+            .set(
+                this.nativeContext.value === true ||
+                    (this.interactiveContext.value === true && this.isPythonFileActive === true)
+            )
             .ignoreErrors();
     }
 }

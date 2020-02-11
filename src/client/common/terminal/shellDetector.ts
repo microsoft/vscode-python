@@ -22,7 +22,10 @@ const defaultOSShells = {
 
 @injectable()
 export class ShellDetector {
-    constructor(@inject(IPlatformService) private readonly platform: IPlatformService, @multiInject(IShellDetector) private readonly shellDetectors: IShellDetector[]) {}
+    constructor(
+        @inject(IPlatformService) private readonly platform: IPlatformService,
+        @multiInject(IShellDetector) private readonly shellDetectors: IShellDetector[]
+    ) {}
     /**
      * Logic is as follows:
      * 1. Try to identify the type of the shell based on the name of the terminal.
@@ -50,7 +53,9 @@ export class ShellDetector {
 
         for (const detector of shellDetectors) {
             shell = detector.identify(telemetryProperties, terminal);
-            traceVerbose(`${detector}. Shell identified as ${shell} ${terminal ? `(Terminal name is ${terminal.name})` : ''}`);
+            traceVerbose(
+                `${detector}. Shell identified as ${shell} ${terminal ? `(Terminal name is ${terminal.name})` : ''}`
+            );
             if (shell && shell !== TerminalShellType.other) {
                 break;
             }

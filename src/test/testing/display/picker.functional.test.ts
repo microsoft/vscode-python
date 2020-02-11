@@ -44,7 +44,9 @@ suite('Testing - TestDisplay', () => {
         mockedServiceContainer = mock(ServiceContainer);
         mockedTestCollectionStorage = mock(TestCollectionStorageService);
         mockedAppShell = mock(ApplicationShell);
-        when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(instance(mockedTestCollectionStorage));
+        when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(
+            instance(mockedTestCollectionStorage)
+        );
         when(mockedServiceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(mockedAppShell));
 
         testDisplay = new TestDisplay(instance(mockedServiceContainer), instance(mockedCommandManager));
@@ -83,7 +85,13 @@ suite('Testing - TestDisplay', () => {
             const { fullPath, fileName } = paths.match;
             fullPathInTests(tests, fullPath);
 
-            testDisplay.displayFunctionTestPickerUI(CommandSource.commandPalette, wkspace, 'rootDirectory', Uri.file(fileName), codeLensTestFunctions());
+            testDisplay.displayFunctionTestPickerUI(
+                CommandSource.commandPalette,
+                wkspace,
+                'rootDirectory',
+                Uri.file(fileName),
+                codeLensTestFunctions()
+            );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).once();
         });
@@ -92,7 +100,13 @@ suite('Testing - TestDisplay', () => {
             const { fullPath, fileName } = paths.mismatch;
             fullPathInTests(tests, fullPath);
 
-            testDisplay.displayFunctionTestPickerUI(CommandSource.commandPalette, wkspace, 'rootDirectory', Uri.file(fileName), codeLensTestFunctions());
+            testDisplay.displayFunctionTestPickerUI(
+                CommandSource.commandPalette,
+                wkspace,
+                'rootDirectory',
+                Uri.file(fileName),
+                codeLensTestFunctions()
+            );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).never();
         });
@@ -107,7 +121,13 @@ suite('Testing - TestDisplay', () => {
             const fileName = 'c:\\path\\to\\testfile';
             fullPathInTests(tests, 'C:\\path\\to\\testfile');
 
-            testDisplay.displayFunctionTestPickerUI(CommandSource.commandPalette, wkspace, 'rootDirectory', Uri.file(fileName), codeLensTestFunctions());
+            testDisplay.displayFunctionTestPickerUI(
+                CommandSource.commandPalette,
+                wkspace,
+                'rootDirectory',
+                Uri.file(fileName),
+                codeLensTestFunctions()
+            );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).once();
         });

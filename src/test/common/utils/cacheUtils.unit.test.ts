@@ -29,7 +29,9 @@ const scenariosToTest: CacheUtilsTestScenario[] = [
     }
 ];
 
-class TestInMemoryInterpreterSpecificCache extends InMemoryInterpreterSpecificCache<string | undefined | { date: number; hello: number }> {
+class TestInMemoryInterpreterSpecificCache extends InMemoryInterpreterSpecificCache<
+    string | undefined | { date: number; hello: number }
+> {
     public elapsed: number = 0;
 
     public set simulatedElapsedMs(value: number) {
@@ -177,15 +179,24 @@ suite('Common Utils - CacheUtils', () => {
 
                 cache.simulatedElapsedMs = 10;
                 expect(cache.hasData).to.be.equal(true, 'Must have data after waiting for 10ms');
-                expect(cache.data).to.be.deep.equal(scenario.dataToStore, 'Data should be intact and unchanged in cache after 10ms');
+                expect(cache.data).to.be.deep.equal(
+                    scenario.dataToStore,
+                    'Data should be intact and unchanged in cache after 10ms'
+                );
 
                 cache.simulatedElapsedMs = 50;
                 expect(cache.hasData).to.be.equal(true, 'Must have data after waiting 50ms');
-                expect(cache.data).to.be.deep.equal(scenario.dataToStore, 'Data should be intact and unchanged in cache after 50ms');
+                expect(cache.data).to.be.deep.equal(
+                    scenario.dataToStore,
+                    'Data should be intact and unchanged in cache after 50ms'
+                );
 
                 cache.simulatedElapsedMs = 110;
                 expect(cache.hasData).to.be.equal(false, 'Must not have data after waiting 110ms');
-                expect(cache.data).to.be.deep.equal(undefined, 'Must not have data stored after 100ms timeout expires.');
+                expect(cache.data).to.be.deep.equal(
+                    undefined,
+                    'Must not have data stored after 100ms timeout expires.'
+                );
             });
             test(`Data is stored in cache (with workspaces): ${scenario.scenarioDesc}`, () => {
                 const pythonPath = 'Some Python Path';

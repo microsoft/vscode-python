@@ -7,18 +7,17 @@
 import { expect } from 'chai';
 import * as fsextra from 'fs-extra';
 import * as path from 'path';
-// prettier-ignore
+import { convertStat, FileSystem, FileSystemUtils, RawFileSystem } from '../../../client/common/platform/fileSystem';
+import { FileType, IFileSystem, IFileSystemUtils, IRawFileSystem } from '../../../client/common/platform/types';
 import {
-    convertStat, FileSystem, FileSystemUtils, RawFileSystem
-} from '../../../client/common/platform/fileSystem';
-// prettier-ignore
-import {
-    FileType, IFileSystem, IFileSystemUtils, IRawFileSystem
-} from '../../../client/common/platform/types';
-// prettier-ignore
-import {
-    assertDoesNotExist, assertExists, DOES_NOT_EXIST, FSFixture,
-    SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS, WINDOWS
+    assertDoesNotExist,
+    assertExists,
+    assertFileText,
+    DOES_NOT_EXIST,
+    FSFixture,
+    SUPPORTS_SOCKETS,
+    SUPPORTS_SYMLINKS,
+    WINDOWS
 } from './utils';
 
 // Note: all functional tests that do not trigger the VS Code "fs" API
@@ -310,10 +309,7 @@ suite('FileSystem - raw', () => {
 
             await filesystem.writeText(filename, data);
 
-            // prettier-ignore
-            const actual = await fsextra.readFile(filename)
-                .then(buffer => buffer.toString());
-            expect(actual).to.equal(data);
+            await assertFileText(filename, data);
         });
 
         test('always UTF-8', async () => {
@@ -322,10 +318,7 @@ suite('FileSystem - raw', () => {
 
             await filesystem.writeText(filename, data);
 
-            // prettier-ignore
-            const actual = await fsextra.readFile(filename)
-                .then(buffer => buffer.toString());
-            expect(actual).to.equal(data);
+            await assertFileText(filename, data);
         });
 
         test('overwrites existing file', async () => {
@@ -334,10 +327,7 @@ suite('FileSystem - raw', () => {
 
             await filesystem.writeText(filename, data);
 
-            // prettier-ignore
-            const actual = await fsextra.readFile(filename)
-                .then(buffer => buffer.toString());
-            expect(actual).to.equal(data);
+            await assertFileText(filename, data);
         });
     });
 
@@ -350,14 +340,8 @@ suite('FileSystem - raw', () => {
 
             await filesystem.copyFile(src, dest);
 
-            // prettier-ignore
-            const actual = await fsextra.readFile(dest)
-                .then(buffer => buffer.toString());
-            expect(actual).to.equal(data);
-            // prettier-ignore
-            const original = await fsextra.readFile(src)
-                .then(buffer => buffer.toString());
-            expect(original).to.equal(data);
+            await assertFileText(dest, data);
+            await assertFileText(src, data); // Make sure src wasn't changed.
         });
 
         test('the source file gets copied (different directory)', async () => {
@@ -368,14 +352,8 @@ suite('FileSystem - raw', () => {
 
             await filesystem.copyFile(src, dest);
 
-            // prettier-ignore
-            const actual = await fsextra.readFile(dest)
-                .then(buffer => buffer.toString());
-            expect(actual).to.equal(data);
-            // prettier-ignore
-            const original = await fsextra.readFile(src)
-                .then(buffer => buffer.toString());
-            expect(original).to.equal(data);
+            await assertFileText(dest, data);
+            await assertFileText(src, data); // Make sure src wasn't changed.
         });
 
         test('fails if the source does not exist', async () => {
@@ -1079,10 +1057,7 @@ suite('FileSystem', () => {
 
                 await filesystem.writeFile(filename, data);
 
-                // prettier-ignore
-                const actual = await fsextra.readFile(filename)
-                    .then(buffer => buffer.toString());
-                expect(actual).to.equal(data);
+                await assertFileText(filename, data);
             });
         });
 
@@ -1095,14 +1070,8 @@ suite('FileSystem', () => {
 
                 await filesystem.copyFile(src, dest);
 
-                // prettier-ignore
-                const actual = await fsextra.readFile(dest)
-                    .then(buffer => buffer.toString());
-                expect(actual).to.equal(data);
-                // prettier-ignore
-                const original = await fsextra.readFile(src)
-                    .then(buffer => buffer.toString());
-                expect(original).to.equal(data);
+                await assertFileText(dest, data);
+                await assertFileText(src, data); // Make sure src wasn't changed.
             });
         });
 

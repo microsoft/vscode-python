@@ -21,7 +21,11 @@ export class MockLanguageServerProxy implements ILanguageServerProxy {
         return this.mockLanguageClient;
     }
 
-    public start(_resource: Uri | undefined, _interpreter: PythonInterpreter | undefined, _options: LanguageClientOptions): Promise<void> {
+    public start(
+        _resource: Uri | undefined,
+        _interpreter: PythonInterpreter | undefined,
+        _options: LanguageClientOptions
+    ): Promise<void> {
         if (!this.mockLanguageClient) {
             this.mockLanguageClient = new MockLanguageClient('mockLanguageClient', { module: 'dummy' }, {});
         }

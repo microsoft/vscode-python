@@ -20,15 +20,32 @@ import { ProcessService } from '../client/common/process/proc';
 import { PythonExecutionFactory } from '../client/common/process/pythonExecutionFactory';
 import { PythonToolExecutionService } from '../client/common/process/pythonToolService';
 import { registerTypes as processRegisterTypes } from '../client/common/process/serviceRegistry';
-import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonToolExecutionService } from '../client/common/process/types';
+import {
+    IBufferDecoder,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonToolExecutionService
+} from '../client/common/process/types';
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
-import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, IMemento, IOutputChannel, IPathUtils, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
+import {
+    GLOBAL_MEMENTO,
+    ICurrentProcess,
+    IDisposableRegistry,
+    IMemento,
+    IOutputChannel,
+    IPathUtils,
+    IsWindows,
+    WORKSPACE_MEMENTO
+} from '../client/common/types';
 import { createDeferred } from '../client/common/utils/async';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
-import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../client/interpreter/autoSelection/types';
+import {
+    IInterpreterAutoSelectionService,
+    IInterpreterAutoSeletionProxyService
+} from '../client/interpreter/autoSelection/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -198,13 +215,23 @@ export class IocContainer {
 
         const stdOutputChannel = new MockOutputChannel('Python');
         this.disposables.push(stdOutputChannel);
-        this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, stdOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        this.serviceManager.addSingletonInstance<OutputChannel>(
+            IOutputChannel,
+            stdOutputChannel,
+            STANDARD_OUTPUT_CHANNEL
+        );
         const testOutputChannel = new MockOutputChannel('Python Test - UnitTests');
         this.disposables.push(testOutputChannel);
         this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, testOutputChannel, TEST_OUTPUT_CHANNEL);
 
-        this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
-        this.serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(
+            IInterpreterAutoSelectionService,
+            MockAutoSelectionService
+        );
+        this.serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
+            IInterpreterAutoSeletionProxyService,
+            MockAutoSelectionService
+        );
     }
     public async dispose(): Promise<void> {
         for (const disposable of this.disposables) {
@@ -238,11 +265,19 @@ export class IocContainer {
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
-        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve();
-        this.serviceManager.addSingletonInstance<IEnvironmentActivationService>(IEnvironmentActivationService, instance(mockEnvironmentActivationService));
+        when(
+            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())
+        ).thenResolve();
+        this.serviceManager.addSingletonInstance<IEnvironmentActivationService>(
+            IEnvironmentActivationService,
+            instance(mockEnvironmentActivationService)
+        );
         this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        this.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        this.serviceManager.addSingleton<InterpeterHashProviderFactory>(
+            InterpeterHashProviderFactory,
+            InterpeterHashProviderFactory
+        );
         this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
     public registerVariableTypes() {
@@ -270,31 +305,84 @@ export class IocContainer {
         // tslint:disable-next-line:no-any
         const processService = new MockProcessService(new ProcessService(new BufferDecoder(), process.env as any));
         processServiceFactory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService));
-        this.serviceManager.addSingletonInstance<IProcessServiceFactory>(IProcessServiceFactory, processServiceFactory.object);
+        this.serviceManager.addSingletonInstance<IProcessServiceFactory>(
+            IProcessServiceFactory,
+            processServiceFactory.object
+        );
         this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
-        this.serviceManager.addSingleton<IPythonToolExecutionService>(IPythonToolExecutionService, PythonToolExecutionService);
-        this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
+        this.serviceManager.addSingleton<IPythonToolExecutionService>(
+            IPythonToolExecutionService,
+            PythonToolExecutionService
+        );
+        this.serviceManager.addSingleton<IEnvironmentActivationService>(
+            IEnvironmentActivationService,
+            EnvironmentActivationService
+        );
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
-        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve();
-        this.serviceManager.rebindInstance<IEnvironmentActivationService>(IEnvironmentActivationService, instance(mockEnvironmentActivationService));
+        when(
+            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())
+        ).thenResolve();
+        this.serviceManager.rebindInstance<IEnvironmentActivationService>(
+            IEnvironmentActivationService,
+            instance(mockEnvironmentActivationService)
+        );
     }
 
     public registerMockInterpreterTypes() {
         this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PythonInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, CondaEnvFileService, CONDA_ENV_FILE_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, CondaEnvService, CONDA_ENV_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, CurrentPathService, CURRENT_PATH_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, GlobalVirtualEnvService, GLOBAL_VIRTUAL_ENV_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, WorkspaceVirtualEnvService, WORKSPACE_VIRTUAL_ENV_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, WindowsRegistryService, WINDOWS_REGISTRY_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, KnownPathsService, KNOWN_PATH_SERVICE);
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            PythonInterpreterLocatorService,
+            INTERPRETER_LOCATOR_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            CondaEnvFileService,
+            CONDA_ENV_FILE_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            CondaEnvService,
+            CONDA_ENV_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            CurrentPathService,
+            CURRENT_PATH_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            GlobalVirtualEnvService,
+            GLOBAL_VIRTUAL_ENV_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            WorkspaceVirtualEnvService,
+            WORKSPACE_VIRTUAL_ENV_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            PipEnvService,
+            PIPENV_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            WindowsRegistryService,
+            WINDOWS_REGISTRY_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            KnownPathsService,
+            KNOWN_PATH_SERVICE
+        );
         this.serviceManager.addSingleton<IInterpreterLocatorService>(IPipEnvService, PipEnvService);
 
-        this.serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
+        this.serviceManager.addSingleton<IInterpreterLocatorHelper>(
+            IInterpreterLocatorHelper,
+            InterpreterLocatorHelper
+        );
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
     }

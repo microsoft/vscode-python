@@ -36,23 +36,71 @@ suite('Debugger - Launcher Script Provider', () => {
     testsForLaunchProvider.forEach(testParams => {
         suite(testParams.testName, async () => {
             test('Test debug launcher args', async () => {
-                const args = new DebuggerLauncherScriptProvider(testParams.path).getLauncherArgs({ host: 'something', port: 1234 });
-                const expectedArgs = [testParams.expectedPath, '--default', '--client', '--host', 'something', '--port', '1234'];
+                const args = new DebuggerLauncherScriptProvider(testParams.path).getLauncherArgs({
+                    host: 'something',
+                    port: 1234
+                });
+                const expectedArgs = [
+                    testParams.expectedPath,
+                    '--default',
+                    '--client',
+                    '--host',
+                    'something',
+                    '--port',
+                    '1234'
+                ];
                 expect(args).to.be.deep.equal(expectedArgs);
             });
             test('Test non-debug launcher args', async () => {
-                const args = new NoDebugLauncherScriptProvider(testParams.path).getLauncherArgs({ host: 'something', port: 1234 });
-                const expectedArgs = [testParams.expectedPath, '--default', '--nodebug', '--client', '--host', 'something', '--port', '1234'];
+                const args = new NoDebugLauncherScriptProvider(testParams.path).getLauncherArgs({
+                    host: 'something',
+                    port: 1234
+                });
+                const expectedArgs = [
+                    testParams.expectedPath,
+                    '--default',
+                    '--nodebug',
+                    '--client',
+                    '--host',
+                    'something',
+                    '--port',
+                    '1234'
+                ];
                 expect(args).to.be.deep.equal(expectedArgs);
             });
             test('Test debug launcher args and custom ptvsd', async () => {
-                const args = new DebuggerLauncherScriptProvider(testParams.path).getLauncherArgs({ host: 'something', port: 1234, customDebugger: true });
-                const expectedArgs = [testParams.expectedPath, '--custom', '--client', '--host', 'something', '--port', '1234'];
+                const args = new DebuggerLauncherScriptProvider(testParams.path).getLauncherArgs({
+                    host: 'something',
+                    port: 1234,
+                    customDebugger: true
+                });
+                const expectedArgs = [
+                    testParams.expectedPath,
+                    '--custom',
+                    '--client',
+                    '--host',
+                    'something',
+                    '--port',
+                    '1234'
+                ];
                 expect(args).to.be.deep.equal(expectedArgs);
             });
             test('Test non-debug launcher args and custom ptvsd', async () => {
-                const args = new NoDebugLauncherScriptProvider(testParams.path).getLauncherArgs({ host: 'something', port: 1234, customDebugger: true });
-                const expectedArgs = [testParams.expectedPath, '--custom', '--nodebug', '--client', '--host', 'something', '--port', '1234'];
+                const args = new NoDebugLauncherScriptProvider(testParams.path).getLauncherArgs({
+                    host: 'something',
+                    port: 1234,
+                    customDebugger: true
+                });
+                const expectedArgs = [
+                    testParams.expectedPath,
+                    '--custom',
+                    '--nodebug',
+                    '--client',
+                    '--host',
+                    'something',
+                    '--port',
+                    '1234'
+                ];
                 expect(args).to.be.deep.equal(expectedArgs);
             });
         });
@@ -78,7 +126,14 @@ suite('Debugger - Launcher Script Provider', () => {
                         port: 1234,
                         waitUntilDebuggerAttaches: false
                     });
-                    const expectedArgs = [testParams.expectedPath, '--default', '--host', 'something', '--port', '1234'];
+                    const expectedArgs = [
+                        testParams.expectedPath,
+                        '--default',
+                        '--host',
+                        'something',
+                        '--port',
+                        '1234'
+                    ];
                     expect(args).to.be.deep.equal(expectedArgs);
                 });
                 test('Test remote debug launcher args (and wait for debugger to attach)', async () => {
@@ -87,7 +142,15 @@ suite('Debugger - Launcher Script Provider', () => {
                         port: 1234,
                         waitUntilDebuggerAttaches: true
                     });
-                    const expectedArgs = [testParams.expectedPath, '--default', '--host', 'something', '--port', '1234', '--wait'];
+                    const expectedArgs = [
+                        testParams.expectedPath,
+                        '--default',
+                        '--host',
+                        'something',
+                        '--port',
+                        '1234',
+                        '--wait'
+                    ];
                     expect(args).to.be.deep.equal(expectedArgs);
                 });
             });

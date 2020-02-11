@@ -35,7 +35,11 @@ suite('Source Map Support', () => {
                             return isEnabled;
                         },
                         update: (prop: string, value: boolean, scope: ConfigurationTarget) => {
-                            if (prop === 'sourceMapsEnabled' && value === false && scope === ConfigurationTarget.Global) {
+                            if (
+                                prop === 'sourceMapsEnabled' &&
+                                value === false &&
+                                scope === ConfigurationTarget.Global
+                            ) {
                                 stubInfo.configValueUpdated = true;
                             }
                         }
@@ -124,6 +128,8 @@ suite('Source Map Support', () => {
         const debuggerSourceMap = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'debugger', 'debugAdapter', 'main.js');
         expect(sourceFilesPassed).to.deep.equal([extensionSourceMap, debuggerSourceMap]);
     }
-    test('Rename extension and debugger source maps when enabling source maps', () => testRenamingFilesWhenEnablingDisablingSourceMaps(true));
-    test('Rename extension and debugger source maps when disabling source maps', () => testRenamingFilesWhenEnablingDisablingSourceMaps(false));
+    test('Rename extension and debugger source maps when enabling source maps', () =>
+        testRenamingFilesWhenEnablingDisablingSourceMaps(true));
+    test('Rename extension and debugger source maps when disabling source maps', () =>
+        testRenamingFilesWhenEnablingDisablingSourceMaps(false));
 });

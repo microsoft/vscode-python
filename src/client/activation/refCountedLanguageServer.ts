@@ -28,7 +28,11 @@ import { ILanguageServerActivator, LanguageServerType } from './types';
 
 export class RefCountedLanguageServer implements ILanguageServerActivator {
     private refCount = 1;
-    constructor(private impl: ILanguageServerActivator, private _type: LanguageServerType, private disposeCallback: () => void) {}
+    constructor(
+        private impl: ILanguageServerActivator,
+        private _type: LanguageServerType,
+        private disposeCallback: () => void
+    ) {}
 
     public increment = () => {
         this.refCount += 1;
@@ -69,16 +73,30 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
         this.impl.handleOpen ? this.impl.handleOpen(document) : noop();
     }
 
-    public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
+    public provideRenameEdits(
+        document: TextDocument,
+        position: Position,
+        newName: string,
+        token: CancellationToken
+    ): ProviderResult<WorkspaceEdit> {
         return this.impl.provideRenameEdits(document, position, newName, token);
     }
-    public provideDefinition(document: TextDocument, position: Position, token: CancellationToken): ProviderResult<Location | Location[] | LocationLink[]> {
+    public provideDefinition(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken
+    ): ProviderResult<Location | Location[] | LocationLink[]> {
         return this.impl.provideDefinition(document, position, token);
     }
     public provideHover(document: TextDocument, position: Position, token: CancellationToken): ProviderResult<Hover> {
         return this.impl.provideHover(document, position, token);
     }
-    public provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): ProviderResult<Location[]> {
+    public provideReferences(
+        document: TextDocument,
+        position: Position,
+        context: ReferenceContext,
+        token: CancellationToken
+    ): ProviderResult<Location[]> {
         return this.impl.provideReferences(document, position, context, token);
     }
     public provideCompletionItems(
@@ -97,10 +115,18 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
     public provideCodeLenses(document: TextDocument, token: CancellationToken): ProviderResult<CodeLens[]> {
         return this.impl.provideCodeLenses(document, token);
     }
-    public provideDocumentSymbols(document: TextDocument, token: CancellationToken): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
+    public provideDocumentSymbols(
+        document: TextDocument,
+        token: CancellationToken
+    ): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
         return this.impl.provideDocumentSymbols(document, token);
     }
-    public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken, context: SignatureHelpContext): ProviderResult<SignatureHelp> {
+    public provideSignatureHelp(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        context: SignatureHelpContext
+    ): ProviderResult<SignatureHelp> {
         return this.impl.provideSignatureHelp(document, position, token, context);
     }
 }

@@ -37,7 +37,10 @@ suite('Debugging - Config Resolver', () => {
         public getProgram(): string | undefined {
             return super.getProgram();
         }
-        public resolveAndUpdatePythonPath(workspaceFolder: Uri | undefined, debugConfiguration: LaunchRequestArguments): void {
+        public resolveAndUpdatePythonPath(
+            workspaceFolder: Uri | undefined,
+            debugConfiguration: LaunchRequestArguments
+        ): void {
             return super.resolveAndUpdatePythonPath(workspaceFolder, debugConfiguration);
         }
         public debugOption(debugOptions: DebugOptions[], debugOption: DebugOptions) {
@@ -60,7 +63,12 @@ suite('Debugging - Config Resolver', () => {
         documentManager = mock(DocumentManager);
         platformService = mock(PlatformService);
         configurationService = mock(ConfigurationService);
-        resolver = new BaseResolver(instance(workspaceService), instance(documentManager), instance(platformService), instance(configurationService));
+        resolver = new BaseResolver(
+            instance(workspaceService),
+            instance(documentManager),
+            instance(platformService),
+            instance(configurationService)
+        );
     });
 
     test('Program should return filepath of active editor if file is python', () => {
@@ -117,7 +125,10 @@ suite('Debugging - Config Resolver', () => {
         expect(uri).to.be.deep.equal(expectedUri);
     });
     [
-        { title: 'Should get directory of active program when there are not workspace folders', workspaceFolders: undefined },
+        {
+            title: 'Should get directory of active program when there are not workspace folders',
+            workspaceFolders: undefined
+        },
         { title: 'Should get directory of active program when there are 0 workspace folders', workspaceFolders: [] }
     ].forEach(item => {
         test(item.title, () => {
@@ -196,7 +207,14 @@ suite('Debugging - Config Resolver', () => {
 
         expect(config.pythonPath).to.equal(pythonPath);
     });
-    const localHostTestMatrix: Record<string, boolean> = { localhost: true, '127.0.0.1': true, '::1': true, '127.0.0.2': false, '156.1.2.3': false, '::2': false };
+    const localHostTestMatrix: Record<string, boolean> = {
+        localhost: true,
+        '127.0.0.1': true,
+        '::1': true,
+        '127.0.0.2': false,
+        '156.1.2.3': false,
+        '::2': false
+    };
     Object.keys(localHostTestMatrix).forEach(key => {
         test(`Local host = ${localHostTestMatrix[key]} for ${key}`, () => {
             const isLocalHost = resolver.isLocalHost(key);

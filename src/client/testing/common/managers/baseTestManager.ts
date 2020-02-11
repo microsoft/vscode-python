@@ -16,7 +16,14 @@ import '../../../common/extensions';
 import { isNotInstalledError } from '../../../common/helpers';
 import { traceError } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IInstaller, IOutputChannel, IPythonSettings, Product } from '../../../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IInstaller,
+    IOutputChannel,
+    IPythonSettings,
+    Product
+} from '../../../common/types';
 import { getNamesAndValues } from '../../../common/utils/enum';
 import { noop } from '../../../common/utils/misc';
 import { IServiceContainer } from '../../../ioc/types';
@@ -89,7 +96,9 @@ export abstract class BaseTestManager implements ITestManager {
         this.settings = configService.getSettings(this.rootDirectory ? Uri.file(this.rootDirectory) : undefined);
         const disposables = serviceContainer.get<Disposable[]>(IDisposableRegistry);
         this._outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
-        this.testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService);
+        this.testCollectionStorage = this.serviceContainer.get<ITestCollectionStorageService>(
+            ITestCollectionStorageService
+        );
         this._testResultsService = this.serviceContainer.get<ITestResultsService>(ITestResultsService);
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.diagnosticCollection = languages.createDiagnosticCollection(this.testProvider);
@@ -114,7 +123,9 @@ export abstract class BaseTestManager implements ITestManager {
         return this._onDidStatusChange.event;
     }
     public get workingDirectory(): string {
-        return this.settings.testing.cwd && this.settings.testing.cwd.length > 0 ? this.settings.testing.cwd : this.rootDirectory;
+        return this.settings.testing.cwd && this.settings.testing.cwd.length > 0
+            ? this.settings.testing.cwd
+            : this.rootDirectory;
     }
     public stop() {
         if (this.testDiscoveryCancellationTokenSource) {
@@ -145,7 +156,13 @@ export abstract class BaseTestManager implements ITestManager {
         if (this.discoverTestsPromise) {
             return this.discoverTestsPromise;
         }
-        this.discoverTestsPromise = this._discoverTests(cmdSource, ignoreCache, quietMode, userInitiated, clearTestStatus);
+        this.discoverTestsPromise = this._discoverTests(
+            cmdSource,
+            ignoreCache,
+            quietMode,
+            userInitiated,
+            clearTestStatus
+        );
         this.discoverTestsPromise
             .catch(noop)
             .then(() => (this.discoverTestsPromise = undefined))
@@ -181,7 +198,10 @@ export abstract class BaseTestManager implements ITestManager {
         this.commandManager.executeCommand('setContext', 'testsDiscovered', true).then(noop, noop);
         this.createCancellationToken(CancellationTokenType.testDiscovery);
         const discoveryOptions = this.getDiscoveryOptions(ignoreCache);
-        const discoveryService = this.serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, this.testProvider);
+        const discoveryService = this.serviceContainer.get<ITestDiscoveryService>(
+            ITestDiscoveryService,
+            this.testProvider
+        );
         return discoveryService
             .discoverTests(discoveryOptions)
             .then(tests => {
@@ -221,13 +241,22 @@ export abstract class BaseTestManager implements ITestManager {
                 if (userInitiated) {
                     this.testsStatusUpdaterService.updateStatusAsUnknown(this.workspaceFolder, this.tests);
                 }
-                if (isNotInstalledError(reason as Error) && !quietMode && !(await this.installer.isInstalled(this.product, this.workspaceFolder))) {
-                    this.installer.promptToInstall(this.product, this.workspaceFolder).catch(ex => traceError('isNotInstalledError', ex));
+                if (
+                    isNotInstalledError(reason as Error) &&
+                    !quietMode &&
+                    !(await this.installer.isInstalled(this.product, this.workspaceFolder))
+                ) {
+                    this.installer
+                        .promptToInstall(this.product, this.workspaceFolder)
+                        .catch(ex => traceError('isNotInstalledError', ex));
                 }
 
                 this.tests = undefined;
                 this.discoverTestsPromise = undefined;
-                if (this.testDiscoveryCancellationToken && this.testDiscoveryCancellationToken.isCancellationRequested) {
+                if (
+                    this.testDiscoveryCancellationToken &&
+                    this.testDiscoveryCancellationToken.isCancellationRequested
+                ) {
                     reason = CANCELLATION_REASON;
                     this.updateStatus(TestStatus.Idle);
                 } else {
@@ -243,7 +272,12 @@ export abstract class BaseTestManager implements ITestManager {
                 return Promise.reject(reason);
             });
     }
-    public async runTest(cmdSource: CommandSource, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests> {
+    public async runTest(
+        cmdSource: CommandSource,
+        testsToRun?: TestsToRun,
+        runFailedTests?: boolean,
+        debug?: boolean
+    ): Promise<Tests> {
         const moreInfo = {
             Test_Provider: this.testProvider,
             Run_Failed_Tests: 'false',
@@ -288,17 +322,30 @@ export abstract class BaseTestManager implements ITestManager {
                 telementryProperties.scope = 'function';
                 moreInfo.Run_Specific_Function = 'true';
             }
-            this.testsStatusUpdaterService.updateStatusAsRunningSpecificTests(this.workspaceFolder, testsToRun, this.tests);
+            this.testsStatusUpdaterService.updateStatusAsRunningSpecificTests(
+                this.workspaceFolder,
+                testsToRun,
+                this.tests
+            );
         }
 
         this.testsStatusUpdaterService.triggerUpdatesToTests(this.workspaceFolder, this.tests);
         // If running failed tests, then don't clear the previously build UnitTests
         // If we do so, then we end up re-discovering the unit tests and clearing previously cached list of failed tests
         // Similarly, if running a specific test or test file, don't clear the cache (possible tests have some state information retained)
-        const clearDiscoveredTestCache = runFailedTests || moreInfo.Run_Specific_File || moreInfo.Run_Specific_Class || moreInfo.Run_Specific_Function ? false : true;
+        const clearDiscoveredTestCache =
+            runFailedTests ||
+            moreInfo.Run_Specific_File ||
+            moreInfo.Run_Specific_Class ||
+            moreInfo.Run_Specific_Function
+                ? false
+                : true;
         return this.discoverTests(cmdSource, clearDiscoveredTestCache, true, true)
             .catch(reason => {
-                if (this.testDiscoveryCancellationToken && this.testDiscoveryCancellationToken.isCancellationRequested) {
+                if (
+                    this.testDiscoveryCancellationToken &&
+                    this.testDiscoveryCancellationToken.isCancellationRequested
+                ) {
                     return Promise.reject<Tests>(reason);
                 }
                 const testsHelper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
@@ -366,7 +413,10 @@ export abstract class BaseTestManager implements ITestManager {
                 newDiagnostics.push(diagnostic);
             }
             for (const msg of messages) {
-                if (fs.arePathsSame(fileUri.fsPath, Uri.file(msg.testFilePath).fsPath) && msg.status !== TestStatus.Pass) {
+                if (
+                    fs.arePathsSame(fileUri.fsPath, Uri.file(msg.testFilePath).fsPath) &&
+                    msg.status !== TestStatus.Pass
+                ) {
                     const diagnostic = this.createDiagnostics(msg);
                     newDiagnostics.push(diagnostic);
                 }
@@ -376,7 +426,12 @@ export abstract class BaseTestManager implements ITestManager {
             this.diagnosticCollection.set(fileUri, newDiagnostics);
         }
     }
-    protected abstract runTestImpl(tests: Tests, testsToRun?: TestsToRun, runFailedTests?: boolean, debug?: boolean): Promise<Tests>;
+    protected abstract runTestImpl(
+        tests: Tests,
+        testsToRun?: TestsToRun,
+        runFailedTests?: boolean,
+        debug?: boolean
+    ): Promise<Tests>;
     protected abstract getDiscoveryOptions(ignoreCache: boolean): TestDiscoveryOptions;
     private updateStatus(status: TestStatus): void {
         this._status = status;
@@ -441,7 +496,11 @@ export abstract class BaseTestManager implements ITestManager {
         const diagPrefix = this.unitTestDiagnosticService.getMessagePrefix(message.status!);
         const severity = this.unitTestDiagnosticService.getSeverity(message.severity)!;
         const diagMsg = message.message ? message.message.split('\n')[0] : '';
-        const diagnostic = new Diagnostic(stackStart.location.range, `${diagPrefix ? `${diagPrefix}: ` : ''}${diagMsg}`, severity);
+        const diagnostic = new Diagnostic(
+            stackStart.location.range,
+            `${diagPrefix ? `${diagPrefix}: ` : ''}${diagMsg}`,
+            severity
+        );
         diagnostic.code = message.code;
         diagnostic.source = message.provider;
         const relatedInfoArr: DiagnosticRelatedInformation[] = [];

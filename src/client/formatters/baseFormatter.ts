@@ -68,7 +68,9 @@ export abstract class BaseFormatter {
 
         const executionInfo = this.helper.getExecutionInfo(this.product, args, document.uri);
         executionInfo.args.push(tempFile);
-        const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
+        const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(
+            IPythonToolExecutionService
+        );
         const promise = pythonToolsExecutionService
             .exec(executionInfo, { cwd, throwOnStdErr: false, token }, document.uri)
             .then(output => output.stdout)
@@ -106,7 +108,9 @@ export abstract class BaseFormatter {
             const isInstalled = await installer.isInstalled(this.product, resource);
             if (!isInstalled) {
                 customError += `\nYou could either install the '${this.Id}' formatter, turn it off or use another formatter.`;
-                installer.promptToInstall(this.product, resource).catch(ex => traceError('Python Extension: promptToInstall', ex));
+                installer
+                    .promptToInstall(this.product, resource)
+                    .catch(ex => traceError('Python Extension: promptToInstall', ex));
             }
         }
 

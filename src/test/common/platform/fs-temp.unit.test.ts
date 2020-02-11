@@ -9,8 +9,11 @@ import { TemporaryFileSystem } from '../../../client/common/platform/fs-temp';
 
 interface IDeps {
     // tmp module
-    // tslint:disable-next-line:no-any
-    file(config: { postfix?: string }, callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void): void;
+    file(
+        config: { postfix?: string },
+        // tslint:disable-next-line:no-any
+        callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void
+    ): void;
 }
 
 suite('FileSystem - temp files', () => {
@@ -27,8 +30,8 @@ suite('FileSystem - temp files', () => {
     suite('createFile', () => {
         test(`fails if the raw call fails`, async () => {
             const failure = new Error('oops');
-            // prettier-ignore
             deps.setup(d => d.file({ postfix: '.tmp' }, TypeMoq.It.isAny()))
+                // fail with an arbitrary error
                 .throws(failure);
 
             const promise = temp.createFile('.tmp');

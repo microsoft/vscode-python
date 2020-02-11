@@ -41,13 +41,20 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
     }
 
     public async prepareLanguageServerForNoICU(languageServerFolderPath: string): Promise<void> {
-        const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        const targetJsonFile = path.join(
+            languageServerFolderPath,
+            'Microsoft.Python.LanguageServer.runtimeconfig.json'
+        );
         // tslint:disable-next-line:no-any
         let content: any = {};
         if (await this.fs.fileExists(targetJsonFile)) {
             try {
                 content = JSON.parse(await this.fs.readFile(targetJsonFile));
-                if (content.runtimeOptions && content.runtimeOptions.configProperties && content.runtimeOptions.configProperties['System.Globalization.Invariant'] === true) {
+                if (
+                    content.runtimeOptions &&
+                    content.runtimeOptions.configProperties &&
+                    content.runtimeOptions.configProperties['System.Globalization.Invariant'] === true
+                ) {
                     return;
                 }
             } catch {

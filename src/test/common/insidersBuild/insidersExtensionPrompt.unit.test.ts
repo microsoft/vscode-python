@@ -11,7 +11,10 @@ import { ApplicationShell } from '../../../client/common/application/application
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { ExtensionChannelService } from '../../../client/common/insidersBuild/downloadChannelService';
-import { InsidersExtensionPrompt, insidersPromptStateKey } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
+import {
+    InsidersExtensionPrompt,
+    insidersPromptStateKey
+} from '../../../client/common/insidersBuild/insidersExtensionPrompt';
 import { ExtensionChannel, IExtensionChannelService } from '../../../client/common/insidersBuild/types';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
@@ -31,13 +34,26 @@ suite('Insiders Extension prompt', () => {
         persistentState = mock(PersistentStateFactory);
         cmdManager = mock(CommandManager);
         hasUserBeenNotifiedState = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        when(persistentState.createGlobalPersistentState(insidersPromptStateKey, false)).thenReturn(hasUserBeenNotifiedState.object);
-        insidersPrompt = new InsidersExtensionPrompt(instance(appShell), instance(extensionChannelService), instance(cmdManager), instance(persistentState));
+        when(persistentState.createGlobalPersistentState(insidersPromptStateKey, false)).thenReturn(
+            hasUserBeenNotifiedState.object
+        );
+        insidersPrompt = new InsidersExtensionPrompt(
+            instance(appShell),
+            instance(extensionChannelService),
+            instance(cmdManager),
+            instance(persistentState)
+        );
     });
 
     test("Channel is set to 'daily' if 'Yes, daily' option is selected", async () => {
-        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
-        when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(ExtensionChannels.yesDaily() as any);
+        const prompts = [
+            ExtensionChannels.yesWeekly(),
+            ExtensionChannels.yesDaily(),
+            DataScienceSurveyBanner.bannerLabelNo()
+        ];
+        when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
+            ExtensionChannels.yesDaily() as any
+        );
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(ExtensionChannel.daily)).thenResolve();
         hasUserBeenNotifiedState
@@ -52,8 +68,14 @@ suite('Insiders Extension prompt', () => {
     });
 
     test("Channel is set to 'weekly' if 'Yes, weekly' option is selected", async () => {
-        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
-        when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(ExtensionChannels.yesWeekly() as any);
+        const prompts = [
+            ExtensionChannels.yesWeekly(),
+            ExtensionChannels.yesDaily(),
+            DataScienceSurveyBanner.bannerLabelNo()
+        ];
+        when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
+            ExtensionChannels.yesWeekly() as any
+        );
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(ExtensionChannel.weekly)).thenResolve();
         hasUserBeenNotifiedState
@@ -68,8 +90,14 @@ suite('Insiders Extension prompt', () => {
     });
 
     test("No channel is set if 'No, thanks' option is selected", async () => {
-        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
-        when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(DataScienceSurveyBanner.bannerLabelNo() as any);
+        const prompts = [
+            ExtensionChannels.yesWeekly(),
+            ExtensionChannels.yesDaily(),
+            DataScienceSurveyBanner.bannerLabelNo()
+        ];
+        when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
+            DataScienceSurveyBanner.bannerLabelNo() as any
+        );
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(anything())).thenResolve();
         hasUserBeenNotifiedState
@@ -84,8 +112,14 @@ suite('Insiders Extension prompt', () => {
     });
 
     test('No channel is set if no option is selected', async () => {
-        const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
-        when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(undefined as any);
+        const prompts = [
+            ExtensionChannels.yesWeekly(),
+            ExtensionChannels.yesDaily(),
+            DataScienceSurveyBanner.bannerLabelNo()
+        ];
+        when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
+            undefined as any
+        );
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(anything())).thenResolve();
         hasUserBeenNotifiedState
@@ -100,7 +134,9 @@ suite('Insiders Extension prompt', () => {
     });
 
     test('Do not do anything if no option is selected in the reload prompt', async () => {
-        when(appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())).thenResolve(undefined);
+        when(
+            appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())
+        ).thenResolve(undefined);
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         await insidersPrompt.promptToReload();
         verify(appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())).once();
@@ -108,7 +144,9 @@ suite('Insiders Extension prompt', () => {
     });
 
     test("Reload windows if 'Reload' option is selected in the reload prompt", async () => {
-        when(appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())).thenResolve(Common.reload() as any);
+        when(
+            appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())
+        ).thenResolve(Common.reload() as any);
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         await insidersPrompt.promptToReload();
         verify(appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload())).once();

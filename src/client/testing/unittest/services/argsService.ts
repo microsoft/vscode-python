@@ -9,7 +9,21 @@ import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../types';
 
 const OptionsWithArguments = ['-k', '-p', '-s', '-t', '--pattern', '--start-directory', '--top-level-directory'];
 
-const OptionsWithoutArguments = ['-b', '-c', '-f', '-h', '-q', '-v', '--buffer', '--catch', '--failfast', '--help', '--locals', '--quiet', '--verbose'];
+const OptionsWithoutArguments = [
+    '-b',
+    '-c',
+    '-f',
+    '-h',
+    '-q',
+    '-v',
+    '--buffer',
+    '--catch',
+    '--failfast',
+    '--help',
+    '--locals',
+    '--quiet',
+    '--verbose'
+];
 
 @injectable()
 export class ArgumentsService implements IArgumentsService {
@@ -47,7 +61,11 @@ export class ArgumentsService implements IArgumentsService {
 
         let filteredArgs = args.slice();
         if (removePositionalArgs) {
-            const positionalArgs = this.helper.getPositionalArguments(filteredArgs, OptionsWithArguments, OptionsWithoutArguments);
+            const positionalArgs = this.helper.getPositionalArguments(
+                filteredArgs,
+                OptionsWithArguments,
+                OptionsWithoutArguments
+            );
             filteredArgs = filteredArgs.filter(item => positionalArgs.indexOf(item) === -1);
         }
         return this.helper.filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);

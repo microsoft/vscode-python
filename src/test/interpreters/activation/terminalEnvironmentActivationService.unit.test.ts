@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import * as path from 'path';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { EXTENSION_ROOT_DIR, terminalNamePrefixNotToAutoActivate } from '../../../client/common/constants';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { TerminalServiceFactory } from '../../../client/common/terminal/factory';
@@ -43,7 +43,11 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
         when(terminalFactory.getTerminalService(anything())).thenReturn(instance(terminal));
         when(fs.createTemporaryFile(anything())).thenResolve({ dispose: noop, filePath: jsonFile });
         when(terminal.sendCommand(anything(), anything(), anything(), anything())).thenResolve();
-        envActivationService = new TerminalEnvironmentActivationService(instance(terminalFactory), instance(fs), instance(envVarsProvider));
+        envActivationService = new TerminalEnvironmentActivationService(
+            instance(terminalFactory),
+            instance(fs),
+            instance(envVarsProvider)
+        );
     });
 
     [undefined, Uri.file('some Resource')].forEach(resource => {
@@ -77,7 +81,6 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                         assert.equal(termArgs?.resource, resource);
                         assert.deepEqual(termArgs?.interpreter, interpreter);
                         assert.isTrue(termArgs?.hideFromUser);
-                        assert.isTrue(termArgs?.title?.startsWith(terminalNamePrefixNotToAutoActivate));
                     });
                     test('Should create a terminal with correct arguments', async () => {
                         when(envVarsProvider.getCustomEnvironmentVariables(resource)).thenResolve(undefined);
@@ -89,7 +92,6 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                         assert.equal(termArgs?.resource, resource);
                         assert.deepEqual(termArgs?.interpreter, interpreter);
                         assert.isTrue(termArgs?.hideFromUser);
-                        assert.isTrue(termArgs?.title?.startsWith(terminalNamePrefixNotToAutoActivate));
                     });
                     test('Should execute python file in terminal (that is what dumps variables into json)', async () => {
                         when(envVarsProvider.getCustomEnvironmentVariables(resource)).thenResolve(undefined);
@@ -98,7 +100,14 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                         await envActivationService.getActivatedEnvironmentVariables(resource, interpreter);
 
                         const cmd = interpreter?.path || 'python';
-                        verify(terminal.sendCommand(cmd, deepEqual([pyFile.fileToCommandArgument(), jsonFile.fileToCommandArgument()]), anything(), false)).once();
+                        verify(
+                            terminal.sendCommand(
+                                cmd,
+                                deepEqual([pyFile.fileToCommandArgument(), jsonFile.fileToCommandArgument()]),
+                                anything(),
+                                false
+                            )
+                        ).once();
                     });
                     test('Should return activated environment variables', async () => {
                         when(envVarsProvider.getCustomEnvironmentVariables(resource)).thenResolve(undefined);

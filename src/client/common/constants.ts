@@ -101,6 +101,3 @@ export function isUnitTestExecution(): boolean {
 }
 
 export * from '../constants';
-
-// Terminals with this name prefix will not be automatically activated.
-export const terminalNamePrefixNotToAutoActivate = 'VSC_NO_ACTIVATE';

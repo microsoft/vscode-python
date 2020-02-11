@@ -18,12 +18,17 @@ export class DebugAdapterActivator implements IExtensionSingleActivationService 
         @inject(IDebugAdapterDescriptorFactory) private descriptorFactory: IDebugAdapterDescriptorFactory,
         @inject(IDebugSessionLoggingFactory) private debugSessionLoggingFactory: IDebugSessionLoggingFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IAttachProcessProviderFactory) private readonly attachProcessProviderFactory: IAttachProcessProviderFactory
+        @inject(IAttachProcessProviderFactory)
+        private readonly attachProcessProviderFactory: IAttachProcessProviderFactory
     ) {}
     public async activate(): Promise<void> {
         this.attachProcessProviderFactory.registerCommands();
 
-        this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.debugSessionLoggingFactory));
-        this.disposables.push(this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.descriptorFactory));
+        this.disposables.push(
+            this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.debugSessionLoggingFactory)
+        );
+        this.disposables.push(
+            this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.descriptorFactory)
+        );
     }
 }

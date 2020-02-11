@@ -3,7 +3,12 @@
 'use strict';
 import { Reducer } from 'redux';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICell, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../../../../client/datascience/types';
+import {
+    ICell,
+    IJupyterVariable,
+    IJupyterVariablesRequest,
+    IJupyterVariablesResponse
+} from '../../../../client/datascience/types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { createPostableAction, IncomingMessageActions } from '../postOffice';
 import { CommonActionType } from './types';
@@ -22,7 +27,8 @@ type VariableReducerFunc<T> = ReducerFunc<IVariableState, IncomingMessageActions
 type VariableReducerArg<T = never | undefined> = ReducerArg<IVariableState, IncomingMessageActions, T>;
 
 function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVariableState {
-    const newExecutionCount = arg.payload.executionCount !== undefined ? arg.payload.executionCount : arg.prevState.currentExecutionCount;
+    const newExecutionCount =
+        arg.payload.executionCount !== undefined ? arg.payload.executionCount : arg.prevState.currentExecutionCount;
     arg.queueAction(
         createPostableAction(InteractiveWindowMessages.GetVariablesRequest, {
             executionCount: newExecutionCount,
@@ -51,7 +57,13 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
         return handleRequest({
             ...arg,
             prevState: newState,
-            payload: { executionCount: arg.prevState.currentExecutionCount, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize }
+            payload: {
+                executionCount: arg.prevState.currentExecutionCount,
+                sortColumn: 'name',
+                sortAscending: true,
+                startIndex: 0,
+                pageSize: arg.prevState.pageSize
+            }
         });
     } else {
         return newState;
@@ -108,7 +120,16 @@ function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVa
 function handleRestarted(arg: VariableReducerArg): IVariableState {
     // If the variables are visible, refresh them
     if (arg.prevState.visible) {
-        const result = handleRequest({ ...arg, payload: { executionCount: 0, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize } });
+        const result = handleRequest({
+            ...arg,
+            payload: {
+                executionCount: 0,
+                sortColumn: 'name',
+                sortAscending: true,
+                startIndex: 0,
+                pageSize: arg.prevState.pageSize
+            }
+        });
         return {
             ...result,
             currentExecutionCount: 0,
@@ -119,11 +140,22 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
 }
 
 function handleFinishCell(arg: VariableReducerArg<ICell>): IVariableState {
-    const executionCount = arg.payload.data.execution_count ? parseInt(arg.payload.data.execution_count.toString(), 10) : undefined;
+    const executionCount = arg.payload.data.execution_count
+        ? parseInt(arg.payload.data.execution_count.toString(), 10)
+        : undefined;
 
     // If the variables are visible, refresh them
     if (arg.prevState.visible && executionCount) {
-        return handleRequest({ ...arg, payload: { executionCount, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize } });
+        return handleRequest({
+            ...arg,
+            payload: {
+                executionCount,
+                sortColumn: 'name',
+                sortAscending: true,
+                startIndex: 0,
+                pageSize: arg.prevState.pageSize
+            }
+        });
     }
     return {
         ...arg.prevState,

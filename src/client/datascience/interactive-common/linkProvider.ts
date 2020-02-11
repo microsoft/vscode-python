@@ -18,7 +18,10 @@ const LineQueryRegex = /line=(\d+)/;
 // tslint:disable: no-any
 @injectable()
 export class LinkProvider implements IInteractiveWindowListener {
-    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
+    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
+        message: string;
+        payload: any;
+    }>();
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
@@ -86,16 +89,22 @@ export class LinkProvider implements IInteractiveWindowListener {
         }
 
         // Show the matching editor if there is one
-        let editor = this.documentManager.visibleTextEditors.find(e => this.fileSystem.arePathsSame(e.document.fileName, uri.fsPath));
+        let editor = this.documentManager.visibleTextEditors.find(e =>
+            this.fileSystem.arePathsSame(e.document.fileName, uri.fsPath)
+        );
         if (editor) {
-            this.documentManager.showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn }).then(e => {
-                e.revealRange(selection, TextEditorRevealType.InCenter);
-            });
+            this.documentManager
+                .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
+                .then(e => {
+                    e.revealRange(selection, TextEditorRevealType.InCenter);
+                });
         } else {
             // Not a visible editor, try opening otherwise
             this.commandManager.executeCommand('vscode.open', uri).then(() => {
                 // See if that opened a text document
-                editor = this.documentManager.visibleTextEditors.find(e => this.fileSystem.arePathsSame(e.document.fileName, uri.fsPath));
+                editor = this.documentManager.visibleTextEditors.find(e =>
+                    this.fileSystem.arePathsSame(e.document.fileName, uri.fsPath)
+                );
                 if (editor) {
                     // Force the selection to change
                     editor.revealRange(selection);

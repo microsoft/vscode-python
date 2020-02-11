@@ -3,7 +3,12 @@
 'use strict';
 import { assert } from 'chai';
 import { IDataScienceSettings } from '../../client/common/types';
-import { createEmptyCell, CursorPos, extractInputText, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
+import {
+    createEmptyCell,
+    CursorPos,
+    extractInputText,
+    ICellViewModel
+} from '../../datascience-ui/interactive-common/mainState';
 import { defaultDataScienceSettings } from './helpers';
 
 // tslint:disable: max-func-body-length
@@ -44,7 +49,15 @@ suite('Data Science MainState', () => {
             hasBeenRun: false
         };
         assert.equal(extractInputText(cloneVM(cvm, '# %%\na=1'), settings), 'a=1', 'Cell marker not removed');
-        assert.equal(extractInputText(cloneVM(cvm, '# %%\nbreakpoint()\na=1'), settings), 'breakpoint()\na=1', 'Cell marker not removed');
-        assert.equal(extractInputText(cloneVM(cvm, '# %%\nbreakpoint()\na=1', true), settings), 'a=1', 'Cell marker not removed');
+        assert.equal(
+            extractInputText(cloneVM(cvm, '# %%\nbreakpoint()\na=1'), settings),
+            'breakpoint()\na=1',
+            'Cell marker not removed'
+        );
+        assert.equal(
+            extractInputText(cloneVM(cvm, '# %%\nbreakpoint()\na=1', true), settings),
+            'a=1',
+            'Cell marker not removed'
+        );
     });
 });

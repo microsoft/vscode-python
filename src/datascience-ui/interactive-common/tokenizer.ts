@@ -41,7 +41,9 @@ export function registerMonacoLanguage() {
         ],
         onEnterRules: [
             {
-                beforeText: new RegExp('^\\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async).*?:\\s*$'),
+                beforeText: new RegExp(
+                    '^\\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async).*?:\\s*$'
+                ),
                 action: { indentAction: monacoEditor.languages.IndentAction.Indent }
             }
         ],
@@ -56,7 +58,11 @@ export function registerMonacoLanguage() {
 }
 
 // tslint:disable: no-any
-export async function initializeTokenizer(onigasm: ArrayBuffer, tmlanguageJSON: string, loadingFinished: (e?: any) => void): Promise<void> {
+export async function initializeTokenizer(
+    onigasm: ArrayBuffer,
+    tmlanguageJSON: string,
+    loadingFinished: (e?: any) => void
+): Promise<void> {
     try {
         // Register the language first
         registerMonacoLanguage();

@@ -76,7 +76,9 @@ suite('Provider - Folding Provider', () => {
             const ranges = await provider.provideFoldingRanges(document, {}, new CancellationTokenSource().token);
             expect(ranges).to.be.lengthOf(item.ranges.length);
             ranges!.forEach(range => {
-                const index = item.ranges.findIndex(searchItem => searchItem.start === range.start && searchItem.end === range.end);
+                const index = item.ranges.findIndex(
+                    searchItem => searchItem.start === range.start && searchItem.end === range.end
+                );
                 expect(index).to.be.greaterThan(-1, `${range.start}, ${range.end} not found`);
             });
         });

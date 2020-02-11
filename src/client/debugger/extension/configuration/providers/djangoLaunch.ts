@@ -60,7 +60,11 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
         });
         Object.assign(state.config, config);
     }
-    public async validateManagePy(folder: WorkspaceFolder | undefined, defaultValue: string, selected?: string): Promise<string | undefined> {
+    public async validateManagePy(
+        folder: WorkspaceFolder | undefined,
+        defaultValue: string,
+        selected?: string
+    ): Promise<string | undefined> {
         const error = DebugConfigStrings.django.enterManagePyPath.invalid();
         if (!selected || selected.trim().length === 0) {
             return error;

@@ -100,7 +100,9 @@ export namespace Execution {
 
             // Update input controls (always show expanded since we just edited it.)
             newCell = createCellVM(newCell.cell, arg.prevState.settings, false, false);
-            const collapseInputs = arg.prevState.settings ? arg.prevState.settings.collapseCellInputCodeByDefault : false;
+            const collapseInputs = arg.prevState.settings
+                ? arg.prevState.settings.collapseCellInputCodeByDefault
+                : false;
             newCell = Creation.alterCellVM(newCell, arg.prevState.settings, true, !collapseInputs);
             newCell.useQuickEdit = false;
 
@@ -113,7 +115,12 @@ export namespace Execution {
 
             // Send a message to execute this code if necessary.
             if (newCell.cell.state !== CellState.finished) {
-                arg.queueAction(createPostableAction(InteractiveWindowMessages.SubmitNewCell, { code: arg.payload.code, id: newCell.cell.id }));
+                arg.queueAction(
+                    createPostableAction(InteractiveWindowMessages.SubmitNewCell, {
+                        code: arg.payload.code,
+                        id: newCell.cell.id
+                    })
+                );
             }
 
             // Stick in a new cell at the bottom that's editable and update our state

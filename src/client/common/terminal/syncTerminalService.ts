@@ -28,7 +28,11 @@ class ExecutionState implements Disposable {
     public state: State = State.notStarted;
     private _completed: Deferred<void> = createDeferred();
     private disposable?: Disposable;
-    constructor(public readonly lockFile: string, private readonly fs: IFileSystem, private readonly command: string[]) {
+    constructor(
+        public readonly lockFile: string,
+        private readonly fs: IFileSystem,
+        private readonly command: string[]
+    ) {
         this.registerStateUpdate();
         this._completed.promise.finally(() => this.dispose()).ignoreErrors();
     }
@@ -50,7 +54,13 @@ class ExecutionState implements Disposable {
             this.state = state;
             if (state & State.errored) {
                 const errorContents = await this.fs.readFile(`${this.lockFile}.error`).catch(() => '');
-                this._completed.reject(new Error(`Command failed with errors, check the terminal for details. Command: ${this.command.join(' ')}\n${errorContents}`));
+                this._completed.reject(
+                    new Error(
+                        `Command failed with errors, check the terminal for details. Command: ${this.command.join(
+                            ' '
+                        )}\n${errorContents}`
+                    )
+                );
             } else if (state & State.completed) {
                 this._completed.resolve();
             }
@@ -116,7 +126,12 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
             }
         }
     }
-    public async sendCommand(command: string, args: string[], cancel?: CancellationToken, swallowExceptions: boolean = true): Promise<void> {
+    public async sendCommand(
+        command: string,
+        args: string[],
+        cancel?: CancellationToken,
+        swallowExceptions: boolean = true
+    ): Promise<void> {
         if (!cancel) {
             return this.terminalService.sendCommand(command, args);
         }

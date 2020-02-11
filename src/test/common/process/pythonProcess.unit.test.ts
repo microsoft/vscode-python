@@ -39,7 +39,9 @@ suite('PythonExecutionService', () => {
             is64Bit: true
         };
 
-        processService.setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+        processService
+            .setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
 
         const result = await executionService.getInterpreterInformation();
         const expectedResult = {
@@ -61,7 +63,9 @@ suite('PythonExecutionService', () => {
             is64Bit: true
         };
 
-        processService.setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+        processService
+            .setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
 
         const result = await executionService.getInterpreterInformation();
         const expectedResult = {
@@ -72,7 +76,10 @@ suite('PythonExecutionService', () => {
             sysVersion: undefined
         };
 
-        expect(result).to.deep.equal(expectedResult, 'Incorrect value returned by getInterpreterInformation() with truncated versionInfo.');
+        expect(result).to.deep.equal(
+            expectedResult,
+            'Incorrect value returned by getInterpreterInformation() with truncated versionInfo.'
+        );
     });
 
     test('getInterpreterInformation should return an object with the architecture value set to x86 if json.is64bit is not 64bit', async () => {
@@ -83,7 +90,9 @@ suite('PythonExecutionService', () => {
             is64Bit: false
         };
 
-        processService.setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+        processService
+            .setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
 
         const result = await executionService.getInterpreterInformation();
         const expectedResult = {
@@ -94,20 +103,30 @@ suite('PythonExecutionService', () => {
             sysVersion: undefined
         };
 
-        expect(result).to.deep.equal(expectedResult, 'Incorrect value returned by getInterpreterInformation() for x86b architecture.');
+        expect(result).to.deep.equal(
+            expectedResult,
+            'Incorrect value returned by getInterpreterInformation() for x86b architecture.'
+        );
     });
 
     test('getInterpreterInformation should error out if interpreterInfo.py times out', async () => {
-        // tslint:disable-next-line: no-any
-        processService.setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined as any));
+        processService
+            .setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            // tslint:disable-next-line: no-any
+            .returns(() => Promise.resolve(undefined as any));
 
         const result = await executionService.getInterpreterInformation();
 
-        expect(result).to.equal(undefined, 'getInterpreterInfo() should return undefined because interpreterInfo timed out.');
+        expect(result).to.equal(
+            undefined,
+            'getInterpreterInfo() should return undefined because interpreterInfo timed out.'
+        );
     });
 
     test('getInterpreterInformation should return undefined if the json value returned by interpreterInfo.py is not valid', async () => {
-        processService.setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'bad json' }));
+        processService
+            .setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({ stdout: 'bad json' }));
 
         const result = await executionService.getInterpreterInformation();
 
@@ -137,7 +156,9 @@ suite('PythonExecutionService', () => {
     test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {
         const stderr = 'bar';
         fileSystem.setup(f => f.fileExists(pythonPath)).returns(() => Promise.resolve(false));
-        processService.setup(p => p.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true })).returns(() => Promise.reject(new StdErrError(stderr)));
+        processService
+            .setup(p => p.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true }))
+            .returns(() => Promise.reject(new StdErrError(stderr)));
 
         const result = executionService.getExecutablePath();
 
@@ -146,16 +167,23 @@ suite('PythonExecutionService', () => {
 
     test('isModuleInstalled should call processService.exec()', async () => {
         const moduleName = 'foo';
-        processService.setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })).returns(() => Promise.resolve({ stdout: '' }));
+        processService
+            .setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
+            .returns(() => Promise.resolve({ stdout: '' }));
 
         await executionService.isModuleInstalled(moduleName);
 
-        processService.verify(async p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }), TypeMoq.Times.once());
+        processService.verify(
+            async p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }),
+            TypeMoq.Times.once()
+        );
     });
 
     test('isModuleInstalled should return true when processService.exec() succeeds', async () => {
         const moduleName = 'foo';
-        processService.setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })).returns(() => Promise.resolve({ stdout: '' }));
+        processService
+            .setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
+            .returns(() => Promise.resolve({ stdout: '' }));
 
         const result = await executionService.isModuleInstalled(moduleName);
 
@@ -164,7 +192,9 @@ suite('PythonExecutionService', () => {
 
     test('isModuleInstalled should return false when processService.exec() throws', async () => {
         const moduleName = 'foo';
-        processService.setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })).returns(() => Promise.reject(new StdErrError('bar')));
+        processService
+            .setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
+            .returns(() => Promise.reject(new StdErrError('bar')));
 
         const result = await executionService.isModuleInstalled(moduleName);
 
@@ -242,8 +272,12 @@ suite('PythonExecutionService', () => {
         const moduleName = 'foo';
         const expectedArgs = ['-m', moduleName, ...args];
         const options = {};
-        processService.setup(p => p.exec(pythonPath, expectedArgs, options)).returns(() => Promise.resolve({ stdout: 'bar', stderr: `Error: No module named ${moduleName}` }));
-        processService.setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })).returns(() => Promise.reject(new StdErrError('not installed')));
+        processService
+            .setup(p => p.exec(pythonPath, expectedArgs, options))
+            .returns(() => Promise.resolve({ stdout: 'bar', stderr: `Error: No module named ${moduleName}` }));
+        processService
+            .setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
+            .returns(() => Promise.reject(new StdErrError('not installed')));
 
         const result = executionService.execModule(moduleName, args, options);
 
@@ -255,6 +289,9 @@ suite('PythonExecutionService', () => {
 
         const result = executionService.getExecutionInfo(args);
 
-        expect(result).to.deep.equal({ command: pythonPath, args }, 'getExecutionInfo should return pythonPath and the command and execution arguments as is');
+        expect(result).to.deep.equal(
+            { command: pythonPath, args },
+            'getExecutionInfo should return pythonPath and the command and execution arguments as is'
+        );
     });
 });

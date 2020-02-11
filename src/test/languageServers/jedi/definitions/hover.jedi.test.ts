@@ -38,17 +38,33 @@ suite('Hover Definition (Jedi)', () => {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(30, 5);
-                return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.Hover[]>(
+                    'vscode.executeHoverProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(result => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
-                assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '30,4', 'Start position is incorrect');
-                assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '30,11', 'End position is incorrect');
+                assert.equal(
+                    `${def[0].range!.start.line},${def[0].range!.start.character}`,
+                    '30,4',
+                    'Start position is incorrect'
+                );
+                assert.equal(
+                    `${def[0].range!.end.line},${def[0].range!.end.character}`,
+                    '30,11',
+                    'End position is incorrect'
+                );
                 assert.equal(def[0].contents.length, 1, 'Invalid content items');
                 // tslint:disable-next-line:prefer-template
                 const expectedContent = '```python' + EOL + 'def method1()' + EOL + '```' + EOL + 'This is method1';
-                assert.equal(normalizeMarkedString(def[0].contents[0]), expectedContent, 'function signature incorrect');
+                assert.equal(
+                    normalizeMarkedString(def[0].contents[0]),
+                    expectedContent,
+                    'function signature incorrect'
+                );
             })
             .then(done, done);
     });
@@ -64,15 +80,31 @@ suite('Hover Definition (Jedi)', () => {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(1, 12);
-                return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.Hover[]>(
+                    'vscode.executeHoverProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(result => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
-                assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '1,9', 'Start position is incorrect');
-                assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '1,12', 'End position is incorrect');
-                // tslint:disable-next-line:prefer-template
-                assert.equal(normalizeMarkedString(def[0].contents[0]), '```python' + EOL + 'def fun()' + EOL + '```' + EOL + 'This is fun', 'Invalid contents');
+                assert.equal(
+                    `${def[0].range!.start.line},${def[0].range!.start.character}`,
+                    '1,9',
+                    'Start position is incorrect'
+                );
+                assert.equal(
+                    `${def[0].range!.end.line},${def[0].range!.end.character}`,
+                    '1,12',
+                    'End position is incorrect'
+                );
+                assert.equal(
+                    normalizeMarkedString(def[0].contents[0]),
+                    // tslint:disable-next-line:prefer-template
+                    '```python' + EOL + 'def fun()' + EOL + '```' + EOL + 'This is fun',
+                    'Invalid contents'
+                );
             })
             .then(done, done);
     });
@@ -88,13 +120,25 @@ suite('Hover Definition (Jedi)', () => {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(25, 6);
-                return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.Hover[]>(
+                    'vscode.executeHoverProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(result => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
-                assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '25,4', 'Start position is incorrect');
-                assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '25,7', 'End position is incorrect');
+                assert.equal(
+                    `${def[0].range!.start.line},${def[0].range!.start.character}`,
+                    '25,4',
+                    'Start position is incorrect'
+                );
+                assert.equal(
+                    `${def[0].range!.end.line},${def[0].range!.end.character}`,
+                    '25,7',
+                    'End position is incorrect'
+                );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
                     // tslint:disable-next-line:prefer-template
@@ -126,13 +170,25 @@ suite('Hover Definition (Jedi)', () => {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(1, 11);
-                return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.Hover[]>(
+                    'vscode.executeHoverProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(result => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
-                assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '1,5', 'Start position is incorrect');
-                assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '1,16', 'End position is incorrect');
+                assert.equal(
+                    `${def[0].range!.start.line},${def[0].range!.start.character}`,
+                    '1,5',
+                    'Start position is incorrect'
+                );
+                assert.equal(
+                    `${def[0].range!.end.line},${def[0].range!.end.character}`,
+                    '1,16',
+                    'End position is incorrect'
+                );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
                     // tslint:disable-next-line:prefer-template
@@ -162,7 +218,11 @@ suite('Hover Definition (Jedi)', () => {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(5, 1);
-                return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.Hover[]>(
+                    'vscode.executeHoverProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(def => {
                 assert.equal(def!.length, 0, 'Definition length is incorrect');
@@ -181,7 +241,11 @@ suite('Hover Definition (Jedi)', () => {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(3, 1);
-                return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.Hover[]>(
+                    'vscode.executeHoverProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(def => {
                 assert.equal(def!.length, 0, 'Definition length is incorrect');
@@ -200,13 +264,25 @@ suite('Hover Definition (Jedi)', () => {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(11, 15);
-                return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.Hover[]>(
+                    'vscode.executeHoverProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(result => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
-                assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '11,12', 'Start position is incorrect');
-                assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '11,18', 'End position is incorrect');
+                assert.equal(
+                    `${def[0].range!.start.line},${def[0].range!.start.character}`,
+                    '11,12',
+                    'Start position is incorrect'
+                );
+                assert.equal(
+                    `${def[0].range!.end.line},${def[0].range!.end.character}`,
+                    '11,18',
+                    'End position is incorrect'
+                );
                 const documentation =
                     // tslint:disable-next-line:prefer-template
                     '```python' +
@@ -251,17 +327,35 @@ suite('Hover Definition (Jedi)', () => {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(12, 10);
-                return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.Hover[]>(
+                    'vscode.executeHoverProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(result => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
-                assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '12,5', 'Start position is incorrect');
-                assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '12,12', 'End position is incorrect');
+                assert.equal(
+                    `${def[0].range!.start.line},${def[0].range!.start.character}`,
+                    '12,5',
+                    'Start position is incorrect'
+                );
+                assert.equal(
+                    `${def[0].range!.end.line},${def[0].range!.end.character}`,
+                    '12,12',
+                    'End position is incorrect'
+                );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
                     // tslint:disable-next-line:prefer-template
-                    '```python' + EOL + 'def randint(a, b)' + EOL + '```' + EOL + 'Return random integer in range [a, b], including both end points.',
+                    '```python' +
+                        EOL +
+                        'def randint(a, b)' +
+                        EOL +
+                        '```' +
+                        EOL +
+                        'Return random integer in range [a, b], including both end points.',
                     'Invalid contents'
                 );
             })
@@ -279,17 +373,35 @@ suite('Hover Definition (Jedi)', () => {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(8, 14);
-                return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.Hover[]>(
+                    'vscode.executeHoverProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(result => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
-                assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '8,11', 'Start position is incorrect');
-                assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '8,15', 'End position is incorrect');
+                assert.equal(
+                    `${def[0].range!.start.line},${def[0].range!.start.character}`,
+                    '8,11',
+                    'Start position is incorrect'
+                );
+                assert.equal(
+                    `${def[0].range!.end.line},${def[0].range!.end.character}`,
+                    '8,15',
+                    'End position is incorrect'
+                );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
                     // tslint:disable-next-line:prefer-template
-                    '```python' + EOL + 'def acos(x: SupportsFloat)' + EOL + '```' + EOL + 'Return the arc cosine (measured in radians) of x.',
+                    '```python' +
+                        EOL +
+                        'def acos(x: SupportsFloat)' +
+                        EOL +
+                        '```' +
+                        EOL +
+                        'Return the arc cosine (measured in radians) of x.',
                     'Invalid contents'
                 );
             })
@@ -307,13 +419,25 @@ suite('Hover Definition (Jedi)', () => {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(14, 14);
-                return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.Hover[]>(
+                    'vscode.executeHoverProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(result => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
-                assert.equal(`${def[0].range!.start.line},${def[0].range!.start.character}`, '14,9', 'Start position is incorrect');
-                assert.equal(`${def[0].range!.end.line},${def[0].range!.end.character}`, '14,15', 'End position is incorrect');
+                assert.equal(
+                    `${def[0].range!.start.line},${def[0].range!.start.character}`,
+                    '14,9',
+                    'Start position is incorrect'
+                );
+                assert.equal(
+                    `${def[0].range!.end.line},${def[0].range!.end.character}`,
+                    '14,15',
+                    'End position is incorrect'
+                );
                 assert.equal(
                     normalizeMarkedString(def[0].contents[0]),
                     // tslint:disable-next-line:prefer-template
@@ -345,7 +469,11 @@ suite('Hover Definition (Jedi)', () => {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(6, 2);
-                return vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.Hover[]>(
+                    'vscode.executeHoverProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(result => {
                 const def = result!;
@@ -366,7 +494,11 @@ suite('Hover Definition (Jedi)', () => {
         const textDocument = await vscode.workspace.openTextDocument(fileStringFormat);
         await vscode.window.showTextDocument(textDocument);
         const position = new vscode.Position(8, 4);
-        const def = (await vscode.commands.executeCommand<vscode.Hover[]>('vscode.executeHoverProvider', textDocument.uri, position))!;
+        const def = (await vscode.commands.executeCommand<vscode.Hover[]>(
+            'vscode.executeHoverProvider',
+            textDocument.uri,
+            position
+        ))!;
         assert.equal(def.length, 1, 'Definition length is incorrect');
         assert.equal(def[0].contents.length, 1, 'Only expected one result');
         const contents = normalizeMarkedString(def[0].contents[0]);

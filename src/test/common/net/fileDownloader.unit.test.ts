@@ -59,7 +59,11 @@ class DelayedReadMemoryStream extends Readable {
         return 1024 * 10;
     }
     private readCounter = 0;
-    constructor(private readonly totalKb: number, private readonly delayMs: number, private readonly kbPerIteration: number) {
+    constructor(
+        private readonly totalKb: number,
+        private readonly delayMs: number,
+        private readonly kbPerIteration: number
+    ) {
         super();
     }
     public _read() {
@@ -129,7 +133,9 @@ suite('File Downloader', () => {
             fileDownloader = new FileDownloader(instance(httpClient), fs, instance(appShell));
             const promise = fileDownloader.downloadFileWithStatusBarProgress(uri, 'hello', tmpFilePath.filePath);
 
-            await expect(promise).to.eventually.be.rejectedWith('Failed with status 500, null, Uri https://python.extension/package.json');
+            await expect(promise).to.eventually.be.rejectedWith(
+                'Failed with status 500, null, Uri https://python.extension/package.json'
+            );
         });
         test('Error is throw if unable to write to the file stream', async () => {
             // When downloading a uri, point it to package.json file.
@@ -141,7 +147,9 @@ suite('File Downloader', () => {
             when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
 
             // Use bogus files that cannot be created (on windows, invalid drives, on mac & linux use invalid home directories).
-            const invalidFileName = new PlatformService().isWindows ? 'abcd:/bogusFile/one.txt' : '/bogus file path/.txt';
+            const invalidFileName = new PlatformService().isWindows
+                ? 'abcd:/bogusFile/one.txt'
+                : '/bogus file path/.txt';
             fileDownloader = new FileDownloader(instance(httpClient), fs, instance(appShell));
             const promise = fileDownloader.downloadFileWithStatusBarProgress(uri, 'hello', invalidFileName);
 
@@ -175,7 +183,11 @@ suite('File Downloader', () => {
             // When the download is slow, we can test progress.
             nock('https://python.extension')
                 .get('/package.json')
-                .reply(200, () => [200, new DelayedReadMemoryStream(1024 * totalKb, 5, 1024 * 10), { 'content-length': 1024 * totalKb }]);
+                .reply(200, () => [
+                    200,
+                    new DelayedReadMemoryStream(1024 * totalKb, 5, 1024 * 10),
+                    { 'content-length': 1024 * totalKb }
+                ]);
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
             when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
@@ -201,7 +213,12 @@ suite('File Downloader', () => {
             expect(progressReportStub.args[4][0].message).to.equal(getProgressMessage(50, 100));
 
             function getProgressMessage(downloadedKb: number, percentage: number) {
-                return Http.downloadingFileProgress().format('Downloading-something', downloadedKb.toFixed(), totalKb.toFixed(), percentage.toString());
+                return Http.downloadingFileProgress().format(
+                    'Downloading-something',
+                    downloadedKb.toFixed(),
+                    totalKb.toFixed(),
+                    percentage.toString()
+                );
             }
         });
     });
@@ -233,7 +250,11 @@ suite('File Downloader', () => {
             when(fs.createTemporaryFile('.pdf')).thenResolve(tmpFile);
             fileDownloader = new FileDownloader(instance(httpClient), instance(fs), instance(appShell));
 
-            await fileDownloader.downloadFile('file to download', { progressMessagePrefix: '', extension: '.pdf', outputChannel: outputChannel });
+            await fileDownloader.downloadFile('file to download', {
+                progressMessagePrefix: '',
+                extension: '.pdf',
+                outputChannel: outputChannel
+            });
 
             verify(outputChannel.appendLine(Http.downloadingFile().format('file to download')));
         });

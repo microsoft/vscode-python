@@ -54,7 +54,11 @@ export class TestResultDisplay implements ITestResultDisplay {
         }
     }
     public displayProgressStatus(testRunResult: Promise<Tests>, debug: boolean = false) {
-        this.displayProgress('Running Tests', 'Running Tests (Click to Stop)', constants.Commands.Tests_Ask_To_Stop_Test);
+        this.displayProgress(
+            'Running Tests',
+            'Running Tests (Click to Stop)',
+            constants.Commands.Tests_Ask_To_Stop_Test
+        );
         testRunResult
             .then(tests => this.updateTestRunWithSuccess(tests, debug))
             .catch(this.updateTestRunWithFailure.bind(this))
@@ -62,7 +66,11 @@ export class TestResultDisplay implements ITestResultDisplay {
             .catch(noop);
     }
     public displayDiscoverStatus(testDiscovery: Promise<Tests>, quietMode: boolean = false) {
-        this.displayProgress('Discovering Tests', 'Discovering tests (click to stop)', constants.Commands.Tests_Ask_To_Stop_Discovery);
+        this.displayProgress(
+            'Discovering Tests',
+            'Discovering tests (click to stop)',
+            constants.Commands.Tests_Ask_To_Stop_Discovery
+        );
         return testDiscovery
             .then(tests => {
                 this.updateWithDiscoverSuccess(tests, quietMode);
@@ -148,7 +156,12 @@ export class TestResultDisplay implements ITestResultDisplay {
     // tslint:disable-next-line:no-any
     private async disableTests(): Promise<any> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const settingsToDisable = ['testing.promptToConfigure', 'testing.pytestEnabled', 'testing.unittestEnabled', 'testing.nosetestsEnabled'];
+        const settingsToDisable = [
+            'testing.promptToConfigure',
+            'testing.pytestEnabled',
+            'testing.unittestEnabled',
+            'testing.nosetestsEnabled'
+        ];
 
         for (const setting of settingsToDisable) {
             await configurationService.updateSetting(setting, false).catch(noop);
@@ -169,12 +182,18 @@ export class TestResultDisplay implements ITestResultDisplay {
 
         if (!haveTests && !quietMode) {
             this.appShell
-                .showInformationMessage('No tests discovered, please check the configuration settings for the tests.', Testing.disableTests(), Testing.configureTests())
+                .showInformationMessage(
+                    'No tests discovered, please check the configuration settings for the tests.',
+                    Testing.disableTests(),
+                    Testing.configureTests()
+                )
                 .then(item => {
                     if (item === Testing.disableTests()) {
                         this.disableTests().catch(ex => traceError('Python Extension: disableTests', ex));
                     } else if (item === Testing.configureTests()) {
-                        this.cmdManager.executeCommand(constants.Commands.Tests_Configure, undefined, undefined, undefined).then(noop);
+                        this.cmdManager
+                            .executeCommand(constants.Commands.Tests_Configure, undefined, undefined, undefined)
+                            .then(noop);
                     }
                 });
         }
@@ -196,7 +215,9 @@ export class TestResultDisplay implements ITestResultDisplay {
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: show an option that will invoke a command 'python.test.configureTest' or similar.
                 // This will be hanlded by main.ts that will capture input from user and configure the tests.
-                this.appShell.showErrorMessage('Test discovery error, please check the configuration settings for the tests.');
+                this.appShell.showErrorMessage(
+                    'Test discovery error, please check the configuration settings for the tests.'
+                );
             }
         }
     }

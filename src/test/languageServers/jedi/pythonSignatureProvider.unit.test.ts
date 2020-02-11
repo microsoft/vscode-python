@@ -91,19 +91,28 @@ suite('Signature Provider unit tests', () => {
     test('Ensure no signature is given within a string.', async () => {
         const source = "  print('Python is awesome,')\n";
         const sigHelp: SignatureHelp = await testSignatureReturns(source, 27);
-        expect(sigHelp).to.not.be.equal(undefined, 'Expected to get a blank signature item back - did the pattern change here?');
+        expect(sigHelp).to.not.be.equal(
+            undefined,
+            'Expected to get a blank signature item back - did the pattern change here?'
+        );
         expect(sigHelp.signatures.length).to.equal(0, 'Signature provided for symbols within a string?');
     });
     test('Ensure no signature is given within a line comment.', async () => {
         const source = "#  print('Python is awesome,')\n";
         const sigHelp: SignatureHelp = await testSignatureReturns(source, 28);
-        expect(sigHelp).to.not.be.equal(undefined, 'Expected to get a blank signature item back - did the pattern change here?');
+        expect(sigHelp).to.not.be.equal(
+            undefined,
+            'Expected to get a blank signature item back - did the pattern change here?'
+        );
         expect(sigHelp.signatures.length).to.equal(0, 'Signature provided for symbols within a full-line comment?');
     });
     test('Ensure no signature is given within a comment tailing a command.', async () => {
         const source = "  print('Python') # print('is awesome,')\n";
         const sigHelp: SignatureHelp = await testSignatureReturns(source, 38);
-        expect(sigHelp).to.not.be.equal(undefined, 'Expected to get a blank signature item back - did the pattern change here?');
+        expect(sigHelp).to.not.be.equal(
+            undefined,
+            'Expected to get a blank signature item back - did the pattern change here?'
+        );
         expect(sigHelp.signatures.length).to.equal(0, 'Signature provided for symbols within a trailing comment?');
     });
     test('Ensure signature is given for built-in print command.', async () => {
@@ -111,13 +120,27 @@ suite('Signature Provider unit tests', () => {
         let sigHelp: SignatureHelp;
         try {
             sigHelp = await testSignatureReturns(source, 18);
-            expect(sigHelp).to.not.equal(undefined, 'Expected to get a blank signature item back - did the pattern change here?');
-            expect(sigHelp.signatures.length).to.not.equal(0, 'Expected dummy argresult back from testing our print signature.');
-            expect(sigHelp.activeParameter).to.be.equal(0, "Parameter for print should be the first member of the test argresult's params object.");
-            expect(sigHelp.activeSignature).to.be.equal(0, 'The signature for print should be the first member of the test argresult.');
+            expect(sigHelp).to.not.equal(
+                undefined,
+                'Expected to get a blank signature item back - did the pattern change here?'
+            );
+            expect(sigHelp.signatures.length).to.not.equal(
+                0,
+                'Expected dummy argresult back from testing our print signature.'
+            );
+            expect(sigHelp.activeParameter).to.be.equal(
+                0,
+                "Parameter for print should be the first member of the test argresult's params object."
+            );
+            expect(sigHelp.activeSignature).to.be.equal(
+                0,
+                'The signature for print should be the first member of the test argresult.'
+            );
             expect(sigHelp.signatures[sigHelp.activeSignature].label).to.be.equal(
                 'print(param)',
-                `Expected arg result calls for specific returned signature of \'print(param)\' but we got ${sigHelp.signatures[sigHelp.activeSignature].label}`
+                `Expected arg result calls for specific returned signature of \'print(param)\' but we got ${
+                    sigHelp.signatures[sigHelp.activeSignature].label
+                }`
             );
         } catch (error) {
             assert(false, `Caught exception ${error}`);
@@ -128,21 +151,37 @@ suite('Signature Provider unit tests', () => {
         const sourcePos: number = sourceLine.length - 1;
         const isInsideStrComment: boolean = testIsInsideStringOrComment(sourceLine, sourcePos);
 
-        expect(isInsideStrComment).to.not.be.equal(true, [`Position set to the end of ${sourceLine} but `, 'is reported as being within a string or comment.'].join(''));
+        expect(isInsideStrComment).to.not.be.equal(
+            true,
+            [`Position set to the end of ${sourceLine} but `, 'is reported as being within a string or comment.'].join(
+                ''
+            )
+        );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected at end of source.', () => {
         const sourceLine: string = "  print('Hello world!')\n";
         const sourcePos: number = 0;
         const isInsideStrComment: boolean = testIsInsideStringOrComment(sourceLine, sourcePos);
 
-        expect(isInsideStrComment).to.not.be.equal(true, [`Position set to the end of ${sourceLine} but `, 'is reported as being within a string or comment.'].join(''));
+        expect(isInsideStrComment).to.not.be.equal(
+            true,
+            [`Position set to the end of ${sourceLine} but `, 'is reported as being within a string or comment.'].join(
+                ''
+            )
+        );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected at beginning of source.', () => {
         const sourceLine: string = "  print('Hello world!')\n";
         const sourcePos: number = 0;
         const isInsideStrComment: boolean = testIsInsideStringOrComment(sourceLine, sourcePos);
 
-        expect(isInsideStrComment).to.not.be.equal(true, [`Position set to the beginning of ${sourceLine} but `, 'is reported as being within a string or comment.'].join(''));
+        expect(isInsideStrComment).to.not.be.equal(
+            true,
+            [
+                `Position set to the beginning of ${sourceLine} but `,
+                'is reported as being within a string or comment.'
+            ].join('')
+        );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected within a string.', () => {
         const sourceLine: string = "  print('Hello world!')\n";
@@ -151,7 +190,10 @@ suite('Signature Provider unit tests', () => {
 
         expect(isInsideStrComment).to.be.equal(
             true,
-            [`Position set within the string in ${sourceLine} (position ${sourcePos}) but `, 'is reported as NOT being within a string or comment.'].join('')
+            [
+                `Position set within the string in ${sourceLine} (position ${sourcePos}) but `,
+                'is reported as NOT being within a string or comment.'
+            ].join('')
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected immediately before a string.', () => {
@@ -161,7 +203,10 @@ suite('Signature Provider unit tests', () => {
 
         expect(isInsideStrComment).to.be.equal(
             false,
-            [`Position set to just before the string in ${sourceLine} (position ${sourcePos}) but `, 'is reported as being within a string or comment.'].join('')
+            [
+                `Position set to just before the string in ${sourceLine} (position ${sourcePos}) but `,
+                'is reported as being within a string or comment.'
+            ].join('')
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected immediately in a string.', () => {
@@ -171,7 +216,10 @@ suite('Signature Provider unit tests', () => {
 
         expect(isInsideStrComment).to.be.equal(
             true,
-            [`Position set to the start of the string in ${sourceLine} (position ${sourcePos}) but `, 'is reported as being within a string or comment.'].join('')
+            [
+                `Position set to the start of the string in ${sourceLine} (position ${sourcePos}) but `,
+                'is reported as being within a string or comment.'
+            ].join('')
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected within a comment.', () => {
@@ -181,7 +229,10 @@ suite('Signature Provider unit tests', () => {
 
         expect(isInsideStrComment).to.be.equal(
             true,
-            [`Position set within a full line comment ${sourceLine} (position ${sourcePos}) but `, 'is reported as NOT being within a string or comment.'].join('')
+            [
+                `Position set within a full line comment ${sourceLine} (position ${sourcePos}) but `,
+                'is reported as NOT being within a string or comment.'
+            ].join('')
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected within a trailing comment.', () => {
@@ -191,7 +242,10 @@ suite('Signature Provider unit tests', () => {
 
         expect(isInsideStrComment).to.be.equal(
             true,
-            [`Position set within a trailing line comment ${sourceLine} (position ${sourcePos}) but `, 'is reported as NOT being within a string or comment.'].join('')
+            [
+                `Position set within a trailing line comment ${sourceLine} (position ${sourcePos}) but `,
+                'is reported as NOT being within a string or comment.'
+            ].join('')
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected at the very end of a trailing comment.', () => {
@@ -201,47 +255,66 @@ suite('Signature Provider unit tests', () => {
 
         expect(isInsideStrComment).to.be.equal(
             true,
-            [`Position set within a trailing line comment ${sourceLine} (position ${sourcePos}) but `, 'is reported as NOT being within a string or comment.'].join('')
+            [
+                `Position set within a trailing line comment ${sourceLine} (position ${sourcePos}) but `,
+                'is reported as NOT being within a string or comment.'
+            ].join('')
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected within a multiline string.', () => {
-        const sourceLine: string = "  stringVal = '''This is a multiline\nstring that you can use\nto test this stuff out with\neveryday!'''\n";
+        const sourceLine: string =
+            "  stringVal = '''This is a multiline\nstring that you can use\nto test this stuff out with\neveryday!'''\n";
         const sourcePos: number = 48;
         const isInsideStrComment: boolean = testIsInsideStringOrComment(sourceLine, sourcePos);
 
         expect(isInsideStrComment).to.be.equal(
             true,
-            [`Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `, 'is reported as NOT being within a string or comment.'].join('')
+            [
+                `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
+                'is reported as NOT being within a string or comment.'
+            ].join('')
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected at the very last quote on a multiline string.', () => {
-        const sourceLine: string = "  stringVal = '''This is a multiline\nstring that you can use\nto test this stuff out with\neveryday!'''\n";
+        const sourceLine: string =
+            "  stringVal = '''This is a multiline\nstring that you can use\nto test this stuff out with\neveryday!'''\n";
         const sourcePos: number = sourceLine.length - 2; // just at the last '
         const isInsideStrComment: boolean = testIsInsideStringOrComment(sourceLine, sourcePos);
 
         expect(isInsideStrComment).to.be.equal(
             true,
-            [`Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `, 'is reported as NOT being within a string or comment.'].join('')
+            [
+                `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
+                'is reported as NOT being within a string or comment.'
+            ].join('')
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected within a multiline string (double-quoted).', () => {
-        const sourceLine: string = '  stringVal = """This is a multiline\nstring that you can use\nto test this stuff out with\neveryday!"""\n';
+        const sourceLine: string =
+            '  stringVal = """This is a multiline\nstring that you can use\nto test this stuff out with\neveryday!"""\n';
         const sourcePos: number = 48;
         const isInsideStrComment: boolean = testIsInsideStringOrComment(sourceLine, sourcePos);
 
         expect(isInsideStrComment).to.be.equal(
             true,
-            [`Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `, 'is reported as NOT being within a string or comment.'].join('')
+            [
+                `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
+                'is reported as NOT being within a string or comment.'
+            ].join('')
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected at the very last quote on a multiline string (double-quoted).', () => {
-        const sourceLine: string = '  stringVal = """This is a multiline\nstring that you can use\nto test this stuff out with\neveryday!"""\n';
+        const sourceLine: string =
+            '  stringVal = """This is a multiline\nstring that you can use\nto test this stuff out with\neveryday!"""\n';
         const sourcePos: number = sourceLine.length - 2; // just at the last '
         const isInsideStrComment: boolean = testIsInsideStringOrComment(sourceLine, sourcePos);
 
         expect(isInsideStrComment).to.be.equal(
             true,
-            [`Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `, 'is reported as NOT being within a string or comment.'].join('')
+            [
+                `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
+                'is reported as NOT being within a string or comment.'
+            ].join('')
         );
     });
     test('Ensure isPositionInsideStringOrComment is behaving as expected during construction of a multiline string (double-quoted).', () => {
@@ -251,7 +324,10 @@ suite('Signature Provider unit tests', () => {
 
         expect(isInsideStrComment).to.be.equal(
             true,
-            [`Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `, 'is reported as NOT being within a string or comment.'].join('')
+            [
+                `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
+                'is reported as NOT being within a string or comment.'
+            ].join('')
         );
     });
 });

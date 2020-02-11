@@ -14,7 +14,11 @@ import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationPro
 
 @injectable()
 export class FileLaunchDebugConfigurationProvider implements IDebugConfigurationProvider {
-    @captureTelemetry(EventName.DEBUGGER_CONFIGURATION_PROMPTS, { configurationType: DebugConfigurationType.launchFile }, false)
+    @captureTelemetry(
+        EventName.DEBUGGER_CONFIGURATION_PROMPTS,
+        { configurationType: DebugConfigurationType.launchFile },
+        false
+    )
     public async buildConfiguration(_input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const config: Partial<LaunchRequestArguments> = {
             name: DebugConfigStrings.file.snippet.name(),

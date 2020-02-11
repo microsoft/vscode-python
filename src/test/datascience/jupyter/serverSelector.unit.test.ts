@@ -20,7 +20,12 @@ import { MockQuickPick } from '../mockQuickPick';
 suite('Data Science - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
 
-    function createDataScienceObject(quickPickSelection: string, inputSelection: string, updateCallback: (val: string) => void, mockStorage?: MockMemento): JupyterServerSelector {
+    function createDataScienceObject(
+        quickPickSelection: string,
+        inputSelection: string,
+        updateCallback: (val: string) => void,
+        mockStorage?: MockMemento
+    ): JupyterServerSelector {
         const configService = mock(ConfigurationService);
         const applicationShell = mock(ApplicationShell);
         const storage = mockStorage ? mockStorage : new MockMemento();
@@ -29,10 +34,12 @@ suite('Data Science - Jupyter Server URI Selector', () => {
         when(applicationShell.createQuickPick()).thenReturn(quickPick!);
         when(applicationShell.createInputBox()).thenReturn(input);
         const multiStepFactory = new MultiStepInputFactory(instance(applicationShell));
-        when(configService.updateSetting('dataScience.jupyterServerURI', anything(), anything(), anything())).thenCall((_a1, a2, _a3, _a4) => {
-            updateCallback(a2);
-            return Promise.resolve();
-        });
+        when(configService.updateSetting('dataScience.jupyterServerURI', anything(), anything(), anything())).thenCall(
+            (_a1, a2, _a3, _a4) => {
+                updateCallback(a2);
+                return Promise.resolve();
+            }
+        );
 
         return new JupyterServerSelector(storage, multiStepFactory, instance(configService));
     }
@@ -97,14 +104,22 @@ suite('Data Science - Jupyter Server URI Selector', () => {
 
         await ds.selectJupyterURI();
         // Need a plus 2 here for the two default items
-        assert.equal(quickPick?.items.length, Settings.JupyterServerUriListMax + 2, 'Wrong number of items in the quick pick');
+        assert.equal(
+            quickPick?.items.length,
+            Settings.JupyterServerUriListMax + 2,
+            'Wrong number of items in the quick pick'
+        );
     });
 
     function quickPickCheck(item: QuickPickItem | undefined, expected: { uri: string; time: Number; date: Date }) {
         assert.isOk(item, 'Quick pick item not defined');
         if (item) {
             assert.equal(item.label, expected.uri, 'Wrong URI value in quick pick');
-            assert.equal(item.detail, DataScience.jupyterSelectURIMRUDetail().format(expected.date.toLocaleString()), 'Wrong detail value in quick pick');
+            assert.equal(
+                item.detail,
+                DataScience.jupyterSelectURIMRUDetail().format(expected.date.toLocaleString()),
+                'Wrong detail value in quick pick'
+            );
         }
     }
 

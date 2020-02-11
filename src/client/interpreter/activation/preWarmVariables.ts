@@ -16,7 +16,9 @@ export class PreWarmActivatedEnvironmentVariables implements IExtensionSingleAct
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
     public async activate(): Promise<void> {
-        this.interpreterService.onDidChangeInterpreter(() => this.activationService.getActivatedEnvironmentVariables(undefined).ignoreErrors());
+        this.interpreterService.onDidChangeInterpreter(() =>
+            this.activationService.getActivatedEnvironmentVariables(undefined).ignoreErrors()
+        );
         this.activationService.getActivatedEnvironmentVariables(undefined).ignoreErrors();
     }
 }

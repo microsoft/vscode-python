@@ -28,13 +28,19 @@ suite('Linting - LintingEngine', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
 
         const docManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDocumentManager), TypeMoq.It.isAny())).returns(() => docManager.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IDocumentManager), TypeMoq.It.isAny()))
+            .returns(() => docManager.object);
 
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny())).returns(() => workspaceService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
+            .returns(() => workspaceService.object);
 
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
+            .returns(() => fileSystem.object);
 
         lintSettings = TypeMoq.Mock.ofType<ILintingSettings>();
         settings = TypeMoq.Mock.ofType<IPythonSettings>();
@@ -42,17 +48,25 @@ suite('Linting - LintingEngine', () => {
         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
         configService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
         configService.setup(x => x.isTestExecution()).returns(() => true);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
+            .returns(() => configService.object);
 
         const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL))).returns(() => outputChannel.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
+            .returns(() => outputChannel.object);
 
         lintManager = TypeMoq.Mock.ofType<ILinterManager>();
         lintManager.setup(x => x.isLintingEnabled(TypeMoq.It.isAny())).returns(async () => true);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny())).returns(() => lintManager.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
+            .returns(() => lintManager.object);
 
         lintingEngine = new LintingEngine(serviceContainer.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILintingEngine), TypeMoq.It.isAny())).returns(() => lintingEngine);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ILintingEngine), TypeMoq.It.isAny()))
+            .returns(() => lintingEngine);
     });
 
     test('Ensure document.uri is passed into isLintingEnabled', () => {
@@ -60,7 +74,10 @@ suite('Linting - LintingEngine', () => {
         try {
             lintingEngine.lintDocument(doc, 'auto').ignoreErrors();
         } catch {
-            lintManager.verify(l => l.isLintingEnabled(TypeMoq.It.isAny(), TypeMoq.It.isValue(doc.uri)), TypeMoq.Times.once());
+            lintManager.verify(
+                l => l.isLintingEnabled(TypeMoq.It.isAny(), TypeMoq.It.isValue(doc.uri)),
+                TypeMoq.Times.once()
+            );
         }
     });
     test('Ensure document.uri is passed into createLinter', () => {
@@ -68,45 +85,78 @@ suite('Linting - LintingEngine', () => {
         try {
             lintingEngine.lintDocument(doc, 'auto').ignoreErrors();
         } catch {
-            lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isValue(doc.uri)), TypeMoq.Times.atLeastOnce());
+            lintManager.verify(
+                l =>
+                    l.createLinter(
+                        TypeMoq.It.isAny(),
+                        TypeMoq.It.isAny(),
+                        TypeMoq.It.isAny(),
+                        TypeMoq.It.isValue(doc.uri)
+                    ),
+                TypeMoq.Times.atLeastOnce()
+            );
         }
     });
 
     test('Verify files that match ignore pattern are not linted', async () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, true, ['a*.py']);
         await lintingEngine.lintDocument(doc, 'auto');
-        lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+        lintManager.verify(
+            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.never()
+        );
     });
 
     test('Ensure non-Python files are not linted', async () => {
         const doc = mockTextDocument('a.ts', 'typescript', true);
         await lintingEngine.lintDocument(doc, 'auto');
-        lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+        lintManager.verify(
+            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.never()
+        );
     });
 
     test('Ensure files with git scheme are not linted', async () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'git');
         await lintingEngine.lintDocument(doc, 'auto');
-        lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+        lintManager.verify(
+            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.never()
+        );
     });
     test('Ensure files with showModifications scheme are not linted', async () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'showModifications');
         await lintingEngine.lintDocument(doc, 'auto');
-        lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+        lintManager.verify(
+            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.never()
+        );
     });
     test('Ensure files with svn scheme are not linted', async () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'svn');
         await lintingEngine.lintDocument(doc, 'auto');
-        lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+        lintManager.verify(
+            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.never()
+        );
     });
 
     test('Ensure non-existing files are not linted', async () => {
         const doc = mockTextDocument('file.py', PYTHON_LANGUAGE, false, []);
         await lintingEngine.lintDocument(doc, 'auto');
-        lintManager.verify(l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+        lintManager.verify(
+            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            TypeMoq.Times.never()
+        );
     });
 
-    function mockTextDocument(fileName: string, language: string, exists: boolean, ignorePattern: string[] = [], scheme?: string): TextDocument {
+    function mockTextDocument(
+        fileName: string,
+        language: string,
+        exists: boolean,
+        ignorePattern: string[] = [],
+        scheme?: string
+    ): TextDocument {
         fileSystem.setup(x => x.fileExists(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(exists));
 
         lintSettings.setup(l => l.ignorePatterns).returns(() => ignorePattern);

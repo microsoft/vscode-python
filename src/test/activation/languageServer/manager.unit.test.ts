@@ -9,7 +9,11 @@ import { LanguageServerAnalysisOptions } from '../../../client/activation/langua
 import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
 import { DotNetLanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
 import { DotNetLanguageServerManager } from '../../../client/activation/languageServer/manager';
-import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerProxy } from '../../../client/activation/types';
+import {
+    ILanguageServerAnalysisOptions,
+    ILanguageServerExtension,
+    ILanguageServerProxy
+} from '../../../client/activation/types';
 import { IPythonExtensionBanner } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -35,7 +39,12 @@ suite('Language Server - Manager', () => {
         languageServer = mock(DotNetLanguageServerProxy);
         lsExtension = mock(LanguageServerExtension);
         surveyBanner = mock(ProposeLanguageServerBanner);
-        manager = new DotNetLanguageServerManager(instance(serviceContainer), instance(analysisOptions), instance(lsExtension), instance(surveyBanner));
+        manager = new DotNetLanguageServerManager(
+            instance(serviceContainer),
+            instance(analysisOptions),
+            instance(lsExtension),
+            instance(surveyBanner)
+        );
     });
 
     [undefined, Uri.file(__filename)].forEach(resource => {
@@ -77,7 +86,9 @@ suite('Language Server - Manager', () => {
         test('Attempting to start LS will throw an exception', async () => {
             await startLanguageServer();
 
-            await expect(manager.start(resource, undefined)).to.eventually.be.rejectedWith('Language Server already started');
+            await expect(manager.start(resource, undefined)).to.eventually.be.rejectedWith(
+                'Language Server already started'
+            );
         });
         test('Changes in analysis options must restart LS', async () => {
             await startLanguageServer();
