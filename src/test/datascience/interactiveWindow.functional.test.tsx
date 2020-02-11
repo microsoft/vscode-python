@@ -210,10 +210,8 @@ suite('DataScience Interactive Window output tests', () => {
                 domDiv.tabIndex = -1;
                 domDiv.focus();
 
-                // Click in content-panel-div, since this doesn't click on any valid click handlers this
-                // should set input back to the input box
                 wrapper
-                    .find('div#content-panel-div')
+                    .find('section#main-panel-footer')
                     .first()
                     .simulate('click');
 
