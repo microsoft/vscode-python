@@ -800,7 +800,7 @@
                     "command": "python.datascience.debugcurrentcell.palette",
                     "title": "%python.command.python.datascience.debugcurrentcell.palette.title%",
                     "category": "Python",
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled"
+                    "when": "editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.showhistorypane",
@@ -836,13 +836,13 @@
                     "command": "python.datascience.runFileInteractive",
                     "title": "%python.command.python.datascience.runFileInteractive.title%",
                     "category": "Python",
-                    "when": "editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "editorLangId == python && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.debugFileInteractive",
                     "title": "%python.command.python.datascience.debugFileInteractive.title%",
                     "category": "Python",
-                    "when": "editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "editorLangId == python && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.importnotebook",
@@ -1016,7 +1016,7 @@
                 {
                     "command": "python.datascience.execSelectionInteractive",
                     "category": "Python",
-                    "when": "editorFocus && editorLangId == python && python.datascience.featureenabled && python.datascience.ownsSelection"
+                    "when": "editorLangId == python && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.switchKernel",
