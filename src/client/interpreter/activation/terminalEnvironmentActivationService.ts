@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationTokenSource } from 'vscode';
-import { EXTENSION_ROOT_DIR, terminalNamePrefixNotToAutoActivate } from '../../common/constants';
+import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { LogOptions, traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
@@ -50,7 +50,7 @@ export class TerminalEnvironmentActivationService implements IEnvironmentActivat
             hideFromUser: true,
             interpreter,
             resource,
-            title: `${terminalNamePrefixNotToAutoActivate}${interpreter?.displayName}${new Date().getTime()}`
+            title: `${interpreter?.displayName}${new Date().getTime()}`
         });
 
         const command = interpreter?.path || 'python';

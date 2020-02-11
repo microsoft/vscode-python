@@ -474,9 +474,10 @@ for _ in range(50):
                 let editor = await openEditor(ioc, JSON.stringify(notebook));
 
                 // Run everything
+                let threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, { numberOfTimes: 3 });
                 let runAllButton = findButton(wrapper, NativeEditor, 0);
                 await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-                await waitForUpdate(wrapper, NativeEditor, 15);
+                await threeCellsUpdated;
 
                 // Close editor. Should still have the server up
                 await closeNotebook(editor, wrapper);
@@ -489,9 +490,11 @@ for _ in range(50):
                 const newWrapper = await setupWebview(ioc);
                 assert.ok(newWrapper, 'Could not mount a second time');
                 editor = await openEditor(ioc, JSON.stringify(notebook));
+
+                threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, { numberOfTimes: 3 });
                 runAllButton = findButton(newWrapper!, NativeEditor, 0);
                 await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-                await waitForUpdate(newWrapper!, NativeEditor, 15);
+                await threeCellsUpdated;
                 verifyHtmlOnCell(newWrapper!, 'NativeCell', `1`, 0);
             },
             () => {
@@ -804,13 +807,20 @@ for _ in range(50):
                 clickCell(0);
 
                 // Switch to markdown
-                let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                let update = waitForMessage(ioc, InteractiveWindowMessages.RemoveCell);
                 simulateKeyPressOnCell(0, { code: 'm' });
                 await update;
 
                 // Monaco editor should be rendered and the cell should be markdown
-                assert.ok(isCellFocused(wrapper, 'NativeCell', 0));
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 0));
                 assert.ok(isCellMarkdown(wrapper, 'NativeCell', 0));
+
+                // Focus the cell.
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                simulateKeyPressOnCell(0, { code: 'Enter', editorInfo: undefined });
+                await update;
+
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 0));
                 assert.equal(
                     wrapper
                         .find(NativeCell)
@@ -1223,17 +1233,42 @@ for _ in range(50):
                 assert.equal(optionsUpdated.lastCall.args[0].lineNumbers, 'off');
             });
 
-            test("Toggle markdown and code modes using 'y' and 'm' keys", async () => {
+            test("Toggle markdown and code modes using 'y' and 'm' keys (cells should not be focused)", async () => {
                 clickCell(1);
-
                 // Switch to markdown
-                let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                let update = waitForMessage(ioc, InteractiveWindowMessages.RemoveCell);
                 simulateKeyPressOnCell(1, { code: 'm' });
                 await update;
 
                 // Monaco editor should be rendered and the cell should be markdown
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused');
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
+
+                // Switch to code
+                update = waitForMessage(ioc, InteractiveWindowMessages.InsertCell);
+                simulateKeyPressOnCell(1, { code: 'y' });
+                await update;
+
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused 2nd time');
+                assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is markdown second time');
+            });
+            test("Toggle markdown and code modes using 'y' and 'm' keys & ensure changes to cells is preserved", async () => {
+                clickCell(1);
+                // Switch to markdown
+                let update = waitForMessage(ioc, InteractiveWindowMessages.RemoveCell);
+                simulateKeyPressOnCell(1, { code: 'm' });
+                await update;
+
+                // Monaco editor should be rendered and the cell should be markdown
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused');
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
+
+                // Focus the cell.
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
+                await update;
+
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
-                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1));
                 assert.equal(
                     wrapper
                         .find(NativeCell)
@@ -1253,8 +1288,8 @@ for _ in range(50):
                 await update;
 
                 // Confirm markdown output is rendered
-                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1));
-                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1));
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is focused');
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
                 assert.equal(
                     wrapper
                         .find(NativeCell)
@@ -1264,18 +1299,17 @@ for _ in range(50):
                 );
 
                 // Switch to code
-                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
-                // At this moment, there's no cell input element, hence send key strokes to the wrapper.
-                const wrapperElement = wrapper
-                    .find(NativeCell)
-                    .at(1)
-                    .find('.cell-wrapper')
-                    .first();
-                wrapperElement.simulate('keyDown', { key: 'y' });
+                update = waitForMessage(ioc, InteractiveWindowMessages.InsertCell);
+                simulateKeyPressOnCell(1, { code: 'y' });
                 await update;
 
-                assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
-                assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1));
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is not focused 2nd time');
+                assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is markdown second time');
+
+                // Focus the cell.
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
+                await update;
 
                 // Confirm editor still has the same text
                 editor = getNativeFocusedEditor(wrapper);

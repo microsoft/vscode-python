@@ -24,7 +24,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.38.0"
+        "vscode": "^1.42.0"
     },
     "keywords": [
         "python",
@@ -800,7 +800,7 @@
                     "command": "python.datascience.debugcurrentcell.palette",
                     "title": "%python.command.python.datascience.debugcurrentcell.palette.title%",
                     "category": "Python",
-                    "when": "editorFocus && editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled"
+                    "when": "editorLangId == python && python.datascience.hascodecells && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.showhistorypane",
@@ -836,13 +836,13 @@
                     "command": "python.datascience.runFileInteractive",
                     "title": "%python.command.python.datascience.runFileInteractive.title%",
                     "category": "Python",
-                    "when": "editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "editorLangId == python && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.debugFileInteractive",
                     "title": "%python.command.python.datascience.debugFileInteractive.title%",
                     "category": "Python",
-                    "when": "editorFocus && editorLangId == python && python.datascience.featureenabled"
+                    "when": "editorLangId == python && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.importnotebook",
@@ -1016,7 +1016,7 @@
                 {
                     "command": "python.datascience.execSelectionInteractive",
                     "category": "Python",
-                    "when": "editorFocus && editorLangId == python && python.datascience.featureenabled && python.datascience.ownsSelection"
+                    "when": "editorLangId == python && python.datascience.featureenabled"
                 },
                 {
                     "command": "python.datascience.switchKernel",
@@ -2974,7 +2974,7 @@
         "@types/tmp": "0.0.33",
         "@types/untildify": "^3.0.0",
         "@types/uuid": "^3.4.3",
-        "@types/vscode": "^1.38.0",
+        "@types/vscode": "^1.42.0",
         "@types/webpack-bundle-analyzer": "^2.13.0",
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",

@@ -4,6 +4,7 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from './application/types';
+import { traceVerbose } from './logger';
 import { launch } from './net/browser';
 import { DeprecatedFeatureInfo, DeprecatedSettingAndValue, IFeatureDeprecationManager, IPersistentStateFactory } from './types';
 
@@ -98,9 +99,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         }
 
         if (notify) {
-            this.notifyDeprecation(deprecatedInfo)
-                // tslint:disable-next-line: no-console
-                .catch(ex => console.error('Python Extension: notifyDeprecation', ex));
+            this.notifyDeprecation(deprecatedInfo).catch(ex => traceVerbose('Python Extension: notifyDeprecation', ex));
         }
     }
 

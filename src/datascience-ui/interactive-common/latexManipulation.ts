@@ -13,7 +13,7 @@ const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/es
 //
 // LaTeX seems to follow the pattern of \begin{name} or is escaped with $$ or $. See here for a bunch of examples:
 // https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Typesetting%20Equations.html
-export function fixLatexEquations(input: string): string {
+export function fixLatexEquations(input: string, wrapSingles: boolean = false): string {
     const output: string[] = [];
 
     // Search for begin/end pairs, outputting as we go
@@ -64,21 +64,25 @@ export function fixLatexEquations(input: string): string {
                 const offset = match.index + 2 + start;
                 const endDollar = endRegex.exec(input.substr(offset));
                 if (endDollar) {
-                    const length = endDollar.index + 2 + offset;
-                    output.push(input.substr(start, length));
-                    start = start + length;
+                    const length = endDollar.index + 2;
+                    const before = input.substr(start, offset - start);
+                    const after = input.substr(offset, length);
+                    output.push(`${before}${after}`);
+                    start = offset + length;
                 } else {
                     // Invalid, just return
                     return input;
                 }
             } else {
-                // Output till the next $
+                // Output till the next $ (wrapping in an extra $ so it works with latex cells too)
                 const offset = match.index + 1 + start;
                 const endDollar = endRegex.exec(input.substr(offset));
                 if (endDollar) {
-                    const length = endDollar.index + 1 + offset;
-                    output.push(input.substr(start, length));
-                    start = start + length;
+                    const length = endDollar.index + 1;
+                    const before = input.substr(start, offset - start);
+                    const after = input.substr(offset, length);
+                    output.push(wrapSingles ? `${before}$${after}$` : `${before}${after}`);
+                    start = offset + length;
                 } else {
                     // Invalid, just return
                     return input;

@@ -277,7 +277,8 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             skipNextScroll: this.props.skipNextScroll ? true : false,
             editable: true,
             renderCell: this.renderCell,
-            scrollToBottom: this.scrollDiv
+            scrollToBottom: this.scrollDiv,
+            scrollBeyondLastLine: this.props.settings ? this.props.settings.extraSettings.editor.scrollBeyondLastLine : false
         };
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {

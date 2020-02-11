@@ -5,7 +5,7 @@ import { assert } from 'chai';
 import * as path from 'path';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { EXTENSION_ROOT_DIR, terminalNamePrefixNotToAutoActivate } from '../../../client/common/constants';
+import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { TerminalServiceFactory } from '../../../client/common/terminal/factory';
@@ -77,7 +77,6 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                         assert.equal(termArgs?.resource, resource);
                         assert.deepEqual(termArgs?.interpreter, interpreter);
                         assert.isTrue(termArgs?.hideFromUser);
-                        assert.isTrue(termArgs?.title?.startsWith(terminalNamePrefixNotToAutoActivate));
                     });
                     test('Should create a terminal with correct arguments', async () => {
                         when(envVarsProvider.getCustomEnvironmentVariables(resource)).thenResolve(undefined);
@@ -89,7 +88,6 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
                         assert.equal(termArgs?.resource, resource);
                         assert.deepEqual(termArgs?.interpreter, interpreter);
                         assert.isTrue(termArgs?.hideFromUser);
-                        assert.isTrue(termArgs?.title?.startsWith(terminalNamePrefixNotToAutoActivate));
                     });
                     test('Should execute python file in terminal (that is what dumps variables into json)', async () => {
                         when(envVarsProvider.getCustomEnvironmentVariables(resource)).thenResolve(undefined);

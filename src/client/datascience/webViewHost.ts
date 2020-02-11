@@ -173,7 +173,8 @@ export class WebViewHost<IMapping> implements IDisposable {
                     autoClosingQuotes: this.getValue(editor, 'autoClosingQuotes', 'languageDefined'),
                     autoSurround: this.getValue(editor, 'autoSurround', 'languageDefined'),
                     autoIndent: this.getValue(editor, 'autoIndent', false),
-                    fontLigatures: this.getValue(editor, 'fontLigatures', false)
+                    fontLigatures: this.getValue(editor, 'fontLigatures', false),
+                    scrollBeyondLastLine: this.getValue(editor, 'scrollBeyondLastLine', true)
                 },
                 fontSize: this.getValue(editor, 'fontSize', 14),
                 fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace"),
@@ -314,6 +315,7 @@ export class WebViewHost<IMapping> implements IDisposable {
             event.affectsConfiguration('editor.autoClosingQuotes') ||
             event.affectsConfiguration('editor.autoSurround') ||
             event.affectsConfiguration('editor.autoIndent') ||
+            event.affectsConfiguration('editor.scrollBeyondLastLine') ||
             event.affectsConfiguration('editor.fontLigatures') ||
             event.affectsConfiguration('files.autoSave') ||
             event.affectsConfiguration('files.autoSaveDelay') ||
