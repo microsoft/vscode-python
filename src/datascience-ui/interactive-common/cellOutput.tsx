@@ -237,8 +237,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             isText = true;
             isError = false;
             renderWithScrollbars = true;
-            // NOSONAR - Sonar is wrong, TS won't compile without this AS
-            const stream = output as nbformat.IStream;
+            // Sonar is wrong, TS won't compile without this AS
+            const stream = output as nbformat.IStream; // NOSONAR
             const formatted = concatMultilineStringOutput(stream.text);
             input = {
                 'text/html': formatted.includes('<') ? `<xmp>${formatted}</xmp>` : `<div>${formatted}</div>`
@@ -262,8 +262,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             isText = true;
             isError = true;
             renderWithScrollbars = true;
-            // NOSONAR - Sonar is wrong, TS won't compile without this AS
-            const error = output as nbformat.IError;
+            // Sonar is wrong, TS won't compile without this AS
+            const error = output as nbformat.IError; // NOSONAR
             try {
                 const converter = new CellOutput.ansiToHtmlClass(CellOutput.getAnsiToHtmlOptions());
                 const trace = converter.toHtml(error.traceback.join('\n'));
@@ -283,7 +283,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
 
         // Then parse the mime type
-        const mimeBundle = input as nbformat.IMimeBundle;
+        const mimeBundle = input as nbformat.IMimeBundle; // NOSONAR
         let data: nbformat.MultilineString | JSONObject = mimeBundle[mimeType];
 
         // For un-executed output we might get text or svg output as multiline string arrays
