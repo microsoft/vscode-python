@@ -18,8 +18,8 @@ The first Python interpreter to check will be the one selected with the selectio
 
 ![selector](resources/PythonSelector.png)
 
-Once a suitable interpreter with Jupyter has been located VS Code will then continue to use that interpreter for starting up Jupyter servers.
-If no interpreters are found with Jupyter you will then get a popup message asking if you would like to install Jupyter into the current interpreter.
+Once a suitable interpreter with Jupyter has been located, VS Code will continue to use that interpreter for starting up Jupyter servers.
+If no interpreters are found with Jupyter installed a popup message will ask if you would like to install Jupyter into the current interpreter.
 
 ![install Jupyter](resources/InstallJupyter.png)
 

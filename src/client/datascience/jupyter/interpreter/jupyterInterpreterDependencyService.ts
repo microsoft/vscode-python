@@ -56,7 +56,7 @@ function sortProductsInOrderForInstallation(products: Product[]) {
  * @param {Product[]} products
  * @returns {string}
  */
-export function getMessageForLibrariesNotInstalled(products: Product[], interpreterName: string | undefined): string {
+export function getMessageForLibrariesNotInstalled(products: Product[], interpreterName?: string): string {
     const names = products
         // Ignore kernelspec as it not something that can be installed.
         .filter(product => product !== Product.kernelspec)
@@ -135,13 +135,6 @@ export class JupyterInterpreterDependencyService {
         }
 
         const message = getMessageForLibrariesNotInstalled(productsToInstall, interpreter.displayName);
-        //const actionTitle = localize.DataScience.pythonInteractiveHelpLink();
-        //this.applicationShell.showErrorMessage(e.toString(), actionTitle).then(v => {
-        //// User clicked on the link, open it.
-        //if (v === actionTitle) {
-        //this.applicationShell.openUrl(HelpLinks.JupyterDataRateHelpLink);
-        //}
-        //});
 
         sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
         const selection = await this.applicationShell.showErrorMessage(
