@@ -98,8 +98,9 @@ export class JupyterVariables implements IJupyterVariables {
             return defaultValue;
         }
 
-        // Prep our targetVariable to send over
-        const variableString = JSON.stringify(targetVariable).replace(/\\n/g, '\\\\n');
+        // Prep our targetVariable to send over. Remove the 'value' as it's not necessary for getting df info and can have invalid data in it
+        const pruned = { ...targetVariable, value: '' };
+        const variableString = JSON.stringify(pruned);
 
         // Setup a regex
         const regexPattern = extraReplacements.length === 0 ? '_VSCode_JupyterTestValue' : ['_VSCode_JupyterTestValue', ...extraReplacements.map(v => v.key)].join('|');
