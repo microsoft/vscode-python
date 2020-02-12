@@ -3,6 +3,7 @@
 'use strict';
 import * as React from 'react';
 import { connect } from 'react-redux';
+import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
@@ -75,13 +76,20 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                 <main id="main-panel-content" onScroll={this.handleScroll}>
                     {this.renderContentPanel(this.props.baseTheme)}
                 </main>
-                <section id="main-panel-footer" aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
+                <section id="main-panel-footer" onClick={this.footerPanelClick} aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
                     {this.renderFooterPanel(this.props.baseTheme)}
                 </section>
             </div>
         );
     }
 
+    // Make the entire footer focus our input, instead of having to click directly on the monaco editor
+    private footerPanelClick = (_event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        // This does nothing in release bits. Not necessary for point release.
+        noop();
+    };
+
+    // tslint:disable-next-line: max-func-body-length
     private renderToolbarPanel() {
         const variableExplorerTooltip = this.props.variableState.visible
             ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')

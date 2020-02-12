@@ -12,7 +12,7 @@ import { PythonExecutionFactory } from '../../../../client/common/process/python
 import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
 import { IPythonExecutionService } from '../../../../client/common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
-import { Common, DataScience } from '../../../../client/common/utils/localize';
+import { DataScience } from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterInterpreterDependencyResponse, JupyterInterpreterDependencyService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
@@ -57,7 +57,9 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
 
         const response = await configuration.installMissingDependencies(pythonInterpreter);
 
-        verify(appShell.showErrorMessage(anything(), DataScience.jupyterInstall(), DataScience.selectDifferentJupyterInterpreter(), Common.cancel())).once();
+        verify(
+            appShell.showErrorMessage(anything(), DataScience.jupyterInstall(), DataScience.selectDifferentJupyterInterpreter(), DataScience.pythonInteractiveHelpLink())
+        ).once();
         assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
     }
     test('Prompt to install if Jupyter is not installed', async () => testPromptIfModuleNotInstalled(false, true));

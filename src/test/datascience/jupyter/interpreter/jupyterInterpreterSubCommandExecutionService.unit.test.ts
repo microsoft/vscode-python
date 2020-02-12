@@ -107,13 +107,19 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
             assert.equal(reason, DataScience.selectJupyterInterpreter());
         });
         test('Jupyter cannot be started because jupyter is not installed', async () => {
-            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.jupyter)!);
+            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
+                activePythonInterpreter.displayName!,
+                ProductNames.get(Product.jupyter)!
+            );
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.jupyter]);
             const reason = await jupyterInterpreterExecutionService.getReasonForJupyterNotebookNotBeingSupported(undefined);
             assert.equal(reason, expectedReason);
         });
         test('Jupyter cannot be started because notebook is not installed', async () => {
-            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!);
+            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
+                activePythonInterpreter.displayName!,
+                ProductNames.get(Product.notebook)!
+            );
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
             const reason = await jupyterInterpreterExecutionService.getReasonForJupyterNotebookNotBeingSupported(undefined);
             assert.equal(reason, expectedReason);
@@ -122,31 +128,41 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
             const promise = jupyterInterpreterExecutionService.startNotebook([], {});
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
 
-            await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
+            await expect(promise).to.eventually.be.rejectedWith(
+                DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(activePythonInterpreter.displayName!, ProductNames.get(Product.notebook)!)
+            );
         });
         test('Cannot launch notebook file in jupyter notebook', async () => {
             const promise = jupyterInterpreterExecutionService.openNotebook('some.ipynb');
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
 
-            await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
+            await expect(promise).to.eventually.be.rejectedWith(
+                DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(activePythonInterpreter.displayName!, ProductNames.get(Product.notebook)!)
+            );
         });
         test('Cannot export notebook to python', async () => {
             const promise = jupyterInterpreterExecutionService.exportNotebookToPython('somefile.ipynb');
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
 
-            await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
+            await expect(promise).to.eventually.be.rejectedWith(
+                DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(activePythonInterpreter.displayName!, ProductNames.get(Product.notebook)!)
+            );
         });
         test('Cannot get a list of running jupyter servers', async () => {
             const promise = jupyterInterpreterExecutionService.getRunningJupyterServers(undefined);
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
 
-            await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
+            await expect(promise).to.eventually.be.rejectedWith(
+                DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(activePythonInterpreter.displayName!, ProductNames.get(Product.notebook)!)
+            );
         });
         test('Cannot get kernelspecs', async () => {
             const promise = jupyterInterpreterExecutionService.getKernelSpecs(undefined);
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
 
-            await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
+            await expect(promise).to.eventually.be.rejectedWith(
+                DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(activePythonInterpreter.displayName!, ProductNames.get(Product.notebook)!)
+            );
         });
     });
     // tslint:disable-next-line: max-func-body-length
@@ -181,7 +197,10 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
             verify(jupyterDependencyService.installMissingDependencies(selectedJupyterInterpreter, undefined)).once();
         });
         test('Jupyter cannot be started because jupyter is not installed', async () => {
-            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.jupyter)!);
+            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
+                selectedJupyterInterpreter.displayName!,
+                ProductNames.get(Product.jupyter)!
+            );
             when(jupyterDependencyService.getDependenciesNotInstalled(selectedJupyterInterpreter, undefined)).thenResolve([Product.jupyter]);
 
             const reason = await jupyterInterpreterExecutionService.getReasonForJupyterNotebookNotBeingSupported(undefined);
@@ -189,7 +208,10 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
             assert.equal(reason, expectedReason);
         });
         test('Jupyter cannot be started because notebook is not installed', async () => {
-            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!);
+            const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
+                selectedJupyterInterpreter.displayName!,
+                ProductNames.get(Product.notebook)!
+            );
             when(jupyterDependencyService.getDependenciesNotInstalled(selectedJupyterInterpreter, undefined)).thenResolve([Product.notebook]);
 
             const reason = await jupyterInterpreterExecutionService.getReasonForJupyterNotebookNotBeingSupported(undefined);

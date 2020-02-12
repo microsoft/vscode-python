@@ -193,6 +193,8 @@
     "DataScience.libraryNotInstalled": "Data Science library {0} is not installed. Install?",
     "DataScience.libraryRequiredToLaunchJupyterNotInstalled": "Data Science library {0} is not installed.",
     "DataScience.librariesRequiredToLaunchJupyterNotInstalled": "Data Science libraries {0} are not installed.",
+    "DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter": "Data Science library {1} is not installed in interpreter {0}.",
+    "DataScience.librariesRequiredToLaunchJupyterNotInstalledInterpreter": "Data Science libraries {1} are not installed in interpreter {0}.",
     "DataScience.jupyterInstall": "Install",
     "DataScience.jupyterSelectURIPrompt": "Enter the URI of the running Jupyter server",
     "DataScience.jupyterSelectURIInvalidURI": "Invalid URI specified",
