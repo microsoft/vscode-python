@@ -57,9 +57,8 @@ function sortProductsInOrderForInstallation(products: Product[]) {
  * @returns {string}
  */
 export function getMessageForLibrariesNotInstalled(products: Product[], interpreterName?: string): string {
+    // Even though kernelspec cannot be installed, display it so user knows what is missing.
     const names = products
-        // Ignore kernelspec as it not something that can be installed.
-        .filter(product => product !== Product.kernelspec)
         .map(product => ProductNames.get(product))
         .filter(name => !!name)
         .map(name => name as string);
@@ -131,15 +130,15 @@ export class JupyterInterpreterDependencyService {
         _error?: JupyterInstallError,
         token?: CancellationToken
     ): Promise<JupyterInterpreterDependencyResponse> {
-        const productsToInstall = await this.getDependenciesNotInstalled(interpreter, token);
+        const missingProducts = await this.getDependenciesNotInstalled(interpreter, token);
         if (Cancellation.isCanceled(token)) {
             return JupyterInterpreterDependencyResponse.cancel;
         }
-        if (productsToInstall.length === 0) {
+        if (missingProducts.length === 0) {
             return JupyterInterpreterDependencyResponse.ok;
         }
 
-        const message = getMessageForLibrariesNotInstalled(productsToInstall, interpreter.displayName);
+        const message = getMessageForLibrariesNotInstalled(missingProducts, interpreter.displayName);
 
         sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
         const selection = await this.applicationShell.showErrorMessage(
@@ -155,8 +154,15 @@ export class JupyterInterpreterDependencyService {
 
         switch (selection) {
             case DataScience.jupyterInstall(): {
+                // Ignore kernelspec as it not something that can be installed.
+                // If kernelspec isn't available, then re-install `Jupyter`.
+                if (missingProducts.includes(Product.kernelspec) && !missingProducts.includes(Product.jupyter)) {
+                    missingProducts.push(Product.jupyter);
+                }
+                const productsToInstall = missingProducts.filter(product => product !== Product.kernelspec);
                 // Install jupyter, then notebook, then others in that order.
                 sortProductsInOrderForInstallation(productsToInstall);
+
                 let productToInstall = productsToInstall.shift();
                 const cancellatonPromise = createPromiseFromCancellation({
                     cancelAction: 'resolve',
