@@ -221,6 +221,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                     >(IJupyterSessionManagerFactory);
                                     const sessionManager = await sessionManagerFactory.create(connection);
                                     const kernelInterpreter = await this.kernelSelector.selectLocalKernel(
+                                        new StopWatch(),
                                         sessionManager,
                                         cancelToken,
                                         launchInfo.kernelSpec

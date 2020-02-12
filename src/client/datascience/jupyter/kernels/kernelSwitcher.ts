@@ -8,8 +8,8 @@ import { ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { IConfigurationService } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
-import { captureTelemetry } from '../../../telemetry';
-import { Commands, Settings, Telemetry } from '../../constants';
+import { StopWatch } from '../../../common/utils/stopWatch';
+import { Commands, Settings } from '../../constants';
 import { IConnection, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebook } from '../../types';
 import { JupyterSessionStartError } from '../jupyterSession';
 import { KernelSelector, KernelSpecInterpreter } from './kernelSelector';
@@ -51,20 +51,19 @@ export class KernelSwitcher {
         return kernel;
     }
 
-    @captureTelemetry(Telemetry.SelectLocalJupyterKernel)
     private async selectLocalJupyterKernel(
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
-        return this.kernelSelector.selectLocalKernel(undefined, undefined, currentKernel);
+        return this.kernelSelector.selectLocalKernel(new StopWatch(), undefined, undefined, currentKernel);
     }
 
-    @captureTelemetry(Telemetry.SelectRemoteJupyuterKernel)
     private async selectRemoteJupyterKernel(
         connInfo: IConnection,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
+        const stopWatch = new StopWatch();
         const session = await this.jupyterSessionManagerFactory.create(connInfo);
-        return this.kernelSelector.selectRemoteKernel(session, undefined, currentKernel);
+        return this.kernelSelector.selectRemoteKernel(stopWatch, session, undefined, currentKernel);
     }
     private async switchKernelWithRetry(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
         const settings = this.configService.getSettings();

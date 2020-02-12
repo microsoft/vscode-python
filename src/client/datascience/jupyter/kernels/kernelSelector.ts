@@ -90,13 +90,21 @@ export class KernelSelector {
      * @memberof KernelSelector
      */
     public async selectRemoteKernel(
+        stopWatch: StopWatch,
         session: IJupyterSessionManager,
         cancelToken?: CancellationToken,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
-        return this.selectKernel(suggestions, session, cancelToken, currentKernel);
+        return this.selectKernel(
+            stopWatch,
+            Telemetry.SelectRemoteJupyterKernel,
+            suggestions,
+            session,
+            cancelToken,
+            currentKernel
+        );
     }
     /**
      * Select a kernel from a local session.
@@ -107,13 +115,21 @@ export class KernelSelector {
      * @memberof KernelSelector
      */
     public async selectLocalKernel(
+        stopWatch: StopWatch,
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
-        return this.selectKernel(suggestions, session, cancelToken, currentKernel);
+        return this.selectKernel(
+            stopWatch,
+            Telemetry.SelectLocalJupyterKernel,
+            suggestions,
+            session,
+            cancelToken,
+            currentKernel
+        );
     }
     /**
      * Gets a kernel that needs to be used with a local session.
@@ -168,7 +184,7 @@ export class KernelSelector {
                     );
                 } else {
                     telemetryProps.promptedToSelect = true;
-                    selection = await this.selectLocalKernel(sessionManager, cancelToken);
+                    selection = await this.selectLocalKernel(stopWatch, sessionManager, cancelToken);
                 }
             }
         } else {
@@ -263,6 +279,8 @@ export class KernelSelector {
         };
     }
     private async selectKernel(
+        stopWatch: StopWatch,
+        telemetryEvent: Telemetry,
         suggestions: IKernelSpecQuickPickItem[],
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken,
@@ -271,6 +289,7 @@ export class KernelSelector {
         const placeHolder =
             localize.DataScience.selectKernel() +
             (currentKernel ? ` (current: ${currentKernel.display_name || currentKernel.name})` : '');
+        sendTelemetryEvent(telemetryEvent, stopWatch.elapsedTime);
         const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder }, cancelToken);
         if (!selection?.selection) {
             return {};
