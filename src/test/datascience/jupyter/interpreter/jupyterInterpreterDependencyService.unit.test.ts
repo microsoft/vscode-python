@@ -22,7 +22,7 @@ import { InterpreterType, PythonInterpreter } from '../../../../client/interpret
 
 // tslint:disable: max-func-body-length
 
-suite('xData Science - Jupyter Interpreter Configuration', () => {
+suite('Data Science - Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
