@@ -10,7 +10,7 @@ import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IConnection, IDataScience, IJupyterSessionManagerFactory, INotebook, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
@@ -33,7 +33,6 @@ type JupyterServerClassType = {
         workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[],
         appShell: IApplicationShell,
-        persistentStateFactory: IPersistentStateFactory,
         fs: IFileSystem,
         kernelSelector: KernelSelector,
         interpreterService: IInterpreterService
@@ -60,7 +59,6 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined,
         @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IPersistentStateFactory) persistentStateFactory: IPersistentStateFactory,
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(KernelSelector) kernelSelector: KernelSelector
@@ -80,7 +78,6 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             workspaceService,
             loggers ? loggers : [],
             appShell,
-            persistentStateFactory,
             fs,
             kernelSelector,
             interpreterService
