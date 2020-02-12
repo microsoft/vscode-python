@@ -329,7 +329,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             const useDefaultConfig = options && options.useDefaultConfig ? true : false;
             const connection = await this.startNotebookServer(
                 useDefaultConfig,
-                this.configuration.getSettings().datascience.jupyterCommandLine,
+                this.configuration.getSettings().datascience.jupyterCommandLineArguments,
                 cancelToken
             );
             if (connection) {
@@ -351,7 +351,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
         useDefaultConfig: boolean,
-        customCommandLine: string | undefined,
+        customCommandLine: string[],
         cancelToken?: CancellationToken
     ): Promise<IConnection> {
         return this.notebookStarter.start(useDefaultConfig, customCommandLine, cancelToken);

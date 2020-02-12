@@ -7,8 +7,6 @@ import * as cp from 'child_process';
 import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
-// tslint:disable-next-line: import-name
-import parseArgsStringToArgv from 'string-argv';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Disposable } from 'vscode';
 import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
@@ -60,7 +58,7 @@ export class NotebookStarter implements Disposable {
     @reportAction(ReportableAction.NotebookStart)
     public async start(
         useDefaultConfig: boolean,
-        customCommandLine: string | undefined,
+        customCommandLine: string[],
         cancelToken?: CancellationToken
     ): Promise<IConnection> {
         traceInfo('Starting Notebook');
@@ -183,19 +181,16 @@ export class NotebookStarter implements Disposable {
         return [...args, ...dockerArgs, ...debugArgs];
     }
 
-    private async generateCustomArguments(customCommandLine: string): Promise<string[]> {
+    private async generateCustomArguments(customCommandLine: string[]): Promise<string[]> {
         // We still have a bunch of args we have to pass
         const requiredArgs = ['--no-browser', '--NotebookApp.iopub_data_rate_limit=10000000000.0'];
 
-        // Otherwise split the custom command line by spaces
-        const customArgs = parseArgsStringToArgv(customCommandLine);
-
-        return [...requiredArgs, ...customArgs];
+        return [...requiredArgs, ...customCommandLine];
     }
 
     private async generateArguments(
         useDefaultConfig: boolean,
-        customCommandLine: string | undefined,
+        customCommandLine: string[],
         tempDirPromise: Promise<TemporaryDirectory>
     ): Promise<string[]> {
         if (!customCommandLine) {

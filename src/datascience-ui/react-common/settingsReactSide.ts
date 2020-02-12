@@ -63,7 +63,7 @@ export function getDefaultSettings() {
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],
-        jupyterCommandLine: ''
+        jupyterCommandLineArguments: []
     };
 
     return result;

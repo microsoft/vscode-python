@@ -94,7 +94,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLine: ''
+            jupyterCommandLineArguments: []
         };
         debugService.setup(d => d.activeDebugSession).returns(() => undefined);
 

@@ -242,7 +242,7 @@
     "DataScience.sysInfoURILabel": "Jupyter Server URI: ",
     "DataScience.jupyterStartTimedout": "Starting Jupyter has timedout. Please check the 'Jupyter' output panel for further details.",
     "DataScience.startingJupyterLogMessage": "Starting Jupyter from {0} with command line {1}",
-    "DataScience.jupyterCommandLineDefaultLabel": "Default",
+    "DataScience.jupyterCommandLineDefaultLabel": "Default (recommended)",
     "DataScience.jupyterCommandLineDefaultDetail": "The Python extension will determine the appropriate command line for Jupyter",
     "DataScience.jupyterCommandLineCustomLabel": "Custom",
     "DataScience.jupyterCommandLineCustomDetail": "Customize the command line passed to Jupyter on startup",

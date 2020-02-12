@@ -4,11 +4,18 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
+// tslint:disable-next-line: import-name
+import parseArgsStringToArgv from 'string-argv';
 import { ConfigurationChangeEvent, ConfigurationTarget, QuickPickItem } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { IConfigurationService } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { IMultiStepInput, IMultiStepInputFactory, InputStep, IQuickPickParameters } from '../../common/utils/multiStepInput';
+import {
+    IMultiStepInput,
+    IMultiStepInputFactory,
+    InputStep,
+    IQuickPickParameters
+} from '../../common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 
@@ -33,9 +40,12 @@ export class JupyterCommandLineSelector {
     }
 
     private async onDidChangeConfiguration(e: ConfigurationChangeEvent) {
-        if (e.affectsConfiguration('python.dataScience.jupyterCommandLine')) {
+        if (e.affectsConfiguration('python.dataScience.jupyterCommandLineArguments')) {
             const reload = DataScience.jupyterCommandLineReloadAnswer();
-            const item = await this.appShell.showInformationMessage(DataScience.jupyterCommandLineReloadQuestion(), reload);
+            const item = await this.appShell.showInformationMessage(
+                DataScience.jupyterCommandLineReloadQuestion(),
+                reload
+            );
             if (item === reload) {
                 this.commandManager.executeCommand('workbench.action.reloadWindow');
             }
@@ -60,7 +70,7 @@ export class JupyterCommandLineSelector {
         // Ask the user to enter a command line
         const result = await input.showInputBox({
             title: DataScience.jupyterCommandLinePrompt(),
-            value: this.configuration.getSettings().datascience.jupyterCommandLine,
+            value: this.configuration.getSettings().datascience.jupyterCommandLineArguments.join(' '),
             validate: this.validate,
             prompt: ''
         });
@@ -74,7 +84,13 @@ export class JupyterCommandLineSelector {
         if (val) {
             sendTelemetryEvent(Telemetry.JupyterCommandLineNonDefault);
         }
-        await this.configuration.updateSetting('dataScience.jupyterCommandLine', val, undefined, ConfigurationTarget.Workspace);
+        const split = parseArgsStringToArgv(val);
+        await this.configuration.updateSetting(
+            'dataScience.jupyterCommandLineArguments',
+            split,
+            undefined,
+            ConfigurationTarget.Workspace
+        );
     }
 
     private validate = async (_inputText: string): Promise<string | undefined> => {

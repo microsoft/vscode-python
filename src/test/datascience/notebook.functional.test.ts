@@ -1220,7 +1220,7 @@ plt.show()`,
         if (!ioc.mockJupyter) {
             const tempDir = os.tmpdir();
             const settings = ioc.getSettings();
-            settings.datascience.jupyterCommandLine = `--NotebookApp.port=9975 --notebook-dir=${tempDir}`;
+            settings.datascience.jupyterCommandLineArguments = ['--NotebookApp.port=9975', `--notebook-dir=${tempDir}`];
             ioc.forceSettingsChanged(settings.pythonPath, settings.datascience);
             const notebook = await createNotebook(true);
             assert.ok(notebook, 'Server should have started on port 9975');
