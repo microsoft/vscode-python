@@ -158,5 +158,5 @@
     "Interpreters.selectInterpreterTip": "小提示：您能透過按下狀態列中的 Python 版本，變更 Python 延伸模組使用的 Python 解譯器。",
     "downloading.file": "正在下載 {0}...",
     "downloading.file.progress": "目前 {0}{1}，總共 {2} KB ({3}%)",
-    "products.installingModule": "正在安裝 {0}",
+    "products.installingModule": "正在安裝 {0}"
 }
