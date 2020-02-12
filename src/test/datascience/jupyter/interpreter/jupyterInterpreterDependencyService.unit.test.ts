@@ -17,6 +17,7 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterInterpreterDependencyResponse, JupyterInterpreterDependencyService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 
+// tslint:disable-next-line: max-func-body-length
 suite('Data Science - Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
     let appShell: IApplicationShell;
@@ -62,6 +63,24 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
     test('Prompt to install if Jupyter is not installed', async () => testPromptIfModuleNotInstalled(false, true));
     test('Prompt to install if notebook is not installed', async () => testPromptIfModuleNotInstalled(true, false));
     test('Prompt to install if jupyter & notebook is not installed', async () => testPromptIfModuleNotInstalled(false, false));
+    test('Reinstall Jupyter if jupyter and notebook are installed but kernelspec is not found', async () => {
+        when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(true);
+        when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
+        when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(
+            // tslint:disable-next-line: no-any
+            DataScience.jupyterInstall() as any
+        );
+        when(pythonExecService.execModule('jupyter', deepEqual(['kernelspec', '--version']), anything())).thenReject(new Error('Not found'));
+        when(installer.install(anything(), anything(), anything())).thenResolve(InstallerResponse.Installed);
+
+        const response = await configuration.installMissingDependencies(pythonInterpreter);
+
+        // Jupyter must be installed & not kernelspec or anything else.
+        verify(installer.install(Product.jupyter, anything(), anything())).once();
+        verify(installer.install(anything(), anything(), anything())).once();
+        verify(appShell.showErrorMessage(anything(), DataScience.jupyterInstall(), DataScience.selectDifferentJupyterInterpreter(), anything())).once();
+        assert.equal(response, JupyterInterpreterDependencyResponse.cancel);
+    });
 
     async function testInstallationOfJupyter(installerResponse: InstallerResponse, expectedConfigurationReponse: JupyterInterpreterDependencyResponse): Promise<void> {
         when(installer.isInstalled(Product.jupyter, pythonInterpreter)).thenResolve(false);
