@@ -14,6 +14,7 @@ env:
   # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
   CACHE_PYTHONFILES: cache-pvsc-pythonFiles
   ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
+  COVERAGE_REPORTS: tests-coverage-reports
   TEST_RESULTS_DIRECTORY: .
 
 jobs:
@@ -311,12 +312,19 @@ jobs:
         run: npm run test:unittests:cover
         if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
 
-      # Run the Python IPython tests in our codebase.
-      # Produce JUnit-style log files that will be uploaded after all tests are complete.
+      # Upload unit test coverage reports for later use in the "reports" job.
+      - name: Upload unit test coverage reports
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
+          path: .nyc_output
+        if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
+
+      # Run the Python and IPython tests in our codebase.
       - name: Run Python and IPython unit tests
         run: |
-          python pythonFiles/tests/run_all.py --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/python-tests-junit.xml
-          python -m IPython pythonFiles/tests/run_all.py -- --junit-xml=${{env.TEST_RESULTS_DIRECTORY}}/ipython-tests-junit.xml
+          python pythonFiles/tests/run_all.py
+          python -m IPython pythonFiles/tests/run_all.py
         if: matrix.test-suite == 'python-unit'
 
       # The virtual environment based tests use the `testSingleWorkspace` set of tests
@@ -387,9 +395,9 @@ jobs:
       # then delete the download folder and compile the source code.
       - name: Prepare for smoke tests
         run: |
-           mv ${{env.ARTIFACT_NAME_VSIX}}/* .
-           rm -r ${{env.ARTIFACT_NAME_VSIX}}
-           npx tsc -p ./
+          mv ${{env.ARTIFACT_NAME_VSIX}}/* .
+          rm -r ${{env.ARTIFACT_NAME_VSIX}}
+          npx tsc -p ./
         shell: bash
 
       - name: Run smoke tests
@@ -398,3 +406,45 @@ jobs:
         uses: GabrielBB/xvfb-action@v1.0
         with:
           run: node ./out/test/smokeTest.js
+
+  coverage:
+    name: Coverage reports upload
+    runs-on: ubuntu-latest
+    if: github.repository == 'microsoft/vscode-python'
+    needs: [tests, smoke-tests]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Retrieve cached npm files
+        uses: actions/cache@v1
+        with:
+          path: ~/.npm
+          key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
+
+      - name: Install dependencies (npm ci)
+        run: npm ci --prefer-offline
+
+      # It isn't possible to specify a regex for artifact names, so we have to download each artifact manually.
+      # The name pattern is ${{runner.os}}-${{env.COVERAGE_REPORTS}}, and possible values for runner.os are `Linux`, `Windows`, or `macOS`.
+      # See https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#runner-context
+      - name: Download Ubuntu test coverage artifacts
+        uses: actions/download-artifact@v1
+        with:
+          name: Linux-${{env.COVERAGE_REPORTS}}
+
+      - name: Extract Ubuntu coverage artifacts to ./nyc_output
+        run: |
+          mkdir .nyc_output
+          mv Linux-${{env.COVERAGE_REPORTS}}/* .nyc_output
+          rm -r Linux-${{env.COVERAGE_REPORTS}}
+
+      - name: Generate coverage reports
+        run: npm run test:cover:report
+        continue-on-error: true
+
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v1
+        with:
+          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+          file: ./coverage/cobertura-coverage.xml

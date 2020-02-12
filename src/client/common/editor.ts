@@ -166,16 +166,17 @@ export function getTextEdits(before: string, after: string): TextEdit[] {
 function getTextEditsInternal(before: string, diffs: [number, string][], startLine: number = 0): Edit[] {
     let line = startLine;
     let character = 0;
+    const beforeLines = before.split(/\r?\n/g);
     if (line > 0) {
-        const beforeLines = before.split(/\r?\n/g);
         beforeLines.filter((_l, i) => i < line).forEach(l => (character += l.length + NEW_LINE_LENGTH));
     }
     const edits: Edit[] = [];
     let edit: Edit | null = null;
+    let end: Position;
 
     // tslint:disable-next-line:prefer-for-of
     for (let i = 0; i < diffs.length; i += 1) {
-        const start = new Position(line, character);
+        let start = new Position(line, character);
         // Compute the line/character after the diff is applied.
         // tslint:disable-next-line:prefer-for-of
         for (let curr = 0; curr < diffs[i][1].length; curr += 1) {
@@ -192,12 +193,21 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
         // tslint:disable-next-line:switch-default
         switch (diffs[i][0]) {
             case dmp.DIFF_DELETE:
+                if (beforeLines[line - 1].length === 0 && beforeLines[start.line - 1].length === 0) {
+                    // We're asked to delete an empty line which only contains `/\r?\n/g`. The last line is also empty.
+                    // Delete the `\n` from the last line instead of deleting `\n` from the current line
+                    // This change ensures that the last line in the file, which won't contain `\n` is deleted
+                    start = new Position(start.line - 1, 0);
+                    end = new Position(line - 1, 0);
+                } else {
+                    end = new Position(line, character);
+                }
                 if (edit === null) {
                     edit = new Edit(EditAction.Delete, start);
                 } else if (edit.action !== EditAction.Delete) {
                     throw new Error('cannot format due to an internal error.');
                 }
-                edit.end = new Position(line, character);
+                edit.end = end;
                 break;
 
             case dmp.DIFF_INSERT:
