@@ -14,7 +14,10 @@ import { noop } from '../../../client/common/utils/misc';
 import { IInterpreterLocatorProgressService } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorProgressStatubarHandler } from '../../../client/interpreter/display/progressDisplay';
 
-type ProgressTask<R> = (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>;
+type ProgressTask<R> = (
+    progress: Progress<{ message?: string; increment?: number }>,
+    token: CancellationToken
+) => Thenable<R>;
 
 suite('Interpreters - Display Progress', () => {
     let refreshingCallback: (e: void) => any | undefined;

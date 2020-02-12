@@ -124,7 +124,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     };
 
     private renderNormalCell() {
-        const allowsPlainInput = this.props.settings.showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
+        const allowsPlainInput =
+            this.props.settings.showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
         const shouldRender = allowsPlainInput || this.shouldRenderResults();
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
         const cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
@@ -186,8 +187,17 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.GatherCode} />
                 </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={gotoCode} tooltip={getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code')} hidden={hasNoSource}>
-                    <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.GoToSourceCode} />
+                <ImageButton
+                    baseTheme={this.props.baseTheme}
+                    onClick={gotoCode}
+                    tooltip={getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code')}
+                    hidden={hasNoSource}
+                >
+                    <Image
+                        baseTheme={this.props.baseTheme}
+                        class="image-button-image"
+                        image={ImageName.GoToSourceCode}
+                    />
                 </ImageButton>
                 <ImageButton
                     baseTheme={this.props.baseTheme}
@@ -197,7 +207,11 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                 >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Copy} />
                 </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCode} tooltip={getLocString('DataScience.deleteButtonTooltip', 'Remove Cell')}>
+                <ImageButton
+                    baseTheme={this.props.baseTheme}
+                    onClick={deleteCode}
+                    tooltip={getLocString('DataScience.deleteButtonTooltip', 'Remove Cell')}
+                >
                     <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Cancel} />
                 </ImageButton>
             </div>
@@ -221,10 +235,18 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     };
 
     private renderControls = () => {
-        const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
-        const collapseVisible = this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable && this.isCodeCell();
+        const busy =
+            this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
+        const collapseVisible =
+            this.props.cellVM.inputBlockCollapseNeeded &&
+            this.props.cellVM.inputBlockShow &&
+            !this.props.cellVM.editable &&
+            this.isCodeCell();
         const executionCount =
-            this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count
+            this.props.cellVM &&
+            this.props.cellVM.cell &&
+            this.props.cellVM.cell.data &&
+            this.props.cellVM.cell.data.execution_count
                 ? this.props.cellVM.cell.data.execution_count.toString()
                 : '-';
         const isEditOnlyCell = this.props.cellVM.cell.id === Identifiers.EditCellId;
@@ -234,7 +256,9 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
             <div className="controls-div">
                 <ExecutionCount
                     isBusy={busy}
-                    count={isEditOnlyCell && this.props.editExecutionCount ? this.props.editExecutionCount : executionCount}
+                    count={
+                        isEditOnlyCell && this.props.editExecutionCount ? this.props.editExecutionCount : executionCount
+                    }
                     visible={this.isCodeCell()}
                 />
                 <CollapseButton
@@ -299,7 +323,11 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     };
 
     private hasOutput = () => {
-        return this.getCell().state === CellState.finished || this.getCell().state === CellState.error || this.getCell().state === CellState.executing;
+        return (
+            this.getCell().state === CellState.finished ||
+            this.getCell().state === CellState.error ||
+            this.getCell().state === CellState.executing
+        );
     };
 
     private getCodeCell = () => {
@@ -307,7 +335,13 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     };
 
     private shouldRenderResults(): boolean {
-        return this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && this.getCodeCell().outputs.length > 0 && !this.props.cellVM.hideOutput;
+        return (
+            this.isCodeCell() &&
+            this.hasOutput() &&
+            this.getCodeCell().outputs &&
+            this.getCodeCell().outputs.length > 0 &&
+            !this.props.cellVM.hideOutput
+        );
     }
 
     private onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {

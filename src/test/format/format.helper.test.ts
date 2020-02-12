@@ -39,7 +39,11 @@ suite('Formatting - Helper', () => {
             const names = formatHelper.getSettingsPropertyNames(formatter);
             const execPath = settings.formatting[names.pathName] as string;
 
-            assert.equal(info.execPath, execPath, `Incorrect executable paths for product ${formatHelper.translateToId(formatter)}`);
+            assert.equal(
+                info.execPath,
+                execPath,
+                `Incorrect executable paths for product ${formatHelper.translateToId(formatter)}`
+            );
         });
     });
 
@@ -49,10 +53,16 @@ suite('Formatting - Helper', () => {
 
         [Product.autopep8, Product.black, Product.yapf].forEach(formatter => {
             const names = formatHelper.getSettingsPropertyNames(formatter);
-            const args: string[] = Array.isArray(settings.formatting[names.argsName]) ? (settings.formatting[names.argsName] as string[]) : [];
+            const args: string[] = Array.isArray(settings.formatting[names.argsName])
+                ? (settings.formatting[names.argsName] as string[])
+                : [];
             const expectedArgs = args.concat(customArgs).join(',');
 
-            assert.equal(expectedArgs.endsWith(customArgs.join(',')), true, `Incorrect custom arguments for product ${formatHelper.translateToId(formatter)}`);
+            assert.equal(
+                expectedArgs.endsWith(customArgs.join(',')),
+                true,
+                `Incorrect custom arguments for product ${formatHelper.translateToId(formatter)}`
+            );
         });
     });
 
@@ -64,7 +74,11 @@ suite('Formatting - Helper', () => {
                 pathName: `${translatedId}Path` as keyof IFormattingSettings
             };
 
-            assert.deepEqual(formatHelper.getSettingsPropertyNames(formatter), settings, `Incorrect settings for product ${formatHelper.translateToId(formatter)}`);
+            assert.deepEqual(
+                formatHelper.getSettingsPropertyNames(formatter),
+                settings,
+                `Incorrect settings for product ${formatHelper.translateToId(formatter)}`
+            );
         });
     });
 
@@ -76,7 +90,11 @@ suite('Formatting - Helper', () => {
 
         [Product.autopep8, Product.black, Product.yapf].forEach(formatter => {
             const translatedId = formatHelper.translateToId(formatter);
-            assert.equal(translatedId, formatterMapping.get(formatter)!, `Incorrect translation for product ${formatHelper.translateToId(formatter)}`);
+            assert.equal(
+                translatedId,
+                formatterMapping.get(formatter)!,
+                `Incorrect translation for product ${formatHelper.translateToId(formatter)}`
+            );
         });
     });
 

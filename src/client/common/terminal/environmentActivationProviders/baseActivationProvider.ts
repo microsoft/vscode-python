@@ -14,11 +14,18 @@ export abstract class BaseActivationCommandProvider implements ITerminalActivati
     constructor(protected readonly serviceContainer: IServiceContainer) {}
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;
-    public getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {
-        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
+    public getActivationCommands(
+        resource: Uri | undefined,
+        targetShell: TerminalShellType
+    ): Promise<string[] | undefined> {
+        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource)
+            .pythonPath;
         return this.getActivationCommandsForInterpreter(pythonPath, targetShell);
     }
-    public abstract getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined>;
+    public abstract getActivationCommandsForInterpreter(
+        pythonPath: string,
+        targetShell: TerminalShellType
+    ): Promise<string[] | undefined>;
 
     protected async findScriptFile(pythonPath: string, scriptFileNames: string[]): Promise<string | undefined> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);

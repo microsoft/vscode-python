@@ -80,7 +80,9 @@ suite('Theme colors', () => {
 
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
-        workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
+        workspaceService
+            .setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => workspaceConfig.object);
 
         cssGenerator = new CodeCssGenerator(workspaceService.object, themeFinder, configService.object, fs);
     });
@@ -122,7 +124,9 @@ suite('Theme colors', () => {
                 // (that would be the default and all themes have a string color)
                 assert.ok(theme.rules, 'No rules found in monaco theme');
                 // tslint:disable-next-line: no-any
-                const commentPunctuation = (theme.rules as any[]).findIndex(r => r.token === 'punctuation.definition.comment');
+                const commentPunctuation = (theme.rules as any[]).findIndex(
+                    r => r.token === 'punctuation.definition.comment'
+                );
                 assert.ok(commentPunctuation >= 0, 'No punctuation.comment found');
             } else {
                 assert.notOk(json, `Found ${themeName} when not expected`);
@@ -152,7 +156,9 @@ suite('Theme colors', () => {
     test('Missing json theme', async () => {
         const mockThemeFinder = TypeMoq.Mock.ofType<IThemeFinder>();
         mockThemeFinder.setup(m => m.isThemeDark(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(false));
-        mockThemeFinder.setup(m => m.findThemeRootJson(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(undefined));
+        mockThemeFinder
+            .setup(m => m.findThemeRootJson(TypeMoq.It.isAnyString()))
+            .returns(() => Promise.resolve(undefined));
 
         const fs = new FileSystem();
         cssGenerator = new CodeCssGenerator(workspaceService.object, mockThemeFinder.object, configService.object, fs);

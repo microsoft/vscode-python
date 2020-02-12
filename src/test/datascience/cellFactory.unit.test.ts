@@ -3,7 +3,7 @@
 'use strict';
 import { assert } from 'chai';
 import { generateCells } from '../../client/datascience/cellFactory';
-import { stripComments } from '../../datascience-ui/common';
+import { removeLinesFromFrontAndBack, stripComments } from '../../datascience-ui/common';
 
 // tslint:disable: max-func-body-length
 suite('Data Science CellFactory', () => {
@@ -121,7 +121,11 @@ def download(url, filename):
         assert.equal(cells.length, 1, 'cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'code cell not generated');
         assert.equal(cells[0].data.source.length, 9, 'Lines for cell not emitted');
-        assert.equal(cells[0].data.source[3], '    """ utility function to download a file """\n', 'Lines for cell not emitted');
+        assert.equal(
+            cells[0].data.source[3],
+            '    """ utility function to download a file """\n',
+            'Lines for cell not emitted'
+        );
 
         // tslint:disable-next-line: no-multiline-string
         const multilineMarkdownWithCell = `#%% [markdown]
@@ -149,5 +153,52 @@ class Pizza(object):
         assert.equal(nonComments, '', 'Multline comment is not being stripped');
         nonComments = stripComments(multilineQuoteInFunc);
         assert.equal(nonComments.splitLines().length, 6, 'Splitting quote in func wrong number of lines');
+    });
+
+    test('Line removal', () => {
+        const entry1 = `# %% CELL
+
+first line`;
+        const expected1 = `# %% CELL
+first line`;
+        const entry2 = `# %% CELL
+
+first line
+
+`;
+        const expected2 = `# %% CELL
+first line`;
+        const entry3 = `# %% CELL
+
+first line
+
+second line
+
+`;
+        const expected3 = `# %% CELL
+first line
+
+second line`;
+
+        const entry4 = `
+
+if (foo):
+    print('stuff')
+
+print('some more')
+
+`;
+        const expected4 = `if (foo):
+    print('stuff')
+
+print('some more')`;
+        let removed = removeLinesFromFrontAndBack(entry1);
+        assert.equal(removed, expected1);
+        removed = removeLinesFromFrontAndBack(entry2);
+        assert.equal(removed, expected2);
+        removed = removeLinesFromFrontAndBack(entry3);
+        assert.equal(removed, expected3);
+        removed = removeLinesFromFrontAndBack(entry4);
+        assert.equal(removed, expected4);
     });
 });

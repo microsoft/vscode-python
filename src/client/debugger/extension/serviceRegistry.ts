@@ -27,7 +27,11 @@ import { AttachConfigurationResolver } from './configuration/resolvers/attach';
 import { DebugEnvironmentVariablesHelper, IDebugEnvironmentVariablesService } from './configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from './configuration/resolvers/launch';
 import { LaunchDebugConfigurationExperiment } from './configuration/resolvers/launchConfigExperiment';
-import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver, ILaunchDebugConfigurationResolverExperiment } from './configuration/types';
+import {
+    IDebugConfigurationProviderFactory,
+    IDebugConfigurationResolver,
+    ILaunchDebugConfigurationResolverExperiment
+} from './configuration/types';
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from './hooks/childProcessAttachService';
 import { IChildProcessAttachService, IDebugSessionEventHandlers } from './hooks/types';
@@ -41,26 +45,89 @@ import {
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, LaunchJsonCompletionProvider);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, LaunchJsonUpdaterService);
-    serviceManager.addSingleton<IDebugConfigurationService>(IDebugConfigurationService, PythonDebugConfigurationService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        LaunchJsonCompletionProvider
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        LaunchJsonUpdaterService
+    );
+    serviceManager.addSingleton<IDebugConfigurationService>(
+        IDebugConfigurationService,
+        PythonDebugConfigurationService
+    );
     serviceManager.addSingleton<IDebuggerBanner>(IDebuggerBanner, DebuggerBanner);
     serviceManager.addSingleton<IChildProcessAttachService>(IChildProcessAttachService, ChildProcessAttachService);
     serviceManager.addSingleton<IDebugSessionEventHandlers>(IDebugSessionEventHandlers, ChildProcessAttachEventHandler);
-    serviceManager.addSingleton<IDebugConfigurationResolver<LaunchRequestArguments>>(IDebugConfigurationResolver, LaunchConfigurationResolver, 'launch');
-    serviceManager.addSingleton<IDebugConfigurationResolver<AttachRequestArguments>>(IDebugConfigurationResolver, AttachConfigurationResolver, 'attach');
-    serviceManager.addSingleton<IDebugConfigurationProviderFactory>(IDebugConfigurationProviderFactory, DebugConfigurationProviderFactory);
-    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, FileLaunchDebugConfigurationProvider, DebugConfigurationType.launchFile);
-    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, DjangoLaunchDebugConfigurationProvider, DebugConfigurationType.launchDjango);
-    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, FlaskLaunchDebugConfigurationProvider, DebugConfigurationType.launchFlask);
-    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, RemoteAttachDebugConfigurationProvider, DebugConfigurationType.remoteAttach);
-    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, ModuleLaunchDebugConfigurationProvider, DebugConfigurationType.launchModule);
-    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, PyramidLaunchDebugConfigurationProvider, DebugConfigurationType.launchPyramid);
-    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, PidAttachDebugConfigurationProvider, DebugConfigurationType.pidAttach);
-    serviceManager.addSingleton<IDebugEnvironmentVariablesService>(IDebugEnvironmentVariablesService, DebugEnvironmentVariablesHelper);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebugAdapterActivator);
-    serviceManager.addSingleton<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory);
+    serviceManager.addSingleton<IDebugConfigurationResolver<LaunchRequestArguments>>(
+        IDebugConfigurationResolver,
+        LaunchConfigurationResolver,
+        'launch'
+    );
+    serviceManager.addSingleton<IDebugConfigurationResolver<AttachRequestArguments>>(
+        IDebugConfigurationResolver,
+        AttachConfigurationResolver,
+        'attach'
+    );
+    serviceManager.addSingleton<IDebugConfigurationProviderFactory>(
+        IDebugConfigurationProviderFactory,
+        DebugConfigurationProviderFactory
+    );
+    serviceManager.addSingleton<IDebugConfigurationProvider>(
+        IDebugConfigurationProvider,
+        FileLaunchDebugConfigurationProvider,
+        DebugConfigurationType.launchFile
+    );
+    serviceManager.addSingleton<IDebugConfigurationProvider>(
+        IDebugConfigurationProvider,
+        DjangoLaunchDebugConfigurationProvider,
+        DebugConfigurationType.launchDjango
+    );
+    serviceManager.addSingleton<IDebugConfigurationProvider>(
+        IDebugConfigurationProvider,
+        FlaskLaunchDebugConfigurationProvider,
+        DebugConfigurationType.launchFlask
+    );
+    serviceManager.addSingleton<IDebugConfigurationProvider>(
+        IDebugConfigurationProvider,
+        RemoteAttachDebugConfigurationProvider,
+        DebugConfigurationType.remoteAttach
+    );
+    serviceManager.addSingleton<IDebugConfigurationProvider>(
+        IDebugConfigurationProvider,
+        ModuleLaunchDebugConfigurationProvider,
+        DebugConfigurationType.launchModule
+    );
+    serviceManager.addSingleton<IDebugConfigurationProvider>(
+        IDebugConfigurationProvider,
+        PyramidLaunchDebugConfigurationProvider,
+        DebugConfigurationType.launchPyramid
+    );
+    serviceManager.addSingleton<IDebugConfigurationProvider>(
+        IDebugConfigurationProvider,
+        PidAttachDebugConfigurationProvider,
+        DebugConfigurationType.pidAttach
+    );
+    serviceManager.addSingleton<IDebugEnvironmentVariablesService>(
+        IDebugEnvironmentVariablesService,
+        DebugEnvironmentVariablesHelper
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        DebugAdapterActivator
+    );
+    serviceManager.addSingleton<IDebugAdapterDescriptorFactory>(
+        IDebugAdapterDescriptorFactory,
+        DebugAdapterDescriptorFactory
+    );
     serviceManager.addSingleton<IDebugSessionLoggingFactory>(IDebugSessionLoggingFactory, DebugSessionLoggingFactory);
-    serviceManager.addSingleton<ILaunchDebugConfigurationResolverExperiment>(ILaunchDebugConfigurationResolverExperiment, LaunchDebugConfigurationExperiment);
-    serviceManager.addSingleton<IAttachProcessProviderFactory>(IAttachProcessProviderFactory, AttachProcessProviderFactory);
+    serviceManager.addSingleton<ILaunchDebugConfigurationResolverExperiment>(
+        ILaunchDebugConfigurationResolverExperiment,
+        LaunchDebugConfigurationExperiment
+    );
+    serviceManager.addSingleton<IAttachProcessProviderFactory>(
+        IAttachProcessProviderFactory,
+        AttachProcessProviderFactory
+    );
 }

@@ -35,8 +35,12 @@ export interface IExtensionApi {
     };
 }
 
-// tslint:disable-next-line:no-any
-export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsManager, debugFactory: IDebugAdapterDescriptorFactory) {
+export function buildApi(
+    // tslint:disable-next-line:no-any
+    ready: Promise<any>,
+    experimentsManager: IExperimentsManager,
+    debugFactory: IDebugAdapterDescriptorFactory
+) {
     return {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch(ex => {
@@ -44,7 +48,11 @@ export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsMa
             return Promise.reject(ex);
         }),
         debug: {
-            async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
+            async getRemoteLauncherCommand(
+                host: string,
+                port: number,
+                waitUntilDebuggerAttaches: boolean = true
+            ): Promise<string[]> {
                 const useNewDAPtvsd = experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
 
                 if (useNewDAPtvsd) {
@@ -53,7 +61,11 @@ export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsMa
                     return [debugFactory.getPtvsdPath(), ...args];
                 }
 
-                return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
+                return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({
+                    host,
+                    port,
+                    waitUntilDebuggerAttaches
+                });
             }
         }
     };

@@ -31,7 +31,10 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         this.editorUtils = serviceContainer.get<IEditorUtils>(IEditorUtils);
     }
     @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
-    public async provideDocumentSortImportsEdits(uri: Uri, token?: CancellationToken): Promise<WorkspaceEdit | undefined> {
+    public async provideDocumentSortImportsEdits(
+        uri: Uri,
+        token?: CancellationToken
+    ): Promise<WorkspaceEdit | undefined> {
         const document = await this.documentManager.openTextDocument(uri);
         if (!document) {
             return;
@@ -45,7 +48,9 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         // to be done here in node (extension), i.e. extension cpu, i.e. less responsive solution.
         const importScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'sortImports.py');
         const fsService = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        const tmpFile = document.isDirty ? await fsService.createTemporaryFile(path.extname(document.uri.fsPath)) : undefined;
+        const tmpFile = document.isDirty
+            ? await fsService.createTemporaryFile(path.extname(document.uri.fsPath))
+            : undefined;
         if (tmpFile) {
             await fsService.writeFile(tmpFile.filePath, document.getText());
         }
@@ -65,7 +70,8 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
                 diffPatch = (await processService.exec(isort, args, { throwOnStdErr: true, token })).stdout;
             } else {
                 const processExeService = await this.pythonExecutionFactory.create({ resource: document.uri });
-                diffPatch = (await processExeService.exec([importScript].concat(args), { throwOnStdErr: true, token })).stdout;
+                diffPatch = (await processExeService.exec([importScript].concat(args), { throwOnStdErr: true, token }))
+                    .stdout;
             }
 
             return this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri);

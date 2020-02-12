@@ -119,7 +119,11 @@ export enum ModuleNamePurpose {
 export const IInstaller = Symbol('IInstaller');
 
 export interface IInstaller {
-    promptToInstall(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
+    promptToInstall(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse>;
     install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
@@ -393,7 +397,13 @@ export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
     isTestExecution(): boolean;
     updateSetting(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
-    updateSectionSetting(section: string, setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
+    updateSectionSetting(
+        section: string,
+        setting: string,
+        value?: {},
+        resource?: Uri,
+        configTarget?: ConfigurationTarget
+    ): Promise<void>;
 }
 
 export const ISocketServer = Symbol('ISocketServer');
@@ -555,7 +565,11 @@ export interface ICryptoUtils {
      * @param data The string to hash
      * @param hashFormat Return format of the hash, number or string
      */
-    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E, algorithm?: 'SHA512' | 'SHA256' | 'FNV'): IHashFormat[E];
+    createHash<E extends keyof IHashFormat>(
+        data: string,
+        hashFormat: E,
+        algorithm?: 'SHA512' | 'SHA256' | 'FNV'
+    ): IHashFormat[E];
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');

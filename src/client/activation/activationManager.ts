@@ -21,7 +21,8 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     private docOpenedHandler?: IDisposable;
     constructor(
         @multiInject(IExtensionActivationService) private readonly activationServices: IExtensionActivationService[],
-        @multiInject(IExtensionSingleActivationService) private readonly singleActivationServices: IExtensionSingleActivationService[],
+        @multiInject(IExtensionSingleActivationService)
+        private readonly singleActivationServices: IExtensionSingleActivationService[],
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
@@ -43,7 +44,10 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     public async activate(): Promise<void> {
         await this.initialize();
         // Activate all activation services together.
-        await Promise.all([Promise.all(this.singleActivationServices.map(item => item.activate())), this.activateWorkspace(this.activeResourceService.getActiveResource())]);
+        await Promise.all([
+            Promise.all(this.singleActivationServices.map(item => item.activate())),
+            this.activateWorkspace(this.activeResourceService.getActiveResource())
+        ]);
         await this.autoSelection.autoSelectInterpreter(undefined);
     }
     @traceDecorators.error('Failed to activate a workspace')
@@ -96,7 +100,9 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     }
     protected onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
-        const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspaceKey(workspaceFolder.uri));
+        const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder =>
+            this.getWorkspaceKey(workspaceFolder.uri)
+        );
         const activatedWkspcKeys = Array.from(this.activatedWorkspaces.keys());
         const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {

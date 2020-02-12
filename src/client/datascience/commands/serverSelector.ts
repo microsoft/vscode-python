@@ -12,9 +12,18 @@ import { JupyterServerSelector } from '../jupyter/serverSelector';
 @injectable()
 export class JupyterServerSelectorCommand implements IDisposable {
     private readonly disposables: IDisposable[] = [];
-    constructor(@inject(ICommandManager) private readonly commandManager: ICommandManager, @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector) {}
+    constructor(
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(JupyterServerSelector) private readonly serverSelector: JupyterServerSelector
+    ) {}
     public register() {
-        this.disposables.push(this.commandManager.registerCommand(Commands.SelectJupyterURI, this.serverSelector.selectJupyterURI, this.serverSelector));
+        this.disposables.push(
+            this.commandManager.registerCommand(
+                Commands.SelectJupyterURI,
+                this.serverSelector.selectJupyterURI,
+                this.serverSelector
+            )
+        );
     }
     public dispose() {
         this.disposables.forEach(d => d.dispose());

@@ -205,7 +205,9 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
     });
 
     test('If no active interpreter is returned, simply return', async () => {
-        serviceContainer.setup(s => s.get<IInterpreterService>(IInterpreterService)).returns(() => interpreterService.object);
+        serviceContainer
+            .setup(s => s.get<IInterpreterService>(IInterpreterService))
+            .returns(() => interpreterService.object);
         serviceContainer.setup(s => s.get<IApplicationShell>(IApplicationShell)).verifiable(TypeMoq.Times.never());
         interpreterService.setup(i => i.getActiveInterpreter(resource)).returns(() => Promise.resolve(undefined));
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
@@ -218,7 +220,9 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             type: InterpreterType.Conda
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        serviceContainer.setup(s => s.get<IInterpreterService>(IInterpreterService)).returns(() => interpreterService.object);
+        serviceContainer
+            .setup(s => s.get<IInterpreterService>(IInterpreterService))
+            .returns(() => interpreterService.object);
         serviceContainer
             .setup(s => s.get<IApplicationShell>(IApplicationShell))
             .returns(() => appShell.object)
@@ -227,7 +231,9 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             .setup(i => i.getActiveInterpreter(resource))
             // tslint:disable-next-line: no-any
             .returns(() => Promise.resolve(activeInterpreter as any));
-        appShell.setup(a => a.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp())).verifiable(TypeMoq.Times.once());
+        appShell
+            .setup(a => a.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp()))
+            .verifiable(TypeMoq.Times.once());
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
         await installChannelManager.showNoInstallersMessage(resource);
         serviceContainer.verifyAll();
@@ -239,7 +245,9 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             type: InterpreterType.Pipenv
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        serviceContainer.setup(s => s.get<IInterpreterService>(IInterpreterService)).returns(() => interpreterService.object);
+        serviceContainer
+            .setup(s => s.get<IInterpreterService>(IInterpreterService))
+            .returns(() => interpreterService.object);
         serviceContainer
             .setup(s => s.get<IApplicationShell>(IApplicationShell))
             .returns(() => appShell.object)
@@ -248,7 +256,9 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
             .setup(i => i.getActiveInterpreter(resource))
             // tslint:disable-next-line: no-any
             .returns(() => Promise.resolve(activeInterpreter as any));
-        appShell.setup(a => a.showErrorMessage(Installer.noPipInstaller(), Installer.searchForHelp())).verifiable(TypeMoq.Times.once());
+        appShell
+            .setup(a => a.showErrorMessage(Installer.noPipInstaller(), Installer.searchForHelp()))
+            .verifiable(TypeMoq.Times.once());
         installChannelManager = new InstallationChannelManager(serviceContainer.object);
         await installChannelManager.showNoInstallersMessage(resource);
         serviceContainer.verifyAll();
@@ -273,8 +283,12 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
                 isMac: true
             }
         ].forEach(testParams => {
-            const expectedURL = `https://www.bing.com/search?q=Install Pip ${testParams.osName} ${interpreterType === InterpreterType.Conda ? 'Conda' : ''}`;
-            test(`If \'Search for help\' is selected in error prompt, open correct URL for ${testParams.osName} when Interpreter type is ${
+            const expectedURL = `https://www.bing.com/search?q=Install Pip ${testParams.osName} ${
+                interpreterType === InterpreterType.Conda ? 'Conda' : ''
+            }`;
+            test(`If \'Search for help\' is selected in error prompt, open correct URL for ${
+                testParams.osName
+            } when Interpreter type is ${
                 interpreterType === InterpreterType.Conda ? 'Conda' : 'not Conda'
             }`, async () => {
                 const activeInterpreter = {
@@ -282,7 +296,9 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
                 };
                 const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                 const platformService = TypeMoq.Mock.ofType<IPlatformService>();
-                serviceContainer.setup(s => s.get<IInterpreterService>(IInterpreterService)).returns(() => interpreterService.object);
+                serviceContainer
+                    .setup(s => s.get<IInterpreterService>(IInterpreterService))
+                    .returns(() => interpreterService.object);
                 serviceContainer
                     .setup(s => s.get<IApplicationShell>(IApplicationShell))
                     .returns(() => appShell.object)
@@ -318,7 +334,9 @@ suite('InstallationChannelManager - showNoInstallersMessage()', () => {
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         const platformService = TypeMoq.Mock.ofType<IPlatformService>();
-        serviceContainer.setup(s => s.get<IInterpreterService>(IInterpreterService)).returns(() => interpreterService.object);
+        serviceContainer
+            .setup(s => s.get<IInterpreterService>(IInterpreterService))
+            .returns(() => interpreterService.object);
         serviceContainer
             .setup(s => s.get<IApplicationShell>(IApplicationShell))
             .returns(() => appShell.object)

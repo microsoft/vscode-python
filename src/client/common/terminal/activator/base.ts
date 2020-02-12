@@ -10,7 +10,10 @@ import { ITerminalActivator, ITerminalHelper, TerminalActivationOptions, Termina
 export class BaseTerminalActivator implements ITerminalActivator {
     private readonly activatedTerminals: Map<Terminal, Promise<boolean>> = new Map<Terminal, Promise<boolean>>();
     constructor(private readonly helper: ITerminalHelper) {}
-    public async activateEnvironmentInTerminal(terminal: Terminal, options?: TerminalActivationOptions): Promise<boolean> {
+    public async activateEnvironmentInTerminal(
+        terminal: Terminal,
+        options?: TerminalActivationOptions
+    ): Promise<boolean> {
         if (this.activatedTerminals.has(terminal)) {
             return this.activatedTerminals.get(terminal)!;
         }
@@ -18,7 +21,11 @@ export class BaseTerminalActivator implements ITerminalActivator {
         this.activatedTerminals.set(terminal, deferred.promise);
         const terminalShellType = this.helper.identifyTerminalShell(terminal);
 
-        const activationCommands = await this.helper.getEnvironmentActivationCommands(terminalShellType, options?.resource, options?.interpreter);
+        const activationCommands = await this.helper.getEnvironmentActivationCommands(
+            terminalShellType,
+            options?.resource,
+            options?.interpreter
+        );
         let activated = false;
         if (activationCommands) {
             for (const command of activationCommands!) {

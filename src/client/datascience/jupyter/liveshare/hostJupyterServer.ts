@@ -34,7 +34,8 @@ import { IRoleBasedObject } from './roleBasedFactory';
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any
 
-export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService) implements IRoleBasedObject, INotebookServer {
+export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
+    implements IRoleBasedObject, INotebookServer {
     private disposed = false;
     private portToForward = 0;
     private sharedPort: vscode.Disposable | undefined;
@@ -83,15 +84,29 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             // Attach event handlers to different requests
             if (service) {
                 // Requests return arrays
-                service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) => this.onSync());
-                service.onRequest(LiveShareCommands.disposeServer, (_args: any[], _cancellation: CancellationToken) => this.dispose());
-                service.onRequest(LiveShareCommands.createNotebook, async (args: any[], cancellation: CancellationToken) => {
-                    const uri = vscode.Uri.parse(args[0]);
-                    const resource = uri.scheme && uri.scheme !== Identifiers.InteractiveWindowIdentityScheme ? this.finishedApi!.convertSharedUriToLocal(uri) : uri;
-                    // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
-                    const notebook = (await this.createNotebook(resource, undefined, cancellation)) as HostJupyterNotebook;
-                    await notebook.onAttach(api);
-                });
+                service.onRequest(LiveShareCommands.syncRequest, (_args: any[], _cancellation: CancellationToken) =>
+                    this.onSync()
+                );
+                service.onRequest(LiveShareCommands.disposeServer, (_args: any[], _cancellation: CancellationToken) =>
+                    this.dispose()
+                );
+                service.onRequest(
+                    LiveShareCommands.createNotebook,
+                    async (args: any[], cancellation: CancellationToken) => {
+                        const uri = vscode.Uri.parse(args[0]);
+                        const resource =
+                            uri.scheme && uri.scheme !== Identifiers.InteractiveWindowIdentityScheme
+                                ? this.finishedApi!.convertSharedUriToLocal(uri)
+                                : uri;
+                        // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
+                        const notebook = (await this.createNotebook(
+                            resource,
+                            undefined,
+                            cancellation
+                        )) as HostJupyterNotebook;
+                        await notebook.onAttach(api);
+                    }
+                );
 
                 // See if we need to forward the port
                 await this.attemptToForwardPort(api, this.portToForward);
@@ -182,7 +197,10 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 defaultKernelInfoToUse = kernelInfoToUse;
             }
             if (possibleSession && kernelInfoToUse) {
-                await possibleSession.changeKernel(kernelInfoToUse, this.configService.getSettings().datascience.jupyterLaunchTimeout);
+                await possibleSession.changeKernel(
+                    kernelInfoToUse,
+                    this.configService.getSettings().datascience.jupyterLaunchTimeout
+                );
             }
             launchInfo.kernelSpec = defaultKernelInfoToUse;
         }
@@ -230,7 +248,10 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     private async attemptToForwardPort(api: vsls.LiveShare | null | undefined, port: number): Promise<void> {
         if (port !== 0 && api && api.session && api.session.role === vsls.Role.Host) {
             this.portToForward = 0;
-            this.sharedPort = await api.shareServer({ port, displayName: localize.DataScience.liveShareHostFormat().format(os.hostname()) });
+            this.sharedPort = await api.shareServer({
+                port,
+                displayName: localize.DataScience.liveShareHostFormat().format(os.hostname())
+            });
         } else {
             this.portToForward = port;
         }

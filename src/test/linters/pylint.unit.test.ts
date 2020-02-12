@@ -35,7 +35,9 @@ suite('Pylint - Function hasConfigurationFile()', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        fileSystem.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns((a, b) => a === b);
+        fileSystem
+            .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .returns((a, b) => a === b);
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
     });
@@ -50,8 +52,12 @@ suite('Pylint - Function hasConfigurationFile()', () => {
 
     pylintrcFiles.forEach(pylintrcFile => {
         test(`If ${pylintrcFile} exists in the current working directory, return true`, async () => {
-            fileSystem.setup(x => x.fileExists(path.join(folder, pylintrc))).returns(() => Promise.resolve(pylintrc === pylintrcFile));
-            fileSystem.setup(x => x.fileExists(path.join(folder, dotPylintrc))).returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
+            fileSystem
+                .setup(x => x.fileExists(path.join(folder, pylintrc)))
+                .returns(() => Promise.resolve(pylintrc === pylintrcFile));
+            fileSystem
+                .setup(x => x.fileExists(path.join(folder, dotPylintrc)))
+                .returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
             const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
             expect(hasConfig).to.equal(true, 'Should return true');
         });
@@ -74,8 +80,12 @@ suite('Pylint - Function hasConfigurationFile()', () => {
                 .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), '__init__.py')))
                 .returns(() => Promise.resolve(true))
                 .verifiable(TypeMoq.Times.once());
-            fileSystem.setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), pylintrc))).returns(() => Promise.resolve(pylintrc === pylintrcFile));
-            fileSystem.setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), dotPylintrc))).returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
+            fileSystem
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), pylintrc)))
+                .returns(() => Promise.resolve(pylintrc === pylintrcFile));
+            fileSystem
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), dotPylintrc)))
+                .returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
             const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
             expect(hasConfig).to.equal(true, 'Should return true');
             fileSystem.verifyAll();
@@ -90,8 +100,12 @@ suite('Pylint - Function hasConfigurationFile()', () => {
                 .setup(x => x.fileExists(path.join(folder, '__init__.py')))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.once());
-            fileSystem.setup(x => x.fileExists(path.join(home, '.config', pylintrc))).returns(() => Promise.resolve(pylintrc === pylintrcFile));
-            fileSystem.setup(x => x.fileExists(path.join(home, dotPylintrc))).returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
+            fileSystem
+                .setup(x => x.fileExists(path.join(home, '.config', pylintrc)))
+                .returns(() => Promise.resolve(pylintrc === pylintrcFile));
+            fileSystem
+                .setup(x => x.fileExists(path.join(home, dotPylintrc)))
+                .returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
             const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
             expect(hasConfig).to.equal(true, 'Should return true');
             fileSystem.verifyAll();
@@ -189,7 +203,9 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        fileSystem.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns((a, b) => a === b);
+        fileSystem
+            .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .returns((a, b) => a === b);
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
     });
@@ -245,8 +261,12 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.once());
 
-            fileSystem.setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), pylintrc))).returns(() => Promise.resolve(pylintrc === pylintrcFile));
-            fileSystem.setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), dotPylintrc))).returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
+            fileSystem
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), pylintrc)))
+                .returns(() => Promise.resolve(pylintrc === pylintrcFile));
+            fileSystem
+                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), dotPylintrc)))
+                .returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
 
             fileSystem
                 .setup(x => x.fileExists(path.join(path.join('user', 'a'), pylintrc)))
@@ -306,12 +326,22 @@ suite('Pylint - Function runLinter()', () => {
     const doc = {
         uri: vscode.Uri.file('path/to/doc')
     };
-    const args = ["--msg-template='{line},{column},{category},{symbol}:{msg}'", '--reports=n', '--output-format=text', doc.uri.fsPath];
+    const args = [
+        "--msg-template='{line},{column},{category},{symbol}:{msg}'",
+        '--reports=n',
+        '--output-format=text',
+        doc.uri.fsPath
+    ];
     const original_hasConfigurationFileInWorkspace = Pylint.hasConfigurationFileInWorkspace;
     const original_hasConfigurationFile = Pylint.hasConfigurationFile;
 
     class PylintTest extends Pylint {
-        public async run(_args: string[], _document: vscode.TextDocument, _cancellation: vscode.CancellationToken, _regEx: string): Promise<ILintMessage[]> {
+        public async run(
+            _args: string[],
+            _document: vscode.TextDocument,
+            _cancellation: vscode.CancellationToken,
+            _regEx: string
+        ): Promise<ILintMessage[]> {
             return [];
         }
         public parseMessagesSeverity(_error: string, _categorySeverity: any): LintMessageSeverity {
@@ -321,7 +351,10 @@ suite('Pylint - Function runLinter()', () => {
             return _info.object;
         }
         // tslint:disable-next-line: no-unnecessary-override
-        public async runLinter(document: vscode.TextDocument, cancellation: vscode.CancellationToken): Promise<ILintMessage[]> {
+        public async runLinter(
+            document: vscode.TextDocument,
+            cancellation: vscode.CancellationToken
+        ): Promise<ILintMessage[]> {
             return super.runLinter(document, cancellation);
         }
         public getWorkspaceRootPath(_document: vscode.TextDocument): string {
@@ -338,12 +371,18 @@ suite('Pylint - Function runLinter()', () => {
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         manager = TypeMoq.Mock.ofType<ILinterManager>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILinterManager))).returns(() => manager.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+            .returns(() => configService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspaceService.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        fileSystem.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns((a, b) => a === b);
+        fileSystem
+            .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .returns((a, b) => a === b);
         manager.setup(m => m.getLinterInfo(TypeMoq.It.isAny())).returns(() => undefined as any);
     });
 

@@ -40,8 +40,13 @@ suite('Nuget Azure Storage Repository', () => {
         public contructor() {
             this.calls = [];
         }
-        // tslint:disable-next-line:no-any
-        public listBlobsSegmentedWithPrefix(c: string, p: string, t: any, cb: ErrorOrResult<BlobService.ListBlobsResult>) {
+        public listBlobsSegmentedWithPrefix(
+            c: string,
+            p: string,
+            // tslint:disable-next-line:no-any
+            t: any,
+            cb: ErrorOrResult<BlobService.ListBlobsResult>
+        ) {
             this.calls.push([c, p, t]);
             const result: BlobService.ListBlobsResult = { entries: this.results! };
             // tslint:disable-next-line:no-any
@@ -58,23 +63,35 @@ suite('Nuget Azure Storage Repository', () => {
     for (const [uri, setting, expected] of tests) {
         test(`Get all packages ("${uri}" / ${setting})`, async () => {
             if (uri.startsWith('https://')) {
-                serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
+                serviceContainer
+                    .setup(c => c.get(typeMoq.It.isValue(IWorkspaceService)))
+                    .returns(() => workspace.object);
                 workspace.setup(w => w.getConfiguration('http', undefined)).returns(() => cfg.object);
                 cfg.setup(c => c.get('proxyStrictSSL', true)).returns(() => setting);
             }
             const blobstore = new FakeBlobStore();
             // tslint:disable:no-object-literal-type-assertion
-            blobstore.results = [{ name: 'Azarath' } as BlobService.BlobResult, { name: 'Metrion' } as BlobService.BlobResult, { name: 'Zinthos' } as BlobService.BlobResult];
+            blobstore.results = [
+                { name: 'Azarath' } as BlobService.BlobResult,
+                { name: 'Metrion' } as BlobService.BlobResult,
+                { name: 'Zinthos' } as BlobService.BlobResult
+            ];
             // tslint:enable:no-object-literal-type-assertion
             const version = new SemVer('1.1.1');
             blobstore.results.forEach(r => {
                 nugetService.setup(n => n.getVersionFromPackageFileName(r.name)).returns(() => version);
             });
             let actualURI = '';
-            const repo = new AzureBlobStoreNugetRepository(serviceContainer.object, uri, 'spam', 'eggs', async uriArg => {
-                actualURI = uriArg;
-                return blobstore;
-            });
+            const repo = new AzureBlobStoreNugetRepository(
+                serviceContainer.object,
+                uri,
+                'spam',
+                'eggs',
+                async uriArg => {
+                    actualURI = uriArg;
+                    return blobstore;
+                }
+            );
 
             const packages = await repo.getPackages(packageName, undefined);
 

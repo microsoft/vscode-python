@@ -96,7 +96,13 @@ suite('Terminal - Django Shell Code Execution', () => {
         const terminalArgs = ['-a', 'b', 'c'];
         const expectedTerminalArgs = terminalArgs.concat('manage.py', 'shell');
 
-        await testReplCommandArguments(true, pythonPath, 'c:/program files/python/python.exe', terminalArgs, expectedTerminalArgs);
+        await testReplCommandArguments(
+            true,
+            pythonPath,
+            'c:/program files/python/python.exe',
+            terminalArgs,
+            expectedTerminalArgs
+        );
     });
 
     test('Ensure fully qualified python path is returned as is, when building repl args on Windows', async () => {
@@ -137,7 +143,10 @@ suite('Terminal - Django Shell Code Execution', () => {
         const workspaceUri = Uri.file(path.join('c', 'usr', 'program files'));
         const workspaceFolder: WorkspaceFolder = { index: 0, name: 'blah', uri: workspaceUri };
         workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
-        const expectedTerminalArgs = terminalArgs.concat(`${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`, 'shell');
+        const expectedTerminalArgs = terminalArgs.concat(
+            `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`,
+            'shell'
+        );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
     });
@@ -148,7 +157,10 @@ suite('Terminal - Django Shell Code Execution', () => {
         const workspaceUri = Uri.file(path.join('c', 'usr', 'programfiles'));
         const workspaceFolder: WorkspaceFolder = { index: 0, name: 'blah', uri: workspaceUri };
         workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
-        const expectedTerminalArgs = terminalArgs.concat(path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(), 'shell');
+        const expectedTerminalArgs = terminalArgs.concat(
+            path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(),
+            'shell'
+        );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
     });
@@ -160,7 +172,10 @@ suite('Terminal - Django Shell Code Execution', () => {
         const workspaceFolder: WorkspaceFolder = { index: 0, name: 'blah', uri: workspaceUri };
         workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
         workspace.setup(w => w.workspaceFolders).returns(() => [workspaceFolder]);
-        const expectedTerminalArgs = terminalArgs.concat(`${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`, 'shell');
+        const expectedTerminalArgs = terminalArgs.concat(
+            `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`,
+            'shell'
+        );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
     });
@@ -172,19 +187,33 @@ suite('Terminal - Django Shell Code Execution', () => {
         const workspaceFolder: WorkspaceFolder = { index: 0, name: 'blah', uri: workspaceUri };
         workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
         workspace.setup(w => w.workspaceFolders).returns(() => [workspaceFolder]);
-        const expectedTerminalArgs = terminalArgs.concat(path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(), 'shell');
+        const expectedTerminalArgs = terminalArgs.concat(
+            path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(),
+            'shell'
+        );
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
     });
 
-    async function testReplCondaCommandArguments(pythonPath: string, terminalArgs: string[], condaEnv: { name: string; path: string }, resource?: Uri) {
+    async function testReplCondaCommandArguments(
+        pythonPath: string,
+        terminalArgs: string[],
+        condaEnv: { name: string; path: string },
+        resource?: Uri
+    ) {
         settings.setup(s => s.pythonPath).returns(() => pythonPath);
         terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
 
         const condaFile = 'conda';
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const processService = TypeMoq.Mock.ofType<IProcessService>();
-        const condaExecutionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, condaEnv);
+        const condaExecutionService = new CondaExecutionService(
+            serviceContainer.object,
+            processService.object,
+            pythonPath,
+            condaFile,
+            condaEnv
+        );
         const expectedTerminalArgs = [...terminalArgs, 'manage.py', 'shell'];
         pythonExecutionFactory
             .setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))

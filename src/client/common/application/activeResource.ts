@@ -9,14 +9,18 @@ import { IActiveResourceService, IDocumentManager, IWorkspaceService } from './t
 
 @injectable()
 export class ActiveResourceService implements IActiveResourceService {
-    constructor(@inject(IDocumentManager) private readonly documentManager: IDocumentManager, @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {}
+    constructor(
+        @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+    ) {}
 
     public getActiveResource(): Resource {
         const editor = this.documentManager.activeTextEditor;
         if (editor && !editor.document.isUntitled) {
             return editor.document.uri;
         }
-        return Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length > 0
+        return Array.isArray(this.workspaceService.workspaceFolders) &&
+            this.workspaceService.workspaceFolders.length > 0
             ? this.workspaceService.workspaceFolders[0].uri
             : undefined;
     }

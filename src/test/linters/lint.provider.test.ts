@@ -20,7 +20,10 @@ import {
     WORKSPACE_MEMENTO
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
-import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
+import {
+    IInterpreterAutoSelectionService,
+    IInterpreterAutoSeletionProxyService
+} from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -89,8 +92,14 @@ suite('Linting - Provider', () => {
         serviceManager.addSingletonInstance<IInstaller>(IInstaller, linterInstaller.object);
         serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
         serviceManager.add(IAvailableLinterActivator, AvailableLinterActivator);
-        serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingleton<IInterpreterAutoSelectionService>(
+            IInterpreterAutoSelectionService,
+            MockAutoSelectionService
+        );
+        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
+            IInterpreterAutoSeletionProxyService,
+            MockAutoSelectionService
+        );
         serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         serviceManager.addSingleton<vscode.Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
         serviceManager.addSingleton<vscode.Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);

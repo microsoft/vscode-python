@@ -80,7 +80,11 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
 
     return textEdits;
 }
-export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot: string | undefined, fs: IFileSystem): WorkspaceEdit {
+export function getWorkspaceEditsFromPatch(
+    filePatches: string[],
+    workspaceRoot: string | undefined,
+    fs: IFileSystem
+): WorkspaceEdit {
     const workspaceEdit = new WorkspaceEdit();
     filePatches.forEach(patch => {
         const indexOfAtAt = patch.indexOf('@@');

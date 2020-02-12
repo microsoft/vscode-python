@@ -28,8 +28,12 @@ export async function getOrCreateInteractiveWindow(ioc: DataScienceIocContainer)
     return window;
 }
 
-// tslint:disable-next-line:no-any
-export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
+export function runMountedTest(
+    name: string,
+    // tslint:disable-next-line:no-any
+    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
+    getIOC: () => DataScienceIocContainer
+) {
     test(name, async () => {
         const ioc = getIOC();
         const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);

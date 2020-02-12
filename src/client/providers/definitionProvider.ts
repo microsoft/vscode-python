@@ -13,12 +13,21 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
             const definitions = data.definitions.filter(d => d.text === possibleWord);
             const definition = definitions.length > 0 ? definitions[0] : data.definitions[data.definitions.length - 1];
             const definitionResource = vscode.Uri.file(definition.fileName);
-            const range = new vscode.Range(definition.range.startLine, definition.range.startColumn, definition.range.endLine, definition.range.endColumn);
+            const range = new vscode.Range(
+                definition.range.startLine,
+                definition.range.startColumn,
+                definition.range.endLine,
+                definition.range.endColumn
+            );
             return new vscode.Location(definitionResource, range);
         }
     }
     @captureTelemetry(EventName.DEFINITION)
-    public async provideDefinition(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.Definition | undefined> {
+    public async provideDefinition(
+        document: vscode.TextDocument,
+        position: vscode.Position,
+        token: vscode.CancellationToken
+    ): Promise<vscode.Definition | undefined> {
         const filename = document.fileName;
         if (document.lineAt(position.line).text.match(/^\s*\/\//)) {
             return;
@@ -42,7 +51,9 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
             cmd.source = document.getText();
         }
         const possibleWord = document.getText(range);
-        const data = await this.jediFactory.getJediProxyHandler<proxy.IDefinitionResult>(document.uri).sendCommand(cmd, token);
+        const data = await this.jediFactory
+            .getJediProxyHandler<proxy.IDefinitionResult>(document.uri)
+            .sendCommand(cmd, token);
         return data ? PythonDefinitionProvider.parseData(data, possibleWord) : undefined;
     }
 }

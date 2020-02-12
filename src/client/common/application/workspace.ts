@@ -43,10 +43,25 @@ export class WorkspaceService implements IWorkspaceService {
     public asRelativePath(pathOrUri: string | Uri, includeWorkspaceFolder?: boolean): string {
         return workspace.asRelativePath(pathOrUri, includeWorkspaceFolder);
     }
-    public createFileSystemWatcher(globPattern: GlobPattern, _ignoreCreateEvents?: boolean, ignoreChangeEvents?: boolean, ignoreDeleteEvents?: boolean): FileSystemWatcher {
-        return workspace.createFileSystemWatcher(globPattern, ignoreChangeEvents, ignoreChangeEvents, ignoreDeleteEvents);
+    public createFileSystemWatcher(
+        globPattern: GlobPattern,
+        _ignoreCreateEvents?: boolean,
+        ignoreChangeEvents?: boolean,
+        ignoreDeleteEvents?: boolean
+    ): FileSystemWatcher {
+        return workspace.createFileSystemWatcher(
+            globPattern,
+            ignoreChangeEvents,
+            ignoreChangeEvents,
+            ignoreDeleteEvents
+        );
     }
-    public findFiles(include: GlobPattern, exclude?: GlobPattern, maxResults?: number, token?: CancellationToken): Thenable<Uri[]> {
+    public findFiles(
+        include: GlobPattern,
+        exclude?: GlobPattern,
+        maxResults?: number,
+        token?: CancellationToken
+    ): Thenable<Uri[]> {
         return workspace.findFiles(include, exclude, maxResults, token);
     }
     public getWorkspaceFolderIdentifier(resource: Resource, defaultValue: string = ''): string {

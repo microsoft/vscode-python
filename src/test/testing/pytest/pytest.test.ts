@@ -10,12 +10,21 @@ import { rootWorkspaceUri, updateSetting } from '../../common';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
-const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'single');
+const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
+    EXTENSION_ROOT_DIR,
+    'src',
+    'test',
+    'pythonFiles',
+    'testFiles',
+    'single'
+);
 
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - pytest - discovery against actual python process', () => {
     let ioc: UnitTestIocContainer;
-    const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
+    const configTarget = IS_MULTI_ROOT_TEST
+        ? vscode.ConfigurationTarget.WorkspaceFolder
+        : vscode.ConfigurationTarget.Workspace;
     suiteSetup(async () => {
         await initialize();
         await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);

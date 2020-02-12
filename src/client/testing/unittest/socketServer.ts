@@ -43,7 +43,8 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
         });
         this.log('starting server as', 'TCP');
         options.port = typeof options.port === 'number' ? options.port! : 0;
-        options.host = typeof options.host === 'string' && options.host!.trim().length > 0 ? options.host!.trim() : 'localhost';
+        options.host =
+            typeof options.host === 'string' && options.host!.trim().length > 0 ? options.host!.trim() : 'localhost';
         this.server!.listen(options, (socket: net.Socket) => {
             this.startedDef!.resolve((this.server!.address() as net.AddressInfo).port);
             this.startedDef = undefined;
@@ -75,7 +76,10 @@ export class UnitTestSocketServer extends EventEmitter implements IUnitTestSocke
                 if (startIndex === -1) {
                     return;
                 }
-                const lengthOfMessage = parseInt(dataStr.slice(dataStr.indexOf(':') + 1, dataStr.indexOf('{')).trim(), 10);
+                const lengthOfMessage = parseInt(
+                    dataStr.slice(dataStr.indexOf(':') + 1, dataStr.indexOf('{')).trim(),
+                    10
+                );
                 if (dataStr.length < startIndex + lengthOfMessage) {
                     return;
                 }

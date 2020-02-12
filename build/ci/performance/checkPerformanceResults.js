@@ -7,7 +7,13 @@ const path = require('path');
 const constants = require('../../constants');
 
 const xmlFile = path.join(constants.ExtensionRootDir, 'test-results.xml');
-const performanceResultsFile = path.join(constants.ExtensionRootDir, 'build', 'ci', 'performance', 'performance-results.json');
+const performanceResultsFile = path.join(
+    constants.ExtensionRootDir,
+    'build',
+    'ci',
+    'performance',
+    'performance-results.json'
+);
 const errorMargin = 0.01;
 let failedTests = '';
 
@@ -40,12 +46,29 @@ fs.readFile(xmlFile, 'utf8', (xmlFileError, xmlData) => {
 
                             // compare the average result to the base JSON
                             if (testcase && avg > parseFloat(testcase.time) + errorMargin) {
-                                failedTests += 'Performance is slow in: ' + testcase.name + ', Benchmark time: ' + testcase.time + ', Average test time: ' + avg + '\n';
+                                failedTests +=
+                                    'Performance is slow in: ' +
+                                    testcase.name +
+                                    ', Benchmark time: ' +
+                                    testcase.time +
+                                    ', Average test time: ' +
+                                    avg +
+                                    '\n';
                             }
                         } else {
                             // compare the average result to the base JSON
-                            if (suite.testcase.name === result.name && avg > parseFloat(suite.testcase.time) + errorMargin) {
-                                failedTests += 'Performance is slow in: ' + testcase.name + ', Benchmark time: ' + testcase.time + ', Average test time: ' + avg + '\n';
+                            if (
+                                suite.testcase.name === result.name &&
+                                avg > parseFloat(suite.testcase.time) + errorMargin
+                            ) {
+                                failedTests +=
+                                    'Performance is slow in: ' +
+                                    testcase.name +
+                                    ', Benchmark time: ' +
+                                    testcase.time +
+                                    ', Average test time: ' +
+                                    avg +
+                                    '\n';
                             }
                         }
                     }

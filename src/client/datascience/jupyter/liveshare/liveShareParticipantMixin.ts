@@ -24,11 +24,21 @@ export class LiveShareParticipantDefault implements IAsyncDisposable {
 }
 
 export function LiveShareParticipantGuest<T extends ClassType<IAsyncDisposable>>(SuperClass: T, serviceName: string) {
-    return LiveShareParticipantMixin<T, vsls.SharedServiceProxy | null>(SuperClass, vsls.Role.Guest, serviceName, waitForGuestService);
+    return LiveShareParticipantMixin<T, vsls.SharedServiceProxy | null>(
+        SuperClass,
+        vsls.Role.Guest,
+        serviceName,
+        waitForGuestService
+    );
 }
 
 export function LiveShareParticipantHost<T extends ClassType<IAsyncDisposable>>(SuperClass: T, serviceName: string) {
-    return LiveShareParticipantMixin<T, vsls.SharedService | null>(SuperClass, vsls.Role.Host, serviceName, waitForHostService);
+    return LiveShareParticipantMixin<T, vsls.SharedService | null>(
+        SuperClass,
+        vsls.Role.Host,
+        serviceName,
+        waitForHostService
+    );
 }
 
 /**

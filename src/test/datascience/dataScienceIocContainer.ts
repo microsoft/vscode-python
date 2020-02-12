@@ -48,10 +48,21 @@ import {
     ILanguageServerProxy,
     LanguageServerType
 } from '../../client/activation/types';
-import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
+import {
+    LSNotSupportedDiagnosticService,
+    LSNotSupportedDiagnosticServiceId
+} from '../../client/application/diagnostics/checks/lsNotSupported';
 import { DiagnosticFilterService } from '../../client/application/diagnostics/filter';
-import { DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../client/application/diagnostics/promptHandler';
-import { IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService } from '../../client/application/diagnostics/types';
+import {
+    DiagnosticCommandPromptHandlerService,
+    DiagnosticCommandPromptHandlerServiceId,
+    MessageCommandPrompt
+} from '../../client/application/diagnostics/promptHandler';
+import {
+    IDiagnosticFilterService,
+    IDiagnosticHandlerService,
+    IDiagnosticsService
+} from '../../client/application/diagnostics/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -98,7 +109,12 @@ import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessLogger } from '../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-import { IBufferDecoder, IProcessLogger, IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
+import {
+    IBufferDecoder,
+    IProcessLogger,
+    IProcessServiceFactory,
+    IPythonExecutionFactory
+} from '../../client/common/process/types';
 import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../client/common/terminal/environmentActivationProviders/commandPrompt';
 import { CondaActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
@@ -106,7 +122,12 @@ import { PipEnvActivationCommandProvider } from '../../client/common/terminal/en
 import { PyEnvActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalHelper } from '../../client/common/terminal/helper';
 import { TerminalNameShellDetector } from '../../client/common/terminal/shellDetectors/terminalNameShellDetector';
-import { IShellDetector, ITerminalActivationCommandProvider, ITerminalHelper, TerminalActivationProviders } from '../../client/common/terminal/types';
+import {
+    IShellDetector,
+    ITerminalActivationCommandProvider,
+    ITerminalHelper,
+    TerminalActivationProviders
+} from '../../client/common/terminal/types';
 import {
     BANNER_NAME_LS_SURVEY,
     IAsyncDisposableRegistry,
@@ -224,7 +245,12 @@ import { InterpreterComparer } from '../../client/interpreter/configuration/inte
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
-import { IInterpreterComparer, IInterpreterSelector, IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
+import {
+    IInterpreterComparer,
+    IInterpreterSelector,
+    IPythonPathUpdaterServiceFactory,
+    IPythonPathUpdaterServiceManager
+} from '../../client/interpreter/configuration/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -259,18 +285,30 @@ import { PythonInterpreterLocatorService } from '../../client/interpreter/locato
 import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
-import { CurrentPathService, PythonInPathCommandProvider } from '../../client/interpreter/locators/services/currentPathService';
-import { GlobalVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvService } from '../../client/interpreter/locators/services/globalVirtualEnvService';
+import {
+    CurrentPathService,
+    PythonInPathCommandProvider
+} from '../../client/interpreter/locators/services/currentPathService';
+import {
+    GlobalVirtualEnvironmentsSearchPathProvider,
+    GlobalVirtualEnvService
+} from '../../client/interpreter/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
 import { InterpreterFilter } from '../../client/interpreter/locators/services/interpreterFilter';
 import { InterpreterWatcherBuilder } from '../../client/interpreter/locators/services/interpreterWatcherBuilder';
-import { KnownPathsService, KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
+import {
+    KnownPathsService,
+    KnownSearchPathsForInterpreters
+} from '../../client/interpreter/locators/services/KnownPathsService';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from '../../client/interpreter/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
 import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
-import { WorkspaceVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvService } from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
+import {
+    WorkspaceVirtualEnvironmentsSearchPathProvider,
+    WorkspaceVirtualEnvService
+} from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
@@ -314,7 +352,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     })(undefined, new MockAutoSelectionService());
     private commandManager: MockCommandManager = new MockCommandManager();
     private setContexts: Record<string, boolean> = {};
-    private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{ name: string; value: boolean }>();
+    private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{
+        name: string;
+        value: boolean;
+    }>();
     private jupyterMock: MockJupyterManagerFactory | undefined;
     private shouldMockJupyter: boolean;
     private asyncRegistry: AsyncDisposableRegistry;
@@ -406,7 +447,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.registerFileSystemTypes();
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
-        this.serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, TestInteractiveWindowProvider);
+        this.serviceManager.addSingleton<IInteractiveWindowProvider>(
+            IInteractiveWindowProvider,
+            TestInteractiveWindowProvider
+        );
         this.serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
         this.serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, PlotViewerProvider);
         this.serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
@@ -421,14 +465,32 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
-        this.serviceManager.add<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters);
-        this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, this.asyncRegistry);
-        this.serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
-        this.serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
+        this.serviceManager.add<IKnownSearchPathsForInterpreters>(
+            IKnownSearchPathsForInterpreters,
+            KnownSearchPathsForInterpreters
+        );
+        this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(
+            IAsyncDisposableRegistry,
+            this.asyncRegistry
+        );
+        this.serviceManager.addSingleton<IPythonInPathCommandProvider>(
+            IPythonInPathCommandProvider,
+            PythonInPathCommandProvider
+        );
+        this.serviceManager.addSingleton<IEnvironmentActivationService>(
+            IEnvironmentActivationService,
+            EnvironmentActivationService
+        );
         this.serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
-        this.serviceManager.add<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider, DataScienceCodeLensProvider);
+        this.serviceManager.add<IDataScienceCodeLensProvider>(
+            IDataScienceCodeLensProvider,
+            DataScienceCodeLensProvider
+        );
         this.serviceManager.add<ICodeExecutionHelper>(ICodeExecutionHelper, CodeExecutionHelper);
-        this.serviceManager.add<IDataScienceCommandListener>(IDataScienceCommandListener, InteractiveWindowCommandListener);
+        this.serviceManager.add<IDataScienceCommandListener>(
+            IDataScienceCommandListener,
+            InteractiveWindowCommandListener
+        );
         this.serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
@@ -436,23 +498,45 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
         this.serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, TestNativeEditorProvider);
         this.serviceManager.add<INotebookEditor>(INotebookEditor, NativeEditor);
-        this.serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
-        this.serviceManager.addSingletonInstance<IOutputChannel>(IOutputChannel, mock(MockOutputChannel), JUPYTER_OUTPUT_CHANNEL);
+        this.serviceManager.addSingleton<IDataScienceCommandListener>(
+            IDataScienceCommandListener,
+            NativeEditorCommandListener
+        );
+        this.serviceManager.addSingletonInstance<IOutputChannel>(
+            IOutputChannel,
+            mock(MockOutputChannel),
+            JUPYTER_OUTPUT_CHANNEL
+        );
         this.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
-        this.serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
+        this.serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            ServerPreload
+        );
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
         mockExtensionContext.setup(m => m.globalStoragePath).returns(() => os.tmpdir());
         this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
-        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Bash, TerminalActivationProviders.bashCShellFish);
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+            ITerminalActivationCommandProvider,
+            Bash,
+            TerminalActivationProviders.bashCShellFish
+        );
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider,
             CommandPromptAndPowerShell,
             TerminalActivationProviders.commandPromptAndPowerShell
         );
-        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, TerminalActivationProviders.pyenv);
-        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, CondaActivationCommandProvider, TerminalActivationProviders.conda);
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+            ITerminalActivationCommandProvider,
+            PyEnvActivationCommandProvider,
+            TerminalActivationProviders.pyenv
+        );
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+            ITerminalActivationCommandProvider,
+            CondaActivationCommandProvider,
+            TerminalActivationProviders.conda
+        );
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
             ITerminalActivationCommandProvider,
             PipEnvActivationCommandProvider,
@@ -466,16 +550,34 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const languageServerType = LanguageServerType.Microsoft; // pythonSettings.languageServer;
 
         this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy);
-        this.serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
+        this.serviceManager.addSingleton<ILanguageServerCache>(
+            ILanguageServerCache,
+            LanguageServerExtensionActivationService
+        );
         this.serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
 
-        this.serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerType.Jedi);
+        this.serviceManager.add<ILanguageServerActivator>(
+            ILanguageServerActivator,
+            JediExtensionActivator,
+            LanguageServerType.Jedi
+        );
         if (languageServerType === LanguageServerType.Microsoft) {
-            this.serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, DotNetLanguageServerActivator, LanguageServerType.Microsoft);
+            this.serviceManager.add<ILanguageServerActivator>(
+                ILanguageServerActivator,
+                DotNetLanguageServerActivator,
+                LanguageServerType.Microsoft
+            );
             this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager);
-            this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
+            this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(
+                ILanguageServerAnalysisOptions,
+                MockLanguageServerAnalysisOptions
+            );
         } else if (languageServerType === LanguageServerType.Node) {
-            this.serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NodeLanguageServerActivator, LanguageServerType.Node);
+            this.serviceManager.add<ILanguageServerActivator>(
+                ILanguageServerActivator,
+                NodeLanguageServerActivator,
+                LanguageServerType.Node
+            );
             this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager);
         }
 
@@ -491,13 +593,23 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IGatherExecution>(IGatherExecution, GatherExecution);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
-        this.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        this.serviceManager.addSingleton<InterpeterHashProviderFactory>(
+            InterpeterHashProviderFactory,
+            InterpeterHashProviderFactory
+        );
         this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
         this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
         this.serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
-        this.serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId);
-        this.serviceManager.addSingleton<ILanguageServerCompatibilityService>(ILanguageServerCompatibilityService, LanguageServerCompatibilityService);
+        this.serviceManager.addSingleton<IDiagnosticsService>(
+            IDiagnosticsService,
+            LSNotSupportedDiagnosticService,
+            LSNotSupportedDiagnosticServiceId
+        );
+        this.serviceManager.addSingleton<ILanguageServerCompatibilityService>(
+            ILanguageServerCompatibilityService,
+            LanguageServerCompatibilityService
+        );
         this.serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(
             IDiagnosticHandlerService,
             DiagnosticCommandPromptHandlerService,
@@ -510,36 +622,79 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
         this.serviceManager.addSingleton<IShebangCodeLensProvider>(IShebangCodeLensProvider, ShebangCodeLensProvider);
         this.serviceManager.addSingleton<IProductService>(IProductService, ProductService);
-        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);
-        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, FormatterProductPathService, ProductType.Formatter);
-        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
-        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
-        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
-        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience);
+        this.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            CTagsProductPathService,
+            ProductType.WorkspaceSymbols
+        );
+        this.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            FormatterProductPathService,
+            ProductType.Formatter
+        );
+        this.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            LinterProductPathService,
+            ProductType.Linter
+        );
+        this.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            TestFrameworkProductPathService,
+            ProductType.TestFramework
+        );
+        this.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            RefactoringLibraryProductPathService,
+            ProductType.RefactoringLibrary
+        );
+        this.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            DataScienceProductPathService,
+            ProductType.DataScience
+        );
         this.serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
 
         // No need of reporting progress.
         const progressReporter = mock(ProgressReporter);
-        when(progressReporter.createProgressIndicator(anything())).thenReturn({ dispose: noop, token: new CancellationTokenSource().token });
+        when(progressReporter.createProgressIndicator(anything())).thenReturn({
+            dispose: noop,
+            token: new CancellationTokenSource().token
+        });
         this.serviceManager.addSingletonInstance<ProgressReporter>(ProgressReporter, instance(progressReporter));
 
         // Don't check for dot net compatibility
         const dotNetCompability = mock(DotNetCompatibilityService);
         when(dotNetCompability.isSupported()).thenResolve(true);
-        this.serviceManager.addSingletonInstance<IDotNetCompatibilityService>(IDotNetCompatibilityService, instance(dotNetCompability));
+        this.serviceManager.addSingletonInstance<IDotNetCompatibilityService>(
+            IDotNetCompatibilityService,
+            instance(dotNetCompability)
+        );
 
         // Don't allow a banner to show up
         const extensionBanner = mock(LanguageServerSurveyBanner);
-        this.serviceManager.addSingletonInstance<IPythonExtensionBanner>(IPythonExtensionBanner, instance(extensionBanner), BANNER_NAME_LS_SURVEY);
+        this.serviceManager.addSingletonInstance<IPythonExtensionBanner>(
+            IPythonExtensionBanner,
+            instance(extensionBanner),
+            BANNER_NAME_LS_SURVEY
+        );
 
         // Don't allow the download to happen
         const downloader = mock(LanguageServerDownloader);
-        this.serviceManager.addSingletonInstance<ILanguageServerDownloader>(ILanguageServerDownloader, instance(downloader));
+        this.serviceManager.addSingletonInstance<ILanguageServerDownloader>(
+            ILanguageServerDownloader,
+            instance(downloader)
+        );
 
         const folderService = mock(DotNetLanguageServerFolderService);
         const packageService = mock(DotNetLanguageServerPackageService);
-        this.serviceManager.addSingletonInstance<ILanguageServerFolderService>(ILanguageServerFolderService, instance(folderService));
-        this.serviceManager.addSingletonInstance<ILanguageServerPackageService>(ILanguageServerPackageService, instance(packageService));
+        this.serviceManager.addSingletonInstance<ILanguageServerFolderService>(
+            ILanguageServerFolderService,
+            instance(folderService)
+        );
+        this.serviceManager.addSingletonInstance<ILanguageServerPackageService>(
+            ILanguageServerPackageService,
+            instance(packageService)
+        );
 
         // Disable experiments.
         const experimentManager = mock(ExperimentsManager);
@@ -631,7 +786,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 noop();
             }
         }
-        when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(new MockFileSystemWatcher());
+        when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(
+            new MockFileSystemWatcher()
+        );
         when(workspaceService.createFileSystemWatcher(anything())).thenReturn(new MockFileSystemWatcher());
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
@@ -652,75 +809,181 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             activateEnvInCurrentTerminal: false
         };
 
-        this.serviceManager.addSingleton<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider, EnvironmentVariablesProvider);
-        this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global');
+        this.serviceManager.addSingleton<IEnvironmentVariablesProvider>(
+            IEnvironmentVariablesProvider,
+            EnvironmentVariablesProvider
+        );
+        this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
+            IVirtualEnvironmentsSearchPathProvider,
+            GlobalVirtualEnvironmentsSearchPathProvider,
+            'global'
+        );
         this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
             IVirtualEnvironmentsSearchPathProvider,
             WorkspaceVirtualEnvironmentsSearchPathProvider,
             'workspace'
         );
-        this.serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
+        this.serviceManager.addSingleton<IVirtualEnvironmentManager>(
+            IVirtualEnvironmentManager,
+            VirtualEnvironmentManager
+        );
 
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
         this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
-        this.serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configurationService.object);
+        this.serviceManager.addSingletonInstance<IConfigurationService>(
+            IConfigurationService,
+            configurationService.object
+        );
         this.serviceManager.addSingletonInstance<IDataScience>(IDataScience, this.datascience.object);
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
-        this.serviceManager.addSingleton<IEnvironmentVariablesService>(IEnvironmentVariablesService, EnvironmentVariablesService);
+        this.serviceManager.addSingleton<IEnvironmentVariablesService>(
+            IEnvironmentVariablesService,
+            EnvironmentVariablesService
+        );
         this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         this.serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 
-        this.serviceManager.add<IInterpreterWatcher>(IInterpreterWatcher, WorkspaceVirtualEnvWatcherService, WORKSPACE_VIRTUAL_ENV_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterWatcherBuilder>(IInterpreterWatcherBuilder, InterpreterWatcherBuilder);
+        this.serviceManager.add<IInterpreterWatcher>(
+            IInterpreterWatcher,
+            WorkspaceVirtualEnvWatcherService,
+            WORKSPACE_VIRTUAL_ENV_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterWatcherBuilder>(
+            IInterpreterWatcherBuilder,
+            InterpreterWatcherBuilder
+        );
 
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PythonInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, CondaEnvFileService, CONDA_ENV_FILE_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, CondaEnvService, CONDA_ENV_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, CurrentPathService, CURRENT_PATH_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, GlobalVirtualEnvService, GLOBAL_VIRTUAL_ENV_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, WorkspaceVirtualEnvService, WORKSPACE_VIRTUAL_ENV_SERVICE);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PipEnvService, PIPENV_SERVICE);
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            PythonInterpreterLocatorService,
+            INTERPRETER_LOCATOR_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            CondaEnvFileService,
+            CONDA_ENV_FILE_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            CondaEnvService,
+            CONDA_ENV_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            CurrentPathService,
+            CURRENT_PATH_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            GlobalVirtualEnvService,
+            GLOBAL_VIRTUAL_ENV_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            WorkspaceVirtualEnvService,
+            WORKSPACE_VIRTUAL_ENV_SERVICE
+        );
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            PipEnvService,
+            PIPENV_SERVICE
+        );
         this.serviceManager.addSingleton<IInterpreterLocatorService>(IPipEnvService, PipEnvService);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, WindowsRegistryService, WINDOWS_REGISTRY_SERVICE);
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            WindowsRegistryService,
+            WINDOWS_REGISTRY_SERVICE
+        );
 
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, KnownPathsService, KNOWN_PATH_SERVICE);
+        this.serviceManager.addSingleton<IInterpreterLocatorService>(
+            IInterpreterLocatorService,
+            KnownPathsService,
+            KNOWN_PATH_SERVICE
+        );
 
         this.serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
-        this.serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
+        this.serviceManager.addSingleton<IInterpreterLocatorHelper>(
+            IInterpreterLocatorHelper,
+            InterpreterLocatorHelper
+        );
         this.serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, InterpreterComparer);
-        this.serviceManager.addSingleton<IInterpreterVersionService>(IInterpreterVersionService, InterpreterVersionService);
+        this.serviceManager.addSingleton<IInterpreterVersionService>(
+            IInterpreterVersionService,
+            InterpreterVersionService
+        );
         this.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         this.serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
 
-        this.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(IPythonPathUpdaterServiceFactory, PythonPathUpdaterServiceFactory);
-        this.serviceManager.addSingleton<IPythonPathUpdaterServiceManager>(IPythonPathUpdaterServiceManager, PythonPathUpdaterService);
+        this.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(
+            IPythonPathUpdaterServiceFactory,
+            PythonPathUpdaterServiceFactory
+        );
+        this.serviceManager.addSingleton<IPythonPathUpdaterServiceManager>(
+            IPythonPathUpdaterServiceManager,
+            PythonPathUpdaterService
+        );
 
         const currentProcess = new CurrentProcess();
         this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
 
-        this.serviceManager.addSingleton<JupyterInterpreterStateStore>(JupyterInterpreterStateStore, JupyterInterpreterStateStore);
-        this.serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, JupyterInterpreterSelectionCommand);
-        this.serviceManager.addSingleton<JupyterInterpreterSelector>(JupyterInterpreterSelector, JupyterInterpreterSelector);
-        this.serviceManager.addSingleton<JupyterInterpreterDependencyService>(JupyterInterpreterDependencyService, JupyterInterpreterDependencyService);
-        this.serviceManager.addSingleton<JupyterInterpreterService>(JupyterInterpreterService, JupyterInterpreterService);
-        this.serviceManager.addSingleton<JupyterInterpreterOldCacheStateStore>(JupyterInterpreterOldCacheStateStore, JupyterInterpreterOldCacheStateStore);
-        this.serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
+        this.serviceManager.addSingleton<JupyterInterpreterStateStore>(
+            JupyterInterpreterStateStore,
+            JupyterInterpreterStateStore
+        );
+        this.serviceManager.addSingleton<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService,
+            JupyterInterpreterSelectionCommand
+        );
+        this.serviceManager.addSingleton<JupyterInterpreterSelector>(
+            JupyterInterpreterSelector,
+            JupyterInterpreterSelector
+        );
+        this.serviceManager.addSingleton<JupyterInterpreterDependencyService>(
+            JupyterInterpreterDependencyService,
+            JupyterInterpreterDependencyService
+        );
+        this.serviceManager.addSingleton<JupyterInterpreterService>(
+            JupyterInterpreterService,
+            JupyterInterpreterService
+        );
+        this.serviceManager.addSingleton<JupyterInterpreterOldCacheStateStore>(
+            JupyterInterpreterOldCacheStateStore,
+            JupyterInterpreterOldCacheStateStore
+        );
+        this.serviceManager.addSingleton<ActiveEditorContextService>(
+            ActiveEditorContextService,
+            ActiveEditorContextService
+        );
 
         if (this.useCommandFinderForJupyterServer) {
-            this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterCommandFinderInterpreterExecutionService);
-            this.serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterCommandInterpreterDependencyService);
+            this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(
+                IJupyterSubCommandExecutionService,
+                JupyterCommandFinderInterpreterExecutionService
+            );
+            this.serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(
+                IJupyterInterpreterDependencyManager,
+                JupyterCommandInterpreterDependencyService
+            );
         } else {
-            this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterInterpreterSubCommandExecutionService);
-            this.serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterInterpreterSubCommandExecutionService);
+            this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(
+                IJupyterSubCommandExecutionService,
+                JupyterInterpreterSubCommandExecutionService
+            );
+            this.serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(
+                IJupyterInterpreterDependencyManager,
+                JupyterInterpreterSubCommandExecutionService
+            );
         }
 
         // Don't use conda at all during functional tests.
         const condaService = TypeMoq.Mock.ofType<ICondaService>();
         this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
         condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
-        condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
+        condaService
+            .setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
+            .returns(() => Promise.resolve(false));
         condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);
 
         // Create our jupyter mock if necessary
@@ -736,7 +999,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
             this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
-            this.serviceManager.addSingleton<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory, JupyterSessionManagerFactory);
+            this.serviceManager.addSingleton<IJupyterSessionManagerFactory>(
+                IJupyterSessionManagerFactory,
+                JupyterSessionManagerFactory
+            );
             this.serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
             this.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         }
@@ -752,14 +1018,20 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             .returns(e => {
                 throw e;
             });
-        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+        appShell
+            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(''));
         appShell
             .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
         appShell
-            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(a =>
+                a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+            )
             .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
-        appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('test.ipynb')));
+        appShell
+            .setup(a => a.showSaveDialog(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(Uri.file('test.ipynb')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
         appShell.setup(a => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve('Python'));
 
@@ -772,12 +1044,17 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     public async activate(): Promise<void> {
         // Activate all of the extension activation services
-        const activationServices = this.serviceManager.getAll<IExtensionSingleActivationService>(IExtensionSingleActivationService);
+        const activationServices = this.serviceManager.getAll<IExtensionSingleActivationService>(
+            IExtensionSingleActivationService
+        );
         await Promise.all(activationServices.map(a => a.activate()));
     }
 
     // tslint:disable:any
-    public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, role: vsls.Role = vsls.Role.None) {
+    public createWebView(
+        mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
+        role: vsls.Role = vsls.Role.None
+    ) {
         // Force the container to mock actual live share if necessary
         if (role !== vsls.Role.None) {
             const liveShareTest = this.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
@@ -786,7 +1063,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         if (!this.webPanelProvider) {
             this.webPanelProvider = TypeMoq.Mock.ofType<IWebPanelProvider>();
-            this.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, this.webPanelProvider.object);
+            this.serviceManager.addSingletonInstance<IWebPanelProvider>(
+                IWebPanelProvider,
+                this.webPanelProvider.object
+            );
         } else {
             this.webPanelProvider.reset();
         }
@@ -806,7 +1086,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                     // This needs to be async because we are being called in the ctor of the webpanel. It can't
                     // handle some messages during the ctor.
                     setTimeout(() => {
-                        this.missedMessages.forEach(m => (this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()));
+                        this.missedMessages.forEach(m =>
+                            this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()
+                        );
                     }, 0);
 
                     // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
@@ -916,7 +1198,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private findPythonPath(): string {
         try {
             // Give preference to the CI test python (could also be set in launch.json for debugging).
-            const output = child_process.execFileSync(process.env.CI_PYTHON_PATH || 'python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
+            const output = child_process.execFileSync(
+                process.env.CI_PYTHON_PATH || 'python',
+                ['-c', 'import sys;print(sys.executable)'],
+                { encoding: 'utf8' }
+            );
             return output.replace(/\r?\n/g, '');
         } catch (ex) {
             return 'python';

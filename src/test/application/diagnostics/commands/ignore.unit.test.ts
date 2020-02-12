@@ -5,7 +5,12 @@
 
 import * as typemoq from 'typemoq';
 import { IgnoreDiagnosticCommand } from '../../../../client/application/diagnostics/commands/ignore';
-import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticFilterService } from '../../../../client/application/diagnostics/types';
+import {
+    DiagnosticScope,
+    IDiagnostic,
+    IDiagnosticCommand,
+    IDiagnosticFilterService
+} from '../../../../client/application/diagnostics/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
 // tslint:disable:no-any
@@ -31,7 +36,9 @@ suite('Application Diagnostics - Commands Ignore', () => {
             .setup(d => d.code)
             .returns(() => 'xyz' as any)
             .verifiable(typemoq.Times.once());
-        filterService.setup(s => s.ignoreDiagnostic(typemoq.It.isValue('xyz'), typemoq.It.isValue(DiagnosticScope.Global))).verifiable(typemoq.Times.once());
+        filterService
+            .setup(s => s.ignoreDiagnostic(typemoq.It.isValue('xyz'), typemoq.It.isValue(DiagnosticScope.Global)))
+            .verifiable(typemoq.Times.once());
 
         await ignoreCommand.invoke();
         serviceContainer.verifyAll();

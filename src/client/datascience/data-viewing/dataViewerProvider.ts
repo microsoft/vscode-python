@@ -51,13 +51,21 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
         return result;
     }
 
-    public async getPandasVersion(notebook: INotebook): Promise<{ major: number; minor: number; build: number } | undefined> {
+    public async getPandasVersion(
+        notebook: INotebook
+    ): Promise<{ major: number; minor: number; build: number } | undefined> {
         const interpreter = notebook.getMatchingInterpreter();
 
         if (interpreter) {
-            const launcher = await this.pythonFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
+            const launcher = await this.pythonFactory.createActivatedEnvironment({
+                resource: undefined,
+                interpreter,
+                allowEnvironmentFetchExceptions: true
+            });
             try {
-                const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], { throwOnStdErr: true });
+                const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], {
+                    throwOnStdErr: true
+                });
                 const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(result.stdout);
                 if (versionMatch && versionMatch.length > 2) {
                     const major = parseInt(versionMatch[1], 10);

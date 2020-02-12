@@ -8,7 +8,12 @@ import * as chaiPromise from 'chai-as-promised';
 import { Uri } from 'vscode';
 import { Resource } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
-import { cache, cacheResourceSpecificInterpreterData, makeDebounceAsyncDecorator, makeDebounceDecorator } from '../../../client/common/utils/decorators';
+import {
+    cache,
+    cacheResourceSpecificInterpreterData,
+    makeDebounceAsyncDecorator,
+    makeDebounceDecorator
+} from '../../../client/common/utils/decorators';
 import { sleep } from '../../core';
 use(chaiPromise);
 
@@ -190,7 +195,10 @@ suite('Common Utils - Decorators', function() {
             if (difference >= 0) {
                 return;
             }
-            expect(Math.abs(difference)).to.be.lessThan(expectedDelay * 0.05, `Actual delay  ${actualDelay}, expected delay ${expectedDelay}, not within 5% of accuracy`);
+            expect(Math.abs(difference)).to.be.lessThan(
+                expectedDelay * 0.05,
+                `Actual delay  ${actualDelay}, expected delay ${expectedDelay}, not within 5% of accuracy`
+            );
         }
         // tslint:disable-next-line: max-classes-per-file
         class Base {

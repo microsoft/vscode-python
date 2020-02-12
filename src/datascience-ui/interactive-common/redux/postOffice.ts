@@ -3,7 +3,10 @@
 'use strict';
 import * as Redux from 'redux';
 
-import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages
+} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
 import { PostOffice } from '../../react-common/postOffice';
 
@@ -96,10 +99,17 @@ export enum IncomingMessageActions {
     LOCINIT = 'action.loc_init'
 }
 
-export const AllowedMessages = [...Object.values(InteractiveWindowMessages), ...Object.values(CssMessages), ...Object.values(SharedMessages)];
+export const AllowedMessages = [
+    ...Object.values(InteractiveWindowMessages),
+    ...Object.values(CssMessages),
+    ...Object.values(SharedMessages)
+];
 
 // Actions created from messages
-export function createPostableAction<M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(message: T, payload?: M[T]): Redux.AnyAction {
+export function createPostableAction<M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(
+    message: T,
+    payload?: M[T]
+): Redux.AnyAction {
     return { type: `${message}`, payload };
 }
 

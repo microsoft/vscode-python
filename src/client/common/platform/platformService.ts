@@ -42,12 +42,16 @@ export class PlatformService implements IPlatformService {
                 try {
                     const ver = coerce(os.release());
                     if (ver) {
-                        sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, { osVersion: `${ver.major}.${ver.minor}.${ver.patch}` });
+                        sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
+                            osVersion: `${ver.major}.${ver.minor}.${ver.patch}`
+                        });
                         return (this.version = ver);
                     }
                     throw new Error('Unable to parse version');
                 } catch (ex) {
-                    sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, { failureType: PlatformErrors.FailedToParseVersion });
+                    sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
+                        failureType: PlatformErrors.FailedToParseVersion
+                    });
                     return parseVersion(os.release());
                 }
             default:

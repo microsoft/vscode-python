@@ -14,7 +14,12 @@ import { IProcessServiceFactory, Output } from '../../client/common/process/type
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import { IDataScienceCodeLensProvider, IDebugLocationTracker, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import {
+    IDataScienceCodeLensProvider,
+    IDebugLocationTracker,
+    IInteractiveWindowProvider,
+    IJupyterExecution
+} from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
@@ -95,11 +100,15 @@ suite('DataScience Debugger tests', () => {
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(e => (lastErrorMessage = e));
-        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+        appShell
+            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(''));
         appShell
             .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
-        appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('test.ipynb')));
+        appShell
+            .setup(a => a.showSaveDialog(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(Uri.file('test.ipynb')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
 
         result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
@@ -115,7 +124,12 @@ suite('DataScience Debugger tests', () => {
         return result;
     }
 
-    async function debugCell(code: string, breakpoint?: Range, breakpointFile?: string, expectError?: boolean): Promise<void> {
+    async function debugCell(
+        code: string,
+        breakpoint?: Range,
+        breakpointFile?: string,
+        expectError?: boolean
+    ): Promise<void> {
         // Create a dummy document with just this code
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         const fileName = path.join(EXTENSION_ROOT_DIR, 'foo.py');
@@ -214,8 +228,19 @@ suite('DataScience Debugger tests', () => {
 
         if (procService && python) {
             const connectionFound = createDeferred();
-            const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'remoteToken.py');
-            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`], { env: process.env, throwOnStdErr: false });
+            const configFile = path.join(
+                EXTENSION_ROOT_DIR,
+                'src',
+                'test',
+                'datascience',
+                'serverConfigFiles',
+                'remoteToken.py'
+            );
+            const exeResult = procService.execObservable(
+                python.path,
+                ['-m', 'jupyter', 'notebook', `--config=${configFile}`],
+                { env: process.env, throwOnStdErr: false }
+            );
 
             // Make sure to shutdown after the session goes away. Otherwise the notebook files generated will still be around.
             postDisposables.push(exeResult);
@@ -263,7 +288,10 @@ suite('DataScience Debugger tests', () => {
             assert.ok(stackTrace, 'Stack trace not computable');
             assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
             assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
-            assert.ok(stackTrace!.body.stackFrames[0].source!.path!.includes('baz.py'), 'Stopped on wrong file name. Name should have been saved');
+            assert.ok(
+                stackTrace!.body.stackFrames[0].source!.path!.includes('baz.py'),
+                'Stopped on wrong file name. Name should have been saved'
+            );
             // Verify break location
             await mockDebuggerService!.continue();
         });

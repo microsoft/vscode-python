@@ -4,7 +4,15 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { ITestsHelper, ITestsParser, TestFile, TestFunction, Tests, TestStatus, UnitTestParserOptions } from '../../common/types';
+import {
+    ITestsHelper,
+    ITestsParser,
+    TestFile,
+    TestFunction,
+    Tests,
+    TestStatus,
+    UnitTestParserOptions
+} from '../../common/types';
 
 @injectable()
 export class TestsParser implements ITestsParser {
@@ -13,7 +21,9 @@ export class TestsParser implements ITestsParser {
         const testIds = this.getTestIds(content);
         let testsDirectory = options.cwd;
         if (options.startDirectory.length > 1) {
-            testsDirectory = path.isAbsolute(options.startDirectory) ? options.startDirectory : path.resolve(options.cwd, options.startDirectory);
+            testsDirectory = path.isAbsolute(options.startDirectory)
+                ? options.startDirectory
+                : path.resolve(options.cwd, options.startDirectory);
         }
         return this.parseTestIds(options.cwd, testsDirectory, testIds);
     }

@@ -9,7 +9,10 @@ import * as path from 'path';
 import * as shortid from 'shortid';
 import { ICurrentProcess, IPathUtils } from '../../client/common/types';
 import { IEnvironmentVariablesService } from '../../client/common/variables/types';
-import { DebugEnvironmentVariablesHelper, IDebugEnvironmentVariablesService } from '../../client/debugger/extension/configuration/resolvers/helper';
+import {
+    DebugEnvironmentVariablesHelper,
+    IDebugEnvironmentVariablesService
+} from '../../client/debugger/extension/configuration/resolvers/helper';
 import { ConsoleType, LaunchRequestArguments } from '../../client/debugger/types';
 import { isOs, OSType } from '../common';
 import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
@@ -71,9 +74,11 @@ suite('Resolving Environment Variables when Debugging', () => {
         expect(envVars).to.have.property('PYTHONIOENCODING', 'UTF-8', 'Property not found');
     }
 
-    test('Confirm basic environment variables exist when launched in external terminal', () => testBasicProperties('externalTerminal', 2));
+    test('Confirm basic environment variables exist when launched in external terminal', () =>
+        testBasicProperties('externalTerminal', 2));
 
-    test('Confirm basic environment variables exist when launched in intergrated terminal', () => testBasicProperties('integratedTerminal', 2));
+    test('Confirm basic environment variables exist when launched in intergrated terminal', () =>
+        testBasicProperties('integratedTerminal', 2));
 
     test('Confirm basic environment variables exist when launched in debug console', async () => {
         let expectedNumberOfVariables = Object.keys(mockProcess.env).length;
@@ -122,9 +127,11 @@ suite('Resolving Environment Variables when Debugging', () => {
         }
     }
 
-    test('Confirm json environment variables exist when launched in external terminal', () => testJsonEnvVariables('externalTerminal', 2 + 2));
+    test('Confirm json environment variables exist when launched in external terminal', () =>
+        testJsonEnvVariables('externalTerminal', 2 + 2));
 
-    test('Confirm json environment variables exist when launched in intergrated terminal', () => testJsonEnvVariables('integratedTerminal', 2 + 2));
+    test('Confirm json environment variables exist when launched in intergrated terminal', () =>
+        testJsonEnvVariables('integratedTerminal', 2 + 2));
 
     test('Confirm json environment variables exist when launched in debug console', async () => {
         // Add 3 for the 3 new json env variables
@@ -138,7 +145,11 @@ suite('Resolving Environment Variables when Debugging', () => {
         await testJsonEnvVariables('internalConsole', expectedNumberOfVariables);
     });
 
-    async function testAppendingOfPaths(console: ConsoleType, expectedNumberOfVariables: number, removePythonPath: boolean) {
+    async function testAppendingOfPaths(
+        console: ConsoleType,
+        expectedNumberOfVariables: number,
+        removePythonPath: boolean
+    ) {
         if (removePythonPath && mockProcess.env.PYTHONPATH !== undefined) {
             delete mockProcess.env.PYTHONPATH;
         }
@@ -194,12 +205,18 @@ suite('Resolving Environment Variables when Debugging', () => {
 
         if (console === 'internalConsole') {
             // All variables in current process must be in here
-            expect(Object.keys(envVars).length).greaterThan(Object.keys(mockProcess.env).length, 'Variables is not a subset');
+            expect(Object.keys(envVars).length).greaterThan(
+                Object.keys(mockProcess.env).length,
+                'Variables is not a subset'
+            );
             Object.keys(mockProcess.env).forEach(key => {
                 if (key === pathVariableName || key === 'PYTHONPATH') {
                     return;
                 }
-                expect(mockProcess.env[key]).equal(envVars[key], `Value for the environment variable '${key}' is incorrect.`);
+                expect(mockProcess.env[key]).equal(
+                    envVars[key],
+                    `Value for the environment variable '${key}' is incorrect.`
+                );
             });
         }
     }

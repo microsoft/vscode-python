@@ -113,7 +113,10 @@ export namespace vscMockRange {
          * Test if `otherRange` is in `range`. If the ranges are equal, will return true.
          */
         public static containsRange(range: IRange, otherRange: IRange): boolean {
-            if (otherRange.startLineNumber < range.startLineNumber || otherRange.endLineNumber < range.startLineNumber) {
+            if (
+                otherRange.startLineNumber < range.startLineNumber ||
+                otherRange.endLineNumber < range.startLineNumber
+            ) {
                 return false;
             }
             if (otherRange.startLineNumber > range.endLineNumber || otherRange.endLineNumber > range.endLineNumber) {
@@ -224,7 +227,14 @@ export namespace vscMockRange {
          * Test if range `a` equals `b`.
          */
         public static equalsRange(a: IRange, b: IRange): boolean {
-            return !!a && !!b && a.startLineNumber === b.startLineNumber && a.startColumn === b.startColumn && a.endLineNumber === b.endLineNumber && a.endColumn === b.endColumn;
+            return (
+                !!a &&
+                !!b &&
+                a.startLineNumber === b.startLineNumber &&
+                a.startColumn === b.startColumn &&
+                a.endLineNumber === b.endLineNumber &&
+                a.endColumn === b.endColumn
+            );
         }
 
         /**
@@ -245,7 +255,17 @@ export namespace vscMockRange {
          * Transform to a user presentable string representation.
          */
         public toString(): string {
-            return '[' + this.startLineNumber + ',' + this.startColumn + ' -> ' + this.endLineNumber + ',' + this.endColumn + ']';
+            return (
+                '[' +
+                this.startLineNumber +
+                ',' +
+                this.startColumn +
+                ' -> ' +
+                this.endLineNumber +
+                ',' +
+                this.endColumn +
+                ']'
+            );
         }
 
         /**
@@ -298,7 +318,11 @@ export namespace vscMockRange {
          */
         public static isIRange(obj: any): obj is IRange {
             return (
-                obj && typeof obj.startLineNumber === 'number' && typeof obj.startColumn === 'number' && typeof obj.endLineNumber === 'number' && typeof obj.endColumn === 'number'
+                obj &&
+                typeof obj.startLineNumber === 'number' &&
+                typeof obj.startColumn === 'number' &&
+                typeof obj.endLineNumber === 'number' &&
+                typeof obj.endColumn === 'number'
             );
         }
 
@@ -307,12 +331,18 @@ export namespace vscMockRange {
          */
         public static areIntersectingOrTouching(a: IRange, b: IRange): boolean {
             // Check if `a` is before `b`
-            if (a.endLineNumber < b.startLineNumber || (a.endLineNumber === b.startLineNumber && a.endColumn < b.startColumn)) {
+            if (
+                a.endLineNumber < b.startLineNumber ||
+                (a.endLineNumber === b.startLineNumber && a.endColumn < b.startColumn)
+            ) {
                 return false;
             }
 
             // Check if `b` is before `a`
-            if (b.endLineNumber < a.startLineNumber || (b.endLineNumber === a.startLineNumber && b.endColumn < a.startColumn)) {
+            if (
+                b.endLineNumber < a.startLineNumber ||
+                (b.endLineNumber === a.startLineNumber && b.endColumn < a.startColumn)
+            ) {
                 return false;
             }
 

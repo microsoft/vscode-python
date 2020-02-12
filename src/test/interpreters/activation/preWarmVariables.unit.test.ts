@@ -22,7 +22,10 @@ suite('Interpreters Activation - Env Variables', () => {
         envActivationService = mock(EnvironmentActivationService);
         interpreterService = mock(InterpreterService);
         when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
-        activationService = new PreWarmActivatedEnvironmentVariables(instance(envActivationService), instance(interpreterService));
+        activationService = new PreWarmActivatedEnvironmentVariables(
+            instance(envActivationService),
+            instance(interpreterService)
+        );
     });
     test('Should pre-warm env variables', async () => {
         when(envActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();

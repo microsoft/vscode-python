@@ -42,7 +42,11 @@ suite('Debugging - Configuration Provider Pyramid', () => {
         workspaceService = mock(WorkspaceService);
         pathUtils = mock(PathUtils);
         input = mock<MultiStepInput<DebugConfigurationState>>(MultiStepInput);
-        provider = new TestPyramidLaunchDebugConfigurationProvider(instance(fs), instance(workspaceService), instance(pathUtils));
+        provider = new TestPyramidLaunchDebugConfigurationProvider(
+            instance(fs),
+            instance(workspaceService),
+            instance(pathUtils)
+        );
     });
     test("getDevelopmentIniPath should return undefined if file doesn't exist", async () => {
         const folder = { uri: Uri.parse(path.join('one', 'two')), name: '1', index: 0 };

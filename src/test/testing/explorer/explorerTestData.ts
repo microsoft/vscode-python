@@ -17,7 +17,14 @@ import { IDisposable, IDisposableRegistry } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { TestsHelper } from '../../../client/testing/common/testUtils';
 import { TestFlatteningVisitor } from '../../../client/testing/common/testVisitors/flatteningVisitor';
-import { ITestCollectionStorageService, TestFile, TestFolder, TestFunction, Tests, TestSuite } from '../../../client/testing/common/types';
+import {
+    ITestCollectionStorageService,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestSuite
+} from '../../../client/testing/common/types';
 import { TestTreeViewProvider } from '../../../client/testing/explorer/testTreeViewProvider';
 import { ITestManagementService } from '../../../client/testing/types';
 
@@ -44,7 +51,11 @@ export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []
     return folder;
 }
 
-export function getMockTestFile(filePath: string, testSuites: TestSuite[] = [], testFunctions: TestFunction[] = []): TestFile {
+export function getMockTestFile(
+    filePath: string,
+    testSuites: TestSuite[] = [],
+    testFunctions: TestFunction[] = []
+): TestFile {
     // tslint:disable-next-line:no-unnecessary-local-variable
     const testFile: TestFile = {
         resource: Uri.file(__filename),
@@ -131,8 +142,12 @@ export function getTestHelperInstance(): TestsHelper {
     const commMgrMoq = typemoq.Mock.ofType<ICommandManager>();
     const serviceContainerMoq = typemoq.Mock.ofType<IServiceContainer>();
 
-    serviceContainerMoq.setup(a => a.get(typemoq.It.isValue(IApplicationShell), typemoq.It.isAny())).returns(() => appShellMoq.object);
-    serviceContainerMoq.setup(a => a.get(typemoq.It.isValue(ICommandManager), typemoq.It.isAny())).returns(() => commMgrMoq.object);
+    serviceContainerMoq
+        .setup(a => a.get(typemoq.It.isValue(IApplicationShell), typemoq.It.isAny()))
+        .returns(() => appShellMoq.object);
+    serviceContainerMoq
+        .setup(a => a.get(typemoq.It.isValue(ICommandManager), typemoq.It.isAny()))
+        .returns(() => commMgrMoq.object);
 
     return new TestsHelper(new TestFlatteningVisitor(), serviceContainerMoq.object);
 }
@@ -233,5 +248,11 @@ export function createMockTestExplorer(
     const dispRegMoq = typemoq.Mock.ofType<IDisposableRegistry>();
     dispRegMoq.setup(d => d.push(typemoq.It.isAny()));
 
-    return new TestTreeViewProvider(testStore, unitTestMgmtService, workspaceService, commandManager, dispRegMoq.object);
+    return new TestTreeViewProvider(
+        testStore,
+        unitTestMgmtService,
+        workspaceService,
+        commandManager,
+        dispRegMoq.object
+    );
 }

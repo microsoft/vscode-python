@@ -21,10 +21,19 @@ export class AddCellLine extends React.Component<IAddCellLineProps> {
     public render() {
         const className = `add-cell-line ${this.props.className}`;
         const tooltip = getLocString('DataScience.insertBelow', 'Insert cell below');
-        const plus = this.props.includePlus ? <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.InsertBelow} /> : null;
+        const plus = this.props.includePlus ? (
+            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.InsertBelow} />
+        ) : null;
         return (
             <div className={className}>
-                <button role="button" aria-pressed="false" title={tooltip} aria-label={tooltip} className="add-cell-line-button" onClick={this.props.click}>
+                <button
+                    role="button"
+                    aria-pressed="false"
+                    title={tooltip}
+                    aria-label={tooltip}
+                    className="add-cell-line-button"
+                    onClick={this.props.click}
+                >
                     {plus}
                     <span className="add-cell-line-divider" />
                 </button>

@@ -16,7 +16,12 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerOutputChannel, IPlatformData } from '../types';
+import {
+    ILanguageServerDownloader,
+    ILanguageServerFolderService,
+    ILanguageServerOutputChannel,
+    IPlatformData
+} from '../types';
 
 // tslint:disable:no-require-imports no-any
 
@@ -59,17 +64,29 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         let localTempFilePath = '';
 
         try {
-            localTempFilePath = await this.downloadFile(downloadUri, 'Downloading Microsoft Python Language Server... ');
+            localTempFilePath = await this.downloadFile(
+                downloadUri,
+                'Downloading Microsoft Python Language Server... '
+            );
         } catch (err) {
             this.output.appendLine(LanguageService.downloadFailedOutputMessage());
             this.output.appendLine(err);
             success = false;
             this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToDownload()).ignoreErrors();
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to download (platform)' }, err);
+            sendTelemetryEvent(
+                EventName.PYTHON_LANGUAGE_SERVER_ERROR,
+                undefined,
+                { error: 'Failed to download (platform)' },
+                err
+            );
             throw new Error(err);
         } finally {
             const usedSSL = downloadUri.startsWith('https:');
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED, timer.elapsedTime, { success, lsVersion, usedSSL });
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED, timer.elapsedTime, {
+                success,
+                lsVersion,
+                usedSSL
+            });
         }
 
         timer.reset();
@@ -80,7 +97,12 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine(err);
             success = false;
             this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToExtract()).ignoreErrors();
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to extract (platform)' }, err);
+            sendTelemetryEvent(
+                EventName.PYTHON_LANGUAGE_SERVER_ERROR,
+                undefined,
+                { error: 'Failed to extract (platform)' },
+                err
+            );
             throw new Error(err);
         } finally {
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED, timer.elapsedTime, { success, lsVersion });

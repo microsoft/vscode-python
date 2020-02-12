@@ -3,7 +3,13 @@
 
 'use strict';
 
-import { CancellationToken, DebugAdapterDescriptorFactory, DebugAdapterTrackerFactory, DebugConfigurationProvider, WorkspaceFolder } from 'vscode';
+import {
+    CancellationToken,
+    DebugAdapterDescriptorFactory,
+    DebugAdapterTrackerFactory,
+    DebugConfigurationProvider,
+    WorkspaceFolder
+} from 'vscode';
 import { InputStep, MultiStepInput } from '../../common/utils/multiStepInput';
 import { RemoteDebugOptions } from '../debugAdapter/types';
 import { DebugConfigurationArguments } from '../types';
@@ -16,9 +22,16 @@ export interface IDebuggerBanner {
 }
 
 export const IDebugConfigurationProvider = Symbol('IDebugConfigurationProvider');
-export type DebugConfigurationState = { config: Partial<DebugConfigurationArguments>; folder?: WorkspaceFolder; token?: CancellationToken };
+export type DebugConfigurationState = {
+    config: Partial<DebugConfigurationArguments>;
+    folder?: WorkspaceFolder;
+    token?: CancellationToken;
+};
 export interface IDebugConfigurationProvider {
-    buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState): Promise<InputStep<DebugConfigurationState> | void>;
+    buildConfiguration(
+        input: MultiStepInput<DebugConfigurationState>,
+        state: DebugConfigurationState
+    ): Promise<InputStep<DebugConfigurationState> | void>;
 }
 
 export enum DebugConfigurationType {

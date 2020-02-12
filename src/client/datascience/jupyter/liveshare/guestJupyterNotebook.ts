@@ -16,15 +16,26 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { ICell, IJupyterKernelSpec, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../types';
+import {
+    ICell,
+    IJupyterKernelSpec,
+    INotebook,
+    INotebookCompletion,
+    INotebookExecutionLogger,
+    INotebookServer,
+    InterruptResult
+} from '../../types';
 import { LiveKernelModel } from '../kernels/types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
 
-export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
+export class GuestJupyterNotebook
+    extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
     implements INotebook, ILiveShareParticipant {
-    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>().event;
+    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
+        IJupyterKernelSpec | LiveKernelModel
+    >().event;
     private responseQueue: ResponseQueue = new ResponseQueue();
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
 
@@ -78,7 +89,13 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
         return ServerStatus.Idle;
     }
 
-    public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]> {
+    public async execute(
+        code: string,
+        file: string,
+        line: number,
+        id: string,
+        cancelToken?: CancellationToken
+    ): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -99,7 +116,9 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
         );
 
         if (cancelToken) {
-            this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
+            this.disposableRegistry.push(
+                cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError()))
+            );
         }
 
         // Wait for the execution to finish
@@ -165,7 +184,11 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
         }
     }
 
-    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken): Promise<INotebookCompletion> {
+    public async getCompletion(
+        _cellCode: string,
+        _offsetInCode: number,
+        _cancelToken?: CancellationToken
+    ): Promise<INotebookCompletion> {
         return Promise.resolve({
             matches: [],
             cursor: {

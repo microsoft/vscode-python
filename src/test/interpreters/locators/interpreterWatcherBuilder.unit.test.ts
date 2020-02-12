@@ -20,7 +20,9 @@ suite('Interpreters - Watcher Builder', () => {
         const watcher = { register: () => Promise.resolve() };
 
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn();
-        when(serviceContainer.get<IInterpreterWatcher>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE)).thenReturn((watcher as any) as IInterpreterWatcher);
+        when(serviceContainer.get<IInterpreterWatcher>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE)).thenReturn(
+            (watcher as any) as IInterpreterWatcher
+        );
 
         const item = await builder.getWorkspaceVirtualEnvInterpreterWatcher(undefined);
 
@@ -33,7 +35,9 @@ suite('Interpreters - Watcher Builder', () => {
         const watcher = { register: () => Promise.resolve() };
 
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn();
-        when(serviceContainer.get<IInterpreterWatcher>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE)).thenReturn((watcher as any) as IInterpreterWatcher);
+        when(serviceContainer.get<IInterpreterWatcher>(IInterpreterWatcher, WORKSPACE_VIRTUAL_ENV_SERVICE)).thenReturn(
+            (watcher as any) as IInterpreterWatcher
+        );
 
         const [item1, item2, item3] = await Promise.all([
             builder.getWorkspaceVirtualEnvInterpreterWatcher(undefined),

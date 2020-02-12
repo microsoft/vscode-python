@@ -7,11 +7,30 @@ import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, ConfigurationTarget, Event, EventEmitter, Memento, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import {
+    CancellationToken,
+    ConfigurationTarget,
+    Event,
+    EventEmitter,
+    Memento,
+    Position,
+    Range,
+    Selection,
+    TextEditor,
+    Uri,
+    ViewColumn
+} from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    ILiveShareApi,
+    IWebPanelProvider,
+    IWorkspaceService
+} from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { WebHostNotebook } from '../../common/experimentGroups';
@@ -151,7 +170,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Tell each listener our identity. Can't do it here though as were in the constructor for the base class
         setTimeout(() => {
             this.getNotebookIdentity()
-                .then(uri => this.listeners.forEach(l => l.onMessage(InteractiveWindowMessages.NotebookIdentity, { resource: uri.toString() })))
+                .then(uri =>
+                    this.listeners.forEach(l =>
+                        l.onMessage(InteractiveWindowMessages.NotebookIdentity, { resource: uri.toString() })
+                    )
+                )
                 .ignoreErrors();
         }, 0);
 
@@ -353,7 +376,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     @captureTelemetry(Telemetry.Interrupt)
     public async interruptKernel(): Promise<void> {
         if (this._notebook && !this.restartingKernel) {
-            const status = this.statusProvider.set(localize.DataScience.interruptKernelStatus(), true, undefined, undefined, this);
+            const status = this.statusProvider.set(
+                localize.DataScience.interruptKernelStatus(),
+                true,
+                undefined,
+                undefined,
+                this
+            );
 
             const settings = this.configuration.getSettings();
             const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
@@ -456,7 +485,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     // tslint:disable-next-line: max-func-body-length
-    protected async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, debug?: boolean): Promise<boolean> {
+    protected async submitCode(
+        code: string,
+        file: string,
+        line: number,
+        id?: string,
+        _editor?: TextEditor,
+        debug?: boolean
+    ): Promise<boolean> {
         traceInfo(`Submitting code for ${this.id}`);
         let result = true;
 
@@ -472,7 +508,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Transmit this submission to all other listeners (in a live share session)
         if (!id) {
             id = uuid();
-            this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code, file, line, id, originator: this.id, debug: debug !== undefined ? debug : false });
+            this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
+                code,
+                file,
+                line,
+                id,
+                originator: this.id,
+                debug: debug !== undefined ? debug : false
+            });
         }
 
         // Create a deferred object that will wait until the status is disposed
@@ -510,7 +553,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                 // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
                 if (file !== Identifiers.EmptyFileName) {
-                    await this._notebook.execute(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, line, uuid(), undefined, true);
+                    await this._notebook.execute(
+                        `__file__ = '${file.replace(/\\/g, '\\\\')}'`,
+                        file,
+                        line,
+                        uuid(),
+                        undefined,
+                        true
+                    );
                 }
 
                 const observable = this._notebook.executeObservable(code, file, line, id, false);
@@ -607,7 +657,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         });
     }
 
-    protected postMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): Promise<void> {
+    protected postMessage<M extends IInteractiveWindowMapping, T extends keyof M>(
+        type: T,
+        payload?: M[T]
+    ): Promise<void> {
         // First send to our listeners
         this.postMessageToListeners(type.toString(), payload);
 
@@ -615,8 +668,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         return super.postMessage(type, payload);
     }
 
-    // tslint:disable-next-line:no-any
-    protected handleMessage<M extends IInteractiveWindowMapping, T extends keyof M>(_message: T, payload: any, handler: (args: M[T]) => void) {
+    protected handleMessage<M extends IInteractiveWindowMapping, T extends keyof M>(
+        _message: T,
+        // tslint:disable-next-line:no-any
+        payload: any,
+        handler: (args: M[T]) => void
+    ) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }
@@ -633,12 +690,17 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
 
             try {
-                // tslint:disable-next-line: no-any
                 const contents = JSON.stringify(notebook);
                 await this.fileSystem.writeFile(file, contents, { encoding: 'utf8', flag: 'w' });
                 const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                const openQuestion2 = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
-                this.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), openQuestion1, openQuestion2).then(async (str: string | undefined) => {
+                const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
+                    ? localize.DataScience.exportOpenQuestion()
+                    : undefined;
+                this.showInformationMessage(
+                    localize.DataScience.exportDialogComplete().format(file),
+                    openQuestion1,
+                    openQuestion2
+                ).then(async (str: string | undefined) => {
                     try {
                         if (str === openQuestion2 && openQuestion2 && this._notebook) {
                             // If the user wants to, open the notebook they just generated.
@@ -677,7 +739,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             // For anything but start, tell the other sides of a live share session
             if (reason !== SysInfoReason.Start && sysInfo) {
-                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, { type: reason, sysInfoCell: sysInfo, id: this.id });
+                this.shareMessage(InteractiveWindowMessages.AddedSysInfo, {
+                    type: reason,
+                    sysInfoCell: sysInfo,
+                    id: this.id
+                });
             }
 
             // For a restart, tell our window to reset
@@ -766,16 +832,29 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // On a self cert error, warn the user and ask if they want to change the setting
                 const enableOption: string = localize.DataScience.jupyterSelfCertEnable();
                 const closeOption: string = localize.DataScience.jupyterSelfCertClose();
-                this.applicationShell.showErrorMessage(localize.DataScience.jupyterSelfCertFail().format(e.message), enableOption, closeOption).then(value => {
-                    if (value === enableOption) {
-                        sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
-                        this.configuration.updateSetting('dataScience.allowUnauthorizedRemoteConnection', true, undefined, ConfigurationTarget.Workspace).ignoreErrors();
-                    } else if (value === closeOption) {
-                        sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
-                    }
-                    // Don't leave our Interactive Window open in a non-connected state
-                    this.closeBecauseOfFailure(e).ignoreErrors();
-                });
+                this.applicationShell
+                    .showErrorMessage(
+                        localize.DataScience.jupyterSelfCertFail().format(e.message),
+                        enableOption,
+                        closeOption
+                    )
+                    .then(value => {
+                        if (value === enableOption) {
+                            sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
+                            this.configuration
+                                .updateSetting(
+                                    'dataScience.allowUnauthorizedRemoteConnection',
+                                    true,
+                                    undefined,
+                                    ConfigurationTarget.Workspace
+                                )
+                                .ignoreErrors();
+                        } else if (value === closeOption) {
+                            sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
+                        }
+                        // Don't leave our Interactive Window open in a non-connected state
+                        this.closeBecauseOfFailure(e).ignoreErrors();
+                    });
                 throw e;
             } else {
                 throw e;
@@ -794,7 +873,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const settings = this.configuration.getSettings();
         if (settings && settings.datascience) {
             settings.datascience.askForKernelRestart = false;
-            this.configuration.updateSetting('dataScience.askForKernelRestart', false, undefined, ConfigurationTarget.Global).ignoreErrors();
+            this.configuration
+                .updateSetting('dataScience.askForKernelRestart', false, undefined, ConfigurationTarget.Global)
+                .ignoreErrors();
         }
     }
 
@@ -807,7 +888,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const settings = this.configuration.getSettings();
         if (settings && settings.datascience) {
             settings.datascience.askForLargeDataFrames = false;
-            this.configuration.updateSetting('dataScience.askForLargeDataFrames', false, undefined, ConfigurationTarget.Global).ignoreErrors();
+            this.configuration
+                .updateSetting('dataScience.askForLargeDataFrames', false, undefined, ConfigurationTarget.Global)
+                .ignoreErrors();
         }
     }
 
@@ -837,7 +920,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    // tslint:disable-next-line:no-any
     private onAddedSysInfo(sysInfo: IAddedSysInfo) {
         // See if this is from us or not.
         if (sysInfo.id !== this.id) {
@@ -870,7 +952,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    // tslint:disable-next-line:no-any
     private async onRemoteAddedCode(args: IRemoteAddCode) {
         // Make sure this is valid
         if (args && args.id && args.file && args.originator !== this.id) {
@@ -903,7 +984,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.finishOutstandingCells();
 
         // Set our status
-        const status = this.statusProvider.set(localize.DataScience.restartingKernelStatus(), true, undefined, undefined, this);
+        const status = this.statusProvider.set(
+            localize.DataScience.restartingKernelStatus(),
+            true,
+            undefined,
+            undefined,
+            this
+        );
 
         try {
             if (this._notebook) {
@@ -1078,7 +1165,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         let editor = this.documentManager.activeTextEditor;
         if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
             // Find the first visible python editor
-            const pythonEditors = this.documentManager.visibleTextEditors.filter(e => e.document.languageId === PYTHON_LANGUAGE || e.document.isUntitled);
+            const pythonEditors = this.documentManager.visibleTextEditors.filter(
+                e => e.document.languageId === PYTHON_LANGUAGE || e.document.isUntitled
+            );
 
             if (pythonEditors.length > 0) {
                 editor = pythonEditors[0];
@@ -1090,7 +1179,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const hasCellsAlready = ranges.length > 0;
             const line = editor.selection.start.line;
             const revealLine = line + 1;
-            const defaultCellMarker = this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+            const defaultCellMarker =
+                this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
             let newCode = `${source}${os.EOL}`;
             if (hasCellsAlready) {
                 // See if inside of a range or not.
@@ -1119,7 +1209,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private showInformationMessage(message: string, question1: string, question2?: string): Thenable<string | undefined> {
+    private showInformationMessage(
+        message: string,
+        question1: string,
+        question2?: string
+    ): Thenable<string | undefined> {
         if (question2) {
             return this.applicationShell.showInformationMessage(message, question1, question2);
         } else {
@@ -1236,8 +1330,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } catch (e) {
             // Can't find a usable interpreter, show the error.
             if (activeInterpreter) {
-                const displayName = activeInterpreter.displayName ? activeInterpreter.displayName : activeInterpreter.path;
-                throw new Error(localize.DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString()));
+                const displayName = activeInterpreter.displayName
+                    ? activeInterpreter.displayName
+                    : activeInterpreter.path;
+                throw new Error(
+                    localize.DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString())
+                );
             } else {
                 throw new JupyterInstallError(
                     localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),

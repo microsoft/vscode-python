@@ -151,7 +151,12 @@ export namespace nodes {
         };
     }
 
-    export function createFileResults(filename: string, nameToRun?: string, xmlName?: string, resource: Uri = RESOURCE): TestNode {
+    export function createFileResults(
+        filename: string,
+        nameToRun?: string,
+        xmlName?: string,
+        resource: Uri = RESOURCE
+    ): TestNode {
         filename = fixPath(filename);
         if (!xmlName) {
             xmlName = filename
@@ -198,7 +203,12 @@ export namespace nodes {
         };
     }
 
-    export function createTestResults(name: string, nameToRun?: string, subtestParent?: SubtestParent, resource: Uri = RESOURCE): TestNode {
+    export function createTestResults(
+        name: string,
+        nameToRun?: string,
+        subtestParent?: SubtestParent,
+        resource: Uri = RESOURCE
+    ): TestNode {
         return {
             resource: resource,
             name: name,
@@ -214,14 +224,25 @@ export namespace nodes {
     //********************************
     // adding children to low-level nodes
 
-    export function addDiscoveredSubFolder(parent: TestFolder, basename: string, nameToRun?: string, resource?: Uri): TestNode {
+    export function addDiscoveredSubFolder(
+        parent: TestFolder,
+        basename: string,
+        nameToRun?: string,
+        resource?: Uri
+    ): TestNode {
         const dirname = path.join(parent.name, fixPath(basename));
         const subFolder = createFolderResults(dirname, nameToRun, resource || parent.resource || RESOURCE);
         parent.folders.push(subFolder as TestFolder);
         return subFolder;
     }
 
-    export function addDiscoveredFile(parent: TestFolder, basename: string, nameToRun?: string, xmlName?: string, resource?: Uri): TestNode {
+    export function addDiscoveredFile(
+        parent: TestFolder,
+        basename: string,
+        nameToRun?: string,
+        xmlName?: string,
+        resource?: Uri
+    ): TestNode {
         const filename = path.join(parent.name, fixPath(basename));
         const file = createFileResults(filename, nameToRun, xmlName, resource || parent.resource || RESOURCE);
         parent.testFiles.push(file as TestFile);
@@ -241,12 +262,25 @@ export namespace nodes {
             const sep = provider === 'pytest' ? '::' : '.';
             nameToRun = `${parent.nameToRun}${sep}${name}`;
         }
-        const suite = createSuiteResults(name, nameToRun!, xmlName || `${parent.xmlName}.${name}`, provider, isInstance, resource || parent.resource || RESOURCE);
+        const suite = createSuiteResults(
+            name,
+            nameToRun!,
+            xmlName || `${parent.xmlName}.${name}`,
+            provider,
+            isInstance,
+            resource || parent.resource || RESOURCE
+        );
         parent.suites.push(suite as TestSuite);
         return suite;
     }
 
-    export function addDiscoveredTest(parent: TestFile | TestSuite, name: string, nameToRun?: string, provider: TestProvider = 'pytest', resource?: Uri): TestNode {
+    export function addDiscoveredTest(
+        parent: TestFile | TestSuite,
+        name: string,
+        nameToRun?: string,
+        provider: TestProvider = 'pytest',
+        resource?: Uri
+    ): TestNode {
         if (!nameToRun) {
             const sep = provider === 'pytest' ? '::' : '.';
             nameToRun = `${parent.nameToRun}${sep}${name}`;
@@ -256,14 +290,27 @@ export namespace nodes {
         return test;
     }
 
-    export function addDiscoveredSubtest(parent: SuperTest, name: string, nameToRun?: string, provider: TestProvider = 'pytest', resource?: Uri): TestNode {
+    export function addDiscoveredSubtest(
+        parent: SuperTest,
+        name: string,
+        nameToRun?: string,
+        provider: TestProvider = 'pytest',
+        resource?: Uri
+    ): TestNode {
         const subtest = createTestResults(
             name,
             nameToRun!,
             {
                 name: parent.name,
                 nameToRun: parent.nameToRun,
-                asSuite: createSuiteResults(parent.name, parent.nameToRun, '', provider, false, parent.resource) as TestSuite,
+                asSuite: createSuiteResults(
+                    parent.name,
+                    parent.nameToRun,
+                    '',
+                    provider,
+                    false,
+                    parent.resource
+                ) as TestSuite,
                 time: 0
             },
             resource || parent.resource || RESOURCE
@@ -459,7 +506,13 @@ namespace declarative {
         return current;
     }
 
-    function buildDiscoveredChildNode(parent: TestParent, name: string, testType: TestingType, provider: TestProvider, resource?: Uri): TestNode {
+    function buildDiscoveredChildNode(
+        parent: TestParent,
+        name: string,
+        testType: TestingType,
+        provider: TestProvider,
+        resource?: Uri
+    ): TestNode {
         switch (testType) {
             case TestingType.folder:
                 if (parent.testType !== TestingType.folder) {

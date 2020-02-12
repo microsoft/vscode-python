@@ -9,7 +9,12 @@ import { ProcessServiceFactory } from '../../../client/common/process/processFac
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { PythonToolExecutionService } from '../../../client/common/process/pythonToolService';
 import { registerTypes } from '../../../client/common/process/serviceRegistry';
-import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonToolExecutionService } from '../../../client/common/process/types';
+import {
+    IBufferDecoder,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonToolExecutionService
+} from '../../../client/common/process/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
 
@@ -23,8 +28,17 @@ suite('Common Process Service Registry', () => {
     test('Ensure services are registered', async () => {
         registerTypes(instance(serviceManager));
         verify(serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder)).once();
-        verify(serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory)).once();
-        verify(serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory)).once();
-        verify(serviceManager.addSingleton<IPythonToolExecutionService>(IPythonToolExecutionService, PythonToolExecutionService)).once();
+        verify(
+            serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory)
+        ).once();
+        verify(
+            serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory)
+        ).once();
+        verify(
+            serviceManager.addSingleton<IPythonToolExecutionService>(
+                IPythonToolExecutionService,
+                PythonToolExecutionService
+            )
+        ).once();
     });
 });

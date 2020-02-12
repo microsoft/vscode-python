@@ -25,13 +25,19 @@ import { PYTHON_PATH } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from './../initialize';
 
 // tslint:disable:no-any
+// tslint:disable: max-func-body-length
 
 type RenameResponse = {
     results: [{ diff: string }];
 };
 
 suite('Refactor Rename', () => {
-    const options: TextEditorOptions = { cursorStyle: TextEditorCursorStyle.Line, insertSpaces: true, lineNumbers: TextEditorLineNumbersStyle.Off, tabSize: 4 };
+    const options: TextEditorOptions = {
+        cursorStyle: TextEditorCursorStyle.Line,
+        insertSpaces: true,
+        lineNumbers: TextEditorLineNumbersStyle.Off,
+        tabSize: 4
+    };
     let pythonSettings: typeMoq.IMock<IPythonSettings>;
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     suiteSetup(initialize);
@@ -42,18 +48,34 @@ suite('Refactor Rename', () => {
         configService.setup(c => c.getSettings(typeMoq.It.isAny())).returns(() => pythonSettings.object);
         const condaService = typeMoq.Mock.ofType<ICondaService>();
         const processServiceFactory = typeMoq.Mock.ofType<IProcessServiceFactory>();
-        processServiceFactory.setup(p => p.create(typeMoq.It.isAny())).returns(() => Promise.resolve(new ProcessService(new BufferDecoder())));
+        processServiceFactory
+            .setup(p => p.create(typeMoq.It.isAny()))
+            .returns(() => Promise.resolve(new ProcessService(new BufferDecoder())));
         const interpreterService = typeMoq.Mock.ofType<IInterpreterService>();
         interpreterService.setup(i => i.hasInterpreters).returns(() => Promise.resolve(true));
         const envActivationService = typeMoq.Mock.ofType<IEnvironmentActivationService>();
-        envActivationService.setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
-        envActivationService.setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
-        envActivationService.setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+        envActivationService
+            .setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+        envActivationService
+            .setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
+        envActivationService
+            .setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IConfigurationService), typeMoq.It.isAny())).returns(() => configService.object);
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IProcessServiceFactory), typeMoq.It.isAny())).returns(() => processServiceFactory.object);
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IInterpreterService), typeMoq.It.isAny())).returns(() => interpreterService.object);
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny())).returns(() => envActivationService.object);
+        serviceContainer
+            .setup(s => s.get(typeMoq.It.isValue(IConfigurationService), typeMoq.It.isAny()))
+            .returns(() => configService.object);
+        serviceContainer
+            .setup(s => s.get(typeMoq.It.isValue(IProcessServiceFactory), typeMoq.It.isAny()))
+            .returns(() => processServiceFactory.object);
+        serviceContainer
+            .setup(s => s.get(typeMoq.It.isValue(IInterpreterService), typeMoq.It.isAny()))
+            .returns(() => interpreterService.object);
+        serviceContainer
+            .setup(s => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
+            .returns(() => envActivationService.object);
         const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
         serviceContainer
             .setup(s => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
@@ -75,42 +97,86 @@ suite('Refactor Rename', () => {
             .returns(() => {
                 return;
             });
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny())).returns(() => processLogger.object);
+        serviceContainer
+            .setup(s => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny()))
+            .returns(() => processLogger.object);
         await initializeTest();
     });
     teardown(closeActiveWindows);
     suiteTeardown(closeActiveWindows);
 
     test('Rename function in source without a trailing empty line', async () => {
-        const sourceFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'refactoring', 'source folder', 'without empty line.py');
+        const sourceFile = path.join(
+            EXTENSION_ROOT_DIR,
+            'src',
+            'test',
+            'pythonFiles',
+            'refactoring',
+            'source folder',
+            'without empty line.py'
+        );
         const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(
             sourceFile
         )}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`.splitLines(
             { removeEmptyEntries: false, trim: false }
         );
 
-        const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings.object, path.dirname(sourceFile), serviceContainer.object);
+        const proxy = new RefactorProxy(
+            EXTENSION_ROOT_DIR,
+            pythonSettings.object,
+            path.dirname(sourceFile),
+            serviceContainer.object
+        );
         const textDocument = await workspace.openTextDocument(sourceFile);
         await window.showTextDocument(textDocument);
 
-        const response = await proxy.rename<RenameResponse>(textDocument, 'three', sourceFile, new Range(7, 20, 7, 23), options);
+        const response = await proxy.rename<RenameResponse>(
+            textDocument,
+            'three',
+            sourceFile,
+            new Range(7, 20, 7, 23),
+            options
+        );
         expect(response.results).to.be.lengthOf(1);
-        expect(response.results[0].diff.splitLines({ removeEmptyEntries: false, trim: false })).to.be.deep.equal(expectedDiff);
+        expect(response.results[0].diff.splitLines({ removeEmptyEntries: false, trim: false })).to.be.deep.equal(
+            expectedDiff
+        );
     });
     test('Rename function in source with a trailing empty line', async () => {
-        const sourceFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'refactoring', 'source folder', 'with empty line.py');
+        const sourceFile = path.join(
+            EXTENSION_ROOT_DIR,
+            'src',
+            'test',
+            'pythonFiles',
+            'refactoring',
+            'source folder',
+            'with empty line.py'
+        );
         const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(
             sourceFile
         )}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`.splitLines(
             { removeEmptyEntries: false, trim: false }
         );
 
-        const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings.object, path.dirname(sourceFile), serviceContainer.object);
+        const proxy = new RefactorProxy(
+            EXTENSION_ROOT_DIR,
+            pythonSettings.object,
+            path.dirname(sourceFile),
+            serviceContainer.object
+        );
         const textDocument = await workspace.openTextDocument(sourceFile);
         await window.showTextDocument(textDocument);
 
-        const response = await proxy.rename<RenameResponse>(textDocument, 'three', sourceFile, new Range(7, 20, 7, 23), options);
+        const response = await proxy.rename<RenameResponse>(
+            textDocument,
+            'three',
+            sourceFile,
+            new Range(7, 20, 7, 23),
+            options
+        );
         expect(response.results).to.be.lengthOf(1);
-        expect(response.results[0].diff.splitLines({ removeEmptyEntries: false, trim: false })).to.be.deep.equal(expectedDiff);
+        expect(response.results[0].diff.splitLines({ removeEmptyEntries: false, trim: false })).to.be.deep.equal(
+            expectedDiff
+        );
     });
 });

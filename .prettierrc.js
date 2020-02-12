@@ -1,6 +1,6 @@
 module.exports = {
     singleQuote: true,
-    printWidth: 180,
+    printWidth: 120,
     tabWidth: 4,
     overrides: [
         {

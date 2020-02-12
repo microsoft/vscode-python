@@ -11,7 +11,14 @@ import * as typeMoq from 'typemoq';
 import { CancellationToken } from 'vscode';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { NOSETEST_PROVIDER } from '../../../client/testing/common/constants';
-import { ITestDiscoveryService, ITestRunner, ITestsParser, Options, TestDiscoveryOptions, Tests } from '../../../client/testing/common/types';
+import {
+    ITestDiscoveryService,
+    ITestRunner,
+    ITestsParser,
+    Options,
+    TestDiscoveryOptions,
+    Tests
+} from '../../../client/testing/common/types';
 import { TestDiscoveryService } from '../../../client/testing/nosetest/services/discoveryService';
 import { IArgumentsService, TestFilter } from '../../../client/testing/types';
 
@@ -29,8 +36,12 @@ suite('Unit Tests - nose - Discovery', () => {
         testParser = typeMoq.Mock.ofType<ITestsParser>();
         runner = typeMoq.Mock.ofType<ITestRunner>();
 
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IArgumentsService), typeMoq.It.isAny())).returns(() => argsService.object);
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ITestRunner), typeMoq.It.isAny())).returns(() => runner.object);
+        serviceContainer
+            .setup(s => s.get(typeMoq.It.isValue(IArgumentsService), typeMoq.It.isAny()))
+            .returns(() => argsService.object);
+        serviceContainer
+            .setup(s => s.get(typeMoq.It.isValue(ITestRunner), typeMoq.It.isAny()))
+            .returns(() => runner.object);
 
         discoveryService = new TestDiscoveryService(serviceContainer.object, testParser.object);
     });

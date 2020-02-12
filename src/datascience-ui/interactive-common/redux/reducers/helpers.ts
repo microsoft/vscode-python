@@ -44,14 +44,21 @@ export namespace Helpers {
         return cvm as ICellViewModel;
     }
 
-    export function updateOrAdd<T>(arg: CommonReducerArg<T, ICell>, generateVM: (cell: ICell, mainState: IMainState) => ICellViewModel): IMainState {
+    export function updateOrAdd<T>(
+        arg: CommonReducerArg<T, ICell>,
+        generateVM: (cell: ICell, mainState: IMainState) => ICellViewModel
+    ): IMainState {
         // First compute new execution count.
         const newExecutionCount = arg.payload.data.execution_count
             ? Math.max(arg.prevState.currentExecutionCount, parseInt(arg.payload.data.execution_count.toString(), 10))
             : arg.prevState.currentExecutionCount;
 
         const index = arg.prevState.cellVMs.findIndex((c: ICellViewModel) => {
-            return c.cell.id === arg.payload.id && c.cell.line === arg.payload.line && arePathsSame(c.cell.file, arg.payload.file);
+            return (
+                c.cell.id === arg.payload.id &&
+                c.cell.line === arg.payload.line &&
+                arePathsSame(c.cell.file, arg.payload.file)
+            );
         });
         if (index >= 0) {
             // This means the cell existed already so it was actual executed code.

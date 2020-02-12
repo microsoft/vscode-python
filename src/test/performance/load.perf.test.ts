@@ -44,7 +44,11 @@ suite('Activation Times', () => {
         });
     }
 
-    if (process.env.ACTIVATION_TIMES_DEV_LOG_FILE_PATHS && process.env.ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS && process.env.ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS) {
+    if (
+        process.env.ACTIVATION_TIMES_DEV_LOG_FILE_PATHS &&
+        process.env.ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS &&
+        process.env.ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS
+    ) {
         test('Test activation times of Dev vs Release Extension', async () => {
             function getActivationTimes(files: string[]) {
                 const activationTimes: number[] = [];
@@ -60,11 +64,19 @@ suite('Activation Times', () => {
                 return activationTimes;
             }
             const devActivationTimes = getActivationTimes(JSON.parse(process.env.ACTIVATION_TIMES_DEV_LOG_FILE_PATHS!));
-            const releaseActivationTimes = getActivationTimes(JSON.parse(process.env.ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS!));
-            const languageServerActivationTimes = getActivationTimes(JSON.parse(process.env.ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS!));
-            const devActivationAvgTime = devActivationTimes.reduce((sum, item) => sum + item, 0) / devActivationTimes.length;
-            const releaseActivationAvgTime = releaseActivationTimes.reduce((sum, item) => sum + item, 0) / releaseActivationTimes.length;
-            const languageServerActivationAvgTime = languageServerActivationTimes.reduce((sum, item) => sum + item, 0) / languageServerActivationTimes.length;
+            const releaseActivationTimes = getActivationTimes(
+                JSON.parse(process.env.ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS!)
+            );
+            const languageServerActivationTimes = getActivationTimes(
+                JSON.parse(process.env.ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS!)
+            );
+            const devActivationAvgTime =
+                devActivationTimes.reduce((sum, item) => sum + item, 0) / devActivationTimes.length;
+            const releaseActivationAvgTime =
+                releaseActivationTimes.reduce((sum, item) => sum + item, 0) / releaseActivationTimes.length;
+            const languageServerActivationAvgTime =
+                languageServerActivationTimes.reduce((sum, item) => sum + item, 0) /
+                languageServerActivationTimes.length;
 
             console.log(`Dev version loaded in ${devActivationAvgTime}ms`);
             console.log(`Release version loaded in ${releaseActivationAvgTime}ms`);

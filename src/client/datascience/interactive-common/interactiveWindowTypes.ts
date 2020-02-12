@@ -4,7 +4,13 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
 import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest } from '../messages';
-import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../types';
+import {
+    ICell,
+    IInteractiveWindowInfo,
+    IJupyterVariable,
+    IJupyterVariablesRequest,
+    IJupyterVariablesResponse
+} from '../types';
 
 export enum InteractiveWindowMessages {
     StartCell = 'start_cell',

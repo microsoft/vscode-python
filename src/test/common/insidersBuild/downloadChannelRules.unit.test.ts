@@ -38,7 +38,9 @@ suite('Download channel rules - ExtensionInsidersDailyChannelRule', () => {
     setup(() => {
         persistentStateFactory = mock(PersistentStateFactory);
         lastLookUpTime = TypeMoq.Mock.ofType<IPersistentState<number>>();
-        when(persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1)).thenReturn(lastLookUpTime.object);
+        when(persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1)).thenReturn(
+            lastLookUpTime.object
+        );
         insidersDailyChannelRule = new ExtensionInsidersDailyChannelRule(instance(persistentStateFactory));
     });
 
@@ -101,7 +103,9 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
     setup(() => {
         persistentStateFactory = mock(PersistentStateFactory);
         lastLookUpTime = TypeMoq.Mock.ofType<IPersistentState<number>>();
-        when(persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1)).thenReturn(lastLookUpTime.object);
+        when(persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1)).thenReturn(
+            lastLookUpTime.object
+        );
         insidersWeeklyChannelRule = new ExtensionInsidersWeeklyChannelRule(instance(persistentStateFactory));
     });
 

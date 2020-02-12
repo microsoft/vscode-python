@@ -114,14 +114,27 @@ suite('JupyterVariables', () => {
     test('getVariables no cells', async () => {
         fakeNotebook
             .setup(fs =>
-                fs.execute(typemoq.It.isAny(), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true))
+                fs.execute(
+                    typemoq.It.isAny(),
+                    typemoq.It.isValue(Identifiers.EmptyFileName),
+                    typemoq.It.isValue(0),
+                    typemoq.It.isAnyString(),
+                    undefined,
+                    typemoq.It.isValue(true)
+                )
             )
             .returns(() => Promise.resolve([]))
             .verifiable(typemoq.Times.once());
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object, { startIndex: 0, pageSize: 100, sortColumn: '', sortAscending: true, executionCount: 1 });
+            await jupyterVariables.getVariables(fakeNotebook.object, {
+                startIndex: 0,
+                pageSize: 100,
+                sortColumn: '',
+                sortAscending: true,
+                executionCount: 1
+            });
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -133,14 +146,27 @@ suite('JupyterVariables', () => {
     test('getVariables no output', async () => {
         fakeNotebook
             .setup(fs =>
-                fs.execute(typemoq.It.isAny(), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true))
+                fs.execute(
+                    typemoq.It.isAny(),
+                    typemoq.It.isValue(Identifiers.EmptyFileName),
+                    typemoq.It.isValue(0),
+                    typemoq.It.isAnyString(),
+                    undefined,
+                    typemoq.It.isValue(true)
+                )
             )
             .returns(() => Promise.resolve(generateCells('', 'stream', false)))
             .verifiable(typemoq.Times.once());
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object, { startIndex: 0, pageSize: 100, sortColumn: '', sortAscending: true, executionCount: 1 });
+            await jupyterVariables.getVariables(fakeNotebook.object, {
+                startIndex: 0,
+                pageSize: 100,
+                sortColumn: '',
+                sortAscending: true,
+                executionCount: 1
+            });
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -152,14 +178,27 @@ suite('JupyterVariables', () => {
     test('getVariables bad output type', async () => {
         fakeNotebook
             .setup(fs =>
-                fs.execute(typemoq.It.isAny(), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true))
+                fs.execute(
+                    typemoq.It.isAny(),
+                    typemoq.It.isValue(Identifiers.EmptyFileName),
+                    typemoq.It.isValue(0),
+                    typemoq.It.isAnyString(),
+                    undefined,
+                    typemoq.It.isValue(true)
+                )
             )
             .returns(() => Promise.resolve(generateCells('bogus string', 'bogus output type')))
             .verifiable(typemoq.Times.once());
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object, { startIndex: 0, pageSize: 100, sortColumn: '', sortAscending: true, executionCount: 1 });
+            await jupyterVariables.getVariables(fakeNotebook.object, {
+                startIndex: 0,
+                pageSize: 100,
+                sortColumn: '',
+                sortAscending: true,
+                executionCount: 1
+            });
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -171,9 +210,23 @@ suite('JupyterVariables', () => {
     test('getVariables fake data', async () => {
         fakeNotebook
             .setup(fs =>
-                fs.execute(typemoq.It.isAny(), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true))
+                fs.execute(
+                    typemoq.It.isAny(),
+                    typemoq.It.isValue(Identifiers.EmptyFileName),
+                    typemoq.It.isValue(0),
+                    typemoq.It.isAnyString(),
+                    undefined,
+                    typemoq.It.isValue(true)
+                )
             )
-            .returns(() => Promise.resolve(generateCells(`['big_dataframe', 'big_dict', 'big_int', 'big_list', 'big_nparray', 'big_string']`, 'execute_result')))
+            .returns(() =>
+                Promise.resolve(
+                    generateCells(
+                        `['big_dataframe', 'big_dict', 'big_int', 'big_list', 'big_nparray', 'big_string']`,
+                        'execute_result'
+                    )
+                )
+            )
             .verifiable(typemoq.Times.once());
         fakeNotebook
             .setup(fs => fs.inspect(typemoq.It.isAny()))
@@ -189,7 +242,13 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
                 })
             );
 
-        const results = await jupyterVariables.getVariables(fakeNotebook.object, { startIndex: 0, pageSize: 100, sortColumn: '', sortAscending: true, executionCount: 1 });
+        const results = await jupyterVariables.getVariables(fakeNotebook.object, {
+            startIndex: 0,
+            pageSize: 100,
+            sortColumn: '',
+            sortAscending: true,
+            executionCount: 1
+        });
 
         // Check the results that we get back
         assert.equal(results.pageResponse.length, 6);
@@ -209,7 +268,14 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
     test('getValue fake data', async () => {
         fakeNotebook
             .setup(fs =>
-                fs.execute(typemoq.It.isAny(), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true))
+                fs.execute(
+                    typemoq.It.isAny(),
+                    typemoq.It.isValue(Identifiers.EmptyFileName),
+                    typemoq.It.isValue(0),
+                    typemoq.It.isAnyString(),
+                    undefined,
+                    typemoq.It.isValue(true)
+                )
             )
             .returns(() => Promise.resolve(generateCells(`['big_complex']`, 'execute_result')))
             .verifiable(typemoq.Times.once());
@@ -239,7 +305,13 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
             supportsDataExplorer: false
         };
 
-        const results = await jupyterVariables.getVariables(fakeNotebook.object, { startIndex: 0, pageSize: 100, sortColumn: '', sortAscending: true, executionCount: 1 });
+        const results = await jupyterVariables.getVariables(fakeNotebook.object, {
+            startIndex: 0,
+            pageSize: 100,
+            sortColumn: '',
+            sortAscending: true,
+            executionCount: 1
+        });
         const resultVariable = results.pageResponse[0];
 
         // Verify the result value should be filled out from fake server result

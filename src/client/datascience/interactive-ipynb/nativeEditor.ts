@@ -12,11 +12,27 @@ import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscod
 
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell, createErrorOutput } from '../../../datascience-ui/common/cellFactory';
-import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    ILiveShareApi,
+    IWebPanelProvider,
+    IWorkspaceService
+} from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
-import { GLOBAL_MEMENTO, IConfigurationService, ICryptoUtils, IDisposableRegistry, IExperimentsManager, IExtensionContext, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    ICryptoUtils,
+    IDisposableRegistry,
+    IExperimentsManager,
+    IExtensionContext,
+    IMemento,
+    WORKSPACE_MEMENTO
+} from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -24,7 +40,13 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Identifiers, NativeKeyboardCommandTelemetryLookup, NativeMouseCommandTelemetryLookup, Telemetry } from '../constants';
+import {
+    EditorContexts,
+    Identifiers,
+    NativeKeyboardCommandTelemetryLookup,
+    NativeMouseCommandTelemetryLookup,
+    Telemetry
+} from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     IEditCell,
@@ -151,7 +173,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             commandManager,
             globalStorage,
             nativeEditorDir,
-            [path.join(nativeEditorDir, 'monaco.bundle.js'), path.join(nativeEditorDir, 'commons.initial.bundle.js'), path.join(nativeEditorDir, 'nativeEditor.js')],
+            [
+                path.join(nativeEditorDir, 'monaco.bundle.js'),
+                path.join(nativeEditorDir, 'commons.initial.bundle.js'),
+                path.join(nativeEditorDir, 'nativeEditor.js')
+            ],
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active,
             experimentsManager
@@ -357,7 +383,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    protected submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor, debug?: boolean): Promise<boolean> {
+    protected submitCode(
+        code: string,
+        file: string,
+        line: number,
+        id?: string,
+        editor?: TextEditor,
+        debug?: boolean
+    ): Promise<boolean> {
         // When code is executed, update the version number in the metadata.
         return super.submitCode(code, file, line, id, editor, debug).then(value => {
             this.updateVersionInfoInNotebook()
@@ -523,7 +556,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             const interpreter = notebook.getMatchingInterpreter();
             const kernelSpec = notebook.getKernelSpec();
 
-            if (interpreter && interpreter.version && this.notebookJson.metadata && this.notebookJson.metadata.language_info) {
+            if (
+                interpreter &&
+                interpreter.version &&
+                this.notebookJson.metadata &&
+                this.notebookJson.metadata.language_info
+            ) {
                 this.notebookJson.metadata.language_info.version = interpreter.version.raw;
             }
 
@@ -593,7 +631,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.contentsLoadedPromise.resolve();
 
         // Extract cells from the json
-        const cells = contents ? (json.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[]) : [];
+        const cells = contents
+            ? (json.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[])
+            : [];
 
         // Then parse the cells
         return this.loadCells(
@@ -904,8 +944,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const message2 = localize.DataScience.dirtyNotebookMessage2();
         const yes = localize.DataScience.dirtyNotebookYes();
         const no = localize.DataScience.dirtyNotebookNo();
-        // tslint:disable-next-line: messages-must-be-localized
-        const result = await this.applicationShell.showInformationMessage(`${message1}\n${message2}`, { modal: true }, yes, no);
+        const result = await this.applicationShell.showInformationMessage(
+            // tslint:disable-next-line: messages-must-be-localized
+            `${message1}\n${message2}`,
+            { modal: true },
+            yes,
+            no
+        );
         switch (result) {
             case yes:
                 return AskForSaveResult.Yes;
@@ -922,7 +967,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Update storage if not untitled. Don't wait for results.
         if (!this.isUntitled) {
             this.generateNotebookContent(this.visibleCells)
-                .then(c => this.storeContents(c).catch(ex => traceError('Failed to generate notebook content to store in state', ex)))
+                .then(c =>
+                    this.storeContents(c).catch(ex =>
+                        traceError('Failed to generate notebook content to store in state', ex)
+                    )
+                )
                 .ignoreErrors();
         }
 
@@ -959,7 +1008,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
 
             // Translate the cells into a notebook
-            await this.fileSystem.writeFile(tempFile.filePath, await this.generateNotebookContent(cells), { encoding: 'utf-8' });
+            await this.fileSystem.writeFile(tempFile.filePath, await this.generateNotebookContent(cells), {
+                encoding: 'utf-8'
+            });
 
             // Import this file and show it
             const contents = await this.importer.importFromFile(tempFile.filePath, this.file.fsPath);
@@ -1039,7 +1090,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 isDirty = true;
 
                 const defaultUri =
-                    Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length > 0
+                    Array.isArray(this.workspaceService.workspaceFolders) &&
+                    this.workspaceService.workspaceFolders.length > 0
                         ? this.workspaceService.workspaceFolders[0].uri
                         : undefined;
                 fileToSaveTo = await this.applicationShell.showSaveDialog({
@@ -1051,7 +1103,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             if (fileToSaveTo && isDirty) {
                 // Write out our visible cells
-                await this.fileSystem.writeFile(fileToSaveTo.fsPath, await this.generateNotebookContent(this.visibleCells));
+                await this.fileSystem.writeFile(
+                    fileToSaveTo.fsPath,
+                    await this.generateNotebookContent(this.visibleCells)
+                );
 
                 // Update our file name and dirty state
                 this._file = fileToSaveTo;
@@ -1071,7 +1126,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private logNativeCommand(args: INativeCommand) {
-        const telemetryEvent = args.source === 'mouse' ? NativeMouseCommandTelemetryLookup[args.command] : NativeKeyboardCommandTelemetryLookup[args.command];
+        const telemetryEvent =
+            args.source === 'mouse'
+                ? NativeMouseCommandTelemetryLookup[args.command]
+                : NativeKeyboardCommandTelemetryLookup[args.command];
         sendTelemetryEvent(telemetryEvent);
     }
 

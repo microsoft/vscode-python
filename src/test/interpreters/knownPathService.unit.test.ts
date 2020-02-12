@@ -26,9 +26,15 @@ suite('Interpreters Known Paths', () => {
         currentProcess = TypeMoq.Mock.ofType<ICurrentProcess>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess), TypeMoq.It.isAny())).returns(() => currentProcess.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPathUtils), TypeMoq.It.isAny())).returns(() => pathUtils.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess), TypeMoq.It.isAny()))
+            .returns(() => currentProcess.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
+            .returns(() => platformService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IPathUtils), TypeMoq.It.isAny()))
+            .returns(() => pathUtils.object);
 
         knownSearchPaths = new KnownSearchPathsForInterpreters(serviceContainer.object);
     });

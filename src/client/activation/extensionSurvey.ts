@@ -53,11 +53,18 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
 
     @traceDecorators.error('Failed to check whether to display prompt for extension survey')
     public shouldShowBanner(): boolean {
-        const doNotShowSurveyAgain = this.persistentState.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false);
+        const doNotShowSurveyAgain = this.persistentState.createGlobalPersistentState(
+            extensionSurveyStateKeys.doNotShowAgain,
+            false
+        );
         if (doNotShowSurveyAgain.value) {
             return false;
         }
-        const isSurveyDisabledForTimeState = this.persistentState.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, timeToDisableSurveyFor);
+        const isSurveyDisabledForTimeState = this.persistentState.createGlobalPersistentState(
+            extensionSurveyStateKeys.disableSurveyForTime,
+            false,
+            timeToDisableSurveyFor
+        );
         if (isSurveyDisabledForTimeState.value) {
             return false;
         }
@@ -72,19 +79,33 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
     @traceDecorators.error('Failed to display prompt for extension survey')
     public async showSurvey() {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-        const telemetrySelections: ['Yes', 'Maybe later', 'Do not show again'] = ['Yes', 'Maybe later', 'Do not show again'];
+        const telemetrySelections: ['Yes', 'Maybe later', 'Do not show again'] = [
+            'Yes',
+            'Maybe later',
+            'Do not show again'
+        ];
         const selection = await this.appShell.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts);
-        sendTelemetryEvent(EventName.EXTENSION_SURVEY_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
+        sendTelemetryEvent(EventName.EXTENSION_SURVEY_PROMPT, undefined, {
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined
+        });
         if (!selection) {
             return;
         }
         if (selection === LanguageService.bannerLabelYes()) {
             this.launchSurvey();
             // Disable survey for a few weeks
-            await this.persistentState.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, timeToDisableSurveyFor).updateValue(true);
+            await this.persistentState
+                .createGlobalPersistentState(
+                    extensionSurveyStateKeys.disableSurveyForTime,
+                    false,
+                    timeToDisableSurveyFor
+                )
+                .updateValue(true);
         } else if (selection === Common.doNotShowAgain()) {
             // Never show the survey again
-            await this.persistentState.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false).updateValue(true);
+            await this.persistentState
+                .createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)
+                .updateValue(true);
         }
     }
 

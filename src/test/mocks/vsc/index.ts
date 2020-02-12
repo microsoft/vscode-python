@@ -181,7 +181,11 @@ export namespace vscMock {
         constructor(public readonly port: number, public readonly host?: string) {}
     }
     export class DebugAdapterExecutable {
-        constructor(public readonly command: string, public readonly args: string[] = [], public readonly options?: DebugAdapterExecutableOptions) {}
+        constructor(
+            public readonly command: string,
+            public readonly args: string[] = [],
+            public readonly options?: DebugAdapterExecutableOptions
+        ) {}
     }
 
     export enum FileType {

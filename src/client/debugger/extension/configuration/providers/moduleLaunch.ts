@@ -26,14 +26,20 @@ export class ModuleLaunchDebugConfigurationProvider implements IDebugConfigurati
             title: DebugConfigStrings.module.enterModule.title(),
             value: config.module || DebugConfigStrings.module.enterModule.default(),
             prompt: DebugConfigStrings.module.enterModule.prompt(),
-            validate: value => Promise.resolve(value && value.trim().length > 0 ? undefined : DebugConfigStrings.module.enterModule.invalid())
+            validate: value =>
+                Promise.resolve(
+                    value && value.trim().length > 0 ? undefined : DebugConfigStrings.module.enterModule.invalid()
+                )
         });
         if (selectedModule) {
             manuallyEnteredAValue = true;
             config.module = selectedModule;
         }
 
-        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.launchModule, manuallyEnteredAValue });
+        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
+            configurationType: DebugConfigurationType.launchModule,
+            manuallyEnteredAValue
+        });
         Object.assign(state.config, config);
     }
 }

@@ -11,7 +11,10 @@ import { BaseDiagnosticsService } from '../../../../client/application/diagnosti
 import { EnvironmentPathVariableDiagnosticsService } from '../../../../client/application/diagnostics/checks/envPathVariable';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
-import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
+import {
+    DiagnosticCommandPromptHandlerServiceId,
+    MessageCommandPrompt
+} from '../../../../client/application/diagnostics/promptHandler';
 import {
     DiagnosticScope,
     IDiagnostic,
@@ -46,7 +49,12 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
 
         messageHandler = typemoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
         serviceContainer
-            .setup(s => s.get(typemoq.It.isValue(IDiagnosticHandlerService), typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)))
+            .setup(s =>
+                s.get(
+                    typemoq.It.isValue(IDiagnosticHandlerService),
+                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)
+                )
+            )
             .returns(() => messageHandler.object);
 
         appEnv = typemoq.Mock.ofType<IApplicationEnvironment>();
@@ -54,10 +62,14 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationEnvironment))).returns(() => appEnv.object);
 
         filterService = typemoq.Mock.ofType<IDiagnosticFilterService>();
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IDiagnosticFilterService))).returns(() => filterService.object);
+        serviceContainer
+            .setup(s => s.get(typemoq.It.isValue(IDiagnosticFilterService)))
+            .returns(() => filterService.object);
 
         commandFactory = typemoq.Mock.ofType<IDiagnosticsCommandFactory>();
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IDiagnosticsCommandFactory))).returns(() => commandFactory.object);
+        serviceContainer
+            .setup(s => s.get(typemoq.It.isValue(IDiagnosticsCommandFactory)))
+            .returns(() => commandFactory.object);
 
         const currentProc = typemoq.Mock.ofType<ICurrentProcess>();
         procEnv = typemoq.Mock.ofType<EnvironmentVariables>();
@@ -68,7 +80,9 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
         pathUtils.setup(p => p.delimiter).returns(() => pathDelimiter);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
         const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+        serviceContainer
+            .setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspaceService.object);
         workspaceService.setup(w => w.getWorkspaceFolder(typemoq.It.isAny())).returns(() => undefined);
 
         diagnosticService = new (class extends EnvironmentPathVariableDiagnosticsService {
@@ -142,7 +156,8 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
         expect(diagnostics[0].scope).to.be.equal(DiagnosticScope.Global);
     });
     test('Should not return diagnostics for Windows if path ends with delimiter', async () => {
-        const paths = [path.join('one', 'two', 'three'), path.join('one', 'two', 'four')].join(pathDelimiter) + pathDelimiter;
+        const paths =
+            [path.join('one', 'two', 'three'), path.join('one', 'two', 'four')].join(pathDelimiter) + pathDelimiter;
         platformService.setup(p => p.isWindows).returns(() => true);
         procEnv.setup(env => env[pathVariableName]).returns(() => paths);
 
@@ -162,7 +177,10 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
             .setup(f =>
                 f.createCommand(
                     typemoq.It.isAny(),
-                    typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({ type: 'ignore', options: DiagnosticScope.Global })
+                    typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({
+                        type: 'ignore',
+                        options: DiagnosticScope.Global
+                    })
                 )
             )
             .returns(() => alwaysIgnoreCommand.object)
@@ -190,14 +208,18 @@ suite('Application Diagnostics - Checks Env Path Variable', () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
 
         filterService
-            .setup(f => f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic)))
+            .setup(f =>
+                f.shouldIgnoreDiagnostic(typemoq.It.isValue(DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic))
+            )
             .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());
         diagnostic
             .setup(d => d.code)
             .returns(() => DiagnosticCodes.InvalidEnvironmentPathVariableDiagnostic)
             .verifiable(typemoq.Times.atLeastOnce());
-        commandFactory.setup(f => f.createCommand(typemoq.It.isAny(), typemoq.It.isAny())).verifiable(typemoq.Times.never());
+        commandFactory
+            .setup(f => f.createCommand(typemoq.It.isAny(), typemoq.It.isAny()))
+            .verifiable(typemoq.Times.never());
         messageHandler.setup(m => m.handle(typemoq.It.isAny(), typemoq.It.isAny())).verifiable(typemoq.Times.never());
 
         await diagnosticService.handle([diagnostic.object]);

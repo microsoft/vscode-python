@@ -16,7 +16,11 @@ import { IConnection } from '../types';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp');
 
-export function expandWorkingDir(workingDir: string | undefined, launchingFile: string, workspace: IWorkspaceService): string {
+export function expandWorkingDir(
+    workingDir: string | undefined,
+    launchingFile: string,
+    workspace: IWorkspaceService
+): string {
     if (workingDir) {
         const variables = new SystemVariables(Uri.file(launchingFile), undefined, workspace);
         return variables.resolve(workingDir);
@@ -34,7 +38,9 @@ export function createRemoteConnectionInfo(uri: string, settings: IDataScienceSe
         // This should already have been parsed when set, so just throw if it's not right here
         throw err;
     }
-    const allowUnauthorized = settings.allowUnauthorizedRemoteConnection ? settings.allowUnauthorizedRemoteConnection : false;
+    const allowUnauthorized = settings.allowUnauthorizedRemoteConnection
+        ? settings.allowUnauthorizedRemoteConnection
+        : false;
 
     return {
         allowUnauthorized,
@@ -61,7 +67,13 @@ function modifyLineNumbers(entry: string, file: string, startLine: number): stri
     });
 }
 
-function modifyTracebackEntry(fileMatchRegex: RegExp, file: string, fileDisplayName: string, startLine: number, entry: string): string {
+function modifyTracebackEntry(
+    fileMatchRegex: RegExp,
+    file: string,
+    fileDisplayName: string,
+    startLine: number,
+    entry: string
+): string {
     if (fileMatchRegex.test(entry)) {
         return modifyLineNumbers(entry, file, startLine);
     } else if (IPythonMatchRegex.test(entry)) {
@@ -71,7 +83,12 @@ function modifyTracebackEntry(fileMatchRegex: RegExp, file: string, fileDisplayN
     return entry;
 }
 
-export function modifyTraceback(file: string, fileDisplayName: string, startLine: number, traceback: string[]): string[] {
+export function modifyTraceback(
+    file: string,
+    fileDisplayName: string,
+    startLine: number,
+    traceback: string[]
+): string[] {
     if (file && file !== Identifiers.EmptyFileName) {
         const escaped = _escapeRegExp(fileDisplayName);
         const fileMatchRegex = new RegExp(`\\[.*?;32m${escaped}`);

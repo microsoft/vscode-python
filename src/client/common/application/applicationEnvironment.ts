@@ -24,11 +24,20 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         const vscodeFolderName = this.channel === 'insiders' ? 'Code - Insiders' : 'Code';
         switch (this.platform.osType) {
             case OSType.OSX:
-                return path.join(this.pathUtils.home, 'Library', 'Application Support', vscodeFolderName, 'User', 'settings.json');
+                return path.join(
+                    this.pathUtils.home,
+                    'Library',
+                    'Application Support',
+                    vscodeFolderName,
+                    'User',
+                    'settings.json'
+                );
             case OSType.Linux:
                 return path.join(this.pathUtils.home, '.config', vscodeFolderName, 'User', 'settings.json');
             case OSType.Windows:
-                return this.process.env.APPDATA ? path.join(this.process.env.APPDATA, vscodeFolderName, 'User', 'settings.json') : undefined;
+                return this.process.env.APPDATA
+                    ? path.join(this.process.env.APPDATA, vscodeFolderName, 'User', 'settings.json')
+                    : undefined;
             default:
                 return;
         }

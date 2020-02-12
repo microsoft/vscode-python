@@ -32,7 +32,10 @@ export class JupyterExporter implements INotebookExporter {
         noop();
     }
 
-    public async translateToNotebook(cells: ICell[], changeDirectory?: string): Promise<nbformat.INotebookContent | undefined> {
+    public async translateToNotebook(
+        cells: ICell[],
+        changeDirectory?: string
+    ): Promise<nbformat.INotebookContent | undefined> {
         // If requested, add in a change directory cell to fix relative paths
         if (changeDirectory && this.configService.getSettings().datascience.changeDirOnImportExport) {
             cells = await this.addDirectoryChangeCell(cells, changeDirectory);
@@ -117,7 +120,9 @@ export class JupyterExporter implements INotebookExporter {
     private calculateDirectoryChange = async (notebookFile: string, cells: ICell[]): Promise<string | undefined> => {
         // Make sure we don't already have a cell with a ChangeDirectory comment in it.
         let directoryChange: string | undefined;
-        const haveChangeAlready = cells.find(c => concatMultilineStringInput(c.data.source).includes(CodeSnippits.ChangeDirectoryCommentIdentifier));
+        const haveChangeAlready = cells.find(c =>
+            concatMultilineStringInput(c.data.source).includes(CodeSnippits.ChangeDirectoryCommentIdentifier)
+        );
         if (!haveChangeAlready) {
             const notebookFilePath = path.dirname(notebookFile);
             // First see if we have a workspace open, this only works if we have a workspace root to be relative to
@@ -125,7 +130,12 @@ export class JupyterExporter implements INotebookExporter {
                 const workspacePath = await this.firstWorkspaceFolder(cells);
 
                 // Make sure that we have everything that we need here
-                if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
+                if (
+                    workspacePath &&
+                    path.isAbsolute(workspacePath) &&
+                    notebookFilePath &&
+                    path.isAbsolute(notebookFilePath)
+                ) {
                     directoryChange = path.relative(notebookFilePath, workspacePath);
                 }
             }

@@ -21,7 +21,10 @@ import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput'
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
 import { PythonDebugConfigurationService } from '../../client/debugger/extension/configuration/debugConfigurationService';
 import { AttachConfigurationResolver } from '../../client/debugger/extension/configuration/resolvers/attach';
-import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from '../../client/debugger/extension/configuration/types';
+import {
+    IDebugConfigurationProviderFactory,
+    IDebugConfigurationResolver
+} from '../../client/debugger/extension/configuration/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { PYTHON_PATH, sleep } from '../common';
@@ -29,7 +32,13 @@ import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { continueDebugging, createDebugAdapter } from './utils';
 
 // tslint:disable:no-invalid-this max-func-body-length no-empty no-increment-decrement no-unused-variable no-console
-const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd.py');
+const fileToDebug = path.join(
+    EXTENSION_ROOT_DIR,
+    'src',
+    'testMultiRootWkspc',
+    'workspace5',
+    'remoteDebugger-start-with-ptvsd.py'
+);
 
 suite('Debugging - Attach Debugger', () => {
     let debugClient: DebugClient;
@@ -62,7 +71,16 @@ suite('Debugging - Attach Debugger', () => {
         // Set the path for PTVSD to be picked up.
         // tslint:disable-next-line:no-string-literal
         env['PYTHONPATH'] = PTVSD_PATH;
-        const pythonArgs = ['-m', 'ptvsd', '--host', 'localhost', '--wait', '--port', `${port}`, fileToDebug.fileToCommandArgument()];
+        const pythonArgs = [
+            '-m',
+            'ptvsd',
+            '--host',
+            'localhost',
+            '--wait',
+            '--port',
+            `${port}`,
+            fileToDebug.fileToCommandArgument()
+        ];
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
         const exited = new Promise(resolve => proc.once('close', resolve));
         await sleep(3000);
@@ -109,7 +127,12 @@ suite('Debugging - Attach Debugger', () => {
         );
         const providerFactory = TypeMoq.Mock.ofType<IDebugConfigurationProviderFactory>().object;
         const multistepFactory = mock(MultiStepInputFactory);
-        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory, instance(multistepFactory));
+        const configProvider = new PythonDebugConfigurationService(
+            attachResolver,
+            launchResolver.object,
+            providerFactory,
+            instance(multistepFactory)
+        );
 
         await configProvider.resolveDebugConfiguration({ index: 0, name: 'root', uri: Uri.file(localRoot) }, options);
         const attachPromise = debugClient.attachRequest(options);

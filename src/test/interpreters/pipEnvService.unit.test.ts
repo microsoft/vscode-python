@@ -15,7 +15,13 @@ import { Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
-import { IConfigurationService, ICurrentProcess, IPersistentState, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
+import {
+    IConfigurationService,
+    ICurrentProcess,
+    IPersistentState,
+    IPersistentStateFactory,
+    IPythonSettings
+} from '../../client/common/types';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
 import { IInterpreterHelper } from '../../client/interpreter/contracts';
@@ -65,31 +71,59 @@ suite('Interpreters - PipEnv', () => {
                 platformService = TypeMoq.Mock.ofType<IPlatformService>();
                 pipEnvServiceHelper = mock(PipEnvServiceHelper);
                 processService.setup((x: any) => x.then).returns(() => undefined);
-                procServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
+                procServiceFactory
+                    .setup(p => p.create(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(processService.object));
 
                 // tslint:disable-next-line:no-any
                 const persistentState = TypeMoq.Mock.ofType<IPersistentState<any>>();
-                persistentStateFactory.setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => persistentState.object);
-                persistentStateFactory.setup(p => p.createWorkspacePersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => persistentState.object);
+                persistentStateFactory
+                    .setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .returns(() => persistentState.object);
+                persistentStateFactory
+                    .setup(p => p.createWorkspacePersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .returns(() => persistentState.object);
                 persistentState.setup(p => p.value).returns(() => undefined);
                 persistentState.setup(p => p.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve());
 
                 const workspaceFolder = TypeMoq.Mock.ofType<WorkspaceFolder>();
                 workspaceFolder.setup(w => w.uri).returns(() => Uri.file(rootWorkspace));
-                workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
+                workspaceService
+                    .setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny()))
+                    .returns(() => workspaceFolder.object);
                 workspaceService.setup(w => w.rootPath).returns(() => rootWorkspace);
 
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny())).returns(() => procServiceFactory.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper))).returns(() => interpreterHelper.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => currentProcess.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny()))
+                    .returns(() => procServiceFactory.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+                    .returns(() => workspaceService.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper)))
+                    .returns(() => interpreterHelper.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess)))
+                    .returns(() => currentProcess.object);
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => persistentStateFactory.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider))).returns(() => envVarsProvider.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => config.object);
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPipEnvServiceHelper), TypeMoq.It.isAny())).returns(() => instance(pipEnvServiceHelper));
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IApplicationShell)))
+                    .returns(() => appShell.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory)))
+                    .returns(() => persistentStateFactory.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider)))
+                    .returns(() => envVarsProvider.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
+                    .returns(() => platformService.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
+                    .returns(() => config.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IPipEnvServiceHelper), TypeMoq.It.isAny()))
+                    .returns(() => instance(pipEnvServiceHelper));
 
                 when(pipEnvServiceHelper.trackWorkspaceFolder(anything(), anything())).thenResolve();
                 config = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -124,9 +158,16 @@ suite('Interpreters - PipEnv', () => {
             test(`Should display warning message if there is a \'PipFile\' but \'pipenv --version\' fails ${testSuffix}`, async () => {
                 const env = {};
                 currentProcess.setup(c => c.env).returns(() => env);
-                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())).returns(() => Promise.reject(''));
-                fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
-                const warningMessage = "Workspace contains Pipfile but 'pipenv' was not found. Make sure 'pipenv' is on the PATH.";
+                processService
+                    .setup(p =>
+                        p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())
+                    )
+                    .returns(() => Promise.reject(''));
+                fileSystem
+                    .setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
+                    .returns(() => Promise.resolve(true));
+                const warningMessage =
+                    "Workspace contains Pipfile but 'pipenv' was not found. Make sure 'pipenv' is on the PATH.";
                 appShell
                     .setup(a => a.showWarningMessage(warningMessage))
                     .returns(() => Promise.resolve(''))
@@ -140,13 +181,20 @@ suite('Interpreters - PipEnv', () => {
                 const env = {};
                 currentProcess.setup(c => c.env).returns(() => env);
                 processService
-                    .setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
+                    .setup(p =>
+                        p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny())
+                    )
                     .returns(() => Promise.resolve({ stderr: '', stdout: 'pipenv, version 2018.11.26' }));
                 processService
-                    .setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--venv']), TypeMoq.It.isAny()))
+                    .setup(p =>
+                        p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isValue(['--venv']), TypeMoq.It.isAny())
+                    )
                     .returns(() => Promise.resolve({ stderr: 'Aborted!', stdout: '' }));
-                fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile')))).returns(() => Promise.resolve(true));
-                const warningMessage = 'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.';
+                fileSystem
+                    .setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
+                    .returns(() => Promise.resolve(true));
+                const warningMessage =
+                    'Workspace contains Pipfile but the associated virtual environment has not been setup. Setup the virtual environment manually if needed.';
                 appShell
                     .setup(a => a.showWarningMessage(warningMessage))
                     .returns(() => Promise.resolve(''))
@@ -164,8 +212,12 @@ suite('Interpreters - PipEnv', () => {
                     .returns(() => Promise.resolve({}))
                     .verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
-                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonPath }));
-                interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: new SemVer('1.0.0') }));
+                processService
+                    .setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve({ stdout: pythonPath }));
+                interpreterHelper
+                    .setup(v => v.getInterpreterInformation(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve({ version: new SemVer('1.0.0') }));
                 fileSystem
                     .setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
                     .returns(() => Promise.resolve(true))
@@ -191,8 +243,12 @@ suite('Interpreters - PipEnv', () => {
                     .returns(() => Promise.resolve({}))
                     .verifiable(TypeMoq.Times.once());
                 currentProcess.setup(c => c.env).returns(() => env);
-                processService.setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: pythonPath }));
-                interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version: new SemVer('1.0.0') }));
+                processService
+                    .setup(p => p.exec(TypeMoq.It.isValue('pipenv'), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve({ stdout: pythonPath }));
+                interpreterHelper
+                    .setup(v => v.getInterpreterInformation(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve({ version: new SemVer('1.0.0') }));
                 fileSystem
                     .setup(fs => fs.fileExists(TypeMoq.It.isValue(path.join(rootWorkspace, 'Pipfile'))))
                     .returns(() => Promise.resolve(false))

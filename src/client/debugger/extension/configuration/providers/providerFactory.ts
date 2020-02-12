@@ -11,13 +11,27 @@ import { IDebugConfigurationProviderFactory } from '../types';
 export class DebugConfigurationProviderFactory implements IDebugConfigurationProviderFactory {
     private readonly providers: Map<DebugConfigurationType, IDebugConfigurationProvider>;
     constructor(
-        @inject(IDebugConfigurationProvider) @named(DebugConfigurationType.launchFlask) flaskProvider: IDebugConfigurationProvider,
-        @inject(IDebugConfigurationProvider) @named(DebugConfigurationType.launchDjango) djangoProvider: IDebugConfigurationProvider,
-        @inject(IDebugConfigurationProvider) @named(DebugConfigurationType.launchModule) moduleProvider: IDebugConfigurationProvider,
-        @inject(IDebugConfigurationProvider) @named(DebugConfigurationType.launchFile) fileProvider: IDebugConfigurationProvider,
-        @inject(IDebugConfigurationProvider) @named(DebugConfigurationType.launchPyramid) pyramidProvider: IDebugConfigurationProvider,
-        @inject(IDebugConfigurationProvider) @named(DebugConfigurationType.remoteAttach) remoteAttachProvider: IDebugConfigurationProvider,
-        @inject(IDebugConfigurationProvider) @named(DebugConfigurationType.pidAttach) pidAttachProvider: IDebugConfigurationProvider
+        @inject(IDebugConfigurationProvider)
+        @named(DebugConfigurationType.launchFlask)
+        flaskProvider: IDebugConfigurationProvider,
+        @inject(IDebugConfigurationProvider)
+        @named(DebugConfigurationType.launchDjango)
+        djangoProvider: IDebugConfigurationProvider,
+        @inject(IDebugConfigurationProvider)
+        @named(DebugConfigurationType.launchModule)
+        moduleProvider: IDebugConfigurationProvider,
+        @inject(IDebugConfigurationProvider)
+        @named(DebugConfigurationType.launchFile)
+        fileProvider: IDebugConfigurationProvider,
+        @inject(IDebugConfigurationProvider)
+        @named(DebugConfigurationType.launchPyramid)
+        pyramidProvider: IDebugConfigurationProvider,
+        @inject(IDebugConfigurationProvider)
+        @named(DebugConfigurationType.remoteAttach)
+        remoteAttachProvider: IDebugConfigurationProvider,
+        @inject(IDebugConfigurationProvider)
+        @named(DebugConfigurationType.pidAttach)
+        pidAttachProvider: IDebugConfigurationProvider
     ) {
         this.providers = new Map<DebugConfigurationType, IDebugConfigurationProvider>();
         this.providers.set(DebugConfigurationType.launchDjango, djangoProvider);

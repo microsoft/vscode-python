@@ -7,7 +7,12 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { PipEnvInstaller } from '../../../client/common/installer/pipEnvInstaller';
-import { IInterpreterLocatorService, InterpreterType, PIPENV_SERVICE, PythonInterpreter } from '../../../client/interpreter/contracts';
+import {
+    IInterpreterLocatorService,
+    InterpreterType,
+    PIPENV_SERVICE,
+    PythonInterpreter
+} from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line: max-func-body-length
@@ -18,7 +23,9 @@ suite('PipEnv installer', async () => {
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         locatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(PIPENV_SERVICE))).returns(() => locatorService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(PIPENV_SERVICE)))
+            .returns(() => locatorService.object);
         pipEnvInstaller = new PipEnvInstaller(serviceContainer.object);
     });
 
@@ -52,7 +59,12 @@ suite('PipEnv installer', async () => {
         const resource = Uri.parse('a');
         locatorService
             .setup(p => p.getInterpreters(resource))
-            .returns(() => Promise.resolve([TypeMoq.Mock.ofType<PythonInterpreter>().object, TypeMoq.Mock.ofType<PythonInterpreter>().object]));
+            .returns(() =>
+                Promise.resolve([
+                    TypeMoq.Mock.ofType<PythonInterpreter>().object,
+                    TypeMoq.Mock.ofType<PythonInterpreter>().object
+                ])
+            );
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(true, 'Should be true');
     });

@@ -10,7 +10,13 @@ import { IConfigurationService, IDisposableRegistry, IPathUtils, IPythonSettings
 import { Architecture } from '../../client/common/utils/platform';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
-import { IInterpreterDisplay, IInterpreterHelper, IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import {
+    IInterpreterDisplay,
+    IInterpreterHelper,
+    IInterpreterService,
+    InterpreterType,
+    PythonInterpreter
+} from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -59,18 +65,34 @@ suite('Interpreters Display', () => {
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
         autoSelection = mock(InterpreterAutoSelectionService);
 
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => applicationShell.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService))).returns(() => interpreterService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IVirtualEnvironmentManager))).returns(() => virtualEnvMgr.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspaceService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IApplicationShell)))
+            .returns(() => applicationShell.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService)))
+            .returns(() => interpreterService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IVirtualEnvironmentManager)))
+            .returns(() => virtualEnvMgr.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => disposableRegistry);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configurationService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper))).returns(() => interpreterHelper.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+            .returns(() => configurationService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper)))
+            .returns(() => interpreterHelper.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterAutoSelectionService))).returns(() => instance(autoSelection));
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterAutoSelectionService)))
+            .returns(() => instance(autoSelection));
 
-        applicationShell.setup(a => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Left), TypeMoq.It.isValue(100))).returns(() => statusBar.object);
+        applicationShell
+            .setup(a => a.createStatusBarItem(TypeMoq.It.isValue(StatusBarAlignment.Left), TypeMoq.It.isValue(100)))
+            .returns(() => statusBar.object);
         pathUtils.setup(p => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(p => p);
 
         interpreterDisplay = new InterpreterDisplay(serviceContainer.object);
@@ -79,7 +101,9 @@ suite('Interpreters Display', () => {
         if (workspaceFolder) {
             const mockFolder = TypeMoq.Mock.ofType<WorkspaceFolder>();
             mockFolder.setup(w => w.uri).returns(() => workspaceFolder);
-            workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource))).returns(() => mockFolder.object);
+            workspaceService
+                .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource)))
+                .returns(() => mockFolder.object);
         } else {
             workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource))).returns(() => undefined);
         }
@@ -100,8 +124,12 @@ suite('Interpreters Display', () => {
         };
         setupWorkspaceFolder(resource, workspaceFolder);
         when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
-        interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve([]));
-        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(activeInterpreter));
+        interpreterService
+            .setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
+            .returns(() => Promise.resolve([]));
+        interpreterService
+            .setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
+            .returns(() => Promise.resolve(activeInterpreter));
 
         await interpreterDisplay.refresh(resource);
 
@@ -120,7 +148,9 @@ suite('Interpreters Display', () => {
             displayName,
             path: pythonPath
         } as any) as PythonInterpreter;
-        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(pythonInterpreter));
+        interpreterService
+            .setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
+            .returns(() => Promise.resolve(pythonInterpreter));
 
         await interpreterDisplay.refresh(resource);
 
@@ -133,18 +163,29 @@ suite('Interpreters Display', () => {
         const workspaceFolder = Uri.file('workspace');
         setupWorkspaceFolder(resource, workspaceFolder);
         // tslint:disable-next-line:no-any
-        interpreterService.setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve([{} as any]));
-        interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(undefined));
+        interpreterService
+            .setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
+            .returns(() => Promise.resolve([{} as any]));
+        interpreterService
+            .setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
+            .returns(() => Promise.resolve(undefined));
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
         fileSystem.setup(f => f.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
-        interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(undefined));
-        virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
+        interpreterHelper
+            .setup(v => v.getInterpreterInformation(TypeMoq.It.isValue(pythonPath)))
+            .returns(() => Promise.resolve(undefined));
+        virtualEnvMgr
+            .setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath)))
+            .returns(() => Promise.resolve(''));
 
         await interpreterDisplay.refresh(resource);
 
         statusBar.verify(s => (s.color = TypeMoq.It.isValue('yellow')), TypeMoq.Times.once());
-        statusBar.verify(s => (s.text = TypeMoq.It.isValue('$(alert) Select Python Interpreter')), TypeMoq.Times.once());
+        statusBar.verify(
+            s => (s.text = TypeMoq.It.isValue('$(alert) Select Python Interpreter')),
+            TypeMoq.Times.once()
+        );
     });
     test('Ensure we try to identify the active workspace when a resource is not provided ', async () => {
         const workspaceFolder = Uri.file('x');
@@ -158,7 +199,9 @@ suite('Interpreters Display', () => {
             path: pythonPath
         };
         fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
-        virtualEnvMgr.setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(''));
+        virtualEnvMgr
+            .setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath)))
+            .returns(() => Promise.resolve(''));
         interpreterService
             .setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(resource)))
             .returns(() => Promise.resolve(activeInterpreter))

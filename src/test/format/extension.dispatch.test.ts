@@ -5,7 +5,15 @@
 
 import * as assert from 'assert';
 import * as TypeMoq from 'typemoq';
-import { CancellationToken, FormattingOptions, OnTypeFormattingEditProvider, Position, ProviderResult, TextDocument, TextEdit } from 'vscode';
+import {
+    CancellationToken,
+    FormattingOptions,
+    OnTypeFormattingEditProvider,
+    Position,
+    ProviderResult,
+    TextDocument,
+    TextEdit
+} from 'vscode';
 import { OnTypeFormattingDispatcher } from '../../client/typeFormatters/dispatcher';
 
 suite('Formatting - Dispatcher', () => {
@@ -21,7 +29,13 @@ suite('Formatting - Dispatcher', () => {
         const triggers = dispatcher.getTriggerCharacters();
         assert.equal(triggers, undefined, 'Trigger was not undefined');
 
-        const result = await dispatcher.provideOnTypeFormattingEdits(doc.object, pos.object, '\n', opt.object, token.object);
+        const result = await dispatcher.provideOnTypeFormattingEdits(
+            doc.object,
+            pos.object,
+            '\n',
+            opt.object,
+            token.object
+        );
         assert.deepStrictEqual(result, [], 'Did not return an empty list of edits');
     });
 
@@ -50,7 +64,14 @@ suite('Formatting - Dispatcher', () => {
         const token2 = TypeMoq.Mock.ofType<CancellationToken>();
         const edits2 = TypeMoq.Mock.ofType<ProviderResult<TextEdit[]>>();
 
-        const newlineProvider = setupProvider(doc2.object, pos2.object, '\n', opt2.object, token2.object, edits2.object);
+        const newlineProvider = setupProvider(
+            doc2.object,
+            pos2.object,
+            '\n',
+            opt2.object,
+            token2.object,
+            edits2.object
+        );
 
         const dispatcher = new OnTypeFormattingDispatcher({
             ':': colonProvider.object,
@@ -63,7 +84,13 @@ suite('Formatting - Dispatcher', () => {
         const result = dispatcher.provideOnTypeFormattingEdits(doc.object, pos.object, ':', opt.object, token.object);
         assert.equal(result, edits.object, 'Did not return correct editsfor colon provider');
 
-        const result2 = dispatcher.provideOnTypeFormattingEdits(doc2.object, pos2.object, '\n', opt2.object, token2.object);
+        const result2 = dispatcher.provideOnTypeFormattingEdits(
+            doc2.object,
+            pos2.object,
+            '\n',
+            opt2.object,
+            token2.object
+        );
         assert.equal(result2, edits2.object, 'Did not return correct edits for newline provider');
 
         colonProvider.verifyAll();

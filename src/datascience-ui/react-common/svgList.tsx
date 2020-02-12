@@ -33,7 +33,9 @@ export class SvgList extends React.Component<ISvgListProps> {
                 this.props.themeMatplotlibBackground ? '' : ' svg-list-white-background'
             }`;
             const ariaLabel =
-                index === this.props.currentImage ? getLocString('DataScience.selectedImageListLabel', 'Selected Image') : getLocString('DataScience.selectedImageLabel', 'Image');
+                index === this.props.currentImage
+                    ? getLocString('DataScience.selectedImageListLabel', 'Selected Image')
+                    : getLocString('DataScience.selectedImageLabel', 'Image');
             const ariaPressed = index === this.props.currentImage ? 'true' : 'false';
             const clickHandler = () => this.props.imageClicked(index);
             const keyDownHandler = (e: React.KeyboardEvent<HTMLDivElement>) => this.onKeyDown(e, index);

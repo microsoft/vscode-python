@@ -10,7 +10,11 @@ import { LanguageServerDownloader } from '../../../client/activation/common/down
 import { DotNetLanguageServerActivator } from '../../../client/activation/languageServer/activator';
 import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { DotNetLanguageServerManager } from '../../../client/activation/languageServer/manager';
-import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../../../client/activation/types';
+import {
+    ILanguageServerDownloader,
+    ILanguageServerFolderService,
+    ILanguageServerManager
+} from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -152,7 +156,10 @@ suite('Language Server - Activator', () => {
         const languageServerFolder = 'Some folder name';
         const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
         const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
-        const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        const targetJsonFile = path.join(
+            languageServerFolderPath,
+            'Microsoft.Python.LanguageServer.runtimeconfig.json'
+        );
 
         when(settings.downloadLanguageServer).thenReturn(true);
         when(lsFolderService.getLanguageServerFolderName(undefined)).thenResolve(languageServerFolder);
@@ -170,7 +177,10 @@ suite('Language Server - Activator', () => {
         const languageServerFolder = 'Some folder name';
         const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
         const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
-        const targetJsonFile = path.join(languageServerFolderPath, 'Microsoft.Python.LanguageServer.runtimeconfig.json');
+        const targetJsonFile = path.join(
+            languageServerFolderPath,
+            'Microsoft.Python.LanguageServer.runtimeconfig.json'
+        );
         const jsonContents = { runtimeOptions: { configProperties: { 'System.Globalization.Invariant': false } } };
 
         when(settings.downloadLanguageServer).thenReturn(true);

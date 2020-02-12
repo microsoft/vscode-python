@@ -10,7 +10,17 @@ import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { UNITTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
-import { ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner, IUnitTestSocketServer, LaunchOptions, TestRunOptions, Tests, TestStatus } from '../common/types';
+import {
+    ITestDebugLauncher,
+    ITestManager,
+    ITestResultsService,
+    ITestRunner,
+    IUnitTestSocketServer,
+    LaunchOptions,
+    TestRunOptions,
+    Tests,
+    TestStatus
+} from '../common/types';
 import { IArgumentsHelper, ITestManagerRunner, IUnitTestHelper } from '../types';
 
 type TestStatusMap = {
@@ -48,7 +58,11 @@ export class TestManagerRunner implements ITestManagerRunner {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    public async runTest(testResultsService: ITestResultsService, options: TestRunOptions, testManager: ITestManager): Promise<Tests> {
+    public async runTest(
+        testResultsService: ITestResultsService,
+        options: TestRunOptions,
+        testManager: ITestManager
+    ): Promise<Tests> {
         if (this.busy && !this.busy.completed) {
             return this.busy.promise;
         }
@@ -87,7 +101,10 @@ export class TestManagerRunner implements ITestManagerRunner {
                 test.testFunction.traceback = data.traceback;
                 options.tests.summary[statusDetails.summaryProperty] += 1;
 
-                if (failFast && (statusDetails.summaryProperty === 'failures' || statusDetails.summaryProperty === 'errors')) {
+                if (
+                    failFast &&
+                    (statusDetails.summaryProperty === 'failures' || statusDetails.summaryProperty === 'errors')
+                ) {
                     testManager.stop();
                 }
             } else {
@@ -118,7 +135,13 @@ export class TestManagerRunner implements ITestManagerRunner {
             if (options.debug === true) {
                 const debugLauncher = this.serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
                 testArgs.push('--debug');
-                const launchOptions: LaunchOptions = { cwd: options.cwd, args: testArgs, token: options.token, outChannel: options.outChannel, testProvider: UNITTEST_PROVIDER };
+                const launchOptions: LaunchOptions = {
+                    cwd: options.cwd,
+                    args: testArgs,
+                    token: options.token,
+                    outChannel: options.outChannel,
+                    testProvider: UNITTEST_PROVIDER
+                };
                 return debugLauncher.launchDebugger(launchOptions);
             } else {
                 const runOptions: Options = {

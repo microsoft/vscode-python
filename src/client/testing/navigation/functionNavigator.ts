@@ -38,7 +38,8 @@ export class TestFunctionCodeNavigator implements ITestCodeNavigator {
         if (item.testFunction.line) {
             range = new Range(item.testFunction.line, 0, item.testFunction.line, 0);
         } else {
-            const predicate = (s: SymbolInformation) => s.name === item.testFunction.name && (s.kind === SymbolKind.Method || s.kind === SymbolKind.Function);
+            const predicate = (s: SymbolInformation) =>
+                s.name === item.testFunction.name && (s.kind === SymbolKind.Method || s.kind === SymbolKind.Function);
             const symbol = await this.helper.findSymbol(doc, predicate, this.cancellationToken.token);
             range = symbol ? symbol.location.range : undefined;
         }

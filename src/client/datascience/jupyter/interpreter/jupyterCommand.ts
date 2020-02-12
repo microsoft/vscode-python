@@ -87,7 +87,10 @@ class InterpreterJupyterCommand implements IJupyterCommand {
             // Create a daemon only if the interpreter is the same as the current interpreter.
             // We don't want too many daemons (we don't want one for each of the users interpreter on their machine).
             if (isActiveInterpreter) {
-                const svc = await pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter!.path });
+                const svc = await pythonExecutionFactory.createDaemon({
+                    daemonModule: PythonDaemonModule,
+                    pythonPath: interpreter!.path
+                });
 
                 // If we're using this command to start notebook, then ensure the daemon can start a notebook inside it.
                 if (
@@ -103,7 +106,10 @@ class InterpreterJupyterCommand implements IJupyterCommand {
                             .startsWith('-m notebook'))
                 ) {
                     try {
-                        const output = await svc.exec([path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'jupyter_nbInstalled.py')], {});
+                        const output = await svc.exec(
+                            [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'jupyter_nbInstalled.py')],
+                            {}
+                        );
                         if (output.stdout.toLowerCase().includes('available')) {
                             return svc;
                         }
@@ -112,7 +118,10 @@ class InterpreterJupyterCommand implements IJupyterCommand {
                     }
                 }
             }
-            return pythonExecutionFactory.createActivatedEnvironment({ interpreter: this._interpreter, bypassCondaExecution: true });
+            return pythonExecutionFactory.createActivatedEnvironment({
+                interpreter: this._interpreter,
+                bypassCondaExecution: true
+            });
         });
     }
     public interpreter(): Promise<PythonInterpreter | undefined> {
@@ -148,7 +157,13 @@ class InterpreterJupyterCommand implements IJupyterCommand {
  * @implements {IJupyterCommand}
  */
 export class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand {
-    constructor(moduleName: string, args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter, isActiveInterpreter: boolean) {
+    constructor(
+        moduleName: string,
+        args: string[],
+        pythonExecutionFactory: IPythonExecutionFactory,
+        interpreter: PythonInterpreter,
+        isActiveInterpreter: boolean
+    ) {
         super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
     }
 }
@@ -162,7 +177,13 @@ export class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand
  */
 // tslint:disable-next-line: max-classes-per-file
 export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterCommand {
-    constructor(moduleName: string, args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter, isActiveInterpreter: boolean) {
+    constructor(
+        moduleName: string,
+        args: string[],
+        pythonExecutionFactory: IPythonExecutionFactory,
+        interpreter: PythonInterpreter,
+        isActiveInterpreter: boolean
+    ) {
         super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
     }
 
@@ -216,8 +237,14 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         }
         try {
             // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
-            const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({ interpreter, bypassCondaExecution: true });
-            return activatedEnv.exec([path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterKernels.py')], { ...options, throwOnStdErr: true });
+            const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
+                interpreter,
+                bypassCondaExecution: true
+            });
+            return activatedEnv.exec(
+                [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterKernels.py')],
+                { ...options, throwOnStdErr: true }
+            );
         } catch (innerEx) {
             traceError('Failed to get a list of the kernelspec using python script', innerEx);
             // Rethrow original exception.
@@ -239,16 +266,40 @@ export class JupyterCommandFactory implements IJupyterCommandFactory {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
 
-    public createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter, isActiveInterpreter: boolean): IJupyterCommand {
+    public createInterpreterCommand(
+        command: JupyterCommands,
+        moduleName: string,
+        args: string[],
+        interpreter: PythonInterpreter,
+        isActiveInterpreter: boolean
+    ): IJupyterCommand {
         if (command === JupyterCommands.NotebookCommand) {
-            return new InterpreterJupyterNotebookCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
+            return new InterpreterJupyterNotebookCommand(
+                moduleName,
+                args,
+                this.executionFactory,
+                interpreter,
+                isActiveInterpreter
+            );
         } else if (command === JupyterCommands.KernelSpecCommand) {
-            return new InterpreterJupyterKernelSpecCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
+            return new InterpreterJupyterKernelSpecCommand(
+                moduleName,
+                args,
+                this.executionFactory,
+                interpreter,
+                isActiveInterpreter
+            );
         }
         return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
     }
 
     public createProcessCommand(exe: string, args: string[]): IJupyterCommand {
-        return new ProcessJupyterCommand(exe, args, this.processServiceFactory, this.activationHelper, this.interpreterService);
+        return new ProcessJupyterCommand(
+            exe,
+            args,
+            this.processServiceFactory,
+            this.activationHelper,
+            this.interpreterService
+        );
     }
 }

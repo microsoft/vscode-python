@@ -29,7 +29,9 @@ suite('Data Science - Server Selector Command', () => {
     test('Command Handler should invoke ServerSelector', () => {
         serverSelectorCommand.register();
         // tslint:disable-next-line: no-any
-        const handler = (capture(commandManager.registerCommand as any).first()[1] as Function).bind(serverSelectorCommand);
+        const handler = (capture(commandManager.registerCommand as any).first()[1] as Function).bind(
+            serverSelectorCommand
+        );
 
         handler();
 

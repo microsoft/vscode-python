@@ -44,7 +44,11 @@ import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyte
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
-import { IJupyterKernelSpec, IJupyterSubCommandExecutionService, INotebookServer } from '../../client/datascience/types';
+import {
+    IJupyterKernelSpec,
+    IJupyterSubCommandExecutionService,
+    INotebookServer
+} from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
@@ -212,7 +216,12 @@ suite('Jupyter Execution', async () => {
         return false;
     }
 
-    function setupPythonService(service: TypeMoq.IMock<IPythonExecutionService>, module: string | undefined, args: (string | RegExp)[], result: Promise<ExecutionResult<string>>) {
+    function setupPythonService(
+        service: TypeMoq.IMock<IPythonExecutionService>,
+        module: string | undefined,
+        args: (string | RegExp)[],
+        result: Promise<ExecutionResult<string>>
+    ) {
         if (module) {
             service
                 .setup(x =>
@@ -279,7 +288,13 @@ suite('Jupyter Execution', async () => {
             .returns(result);
     }
 
-    function setupPythonServiceExecObservable(service: TypeMoq.IMock<IPythonExecutionService>, module: string, args: (string | RegExp)[], stderr: string[], stdout: string[]) {
+    function setupPythonServiceExecObservable(
+        service: TypeMoq.IMock<IPythonExecutionService>,
+        module: string,
+        args: (string | RegExp)[],
+        stderr: string[],
+        stdout: string[]
+    ) {
         const result: ObservableExecutionResult<string> = {
             proc: undefined,
             out: new Observable<Output<string>>(subscriber => {
@@ -311,7 +326,12 @@ suite('Jupyter Execution', async () => {
             .returns(() => result);
     }
 
-    function setupProcessServiceExec(service: TypeMoq.IMock<IProcessService>, file: string, args: (string | RegExp)[], result: Promise<ExecutionResult<string>>) {
+    function setupProcessServiceExec(
+        service: TypeMoq.IMock<IProcessService>,
+        file: string,
+        args: (string | RegExp)[],
+        result: Promise<ExecutionResult<string>>
+    ) {
         service
             .setup(x =>
                 x.exec(
@@ -323,7 +343,12 @@ suite('Jupyter Execution', async () => {
             .returns(() => result);
     }
 
-    function setupProcessServiceExecWithFunc(service: TypeMoq.IMock<IProcessService>, file: string, args: (string | RegExp)[], result: () => Promise<ExecutionResult<string>>) {
+    function setupProcessServiceExecWithFunc(
+        service: TypeMoq.IMock<IProcessService>,
+        file: string,
+        args: (string | RegExp)[],
+        result: () => Promise<ExecutionResult<string>>
+    ) {
         service
             .setup(x =>
                 x.exec(
@@ -335,7 +360,13 @@ suite('Jupyter Execution', async () => {
             .returns(result);
     }
 
-    function setupProcessServiceExecObservable(service: TypeMoq.IMock<IProcessService>, file: string, args: (string | RegExp)[], stderr: string[], stdout: string[]) {
+    function setupProcessServiceExecObservable(
+        service: TypeMoq.IMock<IProcessService>,
+        file: string,
+        args: (string | RegExp)[],
+        stderr: string[],
+        stdout: string[]
+    ) {
         const result: ObservableExecutionResult<string> = {
             proc: undefined,
             out: new Observable<Output<string>>(subscriber => {
@@ -372,7 +403,11 @@ suite('Jupyter Execution', async () => {
         });
         return models;
     }
-    function setupWorkingPythonService(service: TypeMoq.IMock<IPythonExecutionService>, notebookStdErr?: string[], runInDocker?: boolean) {
+    function setupWorkingPythonService(
+        service: TypeMoq.IMock<IPythonExecutionService>,
+        notebookStdErr?: string[],
+        runInDocker?: boolean
+    ) {
         setupPythonService(service, 'ipykernel', ['--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupPythonService(service, 'jupyter', ['nbconvert', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupPythonService(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
@@ -385,52 +420,107 @@ suite('Jupyter Execution', async () => {
             if (ipykernelInstallCount > 0) {
                 const kernelSpecs = createKernelSpecs([
                     { name: 'working', resourceDir: path.dirname(workingKernelSpec) },
-                    { name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }
+                    {
+                        name: '0e8519db-0895-416c-96df-fa80131ecea0',
+                        resourceDir:
+                            'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+                    }
                 ]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             } else {
                 const kernelSpecs = createKernelSpecs([
-                    { name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }
+                    {
+                        name: '0e8519db-0895-416c-96df-fa80131ecea0',
+                        resourceDir:
+                            'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+                    }
                 ]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             }
         });
         const kernelSpecs2 = createKernelSpecs([
             { name: 'working', resourceDir: path.dirname(workingKernelSpec) },
-            { name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }
+            {
+                name: '0e8519db-0895-416c-96df-fa80131ecea0',
+                resourceDir:
+                    'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+            }
         ]);
-        setupPythonService(service, 'jupyter', ['kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs2) }));
-        setupPythonServiceWithFunc(service, 'ipykernel', ['install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`], () => {
-            ipykernelInstallCount += 1;
-            const kernelSpecs = createKernelSpecs([{ name: 'somename', resourceDir: path.dirname(workingKernelSpec) }]);
-            return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
-        });
+        setupPythonService(
+            service,
+            'jupyter',
+            ['kernelspec', 'list', '--json'],
+            Promise.resolve({ stdout: JSON.stringify(kernelSpecs2) })
+        );
+        setupPythonServiceWithFunc(
+            service,
+            'ipykernel',
+            ['install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`],
+            () => {
+                ipykernelInstallCount += 1;
+                const kernelSpecs = createKernelSpecs([
+                    { name: 'somename', resourceDir: path.dirname(workingKernelSpec) }
+                ]);
+                return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
+            }
+        );
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
-        setupPythonService(service, undefined, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
+        setupPythonService(
+            service,
+            undefined,
+            [getServerInfoPath],
+            Promise.resolve({ stdout: 'failure to get server infos' })
+        );
         setupPythonServiceExecObservable(service, 'jupyter', ['kernelspec', 'list', '--json'], [], []);
         const dockerArgs = runInDocker ? ['--ip', '127.0.0.1'] : [];
         setupPythonServiceExecObservable(
             service,
             'jupyter',
-            ['notebook', '--no-browser', /--notebook-dir=.*/, /--config=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0', ...dockerArgs],
+            [
+                'notebook',
+                '--no-browser',
+                /--notebook-dir=.*/,
+                /--config=.*/,
+                '--NotebookApp.iopub_data_rate_limit=10000000000.0',
+                ...dockerArgs
+            ],
             [],
             notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
         );
     }
 
-    function setupMissingKernelPythonService(service: TypeMoq.IMock<IPythonExecutionService>, notebookStdErr?: string[]) {
+    function setupMissingKernelPythonService(
+        service: TypeMoq.IMock<IPythonExecutionService>,
+        notebookStdErr?: string[]
+    ) {
         setupPythonService(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupPythonService(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         service.setup(x => x.getInterpreterInformation()).returns(() => Promise.resolve(missingKernelPython));
         const kernelSpecs = createKernelSpecs([{ name: 'working', resourceDir: path.dirname(workingKernelSpec) }]);
-        setupPythonService(service, 'jupyter', ['kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs) }));
+        setupPythonService(
+            service,
+            'jupyter',
+            ['kernelspec', 'list', '--json'],
+            Promise.resolve({ stdout: JSON.stringify(kernelSpecs) })
+        );
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
-        setupPythonService(service, undefined, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
+        setupPythonService(
+            service,
+            undefined,
+            [getServerInfoPath],
+            Promise.resolve({ stdout: 'failure to get server infos' })
+        );
         setupPythonServiceExecObservable(service, 'jupyter', ['kernelspec', 'list', '--json'], [], []);
         setupPythonServiceExecObservable(
             service,
             'jupyter',
-            ['notebook', '--no-browser', /--notebook-dir=.*/, /--config=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'],
+            [
+                'notebook',
+                '--no-browser',
+                /--notebook-dir=.*/,
+                /--config=.*/,
+                '--NotebookApp.iopub_data_rate_limit=10000000000.0'
+            ],
             [],
             notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
         );
@@ -447,43 +537,95 @@ suite('Jupyter Execution', async () => {
 
     function setupWorkingProcessService(service: TypeMoq.IMock<IProcessService>, notebookStdErr?: string[]) {
         // Don't mind the goofy path here. It's supposed to not find the item. It's just testing the internal regex works
-        setupProcessServiceExecWithFunc(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list', '--json'], () => {
-            // Return different results after we install our kernel
-            if (ipykernelInstallCount > 0) {
-                const kernelSpecs = createKernelSpecs([
-                    { name: 'working', resourceDir: path.dirname(workingKernelSpec) },
-                    { name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }
-                ]);
-                return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
-            } else {
-                const kernelSpecs = createKernelSpecs([
-                    { name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }
-                ]);
-                return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
-            }
-        });
-        const kernelSpecs2 = createKernelSpecs([
-            { name: 'working', resourceDir: path.dirname(workingKernelSpec) },
-            { name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }
-        ]);
-        setupProcessServiceExec(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs2) }));
         setupProcessServiceExecWithFunc(
             service,
             workingPython.path,
-            ['-m', 'ipykernel', 'install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`],
+            ['-m', 'jupyter', 'kernelspec', 'list', '--json'],
+            () => {
+                // Return different results after we install our kernel
+                if (ipykernelInstallCount > 0) {
+                    const kernelSpecs = createKernelSpecs([
+                        { name: 'working', resourceDir: path.dirname(workingKernelSpec) },
+                        {
+                            name: '0e8519db-0895-416c-96df-fa80131ecea0',
+                            resourceDir:
+                                'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+                        }
+                    ]);
+                    return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
+                } else {
+                    const kernelSpecs = createKernelSpecs([
+                        {
+                            name: '0e8519db-0895-416c-96df-fa80131ecea0',
+                            resourceDir:
+                                'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+                        }
+                    ]);
+                    return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
+                }
+            }
+        );
+        const kernelSpecs2 = createKernelSpecs([
+            { name: 'working', resourceDir: path.dirname(workingKernelSpec) },
+            {
+                name: '0e8519db-0895-416c-96df-fa80131ecea0',
+                resourceDir:
+                    'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+            }
+        ]);
+        setupProcessServiceExec(
+            service,
+            workingPython.path,
+            ['-m', 'jupyter', 'kernelspec', 'list', '--json'],
+            Promise.resolve({ stdout: JSON.stringify(kernelSpecs2) })
+        );
+        setupProcessServiceExecWithFunc(
+            service,
+            workingPython.path,
+            [
+                '-m',
+                'ipykernel',
+                'install',
+                '--user',
+                '--name',
+                /\w+-\w+-\w+-\w+-\w+/,
+                '--display-name',
+                `'Python Interactive'`
+            ],
             () => {
                 ipykernelInstallCount += 1;
-                const kernelSpecs = createKernelSpecs([{ name: 'somename', resourceDir: path.dirname(workingKernelSpec) }]);
+                const kernelSpecs = createKernelSpecs([
+                    { name: 'somename', resourceDir: path.dirname(workingKernelSpec) }
+                ]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             }
         );
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
-        setupProcessServiceExec(service, workingPython.path, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
-        setupProcessServiceExecObservable(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list', '--json'], [], []);
+        setupProcessServiceExec(
+            service,
+            workingPython.path,
+            [getServerInfoPath],
+            Promise.resolve({ stdout: 'failure to get server infos' })
+        );
         setupProcessServiceExecObservable(
             service,
             workingPython.path,
-            ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /--config=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'],
+            ['-m', 'jupyter', 'kernelspec', 'list', '--json'],
+            [],
+            []
+        );
+        setupProcessServiceExecObservable(
+            service,
+            workingPython.path,
+            [
+                '-m',
+                'jupyter',
+                'notebook',
+                '--no-browser',
+                /--notebook-dir=.*/,
+                /--config=.*/,
+                '--NotebookApp.iopub_data_rate_limit=10000000000.0'
+            ],
             [],
             notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
         );
@@ -491,30 +633,79 @@ suite('Jupyter Execution', async () => {
 
     function setupMissingKernelProcessService(service: TypeMoq.IMock<IProcessService>, notebookStdErr?: string[]) {
         const kernelSpecs = createKernelSpecs([{ name: 'working', resourceDir: path.dirname(workingKernelSpec) }]);
-        setupProcessServiceExec(service, missingKernelPython.path, ['-m', 'jupyter', 'kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs) }));
+        setupProcessServiceExec(
+            service,
+            missingKernelPython.path,
+            ['-m', 'jupyter', 'kernelspec', 'list', '--json'],
+            Promise.resolve({ stdout: JSON.stringify(kernelSpecs) })
+        );
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
-        setupProcessServiceExec(service, missingKernelPython.path, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
-        setupProcessServiceExecObservable(service, missingKernelPython.path, ['-m', 'jupyter', 'kernelspec', 'list', '--json'], [], []);
+        setupProcessServiceExec(
+            service,
+            missingKernelPython.path,
+            [getServerInfoPath],
+            Promise.resolve({ stdout: 'failure to get server infos' })
+        );
         setupProcessServiceExecObservable(
             service,
             missingKernelPython.path,
-            ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /--config=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'],
+            ['-m', 'jupyter', 'kernelspec', 'list', '--json'],
+            [],
+            []
+        );
+        setupProcessServiceExecObservable(
+            service,
+            missingKernelPython.path,
+            [
+                '-m',
+                'jupyter',
+                'notebook',
+                '--no-browser',
+                /--notebook-dir=.*/,
+                /--config=.*/,
+                '--NotebookApp.iopub_data_rate_limit=10000000000.0'
+            ],
             [],
             notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
         );
     }
 
-    function setupPathProcessService(jupyterPath: string, service: TypeMoq.IMock<IProcessService>, notebookStdErr?: string[]) {
+    function setupPathProcessService(
+        jupyterPath: string,
+        service: TypeMoq.IMock<IProcessService>,
+        notebookStdErr?: string[]
+    ) {
         const kernelSpecs = createKernelSpecs([{ name: 'working', resourceDir: path.dirname(workingKernelSpec) }]);
-        setupProcessServiceExec(service, jupyterPath, ['kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs) }));
+        setupProcessServiceExec(
+            service,
+            jupyterPath,
+            ['kernelspec', 'list', '--json'],
+            Promise.resolve({ stdout: JSON.stringify(kernelSpecs) })
+        );
         setupProcessServiceExecObservable(service, jupyterPath, ['kernelspec', 'list', '--json'], [], []);
         setupProcessServiceExec(service, jupyterPath, ['--version'], Promise.resolve({ stdout: '1.1.1.1' }));
-        setupProcessServiceExec(service, jupyterPath, ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
-        setupProcessServiceExec(service, jupyterPath, ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
+        setupProcessServiceExec(
+            service,
+            jupyterPath,
+            ['notebook', '--version'],
+            Promise.resolve({ stdout: '1.1.1.1' })
+        );
+        setupProcessServiceExec(
+            service,
+            jupyterPath,
+            ['kernelspec', '--version'],
+            Promise.resolve({ stdout: '1.1.1.1' })
+        );
         setupProcessServiceExecObservable(
             service,
             jupyterPath,
-            ['notebook', '--no-browser', /--notebook-dir=.*/, /--config=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'],
+            [
+                'notebook',
+                '--no-browser',
+                /--notebook-dir=.*/,
+                /--config=.*/,
+                '--NotebookApp.iopub_data_rate_limit=10000000000.0'
+            ],
             [],
             notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
         );
@@ -522,26 +713,45 @@ suite('Jupyter Execution', async () => {
         // WE also check for existence with just the key jupyter
         setupProcessServiceExec(service, 'jupyter', ['--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupProcessServiceExec(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
-        setupProcessServiceExec(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
+        setupProcessServiceExec(
+            service,
+            'jupyter',
+            ['kernelspec', '--version'],
+            Promise.resolve({ stdout: '1.1.1.1' })
+        );
     }
 
-    function createExecution(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean): JupyterExecutionFactory {
-        return createExecutionAndReturnProcessService(activeInterpreter, notebookStdErr, skipSearch).jupyterExecutionFactory;
+    function createExecution(
+        activeInterpreter: PythonInterpreter,
+        notebookStdErr?: string[],
+        skipSearch?: boolean
+    ): JupyterExecutionFactory {
+        return createExecutionAndReturnProcessService(activeInterpreter, notebookStdErr, skipSearch)
+            .jupyterExecutionFactory;
     }
     function createExecutionAndReturnProcessService(
         activeInterpreter: PythonInterpreter,
         notebookStdErr?: string[],
         skipSearch?: boolean,
         runInDocker?: boolean
-    ): { workingPythonExecutionService: TypeMoq.IMock<IPythonExecutionService>; jupyterExecutionFactory: JupyterExecutionFactory } {
+    ): {
+        workingPythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
+        jupyterExecutionFactory: JupyterExecutionFactory;
+    } {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
         when(interpreterService.getActiveInterpreter()).thenResolve(activeInterpreter);
-        when(interpreterService.getInterpreters()).thenResolve([workingPython, missingKernelPython, missingNotebookPython]);
+        when(interpreterService.getInterpreters()).thenResolve([
+            workingPython,
+            missingKernelPython,
+            missingNotebookPython
+        ]);
         when(interpreterService.getInterpreterDetails(match('/foo/bar/python.exe'))).thenResolve(workingPython); // Mockito is stupid. Matchers have to use literals.
         when(interpreterService.getInterpreterDetails(match('/foo/baz/python.exe'))).thenResolve(missingKernelPython);
         when(interpreterService.getInterpreterDetails(match('/bar/baz/python.exe'))).thenResolve(missingNotebookPython);
-        when(interpreterService.getInterpreterDetails(argThat(o => !o.includes || !o.includes('python')))).thenReject('Unknown interpreter');
+        when(interpreterService.getInterpreterDetails(argThat(o => !o.includes || !o.includes('python')))).thenReject(
+            'Unknown interpreter'
+        );
         if (runInDocker) {
             when(fileSystem.readFile('/proc/self/cgroup')).thenResolve('hello docker world');
         }
@@ -558,10 +768,18 @@ suite('Jupyter Execution', async () => {
         setupWorkingProcessService(processService, notebookStdErr);
         setupMissingKernelProcessService(processService, notebookStdErr);
         setupPathProcessService(jupyterOnPath, processService, notebookStdErr);
-        when(executionFactory.create(argThat(o => o.pythonPath && o.pythonPath === workingPython.path))).thenResolve(workingService.object);
-        when(executionFactory.create(argThat(o => o.pythonPath && o.pythonPath === missingKernelPython.path))).thenResolve(missingKernelService.object);
-        when(executionFactory.create(argThat(o => o.pythonPath && o.pythonPath === missingNotebookPython.path))).thenResolve(missingNotebookService.object);
-        when(executionFactory.create(argThat(o => o.pythonPath && o.pythonPath === missingNotebookPython2.path))).thenResolve(missingNotebookService2.object);
+        when(executionFactory.create(argThat(o => o.pythonPath && o.pythonPath === workingPython.path))).thenResolve(
+            workingService.object
+        );
+        when(
+            executionFactory.create(argThat(o => o.pythonPath && o.pythonPath === missingKernelPython.path))
+        ).thenResolve(missingKernelService.object);
+        when(
+            executionFactory.create(argThat(o => o.pythonPath && o.pythonPath === missingNotebookPython.path))
+        ).thenResolve(missingNotebookService.object);
+        when(
+            executionFactory.create(argThat(o => o.pythonPath && o.pythonPath === missingNotebookPython2.path))
+        ).thenResolve(missingNotebookService2.object);
 
         // Special case, nothing passed in. Match the active
         let activeService = workingService.object;
@@ -573,7 +791,9 @@ suite('Jupyter Execution', async () => {
             activeService = missingNotebookService2.object;
         }
         when(executionFactory.create(argThat(o => !o || !o.pythonPath))).thenResolve(activeService);
-        when(executionFactory.createActivatedEnvironment(argThat(o => !o || o.interpreter === activeInterpreter))).thenResolve(activeService);
+        when(
+            executionFactory.createActivatedEnvironment(argThat(o => !o || o.interpreter === activeInterpreter))
+        ).thenResolve(activeService);
         when(processServiceFactory.create()).thenResolve(processService.object);
 
         when(liveShare.getApi()).thenResolve(null);
@@ -585,13 +805,15 @@ suite('Jupyter Execution', async () => {
         when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(application));
         when(configService.getSettings()).thenReturn(pythonSettings);
         when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
-        when(application.withProgress(anything(), anything())).thenCall((_, cb: (_: any, token: any) => Promise<any>) => {
-            return new Promise((resolve, reject) => {
-                cb({ report: noop }, new CancellationTokenSource().token)
-                    .then(resolve)
-                    .catch(reject);
-            });
-        });
+        when(application.withProgress(anything(), anything())).thenCall(
+            (_, cb: (_: any, token: any) => Promise<any>) => {
+                return new Promise((resolve, reject) => {
+                    cb({ report: noop }, new CancellationTokenSource().token)
+                        .then(resolve)
+                        .catch(reject);
+                });
+            }
+        );
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -643,14 +865,23 @@ suite('Jupyter Execution', async () => {
             '{"display_name":"Python 3","language":"python","argv":["/foo/bar/python.exe","-m","ipykernel_launcher","-f","{connection_file}"]}'
         );
 
-        const commandFactory = new JupyterCommandFactory(instance(executionFactory), instance(activationHelper), instance(processServiceFactory), instance(interpreterService));
+        const commandFactory = new JupyterCommandFactory(
+            instance(executionFactory),
+            instance(activationHelper),
+            instance(processServiceFactory),
+            instance(interpreterService)
+        );
         const persistentSateFactory = mock(PersistentStateFactory);
         const persistentState = mock(PersistentState);
         when(persistentState.updateValue(anything())).thenResolve();
         when(persistentSateFactory.createGlobalPersistentState(anything())).thenReturn(instance(persistentState));
-        when(persistentSateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(instance(persistentState));
+        when(persistentSateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(
+            instance(persistentState)
+        );
         when(persistentSateFactory.createWorkspacePersistentState(anything())).thenReturn(instance(persistentState));
-        when(persistentSateFactory.createWorkspacePersistentState(anything(), anything())).thenReturn(instance(persistentState));
+        when(persistentSateFactory.createWorkspacePersistentState(anything(), anything())).thenReturn(
+            instance(persistentState)
+        );
         const commandFinder = new JupyterCommandFinder(
             instance(interpreterService),
             instance(executionFactory),
@@ -666,9 +897,15 @@ suite('Jupyter Execution', async () => {
         );
         when(serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder)).thenReturn(commandFinder);
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
-        when(serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)).thenReturn(instance(processServiceFactory));
-        when(serviceContainer.get<IEnvironmentActivationService>(IEnvironmentActivationService)).thenReturn(instance(activationHelper));
-        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(instance(executionFactory));
+        when(serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)).thenReturn(
+            instance(processServiceFactory)
+        );
+        when(serviceContainer.get<IEnvironmentActivationService>(IEnvironmentActivationService)).thenReturn(
+            instance(activationHelper)
+        );
+        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(
+            instance(executionFactory)
+        );
         kernelSelector = mock(KernelSelector);
         const kernelSpec: IJupyterKernelSpec = {
             argv: [],
@@ -677,15 +914,24 @@ suite('Jupyter Execution', async () => {
             name: 'hello',
             path: ''
         };
-        when(kernelSelector.getKernelForLocalConnection(anything(), anything(), anything(), anything())).thenResolve({ kernelSpec });
+        when(kernelSelector.getKernelForLocalConnection(anything(), anything(), anything(), anything())).thenResolve({
+            kernelSpec
+        });
         const jupyterCmdExecutionService = new JupyterCommandFinderInterpreterExecutionService(
             commandFinder,
             instance(interpreterService),
             instance(fileSystem),
             instance(executionFactory)
         );
-        when(serviceContainer.get<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService)).thenReturn(jupyterCmdExecutionService);
-        notebookStarter = new NotebookStarter(jupyterCmdExecutionService, instance(fileSystem), instance(serviceContainer), instance(jupyterOutputChannel));
+        when(serviceContainer.get<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService)).thenReturn(
+            jupyterCmdExecutionService
+        );
+        notebookStarter = new NotebookStarter(
+            jupyterCmdExecutionService,
+            instance(fileSystem),
+            instance(serviceContainer),
+            instance(jupyterOutputChannel)
+        );
         when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
         return {
@@ -708,8 +954,14 @@ suite('Jupyter Execution', async () => {
     }
 
     test('Working notebook and commands found', async () => {
-        const { workingPythonExecutionService, jupyterExecutionFactory } = createExecutionAndReturnProcessService(workingPython);
-        when(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path }))).thenResolve(workingPythonExecutionService.object);
+        const { workingPythonExecutionService, jupyterExecutionFactory } = createExecutionAndReturnProcessService(
+            workingPython
+        );
+        when(
+            executionFactory.createDaemon(
+                deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path })
+            )
+        ).thenResolve(workingPythonExecutionService.object);
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         await assert.eventually.equal(jupyterExecutionFactory.isImportSupported(), true, 'Import not supported');
@@ -719,8 +971,17 @@ suite('Jupyter Execution', async () => {
     }).timeout(10000);
 
     test('Includes correct args for running in docker', async () => {
-        const { workingPythonExecutionService, jupyterExecutionFactory } = createExecutionAndReturnProcessService(workingPython, undefined, undefined, true);
-        when(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path }))).thenResolve(workingPythonExecutionService.object);
+        const { workingPythonExecutionService, jupyterExecutionFactory } = createExecutionAndReturnProcessService(
+            workingPython,
+            undefined,
+            undefined,
+            true
+        );
+        when(
+            executionFactory.createDaemon(
+                deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path })
+            )
+        ).thenResolve(workingPythonExecutionService.object);
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         await assert.eventually.equal(jupyterExecutionFactory.isImportSupported(), true, 'Import not supported');
@@ -761,8 +1022,16 @@ suite('Jupyter Execution', async () => {
         if (usableInterpreter) {
             // Linter
             assert.equal(usableInterpreter.path, missingKernelPython.path);
-            assert.equal(usableInterpreter.version!.major, missingKernelPython.version!.major, 'Found interpreter should match on major');
-            assert.equal(usableInterpreter.version!.minor, missingKernelPython.version!.minor, 'Found interpreter should match on minor');
+            assert.equal(
+                usableInterpreter.version!.major,
+                missingKernelPython.version!.major,
+                'Found interpreter should match on major'
+            );
+            assert.equal(
+                usableInterpreter.version!.minor,
+                missingKernelPython.version!.minor,
+                'Found interpreter should match on minor'
+            );
         }
     }).timeout(10000);
 
@@ -775,7 +1044,11 @@ suite('Jupyter Execution', async () => {
         if (usableInterpreter) {
             // Linter
             assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
-            assert.notEqual(usableInterpreter.version!.major, missingNotebookPython.version!.major, 'Found interpreter should not match on major');
+            assert.notEqual(
+                usableInterpreter.version!.major,
+                missingNotebookPython.version!.major,
+                'Found interpreter should not match on major'
+            );
         }
         // Force config change and ask again
         pythonSettings.datascience.searchForJupyter = false;
@@ -787,7 +1060,11 @@ suite('Jupyter Execution', async () => {
         configChangeEvent.fire(evt);
         // Wait for cache to get cleared.
         await sleep(100);
-        await assert.eventually.equal(execution.isNotebookSupported(), false, 'Notebook should not be supported after config change');
+        await assert.eventually.equal(
+            execution.isNotebookSupported(),
+            false,
+            'Notebook should not be supported after config change'
+        );
     }).timeout(10000);
 
     test('Display progress message', async () => {
@@ -798,7 +1075,11 @@ suite('Jupyter Execution', async () => {
         if (usableInterpreter) {
             // Linter
             assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
-            assert.notEqual(usableInterpreter.version!.major, missingNotebookPython.version!.major, 'Found interpreter should not match on major');
+            assert.notEqual(
+                usableInterpreter.version!.major,
+                missingNotebookPython.version!.major,
+                'Found interpreter should not match on major'
+            );
         }
         // Force config change and ask again
         pythonSettings.datascience.searchForJupyter = false;
@@ -810,7 +1091,11 @@ suite('Jupyter Execution', async () => {
         configChangeEvent.fire(evt);
         // Wait for cache to get cleared.
         await sleep(100);
-        await assert.eventually.equal(execution.isNotebookSupported(), false, 'Notebook should not be supported after config change');
+        await assert.eventually.equal(
+            execution.isNotebookSupported(),
+            false,
+            'Notebook should not be supported after config change'
+        );
         verify(application.withProgress(anything(), anything())).atLeast(1);
     }).timeout(10000);
 
@@ -818,20 +1103,25 @@ suite('Jupyter Execution', async () => {
         const execution = createExecution(missingNotebookPython);
         const progressCancellation = new CancellationTokenSource();
         reset(application);
-        when(application.withProgress(anything(), anything())).thenCall((_, cb: (_: any, token: any) => Promise<any>) => {
-            return new Promise((resolve, reject) => {
-                cb({ report: noop }, progressCancellation.token)
-                    .then(resolve)
-                    .catch(reject);
-            });
-        });
+        when(application.withProgress(anything(), anything())).thenCall(
+            (_, cb: (_: any, token: any) => Promise<any>) => {
+                return new Promise((resolve, reject) => {
+                    cb({ report: noop }, progressCancellation.token)
+                        .then(resolve)
+                        .catch(reject);
+                });
+            }
+        );
 
         // Now interpreters = fast discovery (less time for display of progress).
         when(interpreterService.getInterpreters()).thenReturn(Promise.resolve([]));
 
         // The call to isNotebookSupported should not timeout in 1 seconds.
         const isNotebookSupported = execution.isNotebookSupported();
-        await assert.eventually.notEqual(Promise.race([isNotebookSupported, sleep(1000).then(() => 'timeout')]), 'timeout');
+        await assert.eventually.notEqual(
+            Promise.race([isNotebookSupported, sleep(1000).then(() => 'timeout')]),
+            'timeout'
+        );
         verify(application.withProgress(anything(), anything())).atLeast(1);
     }).timeout(10_000);
 
@@ -839,24 +1129,32 @@ suite('Jupyter Execution', async () => {
         const execution = createExecution(missingNotebookPython);
         const progressCancellation = new CancellationTokenSource();
         reset(application);
-        when(application.withProgress(anything(), anything())).thenCall((_, cb: (_: any, token: any) => Promise<any>) => {
-            return new Promise((resolve, reject) => {
-                cb({ report: noop }, progressCancellation.token)
-                    .then(resolve)
-                    .catch(reject);
-            });
-        });
+        when(application.withProgress(anything(), anything())).thenCall(
+            (_, cb: (_: any, token: any) => Promise<any>) => {
+                return new Promise((resolve, reject) => {
+                    cb({ report: noop }, progressCancellation.token)
+                        .then(resolve)
+                        .catch(reject);
+                });
+            }
+        );
 
         const slowInterpreterDiscovery = createDeferred<PythonInterpreter[]>();
         when(interpreterService.getInterpreters()).thenReturn(slowInterpreterDiscovery.promise);
 
         // The call to interpreterService.getInterpreters shoud not complete, it is very slow.
         const isNotebookSupported = execution.isNotebookSupported();
-        await assert.eventually.equal(Promise.race([isNotebookSupported, sleep(5000).then(() => 'timeout')]), 'timeout');
+        await assert.eventually.equal(
+            Promise.race([isNotebookSupported, sleep(5000).then(() => 'timeout')]),
+            'timeout'
+        );
 
         // Once we cancel the progress message, the promise should resolve almost immediately.
         progressCancellation.cancel();
-        await assert.eventually.notEqual(Promise.race([isNotebookSupported, sleep(500).then(() => 'timeout')]), 'timeout');
+        await assert.eventually.notEqual(
+            Promise.race([isNotebookSupported, sleep(500).then(() => 'timeout')]),
+            'timeout'
+        );
         verify(application.withProgress(anything(), anything())).atLeast(1);
     }).timeout(20_000);
 

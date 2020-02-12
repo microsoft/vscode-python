@@ -16,12 +16,29 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { Commands } from '../../../client/common/constants';
 import '../../../client/common/extensions';
-import { CTagsInsllationScript, CTagsInstaller, FormatterInstaller, LinterInstaller, ProductInstaller } from '../../../client/common/installer/productInstaller';
+import {
+    CTagsInsllationScript,
+    CTagsInstaller,
+    FormatterInstaller,
+    LinterInstaller,
+    ProductInstaller
+} from '../../../client/common/installer/productInstaller';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { ProductService } from '../../../client/common/installer/productService';
-import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from '../../../client/common/installer/types';
+import {
+    IInstallationChannelManager,
+    IModuleInstaller,
+    IProductPathService,
+    IProductService
+} from '../../../client/common/installer/types';
 import { IPlatformService } from '../../../client/common/platform/types';
-import { ExecutionResult, IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
+import {
+    ExecutionResult,
+    IProcessService,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService
+} from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import {
     IConfigurationService,
@@ -70,33 +87,59 @@ suite('Module Installer only', () => {
                     outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
 
                     disposables = [];
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposables);
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProductService), TypeMoq.It.isAny())).returns(() => productService);
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
+                        .returns(() => disposables);
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IProductService), TypeMoq.It.isAny()))
+                        .returns(() => productService);
                     installationChannel = TypeMoq.Mock.ofType<IInstallationChannelManager>();
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInstallationChannelManager), TypeMoq.It.isAny())).returns(() => installationChannel.object);
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IInstallationChannelManager), TypeMoq.It.isAny()))
+                        .returns(() => installationChannel.object);
                     app = TypeMoq.Mock.ofType<IApplicationShell>();
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny())).returns(() => app.object);
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny()))
+                        .returns(() => app.object);
                     workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny())).returns(() => workspaceService.object);
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
+                        .returns(() => workspaceService.object);
                     persistentStore = TypeMoq.Mock.ofType<IPersistentStateFactory>();
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny())).returns(() => persistentStore.object);
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny()))
+                        .returns(() => persistentStore.object);
 
                     moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
                     // tslint:disable-next-line:no-any
                     moduleInstaller.setup((x: any) => x.then).returns(() => undefined);
-                    installationChannel.setup(i => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(moduleInstaller.object));
-                    installationChannel.setup(i => i.getInstallationChannel(TypeMoq.It.isAny())).returns(() => Promise.resolve(moduleInstaller.object));
+                    installationChannel
+                        .setup(i => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(moduleInstaller.object));
+                    installationChannel
+                        .setup(i => i.getInstallationChannel(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(moduleInstaller.object));
 
                     productPathService = TypeMoq.Mock.ofType<IProductPathService>();
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProductPathService), TypeMoq.It.isAny())).returns(() => productPathService.object);
-                    productPathService.setup(p => p.getExecutableNameFromSettings(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => 'xyz');
-                    productPathService.setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => true);
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IProductPathService), TypeMoq.It.isAny()))
+                        .returns(() => productPathService.object);
+                    productPathService
+                        .setup(p => p.getExecutableNameFromSettings(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
+                        .returns(() => 'xyz');
+                    productPathService
+                        .setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
+                        .returns(() => true);
                     interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
                     const pythonInterpreter = TypeMoq.Mock.ofType<PythonInterpreter>();
                     // tslint:disable-next-line:no-any
                     pythonInterpreter.setup(i => (i as any).then).returns(() => undefined);
-                    interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonInterpreter.object));
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
+                    interpreterService
+                        .setup(i => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(pythonInterpreter.object));
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
+                        .returns(() => interpreterService.object);
                     installer = new ProductInstaller(serviceContainer.object, outputChannel.object);
                 });
                 teardown(() => {
@@ -112,8 +155,12 @@ suite('Module Installer only', () => {
 
                 switch (product.value) {
                     case 404: {
-                        test(`If product type is not recognized, throw error (${resource ? 'With a resource' : 'without a resource'})`, async () => {
-                            app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
+                        test(`If product type is not recognized, throw error (${
+                            resource ? 'With a resource' : 'without a resource'
+                        })`, async () => {
+                            app.setup(a =>
+                                a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                            ).verifiable(TypeMoq.Times.never());
                             const getProductType = sinon.stub(ProductService.prototype, 'getProductType');
                             // tslint:disable-next-line: no-any
                             getProductType.returns('random' as any);
@@ -132,11 +179,17 @@ suite('Module Installer only', () => {
                             resource ? 'With a resource' : 'without a resource'
                         }), print the instructions to install Ctags into the output channel`, async () => {
                             const platformService = TypeMoq.Mock.ofType<IPlatformService>();
-                            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+                            serviceContainer
+                                .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
+                                .returns(() => platformService.object);
                             platformService.setup(p => p.isWindows).returns(() => true);
                             outputChannel.setup(o => o.appendLine(TypeMoq.It.isAny())).returns(() => undefined);
                             outputChannel
-                                .setup(o => o.appendLine('Install Universal Ctags Win32 to enable support for Workspace Symbols'))
+                                .setup(o =>
+                                    o.appendLine(
+                                        'Install Universal Ctags Win32 to enable support for Workspace Symbols'
+                                    )
+                                )
                                 .returns(() => undefined)
                                 .verifiable(TypeMoq.Times.once());
                             outputChannel
@@ -151,12 +204,18 @@ suite('Module Installer only', () => {
                             resource ? 'With a resource' : 'without a resource'
                         }), install Ctags using the corresponding script`, async () => {
                             const platformService = TypeMoq.Mock.ofType<IPlatformService>();
-                            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+                            serviceContainer
+                                .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
+                                .returns(() => platformService.object);
                             platformService.setup(p => p.isWindows).returns(() => false);
                             const termianlService = TypeMoq.Mock.ofType<ITerminalService>();
                             const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
-                            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory))).returns(() => terminalServiceFactory.object);
-                            terminalServiceFactory.setup(p => p.getTerminalService(resource)).returns(() => termianlService.object);
+                            serviceContainer
+                                .setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
+                                .returns(() => terminalServiceFactory.object);
+                            terminalServiceFactory
+                                .setup(p => p.getTerminalService(resource))
+                                .returns(() => termianlService.object);
                             termianlService
                                 .setup(t => t.sendCommand(CTagsInsllationScript, []))
                                 .returns(() => Promise.resolve())
@@ -169,12 +228,18 @@ suite('Module Installer only', () => {
                             resource ? 'With a resource' : 'without a resource'
                         }), but installing Ctags fails with Error, log error and return`, async () => {
                             const platformService = TypeMoq.Mock.ofType<IPlatformService>();
-                            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+                            serviceContainer
+                                .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
+                                .returns(() => platformService.object);
                             platformService.setup(p => p.isWindows).returns(() => false);
                             const termianlService = TypeMoq.Mock.ofType<ITerminalService>();
                             const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
-                            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory))).returns(() => terminalServiceFactory.object);
-                            terminalServiceFactory.setup(p => p.getTerminalService(resource)).returns(() => termianlService.object);
+                            serviceContainer
+                                .setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
+                                .returns(() => terminalServiceFactory.object);
+                            terminalServiceFactory
+                                .setup(p => p.getTerminalService(resource))
+                                .returns(() => termianlService.object);
                             termianlService
                                 .setup(t => t.sendCommand(CTagsInsllationScript, []))
                                 .returns(() => Promise.reject('Kaboom'))
@@ -183,10 +248,14 @@ suite('Module Installer only', () => {
                             expect(response).to.be.equal(InstallerResponse.Ignore);
                             termianlService.verifyAll();
                         });
-                        test(`If 'Yes' is selected on the install prompt for the the module installer ${product.name} (${
+                        test(`If 'Yes' is selected on the install prompt for the the module installer ${
+                            product.name
+                        } (${
                             resource ? 'With a resource' : 'without a resource'
                         }), install module and return response`, async () => {
-                            app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            app.setup(a =>
+                                a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                            )
                                 .returns(() => Promise.resolve('Yes'))
                                 .verifiable(TypeMoq.Times.once());
                             const install = sinon.stub(CTagsInstaller.prototype, 'install');
@@ -199,7 +268,9 @@ suite('Module Installer only', () => {
                         test(`If 'No' is selected on the install prompt for the module installer ${product.name} (${
                             resource ? 'With a resource' : 'without a resource'
                         }), return ignore response`, async () => {
-                            app.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            app.setup(a =>
+                                a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+                            )
                                 .returns(() => Promise.resolve('No'))
                                 .verifiable(TypeMoq.Times.once());
                             const install = sinon.stub(CTagsInstaller.prototype, 'install');
@@ -212,13 +283,15 @@ suite('Module Installer only', () => {
                         return;
                     }
                     case Product.unittest: {
-                        test(`Ensure resource info is passed into the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                        test(`Ensure resource info is passed into the module installer ${product.name} (${
+                            resource ? 'With a resource' : 'without a resource'
+                        })`, async () => {
                             const response = await installer.install(product.value, resource);
                             expect(response).to.be.equal(InstallerResponse.Installed);
                         });
-                        test(`Ensure resource info is passed into the module installer  (created using ProductInstaller) ${product.name} (${
-                            resource ? 'With a resource' : 'without a resource'
-                        })`, async () => {
+                        test(`Ensure resource info is passed into the module installer  (created using ProductInstaller) ${
+                            product.name
+                        } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                             const response = await installer.install(product.value, resource);
                             expect(response).to.be.equal(InstallerResponse.Installed);
                         });
@@ -226,9 +299,9 @@ suite('Module Installer only', () => {
                     }
                     default:
                         {
-                            test(`Ensure the prompt is displayed only once, until the prompt is closed, ${product.name} (${
-                                resource ? 'With a resource' : 'without a resource'
-                            })`, async () => {
+                            test(`Ensure the prompt is displayed only once, until the prompt is closed, ${
+                                product.name
+                            } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                                 workspaceService
                                     .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
                                     .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
@@ -253,7 +326,12 @@ suite('Module Installer only', () => {
                                 persistVal.setup(p => p.value).returns(() => false);
                                 persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
                                 persistentStore
-                                    .setup(ps => ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined)))
+                                    .setup(ps =>
+                                        ps.createGlobalPersistentState<boolean>(
+                                            TypeMoq.It.isAnyString(),
+                                            TypeMoq.It.isValue(undefined)
+                                        )
+                                    )
                                     .returns(() => persistVal.object);
 
                                 // Display first prompt.
@@ -273,9 +351,9 @@ suite('Module Installer only', () => {
                                 app.verifyAll();
                                 workspaceService.verifyAll();
                             });
-                            test(`Ensure the prompt is displayed again when previous prompt has been closed, ${product.name} (${
-                                resource ? 'With a resource' : 'without a resource'
-                            })`, async () => {
+                            test(`Ensure the prompt is displayed again when previous prompt has been closed, ${
+                                product.name
+                            } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                                 workspaceService
                                     .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
                                     .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
@@ -298,7 +376,12 @@ suite('Module Installer only', () => {
                                 persistVal.setup(p => p.value).returns(() => false);
                                 persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
                                 persistentStore
-                                    .setup(ps => ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined)))
+                                    .setup(ps =>
+                                        ps.createGlobalPersistentState<boolean>(
+                                            TypeMoq.It.isAnyString(),
+                                            TypeMoq.It.isValue(undefined)
+                                        )
+                                    )
                                     .returns(() => persistVal.object);
 
                                 await installer.promptToInstall(product.value, resource);
@@ -310,9 +393,9 @@ suite('Module Installer only', () => {
                             });
 
                             if (product.value === Product.pylint) {
-                                test(`Ensure the install prompt is not displayed when the user requests it not be shown again, ${product.name} (${
-                                    resource ? 'With a resource' : 'without a resource'
-                                })`, async () => {
+                                test(`Ensure the install prompt is not displayed when the user requests it not be shown again, ${
+                                    product.name
+                                } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                                     workspaceService
                                         .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
                                         .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
@@ -344,7 +427,12 @@ suite('Module Installer only', () => {
                                         })
                                         .verifiable(TypeMoq.Times.once());
                                     persistentStore
-                                        .setup(ps => ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined)))
+                                        .setup(ps =>
+                                            ps.createGlobalPersistentState<boolean>(
+                                                TypeMoq.It.isAnyString(),
+                                                TypeMoq.It.isValue(undefined)
+                                            )
+                                        )
                                         .returns(() => {
                                             return persistVal.object;
                                         })
@@ -365,11 +453,19 @@ suite('Module Installer only', () => {
                                     persistVal.verifyAll();
                                 });
                             } else if (productService.getProductType(product.value) === ProductType.Linter) {
-                                test(`Ensure the 'do not show again' prompt isn't shown for non-pylint linters, ${product.name} (${
-                                    resource ? 'With a resource' : 'without a resource'
-                                })`, async () => {
-                                    workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!))).returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object);
-                                    app.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isValue('Install'), TypeMoq.It.isValue('Select Linter')))
+                                test(`Ensure the 'do not show again' prompt isn't shown for non-pylint linters, ${
+                                    product.name
+                                } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                                    workspaceService
+                                        .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                                        .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object);
+                                    app.setup(a =>
+                                        a.showErrorMessage(
+                                            TypeMoq.It.isAnyString(),
+                                            TypeMoq.It.isValue('Install'),
+                                            TypeMoq.It.isValue('Select Linter')
+                                        )
+                                    )
                                         .returns(async () => {
                                             return undefined;
                                         })
@@ -400,7 +496,12 @@ suite('Module Installer only', () => {
                                             return Promise.resolve();
                                         });
                                     persistentStore
-                                        .setup(ps => ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined)))
+                                        .setup(ps =>
+                                            ps.createGlobalPersistentState<boolean>(
+                                                TypeMoq.It.isAnyString(),
+                                                TypeMoq.It.isValue(undefined)
+                                            )
+                                        )
                                         .returns(() => {
                                             return persistVal.object;
                                         });
@@ -414,18 +515,34 @@ suite('Module Installer only', () => {
                             }
                         }
 
-                        test(`Ensure resource info is passed into the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
-                            const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
+                        test(`Ensure resource info is passed into the module installer ${product.name} (${
+                            resource ? 'With a resource' : 'without a resource'
+                        })`, async () => {
+                            const moduleName = installer.translateProductToModuleName(
+                                product.value,
+                                ModuleNamePurpose.install
+                            );
 
                             moduleInstaller
-                                .setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)))
+                                .setup(m =>
+                                    m.installModule(
+                                        TypeMoq.It.isValue(moduleName),
+                                        TypeMoq.It.isValue(resource),
+                                        TypeMoq.It.isValue(undefined)
+                                    )
+                                )
                                 .returns(() => Promise.reject(new Error('UnitTesting')));
 
                             try {
                                 await installer.install(product.value, resource);
                             } catch (ex) {
                                 moduleInstaller.verify(
-                                    m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)),
+                                    m =>
+                                        m.installModule(
+                                            TypeMoq.It.isValue(moduleName),
+                                            TypeMoq.It.isValue(resource),
+                                            TypeMoq.It.isValue(undefined)
+                                        ),
                                     TypeMoq.Times.once()
                                 );
                             }
@@ -433,13 +550,24 @@ suite('Module Installer only', () => {
                         test(`Return InstallerResponse.Ignore for the module installer ${product.name} (${
                             resource ? 'With a resource' : 'without a resource'
                         }) if installation channel is not defined`, async () => {
-                            const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
+                            const moduleName = installer.translateProductToModuleName(
+                                product.value,
+                                ModuleNamePurpose.install
+                            );
 
                             moduleInstaller
-                                .setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)))
+                                .setup(m =>
+                                    m.installModule(
+                                        TypeMoq.It.isValue(moduleName),
+                                        TypeMoq.It.isValue(resource),
+                                        TypeMoq.It.isValue(undefined)
+                                    )
+                                )
                                 .returns(() => Promise.reject(new Error('UnitTesting')));
                             installationChannel.reset();
-                            installationChannel.setup(i => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+                            installationChannel
+                                .setup(i => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                                .returns(() => Promise.resolve(undefined));
                             try {
                                 const response = await installer.install(product.value, resource);
                                 expect(response).to.equal(InstallerResponse.Ignore);
@@ -447,20 +575,34 @@ suite('Module Installer only', () => {
                                 assert(false, `Should not throw errors, ${ex}`);
                             }
                         });
-                        test(`Ensure resource info is passed into the module installer (created using ProductInstaller) ${product.name} (${
-                            resource ? 'With a resource' : 'without a resource'
-                        })`, async () => {
-                            const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
+                        test(`Ensure resource info is passed into the module installer (created using ProductInstaller) ${
+                            product.name
+                        } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                            const moduleName = installer.translateProductToModuleName(
+                                product.value,
+                                ModuleNamePurpose.install
+                            );
 
                             moduleInstaller
-                                .setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)))
+                                .setup(m =>
+                                    m.installModule(
+                                        TypeMoq.It.isValue(moduleName),
+                                        TypeMoq.It.isValue(resource),
+                                        TypeMoq.It.isValue(undefined)
+                                    )
+                                )
                                 .returns(() => Promise.reject(new Error('UnitTesting')));
 
                             try {
                                 await installer.install(product.value, resource);
                             } catch (ex) {
                                 moduleInstaller.verify(
-                                    m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)),
+                                    m =>
+                                        m.installModule(
+                                            TypeMoq.It.isValue(moduleName),
+                                            TypeMoq.It.isValue(resource),
+                                            TypeMoq.It.isValue(undefined)
+                                        ),
                                     TypeMoq.Times.once()
                                 );
                             }
@@ -468,18 +610,24 @@ suite('Module Installer only', () => {
                 }
                 // Test isInstalled()
                 if (product.value === Product.unittest) {
-                    test(`Method isInstalled() returns true for module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    test(`Method isInstalled() returns true for module installer ${product.name} (${
+                        resource ? 'With a resource' : 'without a resource'
+                    })`, async () => {
                         const result = await installer.isInstalled(product.value, resource);
                         expect(result).to.equal(true, 'Should be true');
                     });
                 } else {
-                    test(`Method isInstalled() returns true if module is installed for the module installer ${product.name} (${
-                        resource ? 'With a resource' : 'without a resource'
-                    })`, async () => {
+                    test(`Method isInstalled() returns true if module is installed for the module installer ${
+                        product.name
+                    } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                         const pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
                         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
-                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory))).returns(() => pythonExecutionFactory.object);
-                        pythonExecutionFactory.setup(p => p.createActivatedEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
+                        serviceContainer
+                            .setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
+                            .returns(() => pythonExecutionFactory.object);
+                        pythonExecutionFactory
+                            .setup(p => p.createActivatedEnvironment(TypeMoq.It.isAny()))
+                            .returns(() => Promise.resolve(pythonExecutionService.object));
                         pythonExecutionService
                             // tslint:disable-next-line: no-any
                             .setup(p => (p as any).then)
@@ -493,13 +641,17 @@ suite('Module Installer only', () => {
                         expect(response).to.equal(true, 'Should be true');
                         pythonExecutionService.verifyAll();
                     });
-                    test(`Method isInstalled() returns false if module is not installed for the module installer ${product.name} (${
-                        resource ? 'With a resource' : 'without a resource'
-                    })`, async () => {
+                    test(`Method isInstalled() returns false if module is not installed for the module installer ${
+                        product.name
+                    } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                         const pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
                         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
-                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory))).returns(() => pythonExecutionFactory.object);
-                        pythonExecutionFactory.setup(p => p.createActivatedEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
+                        serviceContainer
+                            .setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
+                            .returns(() => pythonExecutionFactory.object);
+                        pythonExecutionFactory
+                            .setup(p => p.createActivatedEnvironment(TypeMoq.It.isAny()))
+                            .returns(() => Promise.resolve(pythonExecutionService.object));
                         pythonExecutionService
                             // tslint:disable-next-line: no-any
                             .setup(p => (p as any).then)
@@ -514,13 +666,17 @@ suite('Module Installer only', () => {
 
                         pythonExecutionService.verifyAll();
                     });
-                    test(`Method isInstalled() returns true if running 'path/to/module_executable --version' succeeds for the module installer ${product.name} (${
-                        resource ? 'With a resource' : 'without a resource'
-                    })`, async () => {
+                    test(`Method isInstalled() returns true if running 'path/to/module_executable --version' succeeds for the module installer ${
+                        product.name
+                    } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                         const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
                         const processService = TypeMoq.Mock.ofType<IProcessService>();
-                        serviceContainer.setup(c => c.get<IProcessServiceFactory>(IProcessServiceFactory)).returns(() => processServiceFactory.object);
-                        processServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
+                        serviceContainer
+                            .setup(c => c.get<IProcessServiceFactory>(IProcessServiceFactory))
+                            .returns(() => processServiceFactory.object);
+                        processServiceFactory
+                            .setup(p => p.create(TypeMoq.It.isAny()))
+                            .returns(() => Promise.resolve(processService.object));
                         processService
                             // tslint:disable-next-line: no-any
                             .setup(p => (p as any).then)
@@ -534,20 +690,26 @@ suite('Module Installer only', () => {
                             .verifiable(TypeMoq.Times.once());
 
                         productPathService.reset();
-                        productPathService.setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => false);
+                        productPathService
+                            .setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
+                            .returns(() => false);
 
                         const response = await installer.isInstalled(product.value, resource);
                         expect(response).to.equal(true, 'Should be true');
 
                         processService.verifyAll();
                     });
-                    test(`Method isInstalled() returns false if running 'path/to/module_executable --version' fails for the module installer ${product.name} (${
-                        resource ? 'With a resource' : 'without a resource'
-                    })`, async () => {
+                    test(`Method isInstalled() returns false if running 'path/to/module_executable --version' fails for the module installer ${
+                        product.name
+                    } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                         const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
                         const processService = TypeMoq.Mock.ofType<IProcessService>();
-                        serviceContainer.setup(c => c.get<IProcessServiceFactory>(IProcessServiceFactory)).returns(() => processServiceFactory.object);
-                        processServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
+                        serviceContainer
+                            .setup(c => c.get<IProcessServiceFactory>(IProcessServiceFactory))
+                            .returns(() => processServiceFactory.object);
+                        processServiceFactory
+                            .setup(p => p.create(TypeMoq.It.isAny()))
+                            .returns(() => Promise.resolve(processService.object));
                         processService
                             // tslint:disable-next-line: no-any
                             .setup(p => (p as any).then)
@@ -558,7 +720,9 @@ suite('Module Installer only', () => {
                             .verifiable(TypeMoq.Times.once());
 
                         productPathService.reset();
-                        productPathService.setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => false);
+                        productPathService
+                            .setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
+                            .returns(() => false);
 
                         const response = await installer.isInstalled(product.value, resource);
                         expect(response).to.equal(false, 'Should be false');
@@ -592,7 +756,14 @@ suite('Module Installer only', () => {
                     const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
                     persistVal.setup(p => p.value).returns(() => false);
                     persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
-                    persistentStore.setup(ps => ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))).returns(() => persistVal.object);
+                    persistentStore
+                        .setup(ps =>
+                            ps.createGlobalPersistentState<boolean>(
+                                TypeMoq.It.isAnyString(),
+                                TypeMoq.It.isValue(undefined)
+                            )
+                        )
+                        .returns(() => persistVal.object);
 
                     interpreterService.reset();
                     interpreterService
@@ -636,7 +807,9 @@ suite('Module Installer only', () => {
                 const outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
 
                 when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
-                when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
+                when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
+                    instance(configService)
+                );
                 when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
                 when(serviceContainer.get<IProductService>(IProductService)).thenReturn(instance(productService));
                 when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(cmdManager));
@@ -653,19 +826,40 @@ suite('Module Installer only', () => {
                 const options = ['Select Linter', 'Do not show again'];
                 const productName = ProductNames.get(product)!;
                 await installer.promptToInstallImplementation(product, resource);
-                verify(appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])).once();
+                verify(
+                    appShell.showErrorMessage(
+                        `Linter ${productName} is not installed.`,
+                        'Install',
+                        options[0],
+                        options[1]
+                    )
+                ).once();
             });
             test('Ensure select linter command is invoked', async () => {
                 const product = Product.pylint;
                 const options = ['Select Linter', 'Do not show again'];
                 const productName = ProductNames.get(product)!;
-                // tslint:disable-next-line:no-any
-                when(appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])).thenResolve('Select Linter' as any);
+                when(
+                    appShell.showErrorMessage(
+                        `Linter ${productName} is not installed.`,
+                        'Install',
+                        options[0],
+                        options[1]
+                    )
+                    // tslint:disable-next-line:no-any
+                ).thenResolve('Select Linter' as any);
                 when(cmdManager.executeCommand(Commands.Set_Linter)).thenResolve(undefined);
 
                 const response = await installer.promptToInstallImplementation(product, resource);
 
-                verify(appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])).once();
+                verify(
+                    appShell.showErrorMessage(
+                        `Linter ${productName} is not installed.`,
+                        'Install',
+                        options[0],
+                        options[1]
+                    )
+                ).once();
                 verify(cmdManager.executeCommand(Commands.Set_Linter)).once();
                 expect(response).to.be.equal(InstallerResponse.Ignore);
             });
@@ -673,8 +867,15 @@ suite('Module Installer only', () => {
                 const product = Product.pylint;
                 const options = ['Select Linter', 'Do not show again'];
                 const productName = ProductNames.get(product)!;
-                // tslint:disable-next-line:no-any
-                when(appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])).thenResolve('Install' as any);
+                when(
+                    appShell.showErrorMessage(
+                        `Linter ${productName} is not installed.`,
+                        'Install',
+                        options[0],
+                        options[1]
+                    )
+                    // tslint:disable-next-line:no-any
+                ).thenResolve('Install' as any);
                 when(cmdManager.executeCommand(Commands.Set_Linter)).thenResolve(undefined);
                 const install = sinon.stub(LinterInstaller.prototype, 'install');
                 install.resolves(InstallerResponse.Installed);
@@ -715,7 +916,9 @@ suite('Module Installer only', () => {
                 const outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
 
                 when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
-                when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
+                when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
+                    instance(configService)
+                );
                 when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
                 when(serviceContainer.get<IProductService>(IProductService)).thenReturn(instance(productService));
                 when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(cmdManager));
@@ -729,12 +932,26 @@ suite('Module Installer only', () => {
 
             test('If nothing is selected, return Ignore as response', async () => {
                 const product = Product.autopep8;
-                // tslint:disable-next-line: no-any
-                when(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).thenReturn(undefined as any);
+                when(
+                    appShell.showErrorMessage(
+                        `Formatter autopep8 is not installed. Install?`,
+                        'Yes',
+                        'Use black',
+                        'Use yapf'
+                    )
+                    // tslint:disable-next-line: no-any
+                ).thenReturn(undefined as any);
 
                 const response = await installer.promptToInstallImplementation(product, resource);
 
-                verify(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).once();
+                verify(
+                    appShell.showErrorMessage(
+                        `Formatter autopep8 is not installed. Install?`,
+                        'Yes',
+                        'Use black',
+                        'Use yapf'
+                    )
+                ).once();
                 expect(response).to.equal(InstallerResponse.Ignore);
             });
 
@@ -743,11 +960,25 @@ suite('Module Installer only', () => {
                 const install = sinon.stub(FormatterInstaller.prototype, 'install');
                 install.resolves(InstallerResponse.Installed);
 
-                // tslint:disable-next-line: no-any
-                when(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).thenReturn('Yes' as any);
+                when(
+                    appShell.showErrorMessage(
+                        `Formatter autopep8 is not installed. Install?`,
+                        'Yes',
+                        'Use black',
+                        'Use yapf'
+                    )
+                    // tslint:disable-next-line: no-any
+                ).thenReturn('Yes' as any);
                 const response = await installer.promptToInstallImplementation(product, resource);
 
-                verify(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).once();
+                verify(
+                    appShell.showErrorMessage(
+                        `Formatter autopep8 is not installed. Install?`,
+                        'Yes',
+                        'Use black',
+                        'Use yapf'
+                    )
+                ).once();
                 expect(response).to.equal(InstallerResponse.Installed);
                 assert.ok(install.calledOnceWith(product, resource, undefined));
             });
@@ -757,13 +988,27 @@ suite('Module Installer only', () => {
                 const install = sinon.stub(FormatterInstaller.prototype, 'install');
                 install.resolves(InstallerResponse.Installed);
 
-                // tslint:disable-next-line: no-any
-                when(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).thenReturn('Use black' as any);
+                when(
+                    appShell.showErrorMessage(
+                        `Formatter autopep8 is not installed. Install?`,
+                        'Yes',
+                        'Use black',
+                        'Use yapf'
+                    )
+                    // tslint:disable-next-line: no-any
+                ).thenReturn('Use black' as any);
                 when(configService.updateSetting('formatting.provider', 'black', resource)).thenResolve();
 
                 const response = await installer.promptToInstallImplementation(product, resource);
 
-                verify(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).once();
+                verify(
+                    appShell.showErrorMessage(
+                        `Formatter autopep8 is not installed. Install?`,
+                        'Yes',
+                        'Use black',
+                        'Use yapf'
+                    )
+                ).once();
                 expect(response).to.equal(InstallerResponse.Installed);
                 verify(configService.updateSetting('formatting.provider', 'black', resource)).once();
                 assert.ok(install.calledOnceWith(Product.black, resource, undefined));
@@ -774,13 +1019,27 @@ suite('Module Installer only', () => {
                 const install = sinon.stub(FormatterInstaller.prototype, 'install');
                 install.resolves(InstallerResponse.Installed);
 
-                // tslint:disable-next-line: no-any
-                when(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).thenReturn('Use yapf' as any);
+                when(
+                    appShell.showErrorMessage(
+                        `Formatter autopep8 is not installed. Install?`,
+                        'Yes',
+                        'Use black',
+                        'Use yapf'
+                    )
+                    // tslint:disable-next-line: no-any
+                ).thenReturn('Use yapf' as any);
                 when(configService.updateSetting('formatting.provider', 'yapf', resource)).thenResolve();
 
                 const response = await installer.promptToInstallImplementation(product, resource);
 
-                verify(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).once();
+                verify(
+                    appShell.showErrorMessage(
+                        `Formatter autopep8 is not installed. Install?`,
+                        'Yes',
+                        'Use black',
+                        'Use yapf'
+                    )
+                ).once();
                 expect(response).to.equal(InstallerResponse.Installed);
                 verify(configService.updateSetting('formatting.provider', 'yapf', resource)).once();
                 assert.ok(install.calledOnceWith(Product.yapf, resource, undefined));

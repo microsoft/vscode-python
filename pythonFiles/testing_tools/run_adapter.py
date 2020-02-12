@@ -5,7 +5,14 @@
 import os.path
 import sys
 
-sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(
+    1,
+    os.path.dirname(  # pythonFiles
+        os.path.dirname(  # pythonFiles/testing_tools
+            os.path.abspath(__file__)  # this file
+        )
+    ),
+)
 
 from testing_tools.adapter.__main__ import parse_args, main
 

@@ -18,7 +18,12 @@ suite('Application Diagnostics - Filter', () => {
 
     [
         { name: 'Global', scope: DiagnosticScope.Global, state: () => globalState, otherState: () => workspaceState },
-        { name: 'Workspace', scope: DiagnosticScope.WorkspaceFolder, state: () => workspaceState, otherState: () => globalState }
+        {
+            name: 'Workspace',
+            scope: DiagnosticScope.WorkspaceFolder,
+            state: () => workspaceState,
+            otherState: () => globalState
+        }
     ].forEach(item => {
         let serviceContainer: typemoq.IMock<IServiceContainer>;
         let filterService: IDiagnosticFilterService;
@@ -31,12 +36,24 @@ suite('Application Diagnostics - Filter', () => {
             const stateFactory = typemoq.Mock.ofType<IPersistentStateFactory>();
 
             stateFactory
-                .setup(f => f.createGlobalPersistentState<string[]>(typemoq.It.isValue(FilterKeys.GlobalDiagnosticFilter), typemoq.It.isValue([])))
+                .setup(f =>
+                    f.createGlobalPersistentState<string[]>(
+                        typemoq.It.isValue(FilterKeys.GlobalDiagnosticFilter),
+                        typemoq.It.isValue([])
+                    )
+                )
                 .returns(() => globalState.object);
             stateFactory
-                .setup(f => f.createWorkspacePersistentState<string[]>(typemoq.It.isValue(FilterKeys.WorkspaceDiagnosticFilter), typemoq.It.isValue([])))
+                .setup(f =>
+                    f.createWorkspacePersistentState<string[]>(
+                        typemoq.It.isValue(FilterKeys.WorkspaceDiagnosticFilter),
+                        typemoq.It.isValue([])
+                    )
+                )
                 .returns(() => workspaceState.object);
-            serviceContainer.setup(s => s.get(typemoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+            serviceContainer
+                .setup(s => s.get(typemoq.It.isValue(IPersistentStateFactory)))
+                .returns(() => stateFactory.object);
 
             filterService = new DiagnosticFilterService(serviceContainer.object);
         });

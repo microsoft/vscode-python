@@ -16,7 +16,12 @@ import {
     TestFrameworkProductPathService
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
-import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from '../../client/common/installer/types';
+import {
+    IInstallationChannelManager,
+    IModuleInstaller,
+    IProductPathService,
+    IProductService
+} from '../../client/common/installer/types';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
@@ -82,10 +87,19 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         ioc.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         ioc.serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
-        ioc.serviceManager.addSingleton<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
-        ioc.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, TypeMoq.Mock.ofType<ICommandManager>().object);
+        ioc.serviceManager.addSingleton<IInstallationChannelManager>(
+            IInstallationChannelManager,
+            InstallationChannelManager
+        );
+        ioc.serviceManager.addSingletonInstance<ICommandManager>(
+            ICommandManager,
+            TypeMoq.Mock.ofType<ICommandManager>().object
+        );
 
-        ioc.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, TypeMoq.Mock.ofType<IApplicationShell>().object);
+        ioc.serviceManager.addSingletonInstance<IApplicationShell>(
+            IApplicationShell,
+            TypeMoq.Mock.ofType<IApplicationShell>().object
+        );
         ioc.serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
         ioc.serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
@@ -94,16 +108,43 @@ suite('Installer', () => {
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, FormatterProductPathService, ProductType.Formatter);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
-        ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience);
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            CTagsProductPathService,
+            ProductType.WorkspaceSymbols
+        );
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            FormatterProductPathService,
+            ProductType.Formatter
+        );
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            LinterProductPathService,
+            ProductType.Linter
+        );
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            TestFrameworkProductPathService,
+            ProductType.TestFramework
+        );
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            RefactoringLibraryProductPathService,
+            ProductType.RefactoringLibrary
+        );
+        ioc.serviceManager.addSingleton<IProductPathService>(
+            IProductPathService,
+            DataScienceProductPathService,
+            ProductType.DataScience
+        );
 
         ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(
+            InterpeterHashProviderFactory,
+            InterpeterHashProviderFactory
+        );
         ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
     async function resetSettings() {
@@ -112,7 +153,9 @@ suite('Installer', () => {
 
     async function testCheckingIfProductIsInstalled(product: Product) {
         const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
-        const processService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
+        const processService = (await ioc.serviceContainer
+            .get<IProcessServiceFactory>(IProcessServiceFactory)
+            .create()) as MockProcessService;
         const checkInstalledDef = createDeferred<boolean>();
         processService.onExec((_file, args, _options, callback) => {
             const moduleName = installer.translateProductToModuleName(product, ModuleNamePurpose.run);
@@ -126,8 +169,14 @@ suite('Installer', () => {
     }
     getNamesAndValues<Product>(Product).forEach(prod => {
         test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async () => {
-            ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
-            ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
+            ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
+                IModuleInstaller,
+                new MockModuleInstaller('one', false)
+            );
+            ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
+                IModuleInstaller,
+                new MockModuleInstaller('two', true)
+            );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
             if (
                 prod.value === Product.ctags ||
@@ -162,8 +211,14 @@ suite('Installer', () => {
     }
     getNamesAndValues<Product>(Product).forEach(prod => {
         test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async () => {
-            ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
-            ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
+            ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
+                IModuleInstaller,
+                new MockModuleInstaller('one', false)
+            );
+            ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
+                IModuleInstaller,
+                new MockModuleInstaller('two', true)
+            );
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
             if (
                 prod.value === Product.unittest ||

@@ -8,7 +8,10 @@ export class JupyterDebuggerPortBlockedError extends Error {
     constructor(portNumber: number, rangeBegin: number, rangeEnd: number) {
         super(
             portNumber === -1
-                ? localize.DataScience.jupyterDebuggerPortBlockedSearchError().format(rangeBegin.toString(), rangeEnd.toString())
+                ? localize.DataScience.jupyterDebuggerPortBlockedSearchError().format(
+                      rangeBegin.toString(),
+                      rangeEnd.toString()
+                  )
                 : localize.DataScience.jupyterDebuggerPortBlockedError().format(portNumber.toString())
         );
     }

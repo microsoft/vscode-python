@@ -63,16 +63,27 @@ suite('Product Path', () => {
                 unitTestSettings = TypeMoq.Mock.ofType<ITestingSettings>();
                 workspaceSymnbolSettings = TypeMoq.Mock.ofType<IWorkspaceSymbolSettings>();
 
-                productInstaller = new ProductInstaller(serviceContainer.object, TypeMoq.Mock.ofType<OutputChannel>().object);
+                productInstaller = new ProductInstaller(
+                    serviceContainer.object,
+                    TypeMoq.Mock.ofType<OutputChannel>().object
+                );
                 const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
                 pythonSettings.setup(p => p.formatting).returns(() => formattingSettings.object);
                 pythonSettings.setup(p => p.testing).returns(() => unitTestSettings.object);
                 pythonSettings.setup(p => p.workspaceSymbols).returns(() => workspaceSymnbolSettings.object);
-                configService.setup(s => s.getSettings(TypeMoq.It.isValue(resource))).returns(() => pythonSettings.object);
-                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configService.object);
-                serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny())).returns(() => productInstaller);
+                configService
+                    .setup(s => s.getSettings(TypeMoq.It.isValue(resource)))
+                    .returns(() => pythonSettings.object);
+                serviceContainer
+                    .setup(s => s.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
+                    .returns(() => configService.object);
+                serviceContainer
+                    .setup(s => s.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny()))
+                    .returns(() => productInstaller);
 
-                serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProductService), TypeMoq.It.isAny())).returns(() => new ProductService());
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IProductService), TypeMoq.It.isAny()))
+                    .returns(() => new ProductService());
             });
 
             if (product.value === Product.isort) {
@@ -92,7 +103,10 @@ suite('Product Path', () => {
                 } else if (product.value === Product.kernelspec) {
                     test('Returns true if product is kernelspec', () => {
                         const productPathService = new TestBaseProductPathsService(serviceContainer.object);
-                        expect(productPathService.isExecutableAModule(product.value)).to.equal(false, 'Should be false');
+                        expect(productPathService.isExecutableAModule(product.value)).to.equal(
+                            false,
+                            'Should be false'
+                        );
                     });
                 } else {
                     test('Returns true if User has customized the executable name', () => {
@@ -105,7 +119,10 @@ suite('Product Path', () => {
                         productInstaller.translateProductToModuleName = () => 'moduleName';
                         const productPathService = new TestBaseProductPathsService(serviceContainer.object);
                         productPathService.getExecutableNameFromSettings = () => 'path/to/executable';
-                        expect(productPathService.isExecutableAModule(product.value)).to.equal(false, 'Should be false');
+                        expect(productPathService.isExecutableAModule(product.value)).to.equal(
+                            false,
+                            'Should be false'
+                        );
                     });
                     test('Returns false if translating product to module name fails with error', () => {
                         productInstaller.translateProductToModuleName = () => {
@@ -114,18 +131,25 @@ suite('Product Path', () => {
                         };
                         const productPathService = new TestBaseProductPathsService(serviceContainer.object);
                         productPathService.getExecutableNameFromSettings = () => 'executableName';
-                        expect(productPathService.isExecutableAModule(product.value)).to.equal(false, 'Should be false');
+                        expect(productPathService.isExecutableAModule(product.value)).to.equal(
+                            false,
+                            'Should be false'
+                        );
                     });
                 }
             });
             const productType = new ProductService().getProductType(product.value);
             switch (productType) {
                 case ProductType.Formatter: {
-                    test(`Ensure path is returned for ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    test(`Ensure path is returned for ${product.name} (${
+                        resource ? 'With a resource' : 'without a resource'
+                    })`, async () => {
                         const productPathService = new FormatterProductPathService(serviceContainer.object);
                         const formatterHelper = TypeMoq.Mock.ofType<IFormatterHelper>();
                         const expectedPath = 'Some Path';
-                        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IFormatterHelper), TypeMoq.It.isAny())).returns(() => formatterHelper.object);
+                        serviceContainer
+                            .setup(s => s.get(TypeMoq.It.isValue(IFormatterHelper), TypeMoq.It.isAny()))
+                            .returns(() => formatterHelper.object);
                         formattingSettings
                             .setup(f => f.autopep8Path)
                             .returns(() => expectedPath)
@@ -148,12 +172,16 @@ suite('Product Path', () => {
                     break;
                 }
                 case ProductType.Linter: {
-                    test(`Ensure path is returned for ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    test(`Ensure path is returned for ${product.name} (${
+                        resource ? 'With a resource' : 'without a resource'
+                    })`, async () => {
                         const productPathService = new LinterProductPathService(serviceContainer.object);
                         const linterManager = TypeMoq.Mock.ofType<ILinterManager>();
                         const linterInfo = TypeMoq.Mock.ofType<ILinterInfo>();
                         const expectedPath = 'Some Path';
-                        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny())).returns(() => linterManager.object);
+                        serviceContainer
+                            .setup(s => s.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
+                            .returns(() => linterManager.object);
                         linterInfo
                             .setup(l => l.pathName(TypeMoq.It.isValue(resource)))
                             .returns(() => expectedPath)
@@ -171,17 +199,24 @@ suite('Product Path', () => {
                     break;
                 }
                 case ProductType.RefactoringLibrary: {
-                    test(`Ensure path is returned for ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    test(`Ensure path is returned for ${product.name} (${
+                        resource ? 'With a resource' : 'without a resource'
+                    })`, async () => {
                         const productPathService = new RefactoringLibraryProductPathService(serviceContainer.object);
 
                         const value = productPathService.getExecutableNameFromSettings(product.value, resource);
-                        const moduleName = productInstaller.translateProductToModuleName(product.value, ModuleNamePurpose.run);
+                        const moduleName = productInstaller.translateProductToModuleName(
+                            product.value,
+                            ModuleNamePurpose.run
+                        );
                         expect(value).to.be.equal(moduleName);
                     });
                     break;
                 }
                 case ProductType.WorkspaceSymbols: {
-                    test(`Ensure path is returned for ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    test(`Ensure path is returned for ${product.name} (${
+                        resource ? 'With a resource' : 'without a resource'
+                    })`, async () => {
                         const productPathService = new CTagsProductPathService(serviceContainer.object);
                         const expectedPath = 'Some Path';
                         workspaceSymnbolSettings
@@ -196,11 +231,15 @@ suite('Product Path', () => {
                     break;
                 }
                 case ProductType.TestFramework: {
-                    test(`Ensure path is returned for ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    test(`Ensure path is returned for ${product.name} (${
+                        resource ? 'With a resource' : 'without a resource'
+                    })`, async () => {
                         const productPathService = new TestFrameworkProductPathService(serviceContainer.object);
                         const testHelper = TypeMoq.Mock.ofType<ITestsHelper>();
                         const expectedPath = 'Some Path';
-                        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ITestsHelper), TypeMoq.It.isAny())).returns(() => testHelper.object);
+                        serviceContainer
+                            .setup(s => s.get(TypeMoq.It.isValue(ITestsHelper), TypeMoq.It.isAny()))
+                            .returns(() => testHelper.object);
                         testHelper
                             .setup(t => t.getSettingsPropertyNames(TypeMoq.It.isValue(product.value)))
                             .returns(() => {
@@ -221,10 +260,14 @@ suite('Product Path', () => {
                         testHelper.verifyAll();
                         unitTestSettings.verifyAll();
                     });
-                    test(`Ensure module name is returned for ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    test(`Ensure module name is returned for ${product.name} (${
+                        resource ? 'With a resource' : 'without a resource'
+                    })`, async () => {
                         const productPathService = new TestFrameworkProductPathService(serviceContainer.object);
                         const testHelper = TypeMoq.Mock.ofType<ITestsHelper>();
-                        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ITestsHelper), TypeMoq.It.isAny())).returns(() => testHelper.object);
+                        serviceContainer
+                            .setup(s => s.get(TypeMoq.It.isValue(ITestsHelper), TypeMoq.It.isAny()))
+                            .returns(() => testHelper.object);
                         testHelper
                             .setup(t => t.getSettingsPropertyNames(TypeMoq.It.isValue(product.value)))
                             .returns(() => {
@@ -237,18 +280,26 @@ suite('Product Path', () => {
                             .verifiable(TypeMoq.Times.once());
 
                         const value = productPathService.getExecutableNameFromSettings(product.value, resource);
-                        const moduleName = productInstaller.translateProductToModuleName(product.value, ModuleNamePurpose.run);
+                        const moduleName = productInstaller.translateProductToModuleName(
+                            product.value,
+                            ModuleNamePurpose.run
+                        );
                         expect(value).to.be.equal(moduleName);
                         testHelper.verifyAll();
                     });
                     break;
                 }
                 case ProductType.DataScience: {
-                    test(`Ensure path is returned for ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    test(`Ensure path is returned for ${product.name} (${
+                        resource ? 'With a resource' : 'without a resource'
+                    })`, async () => {
                         const productPathService = new DataScienceProductPathService(serviceContainer.object);
 
                         const value = productPathService.getExecutableNameFromSettings(product.value, resource);
-                        const moduleName = productInstaller.translateProductToModuleName(product.value, ModuleNamePurpose.run);
+                        const moduleName = productInstaller.translateProductToModuleName(
+                            product.value,
+                            ModuleNamePurpose.run
+                        );
                         expect(value).to.be.equal(moduleName);
                     });
                     break;

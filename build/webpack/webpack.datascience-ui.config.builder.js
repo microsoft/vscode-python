@@ -129,7 +129,10 @@ function buildConfiguration(isNotebook) {
                             // `module.resource` contains the absolute path of the file on disk.
                             // Look for `node_modules/monaco...`.
                             const path = require('path');
-                            return module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}@nteract`);
+                            return (
+                                module.resource &&
+                                module.resource.includes(`${path.sep}node_modules${path.sep}@nteract`)
+                            );
                         }
                     },
                     // Bundling `plotly` with nteract isn't the best option, as this plotly alone is 6mb.
@@ -142,7 +145,9 @@ function buildConfiguration(isNotebook) {
                             // `module.resource` contains the absolute path of the file on disk.
                             // Look for `node_modules/monaco...`.
                             const path = require('path');
-                            return module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}plotly`);
+                            return (
+                                module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}plotly`)
+                            );
                         }
                     },
                     // Monaco is a monster. For SSH again, we pull this into a seprate bundle.
@@ -157,7 +162,9 @@ function buildConfiguration(isNotebook) {
                             // `module.resource` contains the absolute path of the file on disk.
                             // Look for `node_modules/monaco...`.
                             const path = require('path');
-                            return module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}monaco`);
+                            return (
+                                module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}monaco`)
+                            );
                         }
                     }
                 }

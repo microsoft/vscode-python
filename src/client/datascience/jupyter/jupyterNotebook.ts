@@ -824,9 +824,14 @@ export class JupyterNotebookBase implements INotebook {
         // Ask the user for input
         if (msg.content && 'prompt' in msg.content) {
             const hasPassword = msg.content.password !== null && (msg.content.password as boolean);
-            this.applicationService.showInputBox({ prompt: msg.content.prompt ? msg.content.prompt.toString() : '', password: hasPassword }).then(v => {
-                this.session.sendInputReply(v || '');
-            });
+            this.applicationService
+                .showInputBox({
+                    prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
+                    password: hasPassword
+                })
+                .then(v => {
+                    this.session.sendInputReply(v || '');
+                });
         }
     }
 
@@ -995,7 +1000,12 @@ export class JupyterNotebookBase implements INotebook {
 
         this.addToCellData(
             cell,
-            { output_type: 'execute_result', data: msg.content.data, metadata: msg.content.metadata, execution_count: msg.content.execution_count },
+            {
+                output_type: 'execute_result',
+                data: msg.content.data,
+                metadata: msg.content.metadata,
+                execution_count: msg.content.execution_count
+            },
             clearState
         );
     }
@@ -1033,7 +1043,6 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: RefBool, cell: ICell, trimFunc: (str: string) => string) {
-        // Might already have a stream message. If so, just add on to it.
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
 
         // Clear output if waiting for a clear

@@ -23,7 +23,9 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IExtensionBuildInstaller) @named(INSIDERS_INSTALLER) private readonly insidersInstaller: IExtensionBuildInstaller,
+        @inject(IExtensionBuildInstaller)
+        @named(INSIDERS_INSTALLER)
+        private readonly insidersInstaller: IExtensionBuildInstaller,
         @inject(IDisposableRegistry) public readonly disposables: IDisposable[]
     ) {}
 
@@ -38,9 +40,21 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
                 return this.handleChannel(channel, true);
             })
         );
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, () => this.extensionChannelService.updateChannel('off')));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () => this.extensionChannelService.updateChannel('daily')));
-        this.disposables.push(this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () => this.extensionChannelService.updateChannel('weekly')));
+        this.disposables.push(
+            this.cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, () =>
+                this.extensionChannelService.updateChannel('off')
+            )
+        );
+        this.disposables.push(
+            this.cmdManager.registerCommand(Commands.SwitchToInsidersDaily, () =>
+                this.extensionChannelService.updateChannel('daily')
+            )
+        );
+        this.disposables.push(
+            this.cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, () =>
+                this.extensionChannelService.updateChannel('weekly')
+            )
+        );
     }
 
     public async initChannel() {

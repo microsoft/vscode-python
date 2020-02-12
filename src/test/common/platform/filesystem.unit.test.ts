@@ -316,7 +316,9 @@ suite('Raw FileSystem', () => {
             raw.setup(r => r.rename(Uri(src), Uri(tgt), { overwrite: false })) // expect the specific filename
                 .returns(() => Promise.reject(err));
             raw.setup(r => r.stat(Uri(tgt))) // It's a symlink.
-                .returns(() => Promise.resolve(({ type: FileType.SymbolicLink | FileType.Directory } as unknown) as FileStat));
+                .returns(() =>
+                    Promise.resolve(({ type: FileType.SymbolicLink | FileType.Directory } as unknown) as FileStat)
+                );
             raw.setup(r => r.rename(Uri(src), Uri(tgt), { overwrite: true })) // expect the specific filename
                 .returns(() => Promise.resolve());
 
@@ -1274,6 +1276,9 @@ suite('FileSystemUtils', () => {
             const err = new Error('oops!');
             deps.setup(d => d.listdir(dirname)) // Fail with an arbirary error.
                 .throws(err);
+            const stat = createMockStat();
+            deps.setup(d => d.stat(dirname)) // The "file" exists.
+                .returns(() => Promise.resolve(stat.object));
 
             const promise = utils.listdir(dirname);
 

@@ -26,7 +26,10 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
     let state: PersistentState<PythonInterpreter | undefined>;
     let workspaceService: IWorkspaceService;
     class SettingsInterpretersAutoSelectionRuleTest extends SettingsInterpretersAutoSelectionRule {
-        public async onAutoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<NextAction> {
+        public async onAutoSelectInterpreter(
+            resource: Resource,
+            manager?: IInterpreterAutoSelectionService
+        ): Promise<NextAction> {
             return super.onAutoSelectInterpreter(resource, manager);
         }
     }
@@ -36,8 +39,14 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         fs = mock(FileSystem);
         workspaceService = mock(WorkspaceService);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(instance(state));
-        rule = new SettingsInterpretersAutoSelectionRuleTest(instance(fs), instance(stateFactory), instance(workspaceService));
+        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+            instance(state)
+        );
+        rule = new SettingsInterpretersAutoSelectionRuleTest(
+            instance(fs),
+            instance(stateFactory),
+            instance(workspaceService)
+        );
     });
 
     test('Invoke next rule if python Path in user settings is default', async () => {

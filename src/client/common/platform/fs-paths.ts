@@ -3,11 +3,7 @@
 
 import * as nodepath from 'path';
 import { getOSType, OSType } from '../utils/platform';
-// prettier-ignore
-import {
-    IExecutables,
-    IFileSystemPaths, IFileSystemPathUtils
-} from './types';
+import { IExecutables, IFileSystemPaths, IFileSystemPathUtils } from './types';
 // tslint:disable-next-line:no-var-requires no-require-imports
 const untildify = require('untildify');
 
@@ -21,24 +17,25 @@ interface INodePath {
 }
 
 export class FileSystemPaths implements IFileSystemPaths {
-    // prettier-ignore
     constructor(
+        // "true" if targeting a case-insensitive host (like Windows)
         private readonly isCaseInsensitive: boolean,
+        // (effectively) the node "path" module to use
         private readonly raw: INodePath
-    ) { }
+    ) {}
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
-    // prettier-ignore
     public static withDefaults(
+        // default: use "isWindows"
         isCaseInsensitive?: boolean
     ): FileSystemPaths {
         if (isCaseInsensitive === undefined) {
             isCaseInsensitive = getOSType() === OSType.Windows;
         }
-        // prettier-ignore
         return new FileSystemPaths(
             isCaseInsensitive,
+            // Use the actual node "path" module.
             nodepath
         );
     }
@@ -65,35 +62,31 @@ export class FileSystemPaths implements IFileSystemPaths {
 
     public normCase(filename: string): string {
         filename = this.raw.normalize(filename);
-        // prettier-ignore
-        return this.isCaseInsensitive
-            ? filename.toUpperCase()
-            : filename;
+        return this.isCaseInsensitive ? filename.toUpperCase() : filename;
     }
 }
 
 export class Executables {
-    // prettier-ignore
     constructor(
+        // the $PATH delimiter to use
         public readonly delimiter: string,
+        // the OS type to target
         private readonly osType: OSType
-    ) { }
+    ) {}
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
     public static withDefaults(): Executables {
-        // prettier-ignore
         return new Executables(
+            // Use node's value.
             nodepath.delimiter,
+            // Use the current OS.
             getOSType()
         );
     }
 
     public get envVar(): string {
-        // prettier-ignore
-        return this.osType === OSType.Windows
-            ? 'Path'
-            : 'PATH';
+        return this.osType === OSType.Windows ? 'Path' : 'PATH';
     }
 }
 
@@ -103,28 +96,32 @@ interface IRawPaths {
 }
 
 export class FileSystemPathUtils implements IFileSystemPathUtils {
-    // prettier-ignore
     constructor(
+        // the user home directory to use (and expose)
         public readonly home: string,
+        // the low-level FS path operations to use (and expose)
         public readonly paths: IFileSystemPaths,
+        // the low-level OS "executables" to use (and expose)
         public readonly executables: IExecutables,
+        // other low-level FS path operations to use
         private readonly raw: IRawPaths
-    ) { }
+    ) {}
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
-    // prettier-ignore
     public static withDefaults(
+        // default: a new FileSystemPaths object (using defaults)
         paths?: IFileSystemPaths
     ): FileSystemPathUtils {
         if (paths === undefined) {
             paths = FileSystemPaths.withDefaults();
         }
-        // prettier-ignore
         return new FileSystemPathUtils(
+            // Use the current user's home directory.
             untildify('~'),
             paths,
             Executables.withDefaults(),
+            // Use the actual node "path" module.
             nodepath
         );
     }

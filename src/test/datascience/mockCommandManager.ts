@@ -12,11 +12,10 @@ import { ICommandManager } from '../../client/common/application/types';
 export class MockCommandManager implements ICommandManager {
     private commands: Map<string, (...args: any[]) => any> = new Map<string, (...args: any[]) => any>();
 
-    public registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
-        command: E,
-        callback: (...args: U) => any,
-        thisArg?: any
-    ): Disposable {
+    public registerCommand<
+        E extends keyof ICommandNameArgumentTypeMapping,
+        U extends ICommandNameArgumentTypeMapping[E]
+    >(command: E, callback: (...args: U) => any, thisArg?: any): Disposable {
         this.commands.set(command, thisArg ? (callback.bind(thisArg) as any) : (callback as any));
         return {
             dispose: () => {
@@ -25,10 +24,18 @@ export class MockCommandManager implements ICommandManager {
         };
     }
 
-    public registerTextEditorCommand(_command: string, _callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void, _thisArg?: any): Disposable {
+    public registerTextEditorCommand(
+        _command: string,
+        _callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void,
+        _thisArg?: any
+    ): Disposable {
         throw new Error('Method not implemented.');
     }
-    public executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, ...rest: U): Thenable<T | undefined> {
+    public executeCommand<
+        T,
+        E extends keyof ICommandNameArgumentTypeMapping,
+        U extends ICommandNameArgumentTypeMapping[E]
+    >(command: E, ...rest: U): Thenable<T | undefined> {
         const func = this.commands.get(command);
         if (func) {
             const result = func(...rest);

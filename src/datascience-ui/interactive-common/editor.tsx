@@ -64,7 +64,9 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
     public render() {
         const classes = this.props.readOnly ? 'editor-area' : 'editor-area editor-area-editable';
         const renderEditor =
-            this.state.forceMonaco || this.props.useQuickEdit === undefined || this.props.useQuickEdit === false ? this.renderMonacoEditor : this.renderQuickEditor;
+            this.state.forceMonaco || this.props.useQuickEdit === undefined || this.props.useQuickEdit === false
+                ? this.renderMonacoEditor
+                : this.renderQuickEditor;
         return <div className={classes}>{renderEditor()}</div>;
     }
 
@@ -216,7 +218,10 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
                     this.state.model.setValue(newValue);
                     this.lastCleanVersionId = this.state.model.getVersionId();
                     const lastLine = this.state.model.getLineCount();
-                    this.state.editor.setPosition({ lineNumber: lastLine, column: this.state.model.getLineLength(lastLine) + 1 });
+                    this.state.editor.setPosition({
+                        lineNumber: lastLine,
+                        column: this.state.model.getLineLength(lastLine) + 1
+                    });
                     e.stopPropagation();
                 }
             } else if (this.props.keyDown) {

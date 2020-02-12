@@ -72,14 +72,20 @@ export class PostOffice implements IAsyncDisposable {
                 case vsls.Role.Guest:
                     // Ask host to broadcast
                     if (this.guestServer) {
-                        this.guestServer.notify(LiveShare.LiveShareBroadcastRequest, this.createBroadcastArgs(command, ...args));
+                        this.guestServer.notify(
+                            LiveShare.LiveShareBroadcastRequest,
+                            this.createBroadcastArgs(command, ...args)
+                        );
                     }
                     skipDefault = true;
                     break;
                 case vsls.Role.Host:
                     // Notify everybody and call our local callback (by falling through)
                     if (this.hostServer) {
-                        this.hostServer.notify(this.escapeCommandName(command), this.translateArgs(api, command, ...args));
+                        this.hostServer.notify(
+                            this.escapeCommandName(command),
+                            this.translateArgs(api, command, ...args)
+                        );
                     }
                     break;
                 default:
@@ -98,7 +104,9 @@ export class PostOffice implements IAsyncDisposable {
 
         // For a guest, make sure to register the notification
         if (api && api.session && api.session.role === vsls.Role.Guest && this.guestServer) {
-            this.guestServer.onNotify(this.escapeCommandName(command), a => this.onGuestNotify(command, a as IMessageArgs));
+            this.guestServer.onNotify(this.escapeCommandName(command), a =>
+                this.onGuestNotify(command, a as IMessageArgs)
+            );
         }
 
         // Always stick in the command map so that if we switch roles, we reregister
@@ -214,7 +222,9 @@ export class PostOffice implements IAsyncDisposable {
 
                 // When we start the host, listen for the broadcast message
                 if (this.hostServer !== null) {
-                    this.hostServer.onNotify(LiveShare.LiveShareBroadcastRequest, a => this.onBroadcastRequest(api, a as IMessageArgs));
+                    this.hostServer.onNotify(LiveShare.LiveShareBroadcastRequest, a =>
+                        this.onBroadcastRequest(api, a as IMessageArgs)
+                    );
                 }
             } else if (api.session.role === vsls.Role.Guest) {
                 this.guestServer = await api.getSharedService(this.name);

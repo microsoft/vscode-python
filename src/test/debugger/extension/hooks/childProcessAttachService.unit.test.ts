@@ -27,7 +27,11 @@ suite('Debug - Attach to Child Process', () => {
         shell = mock(ApplicationShell);
         debugService = mock(DebugService);
         workspaceService = mock(WorkspaceService);
-        attachService = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
+        attachService = new ChildProcessAttachService(
+            instance(shell),
+            instance(debugService),
+            instance(workspaceService)
+        );
     });
 
     test('Message is not displayed if debugger is launched', async () => {

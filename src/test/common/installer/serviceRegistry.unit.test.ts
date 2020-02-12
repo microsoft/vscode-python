@@ -48,17 +48,70 @@ suite('Common installer Service Registry', () => {
         verify(serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipInstaller)).once();
         verify(serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PipEnvInstaller)).once();
         verify(serviceManager.addSingleton<IModuleInstaller>(IModuleInstaller, PoetryInstaller)).once();
-        verify(serviceManager.addSingleton<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager)).once();
-        verify(serviceManager.addSingleton<IExtensionBuildInstaller>(IExtensionBuildInstaller, StableBuildInstaller, STABLE_INSTALLER)).once();
-        verify(serviceManager.addSingleton<IExtensionBuildInstaller>(IExtensionBuildInstaller, InsidersBuildInstaller, INSIDERS_INSTALLER)).once();
+        verify(
+            serviceManager.addSingleton<IInstallationChannelManager>(
+                IInstallationChannelManager,
+                InstallationChannelManager
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<IExtensionBuildInstaller>(
+                IExtensionBuildInstaller,
+                StableBuildInstaller,
+                STABLE_INSTALLER
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<IExtensionBuildInstaller>(
+                IExtensionBuildInstaller,
+                InsidersBuildInstaller,
+                INSIDERS_INSTALLER
+            )
+        ).once();
 
         verify(serviceManager.addSingleton<IProductService>(IProductService, ProductService)).once();
-        verify(serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols)).once();
-        verify(serviceManager.addSingleton<IProductPathService>(IProductPathService, FormatterProductPathService, ProductType.Formatter)).once();
-        verify(serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter)).once();
-        verify(serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework)).once();
-        verify(serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary)).once();
-        verify(serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience)).once();
+        verify(
+            serviceManager.addSingleton<IProductPathService>(
+                IProductPathService,
+                CTagsProductPathService,
+                ProductType.WorkspaceSymbols
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<IProductPathService>(
+                IProductPathService,
+                FormatterProductPathService,
+                ProductType.Formatter
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<IProductPathService>(
+                IProductPathService,
+                LinterProductPathService,
+                ProductType.Linter
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<IProductPathService>(
+                IProductPathService,
+                TestFrameworkProductPathService,
+                ProductType.TestFramework
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<IProductPathService>(
+                IProductPathService,
+                RefactoringLibraryProductPathService,
+                ProductType.RefactoringLibrary
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<IProductPathService>(
+                IProductPathService,
+                DataScienceProductPathService,
+                ProductType.DataScience
+            )
+        ).once();
         verify(serviceManager.addSingleton<IWebPanelProvider>(IWebPanelProvider, WebPanelProvider)).once();
     });
 });

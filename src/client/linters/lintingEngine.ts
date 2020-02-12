@@ -89,7 +89,12 @@ export class LintingEngine implements ILintingEngine {
         const activeLinters = await this.linterManager.getActiveLinters(false, document.uri);
         const promises: Promise<ILintMessage[]>[] = activeLinters.map(async (info: ILinterInfo) => {
             const stopWatch = new StopWatch();
-            const linter = await this.linterManager.createLinter(info.product, this.outputChannel, this.serviceContainer, document.uri);
+            const linter = await this.linterManager.createLinter(
+                info.product,
+                this.outputChannel,
+                this.serviceContainer,
+                document.uri
+            );
             const promise = linter.lint(document, cancelToken.token);
             this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
             return promise;
@@ -119,7 +124,13 @@ export class LintingEngine implements ILintingEngine {
         this.diagnosticCollection.set(document.uri, diagnostics);
     }
 
-    private sendLinterRunTelemetry(info: ILinterInfo, resource: vscode.Uri, promise: Promise<ILintMessage[]>, stopWatch: StopWatch, trigger: LinterTrigger): void {
+    private sendLinterRunTelemetry(
+        info: ILinterInfo,
+        resource: vscode.Uri,
+        promise: Promise<ILintMessage[]>,
+        stopWatch: StopWatch,
+        trigger: LinterTrigger
+    ): void {
         const linterExecutablePathName = info.pathName(resource);
         const properties: LintingTelemetry = {
             tool: info.id,
@@ -156,8 +167,12 @@ export class LintingEngine implements ILintingEngine {
         }
 
         const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
-        const workspaceRootPath = workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string' ? workspaceFolder.uri.fsPath : undefined;
-        const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
+        const workspaceRootPath =
+            workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string' ? workspaceFolder.uri.fsPath : undefined;
+        const relativeFileName =
+            typeof workspaceRootPath === 'string'
+                ? path.relative(workspaceRootPath, document.fileName)
+                : document.fileName;
 
         const settings = this.configurationService.getSettings(document.uri);
         // { dot: true } is important so dirs like `.venv` will be matched by globs

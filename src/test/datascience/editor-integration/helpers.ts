@@ -8,7 +8,13 @@ import { Range, TextDocument, TextLine, Uri } from 'vscode';
 // Disable whitespace / multiline as we use that to pass in our fake file strings
 
 // Helper function to create a document and get line count and lines
-export function createDocument(inputText: string, fileName: string, fileVersion: number, times: TypeMoq.Times, implementGetText?: boolean): TypeMoq.IMock<TextDocument> {
+export function createDocument(
+    inputText: string,
+    fileName: string,
+    fileVersion: number,
+    times: TypeMoq.Times,
+    implementGetText?: boolean
+): TypeMoq.IMock<TextDocument> {
     const document = TypeMoq.Mock.ofType<TextDocument>();
 
     // Split our string on newline chars

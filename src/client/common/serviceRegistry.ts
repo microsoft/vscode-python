@@ -33,11 +33,20 @@ import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
 import { ExperimentsManager } from './experiments';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
-import { ExtensionInsidersDailyChannelRule, ExtensionInsidersOffChannelRule, ExtensionInsidersWeeklyChannelRule } from './insidersBuild/downloadChannelRules';
+import {
+    ExtensionInsidersDailyChannelRule,
+    ExtensionInsidersOffChannelRule,
+    ExtensionInsidersWeeklyChannelRule
+} from './insidersBuild/downloadChannelRules';
 import { ExtensionChannelService } from './insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from './insidersBuild/insidersExtensionPrompt';
 import { InsidersExtensionService } from './insidersBuild/insidersExtensionService';
-import { ExtensionChannel, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from './insidersBuild/types';
+import {
+    ExtensionChannel,
+    IExtensionChannelRule,
+    IExtensionChannelService,
+    IInsiderExtensionPrompt
+} from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
 import { BrowserService } from './net/browser';
 import { FileDownloader } from './net/fileDownloader';
@@ -117,21 +126,40 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IEditorUtils>(IEditorUtils, EditorUtils);
     serviceManager.addSingleton<INugetService>(INugetService, NugetService);
     serviceManager.addSingleton<ITerminalActivator>(ITerminalActivator, TerminalActivator);
-    serviceManager.addSingleton<ITerminalActivationHandler>(ITerminalActivationHandler, PowershellTerminalActivationFailedHandler);
+    serviceManager.addSingleton<ITerminalActivationHandler>(
+        ITerminalActivationHandler,
+        PowershellTerminalActivationFailedHandler
+    );
     serviceManager.addSingleton<ILiveShareApi>(ILiveShareApi, LiveShareApi);
     serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
     serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Bash, TerminalActivationProviders.bashCShellFish);
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        ITerminalActivationCommandProvider,
+        Bash,
+        TerminalActivationProviders.bashCShellFish
+    );
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
         ITerminalActivationCommandProvider,
         CommandPromptAndPowerShell,
         TerminalActivationProviders.commandPromptAndPowerShell
     );
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, TerminalActivationProviders.pyenv);
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, CondaActivationCommandProvider, TerminalActivationProviders.conda);
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        ITerminalActivationCommandProvider,
+        PyEnvActivationCommandProvider,
+        TerminalActivationProviders.pyenv
+    );
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        ITerminalActivationCommandProvider,
+        CondaActivationCommandProvider,
+        TerminalActivationProviders.conda
+    );
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
+        ITerminalActivationCommandProvider,
+        PipEnvActivationCommandProvider,
+        TerminalActivationProviders.pipenv
+    );
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
@@ -142,10 +170,28 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, VSCEnvironmentShellDetector);
     serviceManager.addSingleton<IInsiderExtensionPrompt>(IInsiderExtensionPrompt, InsidersExtensionPrompt);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, InsidersExtensionService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        InsidersExtensionService
+    );
     serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
-    serviceManager.addSingleton<IExtensionChannelRule>(IExtensionChannelRule, ExtensionInsidersOffChannelRule, ExtensionChannel.off);
-    serviceManager.addSingleton<IExtensionChannelRule>(IExtensionChannelRule, ExtensionInsidersDailyChannelRule, ExtensionChannel.daily);
-    serviceManager.addSingleton<IExtensionChannelRule>(IExtensionChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionChannel.weekly);
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebugSessionTelemetry);
+    serviceManager.addSingleton<IExtensionChannelRule>(
+        IExtensionChannelRule,
+        ExtensionInsidersOffChannelRule,
+        ExtensionChannel.off
+    );
+    serviceManager.addSingleton<IExtensionChannelRule>(
+        IExtensionChannelRule,
+        ExtensionInsidersDailyChannelRule,
+        ExtensionChannel.daily
+    );
+    serviceManager.addSingleton<IExtensionChannelRule>(
+        IExtensionChannelRule,
+        ExtensionInsidersWeeklyChannelRule,
+        ExtensionChannel.weekly
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        DebugSessionTelemetry
+    );
 }

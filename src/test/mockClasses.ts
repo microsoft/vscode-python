@@ -1,5 +1,11 @@
 import * as vscode from 'vscode';
-import { Flake8CategorySeverity, ILintingSettings, IMypyCategorySeverity, IPycodestyleCategorySeverity, IPylintCategorySeverity } from '../client/common/types';
+import {
+    Flake8CategorySeverity,
+    ILintingSettings,
+    IMypyCategorySeverity,
+    IPycodestyleCategorySeverity,
+    IPylintCategorySeverity
+} from '../client/common/types';
 
 export class MockOutputChannel implements vscode.OutputChannel {
     public name: string;

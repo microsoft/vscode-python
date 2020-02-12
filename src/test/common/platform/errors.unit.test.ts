@@ -5,10 +5,12 @@
 
 import { expect } from 'chai';
 import * as vscode from 'vscode';
-// prettier-ignore
 import {
-    isFileExistsError, isFileIsDirError, isFileNotFoundError,
-    isNoPermissionsError, isNotDirError
+    isFileExistsError,
+    isFileIsDirError,
+    isFileNotFoundError,
+    isNoPermissionsError,
+    isNotDirError
 } from '../../../client/common/platform/errors';
 import { SystemError } from './utils';
 

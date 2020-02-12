@@ -34,7 +34,11 @@ suite('Run without Debugging', () => {
         } catch (ex) {}
         await sleep(1000);
     });
-    function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = true): LaunchRequestArguments {
+    function buildLaunchArgs(
+        pythonFile: string,
+        stopOnEntry: boolean = false,
+        showReturnValue: boolean = true
+    ): LaunchRequestArguments {
         // tslint:disable-next-line:no-unnecessary-local-variable
         return {
             program: path.join(debugFilesPath, pythonFile),

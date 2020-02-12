@@ -35,7 +35,9 @@ export class KernelSwitcher {
         let kernel: KernelSpecInterpreter | undefined;
 
         const settings = this.configService.getSettings();
-        const isLocalConnection = notebook.server.getConnectionInfo()?.localLaunch ?? settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
+        const isLocalConnection =
+            notebook.server.getConnectionInfo()?.localLaunch ??
+            settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
 
         if (isLocalConnection) {
             kernel = await this.selectLocalJupyterKernel(notebook?.getKernelSpec());
@@ -50,18 +52,25 @@ export class KernelSwitcher {
     }
 
     @captureTelemetry(Telemetry.SelectLocalJupyterKernel)
-    private async selectLocalJupyterKernel(currentKernel?: IJupyterKernelSpec | LiveKernelModel): Promise<KernelSpecInterpreter> {
+    private async selectLocalJupyterKernel(
+        currentKernel?: IJupyterKernelSpec | LiveKernelModel
+    ): Promise<KernelSpecInterpreter> {
         return this.kernelSelector.selectLocalKernel(undefined, undefined, currentKernel);
     }
 
     @captureTelemetry(Telemetry.SelectRemoteJupyuterKernel)
-    private async selectRemoteJupyterKernel(connInfo: IConnection, currentKernel?: IJupyterKernelSpec | LiveKernelModel): Promise<KernelSpecInterpreter> {
+    private async selectRemoteJupyterKernel(
+        connInfo: IConnection,
+        currentKernel?: IJupyterKernelSpec | LiveKernelModel
+    ): Promise<KernelSpecInterpreter> {
         const session = await this.jupyterSessionManagerFactory.create(connInfo);
         return this.kernelSelector.selectRemoteKernel(session, undefined, currentKernel);
     }
     private async switchKernelWithRetry(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
         const settings = this.configService.getSettings();
-        const isLocalConnection = notebook.server.getConnectionInfo()?.localLaunch ?? settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
+        const isLocalConnection =
+            notebook.server.getConnectionInfo()?.localLaunch ??
+            settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
         if (!isLocalConnection) {
             await this.switchToKernel(notebook, kernel);
             return;
@@ -80,8 +89,16 @@ export class KernelSwitcher {
                     // Looks like we were unable to start a session for the local connection.
                     // Possibly something wrong with the kernel.
                     // At this point we have a valid jupyter server.
-                    const displayName = kernel.kernelSpec?.display_name || kernel.kernelModel?.display_name || kernel.kernelSpec?.name || kernel.kernelModel?.name || '';
-                    const message = DataScience.sessionStartFailedWithKernel().format(displayName, Commands.ViewJupyterOutput);
+                    const displayName =
+                        kernel.kernelSpec?.display_name ||
+                        kernel.kernelModel?.display_name ||
+                        kernel.kernelSpec?.name ||
+                        kernel.kernelModel?.name ||
+                        '';
+                    const message = DataScience.sessionStartFailedWithKernel().format(
+                        displayName,
+                        Commands.ViewJupyterOutput
+                    );
                     const selectKernel = DataScience.selectDifferentKernel();
                     const cancel = Common.cancel();
                     const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
@@ -99,7 +116,10 @@ export class KernelSwitcher {
     private async switchToKernel(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
         const switchKernel = async (newKernel: KernelSpecInterpreter) => {
             // Change the kernel. A status update should fire that changes our display
-            await notebook.setKernelSpec(newKernel.kernelSpec || newKernel.kernelModel!, this.configService.getSettings().datascience.jupyterLaunchTimeout);
+            await notebook.setKernelSpec(
+                newKernel.kernelSpec || newKernel.kernelModel!,
+                this.configService.getSettings().datascience.jupyterLaunchTimeout
+            );
 
             if (newKernel.interpreter) {
                 notebook.setInterpreter(newKernel.interpreter);

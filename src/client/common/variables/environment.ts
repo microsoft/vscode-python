@@ -18,7 +18,10 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}
 
-    public async parseFile(filePath?: string, baseVars?: EnvironmentVariables): Promise<EnvironmentVariables | undefined> {
+    public async parseFile(
+        filePath?: string,
+        baseVars?: EnvironmentVariables
+    ): Promise<EnvironmentVariables | undefined> {
         if (!filePath || !(await this.fs.fileExists(filePath))) {
             return;
         }
@@ -55,7 +58,11 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         return this._pathVariable!;
     }
 
-    private appendPaths(vars: EnvironmentVariables, variableName: 'PATH' | 'Path' | 'PYTHONPATH', ...pathsToAppend: string[]) {
+    private appendPaths(
+        vars: EnvironmentVariables,
+        variableName: 'PATH' | 'Path' | 'PYTHONPATH',
+        ...pathsToAppend: string[]
+    ) {
         const valueToAppend = pathsToAppend
             .filter(item => typeof item === 'string' && item.trim().length > 0)
             .map(item => item.trim())
@@ -119,7 +126,12 @@ function parseEnvLine(line: string): [string, string] {
 
 const SUBST_REGEX = /\${([a-zA-Z]\w*)?([^}\w].*)?}/g;
 
-function substituteEnvVars(value: string, localVars: EnvironmentVariables, globalVars: EnvironmentVariables, missing = ''): string {
+function substituteEnvVars(
+    value: string,
+    localVars: EnvironmentVariables,
+    globalVars: EnvironmentVariables,
+    missing = ''
+): string {
     // Substitution here is inspired a little by dotenv-expand:
     //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
 

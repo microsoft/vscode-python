@@ -20,7 +20,13 @@ export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigura
         if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             if (this.experimentsManager.inExperiment(WebAppReload.experiment)) {
                 if (this.isWebAppConfiguration(debugConfiguration)) {
-                    traceInfo(`Configuration used for Web App Reload experiment (before):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
+                    traceInfo(
+                        `Configuration used for Web App Reload experiment (before):\n${JSON.stringify(
+                            debugConfiguration,
+                            undefined,
+                            4
+                        )}`
+                    );
 
                     let subProcessModified: boolean = false;
                     if (!debugConfiguration.subProcess) {
@@ -35,8 +41,17 @@ export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigura
                         debugConfiguration.args = args;
                     }
 
-                    traceInfo(`Configuration used for Web App Reload experiment (after):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
-                    sendTelemetryEvent(EventName.PYTHON_WEB_APP_RELOAD, undefined, { subProcessModified, argsModified });
+                    traceInfo(
+                        `Configuration used for Web App Reload experiment (after):\n${JSON.stringify(
+                            debugConfiguration,
+                            undefined,
+                            4
+                        )}`
+                    );
+                    sendTelemetryEvent(EventName.PYTHON_WEB_APP_RELOAD, undefined, {
+                        subProcessModified,
+                        argsModified
+                    });
                 }
             } else {
                 this.experimentsManager.sendTelemetryIfInExperiment(WebAppReload.control);
@@ -45,6 +60,11 @@ export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigura
     }
 
     private isWebAppConfiguration(debugConfiguration: LaunchRequestArguments): boolean {
-        return debugConfiguration.django || debugConfiguration.flask || debugConfiguration.jinja || debugConfiguration.pyramid;
+        return (
+            debugConfiguration.django ||
+            debugConfiguration.flask ||
+            debugConfiguration.jinja ||
+            debugConfiguration.pyramid
+        );
     }
 }

@@ -69,7 +69,13 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
     public readonly enabled = true;
     // tslint:disable-next-line:no-any
     public readonly discoveryDeferred = createDeferred<Tests>();
-    constructor(testProvider: TestProvider, product: Product, workspaceFolder: Uri, rootDirectory: string, serviceContainer: IServiceContainer) {
+    constructor(
+        testProvider: TestProvider,
+        product: Product,
+        workspaceFolder: Uri,
+        rootDirectory: string,
+        serviceContainer: IServiceContainer
+    ) {
         super(testProvider, product, workspaceFolder, rootDirectory, serviceContainer);
     }
     protected getDiscoveryOptions(_ignoreCache: boolean) {
@@ -77,7 +83,12 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
         return {} as TestDiscoveryOptions;
     }
     // tslint:disable-next-line:no-any
-    protected async runTestImpl(_tests: Tests, _testsToRun?: TestsToRun, _runFailedTests?: boolean, _debug?: boolean): Promise<Tests> {
+    protected async runTestImpl(
+        _tests: Tests,
+        _testsToRun?: TestsToRun,
+        _runFailedTests?: boolean,
+        _debug?: boolean
+    ): Promise<Tests> {
         // tslint:disable-next-line:no-non-null-assertion
         this.testRunnerCancellationToken!.onCancellationRequested(() => {
             this.runnerDeferred.reject(CANCELLATION_REASON);

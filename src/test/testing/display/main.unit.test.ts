@@ -42,7 +42,9 @@ suite('Unit Tests - TestResultDisplay', () => {
         pythonSettings.setup(p => p.testing).returns(() => unitTestSettings.object);
         configurationService.setup(c => c.getSettings(workspaceUri)).returns(() => pythonSettings.object);
 
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IConfigurationService))).returns(() => configurationService.object);
+        serviceContainer
+            .setup(c => c.get(typeMoq.It.isValue(IConfigurationService)))
+            .returns(() => configurationService.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(ITestsHelper))).returns(() => testsHelper.object);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(ICommandManager))).returns(() => cmdManager.object);
@@ -117,7 +119,10 @@ suite('Unit Tests - TestResultDisplay', () => {
         display.displayProgressStatus(createDeferred<Tests>().promise, false);
 
         statusBar.verifyAll();
-        statusBar.verify(s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Test)), typeMoq.Times.atLeastOnce());
+        statusBar.verify(
+            s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Test)),
+            typeMoq.Times.atLeastOnce()
+        );
         statusBar.verify(s => (s.text = typeMoq.It.isValue('$(stop) Running Tests')), typeMoq.Times.atLeastOnce());
     });
     test('Ensure status bar is updated with success with ability to view ui without any results', async () => {
@@ -135,7 +140,10 @@ suite('Unit Tests - TestResultDisplay', () => {
         display.displayProgressStatus(def.promise, false);
 
         statusBar.verifyAll();
-        statusBar.verify(s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Test)), typeMoq.Times.atLeastOnce());
+        statusBar.verify(
+            s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Test)),
+            typeMoq.Times.atLeastOnce()
+        );
         statusBar.verify(s => (s.text = typeMoq.It.isValue('$(stop) Running Tests')), typeMoq.Times.atLeastOnce());
 
         const tests = typeMoq.Mock.ofType<Tests>();
@@ -148,7 +156,9 @@ suite('Unit Tests - TestResultDisplay', () => {
             .verifiable(typeMoq.Times.atLeastOnce());
 
         appShell
-            .setup(a => a.showWarningMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup(a =>
+                a.showWarningMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())
+            )
             .returns(() => Promise.resolve(undefined))
             .verifiable(typeMoq.Times.once());
 
@@ -174,7 +184,10 @@ suite('Unit Tests - TestResultDisplay', () => {
         display.displayProgressStatus(def.promise, false);
 
         statusBar.verifyAll();
-        statusBar.verify(s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Test)), typeMoq.Times.atLeastOnce());
+        statusBar.verify(
+            s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Test)),
+            typeMoq.Times.atLeastOnce()
+        );
         statusBar.verify(s => (s.text = typeMoq.It.isValue('$(stop) Running Tests')), typeMoq.Times.atLeastOnce());
 
         const tests = typeMoq.Mock.ofType<Tests>();
@@ -187,7 +200,9 @@ suite('Unit Tests - TestResultDisplay', () => {
             .verifiable(typeMoq.Times.atLeastOnce());
 
         appShell
-            .setup(a => a.showWarningMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup(a =>
+                a.showWarningMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())
+            )
             .returns(() => Promise.resolve(undefined))
             .verifiable(typeMoq.Times.never());
 
@@ -213,7 +228,10 @@ suite('Unit Tests - TestResultDisplay', () => {
         display.displayProgressStatus(def.promise, false);
 
         statusBar.verifyAll();
-        statusBar.verify(s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Test)), typeMoq.Times.atLeastOnce());
+        statusBar.verify(
+            s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Test)),
+            typeMoq.Times.atLeastOnce()
+        );
         statusBar.verify(s => (s.text = typeMoq.It.isValue('$(stop) Running Tests')), typeMoq.Times.atLeastOnce());
 
         testsHelper.setup(t => t.displayTestErrorMessage(typeMoq.It.isAny())).verifiable(typeMoq.Times.never());
@@ -240,7 +258,10 @@ suite('Unit Tests - TestResultDisplay', () => {
         display.displayProgressStatus(def.promise, false);
 
         statusBar.verifyAll();
-        statusBar.verify(s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Test)), typeMoq.Times.atLeastOnce());
+        statusBar.verify(
+            s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Test)),
+            typeMoq.Times.atLeastOnce()
+        );
         statusBar.verify(s => (s.text = typeMoq.It.isValue('$(stop) Running Tests')), typeMoq.Times.atLeastOnce());
 
         testsHelper.setup(t => t.displayTestErrorMessage(typeMoq.It.isAny())).verifiable(typeMoq.Times.once());
@@ -266,7 +287,10 @@ suite('Unit Tests - TestResultDisplay', () => {
         display.displayDiscoverStatus(createDeferred<Tests>().promise, false).ignoreErrors();
 
         statusBar.verifyAll();
-        statusBar.verify(s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)), typeMoq.Times.atLeastOnce());
+        statusBar.verify(
+            s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)),
+            typeMoq.Times.atLeastOnce()
+        );
         statusBar.verify(s => (s.text = typeMoq.It.isValue('$(stop) Discovering Tests')), typeMoq.Times.atLeastOnce());
     });
     test('Ensure status bar is displayed and updated with success and no tests, with ability to view ui to view results of test discovery', async () => {
@@ -284,12 +308,17 @@ suite('Unit Tests - TestResultDisplay', () => {
         display.displayDiscoverStatus(def.promise, false).ignoreErrors();
 
         statusBar.verifyAll();
-        statusBar.verify(s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)), typeMoq.Times.atLeastOnce());
+        statusBar.verify(
+            s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)),
+            typeMoq.Times.atLeastOnce()
+        );
         statusBar.verify(s => (s.text = typeMoq.It.isValue('$(stop) Discovering Tests')), typeMoq.Times.atLeastOnce());
 
         const tests = typeMoq.Mock.ofType<Tests>();
         appShell
-            .setup(a => a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup(a =>
+                a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())
+            )
             .returns(() => Promise.resolve(undefined))
             .verifiable(typeMoq.Times.once());
 
@@ -309,7 +338,13 @@ suite('Unit Tests - TestResultDisplay', () => {
 
         statusBar.setup(s => s.show()).verifiable(typeMoq.Times.once());
         cmdManager
-            .setup(c => c.executeCommand(typeMoq.It.isValue('setContext'), typeMoq.It.isValue('testsDiscovered'), typeMoq.It.isValue(false)))
+            .setup(c =>
+                c.executeCommand(
+                    typeMoq.It.isValue('setContext'),
+                    typeMoq.It.isValue('testsDiscovered'),
+                    typeMoq.It.isValue(false)
+                )
+            )
             .verifiable(typeMoq.Times.once());
         createTestResultDisplay();
         const def = createDeferred<Tests>();
@@ -317,16 +352,26 @@ suite('Unit Tests - TestResultDisplay', () => {
         display.displayDiscoverStatus(def.promise, false).ignoreErrors();
 
         statusBar.verifyAll();
-        statusBar.verify(s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)), typeMoq.Times.atLeastOnce());
+        statusBar.verify(
+            s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)),
+            typeMoq.Times.atLeastOnce()
+        );
         statusBar.verify(s => (s.text = typeMoq.It.isValue('$(stop) Discovering Tests')), typeMoq.Times.atLeastOnce());
 
         const tests = typeMoq.Mock.ofType<Tests>();
         appShell
-            .setup(a => a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup(a =>
+                a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())
+            )
             .returns(() => Promise.resolve(Testing.disableTests()))
             .verifiable(typeMoq.Times.once());
 
-        for (const setting of ['testing.promptToConfigure', 'testing.pytestEnabled', 'testing.unittestEnabled', 'testing.nosetestsEnabled']) {
+        for (const setting of [
+            'testing.promptToConfigure',
+            'testing.pytestEnabled',
+            'testing.unittestEnabled',
+            'testing.nosetestsEnabled'
+        ]) {
             configurationService
                 .setup(c => c.updateSetting(typeMoq.It.isValue(setting), typeMoq.It.isValue(false)))
                 .returns(() => Promise.resolve())
@@ -356,18 +401,30 @@ suite('Unit Tests - TestResultDisplay', () => {
         display.displayDiscoverStatus(def.promise, false).ignoreErrors();
 
         statusBar.verifyAll();
-        statusBar.verify(s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)), typeMoq.Times.atLeastOnce());
+        statusBar.verify(
+            s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)),
+            typeMoq.Times.atLeastOnce()
+        );
         statusBar.verify(s => (s.text = typeMoq.It.isValue('$(stop) Discovering Tests')), typeMoq.Times.atLeastOnce());
 
         const tests = typeMoq.Mock.ofType<Tests>();
         appShell
-            .setup(a => a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup(a =>
+                a.showInformationMessage(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())
+            )
             .returns(() => Promise.resolve(Testing.configureTests()))
             .verifiable(typeMoq.Times.once());
 
         const undefinedArg = typeMoq.It.isValue(undefined);
         cmdManager
-            .setup(c => c.executeCommand(typeMoq.It.isValue(Commands.Tests_Configure as any), undefinedArg, undefinedArg, undefinedArg))
+            .setup(c =>
+                c.executeCommand(
+                    typeMoq.It.isValue(Commands.Tests_Configure as any),
+                    undefinedArg,
+                    undefinedArg,
+                    undefinedArg
+                )
+            )
             .returns(() => Promise.resolve() as any)
             .verifiable(typeMoq.Times.once());
         def.resolve(undefined as any);
@@ -393,7 +450,10 @@ suite('Unit Tests - TestResultDisplay', () => {
         display.displayDiscoverStatus(def.promise, false).ignoreErrors();
 
         statusBar.verifyAll();
-        statusBar.verify(s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)), typeMoq.Times.atLeastOnce());
+        statusBar.verify(
+            s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)),
+            typeMoq.Times.atLeastOnce()
+        );
         statusBar.verify(s => (s.text = typeMoq.It.isValue('$(stop) Discovering Tests')), typeMoq.Times.atLeastOnce());
 
         appShell.setup(a => a.showErrorMessage(typeMoq.It.isAny())).verifiable(typeMoq.Times.never());
@@ -420,7 +480,10 @@ suite('Unit Tests - TestResultDisplay', () => {
         display.displayDiscoverStatus(def.promise, false).ignoreErrors();
 
         statusBar.verifyAll();
-        statusBar.verify(s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)), typeMoq.Times.atLeastOnce());
+        statusBar.verify(
+            s => (s.command = typeMoq.It.isValue(Commands.Tests_Ask_To_Stop_Discovery)),
+            typeMoq.Times.atLeastOnce()
+        );
         statusBar.verify(s => (s.text = typeMoq.It.isValue('$(stop) Discovering Tests')), typeMoq.Times.atLeastOnce());
 
         appShell.setup(a => a.showErrorMessage(typeMoq.It.isAny())).verifiable(typeMoq.Times.once());

@@ -111,9 +111,20 @@ suite('ProcessService', () => {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
-        const pythonCode = ['import sys', 'import time', 'print("1")', 'sys.stdout.flush()', 'time.sleep(10)', 'print("2")', 'sys.stdout.flush()', 'time.sleep(2)'];
+        const pythonCode = [
+            'import sys',
+            'import time',
+            'print("1")',
+            'sys.stdout.flush()',
+            'time.sleep(10)',
+            'print("2")',
+            'sys.stdout.flush()',
+            'time.sleep(2)'
+        ];
         const cancellationToken = new CancellationTokenSource();
-        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
+        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], {
+            token: cancellationToken.token
+        });
 
         const def = createDeferred();
         def.promise.then(done).catch(done);
@@ -147,9 +158,20 @@ suite('ProcessService', () => {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
-        const pythonCode = ['import sys', 'import time', 'print("1")', 'sys.stdout.flush()', 'time.sleep(10)', 'print("2")', 'sys.stdout.flush()', 'time.sleep(2)'];
+        const pythonCode = [
+            'import sys',
+            'import time',
+            'print("1")',
+            'sys.stdout.flush()',
+            'time.sleep(10)',
+            'print("2")',
+            'sys.stdout.flush()',
+            'time.sleep(2)'
+        ];
         const cancellationToken = new CancellationTokenSource();
-        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
+        const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], {
+            token: cancellationToken.token
+        });
         let procKilled = false;
 
         expect(result).not.to.be.an('undefined', 'result is undefined');

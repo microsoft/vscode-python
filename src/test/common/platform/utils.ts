@@ -57,17 +57,20 @@ export const SUPPORTS_SOCKETS = (() => {
 export const DOES_NOT_EXIST = 'this file does not exist';
 
 export async function assertDoesNotExist(filename: string) {
-    // prettier-ignore
-    await expect(
-        fsextra.stat(filename)
-    ).to.eventually.be.rejected;
+    const promise = fsextra.stat(filename);
+    await expect(promise).to.eventually.be.rejected;
 }
 
 export async function assertExists(filename: string) {
-    // prettier-ignore
-    await expect(
-        fsextra.stat(filename)
-    ).to.not.eventually.be.rejected;
+    const promise = fsextra.stat(filename);
+    await expect(promise).to.not.eventually.be.rejected;
+}
+
+export async function assertFileText(filename: string, expected: string): Promise<string> {
+    const data = await fsextra.readFile(filename);
+    const text = data.toString();
+    expect(text).to.equal(expected);
+    return text;
 }
 
 export function fixPath(filename: string): string {
@@ -134,10 +137,8 @@ export class FSFixture extends CleanupFixture {
         relname = path.normalize(relname);
         const filename = path.join(tempDir, relname);
         if (mkdirs) {
-            // prettier-ignore
-            await fsextra.mkdirp(
-                path.dirname(filename)
-            );
+            const dirname = path.dirname(filename);
+            await fsextra.mkdirp(dirname);
         }
         return filename;
     }

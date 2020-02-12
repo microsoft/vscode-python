@@ -7,7 +7,11 @@ import { expect } from 'chai';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
-import { DownloadBetaChannelRule, DownloadDailyChannelRule, DownloadStableChannelRule } from '../../../client/activation/common/downloadChannelRules';
+import {
+    DownloadBetaChannelRule,
+    DownloadDailyChannelRule,
+    DownloadStableChannelRule
+} from '../../../client/activation/common/downloadChannelRules';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -24,7 +28,10 @@ suite('Language Server Download Channel Rules', () => {
         test(`Stable channel should be download only if folder doesn't exist ${testSuffix}`, async () => {
             const rule = new DownloadStableChannelRule();
             const hasExistingLSFolder = currentFolderPath ? false : true;
-            expect(await rule.shouldLookForNewLanguageServer(currentFolder)).to.be.equal(hasExistingLSFolder, 'invalid value');
+            expect(await rule.shouldLookForNewLanguageServer(currentFolder)).to.be.equal(
+                hasExistingLSFolder,
+                'invalid value'
+            );
         });
 
         suite('Betal channel', () => {
@@ -37,11 +44,15 @@ suite('Language Server Download Channel Rules', () => {
                 stateFactory = typeMoq.Mock.ofType<IPersistentStateFactory>();
                 state = typeMoq.Mock.ofType<IPersistentState<Boolean>>();
                 stateFactory
-                    .setup(s => s.createGlobalPersistentState(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+                    .setup(s =>
+                        s.createGlobalPersistentState(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())
+                    )
                     .returns(() => state.object)
                     .verifiable(typeMoq.Times.once());
 
-                serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
+                serviceContainer
+                    .setup(c => c.get(typeMoq.It.isValue(IPersistentStateFactory)))
+                    .returns(() => stateFactory.object);
             });
             function setupStateValue(value: boolean) {
                 state
@@ -58,7 +69,10 @@ suite('Language Server Download Channel Rules', () => {
                 const rule = new DownloadBetaChannelRule(serviceContainer.object);
                 setupStateValue(false);
                 const shouldDownload = currentFolderPath ? false : true;
-                expect(await rule.shouldLookForNewLanguageServer(currentFolder)).to.be.equal(shouldDownload, 'invalid value');
+                expect(await rule.shouldLookForNewLanguageServer(currentFolder)).to.be.equal(
+                    shouldDownload,
+                    'invalid value'
+                );
             });
         });
     });

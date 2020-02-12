@@ -8,7 +8,12 @@ import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../../common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel
+} from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
@@ -24,7 +29,9 @@ import { ServerCache } from './serverCache';
 // tslint:disable:no-any
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
-export class HostJupyterExecution extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService) implements IRoleBasedObject, IJupyterExecution {
+export class HostJupyterExecution
+    extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService)
+    implements IRoleBasedObject, IJupyterExecution {
     private serverCache: ServerCache;
     constructor(
         liveShare: ILiveShareApi,
@@ -40,7 +47,18 @@ export class HostJupyterExecution extends LiveShareParticipantHost(JupyterExecut
         jupyterOutputChannel: IOutputChannel,
         serviceContainer: IServiceContainer
     ) {
-        super(liveShare, interpreterService, disposableRegistry, workspace, configService, kernelSelector, notebookStarter, appShell, jupyterOutputChannel, serviceContainer);
+        super(
+            liveShare,
+            interpreterService,
+            disposableRegistry,
+            workspace,
+            configService,
+            kernelSelector,
+            notebookStarter,
+            appShell,
+            jupyterOutputChannel,
+            serviceContainer
+        );
         this.serverCache = new ServerCache(configService, workspace, fileSys);
         asyncRegistry.push(this);
     }
@@ -56,11 +74,17 @@ export class HostJupyterExecution extends LiveShareParticipantHost(JupyterExecut
         }
     }
 
-    public async hostConnectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
+    public async hostConnectToNotebookServer(
+        options?: INotebookServerOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookServer | undefined> {
         return super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
     }
 
-    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
+    public async connectToNotebookServer(
+        options?: INotebookServerOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookServer | undefined> {
         return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
     }
 
@@ -84,7 +108,8 @@ export class HostJupyterExecution extends LiveShareParticipantHost(JupyterExecut
         await super.onDetach(api);
 
         // clear our cached servers if our role is no longer host or none
-        const newRole = api === null || (api.session && api.session.role !== vsls.Role.Guest) ? vsls.Role.Host : vsls.Role.Guest;
+        const newRole =
+            api === null || (api.session && api.session.role !== vsls.Role.Guest) ? vsls.Role.Host : vsls.Role.Guest;
         if (newRole !== vsls.Role.Host) {
             await this.serverCache.dispose();
         }
@@ -105,9 +130,15 @@ export class HostJupyterExecution extends LiveShareParticipantHost(JupyterExecut
         return this.isImportSupported(cancellation);
     };
 
-    private onRemoteConnectToNotebookServer = async (args: any[], cancellation: CancellationToken): Promise<IConnection | undefined> => {
+    private onRemoteConnectToNotebookServer = async (
+        args: any[],
+        cancellation: CancellationToken
+    ): Promise<IConnection | undefined> => {
         // Connect to the local server. THe local server should have started the port forwarding already
-        const localServer = await this.connectToNotebookServer(args[0] as INotebookServerOptions | undefined, cancellation);
+        const localServer = await this.connectToNotebookServer(
+            args[0] as INotebookServerOptions | undefined,
+            cancellation
+        );
 
         // Extract the URI and token for the other side
         if (localServer) {

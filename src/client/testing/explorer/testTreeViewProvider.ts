@@ -13,7 +13,15 @@ import { EventName } from '../../telemetry/constants';
 import { CommandSource } from '../common/constants';
 import { getChildren, getParent, getTestDataItemType } from '../common/testUtils';
 import { ITestCollectionStorageService, Tests, TestStatus } from '../common/types';
-import { ITestDataItemResource, ITestManagementService, ITestTreeViewProvider, TestDataItem, TestDataItemType, TestWorkspaceFolder, WorkspaceTestStatus } from '../types';
+import {
+    ITestDataItemResource,
+    ITestManagementService,
+    ITestTreeViewProvider,
+    TestDataItem,
+    TestDataItemType,
+    TestWorkspaceFolder,
+    WorkspaceTestStatus
+} from '../types';
 import { TestTreeItem } from './testTreeViewItem';
 
 @injectable()
@@ -73,7 +81,9 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
      * @return [TreeItem](#TreeItem) representation of the element
      */
     public async getTreeItem(element: TestDataItem): Promise<TreeItem> {
-        const defaultCollapsibleState = (await this.shouldElementBeExpandedByDefault(element)) ? TreeItemCollapsibleState.Expanded : undefined;
+        const defaultCollapsibleState = (await this.shouldElementBeExpandedByDefault(element))
+            ? TreeItemCollapsibleState.Expanded
+            : undefined;
         return new TestTreeItem(element.resource, element, defaultCollapsibleState);
     }
 
@@ -89,7 +99,12 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
                 let tests = this.testStore.getTests(element.workspaceFolder.uri);
                 if (!tests && !this.discovered.has(element.workspaceFolder.uri.fsPath)) {
                     this.discovered.add(element.workspaceFolder.uri.fsPath);
-                    await this.commandManager.executeCommand(Commands.Tests_Discover, element, CommandSource.testExplorer, undefined);
+                    await this.commandManager.executeCommand(
+                        Commands.Tests_Discover,
+                        element,
+                        CommandSource.testExplorer,
+                        undefined
+                    );
                     tests = this.testStore.getTests(element.workspaceFolder.uri);
                 }
                 return this.getRootNodes(tests);
@@ -101,7 +116,9 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
             return [];
         }
 
-        sendTelemetryEvent(EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT, undefined, { count: this.workspace.workspaceFolders.length });
+        sendTelemetryEvent(EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT, undefined, {
+            count: this.workspace.workspaceFolders.length
+        });
 
         // If we are in a single workspace
         if (this.workspace.workspaceFolders.length === 1) {

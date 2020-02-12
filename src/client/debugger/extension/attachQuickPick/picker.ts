@@ -12,7 +12,10 @@ import { IAttachItem, IAttachPicker, IAttachProcessProvider, REFRESH_BUTTON_ICON
 
 @injectable()
 export class AttachPicker implements IAttachPicker {
-    constructor(@inject(IApplicationShell) private readonly applicationShell: IApplicationShell, private readonly attachItemsProvider: IAttachProcessProvider) {}
+    constructor(
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+        private readonly attachItemsProvider: IAttachProcessProvider
+    ) {}
 
     public showQuickPick(): Promise<string> {
         return new Promise<string>(async (resolve, reject) => {

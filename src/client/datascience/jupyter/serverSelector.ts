@@ -7,7 +7,12 @@ import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento, QuickPickItem } from 'vscode';
 import { GLOBAL_MEMENTO, IConfigurationService, IMemento } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { IMultiStepInput, IMultiStepInputFactory, InputStep, IQuickPickParameters } from '../../common/utils/multiStepInput';
+import {
+    IMultiStepInput,
+    IMultiStepInputFactory,
+    InputStep,
+    IQuickPickParameters
+} from '../../common/utils/multiStepInput';
 import { captureTelemetry } from '../../telemetry';
 import { getSavedUriList } from '../common';
 import { Settings, Telemetry } from '../constants';
@@ -64,12 +69,22 @@ export class JupyterServerSelector {
 
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
-        await this.configuration.updateSetting('dataScience.jupyterServerURI', Settings.JupyterServerLocalLaunch, undefined, ConfigurationTarget.Workspace);
+        await this.configuration.updateSetting(
+            'dataScience.jupyterServerURI',
+            Settings.JupyterServerLocalLaunch,
+            undefined,
+            ConfigurationTarget.Workspace
+        );
     }
 
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
     private async setJupyterURIToRemote(userURI: string): Promise<void> {
-        await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, ConfigurationTarget.Workspace);
+        await this.configuration.updateSetting(
+            'dataScience.jupyterServerURI',
+            userURI,
+            undefined,
+            ConfigurationTarget.Workspace
+        );
     }
     private validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
         try {
@@ -96,7 +111,11 @@ export class JupyterServerSelector {
         savedURIList.forEach(uriItem => {
             if (uriItem.uri) {
                 const uriDate = new Date(uriItem.time);
-                items.push({ label: uriItem.uri, detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()), newChoice: false });
+                items.push({
+                    label: uriItem.uri,
+                    detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
+                    newChoice: false
+                });
             }
         });
 

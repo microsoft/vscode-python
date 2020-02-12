@@ -16,7 +16,11 @@ export class LiveShareProxy implements vsls.LiveShare {
     private guestChecker: vsls.SharedService | vsls.SharedServiceProxy | null = null;
     private pendingGuestCheckCount = 0;
     private peerCheckPromise: Deferred<boolean> | undefined;
-    constructor(private applicationShell: IApplicationShell, private peerTimeout: number | undefined, private realApi: vsls.LiveShare) {
+    constructor(
+        private applicationShell: IApplicationShell,
+        private peerTimeout: number | undefined,
+        private realApi: vsls.LiveShare
+    ) {
         this.realApi.onDidChangePeers(this.onPeersChanged, this);
         this.realApi.onDidChangeSession(this.onSessionChanged, this);
         this.onSessionChanged({ session: this.realApi.session }).ignoreErrors();
@@ -76,7 +80,10 @@ export class LiveShareProxy implements vsls.LiveShare {
     public registerTreeDataProvider<T>(viewId: vsls.View, treeDataProvider: TreeDataProvider<T>): Disposable | null {
         return this.realApi.registerTreeDataProvider(viewId, treeDataProvider);
     }
-    public registerContactServiceProvider(name: string, contactServiceProvider: vsls.ContactServiceProvider): Disposable | null {
+    public registerContactServiceProvider(
+        name: string,
+        contactServiceProvider: vsls.ContactServiceProvider
+    ): Disposable | null {
         return this.realApi.registerContactServiceProvider(name, contactServiceProvider);
     }
     public shareServer(server: vsls.Server): Promise<Disposable> {

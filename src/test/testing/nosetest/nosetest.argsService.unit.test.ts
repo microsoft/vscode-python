@@ -19,7 +19,9 @@ suite('ArgsService: nosetest', () => {
 
         const argsHelper = new ArgumentsHelper();
 
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny())).returns(() => argsHelper);
+        serviceContainer
+            .setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny()))
+            .returns(() => argsHelper);
 
         argumentsService = new NoseTestArgumentsService(serviceContainer.object);
     });

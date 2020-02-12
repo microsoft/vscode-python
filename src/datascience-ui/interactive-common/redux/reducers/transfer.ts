@@ -6,7 +6,15 @@ import { CssMessages } from '../../../../client/datascience/messages';
 import { extractInputText, IMainState } from '../../mainState';
 import { createPostableAction } from '../postOffice';
 import { Helpers } from './helpers';
-import { CommonReducerArg, ICellAction, IEditCellAction, ILinkClickAction, ISendCommandAction, IShowDataViewerAction, IShowPlotAction } from './types';
+import {
+    CommonReducerArg,
+    ICellAction,
+    IEditCellAction,
+    ILinkClickAction,
+    ISendCommandAction,
+    IShowDataViewerAction,
+    IShowPlotAction
+} from './types';
 
 // These are all reducers that don't actually change state. They merely dispatch a message to the other side.
 export namespace Transfer {
@@ -25,17 +33,31 @@ export namespace Transfer {
         // Note: this is assuming editor contents have already been saved. That should happen as a result of focus change
 
         // Actually waiting for save results before marking as not dirty, so don't do it here.
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.SaveAll, { cells: arg.prevState.cellVMs.map(cvm => cvm.cell) }));
+        arg.queueAction(
+            createPostableAction(InteractiveWindowMessages.SaveAll, {
+                cells: arg.prevState.cellVMs.map(cvm => cvm.cell)
+            })
+        );
         return arg.prevState;
     }
 
     export function showDataViewer<T>(arg: CommonReducerArg<T, IShowDataViewerAction>): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.ShowDataViewer, { variable: arg.payload.variable, columnSize: arg.payload.columnSize }));
+        arg.queueAction(
+            createPostableAction(InteractiveWindowMessages.ShowDataViewer, {
+                variable: arg.payload.variable,
+                columnSize: arg.payload.columnSize
+            })
+        );
         return arg.prevState;
     }
 
     export function sendCommand<T>(arg: CommonReducerArg<T, ISendCommandAction>): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.NativeCommand, { command: arg.payload.command, source: arg.payload.commandType }));
+        arg.queueAction(
+            createPostableAction(InteractiveWindowMessages.NativeCommand, {
+                command: arg.payload.command,
+                source: arg.payload.commandType
+            })
+        );
         return arg.prevState;
     }
 
@@ -62,7 +84,12 @@ export namespace Transfer {
     export function gotoCell<T>(arg: CommonReducerArg<T, ICellAction>): IMainState {
         const cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.cellId);
         if (cellVM && cellVM.cell.data.cell_type === 'code') {
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.GotoCodeCell, { file: cellVM.cell.file, line: cellVM.cell.line }));
+            arg.queueAction(
+                createPostableAction(InteractiveWindowMessages.GotoCodeCell, {
+                    file: cellVM.cell.file,
+                    line: cellVM.cell.line
+                })
+            );
         }
         return arg.prevState;
     }
@@ -75,7 +102,11 @@ export namespace Transfer {
 
         // Send a message to the other side to jump to a particular cell
         if (cellVM) {
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.CopyCodeCell, { source: extractInputText(cellVM, arg.prevState.settings) }));
+            arg.queueAction(
+                createPostableAction(InteractiveWindowMessages.CopyCodeCell, {
+                    source: extractInputText(cellVM, arg.prevState.settings)
+                })
+            );
         }
 
         return arg.prevState;
@@ -91,7 +122,12 @@ export namespace Transfer {
 
     export function editCell<T>(arg: CommonReducerArg<T, IEditCellAction>): IMainState {
         if (arg.payload.cellId) {
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.EditCell, { changes: arg.payload.changes, id: arg.payload.cellId }));
+            arg.queueAction(
+                createPostableAction(InteractiveWindowMessages.EditCell, {
+                    changes: arg.payload.changes,
+                    id: arg.payload.cellId
+                })
+            );
 
             // Update the uncomitted text on the cell view model
             // We keep this saved here so we don't re-render and we put this code into the input / code data
@@ -119,15 +155,25 @@ export namespace Transfer {
     export function started<T>(arg: CommonReducerArg<T>): IMainState {
         // Send all of our initial requests
         arg.queueAction(createPostableAction(InteractiveWindowMessages.Started));
-        arg.queueAction(createPostableAction(CssMessages.GetCssRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' }));
-        arg.queueAction(createPostableAction(CssMessages.GetMonacoThemeRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' }));
+        arg.queueAction(
+            createPostableAction(CssMessages.GetCssRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' })
+        );
+        arg.queueAction(
+            createPostableAction(CssMessages.GetMonacoThemeRequest, {
+                isDark: arg.prevState.baseTheme !== 'vscode-light'
+            })
+        );
         arg.queueAction(createPostableAction(InteractiveWindowMessages.LoadOnigasmAssemblyRequest));
         arg.queueAction(createPostableAction(InteractiveWindowMessages.LoadTmLanguageRequest));
         return arg.prevState;
     }
 
     export function loadedAllCells<T>(arg: CommonReducerArg<T>): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.LoadAllCellsComplete, { cells: arg.prevState.cellVMs.map(c => c.cell) }));
+        arg.queueAction(
+            createPostableAction(InteractiveWindowMessages.LoadAllCellsComplete, {
+                cells: arg.prevState.cellVMs.map(c => c.cell)
+            })
+        );
         return arg.prevState;
     }
 }

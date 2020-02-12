@@ -12,7 +12,13 @@ import { IApplicationEnvironment, IApplicationShell } from '../../client/common/
 import { ShowExtensionSurveyPrompt } from '../../client/common/experimentGroups';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IPlatformService } from '../../client/common/platform/types';
-import { IBrowserService, IExperimentsManager, IPersistentState, IPersistentStateFactory, IRandom } from '../../client/common/types';
+import {
+    IBrowserService,
+    IExperimentsManager,
+    IPersistentState,
+    IPersistentStateFactory,
+    IRandom
+} from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Common, ExtensionSurveyBanner, LanguageService } from '../../client/common/utils/localize';
 import { OSType } from '../../client/common/utils/platform';
@@ -42,8 +48,16 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
         doNotShowAgain = TypeMoq.Mock.ofType<IPersistentState<any>>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
-        when(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).thenReturn(disableSurveyForTime.object);
-        when(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).thenReturn(doNotShowAgain.object);
+        when(
+            persistentStateFactory.createGlobalPersistentState(
+                extensionSurveyStateKeys.disableSurveyForTime,
+                false,
+                anything()
+            )
+        ).thenReturn(disableSurveyForTime.object);
+        when(
+            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)
+        ).thenReturn(doNotShowAgain.object);
         extensionSurveyPrompt = new ExtensionSurveyPrompt(
             appShell.object,
             browserService.object,
@@ -65,8 +79,16 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
         const result = extensionSurveyPrompt.shouldShowBanner();
 
         expect(result).to.equal(false, 'Banner should not be shown');
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).never();
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).once();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(
+                extensionSurveyStateKeys.disableSurveyForTime,
+                false,
+                anything()
+            )
+        ).never();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)
+        ).once();
         random.verifyAll();
     });
     test('Returns false if prompt is disabled for a while', async () => {
@@ -80,8 +102,16 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
         const result = extensionSurveyPrompt.shouldShowBanner();
 
         expect(result).to.equal(false, 'Banner should not be shown');
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).once();
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).once();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(
+                extensionSurveyStateKeys.disableSurveyForTime,
+                false,
+                anything()
+            )
+        ).once();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)
+        ).once();
         random.verifyAll();
     });
     test('Returns false if user is not in the random sampling', async () => {
@@ -169,8 +199,16 @@ suite('Extension survey prompt - showSurvey()', () => {
         doNotShowAgain = TypeMoq.Mock.ofType<IPersistentState<any>>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         appEnvironment = TypeMoq.Mock.ofType<IApplicationEnvironment>();
-        when(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).thenReturn(disableSurveyForTime.object);
-        when(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).thenReturn(doNotShowAgain.object);
+        when(
+            persistentStateFactory.createGlobalPersistentState(
+                extensionSurveyStateKeys.disableSurveyForTime,
+                false,
+                anything()
+            )
+        ).thenReturn(disableSurveyForTime.object);
+        when(
+            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)
+        ).thenReturn(doNotShowAgain.object);
         experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
         extensionSurveyPrompt = new ExtensionSurveyPrompt(
             appShell.object,
@@ -225,8 +263,16 @@ suite('Extension survey prompt - showSurvey()', () => {
 
         await extensionSurveyPrompt.showSurvey();
 
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).once();
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).never();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(
+                extensionSurveyStateKeys.disableSurveyForTime,
+                false,
+                anything()
+            )
+        ).once();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)
+        ).never();
         appShell.verifyAll();
         browserService.verifyAll();
         disableSurveyForTime.verifyAll();
@@ -257,8 +303,16 @@ suite('Extension survey prompt - showSurvey()', () => {
 
         await extensionSurveyPrompt.showSurvey();
 
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).never();
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).never();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(
+                extensionSurveyStateKeys.disableSurveyForTime,
+                false,
+                anything()
+            )
+        ).never();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)
+        ).never();
         appShell.verifyAll();
         browserService.verifyAll();
         disableSurveyForTime.verifyAll();
@@ -288,8 +342,16 @@ suite('Extension survey prompt - showSurvey()', () => {
 
         await extensionSurveyPrompt.showSurvey();
 
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).never();
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).never();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(
+                extensionSurveyStateKeys.disableSurveyForTime,
+                false,
+                anything()
+            )
+        ).never();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)
+        ).never();
         appShell.verifyAll();
         browserService.verifyAll();
         disableSurveyForTime.verifyAll();
@@ -319,8 +381,16 @@ suite('Extension survey prompt - showSurvey()', () => {
 
         await extensionSurveyPrompt.showSurvey();
 
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.disableSurveyForTime, false, anything())).never();
-        verify(persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)).once();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(
+                extensionSurveyStateKeys.disableSurveyForTime,
+                false,
+                anything()
+            )
+        ).never();
+        verify(
+            persistentStateFactory.createGlobalPersistentState(extensionSurveyStateKeys.doNotShowAgain, false)
+        ).once();
         appShell.verifyAll();
         browserService.verifyAll();
         disableSurveyForTime.verifyAll();

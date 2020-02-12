@@ -68,11 +68,15 @@ suite('Attach to process - process provider', () => {
                 commandLine: 'kextd'
             }
         ];
-        when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
+        when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({
+            stdout: psOutput
+        });
 
         const attachItems = await provider._getInternalProcessEntries();
 
-        verify(processService.exec(PsProcessParser.psLinuxCommand.command, PsProcessParser.psLinuxCommand.args, anything())).once();
+        verify(
+            processService.exec(PsProcessParser.psLinuxCommand.command, PsProcessParser.psLinuxCommand.args, anything())
+        ).once();
         assert.deepEqual(attachItems, expectedOutput);
     });
 
@@ -109,11 +113,19 @@ suite('Attach to process - process provider', () => {
                 commandLine: 'kextd'
             }
         ];
-        when(processService.exec(PsProcessParser.psDarwinCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
+        when(processService.exec(PsProcessParser.psDarwinCommand.command, anything(), anything())).thenResolve({
+            stdout: psOutput
+        });
 
         const attachItems = await provider._getInternalProcessEntries();
 
-        verify(processService.exec(PsProcessParser.psDarwinCommand.command, PsProcessParser.psDarwinCommand.args, anything())).once();
+        verify(
+            processService.exec(
+                PsProcessParser.psDarwinCommand.command,
+                PsProcessParser.psDarwinCommand.args,
+                anything()
+            )
+        ).once();
         assert.deepEqual(attachItems, expectedOutput);
     });
 
@@ -161,11 +173,15 @@ ProcessId=5912\r
         when(platformService.isMac).thenReturn(false);
         when(platformService.isLinux).thenReturn(false);
         when(platformService.isWindows).thenReturn(true);
-        when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({ stdout: windowsOutput });
+        when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({
+            stdout: windowsOutput
+        });
 
         const attachItems = await provider._getInternalProcessEntries();
 
-        verify(processService.exec(WmicProcessParser.wmicCommand.command, WmicProcessParser.wmicCommand.args, anything())).once();
+        verify(
+            processService.exec(WmicProcessParser.wmicCommand.command, WmicProcessParser.wmicCommand.args, anything())
+        ).once();
         assert.deepEqual(attachItems, expectedOutput);
     });
 
@@ -219,7 +235,9 @@ ProcessId=5912\r
                     commandLine: 'syslogd'
                 }
             ];
-            when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
+            when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({
+                stdout: psOutput
+            });
 
             const output = await provider.getAttachItems();
 
@@ -276,7 +294,9 @@ ProcessId=5912\r
                     commandLine: 'syslogd'
                 }
             ];
-            when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
+            when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({
+                stdout: psOutput
+            });
 
             const output = await provider.getAttachItems();
 
@@ -333,7 +353,9 @@ ProcessId=5728\r
                     commandLine: ''
                 }
             ];
-            when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({ stdout: windowsOutput });
+            when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({
+                stdout: windowsOutput
+            });
 
             const output = await provider.getAttachItems();
 
@@ -374,18 +396,22 @@ ProcessId=8026\r
                 {
                     label: 'python.exe',
                     description: '8026',
-                    detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py',
+                    detail:
+                        'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py',
                     id: '8026',
                     processName: 'python.exe',
-                    commandLine: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py'
+                    commandLine:
+                        'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py'
                 },
                 {
                     label: 'python.exe',
                     description: '6028',
-                    detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+                    detail:
+                        'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
                     id: '6028',
                     processName: 'python.exe',
-                    commandLine: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py'
+                    commandLine:
+                        'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py'
                 },
                 {
                     label: 'sihost.exe',
@@ -420,7 +446,9 @@ ProcessId=8026\r
                     commandLine: ''
                 }
             ];
-            when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({ stdout: windowsOutput });
+            when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({
+                stdout: windowsOutput
+            });
 
             const output = await provider.getAttachItems();
 

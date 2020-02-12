@@ -9,19 +9,22 @@ interface IRawTempFS {
     // TODO (https://github.com/microsoft/vscode/issues/84517)
     //   This functionality has been requested for the
     //   VS Code FS API (vscode.workspace.fs.*).
-    // tslint:disable-next-line:no-any
-    file(config: tmp.Options, callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void): void;
+    file(
+        config: tmp.Options,
+        // tslint:disable-next-line:no-any
+        callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void
+    ): void;
 }
 
 // Operations related to temporary files and directories.
 export class TemporaryFileSystem implements ITempFileSystem {
-    // prettier-ignore
     constructor(
+        // (effectively) the third-party "tmp" module to use
         private readonly raw: IRawTempFS
-    ) { }
+    ) {}
     public static withDefaults(): TemporaryFileSystem {
-        // prettier-ignore
         return new TemporaryFileSystem(
+            // Use the actual "tmp" module.
             tmp
         );
     }

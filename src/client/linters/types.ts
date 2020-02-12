@@ -47,7 +47,12 @@ export interface ILinterManager {
     isLintingEnabled(silent: boolean, resource?: vscode.Uri): Promise<boolean>;
     enableLintingAsync(enable: boolean, resource?: vscode.Uri): Promise<void>;
     setActiveLintersAsync(products: Product[], resource?: vscode.Uri): Promise<void>;
-    createLinter(product: Product, outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer, resource?: vscode.Uri): Promise<ILinter>;
+    createLinter(
+        product: Product,
+        outputChannel: vscode.OutputChannel,
+        serviceContainer: IServiceContainer,
+        resource?: vscode.Uri
+    ): Promise<ILinter>;
 }
 
 export interface ILintMessage {

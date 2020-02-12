@@ -219,8 +219,10 @@ suite('Data Science - JupyterSession', () => {
                     const signal = mock(Signal);
                     when(remoteSession.statusChanged).thenReturn(instance(signal));
                     verify(sessionManager.startNew(anything())).once();
-                    // tslint:disable-next-line: no-any
-                    when(sessionManager.connectTo(newActiveRemoteKernel.session)).thenReturn(newActiveRemoteKernel.session as any);
+                    when(sessionManager.connectTo(newActiveRemoteKernel.session)).thenReturn(
+                        // tslint:disable-next-line: no-any
+                        newActiveRemoteKernel.session as any
+                    );
 
                     assert.isFalse(remoteSessionInstance.isRemoteSession);
                     await jupyterSession.changeKernel(newActiveRemoteKernel, 10000);
@@ -268,8 +270,12 @@ suite('Data Science - JupyterSession', () => {
                 kernelRemovedFromIgnoreList = createDeferred<void>();
                 when(restartSession.statusChanged).thenReturn(instance(restartStatusChangedSignal));
                 when(restartSession.kernelChanged).thenReturn(instance(restartKernelChangedSignal));
-                when(kernelSelector.addKernelToIgnoreList(anything())).thenCall(() => kernelAddedToIgnoreList.resolve());
-                when(kernelSelector.removeKernelFromIgnoreList(anything())).thenCall(() => kernelRemovedFromIgnoreList.resolve());
+                when(kernelSelector.addKernelToIgnoreList(anything())).thenCall(() =>
+                    kernelAddedToIgnoreList.resolve()
+                );
+                when(kernelSelector.removeKernelFromIgnoreList(anything())).thenCall(() =>
+                    kernelRemovedFromIgnoreList.resolve()
+                );
                 // tslint:disable-next-line: no-any
                 (instance(restartSession) as any).then = undefined;
                 newSessionCreated = createDeferred();

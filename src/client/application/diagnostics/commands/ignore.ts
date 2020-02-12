@@ -10,7 +10,11 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticFilterService } from '../types
 import { BaseDiagnosticCommand } from './base';
 
 export class IgnoreDiagnosticCommand extends BaseDiagnosticCommand {
-    constructor(diagnostic: IDiagnostic, private serviceContainer: IServiceContainer, private readonly scope: DiagnosticScope) {
+    constructor(
+        diagnostic: IDiagnostic,
+        private serviceContainer: IServiceContainer,
+        private readonly scope: DiagnosticScope
+    ) {
         super(diagnostic);
     }
     public invoke(): Promise<void> {

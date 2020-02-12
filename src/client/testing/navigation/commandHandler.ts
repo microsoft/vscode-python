@@ -14,9 +14,15 @@ export class TestCodeNavigatorCommandHandler implements ITestCodeNavigatorComman
     private disposables: IDisposable[] = [];
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(ITestCodeNavigator) @named(NavigableItemType.testFile) private readonly testFileNavigator: ITestCodeNavigator,
-        @inject(ITestCodeNavigator) @named(NavigableItemType.testFunction) private readonly testFunctionNavigator: ITestCodeNavigator,
-        @inject(ITestCodeNavigator) @named(NavigableItemType.testSuite) private readonly testSuiteNavigator: ITestCodeNavigator,
+        @inject(ITestCodeNavigator)
+        @named(NavigableItemType.testFile)
+        private readonly testFileNavigator: ITestCodeNavigator,
+        @inject(ITestCodeNavigator)
+        @named(NavigableItemType.testFunction)
+        private readonly testFunctionNavigator: ITestCodeNavigator,
+        @inject(ITestCodeNavigator)
+        @named(NavigableItemType.testSuite)
+        private readonly testSuiteNavigator: ITestCodeNavigator,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
     ) {
         disposableRegistry.push(this);
@@ -28,11 +34,23 @@ export class TestCodeNavigatorCommandHandler implements ITestCodeNavigatorComman
         if (this.disposables.length > 0) {
             return;
         }
-        let disposable = this.commandManager.registerCommand(Commands.navigateToTestFile, this.testFileNavigator.navigateTo, this.testFileNavigator);
+        let disposable = this.commandManager.registerCommand(
+            Commands.navigateToTestFile,
+            this.testFileNavigator.navigateTo,
+            this.testFileNavigator
+        );
         this.disposables.push(disposable);
-        disposable = this.commandManager.registerCommand(Commands.navigateToTestFunction, this.testFunctionNavigator.navigateTo, this.testFunctionNavigator);
+        disposable = this.commandManager.registerCommand(
+            Commands.navigateToTestFunction,
+            this.testFunctionNavigator.navigateTo,
+            this.testFunctionNavigator
+        );
         this.disposables.push(disposable);
-        disposable = this.commandManager.registerCommand(Commands.navigateToTestSuite, this.testSuiteNavigator.navigateTo, this.testSuiteNavigator);
+        disposable = this.commandManager.registerCommand(
+            Commands.navigateToTestSuite,
+            this.testSuiteNavigator.navigateTo,
+            this.testSuiteNavigator
+        );
         this.disposables.push(disposable);
     }
 }

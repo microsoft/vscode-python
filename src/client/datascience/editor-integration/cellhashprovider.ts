@@ -15,7 +15,15 @@ import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
 import { Identifiers } from '../constants';
 import { InteractiveWindowMessages, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
-import { ICell, ICellHash, ICellHashListener, ICellHashProvider, IFileHashes, IInteractiveWindowListener, INotebookExecutionLogger } from '../types';
+import {
+    ICell,
+    ICellHash,
+    ICellHashListener,
+    ICellHashProvider,
+    IFileHashes,
+    IInteractiveWindowListener,
+    INotebookExecutionLogger
+} from '../types';
 
 interface IRangedCellHash extends ICellHash {
     code: string;
@@ -30,7 +38,11 @@ interface IRangedCellHash extends ICellHash {
 @injectable()
 export class CellHashProvider implements ICellHashProvider, IInteractiveWindowListener, INotebookExecutionLogger {
     // tslint:disable-next-line: no-any
-    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
+    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
+        message: string;
+        // tslint:disable-next-line: no-any
+        payload: any;
+    }>();
     // Map of file to Map of start line to actual hash
     private hashes: Map<string, IRangedCellHash[]> = new Map<string, IRangedCellHash[]>();
     private executionCount: number = 0;
@@ -272,8 +284,16 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         }
     }
 
-    private adjustRuntimeForDebugging(cell: ICell, source: string[], _cellStartOffset: number, _cellEndOffset: number): number {
-        if (this.debugService.activeDebugSession && this.configService.getSettings().datascience.stopOnFirstLineWhileDebugging) {
+    private adjustRuntimeForDebugging(
+        cell: ICell,
+        source: string[],
+        _cellStartOffset: number,
+        _cellEndOffset: number
+    ): number {
+        if (
+            this.debugService.activeDebugSession &&
+            this.configService.getSettings().datascience.stopOnFirstLineWhileDebugging
+        ) {
             // Inject the breakpoint line
             source.splice(0, 0, 'breakpoint()\n');
             cell.data.source = source;

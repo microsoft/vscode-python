@@ -15,7 +15,13 @@ import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
 import { IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT } from './ciConstants';
-import { IS_MULTI_ROOT_TEST, IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME, TEST_RETRYCOUNT, TEST_TIMEOUT } from './constants';
+import {
+    IS_MULTI_ROOT_TEST,
+    IS_SMOKE_TEST,
+    MAX_EXTENSION_ACTIVATION_TIME,
+    TEST_RETRYCOUNT,
+    TEST_TIMEOUT
+} from './constants';
 import { initialize } from './initialize';
 
 type SetupOptions = Mocha.MochaOptions & {
@@ -137,12 +143,16 @@ export async function run(): Promise<void> {
     }
 
     const testFiles = await new Promise<string[]>((resolve, reject) => {
-        glob(`**/**.${options.testFilesSuffix}.js`, { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot }, (error, files) => {
-            if (error) {
-                return reject(error);
+        glob(
+            `**/**.${options.testFilesSuffix}.js`,
+            { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot },
+            (error, files) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve(files);
             }
-            resolve(files);
-        });
+        );
     });
 
     // Setup test files that need to be run.

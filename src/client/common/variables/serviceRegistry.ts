@@ -7,6 +7,12 @@ import { EnvironmentVariablesProvider } from './environmentVariablesProvider';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IEnvironmentVariablesService>(IEnvironmentVariablesService, EnvironmentVariablesService);
-    serviceManager.addSingleton<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider, EnvironmentVariablesProvider);
+    serviceManager.addSingleton<IEnvironmentVariablesService>(
+        IEnvironmentVariablesService,
+        EnvironmentVariablesService
+    );
+    serviceManager.addSingleton<IEnvironmentVariablesProvider>(
+        IEnvironmentVariablesProvider,
+        EnvironmentVariablesProvider
+    );
 }

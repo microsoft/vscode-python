@@ -10,7 +10,11 @@ import { CommandManager } from '../../../../client/common/application/commandMan
 import { ICommandManager } from '../../../../client/common/application/types';
 import { TestContextService } from '../../../../client/testing/common/services/contextService';
 import { TestCollectionStorageService } from '../../../../client/testing/common/services/storageService';
-import { ITestCollectionStorageService, ITestContextService, TestStatus } from '../../../../client/testing/common/types';
+import {
+    ITestCollectionStorageService,
+    ITestContextService,
+    TestStatus
+} from '../../../../client/testing/common/types';
 import { UnitTestManagementService } from '../../../../client/testing/main';
 import { ITestManagementService, WorkspaceTestStatus } from '../../../../client/testing/types';
 

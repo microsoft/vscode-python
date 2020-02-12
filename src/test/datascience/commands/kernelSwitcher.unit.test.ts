@@ -25,7 +25,12 @@ suite('Data Science - KernelSwitcher Command', () => {
         commandManager = mock(CommandManager);
         kernelSwitcher = mock(KernelSwitcher);
 
-        kernelSwitcherCommand = new KernelSwitcherCommand(instance(commandManager), instance(kernelSwitcher), instance(notebookProvider), instance(interactiveWindowProvider));
+        kernelSwitcherCommand = new KernelSwitcherCommand(
+            instance(commandManager),
+            instance(kernelSwitcher),
+            instance(notebookProvider),
+            instance(interactiveWindowProvider)
+        );
     });
 
     test('Register Command', () => {

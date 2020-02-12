@@ -51,7 +51,13 @@ function isMember(line: string, regexes: RegExp[]): boolean {
     return false;
 }
 
-function resolveExample(base: string, leading: string, postKeyword: string, preColon: string, trailing: string): [string | undefined, string | undefined, boolean] {
+function resolveExample(
+    base: string,
+    leading: string,
+    postKeyword: string,
+    preColon: string,
+    trailing: string
+): [string | undefined, string | undefined, boolean] {
     let invalid: string | undefined;
     if (base.trim() === '') {
         invalid = 'blank line';
@@ -120,17 +126,26 @@ suite('Language Configuration', () => {
 
         test('Multiline separator indent regex should not pick up strings with no multiline separator', async () => {
             const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = "test"');
-            expect(result).to.be.equal(false, 'Multiline separator indent regex for regular strings should not have matches');
+            expect(result).to.be.equal(
+                false,
+                'Multiline separator indent regex for regular strings should not have matches'
+            );
         });
 
         test('Multiline separator indent regex should not pick up strings with escaped characters', async () => {
             const result = MULTILINE_SEPARATOR_INDENT_REGEX.test("a = 'hello \\n'");
-            expect(result).to.be.equal(false, 'Multiline separator indent regex for strings with escaped characters should not have matches');
+            expect(result).to.be.equal(
+                false,
+                'Multiline separator indent regex for strings with escaped characters should not have matches'
+            );
         });
 
         test('Multiline separator indent regex should pick up strings ending with a multiline separator', async () => {
             const result = MULTILINE_SEPARATOR_INDENT_REGEX.test("a = 'multiline \\");
-            expect(result).to.be.equal(true, 'Multiline separator indent regex for strings with newline separator should have matches');
+            expect(result).to.be.equal(
+                true,
+                'Multiline separator indent regex for strings with newline separator should have matches'
+            );
         });
 
         [

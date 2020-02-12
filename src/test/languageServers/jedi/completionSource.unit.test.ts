@@ -29,7 +29,9 @@ suite('Completion Provider', () => {
         autoCompleteSettings = TypeMoq.Mock.ofType<IAutoCompleteSettings>();
 
         jediFactory.setup(j => j.getJediProxyHandler(TypeMoq.It.isAny())).returns(() => jediHandler.object);
-        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configService.object);
+        serviceContainer
+            .setup(s => s.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
+            .returns(() => configService.object);
         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         pythonSettings.setup(p => p.autoComplete).returns(() => autoCompleteSettings.object);
         itemInfoSource = TypeMoq.Mock.ofType<IItemInfoSource>();
@@ -72,7 +74,15 @@ suite('Completion Provider', () => {
 
         const expectedSource = `${source}${autoCompleteItems[0].text}`;
         itemInfoSource
-            .setup(i => i.getItemInfoFromText(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), expectedSource, TypeMoq.It.isAny()))
+            .setup(i =>
+                i.getItemInfoFromText(
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isAny(),
+                    expectedSource,
+                    TypeMoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
 

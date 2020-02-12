@@ -143,7 +143,11 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
             { scheme: 'untitled', language: PYTHON_LANGUAGE }
         ];
         // Set the document selector only when in a multi-root workspace scenario.
-        if (workspaceFolder && Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders!.length > 1) {
+        if (
+            workspaceFolder &&
+            Array.isArray(this.workspace.workspaceFolders) &&
+            this.workspace.workspaceFolders!.length > 1
+        ) {
             // tslint:disable-next-line:no-any
             documentSelector[0].pattern = `${workspaceFolder.uri.fsPath}/**/*`;
         }
@@ -181,7 +185,9 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     }
     protected getCacheFolderPath(): string | null {
         const settings = this.configuration.getSettings(this.resource);
-        return settings.analysis.cacheFolderPath && settings.analysis.cacheFolderPath.length > 0 ? settings.analysis.cacheFolderPath : null;
+        return settings.analysis.cacheFolderPath && settings.analysis.cacheFolderPath.length > 0
+            ? settings.analysis.cacheFolderPath
+            : null;
     }
     protected async onSettingsChangedHandler(e?: ConfigurationChangeEvent): Promise<void> {
         if (e && !e.affectsConfiguration('python', this.resource)) {

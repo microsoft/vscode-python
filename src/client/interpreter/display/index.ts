@@ -33,7 +33,11 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         this.statusBar.command = 'python.setInterpreter';
         disposableRegistry.push(this.statusBar);
 
-        this.interpreterService.onDidChangeInterpreterInformation(this.onDidChangeInterpreterInformation, this, disposableRegistry);
+        this.interpreterService.onDidChangeInterpreterInformation(
+            this.onDidChangeInterpreterInformation,
+            this,
+            disposableRegistry
+        );
     }
     public async refresh(resource?: Uri) {
         // Use the workspace Uri if available
@@ -57,7 +61,10 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         this.currentlySelectedWorkspaceFolder = workspaceFolder;
         if (interpreter) {
             this.statusBar.color = '';
-            this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder ? workspaceFolder.fsPath : undefined);
+            this.statusBar.tooltip = this.pathUtils.getDisplayName(
+                interpreter.path,
+                workspaceFolder ? workspaceFolder.fsPath : undefined
+            );
             this.statusBar.text = interpreter.displayName!;
             this.currentlySelectedInterpreterPath = interpreter.path;
         } else {

@@ -21,13 +21,17 @@ export class VSCEnvironmentShellDetector extends BaseShellDetector {
     constructor(@inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment) {
         super(3);
     }
-    public identify(telemetryProperties: ShellIdentificationTelemetry, _terminal?: Terminal): TerminalShellType | undefined {
+    public identify(
+        telemetryProperties: ShellIdentificationTelemetry,
+        _terminal?: Terminal
+    ): TerminalShellType | undefined {
         if (!this.appEnv.shell) {
             return;
         }
         const shell = this.identifyShellFromShellPath(this.appEnv.shell);
         traceVerbose(`Terminal shell path '${this.appEnv.shell}' identified as shell '${shell}'`);
-        telemetryProperties.shellIdentificationSource = shell === TerminalShellType.other ? telemetryProperties.shellIdentificationSource : 'vscode';
+        telemetryProperties.shellIdentificationSource =
+            shell === TerminalShellType.other ? telemetryProperties.shellIdentificationSource : 'vscode';
         return shell;
     }
 }

@@ -17,11 +17,18 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
     private readonly interpreterVersionService: IInterpreterVersionService;
     private readonly executionFactory: IPythonExecutionFactory;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        this.pythonPathSettingsUpdaterFactory = serviceContainer.get<IPythonPathUpdaterServiceFactory>(IPythonPathUpdaterServiceFactory);
+        this.pythonPathSettingsUpdaterFactory = serviceContainer.get<IPythonPathUpdaterServiceFactory>(
+            IPythonPathUpdaterServiceFactory
+        );
         this.interpreterVersionService = serviceContainer.get<IInterpreterVersionService>(IInterpreterVersionService);
         this.executionFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
     }
-    public async updatePythonPath(pythonPath: string, configTarget: ConfigurationTarget, trigger: 'ui' | 'shebang' | 'load', wkspace?: Uri): Promise<void> {
+    public async updatePythonPath(
+        pythonPath: string,
+        configTarget: ConfigurationTarget,
+        trigger: 'ui' | 'shebang' | 'load',
+        wkspace?: Uri
+    ): Promise<void> {
         const stopWatch = new StopWatch();
         const pythonPathUpdater = this.getPythonUpdaterService(configTarget, wkspace);
         let failed = false;
@@ -35,16 +42,25 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             traceError(reason);
         }
         // do not wait for this to complete
-        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath).catch(ex => traceError('Python Extension: sendTelemetry', ex));
+        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath).catch(ex =>
+            traceError('Python Extension: sendTelemetry', ex)
+        );
     }
-    private async sendTelemetry(duration: number, failed: boolean, trigger: 'ui' | 'shebang' | 'load', pythonPath: string) {
+    private async sendTelemetry(
+        duration: number,
+        failed: boolean,
+        trigger: 'ui' | 'shebang' | 'load',
+        pythonPath: string
+    ) {
         const telemtryProperties: PythonInterpreterTelemetry = {
             failed,
             trigger
         };
         if (!failed) {
             const processService = await this.executionFactory.create({ pythonPath });
-            const infoPromise = processService.getInterpreterInformation().catch<InterpreterInfomation | undefined>(() => undefined);
+            const infoPromise = processService
+                .getInterpreterInformation()
+                .catch<InterpreterInfomation | undefined>(() => undefined);
             const pipVersionPromise = this.interpreterVersionService
                 .getPipVersion(pythonPath)
                 .then(value => (value.length === 0 ? undefined : value))

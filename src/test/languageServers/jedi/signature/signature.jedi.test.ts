@@ -14,7 +14,13 @@ import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'signature');
 
 class SignatureHelpResult {
-    constructor(public line: number, public index: number, public signaturesCount: number, public activeParameter: number, public parameterName: string | null) {}
+    constructor(
+        public line: number,
+        public index: number,
+        public signaturesCount: number,
+        public activeParameter: number,
+        public parameterName: string | null
+    ) {}
 }
 
 // tslint:disable-next-line:max-func-body-length
@@ -141,10 +147,22 @@ async function openDocument(documentPath: string): Promise<vscode.TextDocument |
 
 async function checkSignature(expected: SignatureHelpResult, uri: vscode.Uri, caseIndex: number) {
     const position = new vscode.Position(expected.line, expected.index);
-    const actual = await vscode.commands.executeCommand<vscode.SignatureHelp>('vscode.executeSignatureHelpProvider', uri, position);
-    assert.equal(actual!.signatures.length, expected.signaturesCount, `Signature count does not match, case ${caseIndex}`);
+    const actual = await vscode.commands.executeCommand<vscode.SignatureHelp>(
+        'vscode.executeSignatureHelpProvider',
+        uri,
+        position
+    );
+    assert.equal(
+        actual!.signatures.length,
+        expected.signaturesCount,
+        `Signature count does not match, case ${caseIndex}`
+    );
     if (expected.signaturesCount > 0) {
-        assert.equal(actual!.activeParameter, expected.activeParameter, `Parameter index does not match, case ${caseIndex}`);
+        assert.equal(
+            actual!.activeParameter,
+            expected.activeParameter,
+            `Parameter index does not match, case ${caseIndex}`
+        );
         if (expected.parameterName) {
             const parameter = actual!.signatures[0].parameters[expected.activeParameter];
             assert.equal(parameter.label, expected.parameterName, `Parameter name is incorrect, case ${caseIndex}`);

@@ -23,20 +23,39 @@ import { DiscoveredTests } from '../../../client/testing/common/services/types';
 import { ITestVisitor, TestDiscoveryOptions, Tests, TestStatus } from '../../../client/testing/common/types';
 import { XUnitParser } from '../../../client/testing/common/xUnitParser';
 import { TestMessageService } from '../../../client/testing/pytest/services/testMessageService';
-import { ILocationStackFrameDetails, IPythonTestMessage, PythonTestMessageSeverity } from '../../../client/testing/types';
+import {
+    ILocationStackFrameDetails,
+    IPythonTestMessage,
+    PythonTestMessageSeverity
+} from '../../../client/testing/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
 import { UnitTestIocContainer } from '../serviceRegistry';
 import { ITestDetails, testScenarios } from './pytest_run_tests_data';
 
+// tslint:disable:max-func-body-length
+
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
-const PYTEST_RESULTS_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'pytestFiles', 'results');
+const PYTEST_RESULTS_PATH = path.join(
+    EXTENSION_ROOT_DIR,
+    'src',
+    'test',
+    'pythonFiles',
+    'testFiles',
+    'pytestFiles',
+    'results'
+);
 
 const filterdTestScenarios = testScenarios.filter(ts => {
     return !ts.shouldRunFailed;
 });
 
-async function testMessageProperties(message: IPythonTestMessage, expectedMessage: IPythonTestMessage, imported: boolean = false, status: TestStatus) {
+async function testMessageProperties(
+    message: IPythonTestMessage,
+    expectedMessage: IPythonTestMessage,
+    imported: boolean = false,
+    status: TestStatus
+) {
     assert.equal(message.code, expectedMessage.code, 'IPythonTestMessage code');
     assert.equal(message.message, expectedMessage.message, 'IPythonTestMessage message');
     assert.equal(message.severity, expectedMessage.severity, 'IPythonTestMessage severity');
@@ -45,15 +64,39 @@ async function testMessageProperties(message: IPythonTestMessage, expectedMessag
     assert.equal(message.status, expectedMessage.status, 'IPythonTestMessage status');
     assert.equal(message.testFilePath, expectedMessage.testFilePath, 'IPythonTestMessage testFilePath');
     if (status !== TestStatus.Pass) {
-        assert.equal(message.locationStack![0].lineText, expectedMessage.locationStack![0].lineText, 'IPythonTestMessage line text');
-        assert.equal(message.locationStack![0].location.uri.fsPath, expectedMessage.locationStack![0].location.uri.fsPath, 'IPythonTestMessage locationStack fsPath');
+        assert.equal(
+            message.locationStack![0].lineText,
+            expectedMessage.locationStack![0].lineText,
+            'IPythonTestMessage line text'
+        );
+        assert.equal(
+            message.locationStack![0].location.uri.fsPath,
+            expectedMessage.locationStack![0].location.uri.fsPath,
+            'IPythonTestMessage locationStack fsPath'
+        );
         if (status !== TestStatus.Skipped) {
-            assert.equal(message.locationStack![1].lineText, expectedMessage.locationStack![1].lineText, 'IPythonTestMessage line text');
-            assert.equal(message.locationStack![1].location.uri.fsPath, expectedMessage.locationStack![1].location.uri.fsPath, 'IPythonTestMessage locationStack fsPath');
+            assert.equal(
+                message.locationStack![1].lineText,
+                expectedMessage.locationStack![1].lineText,
+                'IPythonTestMessage line text'
+            );
+            assert.equal(
+                message.locationStack![1].location.uri.fsPath,
+                expectedMessage.locationStack![1].location.uri.fsPath,
+                'IPythonTestMessage locationStack fsPath'
+            );
         }
         if (imported) {
-            assert.equal(message.locationStack![2].lineText, expectedMessage.locationStack![2].lineText, 'IPythonTestMessage imported line text');
-            assert.equal(message.locationStack![2].location.uri.fsPath, expectedMessage.locationStack![2].location.uri.fsPath, 'IPythonTestMessage imported location fsPath');
+            assert.equal(
+                message.locationStack![2].lineText,
+                expectedMessage.locationStack![2].lineText,
+                'IPythonTestMessage imported line text'
+            );
+            assert.equal(
+                message.locationStack![2].location.uri.fsPath,
+                expectedMessage.locationStack![2].location.uri.fsPath,
+                'IPythonTestMessage imported location fsPath'
+            );
         }
     }
 }
@@ -65,7 +108,9 @@ async function testMessageProperties(message: IPythonTestMessage, expectedMessag
  *
  * @param testDetails Test details for a specific test.
  */
-async function getExpectedLocationStackFromTestDetails(testDetails: ITestDetails): Promise<ILocationStackFrameDetails[]> {
+async function getExpectedLocationStackFromTestDetails(
+    testDetails: ITestDetails
+): Promise<ILocationStackFrameDetails[]> {
     const locationStack: ILocationStackFrameDetails[] = [];
     const testFilePath = path.join(UNITTEST_TEST_FILES_PATH, testDetails.fileName);
     const testFileUri = vscode.Uri.file(testFilePath);
@@ -97,7 +142,9 @@ async function getExpectedLocationStackFromTestDetails(testDetails: ITestDetails
 suite('Unit Tests - PyTest - TestMessageService', () => {
     let ioc: UnitTestIocContainer;
     const filesystem = new FileSystem();
-    const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
+    const configTarget = IS_MULTI_ROOT_TEST
+        ? vscode.ConfigurationTarget.WorkspaceFolder
+        : vscode.ConfigurationTarget.Workspace;
     suiteSetup(async () => {
         await initialize();
         await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
@@ -110,7 +157,10 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
         // Mocks.
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
+            IInterpreterService,
+            instance(mock(InterpreterService))
+        );
     }
     // Build tests for the test data that is relevant for this platform.
     filterdTestScenarios.forEach(scenario => {
@@ -137,13 +187,19 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 const parser = new TestDiscoveredTestParser(workspaceService);
                 const discoveryOutput = fs
                     .readFileSync(path.join(PYTEST_RESULTS_PATH, scenario.discoveryOutput), 'utf8')
-                    .replace(/\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g, path.dirname(UNITTEST_TEST_FILES_PATH))
+                    .replace(
+                        /\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g,
+                        path.dirname(UNITTEST_TEST_FILES_PATH)
+                    )
                     .replace(/\\/g, '/');
                 const discoveredTest: DiscoveredTests[] = JSON.parse(discoveryOutput);
                 options.workspaceFolder = vscode.Uri.file(discoveredTest[0].root);
                 const parsedTests: Tests = parser.parse(options.workspaceFolder, discoveredTest);
                 const xUnitParser = new XUnitParser(filesystem);
-                await xUnitParser.updateResultsFromXmlLogFile(parsedTests, path.join(PYTEST_RESULTS_PATH, scenario.runOutput));
+                await xUnitParser.updateResultsFromXmlLogFile(
+                    parsedTests,
+                    path.join(PYTEST_RESULTS_PATH, scenario.runOutput)
+                );
                 const testResultsService = new TestResultsService(testVisitor.object);
                 testResultsService.updateResults(parsedTests);
                 const testMessageService = new TestMessageService(ioc.serviceContainer);

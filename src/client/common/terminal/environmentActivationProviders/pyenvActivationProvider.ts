@@ -18,7 +18,9 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
     }
 
     public async getActivationCommands(resource: Uri | undefined, _: TerminalShellType): Promise<string[] | undefined> {
-        const interpreter = await this.serviceContainer.get<IInterpreterService>(IInterpreterService).getActiveInterpreter(resource);
+        const interpreter = await this.serviceContainer
+            .get<IInterpreterService>(IInterpreterService)
+            .getActiveInterpreter(resource);
         if (!interpreter || interpreter.type !== InterpreterType.Pyenv || !interpreter.envName) {
             return;
         }
@@ -26,8 +28,13 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
         return [`pyenv shell ${interpreter.envName.toCommandArgument()}`];
     }
 
-    public async getActivationCommandsForInterpreter(pythonPath: string, _targetShell: TerminalShellType): Promise<string[] | undefined> {
-        const interpreter = await this.serviceContainer.get<IInterpreterService>(IInterpreterService).getInterpreterDetails(pythonPath);
+    public async getActivationCommandsForInterpreter(
+        pythonPath: string,
+        _targetShell: TerminalShellType
+    ): Promise<string[] | undefined> {
+        const interpreter = await this.serviceContainer
+            .get<IInterpreterService>(IInterpreterService)
+            .getInterpreterDetails(pythonPath);
         if (!interpreter || interpreter.type !== InterpreterType.Pyenv || !interpreter.envName) {
             return;
         }

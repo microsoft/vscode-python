@@ -74,10 +74,18 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         try {
             this.throwIfRPCConnectionIsDead();
-            type InterpreterInfoResponse = ErrorResponse & { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
+            type InterpreterInfoResponse = ErrorResponse & {
+                versionInfo: PythonVersionInfo;
+                sysPrefix: string;
+                sysVersion: string;
+                is64Bit: boolean;
+            };
             const request = new RequestType0<InterpreterInfoResponse, void, void>('get_interpreter_information');
             const response = await this.sendRequestWithoutArgs(request);
-            const versionValue = response.versionInfo.length === 4 ? `${response.versionInfo.slice(0, 3).join('.')}-${response.versionInfo[3]}` : response.versionInfo.join('.');
+            const versionValue =
+                response.versionInfo.length === 4
+                    ? `${response.versionInfo.slice(0, 3).join('.')}-${response.versionInfo[3]}`
+                    : response.versionInfo.join('.');
             return {
                 architecture: response.is64Bit ? Architecture.x64 : Architecture.x86,
                 path: this.pythonPath,
@@ -112,7 +120,9 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         try {
             this.throwIfRPCConnectionIsDead();
             type ModuleInstalledResponse = ErrorResponse & { exists: boolean };
-            const request = new RequestType<{ module_name: string }, ModuleInstalledResponse, void, void>('is_module_installed');
+            const request = new RequestType<{ module_name: string }, ModuleInstalledResponse, void, void>(
+                'is_module_installed'
+            );
             const response = await this.sendRequest(request, { module_name: moduleName });
             if (response.error) {
                 throw new DaemonError(response.error);
@@ -139,7 +149,11 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             return this.pythonExecutionService.execObservable(args, options);
         }
     }
-    public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
+    public execModuleObservable(
+        moduleName: string,
+        args: string[],
+        options: SpawnOptions
+    ): ObservableExecutionResult<string> {
         if (this.isAlive && this.canExecModuleUsingDaemon(moduleName, args, options)) {
             try {
                 return this.execAsObservable({ moduleName }, args, options);
@@ -171,7 +185,11 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             return this.pythonExecutionService.exec(args, options);
         }
     }
-    public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+    public async execModule(
+        moduleName: string,
+        args: string[],
+        options: SpawnOptions
+    ): Promise<ExecutionResult<string>> {
         if (this.isAlive && this.canExecModuleUsingDaemon(moduleName, args, options)) {
             try {
                 return await this.execModuleWithDaemon(moduleName, args, options);
@@ -194,7 +212,15 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         return this.areOptionsSupported(options);
     }
     protected areOptionsSupported(options: SpawnOptions): boolean {
-        const daemonSupportedSpawnOptions: (keyof SpawnOptions)[] = ['cwd', 'env', 'throwOnStdErr', 'token', 'encoding', 'mergeStdOutErr', 'extraVariables'];
+        const daemonSupportedSpawnOptions: (keyof SpawnOptions)[] = [
+            'cwd',
+            'env',
+            'throwOnStdErr',
+            'token',
+            'encoding',
+            'mergeStdOutErr',
+            'extraVariables'
+        ];
         // tslint:disable-next-line: no-any
         return Object.keys(options).every(item => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
     }
@@ -213,7 +239,10 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
      * @param {SpawnOptions} options
      * @memberof PythonDaemonExecutionService
      */
-    private processResponse(response: { error?: string | undefined; stdout: string; stderr?: string }, options: SpawnOptions) {
+    private processResponse(
+        response: { error?: string | undefined; stdout: string; stderr?: string },
+        options: SpawnOptions
+    ) {
         if (response.error) {
             throw new DaemonError(`Failed to execute using the daemon, ${response.error}`);
         }
@@ -226,35 +255,87 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             response.stdout = `${response.stdout || ''}${os.EOL}${response.stderr}`;
         }
     }
-    private async execFileWithDaemon(fileName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+    private async execFileWithDaemon(
+        fileName: string,
+        args: string[],
+        options: SpawnOptions
+    ): Promise<ExecutionResult<string>> {
         type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
-        // tslint:disable-next-line: no-any
-        const request = new RequestType<{ file_name: string; args: string[]; cwd?: string; env?: any }, ExecResponse, void, void>('exec_file');
-        const response = await this.sendRequest(request, { file_name: fileName, args, cwd: options.cwd, env: options.env });
+        const request = new RequestType<
+            // tslint:disable-next-line: no-any
+            { file_name: string; args: string[]; cwd?: string; env?: any },
+            ExecResponse,
+            void,
+            void
+        >('exec_file');
+        const response = await this.sendRequest(request, {
+            file_name: fileName,
+            args,
+            cwd: options.cwd,
+            env: options.env
+        });
         this.processResponse(response, options);
         return response;
     }
-    private async execModuleWithDaemon(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+    private async execModuleWithDaemon(
+        moduleName: string,
+        args: string[],
+        options: SpawnOptions
+    ): Promise<ExecutionResult<string>> {
         type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
-        // tslint:disable-next-line: no-any
-        const request = new RequestType<{ module_name: string; args: string[]; cwd?: string; env?: any }, ExecResponse, void, void>('exec_module');
-        const response = await this.sendRequest(request, { module_name: moduleName, args, cwd: options.cwd, env: options.env });
+        const request = new RequestType<
+            // tslint:disable-next-line: no-any
+            { module_name: string; args: string[]; cwd?: string; env?: any },
+            ExecResponse,
+            void,
+            void
+        >('exec_module');
+        const response = await this.sendRequest(request, {
+            module_name: moduleName,
+            args,
+            cwd: options.cwd,
+            env: options.env
+        });
         this.processResponse(response, options);
         return response;
     }
-    private execAsObservable(moduleOrFile: { moduleName: string } | { fileName: string }, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
+    private execAsObservable(
+        moduleOrFile: { moduleName: string } | { fileName: string },
+        args: string[],
+        options: SpawnOptions
+    ): ObservableExecutionResult<string> {
         const subject = new Subject<Output<string>>();
         const start = async () => {
             type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
             let response: ExecResponse;
             if ('fileName' in moduleOrFile) {
-                // tslint:disable-next-line: no-any
-                const request = new RequestType<{ file_name: string; args: string[]; cwd?: string; env?: any }, ExecResponse, void, void>('exec_file_observable');
-                response = await this.sendRequest(request, { file_name: moduleOrFile.fileName, args, cwd: options.cwd, env: options.env });
+                const request = new RequestType<
+                    // tslint:disable-next-line: no-any
+                    { file_name: string; args: string[]; cwd?: string; env?: any },
+                    ExecResponse,
+                    void,
+                    void
+                >('exec_file_observable');
+                response = await this.sendRequest(request, {
+                    file_name: moduleOrFile.fileName,
+                    args,
+                    cwd: options.cwd,
+                    env: options.env
+                });
             } else {
-                // tslint:disable-next-line: no-any
-                const request = new RequestType<{ module_name: string; args: string[]; cwd?: string; env?: any }, ExecResponse, void, void>('exec_module_observable');
-                response = await this.sendRequest(request, { module_name: moduleOrFile.moduleName, args, cwd: options.cwd, env: options.env });
+                const request = new RequestType<
+                    // tslint:disable-next-line: no-any
+                    { module_name: string; args: string[]; cwd?: string; env?: any },
+                    ExecResponse,
+                    void,
+                    void
+                >('exec_module_observable');
+                response = await this.sendRequest(request, {
+                    module_name: moduleOrFile.moduleName,
+                    args,
+                    cwd: options.cwd,
+                    env: options.env
+                });
             }
             // Might not get a response object back, as its observable.
             if (response && response.error) {
@@ -275,7 +356,9 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         });
         start()
             .catch(ex => {
-                const errorMsg = `Failed to run ${'fileName' in moduleOrFile ? moduleOrFile.fileName : moduleOrFile.moduleName} as observable with args ${args.join(' ')}`;
+                const errorMsg = `Failed to run ${
+                    'fileName' in moduleOrFile ? moduleOrFile.fileName : moduleOrFile.moduleName
+                } as observable with args ${args.join(' ')}`;
                 traceError(errorMsg, ex);
                 subject.next({ source: 'stderr', out: `${errorMsg}\n${stdErr}` });
                 subject.error(ex);
@@ -313,7 +396,10 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         // Wire up stdout/stderr.
         const OuputNotification = new NotificationType<Output<string>, void>('output');
         this.connection.onNotification(OuputNotification, output => this.outputObservale.next(output));
-        const logNotification = new NotificationType<{ level: 'WARN' | 'WARNING' | 'INFO' | 'DEBUG' | 'NOTSET'; msg: string }, void>('log');
+        const logNotification = new NotificationType<
+            { level: 'WARN' | 'WARNING' | 'INFO' | 'DEBUG' | 'NOTSET'; msg: string },
+            void
+        >('log');
         this.connection.onNotification(logNotification, output => {
             const msg = `Python Daemon: ${output.msg}`;
             if (output.level === 'DEBUG' || output.level === 'NOTSET') {

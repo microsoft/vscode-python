@@ -21,7 +21,9 @@ export class ImageButton extends React.Component<IImageButtonProps> {
     }
 
     public render() {
-        const classNames = `image-button image-button-${this.props.baseTheme} ${this.props.hidden ? 'hide' : ''} ${this.props.className}`;
+        const classNames = `image-button image-button-${this.props.baseTheme} ${this.props.hidden ? 'hide' : ''} ${
+            this.props.className
+        }`;
         const innerFilter = this.props.disabled ? 'image-button-inner-disabled-filter' : '';
         const ariaDisabled = this.props.disabled ? 'true' : 'false';
 

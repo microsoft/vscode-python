@@ -38,7 +38,12 @@ suite('Windows store execution service', () => {
         superExecutablePathStub = sinon.stub(PythonExecutionService.prototype, 'getExecutablePath');
         superExecutablePathStub.resolves(superPythonPath);
 
-        executionService = new WindowsStorePythonProcess(instance(serviceContainer), instance(processService), pythonPath, instance(windowsStoreInterpreter));
+        executionService = new WindowsStorePythonProcess(
+            instance(serviceContainer),
+            instance(processService),
+            pythonPath,
+            instance(windowsStoreInterpreter)
+        );
     });
 
     teardown(() => {

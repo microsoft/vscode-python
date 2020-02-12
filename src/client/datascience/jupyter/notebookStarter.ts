@@ -36,7 +36,8 @@ import { JupyterInstallError } from './jupyterInstallError';
 export class NotebookStarter implements Disposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
-        @inject(IJupyterSubCommandExecutionService) private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
+        @inject(IJupyterSubCommandExecutionService)
+        private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel
@@ -76,7 +77,11 @@ export class NotebookStarter implements Disposable {
             traceInfo('Starting Jupyter Notebook');
             const stopWatch = new StopWatch();
             const [launchResult, tempDir] = await Promise.all([
-                this.jupyterInterpreterService.startNotebook(args || [], { throwOnStdErr: false, encoding: 'utf8', token: cancelToken }),
+                this.jupyterInterpreterService.startNotebook(args || [], {
+                    throwOnStdErr: false,
+                    encoding: 'utf8',
+                    token: cancelToken
+                }),
                 tempDirPromise
             ]);
 
@@ -108,7 +113,11 @@ export class NotebookStarter implements Disposable {
             }
             const connection = await Promise.race([
                 starter.waitForConnection(),
-                createPromiseFromCancellation({ cancelAction: 'reject', defaultValue: new CancellationError(), token: cancelToken })
+                createPromiseFromCancellation({
+                    cancelAction: 'reject',
+                    defaultValue: new CancellationError(),
+                    token: cancelToken
+                })
             ]);
 
             if (connection instanceof CancellationError) {
@@ -143,7 +152,10 @@ export class NotebookStarter implements Disposable {
         }
     }
 
-    private async generateArguments(useDefaultConfig: boolean, tempDirPromise: Promise<TemporaryDirectory>): Promise<string[]> {
+    private async generateArguments(
+        useDefaultConfig: boolean,
+        tempDirPromise: Promise<TemporaryDirectory>
+    ): Promise<string[]> {
         // Parallelize as much as possible.
         const promisedArgs: Promise<string>[] = [];
         promisedArgs.push(Promise.resolve('--no-browser'));

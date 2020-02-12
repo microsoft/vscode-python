@@ -93,7 +93,9 @@ suite('Interpreters - Locators Index', () => {
                         .returns(() => Promise.resolve([interpreter]))
                         .verifiable(TypeMoq.Times.once());
 
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName))).returns(() => typeLocator.object);
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName)))
+                        .returns(() => typeLocator.object);
 
                     return {
                         type: typeName,
@@ -151,7 +153,9 @@ suite('Interpreters - Locators Index', () => {
                         .returns(() => Promise.resolve([interpreter]))
                         .verifiable(TypeMoq.Times.once());
 
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName))).returns(() => typeLocator.object);
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName)))
+                        .returns(() => typeLocator.object);
 
                     return {
                         type: typeName,

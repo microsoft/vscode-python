@@ -41,7 +41,11 @@ const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp
  */
 function isInterpreter(item: nbformat.IKernelspecMetadata | PythonInterpreter): item is PythonInterpreter {
     // Interpreters will not have a `display_name` property, but have `path` and `type` properties.
-    return !!(item as PythonInterpreter).path && !!(item as PythonInterpreter).type && !(item as nbformat.IKernelspecMetadata).display_name;
+    return (
+        !!(item as PythonInterpreter).path &&
+        !!(item as PythonInterpreter).type &&
+        !(item as nbformat.IKernelspecMetadata).display_name
+    );
 }
 
 /**
@@ -53,7 +57,8 @@ function isInterpreter(item: nbformat.IKernelspecMetadata | PythonInterpreter): 
 @injectable()
 export class KernelService {
     constructor(
-        @inject(IJupyterSubCommandExecutionService) private readonly jupyterInterpreterExecService: IJupyterSubCommandExecutionService,
+        @inject(IJupyterSubCommandExecutionService)
+        private readonly jupyterInterpreterExecService: IJupyterSubCommandExecutionService,
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInstaller) private readonly installer: IInstaller,
@@ -102,10 +107,18 @@ export class KernelService {
                 if (item.display_name !== option.displayName) {
                     return false;
                 }
-                return this.fileSystem.arePathsSame(item.argv[0], option.path) || this.fileSystem.arePathsSame(item.metadata?.interpreter?.path || '', option.path);
+                return (
+                    this.fileSystem.arePathsSame(item.argv[0], option.path) ||
+                    this.fileSystem.arePathsSame(item.metadata?.interpreter?.path || '', option.path)
+                );
             });
         } else {
-            return specs.find(item => item.language === PYTHON_LANGUAGE && item.display_name === option.display_name && item.name === option.name);
+            return specs.find(
+                item =>
+                    item.language === PYTHON_LANGUAGE &&
+                    item.display_name === option.display_name &&
+                    item.name === option.name
+            );
         }
     }
 
@@ -118,7 +131,10 @@ export class KernelService {
      * @returns {(Promise<PythonInterpreter | undefined>)}
      * @memberof KernelService
      */
-    public async findMatchingInterpreter(kernelSpec: IJupyterKernelSpec | LiveKernelModel, cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    public async findMatchingInterpreter(
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel,
+        cancelToken?: CancellationToken
+    ): Promise<PythonInterpreter | undefined> {
         if (kernelSpec.language && kernelSpec.language?.toLowerCase() !== PYTHON_LANGUAGE) {
             return;
         }
@@ -133,12 +149,18 @@ export class KernelService {
 
         // 1. Check if current interpreter has the same path
         if (kernelSpec.metadata?.interpreter?.path) {
-            const interpreter = await this.interpreterService.getInterpreterDetails(kernelSpec.metadata?.interpreter?.path);
+            const interpreter = await this.interpreterService.getInterpreterDetails(
+                kernelSpec.metadata?.interpreter?.path
+            );
             if (interpreter) {
-                traceInfo(`Found matching interpreter based on metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
+                traceInfo(
+                    `Found matching interpreter based on metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`
+                );
                 return interpreter;
             }
-            traceError(`KernelSpec has interpreter information, however a matching interepter could not be found for ${kernelSpec.metadata?.interpreter?.path}`);
+            traceError(
+                `KernelSpec has interpreter information, however a matching interepter could not be found for ${kernelSpec.metadata?.interpreter?.path}`
+            );
         }
         if (Cancellation.isCanceled(cancelToken)) {
             return;
@@ -170,11 +192,15 @@ export class KernelService {
 
             // If we cannot find a matching one, then use the current interpreter.
             if (found) {
-                traceVerbose(`Using interpreter ${found.path} for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
+                traceVerbose(
+                    `Using interpreter ${found.path} for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`
+                );
                 return found;
             }
 
-            traceWarning(`Unable to find an interpreter that matches the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`);
+            traceWarning(
+                `Unable to find an interpreter that matches the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`
+            );
             return activeInterpreter;
         } else {
             // 4. Look for interpreter with same display name across all interpreters.
@@ -189,15 +215,23 @@ export class KernelService {
             const found = allInterpreters.find(item => item.displayName === kernelSpec.display_name);
 
             if (found) {
-                traceVerbose(`Found an interpreter that has the same display name as kernelspec ${kernelSpec.display_name}, matches ${found.path}`);
+                traceVerbose(
+                    `Found an interpreter that has the same display name as kernelspec ${kernelSpec.display_name}, matches ${found.path}`
+                );
                 return found;
             } else {
-                traceWarning(`Unable to determine version of Python interpreter to use for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`);
+                traceWarning(
+                    `Unable to determine version of Python interpreter to use for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`
+                );
                 return activeInterpreter;
             }
         }
     }
-    public async searchAndRegisterKernel(interpreter: PythonInterpreter, disableUI?: boolean, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+    public async searchAndRegisterKernel(
+        interpreter: PythonInterpreter,
+        disableUI?: boolean,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterKernelSpec | undefined> {
         // If a kernelspec already exists for this, then use that.
         const found = await this.findMatchingKernelSpec(interpreter, undefined, cancelToken);
         if (found) {
@@ -226,12 +260,20 @@ export class KernelService {
     @traceDecorators.error('Failed to register an interpreter as a kernel')
     @reportAction(ReportableAction.KernelsRegisterKernel)
     // tslint:disable-next-line:max-func-body-length
-    public async registerKernel(interpreter: PythonInterpreter, disableUI?: boolean, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+    public async registerKernel(
+        interpreter: PythonInterpreter,
+        disableUI?: boolean,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterKernelSpec | undefined> {
         if (!interpreter.displayName) {
             throw new Error('Interpreter does not have a display name');
         }
 
-        const execServicePromise = this.execFactory.createActivatedEnvironment({ interpreter, allowEnvironmentFetchExceptions: true, bypassCondaExecution: true });
+        const execServicePromise = this.execFactory.createActivatedEnvironment({
+            interpreter,
+            allowEnvironmentFetchExceptions: true,
+            bypassCondaExecution: true
+        });
         // Swallow errors if we get out of here and not resolve this.
         execServicePromise.ignoreErrors();
         const name = this.generateKernelNameForIntepreter(interpreter);
@@ -239,9 +281,15 @@ export class KernelService {
         if (!(await this.installer.isInstalled(Product.ipykernel, interpreter)) && !disableUI) {
             // If we wish to wait for installation to complete, we must provide a cancel token.
             const token = new CancellationTokenSource();
-            const response = await this.installer.promptToInstall(Product.ipykernel, interpreter, wrapCancellationTokens(cancelToken, token.token));
+            const response = await this.installer.promptToInstall(
+                Product.ipykernel,
+                interpreter,
+                wrapCancellationTokens(cancelToken, token.token)
+            );
             if (response !== InstallerResponse.Installed) {
-                traceWarning(`Prompted to install ipykernel, however ipykernel not installed in the interpreter ${interpreter.path}. Response ${response}`);
+                traceWarning(
+                    `Prompted to install ipykernel, however ipykernel not installed in the interpreter ${interpreter.path}. Response ${response}`
+                );
                 return;
             }
         }
@@ -251,16 +299,24 @@ export class KernelService {
         }
 
         const execService = await execServicePromise;
-        const output = await execService.execModule('ipykernel', ['install', '--user', '--name', name, '--display-name', interpreter.displayName], {
-            throwOnStdErr: true,
-            encoding: 'utf8',
-            token: cancelToken
-        });
+        const output = await execService.execModule(
+            'ipykernel',
+            ['install', '--user', '--name', name, '--display-name', interpreter.displayName],
+            {
+                throwOnStdErr: true,
+                encoding: 'utf8',
+                token: cancelToken
+            }
+        );
         if (Cancellation.isCanceled(cancelToken)) {
             return;
         }
 
-        let kernel = await this.findMatchingKernelSpec({ display_name: interpreter.displayName, name }, undefined, cancelToken);
+        let kernel = await this.findMatchingKernelSpec(
+            { display_name: interpreter.displayName, name },
+            undefined,
+            cancelToken
+        );
         // Wait for at least 5s. We know launching a python (conda env) process on windows can sometimes take around 4s.
         for (let counter = 0; counter < 10; counter += 1) {
             if (Cancellation.isCanceled(cancelToken)) {
@@ -272,7 +328,11 @@ export class KernelService {
             traceWarning('Waiting for 500ms for registered kernel to get detected');
             // Wait for jupyter server to get updated with the new kernel information.
             await sleep(500);
-            kernel = await this.findMatchingKernelSpec({ display_name: interpreter.displayName, name }, undefined, cancelToken);
+            kernel = await this.findMatchingKernelSpec(
+                { display_name: interpreter.displayName, name },
+                undefined,
+                cancelToken
+            );
         }
         if (!kernel) {
             // Possible user doesn't have kernelspec installed.
@@ -332,11 +392,16 @@ export class KernelService {
         specModel.metadata.interpreter = interpreter as any;
 
         // Update the kernel.json with our new stuff.
-        await this.fileSystem.writeFile(kernel.specFile, JSON.stringify(specModel, undefined, 2), { flag: 'w', encoding: 'utf8' });
+        await this.fileSystem.writeFile(kernel.specFile, JSON.stringify(specModel, undefined, 2), {
+            flag: 'w',
+            encoding: 'utf8'
+        });
         kernel.metadata = specModel.metadata;
 
         sendTelemetryEvent(Telemetry.RegisterAndUseInterpreterAsKernel);
-        traceInfo(`Kernel successfully registered for ${interpreter.path} with the name=${name} and spec can be found here ${kernel.specFile}`);
+        traceInfo(
+            `Kernel successfully registered for ${interpreter.path} with the name=${name} and spec can be found here ${kernel.specFile}`
+        );
         return kernel;
     }
     /**
@@ -348,8 +413,13 @@ export class KernelService {
      * @memberof KernelService
      */
     @reportAction(ReportableAction.KernelsGetKernelSpecs)
-    public async getKernelSpecs(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
-        const enumerator = sessionManager ? sessionManager.getKernelSpecs() : this.jupyterInterpreterExecService.getKernelSpecs(cancelToken);
+    public async getKernelSpecs(
+        sessionManager?: IJupyterSessionManager,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterKernelSpec[]> {
+        const enumerator = sessionManager
+            ? sessionManager.getKernelSpecs()
+            : this.jupyterInterpreterExecService.getKernelSpecs(cancelToken);
         if (Cancellation.isCanceled(cancelToken)) {
             return [];
         }

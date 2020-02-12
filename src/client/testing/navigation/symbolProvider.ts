@@ -5,7 +5,16 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, DocumentSymbolProvider, Location, Range, SymbolInformation, SymbolKind, TextDocument, Uri } from 'vscode';
+import {
+    CancellationToken,
+    DocumentSymbolProvider,
+    Location,
+    Range,
+    SymbolInformation,
+    SymbolKind,
+    TextDocument,
+    Uri
+} from 'vscode';
 import { traceError } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -20,7 +29,10 @@ type Symbols = {
 @injectable()
 export class TestFileSymbolProvider implements DocumentSymbolProvider {
     constructor(@inject(IPythonExecutionFactory) private readonly pythonServiceFactory: IPythonExecutionFactory) {}
-    public async provideDocumentSymbols(document: TextDocument, token: CancellationToken): Promise<SymbolInformation[]> {
+    public async provideDocumentSymbols(
+        document: TextDocument,
+        token: CancellationToken
+    ): Promise<SymbolInformation[]> {
         const rawSymbols = await this.getSymbols(document, token);
         if (!rawSymbols) {
             return [];
@@ -32,7 +44,12 @@ export class TestFileSymbolProvider implements DocumentSymbolProvider {
         ];
     }
     private parseRawSymbol(uri: Uri, symbol: RawSymbol, kind: SymbolKind): SymbolInformation {
-        const range = new Range(symbol.range.start.line, symbol.range.start.character, symbol.range.end.line, symbol.range.end.character);
+        const range = new Range(
+            symbol.range.start.line,
+            symbol.range.start.character,
+            symbol.range.end.line,
+            symbol.range.end.character
+        );
         return {
             containerName: symbol.namespace,
             kind,

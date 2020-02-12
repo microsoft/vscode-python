@@ -27,7 +27,11 @@ export class PythonExecutionService implements IPythonExecutionService {
     private readonly fileSystem: IFileSystem;
     private cachedInterpreterInformation: InterpreterInfomation | undefined | null = null;
 
-    constructor(serviceContainer: IServiceContainer, private readonly procService: IProcessService, protected readonly pythonPath: string) {
+    constructor(
+        serviceContainer: IServiceContainer,
+        private readonly procService: IProcessService,
+        protected readonly pythonPath: string
+    ) {
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
@@ -66,7 +70,11 @@ export class PythonExecutionService implements IPythonExecutionService {
         // See https://github.com/microsoft/vscode-python/issues/8473
         return this.procService.execObservable(this.pythonPath, args, opts);
     }
-    public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
+    public execModuleObservable(
+        moduleName: string,
+        args: string[],
+        options: SpawnOptions
+    ): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
         // Cannot use this.getExecutionInfo() until 'conda run' can be run without buffering output.
         // See https://github.com/microsoft/vscode-python/issues/8473
@@ -77,7 +85,11 @@ export class PythonExecutionService implements IPythonExecutionService {
         const executable = this.getExecutionInfo(args);
         return this.procService.exec(executable.command, executable.args, opts);
     }
-    public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+    public async execModule(
+        moduleName: string,
+        args: string[],
+        options: SpawnOptions
+    ): Promise<ExecutionResult<string>> {
         const opts: SpawnOptions = { ...options };
         const executable = this.getExecutionInfo(['-m', moduleName, ...args]);
         const result = await this.procService.exec(executable.command, executable.args, opts);
@@ -103,7 +115,10 @@ export class PythonExecutionService implements IPythonExecutionService {
             const { command, args } = this.getExecutionInfo([file]);
 
             // Concat these together to make a set of quoted strings
-            const quoted = [command, ...args].reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '\\\\')}"`), '');
+            const quoted = [command, ...args].reduce(
+                (p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '\\\\')}"`),
+                ''
+            );
 
             // Try shell execing the command, followed by the arguments. This will make node kill the process if it
             // takes too long.
@@ -117,11 +132,17 @@ export class PythonExecutionService implements IPythonExecutionService {
             try {
                 json = JSON.parse(result.stdout);
             } catch (ex) {
-                traceError(`Failed to parse interpreter information for '${command} ${args}' with JSON ${result.stdout}`, ex);
+                traceError(
+                    `Failed to parse interpreter information for '${command} ${args}' with JSON ${result.stdout}`,
+                    ex
+                );
                 return;
             }
             traceInfo(`Found interpreter for ${command} ${args}`);
-            const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
+            const versionValue =
+                json.versionInfo.length === 4
+                    ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}`
+                    : json.versionInfo.join('.');
             return {
                 architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
                 path: this.pythonPath,

@@ -8,12 +8,27 @@ import { IApplicationShell, IWorkspaceService } from '../../../common/applicatio
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, IPersistentState, IPersistentStateFactory } from '../../../common/types';
+import {
+    IProcessService,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService,
+    SpawnOptions
+} from '../../../common/process/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IPersistentState,
+    IPersistentStateFactory
+} from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
-import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../../interpreter/contracts';
+import {
+    IInterpreterService,
+    IKnownSearchPathsForInterpreters,
+    PythonInterpreter
+} from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { JupyterCommands, PythonDaemonModule, RegExpValues, Telemetry } from '../../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../types';
@@ -93,14 +108,19 @@ export class JupyterCommandFinderImpl {
      * @returns {Promise<IFindCommandResult>}
      * @memberof JupyterCommandFinder
      */
-    public async findBestCommand(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
+    public async findBestCommand(
+        command: JupyterCommands,
+        cancelToken?: CancellationToken
+    ): Promise<IFindCommandResult> {
         if (this.commands.has(command)) {
             return this.commands.get(command)!;
         }
 
         // Only log telemetry if not already found (meaning the first time)
         const timer = new StopWatch();
-        const promise = this.findBestCommandImpl(command, cancelToken).finally(() => sendTelemetryEvent(Telemetry.FindJupyterCommand, timer.elapsedTime, { command }));
+        const promise = this.findBestCommandImpl(command, cancelToken).finally(() =>
+            sendTelemetryEvent(Telemetry.FindJupyterCommand, timer.elapsedTime, { command })
+        );
 
         if (cancelToken) {
             let promiseCompleted = false;
@@ -131,7 +151,11 @@ export class JupyterCommandFinderImpl {
         this.commands.clear();
     }
 
-    protected async findInterpreterCommand(command: JupyterCommands, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
+    protected async findInterpreterCommand(
+        command: JupyterCommands,
+        interpreter: PythonInterpreter,
+        cancelToken?: CancellationToken
+    ): Promise<IFindCommandResult> {
         let findResult: IFindCommandResult = {
             status: ModuleExistsStatus.NotFound,
             error: localize.DataScience.noInterpreter()
@@ -146,9 +170,21 @@ export class JupyterCommandFinderImpl {
             findResult = result!;
             const isActiveInterpreter = activeInterpreter ? activeInterpreter.path === interpreter.path : false;
             if (findResult.status === ModuleExistsStatus.FoundJupyter) {
-                findResult.command = this.commandFactory.createInterpreterCommand(command, 'jupyter', ['-m', 'jupyter', command], interpreter, isActiveInterpreter);
+                findResult.command = this.commandFactory.createInterpreterCommand(
+                    command,
+                    'jupyter',
+                    ['-m', 'jupyter', command],
+                    interpreter,
+                    isActiveInterpreter
+                );
             } else if (findResult.status === ModuleExistsStatus.Found) {
-                findResult.command = this.commandFactory.createInterpreterCommand(command, command, ['-m', command], interpreter, isActiveInterpreter);
+                findResult.command = this.commandFactory.createInterpreterCommand(
+                    command,
+                    command,
+                    ['-m', command],
+                    interpreter,
+                    isActiveInterpreter
+                );
             }
         }
         return findResult;
@@ -177,7 +213,10 @@ export class JupyterCommandFinderImpl {
         return this.jupyterPath;
     }
 
-    private async findPathCommand(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
+    private async findPathCommand(
+        command: JupyterCommands,
+        cancelToken?: CancellationToken
+    ): Promise<IFindCommandResult> {
         if ((await this.doesJupyterCommandExist(command, cancelToken)) && !Cancellation.isCanceled(cancelToken)) {
             // Search the known paths for jupyter
             const jupyterPath = await this.searchPathsForJupyter();
@@ -203,7 +242,10 @@ export class JupyterCommandFinderImpl {
         return true;
     }
     // tslint:disable:cyclomatic-complexity max-func-body-length
-    private async findBestCommandImpl(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
+    private async findBestCommandImpl(
+        command: JupyterCommands,
+        cancelToken?: CancellationToken
+    ): Promise<IFindCommandResult> {
         let found: IFindCommandResult = {
             status: ModuleExistsStatus.NotFound
         };
@@ -219,7 +261,11 @@ export class JupyterCommandFinderImpl {
 
         found = current ? await this.findInterpreterCommand(command, current, cancelToken) : found;
         if (found.status === ModuleExistsStatus.NotFound) {
-            traceInfo(`Active interpreter does not support ${command} because of error ${found.error}. Interpreter is ${current ? current.displayName : 'undefined'}.`);
+            traceInfo(
+                `Active interpreter does not support ${command} because of error ${found.error}. Interpreter is ${
+                    current ? current.displayName : 'undefined'
+                }.`
+            );
 
             // Save our error information. This should propagate out as the error information for the command
             firstError = found.error;
@@ -303,7 +349,11 @@ export class JupyterCommandFinderImpl {
         };
 
         // Look through all of our interpreters (minus the active one at the same time)
-        const cancelGetInterpreters = createPromiseFromCancellation<PythonInterpreter[]>({ defaultValue: [], cancelAction: 'resolve', token: cancelToken });
+        const cancelGetInterpreters = createPromiseFromCancellation<PythonInterpreter[]>({
+            defaultValue: [],
+            cancelAction: 'resolve',
+            token: cancelToken
+        });
         const all = await Promise.race([this.interpreterService.getInterpreters(), cancelGetInterpreters]);
 
         if (isCommandFinderCancelled(command, cancelToken)) {
@@ -314,7 +364,11 @@ export class JupyterCommandFinderImpl {
             traceWarning('No interpreters found. Jupyter cannot run.');
         }
 
-        const cancelFind = createPromiseFromCancellation<IFindCommandResult[]>({ defaultValue: [], cancelAction: 'resolve', token: cancelToken });
+        const cancelFind = createPromiseFromCancellation<IFindCommandResult[]>({
+            defaultValue: [],
+            cancelAction: 'resolve',
+            token: cancelToken
+        });
         const promises = all.filter(i => i !== current).map(i => this.findInterpreterCommand(command, i, cancelToken));
         const foundList = await Promise.race([Promise.all(promises), cancelFind]);
 
@@ -336,7 +390,11 @@ export class JupyterCommandFinderImpl {
                 }
                 // Keep the progress message ticking with list of interpreters that are searched.
                 if (interpreter && interpreter.displayName) {
-                    progress.report({ message: localize.DataScience.findJupyterCommandProgressCheckInterpreter().format(interpreter.displayName) });
+                    progress.report({
+                        message: localize.DataScience.findJupyterCommandProgressCheckInterpreter().format(
+                            interpreter.displayName
+                        )
+                    });
                 }
                 const version = interpreter ? interpreter.version : undefined;
                 if (version) {
@@ -365,7 +423,12 @@ export class JupyterCommandFinderImpl {
     private async createExecutionService(interpreter: PythonInterpreter): Promise<IPythonExecutionService> {
         const [currentInterpreter, pythonService] = await Promise.all([
             this.interpreterService.getActiveInterpreter(undefined),
-            this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true, bypassCondaExecution: true })
+            this.executionFactory.createActivatedEnvironment({
+                resource: undefined,
+                interpreter,
+                allowEnvironmentFetchExceptions: true,
+                bypassCondaExecution: true
+            })
         ]);
 
         // Use daemons for current interpreter, when using any other interpreter, do not use a daemon.
@@ -378,7 +441,11 @@ export class JupyterCommandFinderImpl {
 
         return this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
     }
-    private async doesModuleExist(moduleName: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IModuleExistsResult> {
+    private async doesModuleExist(
+        moduleName: string,
+        interpreter: PythonInterpreter,
+        cancelToken?: CancellationToken
+    ): Promise<IModuleExistsResult> {
         const result: IModuleExistsResult = {
             status: ModuleExistsStatus.NotFound
         };
@@ -487,10 +554,23 @@ export class JupyterCommandFinder extends JupyterCommandFinderImpl {
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IPersistentStateFactory) persistentStateFactory: IPersistentStateFactory
     ) {
-        super(interpreterService, executionFactory, configuration, knownSearchPaths, disposableRegistry, fileSystem, processServiceFactory, commandFactory, workspace, appShell);
+        super(
+            interpreterService,
+            executionFactory,
+            configuration,
+            knownSearchPaths,
+            disposableRegistry,
+            fileSystem,
+            processServiceFactory,
+            commandFactory,
+            workspace,
+            appShell
+        );
 
         // Cache stores to keep track of jupyter interpreters found.
-        const workspaceState = persistentStateFactory.createWorkspacePersistentState<string>('DS-VSC-JupyterInterpreter');
+        const workspaceState = persistentStateFactory.createWorkspacePersistentState<string>(
+            'DS-VSC-JupyterInterpreter'
+        );
         const globalState = persistentStateFactory.createGlobalPersistentState<string>('DS-VSC-JupyterInterpreter');
         this.workspaceJupyterInterpreter = { state: workspaceState };
         this.globalJupyterInterpreter = { state: globalState };
@@ -499,7 +579,11 @@ export class JupyterCommandFinder extends JupyterCommandFinderImpl {
         return this.workspace.hasWorkspaceFolders ? this.workspaceJupyterInterpreter : this.globalJupyterInterpreter;
     }
     public findBestCommand(command: JupyterCommands, token?: CancellationToken): Promise<IFindCommandResult> {
-        if (command === JupyterCommands.NotebookCommand && this.findNotebookCommandPromise && !this.findNotebookCommandPromise.rejected) {
+        if (
+            command === JupyterCommands.NotebookCommand &&
+            this.findNotebookCommandPromise &&
+            !this.findNotebookCommandPromise.rejected
+        ) {
             // Use previously seached item, also possible the promise has not yet resolved.
             // I.e. use same search.
             return this.findNotebookCommandPromise.promise;
@@ -591,7 +675,9 @@ export class JupyterCommandFinder extends JupyterCommandFinderImpl {
             }
         }).ignoreErrors();
     }
-    private async getCachedNotebookInterpreter(cancelToken: CancellationToken): Promise<IFindCommandResult | undefined> {
+    private async getCachedNotebookInterpreter(
+        cancelToken: CancellationToken
+    ): Promise<IFindCommandResult | undefined> {
         // We have already checked in current session.
         if (this.cacheStore.checked) {
             return this.cacheStore.sessionState;
@@ -609,7 +695,10 @@ export class JupyterCommandFinder extends JupyterCommandFinderImpl {
         this.updateCacheWithInterpreter(result, cancelToken);
     }
 
-    private async getNotebookCommand(pythonPath: string, cancelToken: CancellationToken): Promise<IFindCommandResult | undefined> {
+    private async getNotebookCommand(
+        pythonPath: string,
+        cancelToken: CancellationToken
+    ): Promise<IFindCommandResult | undefined> {
         if (cancelToken.isCancellationRequested || !(await this.fileSystem.fileExists(pythonPath))) {
             return;
         }

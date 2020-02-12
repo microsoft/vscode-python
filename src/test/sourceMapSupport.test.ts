@@ -32,7 +32,11 @@ suite('Source Map Support', () => {
                             return isEnabled;
                         },
                         update: (prop: string, value: boolean, scope: ConfigurationTarget) => {
-                            if (prop === 'sourceMapsEnabled' && value === false && scope === ConfigurationTarget.Global) {
+                            if (
+                                prop === 'sourceMapsEnabled' &&
+                                value === false &&
+                                scope === ConfigurationTarget.Global
+                            ) {
                                 stubInfo.configValueUpdated = true;
                             }
                         }

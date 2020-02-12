@@ -33,7 +33,10 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     private readonly platform: IPlatformService;
     private readonly interpreterLocatorHelper: IInterpreterLocatorHelper;
     private readonly _hasInterpreters: Deferred<boolean>;
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer, @inject(InterpreterFilter) private readonly interpreterFilter: IInterpreterFilter) {
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(InterpreterFilter) private readonly interpreterFilter: IInterpreterFilter
+    ) {
         this._hasInterpreters = createDeferred<boolean>();
         serviceContainer.get<Disposable[]>(IDisposableRegistry).push(this);
         this.platform = serviceContainer.get<IPlatformService>(IPlatformService);

@@ -11,7 +11,15 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { LSControl, LSEnabled } from '../common/experimentGroups';
 import { traceError } from '../common/logger';
-import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentsManager,
+    IOutputChannel,
+    IPersistentStateFactory,
+    IPythonSettings,
+    Resource
+} from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../interpreter/contracts';
@@ -20,7 +28,12 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { Commands } from './languageServer/constants';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
-import { IExtensionActivationService, ILanguageServerActivator, ILanguageServerCache, LanguageServerType } from './types';
+import {
+    IExtensionActivationService,
+    ILanguageServerActivator,
+    ILanguageServerCache,
+    LanguageServerType
+} from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
@@ -33,7 +46,8 @@ interface IActivatedServer {
 }
 
 @injectable()
-export class LanguageServerExtensionActivationService implements IExtensionActivationService, ILanguageServerCache, Disposable {
+export class LanguageServerExtensionActivationService
+    implements IExtensionActivationService, ILanguageServerCache, Disposable {
     private cache = new Map<string, Promise<RefCountedLanguageServer>>();
     private activatedServer?: IActivatedServer;
     private readonly workspaceService: IWorkspaceService;
@@ -57,7 +71,9 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
         disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
         disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
-        disposables.push(commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCaches.bind(this)));
+        disposables.push(
+            commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCaches.bind(this))
+        );
     }
 
     public async activate(resource: Resource): Promise<void> {
@@ -121,9 +137,13 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
         if (state.value !== jediEnabled) {
             await state.updateValue(jediEnabled);
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, { switchTo: jediEnabled });
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
+                switchTo: jediEnabled
+            });
         } else {
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, { lsStartup: jediEnabled });
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
+                lsStartup: jediEnabled
+            });
         }
     }
 
@@ -138,7 +158,11 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.jediEnabled`');
             return false;
         }
-        return settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined;
+        return (
+            settings.globalValue === undefined &&
+            settings.workspaceValue === undefined &&
+            settings.workspaceFolderValue === undefined
+        );
     }
 
     /**
@@ -163,7 +187,9 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
     protected async onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, dispose its activator
-        const workspaceKeys = await Promise.all(this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getKey(workspaceFolder.uri)));
+        const workspaceKeys = await Promise.all(
+            this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getKey(workspaceFolder.uri))
+        );
         const activatedWkspcKeys = Array.from(this.cache.keys());
         const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
@@ -179,7 +205,11 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         return this.activate(this.resource);
     }
 
-    private async createRefCountedServer(resource: Resource, interpreter: PythonInterpreter | undefined, key: string): Promise<RefCountedLanguageServer> {
+    private async createRefCountedServer(
+        resource: Resource,
+        interpreter: PythonInterpreter | undefined,
+        key: string
+    ): Promise<RefCountedLanguageServer> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         let serverType = configurationService.getSettings(this.resource).languageServer;
         if (!serverType) {
@@ -198,11 +228,16 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
                     serverType = LanguageServerType.Jedi;
                     break;
                 }
-                const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticServiceId);
+                const lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
+                    IDiagnosticsService,
+                    LSNotSupportedDiagnosticServiceId
+                );
                 const diagnostic = await lsNotSupportedDiagnosticService.diagnose(undefined);
                 lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
                 if (diagnostic.length) {
-                    sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
+                    sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
+                        supported: false
+                    });
                     serverType = LanguageServerType.Jedi;
                 }
                 break;
@@ -278,13 +313,19 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             }
         }
 
-        const item = await this.appShell.showInformationMessage('Please reload the window switching between language engines.', 'Reload');
+        const item = await this.appShell.showInformationMessage(
+            'Please reload the window switching between language engines.',
+            'Reload'
+        );
         if (item === 'Reload') {
             this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
         }
     }
     private async getKey(resource: Resource, interpreter?: PythonInterpreter): Promise<string> {
-        const resourcePortion = this.workspaceService.getWorkspaceFolderIdentifier(resource, workspacePathNameForGlobalWorkspaces);
+        const resourcePortion = this.workspaceService.getWorkspaceFolderIdentifier(
+            resource,
+            workspacePathNameForGlobalWorkspaces
+        );
         interpreter = interpreter ? interpreter : await this.interpreterService.getActiveInterpreter(resource);
         const interperterPortion = interpreter ? `${interpreter.path}-${interpreter.envName}` : '';
         return `${resourcePortion}-${interperterPortion}`;

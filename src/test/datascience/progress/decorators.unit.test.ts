@@ -5,7 +5,11 @@
 
 import { anything, deepEqual, instance, mock, verify } from 'ts-mockito';
 import { createDeferred } from '../../../client/common/utils/async';
-import { disposeRegisteredReporters, registerReporter, reportAction } from '../../../client/datascience/progress/decorator';
+import {
+    disposeRegisteredReporters,
+    registerReporter,
+    reportAction
+} from '../../../client/datascience/progress/decorator';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { IProgressReporter, ReportableAction } from '../../../client/datascience/progress/types';
 import { noop } from '../../core';
@@ -55,7 +59,9 @@ suite('Data Science - Progress Reporter Decorator', () => {
 
         verify(reporter.report(anything())).times(2);
         verify(reporter.report(deepEqual({ action: ReportableAction.NotebookStart, phase: 'started' }))).once();
-        verify(reporter.report(deepEqual({ action: ReportableAction.JupyterSessionWaitForIdleSession, phase: 'started' }))).once();
+        verify(
+            reporter.report(deepEqual({ action: ReportableAction.JupyterSessionWaitForIdleSession, phase: 'started' }))
+        ).once();
 
         // Report progress of actions completed (even if promises get rejected).
         cls1.something.resolve();
@@ -64,7 +70,11 @@ suite('Data Science - Progress Reporter Decorator', () => {
 
         verify(reporter.report(anything())).times(4);
         verify(reporter.report(deepEqual({ action: ReportableAction.NotebookStart, phase: 'completed' }))).once();
-        verify(reporter.report(deepEqual({ action: ReportableAction.JupyterSessionWaitForIdleSession, phase: 'completed' }))).once();
+        verify(
+            reporter.report(
+                deepEqual({ action: ReportableAction.JupyterSessionWaitForIdleSession, phase: 'completed' })
+            )
+        ).once();
 
         // Report progress of actions started again.
         cls1.doSomethingElse().ignoreErrors();
@@ -72,7 +82,11 @@ suite('Data Science - Progress Reporter Decorator', () => {
 
         verify(reporter.report(anything())).times(6);
         verify(reporter.report(deepEqual({ action: ReportableAction.NotebookConnect, phase: 'started' }))).once();
-        verify(reporter.report(deepEqual({ action: ReportableAction.KernelsGetKernelForRemoteConnection, phase: 'started' }))).once();
+        verify(
+            reporter.report(
+                deepEqual({ action: ReportableAction.KernelsGetKernelForRemoteConnection, phase: 'started' })
+            )
+        ).once();
 
         // Report progress of actions completed (even if promises get rejected).
         cls1.somethingElse.resolve();
@@ -81,6 +95,10 @@ suite('Data Science - Progress Reporter Decorator', () => {
 
         verify(reporter.report(anything())).times(8);
         verify(reporter.report(deepEqual({ action: ReportableAction.NotebookConnect, phase: 'completed' }))).once();
-        verify(reporter.report(deepEqual({ action: ReportableAction.KernelsGetKernelForRemoteConnection, phase: 'completed' }))).once();
+        verify(
+            reporter.report(
+                deepEqual({ action: ReportableAction.KernelsGetKernelForRemoteConnection, phase: 'completed' })
+            )
+        ).once();
     });
 });

@@ -34,8 +34,22 @@ import { MockProcessService } from '../../mocks/proc';
 import { UnitTestIocContainer } from '../serviceRegistry';
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
-const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'single');
-const UNITTEST_TEST_FILES_PATH_WITH_CONFIGS = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'unitestsWithConfigs');
+const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
+    EXTENSION_ROOT_DIR,
+    'src',
+    'test',
+    'pythonFiles',
+    'testFiles',
+    'single'
+);
+const UNITTEST_TEST_FILES_PATH_WITH_CONFIGS = path.join(
+    EXTENSION_ROOT_DIR,
+    'src',
+    'test',
+    'pythonFiles',
+    'testFiles',
+    'unitestsWithConfigs'
+);
 const unitTestTestFilesCwdPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'cwd', 'src');
 
 /*
@@ -46,7 +60,9 @@ Run the command `python <ExtensionDir>/pythonFiles/testing_tools/run_adapter.py 
 // tslint:disable:max-func-body-length
 suite('Unit Tests - pytest - discovery with mocked process output', () => {
     let ioc: UnitTestIocContainer;
-    const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
+    const configTarget = IS_MULTI_ROOT_TEST
+        ? vscode.ConfigurationTarget.WorkspaceFolder
+        : vscode.ConfigurationTarget.Workspace;
     @injectable()
     class ExecutionFactory extends PythonExecutionFactory {
         constructor(
@@ -58,11 +74,25 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
             @inject(IBufferDecoder) decoder: IBufferDecoder
         ) {
-            super(_serviceContainer, activationHelper, processServiceFactory, _configService, condaService, decoder, windowsStoreInterpreter);
+            super(
+                _serviceContainer,
+                activationHelper,
+                processServiceFactory,
+                _configService,
+                condaService,
+                decoder,
+                windowsStoreInterpreter
+            );
         }
-        public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
-            const pythonPath = options.interpreter ? options.interpreter.path : this._configService.getSettings(options.resource).pythonPath;
-            const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
+        public async createActivatedEnvironment(
+            options: ExecutionFactoryCreateWithEnvironmentOptions
+        ): Promise<IPythonExecutionService> {
+            const pythonPath = options.interpreter
+                ? options.interpreter.path
+                : this._configService.getSettings(options.resource).pythonPath;
+            const procService = (await ioc.serviceContainer
+                .get<IProcessServiceFactory>(IProcessServiceFactory)
+                .create()) as MockProcessService;
             return new PythonExecutionService(this._serviceContainer, procService, pythonPath);
         }
     }
@@ -88,17 +118,25 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         // Mocks.
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
+            IInterpreterService,
+            instance(mock(InterpreterService))
+        );
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
 
         ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(
+            InterpeterHashProviderFactory,
+            InterpeterHashProviderFactory
+        );
         ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
 
     async function injectTestDiscoveryOutput(output: string) {
-        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
+        const procService = (await ioc.serviceContainer
+            .get<IProcessServiceFactory>(IProcessServiceFactory)
+            .create()) as MockProcessService;
         procService.onExec((_file, args, _options, callback) => {
             if (args.indexOf('discover') >= 0 && args.indexOf('pytest') >= 0) {
                 callback({
@@ -113,7 +151,8 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             JSON.stringify([
                 {
                     rootid: '.',
-                    root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/single',
+                    root:
+                        '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/single',
                     parents: [
                         {
                             id: './test_root.py',
@@ -224,7 +263,8 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             JSON.stringify([
                 {
                     rootid: '.',
-                    root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard',
+                    root:
+                        '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard',
                     parents: [
                         {
                             id: './test_root.py',
@@ -279,7 +319,8 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                             parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests'
                         },
                         {
-                            id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests',
+                            id:
+                                './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests',
                             kind: 'suite',
                             name: 'TestExtraNestedForeignTests',
                             parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere'
@@ -412,21 +453,25 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                             parentid: './tests/test_another_pytest.py::test_parametrized_username'
                         },
                         {
-                            id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests::test_super_deep_foreign',
+                            id:
+                                './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests::test_super_deep_foreign',
                             name: 'test_super_deep_foreign',
                             source: 'tests/external.py:2',
                             markers: [],
-                            parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests'
+                            parentid:
+                                './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests'
                         },
                         {
-                            id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_foreign_test',
+                            id:
+                                './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_foreign_test',
                             name: 'test_foreign_test',
                             source: 'tests/external.py:4',
                             markers: [],
                             parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere'
                         },
                         {
-                            id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_nested_normal',
+                            id:
+                                './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_nested_normal',
                             name: 'test_nested_normal',
                             source: 'tests/test_foreign_nested_tests.py:5',
                             markers: [],
@@ -461,11 +506,13 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                             parentid: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
                         },
                         {
-                            id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A::test_d',
+                            id:
+                                './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A::test_d',
                             name: 'test_d',
                             source: 'tests/test_pytest.py:16',
                             markers: [],
-                            parentid: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A'
+                            parentid:
+                                './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A'
                         },
                         {
                             id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodC',
@@ -651,7 +698,8 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             JSON.stringify([
                 {
                     rootid: '.',
-                    root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard',
+                    root:
+                        '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard',
                     parents: [
                         {
                             id: './tests',
@@ -717,7 +765,8 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             JSON.stringify([
                 {
                     rootid: '.',
-                    root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/unitestsWithConfigs',
+                    root:
+                        '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/unitestsWithConfigs',
                     parents: [
                         {
                             id: './other',
@@ -794,11 +843,13 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
                             parentid: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
                         },
                         {
-                            id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A::test_d',
+                            id:
+                                './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A::test_d',
                             name: 'test_d',
                             source: 'other/test_pytest.py:16',
                             markers: [],
-                            parentid: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A'
+                            parentid:
+                                './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A'
                         },
                         {
                             id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodC',
@@ -903,7 +954,8 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             JSON.stringify([
                 {
                     rootid: '.',
-                    root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/cwd/src',
+                    root:
+                        '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/cwd/src',
                     parents: [
                         {
                             id: './tests',

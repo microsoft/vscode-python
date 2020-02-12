@@ -24,7 +24,10 @@ export class Bash extends BaseActivationCommandProvider {
             targetShell === TerminalShellType.fish
         );
     }
-    public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
+    public async getActivationCommandsForInterpreter(
+        pythonPath: string,
+        targetShell: TerminalShellType
+    ): Promise<string[] | undefined> {
         const scriptFile = await this.findScriptFile(pythonPath, this.getScriptsInOrderOfPreference(targetShell));
         if (!scriptFile) {
             return;

@@ -67,7 +67,13 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
     }
 }
 
-// tslint:disable-next-line: no-any
-export function cellFormatterFunc(_row: number, _cell: number, value: any, columnDef: Slick.Column<ISlickRow>, _dataContext: Slick.SlickData): string {
+export function cellFormatterFunc(
+    _row: number,
+    _cell: number,
+    // tslint:disable-next-line: no-any
+    value: any,
+    columnDef: Slick.Column<ISlickRow>,
+    _dataContext: Slick.SlickData
+): string {
     return ReactDOMServer.renderToString(<CellFormatter value={value} columnDef={columnDef} />);
 }

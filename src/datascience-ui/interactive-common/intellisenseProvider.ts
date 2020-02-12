@@ -23,13 +23,26 @@ interface IRequestData<T> {
 }
 
 export class IntellisenseProvider
-    implements monacoEditor.languages.CompletionItemProvider, monacoEditor.languages.HoverProvider, monacoEditor.languages.SignatureHelpProvider, IDisposable {
+    implements
+        monacoEditor.languages.CompletionItemProvider,
+        monacoEditor.languages.HoverProvider,
+        monacoEditor.languages.SignatureHelpProvider,
+        IDisposable {
     public triggerCharacters?: string[] | undefined = ['.'];
     public readonly signatureHelpTriggerCharacters?: ReadonlyArray<string> = ['(', ',', '<'];
     public readonly signatureHelpRetriggerCharacters?: ReadonlyArray<string> = [')'];
-    private completionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionList>> = new Map<string, IRequestData<monacoEditor.languages.CompletionList>>();
-    private resolveCompletionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionItem>> = new Map<string, IRequestData<monacoEditor.languages.CompletionItem>>();
-    private hoverRequests: Map<string, IRequestData<monacoEditor.languages.Hover>> = new Map<string, IRequestData<monacoEditor.languages.Hover>>();
+    private completionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionList>> = new Map<
+        string,
+        IRequestData<monacoEditor.languages.CompletionList>
+    >();
+    private resolveCompletionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionItem>> = new Map<
+        string,
+        IRequestData<monacoEditor.languages.CompletionItem>
+    >();
+    private hoverRequests: Map<string, IRequestData<monacoEditor.languages.Hover>> = new Map<
+        string,
+        IRequestData<monacoEditor.languages.Hover>
+    >();
     private signatureHelpRequests: Map<string, IRequestData<monacoEditor.languages.SignatureHelpResult>> = new Map<
         string,
         IRequestData<monacoEditor.languages.SignatureHelpResult>
@@ -38,7 +51,9 @@ export class IntellisenseProvider
     private monacoIdToCellId: Map<string, string> = new Map<string, string>();
     private cellIdToMonacoId: Map<string, string> = new Map<string, string>();
     private disposed = false;
-    constructor(private messageSender: <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => void) {
+    constructor(
+        private messageSender: <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => void
+    ) {
         // Register a completion provider
         this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider('python', this));
         this.registerDisposables.push(monacoEditor.languages.registerHoverProvider('python', this));
@@ -61,7 +76,12 @@ export class IntellisenseProvider
         });
 
         this.completionRequests.set(requestId, { promise, cancelDisposable });
-        this.sendMessage(InteractiveWindowMessages.ProvideCompletionItemsRequest, { position, context, requestId, cellId: this.getCellId(model.id) });
+        this.sendMessage(InteractiveWindowMessages.ProvideCompletionItemsRequest, {
+            position,
+            context,
+            requestId,
+            cellId: this.getCellId(model.id)
+        });
 
         return promise.promise;
     }
@@ -84,7 +104,12 @@ export class IntellisenseProvider
             });
 
             this.resolveCompletionRequests.set(requestId, { promise, cancelDisposable });
-            this.sendMessage(InteractiveWindowMessages.ResolveCompletionItemRequest, { position, item, requestId, cellId: this.getCellId(model.id) });
+            this.sendMessage(InteractiveWindowMessages.ResolveCompletionItemRequest, {
+                position,
+                item,
+                requestId,
+                cellId: this.getCellId(model.id)
+            });
 
             const newItem = await promise.promise;
             // Our code strips out _documentPosition and possibly other items that are too large to send
@@ -111,7 +136,11 @@ export class IntellisenseProvider
         });
 
         this.hoverRequests.set(requestId, { promise, cancelDisposable });
-        this.sendMessage(InteractiveWindowMessages.ProvideHoverRequest, { position, requestId, cellId: this.getCellId(model.id) });
+        this.sendMessage(InteractiveWindowMessages.ProvideHoverRequest, {
+            position,
+            requestId,
+            cellId: this.getCellId(model.id)
+        });
 
         return promise.promise;
     }
@@ -132,7 +161,12 @@ export class IntellisenseProvider
         });
 
         this.signatureHelpRequests.set(requestId, { promise, cancelDisposable });
-        this.sendMessage(InteractiveWindowMessages.ProvideSignatureHelpRequest, { position, context, requestId, cellId: this.getCellId(model.id) });
+        this.sendMessage(InteractiveWindowMessages.ProvideSignatureHelpRequest, {
+            position,
+            context,
+            requestId,
+            cellId: this.getCellId(model.id)
+        });
 
         return promise.promise;
     }

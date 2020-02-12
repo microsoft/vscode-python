@@ -36,7 +36,9 @@ export class FormatterHelper implements IFormatterHelper {
         const names = this.getSettingsPropertyNames(formatter);
 
         const execPath = settings.formatting[names.pathName] as string;
-        let args: string[] = Array.isArray(settings.formatting[names.argsName]) ? (settings.formatting[names.argsName] as string[]) : [];
+        let args: string[] = Array.isArray(settings.formatting[names.argsName])
+            ? (settings.formatting[names.argsName] as string[])
+            : [];
         args = args.concat(customArgs);
 
         let moduleName: string | undefined;

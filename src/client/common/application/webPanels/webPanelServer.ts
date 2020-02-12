@@ -165,7 +165,9 @@ export class WebPanelServer {
                 <script type="text/javascript">
                 ${this.getStyleUpdateScript()}
                 </script>
-                ${scripts.map((script: string) => `<script type="text/javascript" src="${script}"></script>`).join('\n')}
+                ${scripts
+                    .map((script: string) => `<script type="text/javascript" src="${script}"></script>`)
+                    .join('\n')}
             </body>
         </html>`;
     }

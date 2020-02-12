@@ -61,7 +61,11 @@ export namespace CommonEffects {
         // We also get this in our response, but computing is more reliable
         // than searching for it.
         const newBaseTheme =
-            arg.prevState.knownDark !== computedKnownDark && !arg.prevState.testMode ? (computedKnownDark ? 'vscode-dark' : 'vscode-light') : arg.prevState.baseTheme;
+            arg.prevState.knownDark !== computedKnownDark && !arg.prevState.testMode
+                ? computedKnownDark
+                    ? 'vscode-dark'
+                    : 'vscode-light'
+                : arg.prevState.baseTheme;
 
         let fontSize: number = 14;
         let fontFamily: string = "Consolas, 'Courier New', monospace";

@@ -21,12 +21,15 @@ import { onItemSelected, TestDisplay, Type } from '../../../client/testing/displ
 import { createEmptyResults } from '../results';
 
 // tslint:disable:no-any
+// tslint:disable:max-func-body-length
 
 suite('Unit Tests - Picker (execution of commands)', () => {
     getNamesAndValues<Type>(Type).forEach(item => {
         getNamesAndValues<CommandSource>(CommandSource).forEach(commandSource => {
             [true, false].forEach(debug => {
-                test(`Invoking command for selection ${item.name} from ${commandSource.name} (${debug ? 'Debug' : 'No debug'})`, async () => {
+                test(`Invoking command for selection ${item.name} from ${commandSource.name} (${
+                    debug ? 'Debug' : 'No debug'
+                })`, async () => {
                     const commandManager = mock(CommandManager);
                     const workspaceUri = Uri.file(__filename);
 
@@ -49,7 +52,13 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                         commandSource.value = CommandSource.commandPalette;
                     }
 
-                    onItemSelected(instance(commandManager), commandSource.value, workspaceUri, selection as any, debug);
+                    onItemSelected(
+                        instance(commandManager),
+                        commandSource.value,
+                        workspaceUri,
+                        selection as any,
+                        debug
+                    );
 
                     switch (selection.type) {
                         case Type.Null: {
@@ -62,42 +71,102 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                             return;
                         }
                         case Type.RunAll: {
-                            verify(commandManager.executeCommand(Commands.Tests_Run, undefined, commandSource.value, workspaceUri, undefined)).once();
+                            verify(
+                                commandManager.executeCommand(
+                                    Commands.Tests_Run,
+                                    undefined,
+                                    commandSource.value,
+                                    workspaceUri,
+                                    undefined
+                                )
+                            ).once();
                             return;
                         }
                         case Type.RunParametrized: {
-                            verify(commandManager.executeCommand(Commands.Tests_Run_Parametrized, undefined, commandSource.value, workspaceUri, selection.fns, debug)).once();
+                            verify(
+                                commandManager.executeCommand(
+                                    Commands.Tests_Run_Parametrized,
+                                    undefined,
+                                    commandSource.value,
+                                    workspaceUri,
+                                    selection.fns,
+                                    debug
+                                )
+                            ).once();
                             return;
                         }
                         case Type.ReDiscover: {
-                            verify(commandManager.executeCommand(Commands.Tests_Discover, undefined, commandSource.value, workspaceUri)).once();
+                            verify(
+                                commandManager.executeCommand(
+                                    Commands.Tests_Discover,
+                                    undefined,
+                                    commandSource.value,
+                                    workspaceUri
+                                )
+                            ).once();
                             return;
                         }
                         case Type.ViewTestOutput: {
-                            verify(commandManager.executeCommand(Commands.Tests_ViewOutput, undefined, commandSource.value)).once();
+                            verify(
+                                commandManager.executeCommand(Commands.Tests_ViewOutput, undefined, commandSource.value)
+                            ).once();
                             return;
                         }
                         case Type.RunFailed: {
-                            verify(commandManager.executeCommand(Commands.Tests_Run_Failed, undefined, commandSource.value, workspaceUri)).once();
+                            verify(
+                                commandManager.executeCommand(
+                                    Commands.Tests_Run_Failed,
+                                    undefined,
+                                    commandSource.value,
+                                    workspaceUri
+                                )
+                            ).once();
                             return;
                         }
                         case Type.SelectAndRunMethod: {
-                            const cmd = debug ? Commands.Tests_Select_And_Debug_Method : Commands.Tests_Select_And_Run_Method;
-                            verify(commandManager.executeCommand(cmd, undefined, commandSource.value, workspaceUri)).once();
+                            const cmd = debug
+                                ? Commands.Tests_Select_And_Debug_Method
+                                : Commands.Tests_Select_And_Run_Method;
+                            verify(
+                                commandManager.executeCommand(cmd, undefined, commandSource.value, workspaceUri)
+                            ).once();
                             return;
                         }
                         case Type.RunMethod: {
                             const testsToRun: TestsToRun = { testFunction: ['something' as any] };
-                            verify(commandManager.executeCommand(Commands.Tests_Run, undefined, commandSource.value, workspaceUri, testsToRun)).never();
+                            verify(
+                                commandManager.executeCommand(
+                                    Commands.Tests_Run,
+                                    undefined,
+                                    commandSource.value,
+                                    workspaceUri,
+                                    testsToRun
+                                )
+                            ).never();
                             return;
                         }
                         case Type.DebugMethod: {
                             const testsToRun: TestsToRun = { testFunction: ['something' as any] };
-                            verify(commandManager.executeCommand(Commands.Tests_Debug, undefined, commandSource.value, workspaceUri, testsToRun)).never();
+                            verify(
+                                commandManager.executeCommand(
+                                    Commands.Tests_Debug,
+                                    undefined,
+                                    commandSource.value,
+                                    workspaceUri,
+                                    testsToRun
+                                )
+                            ).never();
                             return;
                         }
                         case Type.Configure: {
-                            verify(commandManager.executeCommand(Commands.Tests_Configure, undefined, commandSource.value, workspaceUri)).once();
+                            verify(
+                                commandManager.executeCommand(
+                                    Commands.Tests_Configure,
+                                    undefined,
+                                    commandSource.value,
+                                    workspaceUri
+                                )
+                            ).once();
                             return;
                         }
                         default: {
@@ -134,7 +203,9 @@ suite('Testing - TestDisplay', () => {
         mockedServiceContainer = mock(ServiceContainer);
         mockedTestCollectionStorage = mock(TestCollectionStorageService);
         mockedAppShell = mock(ApplicationShell);
-        when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(instance(mockedTestCollectionStorage));
+        when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(
+            instance(mockedTestCollectionStorage)
+        );
         when(mockedServiceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(mockedAppShell));
 
         testDisplay = new TestDisplay(instance(mockedServiceContainer), instance(mockedCommandManager));
@@ -165,7 +236,13 @@ suite('Testing - TestDisplay', () => {
             fullPathInTests(tests);
             when(mockedFileSytem.arePathsSame(anything(), anything())).thenReturn(true);
 
-            testDisplay.displayFunctionTestPickerUI(CommandSource.commandPalette, wkspace, 'rootDirectory', fileName, codeLensTestFunctions());
+            testDisplay.displayFunctionTestPickerUI(
+                CommandSource.commandPalette,
+                wkspace,
+                'rootDirectory',
+                fileName,
+                codeLensTestFunctions()
+            );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).once();
         });
@@ -174,7 +251,13 @@ suite('Testing - TestDisplay', () => {
             fullPathInTests(tests);
             when(mockedFileSytem.arePathsSame(anything(), anything())).thenReturn(false);
 
-            testDisplay.displayFunctionTestPickerUI(CommandSource.commandPalette, wkspace, 'rootDirectory', fileName, codeLensTestFunctions());
+            testDisplay.displayFunctionTestPickerUI(
+                CommandSource.commandPalette,
+                wkspace,
+                'rootDirectory',
+                fileName,
+                codeLensTestFunctions()
+            );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).never();
         });
