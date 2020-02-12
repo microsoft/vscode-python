@@ -57,6 +57,7 @@ function sortProductsInOrderForInstallation(products: Product[]) {
  * @returns {string}
  */
 export function getMessageForLibrariesNotInstalled(products: Product[], interpreterName?: string): string {
+    // Even though kernelspec cannot be installed, display it so user knows what is missing.
     const names = products
         .map(product => ProductNames.get(product))
         .filter(name => !!name)
