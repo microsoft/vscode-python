@@ -187,7 +187,7 @@ jobs:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, windows-latests]
         # Run the tests on the oldest and most recent versions of Python.
         python: [3.8]
         test-suite: [ts-unit]
