@@ -17,7 +17,13 @@ export class JupyterCommandLineSelectorCommand implements IDisposable {
         @inject(JupyterCommandLineSelector) private readonly commandSelector: JupyterCommandLineSelector
     ) {}
     public register() {
-        this.disposables.push(this.commandManager.registerCommand(Commands.SelectJupyterCommandLine, this.commandSelector.selectJupyterCommandLine, this.commandSelector));
+        this.disposables.push(
+            this.commandManager.registerCommand(
+                Commands.SelectJupyterCommandLine,
+                this.commandSelector.selectJupyterCommandLine,
+                this.commandSelector
+            )
+        );
     }
     public dispose() {
         this.disposables.forEach(d => d.dispose());
