@@ -76,7 +76,11 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
         const afterState = store.getState();
 
         // If the action is part of a sync message, then do not send it to the extension.
-        if (action.payload && typeof (action.payload as BaseReduxActionPayload).messageType === 'number') {
+        const messageType = (action?.payload as BaseReduxActionPayload).messageType ?? MessageType.userAction;
+        const isSyncMessage =
+            (messageType & MessageType.syncAcrossSameNotebooks) === MessageType.syncAcrossSameNotebooks &&
+            (messageType & MessageType.syncAcrossSameNotebooks) === MessageType.syncWithLiveShare;
+        if (isSyncMessage) {
             return res;
         }
 
