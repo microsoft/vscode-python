@@ -10,6 +10,10 @@
    (thanks to [ChenKB91](https://github.com/ChenKB91/))
    ([#10072](https://github.com/Microsoft/vscode-python/issues/10072))
 
+### Note
+
+1. Please only set the `python.languageServer` setting if you want to turn IntelliSense off. To switch between language servers, please keep using the `python.jediEnabled` setting for now.
+
 ### Thanks
 
 Thanks to the following projects which we fully rely on to provide some of
