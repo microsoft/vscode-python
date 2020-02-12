@@ -193,7 +193,7 @@ export class NotebookStarter implements Disposable {
         customCommandLine: string[],
         tempDirPromise: Promise<TemporaryDirectory>
     ): Promise<string[]> {
-        if (!customCommandLine) {
+        if (!customCommandLine || customCommandLine.length === 0) {
             return this.generateDefaultArguments(useDefaultConfig, tempDirPromise);
         }
         return this.generateCustomArguments(customCommandLine);
