@@ -337,7 +337,15 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
         const tokenContent = await this.fs.readFile(themeFile);
         const theme = parse(tokenContent);
-        const tokenColors = theme.tokenColors as JSONArray;
+        let tokenColors: JSONArray = [];
+
+        if (typeof theme.tokenColors === 'string') {
+            const style = await this.fs.readData(theme.tokenColors);
+            tokenColors = JSON.parse(style.toString());
+        } else {
+            tokenColors = theme.tokenColors as JSONArray;
+        }
+
         if (tokenColors && tokenColors.length > 0) {
             // This theme may include others. If so we need to combine the two together
             const include = theme ? theme.include : undefined;
