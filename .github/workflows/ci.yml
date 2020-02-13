@@ -457,9 +457,6 @@ jobs:
     # needs: [tests, smoke-tests]
     # if: github.repository == 'microsoft/vscode-python'
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
       - name: Delete existing tag
         run: |
           curl -s -X DELETE https://api.github.com/repos/kimadeline/vscode-python/git/refs/tags/${{env.LKG_TAG}} \
