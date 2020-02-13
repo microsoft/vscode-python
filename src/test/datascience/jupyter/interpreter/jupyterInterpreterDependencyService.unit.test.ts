@@ -14,10 +14,12 @@ import { IPythonExecutionService } from '../../../../client/common/process/types
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { DataScience } from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
+import { JupyterCommandFactory } from '../../../../client/datascience/jupyter/interpreter/jupyterCommand';
 import {
     JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService
 } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
+import { IJupyterCommandFactory } from '../../../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 
 // tslint:disable: max-func-body-length
@@ -26,6 +28,7 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
+    let commandFactory: IJupyterCommandFactory;
     let pythonExecService: IPythonExecutionService;
     const pythonInterpreter: PythonInterpreter = {
         path: '',
@@ -37,6 +40,7 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
     setup(() => {
         appShell = mock(ApplicationShell);
         installer = mock(ProductInstaller);
+        commandFactory = mock(JupyterCommandFactory);
         pythonExecService = mock(PythonExecutionService);
         const pythonExecFactory = mock(PythonExecutionFactory);
         when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonExecService));
@@ -49,7 +53,7 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
         configuration = new JupyterInterpreterDependencyService(
             instance(appShell),
             instance(installer),
-            instance(pythonExecFactory)
+            instance(commandFactory)
         );
     });
     test('Return ok if all dependencies are installed', async () => {
