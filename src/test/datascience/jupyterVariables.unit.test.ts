@@ -96,7 +96,8 @@ suite('JupyterVariables', () => {
             enablePlotViewer: true,
             runStartupCommands: '',
             debugJustMyCode: true,
-            variableQueries: []
+            variableQueries: [],
+            jupyterCommandLineArguments: []
         };
 
         // Create our fake notebook

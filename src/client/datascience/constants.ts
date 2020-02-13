@@ -45,6 +45,7 @@ export namespace Commands {
     export const ImportNotebookFile = 'python.datascience.importnotebookfile';
     export const OpenNotebook = 'python.datascience.opennotebook';
     export const SelectJupyterURI = 'python.datascience.selectjupyteruri';
+    export const SelectJupyterCommandLine = 'python.datascience.selectjupytercommandline';
     export const ExportFileAsNotebook = 'python.datascience.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'python.datascience.exportfileandoutputasnotebook';
     export const UndoCells = 'python.datascience.undocells';
@@ -264,7 +265,8 @@ export enum Telemetry {
     KernelRegisterFailed = 'DS_INTERNAL.KERNEL_REGISTER_FAILED',
     KernelEnumeration = 'DS_INTERNAL.KERNEL_ENUMERATION',
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
-    UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE'
+    UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
+    JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE'
 }
 
 export enum NativeKeyboardCommandTelemetry {

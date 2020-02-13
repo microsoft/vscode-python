@@ -6,6 +6,7 @@ import { IWorkspaceService } from '../common/application/types';
 import { IServiceManager } from '../ioc/types';
 import { Activation } from './activation';
 import { CodeCssGenerator } from './codeCssGenerator';
+import { JupyterCommandLineSelectorCommand } from './commands/commandLineSelector';
 import { CommandRegistry } from './commands/commandRegistry';
 import { KernelSwitcherCommand } from './commands/kernelSwitcher';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
@@ -33,6 +34,7 @@ import { NativeEditorProvider } from './interactive-ipynb/nativeEditorProvider';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
+import { JupyterCommandLineSelector } from './jupyter/commandLineSelector';
 import { JupyterCommandFactory } from './jupyter/interpreter/jupyterCommand';
 import { JupyterCommandFinder } from './jupyter/interpreter/jupyterCommandFinder';
 import { JupyterCommandInterpreterDependencyService } from './jupyter/interpreter/jupyterCommandInterpreterDependencyService';
@@ -168,6 +170,11 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<KernelSwitcherCommand>(KernelSwitcherCommand, KernelSwitcherCommand);
     serviceManager.addSingleton<KernelSwitcher>(KernelSwitcher, KernelSwitcher);
     serviceManager.addSingleton<JupyterServerSelector>(JupyterServerSelector, JupyterServerSelector);
+    serviceManager.addSingleton<JupyterCommandLineSelectorCommand>(
+        JupyterCommandLineSelectorCommand,
+        JupyterCommandLineSelectorCommand
+    );
+    serviceManager.addSingleton<JupyterCommandLineSelector>(JupyterCommandLineSelector, JupyterCommandLineSelector);
     serviceManager.addSingleton<JupyterInterpreterStateStore>(
         JupyterInterpreterStateStore,
         JupyterInterpreterStateStore

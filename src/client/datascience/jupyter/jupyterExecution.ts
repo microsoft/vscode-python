@@ -328,7 +328,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
         if (!options || !options.uri) {
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
             const useDefaultConfig = options && options.useDefaultConfig ? true : false;
-            const connection = await this.startNotebookServer(useDefaultConfig, cancelToken);
+            const connection = await this.startNotebookServer(
+                useDefaultConfig,
+                this.configuration.getSettings().datascience.jupyterCommandLineArguments,
+                cancelToken
+            );
             if (connection) {
                 return connection;
             } else {
@@ -348,9 +352,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(
         useDefaultConfig: boolean,
+        customCommandLine: string[],
         cancelToken?: CancellationToken
     ): Promise<IConnection> {
-        return this.notebookStarter.start(useDefaultConfig, cancelToken);
+        return this.notebookStarter.start(useDefaultConfig, customCommandLine, cancelToken);
     }
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values

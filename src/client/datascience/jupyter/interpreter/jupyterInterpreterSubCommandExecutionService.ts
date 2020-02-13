@@ -106,7 +106,10 @@ export class JupyterInterpreterSubCommandExecutionService
     ): Promise<ObservableExecutionResult<string>> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(options.token);
         this.jupyterOutputChannel.appendLine(
-            DataScience.startingJupyterLogMessage().format(this.pathUtils.getDisplayName(interpreter.path))
+            DataScience.startingJupyterLogMessage().format(
+                this.pathUtils.getDisplayName(interpreter.path),
+                notebookArgs.join(' ')
+            )
         );
         const executionService = await this.pythonExecutionFactory.createDaemon({
             daemonModule: PythonDaemonModule,

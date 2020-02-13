@@ -1814,4 +1814,10 @@ export interface IEventNamePropertyMapping {
      * @memberof IEventNamePropertyMapping
      */
     [Telemetry.UserInstalledModule]: { product: string };
+    /**
+     * Telemetry event sent to when user customizes the jupyter command line
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.JupyterCommandLineNonDefault]: undefined | never;
 }

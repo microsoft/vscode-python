@@ -49,7 +49,8 @@ suite('Data Science - ServerCache', () => {
             enablePlotViewer: true,
             runStartupCommands: '',
             debugJustMyCode: true,
-            variableQueries: []
+            variableQueries: [],
+            jupyterCommandLineArguments: []
         };
         when(configService.getSettings()).thenReturn(pythonSettings);
         serverCache = new ServerCache(instance(configService), instance(workspaceService), instance(fileSystem));

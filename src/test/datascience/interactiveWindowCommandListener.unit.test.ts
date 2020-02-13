@@ -140,7 +140,8 @@ suite('Interactive window command listener', async () => {
             enablePlotViewer: true,
             runStartupCommands: '',
             debugJustMyCode: true,
-            variableQueries: []
+            variableQueries: [],
+            jupyterCommandLineArguments: []
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);

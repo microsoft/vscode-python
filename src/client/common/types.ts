@@ -390,6 +390,7 @@ export interface IDataScienceSettings {
     useWebViewServer?: boolean;
     variableQueries: IVariableQuery[];
     disableJupyterAutoStart?: boolean;
+    jupyterCommandLineArguments: string[];
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

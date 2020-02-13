@@ -19,7 +19,10 @@
             "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
-            ]
+            ],
+            "env": {
+                "VSC_PYTHON_LOG_TELEMETRY": "true"
+            }
         },
         {
             "name": "Extension inside container",
