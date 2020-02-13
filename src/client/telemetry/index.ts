@@ -1749,4 +1749,16 @@ export interface IEventNamePropertyMapping {
      * @memberof IEventNamePropertyMapping
      */
     [Telemetry.CompletionTimeFromJupyter]: undefined | never;
+    /**
+     * Telemetry event sent to indicate the language used in a notebook
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.NotebookLanguage]: {
+        /**
+         * Language found in the notebook if a known language. Otherwise 'unknown'
+         */
+        language: string;
+    };
 }
