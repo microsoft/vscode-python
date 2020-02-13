@@ -354,7 +354,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.setDirty();
     }
 
-    protected addSysInfo(_reason: SysInfoReason): Promise<void> {
+    protected addSysInfo(reason: SysInfoReason): Promise<void> {
+        // We need to send a message when restarting
+        if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
+            this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
+        }
+
         // These are not supported.
         return Promise.resolve();
     }
