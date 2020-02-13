@@ -363,7 +363,7 @@ export class DataScienceInstaller extends BaseInstaller {
                 const response = await this.install(product, resource, cancel);
                 const event =
                     product === Product.jupyter ? Telemetry.UserInstalledJupyter : Telemetry.UserInstalledModule;
-                sendTelemetryEvent(event, stopWatch.elapsedTime, { product: product.toString() });
+                sendTelemetryEvent(event, stopWatch.elapsedTime, { product: productName });
                 return response;
             } catch (e) {
                 if (product === Product.jupyter) {
