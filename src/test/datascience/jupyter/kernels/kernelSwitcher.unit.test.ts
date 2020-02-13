@@ -137,7 +137,9 @@ suite('Data Science - Kernel Switcher', () => {
                                 )
                             ).once();
                         } else {
-                            verify(kernelSelector.selectRemoteKernel(anything(), anything(), anything())).once();
+                            verify(
+                                kernelSelector.selectRemoteKernel(anything(), anything(), anything(), anything())
+                            ).once();
                         }
                     });
 
@@ -329,7 +331,9 @@ suite('Data Science - Kernel Switcher', () => {
                                     )
                                 ).once();
                                 // first time when user select a kernel, second time is when user selects after failing to switch to the first kernel.
-                                verify(kernelSelector.selectLocalKernel(anything(), anything(), anything())).twice();
+                                verify(
+                                    kernelSelector.selectLocalKernel(anything(), anything(), anything(), anything())
+                                ).twice();
                             });
                         });
                     });
