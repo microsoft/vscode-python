@@ -192,7 +192,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 if (selection === selectKernel) {
                                     const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
                                     const sessionManager = await sessionManagerFactory.create(connection);
-                                    const kernelInterpreter = await this.kernelSelector.selectLocalKernel(sessionManager, cancelToken, launchInfo.kernelSpec);
+                                    const kernelInterpreter = await this.kernelSelector.selectLocalKernel(new StopWatch(), sessionManager, cancelToken, launchInfo.kernelSpec);
                                     if (Object.keys(kernelInterpreter).length > 0) {
                                         launchInfo.interpreter = kernelInterpreter.interpreter;
                                         launchInfo.kernelSpec = kernelInterpreter.kernelSpec || kernelInterpreter.kernelModel;

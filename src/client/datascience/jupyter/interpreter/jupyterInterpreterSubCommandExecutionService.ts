@@ -15,7 +15,8 @@ import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
-import { JUPYTER_OUTPUT_CHANNEL, PythonDaemonModule } from '../../constants';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { JUPYTER_OUTPUT_CHANNEL, PythonDaemonModule, Telemetry } from '../../constants';
 import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionService } from '../../types';
 import { JupyterServerInfo } from '../jupyterConnection';
 import { JupyterInstallError } from '../jupyterInstallError';
@@ -153,6 +154,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
                 .execModule('jupyter', ['kernelspec', 'list', '--json'], spawnOptions)
                 .then(output => output.stdout)
                 .catch(daemonEx => {
+                    sendTelemetryEvent(Telemetry.KernelSpecNotFound);
                     traceError('Failed to list kernels from daemon', daemonEx);
                     return '';
                 });

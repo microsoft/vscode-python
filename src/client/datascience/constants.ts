@@ -14,6 +14,9 @@ export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 // Python Module to be used when instantiating the Python Daemon.
 export const PythonDaemonModule = 'datascience.jupyter_daemon';
 
+// List of 'language' names that we know about. All should be lower case as that's how we compare.
+export const KnownNotebookLanguages: string[] = ['python', 'r', 'julia', 'c++', 'c#', 'f#', 'scala', 'haskell', 'bash', 'cling', 'sas'];
+
 export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunAllCellsAbove = 'python.datascience.runallcellsabove';
@@ -147,7 +150,7 @@ export enum Telemetry {
     CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
     SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI',
     SelectLocalJupyterKernel = 'DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL',
-    SelectRemoteJupyuterKernel = 'DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL',
+    SelectRemoteJupyterKernel = 'DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL',
     SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
@@ -239,7 +242,14 @@ export enum Telemetry {
     OpenedInteractiveWindow = 'DATASCIENCE.OPENED_INTERACTIVE',
     FindKernelForLocalConnection = 'DS_INTERNAL.FIND_KERNEL_FOR_LOCAL_CONNECTION',
     CompletionTimeFromLS = 'DS_INTERNAL.COMPLETION_TIME_FROM_LS',
-    CompletionTimeFromJupyter = 'DS_INTERNAL.COMPLETION_TIME_FROM_JUPYTER'
+    CompletionTimeFromJupyter = 'DS_INTERNAL.COMPLETION_TIME_FROM_JUPYTER',
+    NotebookLanguage = 'DATASCIENCE.NOTEBOOK_LANGUAGE',
+    KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
+    KernelRegisterFailed = 'DS_INTERNAL.KERNEL_REGISTER_FAILED',
+    KernelEnumeration = 'DS_INTERNAL.KERNEL_ENUMERATION',
+    JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
+    UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
+    JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE'
 }
 
 export enum NativeKeyboardCommandTelemetry {

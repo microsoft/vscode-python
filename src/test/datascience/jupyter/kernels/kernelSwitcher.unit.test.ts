@@ -97,14 +97,14 @@ suite('Data Science - Kernel Switcher', () => {
                         verify(notebook.getKernelSpec()).once();
 
                         if (isLocalConnection) {
-                            verify(kernelSelector.selectLocalKernel(undefined, undefined, currentKernelInfo.currentKernel)).once();
+                            verify(kernelSelector.selectLocalKernel(anything(), undefined, undefined, currentKernelInfo.currentKernel)).once();
                         } else {
-                            verify(kernelSelector.selectRemoteKernel(anything(), anything(), anything())).once();
+                            verify(kernelSelector.selectRemoteKernel(anything(), anything(), anything(), anything())).once();
                         }
                     });
 
                     test('Prompt to select local kernel', async () => {
-                        when(kernelSelector.selectLocalKernel(undefined, undefined, currentKernelInfo.currentKernel)).thenResolve({});
+                        when(kernelSelector.selectLocalKernel(anything(), undefined, undefined, currentKernelInfo.currentKernel)).thenResolve({});
 
                         const selection = await kernelSwitcher.switchKernel(instance(notebook));
 
@@ -114,13 +114,13 @@ suite('Data Science - Kernel Switcher', () => {
                     suite('Kernel Selected', () => {
                         setup(() => {
                             if (isLocalConnection) {
-                                when(kernelSelector.selectLocalKernel(undefined, undefined, currentKernelInfo.currentKernel)).thenResolve({
+                                when(kernelSelector.selectLocalKernel(anything(), undefined, undefined, currentKernelInfo.currentKernel)).thenResolve({
                                     kernelModel: selectedKernel,
                                     kernelSpec: undefined,
                                     interpreter: selectedInterpreter
                                 });
                             } else {
-                                when(kernelSelector.selectRemoteKernel(anything(), anything(), anything())).thenResolve({
+                                when(kernelSelector.selectRemoteKernel(anything(), anything(), anything(), anything())).thenResolve({
                                     kernelModel: selectedKernel,
                                     kernelSpec: undefined,
                                     interpreter: selectedInterpreter
@@ -212,7 +212,7 @@ suite('Data Science - Kernel Switcher', () => {
                                         return;
                                     }
                                 });
-                                when(kernelSelector.selectLocalKernel(undefined, anything(), anything())).thenCall(() => {
+                                when(kernelSelector.selectLocalKernel(anything(), undefined, anything(), anything())).thenCall(() => {
                                     // When selecting a kernel the second time, then return a different selection.
                                     firstTimeSelectingAKernel = false;
                                     return {
@@ -221,8 +221,10 @@ suite('Data Science - Kernel Switcher', () => {
                                         interpreter: selectedInterpreter
                                     };
                                 });
-                                // tslint:disable-next-line: no-any
-                                when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(DataScience.selectDifferentKernel() as any);
+                                when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(
+                                    // tslint:disable-next-line: no-any
+                                    DataScience.selectDifferentKernel() as any
+                                );
 
                                 const selection = await kernelSwitcher.switchKernel(instance(notebook));
 
@@ -234,7 +236,7 @@ suite('Data Science - Kernel Switcher', () => {
                                 verify(notebook.setInterpreter(selectedInterpreter)).once();
                                 verify(appShell.showErrorMessage(anything(), DataScience.selectDifferentKernel(), Common.cancel())).once();
                                 // first time when user select a kernel, second time is when user selects after failing to switch to the first kernel.
-                                verify(kernelSelector.selectLocalKernel(anything(), anything(), anything())).twice();
+                                verify(kernelSelector.selectLocalKernel(anything(), anything(), anything(), anything())).twice();
                             });
                         });
                     });
