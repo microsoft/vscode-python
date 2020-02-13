@@ -478,7 +478,7 @@ jobs:
           {
             "tag": "${{env.LKG_TAG}}",
             "message": "Last known good build of vscode-python via the GitHub Action CI workflow",
-            "object": "$GITHUB_SHA",
+            "object": "${{github.sha}}",
             "type": "commit"
           }
           EOF
@@ -490,6 +490,6 @@ jobs:
           -d @- << EOF
           {
             "ref": "refs/tags/${{env.LKG_TAG}}",
-            "sha": "$GITHUB_SHA",
+            "sha": "${{github.sha}}",
           }
           EOF
