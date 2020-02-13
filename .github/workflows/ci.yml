@@ -452,7 +452,7 @@ jobs:
           file: ./coverage/cobertura-coverage.xml
 
   lkg-tag:
-    # LKG = last known good
+    #  LKG = last known good
     name: Tag successful build as LKG
     runs-on: ubuntu-latest
     # needs: [tests, smoke-tests]
