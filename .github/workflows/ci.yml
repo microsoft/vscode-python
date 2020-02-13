@@ -463,8 +463,7 @@ jobs:
       - name: Delete existing tag
         run: |
           curl -s -X DELETE https://api.github.com/repos/kimadeline/vscode-python/git/refs/tags/${{env.LKG_TAG}} \
-          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" \
-          -d @- << EOF
+          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}"
 
       # We need to make 2 calls when creating an annotated tag: first create the tag object, and then the tag reference.
       # If we wanted to create a lightweight tag we would only need the tag reference.
