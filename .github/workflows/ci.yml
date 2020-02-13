@@ -460,7 +460,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
 
-      - name: Delete existing tag 
+      - name: Delete existing tag
         run: |
           curl -s -X DELETE https://api.github.com/repos/kimadeline/vscode-python/git/refs/tags/${{env.LKG_TAG}} \
           -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" \
@@ -472,24 +472,24 @@ jobs:
       - name: Create a tag object
         # Curl syntax explanation: https://stackoverflow.com/a/36778045
         run: |
-        curl -s -X POST "https://api.github.com/repos/kimadeline/vscode-python/git/tags"
-        -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" 
-        -d @- << EOF
-        {
-          "tag": "${{env.LKG_TAG}}",
-          "message": "Last known good build of vscode-python via the GitHub Action CI workflow",
-          "object": "$GITHUB_SHA",
-          "type": "commit"
-        }
-        EOF        
-      
+          curl -s -X POST "https://api.github.com/repos/kimadeline/vscode-python/git/tags" \
+          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" \
+          -d @- << EOF
+          {
+            "tag": "${{env.LKG_TAG}}",
+            "message": "Last known good build of vscode-python via the GitHub Action CI workflow",
+            "object": "$GITHUB_SHA",
+            "type": "commit"
+          }
+          EOF
+
       - name: Create a tag reference
         run: |
-        curl -s -X POST "https://api.github.com/repos/kimadeline/vscode-python/git/refs"
-        -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" 
-        -d @- << EOF
-        {
-          "ref": "refs/tags/${{env.LKG_TAG}}",
-          "sha": "$GITHUB_SHA",
-        }
-        EOF 
+          curl -s -X POST "https://api.github.com/repos/kimadeline/vscode-python/git/refs" \
+          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}"  \
+          -d @- << EOF
+          {
+            "ref": "refs/tags/${{env.LKG_TAG}}",
+            "sha": "$GITHUB_SHA",
+          }
+          EOF
