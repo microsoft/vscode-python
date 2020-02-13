@@ -472,8 +472,8 @@ jobs:
       - name: Create a tag object
         # Curl syntax explanation: https://stackoverflow.com/a/36778045
         run: |
-        curl -s -X POST "https://api.github.com/repos/kimadeline/vscode-python/git/tags"\
-        -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" \
+        curl -s -X POST "https://api.github.com/repos/kimadeline/vscode-python/git/tags"
+        -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" 
         -d @- << EOF
         {
           "tag": "${{env.LKG_TAG}}",
@@ -485,8 +485,8 @@ jobs:
       
       - name: Create a tag reference
         run: |
-        curl -s -X POST "https://api.github.com/repos/kimadeline/vscode-python/git/refs"\
-        -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" \
+        curl -s -X POST "https://api.github.com/repos/kimadeline/vscode-python/git/refs"
+        -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" 
         -d @- << EOF
         {
           "ref": "refs/tags/${{env.LKG_TAG}}",
