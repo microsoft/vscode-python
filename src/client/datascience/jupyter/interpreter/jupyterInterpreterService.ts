@@ -25,6 +25,7 @@ export class JupyterInterpreterService {
     private _selectedInterpreter?: PythonInterpreter;
     private _selectedInterpreterPath?: string;
     private _onDidChangeInterpreter = new EventEmitter<PythonInterpreter>();
+    private validateSavedInterpreterPromise: Promise<boolean> | undefined;
     public get onDidChangeInterpreter(): Event<PythonInterpreter> {
         return this._onDidChangeInterpreter.event;
     }
@@ -38,6 +39,13 @@ export class JupyterInterpreterService {
         private readonly interpreterConfiguration: JupyterInterpreterDependencyService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
+    public async validateSavedInterpreter(): Promise<boolean> {
+        if (!this.validateSavedInterpreterPromise) {
+            this.validateSavedInterpreterPromise = this.validateSavedInterpreterImpl();
+        }
+
+        return this.validateSavedInterpreterPromise;
+    }
     /**
      * Gets the selected interpreter configured to run Jupyter.
      *
@@ -65,7 +73,17 @@ export class JupyterInterpreterService {
             return interpreter;
         }
 
-        const pythonPath = this._selectedInterpreterPath || this.interpreterSelectionState.selectedPythonPath;
+        let pythonPath = this._selectedInterpreterPath;
+
+        if (!pythonPath && this.interpreterSelectionState.selectedPythonPath) {
+            // On activate we kick off a check to see if the saved interpreter is still valid
+            // make sure that has completed before we actually use it as a valid interpreter
+            if (await this.validateSavedInterpreter()) {
+                pythonPath = this.interpreterSelectionState.selectedPythonPath;
+            }
+        }
+
+        // If nothing saved, then check our current interpreter to see if we can use it
         if (!pythonPath) {
             // Check if current interpreter has all of the required dependencies.
             // If yes, then use that.
@@ -182,5 +200,33 @@ export class JupyterInterpreterService {
         this._onDidChangeInterpreter.fire(interpreter);
         this.interpreterSelectionState.updateSelectedPythonPath((this._selectedInterpreterPath = interpreter.path));
         sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'selected' });
+    }
+
+    private async validateSavedInterpreterImpl(): Promise<boolean> {
+        if (!this.interpreterSelectionState.selectedPythonPath) {
+            // None set yet, so no need to check
+            return false;
+        }
+
+        try {
+            const interpreterDetails = await this.interpreterService.getInterpreterDetails(
+                this.interpreterSelectionState.selectedPythonPath,
+                undefined
+            );
+
+            if (interpreterDetails) {
+                if (await this.interpreterConfiguration.areDependenciesInstalled(interpreterDetails, undefined)) {
+                    // Our saved interpreter was found and has dependencies installed
+                    return true;
+                }
+            }
+        } catch (_err) {
+            traceInfo('Saved Jupyter interpreter invalid');
+        }
+
+        // At this point we failed some aspect of our checks regarding our saved interpreter, so clear it out
+        this._selectedInterpreter = undefined;
+        this.interpreterSelectionState.updateSelectedPythonPath(undefined);
+        return false;
     }
 }
