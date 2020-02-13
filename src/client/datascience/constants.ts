@@ -14,6 +14,7 @@ export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 // Python Module to be used when instantiating the Python Daemon.
 export const PythonDaemonModule = 'datascience.jupyter_daemon';
 
+// List of 'language' names that we know about. Some are dupes with lower case
 export const KnownNotebookLanguages: string[] = [
     'python',
     'R',
@@ -25,7 +26,16 @@ export const KnownNotebookLanguages: string[] = [
     'Haskell',
     'bash',
     'cling',
-    'SAS'
+    'SAS',
+    'Python',
+    'r',
+    'julia',
+    'c++',
+    'c#',
+    'f#',
+    'scala',
+    'haskell',
+    'sas'
 ];
 
 export namespace Commands {
