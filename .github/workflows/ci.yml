@@ -489,6 +489,6 @@ jobs:
           -d @- << EOF
           {
             "ref": "refs/tags/${{env.LKG_TAG}}",
-            "sha": "${{github.sha}}",
+            "sha": "${{github.sha}}"
           }
           EOF
