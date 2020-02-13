@@ -54,7 +54,7 @@ export class JupyterCommandInterpreterDependencyService implements IJupyterInter
                     installers[0]
                         .installModule(product)
                         .then(() => {
-                            sendTelemetryEvent(Telemetry.UserInstalledModule, stopWatch.elapsedTime, { product });
+                            sendTelemetryEvent(Telemetry.UserInstalledJupyter, stopWatch.elapsedTime);
                         })
                         .catch(e => {
                             sendTelemetryEvent(Telemetry.JupyterInstallFailed, undefined, { product });
