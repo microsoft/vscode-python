@@ -26,7 +26,7 @@ jobs:
     steps:
       - name: Delete existing tag
         run: |
-          curl -s -X DELETE https://api.github.com/repos/microsoft/vscode-python/git/refs/tags/${{env.LKG_TAG}} \
+          curl -s -X DELETE https://api.github.com/repos/kimadeline/vscode-python/git/refs/tags/${{env.LKG_TAG}} \
           -H "Authorization: token ${{secrets.GITHUB_TOKEN}}"
 
       # We need 2 calls when creating an annotated tag: first create the tag object, then the tag reference.
@@ -35,7 +35,7 @@ jobs:
       - name: Create a tag object
         # Curl syntax explanation: https://stackoverflow.com/a/36778045
         run: |
-          curl -s -X POST "https://api.github.com/repos/microsoft/vscode-python/git/tags" \
+          curl -s -X POST "https://api.github.com/repos/kimadeline/vscode-python/git/tags" \
           -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" \
           -d @- << EOF
           {
@@ -48,7 +48,7 @@ jobs:
 
       - name: Create a tag reference
         run: |
-          curl -s -X POST "https://api.github.com/repos/microsoft/vscode-python/git/refs" \
+          curl -s -X POST "https://api.github.com/repos/kimadeline/vscode-python/git/refs" \
           -H "Authorization: token ${{secrets.GITHUB_TOKEN}}"  \
           -d @- << EOF
           {
