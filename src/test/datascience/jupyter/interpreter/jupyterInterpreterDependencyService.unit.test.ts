@@ -4,32 +4,32 @@
 'use strict';
 
 import { assert } from 'chai';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { ProductInstaller } from '../../../../client/common/installer/productInstaller';
-import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
-import { IPythonExecutionService } from '../../../../client/common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../../../../client/common/types';
 import { DataScience } from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
-import { JupyterCommandFactory } from '../../../../client/datascience/jupyter/interpreter/jupyterCommand';
+import {
+    InterpreterJupyterKernelSpecCommand,
+    JupyterCommandFactory
+} from '../../../../client/datascience/jupyter/interpreter/jupyterCommand';
 import {
     JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService
 } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
-import { IJupyterCommandFactory } from '../../../../client/datascience/types';
+import { IJupyterCommand, IJupyterCommandFactory } from '../../../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 
-// tslint:disable: max-func-body-length
+// tslint:disable: max-func-body-length no-any
 
 suite('Data Science - Jupyter Interpreter Configuration', () => {
     let configuration: JupyterInterpreterDependencyService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
     let commandFactory: IJupyterCommandFactory;
-    let pythonExecService: IPythonExecutionService;
+    let command: IJupyterCommand;
     const pythonInterpreter: PythonInterpreter = {
         path: '',
         architecture: Architecture.Unknown,
@@ -41,14 +41,13 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
         appShell = mock(ApplicationShell);
         installer = mock(ProductInstaller);
         commandFactory = mock(JupyterCommandFactory);
-        pythonExecService = mock(PythonExecutionService);
-        const pythonExecFactory = mock(PythonExecutionFactory);
-        when(pythonExecFactory.createActivatedEnvironment(anything())).thenResolve(instance(pythonExecService));
-        // tslint:disable-next-line: no-any
-        instance(pythonExecService as any).then = undefined;
-        when(pythonExecService.execModule('jupyter', deepEqual(['kernelspec', '--version']), anything())).thenResolve({
-            stdout: ''
-        });
+        command = mock(InterpreterJupyterKernelSpecCommand);
+        instance(commandFactory as any).then = undefined;
+        instance(command as any).then = undefined;
+        when(
+            commandFactory.createInterpreterCommand(anything(), anything(), anything(), anything(), anything())
+        ).thenReturn(instance(command));
+        when(command.exec(anything(), anything())).thenResolve({ stdout: '' });
 
         configuration = new JupyterInterpreterDependencyService(
             instance(appShell),
@@ -95,9 +94,7 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
             // tslint:disable-next-line: no-any
             DataScience.jupyterInstall() as any
         );
-        when(pythonExecService.execModule('jupyter', deepEqual(['kernelspec', '--version']), anything())).thenReject(
-            new Error('Not found')
-        );
+        when(command.exec(anything(), anything())).thenReject(new Error('Not found'));
         when(installer.install(anything(), anything(), anything())).thenResolve(InstallerResponse.Installed);
 
         const response = await configuration.installMissingDependencies(pythonInterpreter);
