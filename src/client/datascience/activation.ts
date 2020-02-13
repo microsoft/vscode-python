@@ -28,6 +28,7 @@ export class Activation implements IExtensionSingleActivationService {
     public async activate(): Promise<void> {
         this.disposables.push(this.notebookProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
+        this.testSavedInterpreter();
         await this.contextService.activate();
     }
 
@@ -41,6 +42,11 @@ export class Activation implements IExtensionSingleActivationService {
         if (this.notebookOpened) {
             this.PreWarmDaemonPool().ignoreErrors();
         }
+    }
+
+    private testSavedInterpreter(): void {
+        // Do we have a saved interpreter? If so check it out to see if it's still valid
+        this.jupyterInterpreterService.checkSavedInterpreter().ignoreErrors();
     }
 
     @debounceAsync(500)

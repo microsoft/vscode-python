@@ -113,8 +113,8 @@ export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
     /**
      * Creates a daemon Python Process.
-     * On windows its cheapter to create a daemon and use that than spin up Python Processes everytime.
-     * If something cannot be executed within the daemin, it will resort to using the stanard IPythonExecutionService.
+     * On windows it's cheaper to create a daemon and use that than spin up Python Processes everytime.
+     * If something cannot be executed within the daemon, it will resort to using the standard IPythonExecutionService.
      * Note: The returned execution service is always using an activated environment.
      *
      * @param {ExecutionFactoryCreationOptions} options

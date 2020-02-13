@@ -8,6 +8,7 @@ import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import '../../../common/extensions';
+import { traceInfo } from '../../../common/logger';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
@@ -89,6 +90,36 @@ export class JupyterInterpreterService {
         }
         return interpreterDetails;
     }
+
+    // Verify if a saved global interpreter is still valid for use
+    // If not, then clear it out
+    public async checkSavedInterpreter(): Promise<void> {
+        if (!this.interpreterSelectionState.selectedPythonPath) {
+            // None set yet, so no need to check
+            return;
+        }
+
+        try {
+            const interpreterDetails = await this.interpreterService.getInterpreterDetails(
+                this.interpreterSelectionState.selectedPythonPath,
+                undefined
+            );
+
+            if (interpreterDetails) {
+                if (await this.interpreterConfiguration.areDependenciesInstalled(interpreterDetails, undefined)) {
+                    // Our saved interpreter was found and has dependencies installed
+                    return;
+                }
+            }
+        } catch (_err) {
+            traceInfo('Saved Jupyter interpreter invalid');
+        }
+
+        // At this point we failed some aspect of our checks regarding our saved interpreter, so clear it out
+        this._selectedInterpreter = undefined;
+        this.interpreterSelectionState.updateSelectedPythonPath(undefined);
+    }
+
     /**
      * Selects and interpreter to run jupyter server.
      * Validates and configures the interpreter.

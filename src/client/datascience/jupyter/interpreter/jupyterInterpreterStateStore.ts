@@ -11,11 +11,11 @@ import { noop } from '../../../common/utils/misc';
 const key = 'INTERPRETER_PATH_SELECTED_FOR_JUPYTER_SERVER';
 const keySelected = 'INTERPRETER_PATH_WAS_SELECTED_FOR_JUPYTER_SERVER';
 /**
- * Keeps track of whether the user ever selected an interpreter to be used as the gloabl jupyter interpreter.
+ * Keeps track of whether the user ever selected an interpreter to be used as the global jupyter interpreter.
  * Keeps track of the interpreter path of the interpreter used as the global jupyter interpreter.
  *
  * @export
- * @class JupyterInterpreterFinderEverSet
+ * @class JupyterInterpreterStateStore
  */
 @injectable()
 export class JupyterInterpreterStateStore {
@@ -27,7 +27,6 @@ export class JupyterInterpreterStateStore {
      *
      * @readonly
      * @type {Promise<boolean>}
-     * @memberof JupyterInterpreterFinderEverSet
      */
     public get interpreterSetAtleastOnce(): boolean {
         return !!this.selectedPythonPath || this.memento.get<boolean>(keySelected, false);
@@ -35,7 +34,7 @@ export class JupyterInterpreterStateStore {
     public get selectedPythonPath(): string | undefined {
         return this._interpreterPath || this.memento.get<string | undefined>(key, undefined);
     }
-    public updateSelectedPythonPath(value: string) {
+    public updateSelectedPythonPath(value: string | undefined) {
         this._interpreterPath = value;
         this.memento.update(key, value).then(noop, noop);
         this.memento.update(keySelected, true).then(noop, noop);
