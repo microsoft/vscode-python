@@ -433,7 +433,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, false)
+    @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     // tslint:disable-next-line:no-any
     protected async reexecuteCell(info: ISubmitNewCell): Promise<void> {
         try {

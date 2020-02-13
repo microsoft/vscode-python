@@ -15,7 +15,7 @@ import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
+import { KnownNotebookLanguages, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
@@ -299,7 +299,9 @@ export class KernelSelector {
             sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
             return this.useInterpreterAsKernel(selection.selection.interpreter, undefined, session, false, cancelToken);
         } else if (selection.selection.kernelModel) {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
+            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
+                language: this.computeLanguage(selection.selection.kernelModel.language)
+            });
             // tslint:disable-next-line: no-any
             const interpreter = selection.selection.kernelModel
                 ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelModel, cancelToken)
@@ -310,7 +312,9 @@ export class KernelSelector {
                 kernelModel: selection.selection.kernelModel
             };
         } else if (selection.selection.kernelSpec) {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
+            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
+                language: this.computeLanguage(selection.selection.kernelSpec.language)
+            });
             const interpreter = selection.selection.kernelSpec
                 ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken)
                 : undefined;
@@ -367,7 +371,12 @@ export class KernelSelector {
         }
 
         // Try an install this interpreter as a kernel.
-        kernelSpec = await this.kernelService.registerKernel(interpreter, disableUI, cancelToken);
+        try {
+            kernelSpec = await this.kernelService.registerKernel(interpreter, disableUI, cancelToken);
+        } catch (e) {
+            sendTelemetryEvent(Telemetry.KernelRegisterFailed);
+            throw e;
+        }
 
         // If we have a display name of a kernel that could not be found,
         // then notify user that we're using current interpreter instead.
@@ -386,5 +395,12 @@ export class KernelSelector {
         this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken).ignoreErrors();
 
         return { kernelSpec, interpreter };
+    }
+
+    private computeLanguage(language: string | undefined): string {
+        if (language && KnownNotebookLanguages.includes(language)) {
+            return language;
+        }
+        return 'unknown';
     }
 }

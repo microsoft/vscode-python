@@ -1465,7 +1465,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
     [Telemetry.UseInterpreterAsKernel]: never | undefined;
     [Telemetry.UseExistingKernel]: never | undefined;
-    [Telemetry.SwitchToExistingKernel]: never | undefined;
+    [Telemetry.SwitchToExistingKernel]: { language: string };
     [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
     [Telemetry.ConvertToPythonFile]: never | undefined;
     [Telemetry.CopySourceCode]: never | undefined;
@@ -1752,7 +1752,7 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent to indicate the language used in a notebook
      *
-     * @type {(undefined | never)}
+     * @type { language: string }
      * @memberof IEventNamePropertyMapping
      */
     [Telemetry.NotebookLanguage]: {
@@ -1761,4 +1761,57 @@ export interface IEventNamePropertyMapping {
          */
         language: string;
     };
+    /**
+     * Telemetry event sent to indicate 'jupyter kernelspec' is not possible.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.KernelSpecNotFound]: undefined | never;
+    /**
+     * Telemetry event sent to indicate registering a kernel with jupyter failed.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.KernelRegisterFailed]: undefined | never;
+    /**
+     * Telemetry event sent to every time a kernel enumeration is done
+     *
+     * @type {...}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.KernelEnumeration]: {
+        /**
+         * Count of the number of kernels found
+         */
+        count: number;
+        /**
+         * Boolean indicating if any are python or not
+         */
+        isPython: boolean;
+        /**
+         * Indicates how the enumeration was acquired.
+         */
+        source: 'cli' | 'connection';
+    };
+    /**
+     * Telemetry event sent if there's an error installing a jupyter required dependency
+     *
+     * @type { product: string }
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.JupyterInstallFailed]: {
+        /**
+         * Product being installed (jupyter or ipykernel or other)
+         */
+        product: string;
+    };
+    /**
+     * Telemetry event sent when installing a jupyter dependency
+     *
+     * @type {product: string}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.UserInstalledModule]: { product: string };
 }

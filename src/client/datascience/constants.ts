@@ -259,7 +259,12 @@ export enum Telemetry {
     FindKernelForLocalConnection = 'DS_INTERNAL.FIND_KERNEL_FOR_LOCAL_CONNECTION',
     CompletionTimeFromLS = 'DS_INTERNAL.COMPLETION_TIME_FROM_LS',
     CompletionTimeFromJupyter = 'DS_INTERNAL.COMPLETION_TIME_FROM_JUPYTER',
-    NotebookLanguage = 'DATASCIENCE.NOTEBOOK_LANGUAGE'
+    NotebookLanguage = 'DATASCIENCE.NOTEBOOK_LANGUAGE',
+    KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
+    KernelRegisterFailed = 'DS_INTERNAL.KERNEL_REGISTER_FAILED',
+    KernelEnumeration = 'DS_INTERNAL.KERNEL_ENUMERATION',
+    JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
+    UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE'
 }
 
 export enum NativeKeyboardCommandTelemetry {

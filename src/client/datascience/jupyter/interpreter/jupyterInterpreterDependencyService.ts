@@ -303,7 +303,10 @@ export class JupyterInterpreterDependencyService {
         return execService
             .execModule('jupyter', ['kernelspec', '--version'], { throwOnStdErr: true })
             .then(() => true)
-            .catch(() => false);
+            .catch(() => {
+                sendTelemetryEvent(Telemetry.KernelSpecNotFound);
+                return false;
+            });
     }
 
     /**
