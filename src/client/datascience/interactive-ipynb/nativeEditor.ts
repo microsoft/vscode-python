@@ -663,7 +663,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             } else if (notebookJson.metadata?.kernelspec?.language) {
                 language = notebookJson.metadata?.kernelspec?.language.toString();
             }
-            if (language && !KnownNotebookLanguages.includes(language)) {
+            if (language && !KnownNotebookLanguages.includes(language.toLowerCase())) {
                 language = 'unknown';
             }
             if (language) {

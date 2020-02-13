@@ -398,7 +398,7 @@ export class KernelSelector {
     }
 
     private computeLanguage(language: string | undefined): string {
-        if (language && KnownNotebookLanguages.includes(language)) {
+        if (language && KnownNotebookLanguages.includes(language.toLowerCase())) {
             return language;
         }
         return 'unknown';
