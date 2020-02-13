@@ -126,6 +126,7 @@ steps:
     # Downgrade pywin32 on Windows due to bug https://github.com/jupyter/notebook/issues/4909
     #
     # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+    # TODO: Why only Python 3.6?
     - bash: |
           python -m pip install --upgrade pywin32==224
       displayName: 'Downgrade pywin32 on Windows / Python 3.6'
@@ -151,13 +152,15 @@ steps:
       displayName: 'pip install jupyter'
       condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'), contains(variables['TestsToRun'], 'testSmoke'))
 
+    # This matters for 3.7+ because that's the version the script
+    # was written against.
     - task: PythonScript@0
       displayName: 'Install PTVSD wheels'
       inputs:
           scriptSource: 'filePath'
           scriptPath: './pythonFiles/install_ptvsd.py'
           failOnStderr: true
-      condition: and(eq(variables['NeedsPythonTestReqs'], 'true'), eq(variables['PythonVersion'], '3.7'))
+      condition: and(eq(variables['NeedsPythonTestReqs'], 'true'), or(eq(variables['PythonVersion'], '3.7'), eq(variables['PythonVersion'], '3.8')))
 
     # Run the Python unit tests in our codebase. Produces a JUnit-style log file that
     # will be uploaded after all tests are complete.

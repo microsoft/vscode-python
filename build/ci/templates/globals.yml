@@ -1,5 +1,5 @@
 variables:
-  PythonVersion: '3.7' # Always use latest version.
+  PythonVersion: '3.8' # Always use latest version.
   NodeVersion: '12.4.0' # Check version of node used in VS Code.
   NpmVersion: '6.13.4'
   MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.

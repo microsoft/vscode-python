@@ -50,19 +50,19 @@ stages:
         # No need to run tests against all versions.
         # This is faster/cheaper, besides activation of terminals is generic enough
         # not to warrant testing against all versions.
-        ignorePythonVersions: "3.6,3.5"
+        ignorePythonVersions: "3.7,3.6,3.5"
       - test: "Debugging"
         tags: "@debugging"
         # No need to run tests against all versions.
         # This is faster/cheaper, and these are external packages.
         # We expect them to work (or 3rd party packages to test against all PY versions).
-        ignorePythonVersions: "3.6,3.5"
+        ignorePythonVersions: "3.7,3.6,3.5"
       - test: "Jedi_Language_Server"
         tags: "@ls"
         # No need to run tests against all versions.
         # This is faster/cheaper, and these are external packages.
         # We expect them to work (or 3rd party packages to test against all PY versions).
-        ignorePythonVersions: "3.6,3.5"
+        ignorePythonVersions: "3.7,3.6,3.5"
 
 - stage: Reports
   dependsOn:

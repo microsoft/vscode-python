@@ -8,7 +8,7 @@
 # 4. Setup CI_PYTHON_PATH for extension       - Export Env variable that'll be used by a seprate step.
 #                                               Note: This env variable is NOT used by any Code (used purely in the Azdo step further below).
 # 5. Use Python 2.7                           - Ensure minimum version of Python (2.7) is available on CI for Python Extension.
-# 6. Use Python 3.7                           - Ensure latest version of Python (3.7) is available on CI for Python Extension.
+# 6. Use Python 3.8                           - Ensure latest version of Python (3.8) is available on CI for Python Extension.
 # 7. npm ci                                   - Install npm packages for some JS scripts used in testing (NOT for extension).
 # 8. Show Dependency Versions                 - Logging.
 # 9. Start xvfb                               - Start in-memory display server (for launching VSC).
@@ -41,16 +41,16 @@
 #   VM Image to be used (standard Azure Devops variable).
 
 steps:
-    # Some tests need to have both 2.7 & 3.7 available.
+    # Some tests need to have both 2.7 & 3.8 available.
     - task: UsePythonVersion@0
       displayName: 'Use Python 2.7'
       inputs:
           versionSpec: 2.7
 
     - task: UsePythonVersion@0
-      displayName: 'Use Python 3.7'
+      displayName: 'Use Python 3.8'
       inputs:
-          versionSpec: 3.7
+          versionSpec: 3.8
 
     # Setup python environment in current path for extension to use.
     - template: initialization.yml

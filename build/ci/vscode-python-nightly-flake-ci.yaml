@@ -55,8 +55,7 @@ stages:
         ## Virtual Environment Tests:
 
         # Functional tests (not mocked Jupyter)
-        'Windows-Py3.7 Functional':
-          PythonVersion: '3.7'
+        'Windows-Py3.x Functional':
           VMImageName: 'vs2017-win2016'
           TestsToRun: 'testfunctional'
           NeedsPythonTestReqs: true
@@ -64,16 +63,14 @@ stages:
           # This tells the functional tests to not mock out Jupyter...
           VSCODE_PYTHON_ROLLING: true
           VSC_PYTHON_LOG_TELEMETRY: true
-        'Linux-Py3.7 Functional':
-          PythonVersion: '3.7'
+        'Linux-Py3.x Functional':
           VMImageName: 'ubuntu-16.04'
           TestsToRun: 'testfunctional'
           NeedsPythonTestReqs: true
           NeedsPythonFunctionalReqs: true
           VSCODE_PYTHON_ROLLING: true
           VSC_PYTHON_LOG_TELEMETRY: true
-        'Mac-Py3.7 Functional':
-          PythonVersion: '3.7'
+        'Mac-Py3.x Functional':
           VMImageName: 'macos-10.13'
           TestsToRun: 'testfunctional'
           NeedsPythonTestReqs: true

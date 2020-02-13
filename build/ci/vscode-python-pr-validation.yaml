@@ -39,8 +39,7 @@ stages:
         # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
         # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
         # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
-        'Win-Py3.7 Unit':
-          PythonVersion: '3.7'
+        'Win-Py3.x Unit':
           VMImageName: 'vs2017-win2016'
           TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
           NeedsPythonTestReqs: true
@@ -49,13 +48,11 @@ stages:
           VMImageName: 'vs2017-win2016'
           TestsToRun: 'pythonUnitTests'
           NeedsPythonTestReqs: true
-        'Mac-Py3.7 Unit':
-          PythonVersion: '3.7'
+        'Mac-Py3.x Unit':
           VMImageName: 'macos-10.13'
           TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
           NeedsPythonTestReqs: true
-        'Mac-Py3.7 Single Workspace':
-          PythonVersion: '3.7'
+        'Mac-Py3.x Single Workspace':
           VMImageName: 'macos-10.13'
           TestsToRun: 'testSingleWorkspace'
           NeedsPythonTestReqs: true
@@ -64,13 +61,11 @@ stages:
           VMImageName: 'macos-10.13'
           TestsToRun: 'pythonUnitTests, testSingleWorkspace'
           NeedsPythonTestReqs: true
-        'Linux-Py3.7 Unit':
-          PythonVersion: '3.7'
+        'Linux-Py3.x Unit':
           VMImageName: 'ubuntu-16.04'
           TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
           NeedsPythonTestReqs: true
-        'Linux-Py3.7 Single Workspace':
-          PythonVersion: '3.7'
+        'Linux-Py3.x Single Workspace':
           VMImageName: 'ubuntu-16.04'
           TestsToRun: 'testSingleWorkspace'
           NeedsPythonTestReqs: true
@@ -79,8 +74,7 @@ stages:
           VMImageName: 'ubuntu-16.04'
           TestsToRun: 'pythonUnitTests, testSingleWorkspace'
           NeedsPythonTestReqs: true
-        'Linux-Py3.7 Functional':
-          PythonVersion: '3.7'
+        'Linux-Py3.x Functional':
           VMImageName: 'ubuntu-16.04'
           TestsToRun: 'testfunctional'
           NeedsPythonTestReqs: true
@@ -99,20 +93,17 @@ stages:
     dependsOn: []
     strategy:
       matrix:
-        'Mac-Py3.7':
-            PythonVersion: '3.7'
+        'Mac-Py3.x':
             VMImageName: 'macos-10.13'
             TestsToRun: 'testSmoke'
             NeedsPythonTestReqs: true
             NeedsIPythonReqs: true
-        'Linux-Py3.7':
-            PythonVersion: '3.7'
+        'Linux-Py3.x':
             VMImageName: 'ubuntu-16.04'
             TestsToRun: 'testSmoke'
             NeedsPythonTestReqs: true
             NeedsIPythonReqs: true
-        'Win-Py3.7':
-            PythonVersion: '3.7'
+        'Win-Py3.x':
             VMImageName: 'vs2017-win2016'
             TestsToRun: 'testSmoke'
             NeedsPythonTestReqs: true
