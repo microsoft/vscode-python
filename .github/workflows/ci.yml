@@ -4,7 +4,8 @@ on:
   push:
     branches:
       # Run the CI workflow only on master for microsoft/vscode-python for now.
-      - master
+      - gh-action-*
+      # - master
 
 env:
   PYTHON_VERSION: 3.8
@@ -454,8 +455,8 @@ jobs:
     # LKG = last known good
     name: Tag successful build as LKG
     runs-on: ubuntu-latest
-    needs: [tests, smoke-tests]
-    if: github.repository == 'microsoft/vscode-python'
+    # needs: [tests, smoke-tests]
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Delete existing tag
         run: |
