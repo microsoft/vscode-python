@@ -176,6 +176,11 @@ export interface ISubmitNewCell {
     id: string;
 }
 
+export interface IReExecuteCell {
+    newCode: string;
+    cell: ICell;
+}
+
 export interface IProvideCompletionItemsRequest {
     position: monacoEditor.Position;
     context: monacoEditor.languages.CompletionContext;
@@ -365,7 +370,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
     public [InteractiveWindowMessages.LoadAllCellsComplete]: ILoadAllCells;
     public [InteractiveWindowMessages.ScrollToCell]: IScrollToCell;
-    public [InteractiveWindowMessages.ReExecuteCell]: ISubmitNewCell;
+    public [InteractiveWindowMessages.ReExecuteCell]: IReExecuteCell;
     public [InteractiveWindowMessages.NotebookIdentity]: INotebookIdentity;
     public [InteractiveWindowMessages.NotebookDirty]: never | undefined;
     public [InteractiveWindowMessages.NotebookClean]: never | undefined;

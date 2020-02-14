@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
-import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 import {
     IApplicationShell,
     ICommandManager,
@@ -172,7 +172,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return super.show();
     }
 
-    public async addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+    public async addCode(code: string, file: string, line: number): Promise<boolean> {
         // Save the last file we ran with.
         this.lastFile = file;
 
@@ -183,7 +183,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.updateCwd(path.dirname(file));
 
         // Call the internal method.
-        return this.submitCode(code, file, line, undefined, editor, false);
+        return this.submitCode(code, file, line);
     }
 
     public exportCells() {
@@ -212,7 +212,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    public async debugCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+    public async debugCode(code: string, file: string, line: number): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
         const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, file));
@@ -231,16 +231,13 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
                     // Open the new document
                     await this.documentManager.openTextDocument(file);
-
-                    // Change the editor to the new file
-                    editor = this.documentManager.visibleTextEditors.find(e => e.document.fileName === file);
                 }
             }
         }
 
         // Call the internal method if we were able to save
         if (saved) {
-            return this.submitCode(code, file, line, undefined, editor, true);
+            return this.submitCode(code, file, line, undefined, undefined, true);
         }
 
         return false;
@@ -271,7 +268,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // If there's any payload, it has the code and the id
         if (info && info.code && info.id) {
             // Send to ourselves.
-            this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id, undefined).ignoreErrors();
+            this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id).ignoreErrors();
 
             // Activate the other side, and send as if came from a file
             this.interactiveWindowProvider
