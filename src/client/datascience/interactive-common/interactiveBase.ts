@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
+    commands,
     ConfigurationTarget,
     Event,
     EventEmitter,
@@ -297,6 +298,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.handleMessage(message, payload, this.selectServer);
                 break;
 
+            case InteractiveWindowMessages.OpenSettings:
+                this.handleMessage(message, payload, this.openSettings);
+                break;
             default:
                 break;
         }
@@ -1448,5 +1452,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
     private async kernelChangeHandler(_kernel: IJupyterKernelSpec | LiveKernelModel) {
         await this.addSysInfo(SysInfoReason.New);
+    }
+
+    private openSettings(setting: string | undefined) {
+        if (setting) {
+            commands.executeCommand('workbench.action.openSettings', setting);
+        } else {
+            commands.executeCommand('workbench.action.openSettings');
+        }
     }
 }

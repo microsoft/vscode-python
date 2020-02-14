@@ -2,11 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 import { Identifiers } from '../../../../client/datascience/constants';
+import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
 import { IMainState } from '../../../interactive-common/mainState';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { storeLocStrings } from '../../../react-common/locReactSide';
+import { createPostableAction } from '../postOffice';
 import { CommonReducerArg } from './types';
 
 export namespace CommonEffects {
@@ -116,5 +118,11 @@ export namespace CommonEffects {
             ...prevState,
             focusPending: prevState.focusPending + 1
         };
+    }
+
+    export function openSettings<T>(arg: CommonReducerArg<T>): IMainState {
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.OpenSettings));
+
+        return arg.prevState;
     }
 }

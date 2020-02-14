@@ -31,6 +31,7 @@ interface ICellOutputProps {
     hideOutput?: boolean;
     themeMatplotlibPlots?: boolean;
     expandImage(imageHtml: string): void;
+    openSettings(setting?: string): void;
 }
 
 interface ICellOutputData {
@@ -173,6 +174,22 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
 
+    private getTrimMessage() {
+        const newLine = '\n...\n';
+        return (
+            <a onClick={this.changeTextOutputLimit} role="button" className="image-button-image">
+                {getLocString(
+                    'DataScience.trimmedOutput',
+                    'Output was trimmed for performance reasons.\nTo see the full output set the setting "python.dataScience.textOutputLimit" to 0.'
+                ) + newLine}
+            </a>
+        );
+    }
+
+    private changeTextOutputLimit = () => {
+        this.props.openSettings('python.dataScience.textOutputLimit');
+    };
+
     private getCell = () => {
         return this.props.cellVM.cell;
     };
@@ -210,8 +227,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
     private renderCodeOutputs = () => {
         if (this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && !this.props.hideOutput) {
+            const trim = this.props.cellVM.cell.data.metadata.tags ? this.props.cellVM.cell.data.metadata.tags[0] : '';
             // Render the outputs
-            return this.renderOutputs(this.getCodeCell().outputs);
+            return this.renderOutputs(this.getCodeCell().outputs, trim);
         }
 
         return [];
@@ -405,11 +423,11 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     }
 
     // tslint:disable-next-line: max-func-body-length
-    private renderOutputs(outputs: nbformat.IOutput[]): JSX.Element[] {
-        return [this.renderOutput(outputs)];
+    private renderOutputs(outputs: nbformat.IOutput[], trim: string): JSX.Element[] {
+        return [this.renderOutput(outputs, trim)];
     }
 
-    private renderOutput = (outputs: nbformat.IOutput[]): JSX.Element => {
+    private renderOutput = (outputs: nbformat.IOutput[], trim: string): JSX.Element => {
         const buffer: JSX.Element[] = [];
         const transformedList = outputs.map(this.transformOutput.bind(this));
 
@@ -435,12 +453,22 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         </div>
                     );
                 } else {
-                    buffer.push(
-                        <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
-                            {transformed.extraButton}
-                            <Transform data={transformed.output.data} />
-                        </div>
-                    );
+                    if (trim === 'outputPrepend') {
+                        buffer.push(
+                            <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
+                                {transformed.extraButton}
+                                {this.getTrimMessage()}
+                                <Transform data={transformed.output.data} />
+                            </div>
+                        );
+                    } else {
+                        buffer.push(
+                            <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
+                                {transformed.extraButton}
+                                <Transform data={transformed.output.data} />
+                            </div>
+                        );
+                    }
                 }
             } else if (mimetype.startsWith('application/scrapbook.scrap.')) {
                 // Silently skip rendering of these mime types, render an empty div so the user sees the cell was executed.
