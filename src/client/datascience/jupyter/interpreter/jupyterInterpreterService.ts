@@ -24,7 +24,7 @@ import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 export class JupyterInterpreterService {
     private _selectedInterpreter?: PythonInterpreter;
     private _onDidChangeInterpreter = new EventEmitter<PythonInterpreter>();
-    private setInitialInterpreterPromise: Promise<PythonInterpreter | undefined> | undefined;
+    private getInitialInterpreterPromise: Promise<PythonInterpreter | undefined> | undefined;
     public get onDidChangeInterpreter(): Event<PythonInterpreter> {
         return this._onDidChangeInterpreter.event;
     }
@@ -47,6 +47,8 @@ export class JupyterInterpreterService {
      */
     public async getSelectedInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
         // Before we return _selected interpreter make sure that we have run our initial set interpreter once
+        // because _selectedInterpreter can be changed by other function and at other times, this promise
+        // is cached to only run once
         await this.setInitialInterpreter(token);
 
         return this._selectedInterpreter;
@@ -55,11 +57,17 @@ export class JupyterInterpreterService {
     // To be run one initial time. Check our saved locations and then current interpreter to try to start off
     // with a valid jupyter interpreter
     public async setInitialInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
-        if (!this.setInitialInterpreterPromise) {
-            this.setInitialInterpreterPromise = this.setInitialInterpreterImpl(token);
+        if (!this.getInitialInterpreterPromise) {
+            this.getInitialInterpreterPromise = this.getInitialInterpreterImpl(token).then(result => {
+                // Set ourselves as a valid interpreter if we found something
+                if (result) {
+                    this.changeSelectedInterpreterProperty(result);
+                }
+                return result;
+            });
         }
 
-        return this.setInitialInterpreterPromise;
+        return this.getInitialInterpreterPromise;
     }
 
     /**
@@ -89,9 +97,7 @@ export class JupyterInterpreterService {
         const result = await this.interpreterConfiguration.installMissingDependencies(interpreter, undefined, token);
         switch (result) {
             case JupyterInterpreterDependencyResponse.ok: {
-                // Make sure that we have set our initial path before the user sets it
-                await this.setInitialInterpreter(token);
-                this.setAsSelectedInterpreter(interpreter);
+                await this.setAsSelectedInterpreter(interpreter);
                 return interpreter;
             }
             case JupyterInterpreterDependencyResponse.cancel:
@@ -116,7 +122,14 @@ export class JupyterInterpreterService {
     }
 
     // Set the specified interpreter as our current selected interpreter
-    private setAsSelectedInterpreter(interpreter: PythonInterpreter): void {
+    private async setAsSelectedInterpreter(interpreter: PythonInterpreter): Promise<void> {
+        // Make sure that our initial set has happened before we allow a set so that
+        // calculation of the initial interpreter doesn't clobber the existing one
+        await this.setInitialInterpreter();
+        this.changeSelectedInterpreterProperty(interpreter);
+    }
+
+    private changeSelectedInterpreterProperty(interpreter: PythonInterpreter) {
         this._selectedInterpreter = interpreter;
         this._onDidChangeInterpreter.fire(interpreter);
         this.interpreterSelectionState.updateSelectedPythonPath(interpreter.path);
@@ -154,7 +167,7 @@ export class JupyterInterpreterService {
         return undefined;
     }
 
-    private async setInitialInterpreterImpl(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    private async getInitialInterpreterImpl(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
         let interpreter: PythonInterpreter | undefined;
 
         // Check the old version location first, we will clear it if we find it here
@@ -183,11 +196,6 @@ export class JupyterInterpreterService {
                     interpreter = currentInterpreter;
                 }
             }
-        }
-
-        // Set ourselves as a valid interpreter
-        if (interpreter) {
-            this.setAsSelectedInterpreter(interpreter);
         }
 
         return interpreter;
