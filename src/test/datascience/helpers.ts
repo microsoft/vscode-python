@@ -31,6 +31,7 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         enablePlotViewer: true,
         runStartupCommands: '',
         debugJustMyCode: true,
-        variableQueries: []
+        variableQueries: [],
+        jupyterCommandLineArguments: []
     };
 }

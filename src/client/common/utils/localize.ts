@@ -763,6 +763,33 @@ export namespace DataScience {
         'DataScience.trimmedOutput',
         'Output was trimmed for performance reasons.\nTo see the full output set the setting "python.dataScience.textOutputLimit" to 0.'
     );
+    export const jupyterCommandLineDefaultLabel = localize('DataScience.jupyterCommandLineDefaultLabel', 'Default');
+    export const jupyterCommandLineDefaultDetail = localize(
+        'DataScience.jupyterCommandLineDefaultDetail',
+        'The Python extension will determine the appropriate command line for Jupyter'
+    );
+    export const jupyterCommandLineCustomLabel = localize('DataScience.jupyterCommandLineCustomLabel', 'Custom');
+    export const jupyterCommandLineCustomDetail = localize(
+        'DataScience.jupyterCommandLineCustomDetail',
+        'Customize the command line passed to Jupyter on startup'
+    );
+    export const jupyterCommandLineReloadQuestion = localize(
+        'DataScience.jupyterCommandLineReloadQuestion',
+        'Please reload the window when changing the Jupyter command line.'
+    );
+    export const jupyterCommandLineReloadAnswer = localize('DataScience.jupyterCommandLineReloadAnswer', 'Reload');
+    export const jupyterCommandLineQuickPickPlaceholder = localize(
+        'DataScience.jupyterCommandLineQuickPickPlaceholder',
+        'Choose an option'
+    );
+    export const jupyterCommandLineQuickPickTitle = localize(
+        'DataScience.jupyterCommandLineQuickPickTitle',
+        'Pick command line for Jupyter'
+    );
+    export const jupyterCommandLinePrompt = localize(
+        'DataScience.jupyterCommandLinePrompt',
+        'Enter your custom command line for Jupyter'
+    );
 }
 
 export namespace DebugConfigStrings {

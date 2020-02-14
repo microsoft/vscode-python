@@ -5,6 +5,7 @@ import * as os from 'os';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
+import { Telemetry } from '../../datascience/constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
@@ -27,6 +28,7 @@ import {
     ProductType
 } from '../types';
 import { isResource } from '../utils/misc';
+import { StopWatch } from '../utils/stopWatch';
 import { ProductNames } from './productNames';
 import { IInstallationChannelManager, InterpreterUri, IProductPathService, IProductService } from './types';
 
@@ -355,7 +357,22 @@ export class DataScienceInstaller extends BaseInstaller {
             'Yes',
             'No'
         );
-        return item === 'Yes' ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
+        if (item === 'Yes') {
+            const stopWatch = new StopWatch();
+            try {
+                const response = await this.install(product, resource, cancel);
+                const event =
+                    product === Product.jupyter ? Telemetry.UserInstalledJupyter : Telemetry.UserInstalledModule;
+                sendTelemetryEvent(event, stopWatch.elapsedTime, { product: productName });
+                return response;
+            } catch (e) {
+                if (product === Product.jupyter) {
+                    sendTelemetryEvent(Telemetry.JupyterInstallFailed);
+                }
+                throw e;
+            }
+        }
+        return InstallerResponse.Ignore;
     }
 }
 

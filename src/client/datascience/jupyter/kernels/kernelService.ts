@@ -424,7 +424,17 @@ export class KernelService {
             return [];
         }
         const specs: IJupyterKernelSpec[] = await enumerator;
-        return specs.filter(item => !!item);
+        const result = specs.filter(item => !!item);
+
+        // Send telemetry on this enumeration.
+        const anyPython = result.find(k => k.language === 'python') !== undefined;
+        sendTelemetryEvent(Telemetry.KernelEnumeration, undefined, {
+            count: result.length,
+            isPython: anyPython,
+            source: sessionManager ? 'connection' : 'cli'
+        });
+
+        return result;
     }
     /**
      * Not all characters are allowed in a kernel name.

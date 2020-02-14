@@ -290,7 +290,8 @@ suite('Python Settings', async () => {
             enablePlotViewer: true,
             runStartupCommands: '',
             debugJustMyCode: true,
-            variableQueries: []
+            variableQueries: [],
+            jupyterCommandLineArguments: []
         };
         expected.pythonPath = 'python3';
         // tslint:disable-next-line:no-any

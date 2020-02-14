@@ -9,6 +9,7 @@ import { ProductNames } from '../../../common/installer/productNames';
 import { IInstallationChannelManager } from '../../../common/installer/types';
 import { Product } from '../../../common/types';
 import { DataScience } from '../../../common/utils/localize';
+import { StopWatch } from '../../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
 import { IJupyterInterpreterDependencyManager } from '../../types';
@@ -37,20 +38,28 @@ export class JupyterCommandInterpreterDependencyService implements IJupyterInter
                 // If Conda is available, always pick it as the user must have a Conda Environment
                 const installer = installers.find(ins => ins.name === 'Conda');
                 const product = ProductNames.get(Product.jupyter);
+                const stopWatch = new StopWatch();
 
                 if (installer && product) {
-                    sendTelemetryEvent(Telemetry.UserInstalledJupyter);
                     installer
                         .installModule(product)
-                        .catch(e =>
-                            this.applicationShell.showErrorMessage(e.message, DataScience.pythonInteractiveHelpLink())
-                        );
+                        .then(() => {
+                            sendTelemetryEvent(Telemetry.UserInstalledJupyter, stopWatch.elapsedTime);
+                        })
+                        .catch(e => {
+                            sendTelemetryEvent(Telemetry.JupyterInstallFailed, undefined, { product });
+                            this.applicationShell.showErrorMessage(e.message, DataScience.pythonInteractiveHelpLink());
+                        });
                 } else if (installers[0] && product) {
                     installers[0]
                         .installModule(product)
-                        .catch(e =>
-                            this.applicationShell.showErrorMessage(e.message, DataScience.pythonInteractiveHelpLink())
-                        );
+                        .then(() => {
+                            sendTelemetryEvent(Telemetry.UserInstalledJupyter, stopWatch.elapsedTime);
+                        })
+                        .catch(e => {
+                            sendTelemetryEvent(Telemetry.JupyterInstallFailed, undefined, { product });
+                            this.applicationShell.showErrorMessage(e.message, DataScience.pythonInteractiveHelpLink());
+                        });
                 }
             }
         } else if (response === DataScience.notebookCheckForImportNo()) {

@@ -222,37 +222,59 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
             return output;
         }
 
-        // We're only interested in `python -m jupyter kernelspec list --json`
+        const defaultAction = () => {
+            if (exception) {
+                throw exception;
+            }
+            return output;
+        };
+
+        // We're only interested in `python -m jupyter kernelspec`
         const interpreter = await this.interpreter();
         if (
             !interpreter ||
             this.moduleName.toLowerCase() !== 'jupyter' ||
-            this.args.join(' ').toLowerCase() !== `-m jupyter ${JupyterCommands.KernelSpecCommand}`.toLowerCase() ||
-            args.join(' ').toLowerCase() !== 'list --json'
+            this.args.join(' ').toLowerCase() !== `-m jupyter ${JupyterCommands.KernelSpecCommand}`.toLowerCase()
         ) {
-            if (exception) {
-                throw exception;
-            }
-            return output;
+            return defaultAction();
         }
+
+        // Otherwise try running a script instead.
         try {
-            // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
-            const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
-                interpreter,
-                bypassCondaExecution: true
-            });
-            return activatedEnv.exec(
-                [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterKernels.py')],
-                { ...options, throwOnStdErr: true }
-            );
+            if (args.join(' ').toLowerCase() === 'list --json') {
+                // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
+                return this.getKernelSpecList(interpreter, options);
+            } else if (args.join(' ').toLowerCase() === '--version') {
+                // Try getting kernelspec version using python script, if that fails (even if there's output in stderr) rethrow original exception.
+                return this.getKernelSpecVersion(interpreter, options);
+            }
         } catch (innerEx) {
             traceError('Failed to get a list of the kernelspec using python script', innerEx);
-            // Rethrow original exception.
-            if (exception) {
-                throw exception;
-            }
-            return output;
         }
+        return defaultAction();
+    }
+
+    private async getKernelSpecList(interpreter: PythonInterpreter, options: SpawnOptions) {
+        // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
+        const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
+            interpreter,
+            bypassCondaExecution: true
+        });
+        return activatedEnv.exec(
+            [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterKernels.py')],
+            { ...options, throwOnStdErr: true }
+        );
+    }
+    private async getKernelSpecVersion(interpreter: PythonInterpreter, options: SpawnOptions) {
+        // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
+        const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
+            interpreter,
+            bypassCondaExecution: true
+        });
+        return activatedEnv.exec(
+            [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterKernelspecVersion.py')],
+            { ...options, throwOnStdErr: true }
+        );
     }
 }
 

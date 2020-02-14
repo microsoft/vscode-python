@@ -15,7 +15,7 @@ import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
+import { KnownNotebookLanguages, Telemetry } from '../../constants';
 import { reportAction } from '../../progress/decorator';
 import { ReportableAction } from '../../progress/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
@@ -90,13 +90,21 @@ export class KernelSelector {
      * @memberof KernelSelector
      */
     public async selectRemoteKernel(
+        stopWatch: StopWatch,
         session: IJupyterSessionManager,
         cancelToken?: CancellationToken,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
-        return this.selectKernel(suggestions, session, cancelToken, currentKernel);
+        return this.selectKernel(
+            stopWatch,
+            Telemetry.SelectRemoteJupyterKernel,
+            suggestions,
+            session,
+            cancelToken,
+            currentKernel
+        );
     }
     /**
      * Select a kernel from a local session.
@@ -107,13 +115,21 @@ export class KernelSelector {
      * @memberof KernelSelector
      */
     public async selectLocalKernel(
+        stopWatch: StopWatch,
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
-        return this.selectKernel(suggestions, session, cancelToken, currentKernel);
+        return this.selectKernel(
+            stopWatch,
+            Telemetry.SelectLocalJupyterKernel,
+            suggestions,
+            session,
+            cancelToken,
+            currentKernel
+        );
     }
     /**
      * Gets a kernel that needs to be used with a local session.
@@ -168,7 +184,7 @@ export class KernelSelector {
                     );
                 } else {
                     telemetryProps.promptedToSelect = true;
-                    selection = await this.selectLocalKernel(sessionManager, cancelToken);
+                    selection = await this.selectLocalKernel(stopWatch, sessionManager, cancelToken);
                 }
             }
         } else {
@@ -263,6 +279,8 @@ export class KernelSelector {
         };
     }
     private async selectKernel(
+        stopWatch: StopWatch,
+        telemetryEvent: Telemetry,
         suggestions: IKernelSpecQuickPickItem[],
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken,
@@ -271,6 +289,7 @@ export class KernelSelector {
         const placeHolder =
             localize.DataScience.selectKernel() +
             (currentKernel ? ` (current: ${currentKernel.display_name || currentKernel.name})` : '');
+        sendTelemetryEvent(telemetryEvent, stopWatch.elapsedTime);
         const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder }, cancelToken);
         if (!selection?.selection) {
             return {};
@@ -280,7 +299,9 @@ export class KernelSelector {
             sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
             return this.useInterpreterAsKernel(selection.selection.interpreter, undefined, session, false, cancelToken);
         } else if (selection.selection.kernelModel) {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
+            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
+                language: this.computeLanguage(selection.selection.kernelModel.language)
+            });
             // tslint:disable-next-line: no-any
             const interpreter = selection.selection.kernelModel
                 ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelModel, cancelToken)
@@ -291,7 +312,9 @@ export class KernelSelector {
                 kernelModel: selection.selection.kernelModel
             };
         } else if (selection.selection.kernelSpec) {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
+            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
+                language: this.computeLanguage(selection.selection.kernelSpec.language)
+            });
             const interpreter = selection.selection.kernelSpec
                 ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken)
                 : undefined;
@@ -348,7 +371,12 @@ export class KernelSelector {
         }
 
         // Try an install this interpreter as a kernel.
-        kernelSpec = await this.kernelService.registerKernel(interpreter, disableUI, cancelToken);
+        try {
+            kernelSpec = await this.kernelService.registerKernel(interpreter, disableUI, cancelToken);
+        } catch (e) {
+            sendTelemetryEvent(Telemetry.KernelRegisterFailed);
+            throw e;
+        }
 
         // If we have a display name of a kernel that could not be found,
         // then notify user that we're using current interpreter instead.
@@ -367,5 +395,12 @@ export class KernelSelector {
         this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken).ignoreErrors();
 
         return { kernelSpec, interpreter };
+    }
+
+    private computeLanguage(language: string | undefined): string {
+        if (language && KnownNotebookLanguages.includes(language.toLowerCase())) {
+            return language;
+        }
+        return 'unknown';
     }
 }

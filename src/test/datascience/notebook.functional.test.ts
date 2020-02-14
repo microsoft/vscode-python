@@ -31,6 +31,7 @@ import { ModuleExistsStatus } from '../../client/datascience/jupyter/interpreter
 import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
+import { HostJupyterNotebook } from '../../client/datascience/jupyter/liveshare/hostJupyterNotebook';
 import {
     CellState,
     ICell,
@@ -1212,6 +1213,22 @@ plt.show()`,
             assert.ok(server, 'Never connected to a default server with a bad default config');
 
             await verifySimple(server, `a=1${os.EOL}a`, 1);
+        }
+    });
+
+    runTest('Custom command line', async () => {
+        if (!ioc.mockJupyter) {
+            const tempDir = os.tmpdir();
+            const settings = ioc.getSettings();
+            settings.datascience.jupyterCommandLineArguments = ['--NotebookApp.port=9975', `--notebook-dir=${tempDir}`];
+            ioc.forceSettingsChanged(settings.pythonPath, settings.datascience);
+            const notebook = await createNotebook(true);
+            assert.ok(notebook, 'Server should have started on port 9975');
+            const hs = notebook as HostJupyterNotebook;
+            // Check port number. Should have at least started with the one specified.
+            assert.ok(hs.server.getConnectionInfo()?.baseUrl.startsWith('http://localhost:99'), 'Port was not used');
+
+            await verifySimple(hs, `a=1${os.EOL}a`, 1);
         }
     });
 

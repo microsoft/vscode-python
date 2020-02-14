@@ -14,6 +14,7 @@ import { IInstaller, Product } from '../../../../client/common/types';
 import * as localize from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { Architecture } from '../../../../client/common/utils/platform';
+import { StopWatch } from '../../../../client/common/utils/stopWatch';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
@@ -73,7 +74,7 @@ suite('Data Science - KernelSelector', () => {
             ).thenResolve([]);
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve();
 
-            const kernel = await kernelSelector.selectRemoteKernel(instance(sessionManager));
+            const kernel = await kernelSelector.selectRemoteKernel(new StopWatch(), instance(sessionManager));
 
             assert.isEmpty(kernel);
             verify(
@@ -87,7 +88,7 @@ suite('Data Science - KernelSelector', () => {
             ).thenResolve([]);
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve();
 
-            const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(new StopWatch(), instance(sessionManager));
 
             assert.isEmpty(kernel);
             verify(
@@ -105,7 +106,7 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectRemoteKernel(instance(sessionManager));
+            const kernel = await kernelSelector.selectRemoteKernel(new StopWatch(), instance(sessionManager));
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             assert.isOk(kernel.interpreter === interpreter);
@@ -172,7 +173,7 @@ suite('Data Science - KernelSelector', () => {
             kernelSelector.addKernelToIgnoreList({ id: 'id2' } as any);
             // tslint:disable-next-line: no-any
             kernelSelector.addKernelToIgnoreList({ clientId: 'id4' } as any);
-            const kernel = await kernelSelector.selectRemoteKernel(instance(sessionManager));
+            const kernel = await kernelSelector.selectRemoteKernel(new StopWatch(), instance(sessionManager));
 
             assert.isEmpty(kernel);
             verify(
@@ -240,7 +241,7 @@ suite('Data Science - KernelSelector', () => {
             kernelSelector.addKernelToIgnoreList({ id: 'id2' } as any);
             // tslint:disable-next-line: no-any
             kernelSelector.addKernelToIgnoreList({ clientId: 'id4' } as any);
-            const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(new StopWatch(), instance(sessionManager));
 
             assert.isEmpty(kernel);
             verify(
@@ -265,7 +266,7 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(new StopWatch(), instance(sessionManager));
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             assert.isOk(kernel.interpreter === interpreter);
@@ -291,7 +292,7 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(new StopWatch(), instance(sessionManager));
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
@@ -323,7 +324,7 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(new StopWatch(), instance(sessionManager));
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             assert.isOk(kernel.interpreter === interpreter);
@@ -354,7 +355,7 @@ suite('Data Science - KernelSelector', () => {
                 // tslint:disable-next-line: no-any
             } as any);
 
-            const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
+            const kernel = await kernelSelector.selectLocalKernel(new StopWatch(), instance(sessionManager));
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
@@ -381,6 +382,7 @@ suite('Data Science - KernelSelector', () => {
         let nbMetadata: nbformat.INotebookMetadata = {} as any;
         let selectLocalKernelStub: sinon.SinonStub<
             [
+                StopWatch,
                 (IJupyterSessionManager | undefined)?,
                 (CancellationToken | undefined)?,
                 (IJupyterKernelSpec | LiveKernelModel)?

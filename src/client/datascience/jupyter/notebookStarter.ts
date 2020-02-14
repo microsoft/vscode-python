@@ -56,7 +56,11 @@ export class NotebookStarter implements Disposable {
     }
     // tslint:disable-next-line: max-func-body-length
     @reportAction(ReportableAction.NotebookStart)
-    public async start(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<IConnection> {
+    public async start(
+        useDefaultConfig: boolean,
+        customCommandLine: string[],
+        cancelToken?: CancellationToken
+    ): Promise<IConnection> {
         traceInfo('Starting Notebook');
         // Now actually launch it
         let exitCode: number | null = 0;
@@ -66,7 +70,7 @@ export class NotebookStarter implements Disposable {
             const tempDirPromise = this.generateTempDir();
             tempDirPromise.then(dir => this.disposables.push(dir)).ignoreErrors();
             // Before starting the notebook process, make sure we generate a kernel spec
-            const args = await this.generateArguments(useDefaultConfig, tempDirPromise);
+            const args = await this.generateArguments(useDefaultConfig, customCommandLine, tempDirPromise);
 
             // Make sure we haven't canceled already.
             if (cancelToken && cancelToken.isCancellationRequested) {
@@ -152,7 +156,7 @@ export class NotebookStarter implements Disposable {
         }
     }
 
-    private async generateArguments(
+    private async generateDefaultArguments(
         useDefaultConfig: boolean,
         tempDirPromise: Promise<TemporaryDirectory>
     ): Promise<string[]> {
@@ -175,6 +179,24 @@ export class NotebookStarter implements Disposable {
 
         // Use this temp file and config file to generate a list of args for our command
         return [...args, ...dockerArgs, ...debugArgs];
+    }
+
+    private async generateCustomArguments(customCommandLine: string[]): Promise<string[]> {
+        // We still have a bunch of args we have to pass
+        const requiredArgs = ['--no-browser', '--NotebookApp.iopub_data_rate_limit=10000000000.0'];
+
+        return [...requiredArgs, ...customCommandLine];
+    }
+
+    private async generateArguments(
+        useDefaultConfig: boolean,
+        customCommandLine: string[],
+        tempDirPromise: Promise<TemporaryDirectory>
+    ): Promise<string[]> {
+        if (!customCommandLine || customCommandLine.length === 0) {
+            return this.generateDefaultArguments(useDefaultConfig, tempDirPromise);
+        }
+        return this.generateCustomArguments(customCommandLine);
     }
 
     /**

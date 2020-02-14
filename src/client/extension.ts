@@ -192,7 +192,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     context.subscriptions.push(new ReplProvider(serviceContainer));
 
     const terminalProvider = new TerminalProvider(serviceContainer);
-    await terminalProvider.initialize(window.activeTerminal);
+    terminalProvider.initialize(window.activeTerminal).ignoreErrors();
     context.subscriptions.push(terminalProvider);
 
     context.subscriptions.push(
