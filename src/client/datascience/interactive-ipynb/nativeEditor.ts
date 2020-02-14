@@ -101,6 +101,51 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
+
+    public get visible(): boolean {
+        return this.viewState.visible;
+    }
+
+    public get active(): boolean {
+        return this.viewState.active;
+    }
+
+    public get file(): Uri {
+        return this._file;
+    }
+
+    public get isUntitled(): boolean {
+        const baseName = path.basename(this.file.fsPath);
+        return baseName.includes(localize.DataScience.untitledNotebookFileName());
+    }
+
+    public get cells(): ICell[] {
+        return this.visibleCells;
+    }
+
+    public get closed(): Event<INotebookEditor> {
+        return this.closedEvent.event;
+    }
+
+    public get executed(): Event<INotebookEditor> {
+        return this.executedEvent.event;
+    }
+
+    public get modified(): Event<INotebookEditor> {
+        return this.modifiedEvent.event;
+    }
+
+    public get saved(): Event<INotebookEditor> {
+        return this.savedEvent.event;
+    }
+
+    public get metadataUpdated(): Event<INotebookEditor> {
+        return this.metadataUpdatedEvent.event;
+    }
+
+    public get isDirty(): boolean {
+        return this._dirty;
+    }
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private executedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
@@ -184,23 +229,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             experimentsManager
         );
     }
-
-    public get visible(): boolean {
-        return this.viewState.visible;
-    }
-
-    public get active(): boolean {
-        return this.viewState.active;
-    }
-
-    public get file(): Uri {
-        return this._file;
-    }
-
-    public get isUntitled(): boolean {
-        const baseName = path.basename(this.file.fsPath);
-        return baseName.includes(localize.DataScience.untitledNotebookFileName());
-    }
     public dispose(): Promise<void> {
         super.dispose();
         return this.close();
@@ -208,10 +236,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     public getContents(): Promise<string> {
         return this.generateNotebookContent(this.visibleCells);
-    }
-
-    public get cells(): ICell[] {
-        return this.visibleCells;
     }
 
     public async load(contents: string, file: Uri): Promise<void> {
@@ -246,30 +270,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // Load without setting dirty
             return this.loadContents(contents, false);
         }
-    }
-
-    public get closed(): Event<INotebookEditor> {
-        return this.closedEvent.event;
-    }
-
-    public get executed(): Event<INotebookEditor> {
-        return this.executedEvent.event;
-    }
-
-    public get modified(): Event<INotebookEditor> {
-        return this.modifiedEvent.event;
-    }
-
-    public get saved(): Event<INotebookEditor> {
-        return this.savedEvent.event;
-    }
-
-    public get metadataUpdated(): Event<INotebookEditor> {
-        return this.metadataUpdatedEvent.event;
-    }
-
-    public get isDirty(): boolean {
-        return this._dirty;
     }
 
     // tslint:disable-next-line: no-any
@@ -353,6 +353,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Clear our visible cells
         this.visibleCells = [];
         return this.setDirty();
+    }
+
+    public getNotebookResource(): Promise<Uri> {
+        // Resource to use for loading and our identity are the same.
+        return this.getNotebookIdentity();
     }
 
     protected addSysInfo(_reason: SysInfoReason): Promise<void> {
@@ -481,11 +486,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // File should be set now
         return this._file;
-    }
-
-    protected getNotebookResource(): Promise<Uri> {
-        // Resource to use for loading and our identity are the same.
-        return this.getNotebookIdentity();
     }
 
     protected async setLaunchingFile(_file: string): Promise<void> {

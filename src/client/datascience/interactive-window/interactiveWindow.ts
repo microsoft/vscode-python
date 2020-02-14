@@ -59,13 +59,17 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public get onDidChangeViewState(): Event<void> {
         return this._onDidChangeViewState.event;
     }
-    private _onDidChangeViewState = new EventEmitter<void>();
     public get visible(): boolean {
         return this.viewState.visible;
     }
     public get active(): boolean {
         return this.viewState.active;
     }
+
+    public get closed(): Event<IInteractiveWindow> {
+        return this.closedEvent.event;
+    }
+    private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
     private trackedJupyterStart: boolean = false;
@@ -146,10 +150,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         if (this.closedEvent) {
             this.closedEvent.fire(this);
         }
-    }
-
-    public get closed(): Event<IInteractiveWindow> {
-        return this.closedEvent.event;
     }
 
     public addMessage(message: string): Promise<void> {
@@ -263,6 +263,17 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public scrollToCell(id: string): void {
         this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }).ignoreErrors();
     }
+
+    public async getNotebookResource(): Promise<Uri> {
+        if (this.lastFile) {
+            return Uri.file(this.lastFile);
+        }
+        const root = this.workspaceService.rootPath;
+        if (root) {
+            return Uri.file(root);
+        }
+        return Uri.file('./');
+    }
     protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
         super.onViewStateChanged(args);
         this._onDidChangeViewState.fire();
@@ -300,17 +311,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected async getNotebookIdentity(): Promise<Uri> {
         // Always the same identity (for now)
         return Uri.parse(Identifiers.InteractiveWindowIdentity);
-    }
-
-    protected async getNotebookResource(): Promise<Uri> {
-        if (this.lastFile) {
-            return Uri.file(this.lastFile);
-        }
-        const root = this.workspaceService.rootPath;
-        if (root) {
-            return Uri.file(root);
-        }
-        return Uri.file('./');
     }
 
     protected updateContexts(info: IInteractiveWindowInfo | undefined) {

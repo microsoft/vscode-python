@@ -383,7 +383,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private extraListeners: ((m: string, p: any) => void)[] = [];
 
     private webPanelProvider: TypeMoq.IMock<IWebPanelProvider> | undefined;
-    private settingsMap = new Map<string, PythonSettings>();
+    private settingsMap = new Map<string, any>();
 
     constructor() {
         super();
@@ -1134,7 +1134,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return false;
     }
 
-    public getSettings(resource: Uri | undefined) {
+    public getSettings(resource?: Uri) {
         const setting = resource ? this.settingsMap.get(resource.toString()) : this.pythonSettings;
         return setting ? setting : this.pythonSettings;
     }
@@ -1157,11 +1157,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             const list = await this.get<IInterpreterService>(IInterpreterService).getInterpreters();
 
             // Should support jupyter? How to enforce this
-            const supportsJupyter = list.filter(l => l.path !== active?.path).filter(f => hasJupyter(f.path));
+            const supportsJupyter = list.filter(l => l.path !== active?.path).filter(f => this.hasJupyter(f.path));
             pythonPath = supportsJupyter ? supportsJupyter[0].path : undefined;
         }
         if (pythonPath) {
-            const newSettings: PythonSettings = { ...this.pythonSettings, pythonPath };
+            const newSettings = { ...this.pythonSettings, pythonPath };
             this.settingsMap.set(resource.toString(), newSettings);
         }
     }
@@ -1211,6 +1211,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
         if (this.wrapperCreatedPromise && !this.wrapperCreatedPromise.resolved) {
             this.wrapperCreatedPromise.resolve();
+        }
+    }
+
+    private hasJupyter(pythonPath: string) {
+        try {
+            // Try importing jupyter
+            const output = child_process.execFileSync(pythonPath, ['-c', 'import jupyter;'], { encoding: 'utf8' });
+            return !output.includes('ModuleNotFoundError');
+        } catch (ex) {
+            return false;
         }
     }
 

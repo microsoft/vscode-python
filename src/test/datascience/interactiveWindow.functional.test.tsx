@@ -567,6 +567,50 @@ Type:      builtin_function_or_method`,
     );
 
     runMountedTest(
+        'Multiple Interpreters',
+        async _wrapper => {
+            // if (!ioc.mockJupyter) {
+            //     const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+            //     const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
+            //     const window = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
+            //     await addCode(ioc, wrapper, 'a=1\na');
+            //     const activeInterpreter = await interpreterService.getActiveInterpreter(
+            //         await window.getNotebookResource()
+            //     );
+            //     verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+            //     assert.equal(
+            //         window.notebook!.getMatchingInterpreter()?.path,
+            //         activeInterpreter?.path,
+            //         'Active intrepreter not used to launch notebook'
+            //     );
+            //     await closeInteractiveWindow(window, wrapper);
+
+            //     // Add another python path (hopefully there's more than one on the machine?)
+            //     const secondUri = Uri.file('bar.py');
+            //     await ioc.addNewSetting(secondUri, undefined);
+            //     const newWrapper = mountWebView(ioc, 'interactive');
+            //     assert.ok(newWrapper, 'Could not mount a second time');
+            //     const newWindow = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
+            //     await addCode(ioc, wrapper, 'a=1\na', false, secondUri);
+            //     verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+            //     assert.notEqual(
+            //         newWindow.notebook!.getMatchingInterpreter()?.path,
+            //         activeInterpreter?.path,
+            //         'Active intrepreter used to launch second notebook when it should not have'
+            //     );
+            // } else {
+            // tslint:disable-next-line: no-console
+            console.log(
+                'Multiple interpreters test skipped for now. Reenable after fixing https://github.com/microsoft/vscode-python/issues/10134'
+            );
+            //            }
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
         'Dispose test',
         async () => {
             // tslint:disable-next-line:no-any

@@ -96,6 +96,17 @@ import { InteractiveWindowMessageListener } from './interactiveWindowMessageList
 
 @injectable()
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
+    public get notebook(): INotebook | undefined {
+        return this._notebook;
+    }
+
+    public get id(): string {
+        return this._id;
+    }
+
+    public get onExecutedCode(): Event<string> {
+        return this.executeEvent.event;
+    }
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private potentiallyUnfinishedStatus: Disposable[] = [];
@@ -106,9 +117,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private serverAndNotebookPromise: Promise<void> | undefined;
     private notebookPromise: Promise<void> | undefined;
     private setDarkPromise: Deferred<boolean> | undefined;
-    public get notebook(): INotebook | undefined {
-        return this._notebook;
-    }
 
     constructor(
         @unmanaged() private readonly progressReporter: ProgressReporter,
@@ -182,20 +190,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         jupyterExecution.serverStarted(this.checkForServerStart.bind(this));
     }
 
-    public get id(): string {
-        return this._id;
-    }
-
     public async show(): Promise<void> {
         // Verify a server that matches us hasn't started already
         this.checkForServerStart().ignoreErrors();
 
         // Show our web panel.
         return super.show(true);
-    }
-
-    public get onExecutedCode(): Event<string> {
-        return this.executeEvent.event;
     }
 
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
@@ -419,6 +419,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         });
     }
 
+    public abstract getNotebookResource(): Promise<Uri>;
+
     protected onViewStateChanged(args: WebViewViewChangeEventArgs) {
         // Only activate if the active editor is empty. This means that
         // vscode thinks we are actually supposed to have focus. It would be
@@ -465,8 +467,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     protected abstract updateContexts(info: IInteractiveWindowInfo | undefined): void;
 
     protected abstract getNotebookIdentity(): Promise<Uri>;
-
-    protected abstract getNotebookResource(): Promise<Uri>;
 
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
 

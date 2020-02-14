@@ -66,6 +66,7 @@ suite('DataScience notebook tests', () => {
     let processFactory: IProcessServiceFactory;
     let ioc: DataScienceIocContainer;
     let modifiedConfig = false;
+    const baseUri = Uri.file('foo.py');
 
     setup(() => {
         ioc = new DataScienceIocContainer();
@@ -305,7 +306,7 @@ suite('DataScience notebook tests', () => {
                 assert.ok(false, `Expected server to not be created`);
             }
             if (server) {
-                const notebook = await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity));
+                const notebook = await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity));
                 // If specified set our launch file
                 if (launchingFile) {
                     await notebook.setLaunchingFile(launchingFile);
@@ -409,7 +410,7 @@ suite('DataScience notebook tests', () => {
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
             const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
             const notebook = server
-                ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity))
+                ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
                 : undefined;
             if (!notebook) {
                 assert.fail('Failed to connect to remote self cert server');
@@ -466,7 +467,7 @@ suite('DataScience notebook tests', () => {
                     purpose: ''
                 });
                 const notebook = server
-                    ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity))
+                    ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
                     : undefined;
                 if (!notebook) {
                     assert.fail('Failed to connect to remote password server');
@@ -547,7 +548,7 @@ suite('DataScience notebook tests', () => {
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
             const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
             const notebook = server
-                ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity))
+                ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
                 : undefined;
             if (!notebook) {
                 assert.fail('Failed to connect to remote password server');
@@ -594,7 +595,7 @@ suite('DataScience notebook tests', () => {
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
             const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
             const notebook = server
-                ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity))
+                ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
                 : undefined;
             if (!notebook) {
                 assert.fail('Failed to connect to remote server');
@@ -908,7 +909,7 @@ suite('DataScience notebook tests', () => {
         const nonCancelSource = new CancellationTokenSource();
         const server = await jupyterExecution.connectToNotebookServer(undefined, nonCancelSource.token);
         const notebook = server
-            ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity))
+            ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
             : undefined;
         assert.ok(notebook, 'Server not found with a cancel token that does not cancel');
 
