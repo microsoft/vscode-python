@@ -21,7 +21,7 @@ import {
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
-import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
+import { IAsyncDisposable, IDataScienceSettings, IDisposable, Resource } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
 import { JupyterCommands } from './constants';
@@ -93,7 +93,7 @@ export const INotebookServer = Symbol('INotebookServer');
 export interface INotebookServer extends IAsyncDisposable {
     readonly id: string;
     createNotebook(
-        resource: Uri,
+        resource: Resource,
         identity: Uri,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
@@ -106,6 +106,7 @@ export interface INotebookServer extends IAsyncDisposable {
 }
 
 export interface INotebook extends IAsyncDisposable {
+    readonly resource: Resource;
     readonly identity: Uri;
     readonly server: INotebookServer;
     readonly status: ServerStatus;

@@ -186,7 +186,7 @@ export class KernelSelector {
                 sendTelemetryEvent(Telemetry.UseExistingKernel);
             } else {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
-                const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
+                const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
                 if (activeInterpreter) {
                     selection = await this.useInterpreterAsKernel(
                         resource,
@@ -203,7 +203,7 @@ export class KernelSelector {
             }
         } else {
             // No kernel info, hence use current interpreter as a kernel.
-            const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
+            const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
             if (activeInterpreter) {
                 selection.interpreter = activeInterpreter;
                 selection.kernelSpec = await this.kernelService.searchAndRegisterKernel(

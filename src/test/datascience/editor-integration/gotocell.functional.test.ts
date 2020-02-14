@@ -92,7 +92,9 @@ suite('DataScience gotocell tests', () => {
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
-            return server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+            return server
+                ? await server.createNotebook(undefined, Uri.parse(Identifiers.InteractiveWindowIdentity))
+                : undefined;
         } catch (exc) {
             if (!expectFailure) {
                 assert.ok(false, `Expected server to be created, but got ${exc}`);

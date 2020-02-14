@@ -100,7 +100,9 @@ suite('DataScience DataViewer tests', () => {
         const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
         const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         const server = await exec.connectToNotebookServer(await interactiveWindowProvider.getNotebookOptions());
-        notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+        notebook = server
+            ? await server.createNotebook(undefined, Uri.parse(Identifiers.InteractiveWindowIdentity))
+            : undefined;
         if (notebook) {
             const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());
             assert.equal(cells.length, 1, `Wrong number of cells returned`);

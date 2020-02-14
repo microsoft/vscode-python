@@ -69,6 +69,7 @@ export class GuestJupyterServer
             this.disposableRegistry,
             this.configService,
             resource,
+            identity,
             this,
             this.dataScience.activationStartTime
         );

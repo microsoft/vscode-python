@@ -131,6 +131,7 @@ suite('Data Science - Kernel Switcher', () => {
                             verify(
                                 kernelSelector.selectLocalKernel(
                                     anything(),
+                                    anything(),
                                     undefined,
                                     undefined,
                                     currentKernelInfo.currentKernel
@@ -146,6 +147,7 @@ suite('Data Science - Kernel Switcher', () => {
                     test('Prompt to select local kernel', async () => {
                         when(
                             kernelSelector.selectLocalKernel(
+                                anything(),
                                 anything(),
                                 undefined,
                                 undefined,
@@ -163,6 +165,7 @@ suite('Data Science - Kernel Switcher', () => {
                             if (isLocalConnection) {
                                 when(
                                     kernelSelector.selectLocalKernel(
+                                        anything(),
                                         anything(),
                                         undefined,
                                         undefined,
@@ -298,7 +301,13 @@ suite('Data Science - Kernel Switcher', () => {
                                     }
                                 });
                                 when(
-                                    kernelSelector.selectLocalKernel(anything(), undefined, anything(), anything())
+                                    kernelSelector.selectLocalKernel(
+                                        anything(),
+                                        anything(),
+                                        undefined,
+                                        anything(),
+                                        anything()
+                                    )
                                 ).thenCall(() => {
                                     // When selecting a kernel the second time, then return a different selection.
                                     firstTimeSelectingAKernel = false;

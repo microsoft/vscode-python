@@ -10,7 +10,7 @@ import { ServerStatus } from '../../../../datascience-ui/interactive-common/main
 import { ILiveShareApi } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceInfo } from '../../../common/logger';
-import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
@@ -43,7 +43,8 @@ export class GuestJupyterNotebook
         liveShare: ILiveShareApi,
         private disposableRegistry: IDisposableRegistry,
         private configService: IConfigurationService,
-        private _resource: Uri,
+        private _resource: Resource,
+        private _identity: Uri,
         private _owner: INotebookServer,
         private startTime: number
     ) {
@@ -51,6 +52,10 @@ export class GuestJupyterNotebook
     }
 
     public get identity(): Uri {
+        return this._identity;
+    }
+
+    public get resource(): Resource {
         return this._resource;
     }
 

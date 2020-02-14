@@ -14,6 +14,7 @@ import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
     IDataScience,
@@ -50,7 +51,8 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         loggers: INotebookExecutionLogger[],
         private appService: IApplicationShell,
         private fs: IFileSystem,
-        private readonly kernelSelector: KernelSelector
+        private readonly kernelSelector: KernelSelector,
+        private readonly interpreterService: IInterpreterService
     ) {
         super(liveShare, asyncRegistry, disposableRegistry, configService, sessionManager, loggers);
     }
@@ -169,53 +171,24 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             return existing;
         }
 
-        // Otherwise create a new notebook.
+        // Compute launch information from the resource and the notebook metadata
+        const { info, changedKernel } = await this.computeLaunchInfo(
+            resource,
+            sessionManager,
+            notebookMetadata,
+            cancelToken
+        );
 
-        // First we need our launch information so we can start a new session (that's what our notebook is really)
-        let launchInfo = await this.waitForConnect();
-        if (!launchInfo) {
-            throw this.getDisposedError();
+        // If we switched kernels, try switching the possible session
+        if (changedKernel && possibleSession && info.kernelSpec) {
+            await possibleSession.changeKernel(
+                info.kernelSpec,
+                this.configService.getSettings().datascience.jupyterLaunchTimeout
+            );
         }
-        // Create a copy of launch info, cuz we're modifying it here.
-        // This launch info contains the server connection info (that could be shared across other nbs).
-        // However the kernel info is different. The kernel info is stored as a  property of this, hence create a separate instance for each nb.
-        launchInfo = {
-            ...launchInfo
-        };
 
-        // Find a kernel that can be used.
-        // Do this only if kernel information has been provided in the metadata, else use the default.
-        let defaultKernelInfoToUse = launchInfo.kernelSpec;
-        if (notebookMetadata?.kernelspec) {
-            const kernelInfo = await (launchInfo.connectionInfo.localLaunch
-                ? this.kernelSelector.getKernelForLocalConnection(
-                      resource,
-                      sessionManager,
-                      notebookMetadata,
-                      false,
-                      cancelToken
-                  )
-                : this.kernelSelector.getKernelForRemoteConnection(
-                      resource,
-                      sessionManager,
-                      notebookMetadata,
-                      cancelToken
-                  ));
-
-            const kernelInfoToUse = kernelInfo?.kernelSpec || kernelInfo?.kernelModel;
-            if (kernelInfoToUse) {
-                defaultKernelInfoToUse = kernelInfoToUse;
-            }
-            if (possibleSession && kernelInfoToUse) {
-                await possibleSession.changeKernel(
-                    kernelInfoToUse,
-                    this.configService.getSettings().datascience.jupyterLaunchTimeout
-                );
-            }
-            launchInfo.kernelSpec = defaultKernelInfoToUse;
-        }
         // Start a session (or use the existing one)
-        const session = possibleSession || (await sessionManager.startNew(defaultKernelInfoToUse, cancelToken));
+        const session = possibleSession || (await sessionManager.startNew(info.kernelSpec, cancelToken));
         traceInfo(`Started session ${this.id}`);
 
         if (session) {
@@ -226,9 +199,10 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 configService,
                 disposableRegistry,
                 this,
-                launchInfo,
+                info,
                 loggers,
                 resource,
+                identity,
                 this.getDisposedError.bind(this),
                 this.workspaceService,
                 this.appService,
@@ -253,6 +227,56 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         }
 
         throw this.getDisposedError();
+    }
+
+    private async computeLaunchInfo(
+        resource: vscode.Uri,
+        sessionManager: IJupyterSessionManager,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        cancelToken?: CancellationToken
+    ): Promise<{ info: INotebookServerLaunchInfo; changedKernel: boolean }> {
+        // First we need our launch information so we can start a new session (that's what our notebook is really)
+        let launchInfo = await this.waitForConnect();
+        if (!launchInfo) {
+            throw this.getDisposedError();
+        }
+        // Create a copy of launch info, cuz we're modifying it here.
+        // This launch info contains the server connection info (that could be shared across other nbs).
+        // However the kernel info is different. The kernel info is stored as a  property of this, hence create a separate instance for each nb.
+        launchInfo = {
+            ...launchInfo
+        };
+
+        // Determine the interpreter for our resource. If different, we need a different kernel.
+        const resourceInterpreter = await this.interpreterService.getActiveInterpreter(resource);
+
+        // Find a kernel that can be used.
+        // Do this only if kernel information has been provided in the metadata, or the resource's interpreter is different.
+        let changedKernel = false;
+        if (notebookMetadata?.kernelspec || resourceInterpreter?.displayName !== launchInfo.interpreter?.displayName) {
+            const kernelInfo = await (launchInfo.connectionInfo.localLaunch
+                ? this.kernelSelector.getKernelForLocalConnection(
+                      resource,
+                      sessionManager,
+                      notebookMetadata,
+                      false,
+                      cancelToken
+                  )
+                : this.kernelSelector.getKernelForRemoteConnection(
+                      resource,
+                      sessionManager,
+                      notebookMetadata,
+                      cancelToken
+                  ));
+
+            const kernelInfoToUse = kernelInfo?.kernelSpec || kernelInfo?.kernelModel;
+            if (kernelInfoToUse) {
+                launchInfo.kernelSpec = kernelInfoToUse;
+                changedKernel = true;
+            }
+        }
+
+        return { info: launchInfo, changedKernel };
     }
 
     private parseUri(uri: string): vscode.Uri {

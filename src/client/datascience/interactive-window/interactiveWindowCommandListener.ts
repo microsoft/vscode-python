@@ -326,7 +326,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                 cancelToken
             );
             const notebook = server
-                ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity))
+                ? await server.createNotebook(undefined, Uri.parse(Identifiers.InteractiveWindowIdentity))
                 : undefined;
 
             // If that works, then execute all of the cells.

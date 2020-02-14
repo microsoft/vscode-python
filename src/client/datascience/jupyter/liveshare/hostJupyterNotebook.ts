@@ -9,7 +9,7 @@ import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../co
 import '../../../common/extensions';
 import { traceError } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { Identifiers, LiveShare, LiveShareCommands } from '../../constants';
 import { IExecuteInfo } from '../../interactive-common/interactiveWindowTypes';
@@ -49,6 +49,7 @@ export class HostJupyterNotebook
         owner: INotebookServer,
         launchInfo: INotebookServerLaunchInfo,
         loggers: INotebookExecutionLogger[],
+        resource: Resource,
         identity: vscode.Uri,
         getDisposedError: () => Error,
         workspace: IWorkspaceService,
@@ -63,6 +64,7 @@ export class HostJupyterNotebook
             owner,
             launchInfo,
             loggers,
+            resource,
             identity,
             getDisposedError,
             workspace,

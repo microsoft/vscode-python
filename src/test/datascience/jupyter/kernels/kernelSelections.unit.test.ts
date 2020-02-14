@@ -138,7 +138,10 @@ suite('Data Science - KernelSelections', () => {
         when(sessionManager.getRunningKernels()).thenResolve([]);
         when(sessionManager.getRunningSessions()).thenResolve([]);
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager));
+        const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(
+            undefined,
+            instance(sessionManager)
+        );
 
         assert.equal(items.length, 0);
     });
@@ -193,7 +196,10 @@ suite('Data Science - KernelSelections', () => {
         ];
         expectedItems.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager));
+        const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(
+            undefined,
+            instance(sessionManager)
+        );
 
         verify(sessionManager.getRunningKernels()).once();
         verify(sessionManager.getKernelSpecs()).once();
@@ -229,7 +235,10 @@ suite('Data Science - KernelSelections', () => {
         const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
         expectedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
-        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager));
+        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(
+            undefined,
+            instance(sessionManager)
+        );
 
         verify(kernelService.getKernelSpecs(anything(), anything())).once();
         assert.deepEqual(items, expectedList);

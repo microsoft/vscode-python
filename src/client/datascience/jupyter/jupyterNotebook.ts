@@ -14,7 +14,7 @@ import { CancellationError, createPromiseFromCancellation } from '../../common/c
 import '../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -150,6 +150,7 @@ export class JupyterNotebookBase implements INotebook {
     private sessionStartTime: number;
     private pendingCellSubscriptions: CellSubscriber[] = [];
     private ranInitialSetup = false;
+    private _resource: Resource;
     private _identity: Uri;
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
@@ -170,6 +171,7 @@ export class JupyterNotebookBase implements INotebook {
         private owner: INotebookServer,
         private launchInfo: INotebookServerLaunchInfo,
         loggers: INotebookExecutionLogger[],
+        resource: Resource,
         identity: Uri,
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
@@ -185,6 +187,7 @@ export class JupyterNotebookBase implements INotebook {
         };
         this.sessionStatusChanged = this.session.onSessionStatusChanged(statusChangeHandler);
         this._identity = identity;
+        this._resource = resource;
         this._loggers = [...loggers];
         // Save our interpreter and don't change it. Later on when kernel changes
         // are possible, recompute it.
@@ -225,6 +228,9 @@ export class JupyterNotebookBase implements INotebook {
         return ServerStatus.NotStarted;
     }
 
+    public get resource(): Resource {
+        return this._resource;
+    }
     public get identity(): Uri {
         return this._identity;
     }

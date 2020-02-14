@@ -261,7 +261,9 @@ suite('Interactive window command listener', async () => {
         await documentManager.showTextDocument(doc);
         when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(server.object);
         const notebook = createTypeMoq<INotebook>('jupyter notebook');
-        server.setup(s => s.createNotebook(TypeMoq.It.isAny())).returns(() => Promise.resolve(notebook.object));
+        server
+            .setup(s => s.createNotebook(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(notebook.object));
         notebook
             .setup(n =>
                 n.execute(
