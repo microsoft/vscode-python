@@ -495,7 +495,9 @@ suite('Data Science - KernelSelector', () => {
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
-            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+            ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 anything(),
@@ -518,7 +520,9 @@ suite('Data Science - KernelSelector', () => {
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve();
-            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+            ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
@@ -553,7 +557,9 @@ suite('Data Science - KernelSelector', () => {
                     )
                 )
             ).thenResolve();
-            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+            ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
@@ -590,7 +596,9 @@ suite('Data Science - KernelSelector', () => {
             ).thenResolve(undefined);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.searchAndRegisterKernel(interpreter, anything(), anything())).thenResolve(kernelSpec);
-            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+            ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(
                 undefined,
@@ -633,7 +641,9 @@ suite('Data Science - KernelSelector', () => {
             ]);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.searchAndRegisterKernel(interpreter, anything(), anything())).thenResolve(kernelSpec);
-            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+            ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForRemoteConnection(
                 undefined,
@@ -684,7 +694,9 @@ suite('Data Science - KernelSelector', () => {
             ]);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
-            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+            ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForRemoteConnection(undefined, instance(sessionManager), {
                 orig_nbformat: 4,
@@ -734,7 +746,9 @@ suite('Data Science - KernelSelector', () => {
             ]);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
-            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+            when(
+                kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything(), anything())
+            ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForRemoteConnection(undefined, instance(sessionManager), {
                 orig_nbformat: 4,
