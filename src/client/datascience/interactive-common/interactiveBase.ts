@@ -1424,8 +1424,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         await this.addSysInfo(SysInfoReason.New);
     }
 
-    private async openSettings() {
-        // Open settings and search for 'python.dataScience.textOutputLimit'
-        await commands.executeCommand('workbench.action.openSettings', 'python.dataScience.textOutputLimit');
+    private openSettings(setting: string) {
+        commands.executeCommand('workbench.action.openSettings', setting);
     }
 }

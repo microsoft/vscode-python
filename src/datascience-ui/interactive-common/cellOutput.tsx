@@ -31,7 +31,7 @@ interface ICellOutputProps {
     hideOutput?: boolean;
     themeMatplotlibPlots?: boolean;
     expandImage(imageHtml: string): void;
-    openSettings(): void;
+    openSettings(setting: string): void;
 }
 
 interface ICellOutputData {
@@ -177,7 +177,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private getTrimMessage() {
         const newLine = '\n...\n';
         return (
-            <a onClick={this.props.openSettings} role="button" className="image-button-image">
+            <a onClick={this.changeTextOutputLimit} role="button" className="image-button-image">
                 {getLocString(
                     'DataScience.trimmedOutput',
                     'Output was trimmed for performance reasons.\nTo see the full output set the setting "python.dataScience.textOutputLimit" to 0.'
@@ -185,6 +185,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             </a>
         );
     }
+
+    private changeTextOutputLimit = () => {
+        this.props.openSettings('python.dataScience.textOutputLimit');
+    };
 
     private getCell = () => {
         return this.props.cellVM.cell;
