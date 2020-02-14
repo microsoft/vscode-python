@@ -1424,7 +1424,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         await this.addSysInfo(SysInfoReason.New);
     }
 
-    private openSettings(setting: string) {
-        commands.executeCommand('workbench.action.openSettings', setting);
+    private openSettings(setting: string | undefined) {
+        if (setting) {
+            commands.executeCommand('workbench.action.openSettings', setting);
+        } else {
+            commands.executeCommand('workbench.action.openSettings');
+        }
     }
 }

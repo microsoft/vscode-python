@@ -31,7 +31,7 @@ interface ICellOutputProps {
     hideOutput?: boolean;
     themeMatplotlibPlots?: boolean;
     expandImage(imageHtml: string): void;
-    openSettings(setting: string): void;
+    openSettings(setting?: string): void;
 }
 
 interface ICellOutputData {
