@@ -47,6 +47,7 @@ suite('Data Science - Activation', () => {
         activator = new Activation(instance(notebookProvider), instance(jupyterInterpreterService), instance(executionFactory), [], instance(contextService));
         when(jupyterInterpreterService.getSelectedInterpreter()).thenResolve(interpreter);
         when(jupyterInterpreterService.getSelectedInterpreter(anything())).thenResolve(interpreter);
+        when(jupyterInterpreterService.setInitialInterpreter()).thenResolve(interpreter);
         await activator.activate();
     });
     teardown(() => fakeTimer.uninstall());
