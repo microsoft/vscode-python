@@ -249,6 +249,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
                 // Try getting kernelspec version using python script, if that fails (even if there's output in stderr) rethrow original exception.
                 output = await this.getKernelSpecVersion(interpreter, options);
             }
+            return output;
         } catch (innerEx) {
             traceError('Failed to get a list of the kernelspec using python script', innerEx);
         }
