@@ -8,6 +8,7 @@ import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import '../../../common/extensions';
+import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
@@ -22,8 +23,8 @@ import { JupyterInterpreterStateStore } from './jupyterInterpreterStateStore';
 @injectable()
 export class JupyterInterpreterService {
     private _selectedInterpreter?: PythonInterpreter;
-    private _selectedInterpreterPath?: string;
     private _onDidChangeInterpreter = new EventEmitter<PythonInterpreter>();
+    private getInitialInterpreterPromise: Promise<PythonInterpreter | undefined> | undefined;
     public get onDidChangeInterpreter(): Event<PythonInterpreter> {
         return this._onDidChangeInterpreter.event;
     }
@@ -45,50 +46,30 @@ export class JupyterInterpreterService {
      * @memberof JupyterInterpreterService
      */
     public async getSelectedInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
-        if (this._selectedInterpreter) {
-            return this._selectedInterpreter;
-        }
+        // Before we return _selected interpreter make sure that we have run our initial set interpreter once
+        // because _selectedInterpreter can be changed by other function and at other times, this promise
+        // is cached to only run once
+        await this.setInitialInterpreter(token);
 
-        const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
-            cancelAction: 'resolve',
-            defaultValue: undefined,
-            token
-        });
-        // For backwards compatiblity check if we have a cached interpreter (older version of extension).
-        // If that interpreter has everything we need then use that.
-        let interpreter = await Promise.race([
-            this.getInterpreterFromChangeOfOlderVersionOfExtension(),
-            resolveToUndefinedWhenCancelled
-        ]);
-        if (interpreter) {
-            return interpreter;
-        }
-
-        const pythonPath = this._selectedInterpreterPath || this.interpreterSelectionState.selectedPythonPath;
-        if (!pythonPath) {
-            // Check if current interpreter has all of the required dependencies.
-            // If yes, then use that.
-            interpreter = await this.interpreterService.getActiveInterpreter(undefined);
-            if (!interpreter) {
-                return;
-            }
-            // Use this interpreter going forward.
-            if (await this.interpreterConfiguration.areDependenciesInstalled(interpreter)) {
-                this.setAsSelectedInterpreter(interpreter);
-                return interpreter;
-            }
-            return;
-        }
-
-        const interpreterDetails = await Promise.race([
-            this.interpreterService.getInterpreterDetails(pythonPath, undefined),
-            resolveToUndefinedWhenCancelled
-        ]);
-        if (interpreterDetails) {
-            this._selectedInterpreter = interpreterDetails;
-        }
-        return interpreterDetails;
+        return this._selectedInterpreter;
     }
+
+    // To be run one initial time. Check our saved locations and then current interpreter to try to start off
+    // with a valid jupyter interpreter
+    public async setInitialInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
+        if (!this.getInitialInterpreterPromise) {
+            this.getInitialInterpreterPromise = this.getInitialInterpreterImpl(token).then(result => {
+                // Set ourselves as a valid interpreter if we found something
+                if (result) {
+                    this.changeSelectedInterpreterProperty(result);
+                }
+                return result;
+            });
+        }
+
+        return this.getInitialInterpreterPromise;
+    }
+
     /**
      * Selects and interpreter to run jupyter server.
      * Validates and configures the interpreter.
@@ -116,7 +97,7 @@ export class JupyterInterpreterService {
         const result = await this.interpreterConfiguration.installMissingDependencies(interpreter, undefined, token);
         switch (result) {
             case JupyterInterpreterDependencyResponse.ok: {
-                this.setAsSelectedInterpreter(interpreter);
+                await this.setAsSelectedInterpreter(interpreter);
                 return interpreter;
             }
             case JupyterInterpreterDependencyResponse.cancel:
@@ -126,30 +107,97 @@ export class JupyterInterpreterService {
                 return this.selectInterpreter(token);
         }
     }
-    private async getInterpreterFromChangeOfOlderVersionOfExtension(): Promise<PythonInterpreter | undefined> {
+
+    // Check the location that we stored jupyter launch path in the old version
+    // if it's there, return it and clear the location
+    private getInterpreterFromChangeOfOlderVersionOfExtension(): string | undefined {
         const pythonPath = this.oldVersionCacheStateStore.getCachedInterpreterPath();
         if (!pythonPath) {
             return;
         }
-        try {
-            const interpreter = await this.interpreterService.getInterpreterDetails(pythonPath, undefined);
-            if (!interpreter) {
-                return;
-            }
-            if (await this.interpreterConfiguration.areDependenciesInstalled(interpreter)) {
-                this.setAsSelectedInterpreter(interpreter);
-                return interpreter;
-            }
-            // If dependencies are not installed, then ignore it. lets continue with the current logic.
-        } finally {
-            // Don't perform this check again, just clear the cache.
-            this.oldVersionCacheStateStore.clearCache().ignoreErrors();
-        }
+
+        // Clear the cache to not check again
+        this.oldVersionCacheStateStore.clearCache().ignoreErrors();
+        return pythonPath;
     }
-    private setAsSelectedInterpreter(interpreter: PythonInterpreter): void {
+
+    // Set the specified interpreter as our current selected interpreter
+    private async setAsSelectedInterpreter(interpreter: PythonInterpreter): Promise<void> {
+        // Make sure that our initial set has happened before we allow a set so that
+        // calculation of the initial interpreter doesn't clobber the existing one
+        await this.setInitialInterpreter();
+        this.changeSelectedInterpreterProperty(interpreter);
+    }
+
+    private changeSelectedInterpreterProperty(interpreter: PythonInterpreter) {
         this._selectedInterpreter = interpreter;
         this._onDidChangeInterpreter.fire(interpreter);
-        this.interpreterSelectionState.updateSelectedPythonPath((this._selectedInterpreterPath = interpreter.path));
+        this.interpreterSelectionState.updateSelectedPythonPath(interpreter.path);
         sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'selected' });
+    }
+
+    // For a given python path check if it can run jupyter for us
+    // if so, return the interpreter
+    private async validateInterpreterPath(
+        pythonPath: string,
+        token?: CancellationToken
+    ): Promise<PythonInterpreter | undefined> {
+        try {
+            const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
+                cancelAction: 'resolve',
+                defaultValue: undefined,
+                token
+            });
+
+            // First see if we can get interpreter details
+            const interpreter = await Promise.race([
+                this.interpreterService.getInterpreterDetails(pythonPath, undefined),
+                resolveToUndefinedWhenCancelled
+            ]);
+            if (interpreter) {
+                // Then check that dependencies are installed
+                if (await this.interpreterConfiguration.areDependenciesInstalled(interpreter, token)) {
+                    return interpreter;
+                }
+            }
+        } catch (_err) {
+            // For any errors we are ok with just returning undefined for an invalid interpreter
+            noop();
+        }
+        return undefined;
+    }
+
+    private async getInitialInterpreterImpl(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
+        let interpreter: PythonInterpreter | undefined;
+
+        // Check the old version location first, we will clear it if we find it here
+        const oldVersionPythonPath = this.getInterpreterFromChangeOfOlderVersionOfExtension();
+        if (oldVersionPythonPath) {
+            interpreter = await this.validateInterpreterPath(oldVersionPythonPath, token);
+        }
+
+        // Next check the saved global path
+        if (!interpreter && this.interpreterSelectionState.selectedPythonPath) {
+            interpreter = await this.validateInterpreterPath(this.interpreterSelectionState.selectedPythonPath, token);
+
+            // If we had a global path, but it's not valid, trash it
+            if (!interpreter) {
+                this.interpreterSelectionState.updateSelectedPythonPath(undefined);
+            }
+        }
+
+        // Nothing saved found, so check our current interpreter
+        if (!interpreter) {
+            const currentInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
+
+            if (currentInterpreter) {
+                // Ask and give a chance to install dependencies in current interpreter
+                if (await this.interpreterConfiguration.areDependenciesInstalled(currentInterpreter, token)) {
+                    interpreter = currentInterpreter;
+                }
+            }
+        }
+
+        return interpreter;
     }
 }

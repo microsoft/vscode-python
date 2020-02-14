@@ -8,13 +8,14 @@ import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { ProductNames } from '../../../common/installer/productNames';
-import { IPythonExecutionFactory } from '../../../common/process/types';
+import { traceError } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { HelpLinks, Telemetry } from '../../constants';
+import { HelpLinks, JupyterCommands, Telemetry } from '../../constants';
+import { IJupyterCommandFactory } from '../../types';
 import { JupyterInstallError } from '../jupyterInstallError';
 
 export enum JupyterInterpreterDependencyResponse {
@@ -113,7 +114,7 @@ export class JupyterInterpreterDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
+        @inject(IJupyterCommandFactory) private readonly commandFactory: IJupyterCommandFactory
     ) {}
     /**
      * Configures the python interpreter to ensure it can run Jupyter server by installing any missing dependencies.
@@ -291,19 +292,19 @@ export class JupyterInterpreterDependencyService {
      * @returns {Promise<boolean>}
      * @memberof JupyterInterpreterConfigurationService
      */
-    private async isKernelSpecAvailable(interpreter: PythonInterpreter, token?: CancellationToken): Promise<boolean> {
-        const execService = await this.pythonExecFactory.createActivatedEnvironment({
+    private async isKernelSpecAvailable(interpreter: PythonInterpreter, _token?: CancellationToken): Promise<boolean> {
+        const command = this.commandFactory.createInterpreterCommand(
+            JupyterCommands.KernelSpecCommand,
+            'jupyter',
+            ['-m', 'jupyter', 'kernelspec'],
             interpreter,
-            allowEnvironmentFetchExceptions: true,
-            bypassCondaExecution: true
-        });
-        if (Cancellation.isCanceled(token)) {
-            return false;
-        }
-        return execService
-            .execModule('jupyter', ['kernelspec', '--version'], { throwOnStdErr: true })
+            false
+        );
+        return command
+            .exec(['--version'], { throwOnStdErr: true })
             .then(() => true)
-            .catch(() => {
+            .catch(e => {
+                traceError(`Kernel spec not found: `, e);
                 sendTelemetryEvent(Telemetry.KernelSpecNotFound);
                 return false;
             });
@@ -326,9 +327,10 @@ export class JupyterInterpreterDependencyService {
         token?: CancellationToken
     ): Promise<JupyterInterpreterDependencyResponse> {
         if (await this.isKernelSpecAvailable(interpreter)) {
-            sendTelemetryEvent(Telemetry.JupyterInstalledButNotKernelSpecModule);
             return JupyterInterpreterDependencyResponse.ok;
         }
+        // Indicate no kernel spec module.
+        sendTelemetryEvent(Telemetry.JupyterInstalledButNotKernelSpecModule);
         if (Cancellation.isCanceled(token)) {
             return JupyterInterpreterDependencyResponse.cancel;
         }

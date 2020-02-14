@@ -301,7 +301,7 @@ myDict = {'a': 1}`;
                 {
                     name: 'mySet',
                     value: undefined,
-                    supportsDataExplorer: true,
+                    supportsDataExplorer: false,
                     type: 'set',
                     size: 54,
                     shape: '',

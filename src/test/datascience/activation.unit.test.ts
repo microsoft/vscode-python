@@ -53,6 +53,7 @@ suite('Data Science - Activation', () => {
         );
         when(jupyterInterpreterService.getSelectedInterpreter()).thenResolve(interpreter);
         when(jupyterInterpreterService.getSelectedInterpreter(anything())).thenResolve(interpreter);
+        when(jupyterInterpreterService.setInitialInterpreter()).thenResolve(interpreter);
         await activator.activate();
     });
     teardown(() => fakeTimer.uninstall());
