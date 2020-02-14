@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
+    commands,
     ConfigurationTarget,
     Event,
     EventEmitter,
@@ -295,6 +296,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.handleMessage(message, payload, this.selectServer);
                 break;
 
+            case InteractiveWindowMessages.OpenSettings:
+                this.handleMessage(message, payload, this.openSettings);
+                break;
             default:
                 break;
         }
@@ -1418,5 +1422,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
     private async kernelChangeHandler(_kernel: IJupyterKernelSpec | LiveKernelModel) {
         await this.addSysInfo(SysInfoReason.New);
+    }
+
+    private async openSettings() {
+        // tslint:disable-next-line: prefer-template
+        const uri = Uri.file(EXTENSION_ROOT_DIR + '/.vscode/settings.json');
+        await commands.executeCommand('vscode.open', uri);
     }
 }

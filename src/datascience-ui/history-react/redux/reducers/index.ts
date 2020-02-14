@@ -18,6 +18,7 @@ export const reducerMap: IInteractiveActionMapping = {
     [CommonActionType.INTERRUPT_KERNEL]: Kernel.interruptKernel,
     [CommonActionType.SELECT_KERNEL]: Kernel.selectKernel,
     [CommonActionType.SELECT_SERVER]: Kernel.selectJupyterURI,
+    [CommonActionType.OPEN_SETTINGS]: CommonEffects.openSettings,
     [CommonActionType.EXPORT]: Transfer.exportCells,
     [CommonActionType.SAVE]: Transfer.save,
     [CommonActionType.SHOW_DATA_VIEWER]: Transfer.showDataViewer,

@@ -144,6 +144,7 @@ export const actionCreators = {
     editorUnmounted: (): CommonAction<never | undefined> => ({ type: CommonActionType.UNMOUNT }),
     selectKernel: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_KERNEL }),
     selectServer: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_SERVER }),
+    openSettings: (): CommonAction<never | undefined> => ({ type: CommonActionType.OPEN_SETTINGS }),
     getVariableData: (
         newExecutionCount: number,
         startIndex: number = 0,

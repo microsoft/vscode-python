@@ -761,7 +761,7 @@ export namespace DataScience {
     export const registeringKernel = localize('DataScience.registeringKernel', 'Registering Kernel');
     export const trimmedOutput = localize(
         'DataScience.trimmedOutput',
-        'Output was trimmed for performance reasons.\nTo change this go to Settings -> Python -> Data Science -> Text Output Limit.'
+        'Output was trimmed for performance reasons.\nTo see the full output set the setting "python.dataScience.textOutputLimit" to 0.'
     );
 }
 

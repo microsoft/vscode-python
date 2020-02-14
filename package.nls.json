@@ -432,5 +432,5 @@
     "DataScience.gettingListOfKernelSpecs": "Fetching Kernel specs",
     "DataScience.startingJupyterNotebook": "Starting Jupyter Notebook",
     "DataScience.registeringKernel": "Registering Kernel",
-    "DataScience.trimmedOutput": "Output was trimmed for performance reasons.\nTo change this go to Settings -> Python -> Data Science -> Text Output Limit."
+    "DataScience.trimmedOutput": "Output was trimmed for performance reasons.\nTo see the full output set the setting \"python.dataScience.textOutputLimit\" to 0."
 }

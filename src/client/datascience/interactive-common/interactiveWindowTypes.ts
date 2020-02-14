@@ -92,7 +92,8 @@ export enum InteractiveWindowMessages {
     ClearAllOutputs = 'clear_all_outputs',
     SelectKernel = 'select_kernel',
     UpdateKernel = 'update_kernel',
-    SelectJupyterServer = 'select_jupyter_server'
+    SelectJupyterServer = 'select_jupyter_server',
+    OpenSettings = 'open_settings'
 }
 
 export enum NativeCommandType {
@@ -308,6 +309,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
     public [InteractiveWindowMessages.SelectKernel]: IServerState | undefined;
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
+    public [InteractiveWindowMessages.OpenSettings]: never | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: ICell;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
