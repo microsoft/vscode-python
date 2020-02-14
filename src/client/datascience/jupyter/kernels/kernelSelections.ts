@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { IFileSystem } from '../../../common/platform/types';
-import { IPathUtils } from '../../../common/types';
+import { IPathUtils, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
@@ -65,6 +65,7 @@ function getQuickPickItemForActiveKernel(kernel: LiveKernelModel, pathUtils: IPa
 export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelSelectionListProvider {
     constructor(private readonly sessionManager: IJupyterSessionManager, private readonly pathUtils: IPathUtils) {}
     public async getKernelSelections(
+        _resource: Resource,
         _cancelToken?: CancellationToken | undefined
     ): Promise<IKernelSpecQuickPickItem[]> {
         const [activeKernels, activeSessions, kernelSpecs] = await Promise.all([
@@ -105,7 +106,10 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
         private readonly pathUtils: IPathUtils,
         private readonly sessionManager?: IJupyterSessionManager
     ) {}
-    public async getKernelSelections(cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
+    public async getKernelSelections(
+        _resource: Resource,
+        cancelToken?: CancellationToken | undefined
+    ): Promise<IKernelSpecQuickPickItem[]> {
         const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
         return items
             .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
@@ -124,9 +128,10 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
 export class InterpreterKernelSelectionListProvider implements IKernelSelectionListProvider {
     constructor(private readonly interpreterSelector: IInterpreterSelector) {}
     public async getKernelSelections(
+        resource: Resource,
         _cancelToken?: CancellationToken | undefined
     ): Promise<IKernelSpecQuickPickItem[]> {
-        const items = await this.interpreterSelector.getSuggestions(undefined);
+        const items = await this.interpreterSelector.getSuggestions(resource);
         return items.map(item => {
             return {
                 ...item,
@@ -163,6 +168,7 @@ export class KernelSelectionProvider {
      * @memberof KernelSelectionProvider
      */
     public async getKernelSelectionsForRemoteSession(
+        resource: Resource,
         sessionManager: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem[]> {
@@ -171,11 +177,11 @@ export class KernelSelectionProvider {
                 this.kernelService,
                 this.pathUtils,
                 sessionManager
-            ).getKernelSelections(cancelToken);
+            ).getKernelSelections(resource, cancelToken);
             const liveKernelsPromise = new ActiveJupyterSessionKernelSelectionListProvider(
                 sessionManager,
                 this.pathUtils
-            ).getKernelSelections(cancelToken);
+            ).getKernelSelections(resource, cancelToken);
             const [installedKernels, liveKernels] = await Promise.all([installedKernelsPromise, liveKernelsPromise]);
 
             // Sorty by name.
@@ -199,6 +205,7 @@ export class KernelSelectionProvider {
      * @memberof KernelSelectionProvider
      */
     public async getKernelSelectionsForLocalSession(
+        resource: Resource,
         sessionManager?: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<IKernelSpecQuickPickItem[]> {
@@ -207,10 +214,10 @@ export class KernelSelectionProvider {
                 this.kernelService,
                 this.pathUtils,
                 sessionManager
-            ).getKernelSelections(cancelToken);
+            ).getKernelSelections(resource, cancelToken);
             const interpretersPromise = new InterpreterKernelSelectionListProvider(
                 this.interpreterSelector
-            ).getKernelSelections(cancelToken);
+            ).getKernelSelections(resource, cancelToken);
 
             // tslint:disable-next-line: prefer-const
             let [installedKernels, interpreters] = await Promise.all([installedKernelsPromise, interpretersPromise]);

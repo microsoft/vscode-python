@@ -142,6 +142,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
                 kernelSpecInterpreterPromise = this.kernelSelector.getKernelForLocalConnection(
                     undefined,
+                    undefined,
                     options?.metadata,
                     !allowUI,
                     kernelSpecCancelSource.token
@@ -169,6 +170,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         );
                         const sessionManager = await sessionManagerFactory.create(connection);
                         kernelSpecInterpreter = await this.kernelSelector.getKernelForRemoteConnection(
+                            undefined,
                             sessionManager,
                             options?.metadata,
                             cancelToken
@@ -221,6 +223,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                     >(IJupyterSessionManagerFactory);
                                     const sessionManager = await sessionManagerFactory.create(connection);
                                     const kernelInterpreter = await this.kernelSelector.selectLocalKernel(
+                                        undefined,
                                         new StopWatch(),
                                         sessionManager,
                                         cancelToken,

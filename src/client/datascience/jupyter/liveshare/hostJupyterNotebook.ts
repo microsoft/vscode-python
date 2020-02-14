@@ -49,7 +49,7 @@ export class HostJupyterNotebook
         owner: INotebookServer,
         launchInfo: INotebookServerLaunchInfo,
         loggers: INotebookExecutionLogger[],
-        resource: vscode.Uri,
+        identity: vscode.Uri,
         getDisposedError: () => Error,
         workspace: IWorkspaceService,
         appService: IApplicationShell,
@@ -63,7 +63,7 @@ export class HostJupyterNotebook
             owner,
             launchInfo,
             loggers,
-            resource,
+            identity,
             getDisposedError,
             workspace,
             appService,
@@ -127,7 +127,7 @@ export class HostJupyterNotebook
         // Use our base name plus our id. This means one unique server per notebook
         // Convert to our shared URI to match the guest and remove any '.' as live share won't support them
         const sharedUri =
-            this.resource.scheme === 'file' ? this.finishedApi!.convertLocalUriToShared(this.resource) : this.resource;
+            this.identity.scheme === 'file' ? this.finishedApi!.convertLocalUriToShared(this.identity) : this.identity;
         return Promise.resolve(`${LiveShare.JupyterNotebookSharedService}${sharedUri.toString()}`);
     }
 

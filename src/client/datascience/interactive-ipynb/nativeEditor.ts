@@ -483,6 +483,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this._file;
     }
 
+    protected getNotebookResource(): Promise<Uri> {
+        // Resource to use for loading and our identity are the same.
+        return this.getNotebookIdentity();
+    }
+
     protected async setLaunchingFile(_file: string): Promise<void> {
         // For the native editor, use our own file as the path
         const notebook = this.getNotebook();

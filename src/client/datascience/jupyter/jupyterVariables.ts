@@ -260,7 +260,7 @@ export class JupyterVariables implements IJupyterVariables {
         request: IJupyterVariablesRequest
     ): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
-        let list = this.notebookState.get(notebook.resource);
+        let list = this.notebookState.get(notebook.identity);
         if (!list || list.currentExecutionCount !== request.executionCount) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
@@ -315,7 +315,7 @@ export class JupyterVariables implements IJupyterVariables {
             }
 
             // Save in our cache
-            this.notebookState.set(notebook.resource, list);
+            this.notebookState.set(notebook.identity, list);
 
             // Update total count (exclusions will change this as types are computed)
             result.totalCount = list.variables.length;

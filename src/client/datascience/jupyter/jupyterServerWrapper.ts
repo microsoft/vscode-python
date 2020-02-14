@@ -108,11 +108,12 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
 
     public async createNotebook(
         resource: Uri,
+        identity: Uri,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         const server = await this.serverFactory.get();
-        return server.createNotebook(resource, notebookMetadata, cancelToken);
+        return server.createNotebook(resource, identity, notebookMetadata, cancelToken);
     }
 
     public async shutdown(): Promise<void> {

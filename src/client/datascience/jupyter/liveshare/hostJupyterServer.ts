@@ -93,14 +93,12 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 service.onRequest(
                     LiveShareCommands.createNotebook,
                     async (args: any[], cancellation: CancellationToken) => {
-                        const uri = vscode.Uri.parse(args[0]);
-                        const resource =
-                            uri.scheme && uri.scheme !== Identifiers.InteractiveWindowIdentityScheme
-                                ? this.finishedApi!.convertSharedUriToLocal(uri)
-                                : uri;
+                        const resource = this.parseUri(args[0]);
+                        const identity = this.parseUri(args[1]);
                         // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
                         const notebook = (await this.createNotebook(
                             resource,
+                            identity,
                             undefined,
                             cancellation
                         )) as HostJupyterNotebook;
@@ -150,6 +148,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
 
     protected async createNotebookInstance(
         resource: vscode.Uri,
+        identity: vscode.Uri,
         sessionManager: IJupyterSessionManager,
         possibleSession: IJupyterSession | undefined,
         disposableRegistry: IDisposableRegistry,
@@ -159,7 +158,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
         // See if already exists.
-        const existing = await this.getNotebook(resource);
+        const existing = await this.getNotebook(identity);
         if (existing) {
             // Dispose the possible session as we don't need it
             if (possibleSession) {
@@ -189,8 +188,19 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         let defaultKernelInfoToUse = launchInfo.kernelSpec;
         if (notebookMetadata?.kernelspec) {
             const kernelInfo = await (launchInfo.connectionInfo.localLaunch
-                ? this.kernelSelector.getKernelForLocalConnection(sessionManager, notebookMetadata, false, cancelToken)
-                : this.kernelSelector.getKernelForRemoteConnection(sessionManager, notebookMetadata, cancelToken));
+                ? this.kernelSelector.getKernelForLocalConnection(
+                      resource,
+                      sessionManager,
+                      notebookMetadata,
+                      false,
+                      cancelToken
+                  )
+                : this.kernelSelector.getKernelForRemoteConnection(
+                      resource,
+                      sessionManager,
+                      notebookMetadata,
+                      cancelToken
+                  ));
 
             const kernelInfoToUse = kernelInfo?.kernelSpec || kernelInfo?.kernelModel;
             if (kernelInfoToUse) {
@@ -243,6 +253,13 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         }
 
         throw this.getDisposedError();
+    }
+
+    private parseUri(uri: string): vscode.Uri {
+        const parsed = vscode.Uri.parse(uri);
+        return parsed.scheme && parsed.scheme !== Identifiers.InteractiveWindowIdentityScheme
+            ? this.finishedApi!.convertSharedUriToLocal(parsed)
+            : parsed;
     }
 
     private async attemptToForwardPort(api: vsls.LiveShare | null | undefined, port: number): Promise<void> {

@@ -173,6 +173,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public async addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+        if (this.lastFile && !this.fileSystem.arePathsSame(file, this.lastFile)) {
+            sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
+        }
         // Save the last file we ran with.
         this.lastFile = file;
 
@@ -297,6 +300,17 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected async getNotebookIdentity(): Promise<Uri> {
         // Always the same identity (for now)
         return Uri.parse(Identifiers.InteractiveWindowIdentity);
+    }
+
+    protected async getNotebookResource(): Promise<Uri> {
+        if (this.lastFile) {
+            return Uri.file(this.lastFile);
+        }
+        const root = this.workspaceService.rootPath;
+        if (root) {
+            return Uri.file(root);
+        }
+        return Uri.file('./');
     }
 
     protected updateContexts(info: IInteractiveWindowInfo | undefined) {

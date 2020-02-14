@@ -383,6 +383,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private extraListeners: ((m: string, p: any) => void)[] = [];
 
     private webPanelProvider: TypeMoq.IMock<IWebPanelProvider> | undefined;
+    private settingsMap = new Map<string, PythonSettings>();
 
     constructor() {
         super();
@@ -754,7 +755,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.pythonSettings.downloadLanguageServer = false;
 
         const workspaceConfig = (this.mockedWorkspaceConfig = mock(MockWorkspaceConfiguration));
-        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => this.pythonSettings);
+        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(this.getSettings.bind(this));
         when(workspaceConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
         when(workspaceConfig.has(anything())).thenReturn(false);
         when((workspaceConfig as any).then).thenReturn(undefined);
@@ -1133,8 +1134,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return false;
     }
 
-    public getSettings() {
-        return this.pythonSettings;
+    public getSettings(resource: Uri | undefined) {
+        const setting = resource ? this.settingsMap.get(resource.toString()) : this.pythonSettings;
+        return setting ? setting : this.pythonSettings;
     }
 
     public forceSettingsChanged(newPath: string, datascienceSettings?: IDataScienceSettings) {
@@ -1146,6 +1148,22 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 return true;
             }
         });
+    }
+
+    public async addNewSetting(resource: Uri, pythonPath: string | undefined) {
+        // Force a new config setting to appear.
+        if (!pythonPath) {
+            const active = await this.get<IInterpreterService>(IInterpreterService).getActiveInterpreter(undefined);
+            const list = await this.get<IInterpreterService>(IInterpreterService).getInterpreters();
+
+            // Should support jupyter? How to enforce this
+            const supportsJupyter = list.filter(l => l.path !== active?.path).filter(f => hasJupyter(f.path));
+            pythonPath = supportsJupyter ? supportsJupyter[0].path : undefined;
+        }
+        if (pythonPath) {
+            const newSettings: PythonSettings = { ...this.pythonSettings, pythonPath };
+            this.settingsMap.set(resource.toString(), newSettings);
+        }
     }
 
     public get mockJupyter(): MockJupyterManager | undefined {

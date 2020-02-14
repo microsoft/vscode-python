@@ -466,6 +466,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     protected abstract getNotebookIdentity(): Promise<Uri>;
 
+    protected abstract getNotebookResource(): Promise<Uri>;
+
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
 
     protected async clearResult(id: string): Promise<void> {
@@ -1060,8 +1062,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async ensureNotebookImpl(server: INotebookServer): Promise<void> {
         // Create a new notebook if we need to.
         if (!this._notebook) {
-            const [uri, options] = await Promise.all([this.getNotebookIdentity(), this.getNotebookOptions()]);
-            this._notebook = await server.createNotebook(uri, options.metadata);
+            const [resource, uri, options] = await Promise.all([
+                this.getNotebookResource(),
+                this.getNotebookIdentity(),
+                this.getNotebookOptions()
+            ]);
+            this._notebook = await server.createNotebook(resource, uri, options.metadata);
             if (this._notebook) {
                 this.postMessage(InteractiveWindowMessages.NotebookExecutionActivated, uri.toString()).ignoreErrors();
 

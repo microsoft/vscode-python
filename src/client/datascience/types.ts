@@ -94,10 +94,11 @@ export interface INotebookServer extends IAsyncDisposable {
     readonly id: string;
     createNotebook(
         resource: Uri,
+        identity: Uri,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook>;
-    getNotebook(resource: Uri): Promise<INotebook | undefined>;
+    getNotebook(identity: Uri): Promise<INotebook | undefined>;
     connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void>;
     getConnectionInfo(): IConnection | undefined;
     waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
@@ -105,7 +106,7 @@ export interface INotebookServer extends IAsyncDisposable {
 }
 
 export interface INotebook extends IAsyncDisposable {
-    readonly resource: Uri;
+    readonly identity: Uri;
     readonly server: INotebookServer;
     readonly status: ServerStatus;
     onSessionStatusChanged: Event<ServerStatus>;

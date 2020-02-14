@@ -54,12 +54,13 @@ export class GuestJupyterServer
         return Promise.resolve();
     }
 
-    public async createNotebook(resource: Uri): Promise<INotebook> {
+    public async createNotebook(resource: Uri, identity: Uri): Promise<INotebook> {
         // Tell the host side to generate a notebook for this uri
         const service = await this.waitForService();
         if (service) {
-            const uriString = resource.toString();
-            await service.request(LiveShareCommands.createNotebook, [uriString]);
+            const resourceString = resource.toString();
+            const identityString = identity.toString();
+            await service.request(LiveShareCommands.createNotebook, [resourceString, identityString]);
         }
 
         // Return a new notebook to listen to

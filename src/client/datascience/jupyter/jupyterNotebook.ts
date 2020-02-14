@@ -150,7 +150,7 @@ export class JupyterNotebookBase implements INotebook {
     private sessionStartTime: number;
     private pendingCellSubscriptions: CellSubscriber[] = [];
     private ranInitialSetup = false;
-    private _resource: Uri;
+    private _identity: Uri;
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
     private _loggers: INotebookExecutionLogger[] = [];
@@ -170,7 +170,7 @@ export class JupyterNotebookBase implements INotebook {
         private owner: INotebookServer,
         private launchInfo: INotebookServerLaunchInfo,
         loggers: INotebookExecutionLogger[],
-        resource: Uri,
+        identity: Uri,
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
         private applicationService: IApplicationShell,
@@ -184,7 +184,7 @@ export class JupyterNotebookBase implements INotebook {
             }
         };
         this.sessionStatusChanged = this.session.onSessionStatusChanged(statusChangeHandler);
-        this._resource = resource;
+        this._identity = identity;
         this._loggers = [...loggers];
         // Save our interpreter and don't change it. Later on when kernel changes
         // are possible, recompute it.
@@ -202,7 +202,7 @@ export class JupyterNotebookBase implements INotebook {
             this.sessionStatusChanged.dispose();
         }
 
-        traceInfo(`Shutting down session ${this.resource.toString()}`);
+        traceInfo(`Shutting down session ${this.identity.toString()}`);
         if (!this._disposed) {
             this._disposed = true;
             const dispose = this.session ? this.session.dispose() : undefined;
@@ -225,8 +225,8 @@ export class JupyterNotebookBase implements INotebook {
         return ServerStatus.NotStarted;
     }
 
-    public get resource(): Uri {
-        return this._resource;
+    public get identity(): Uri {
+        return this._identity;
     }
 
     public waitForIdle(timeoutMs: number): Promise<void> {
@@ -253,7 +253,7 @@ export class JupyterNotebookBase implements INotebook {
                 this.initializedMatplotlib = false;
                 const configInit =
                     !settings || settings.enablePlotViewer ? CodeSnippits.ConfigSvg : CodeSnippits.ConfigPng;
-                traceInfo(`Initialize config for plots for ${this.resource.toString()}`);
+                traceInfo(`Initialize config for plots for ${this.identity.toString()}`);
                 await this.executeSilently(configInit, cancelToken);
             }
 
@@ -266,7 +266,7 @@ export class JupyterNotebookBase implements INotebook {
                 traceInfo(`Run startup code for notebook: ${cleanedUp} - results: ${cells.length}`);
             }
 
-            traceInfo(`Initial setup complete for ${this.resource.toString()}`);
+            traceInfo(`Initial setup complete for ${this.identity.toString()}`);
         } catch (e) {
             traceWarning(e);
         }
@@ -625,7 +625,7 @@ export class JupyterNotebookBase implements INotebook {
                     ? CodeSnippits.MatplotLibInitSvg
                     : CodeSnippits.MatplotLibInitPng;
 
-            traceInfo(`Initialize matplotlib for ${this.resource.toString()}`);
+            traceInfo(`Initialize matplotlib for ${this.identity.toString()}`);
             // Force matplotlib to inline and save the default style. We'll use this later if we
             // get a request to update style
             await this.executeSilently(matplobInit, cancelToken);

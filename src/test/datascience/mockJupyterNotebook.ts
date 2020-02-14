@@ -32,7 +32,7 @@ export class MockJupyterNotebook implements INotebook {
         return this.owner;
     }
 
-    public get resource(): Uri {
+    public get identity(): Uri {
         return Uri.parse(Identifiers.InteractiveWindowIdentity);
     }
 
