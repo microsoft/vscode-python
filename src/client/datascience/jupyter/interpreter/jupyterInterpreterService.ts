@@ -8,6 +8,7 @@ import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { createPromiseFromCancellation } from '../../../common/cancellation';
 import '../../../common/extensions';
+import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
@@ -88,6 +89,8 @@ export class JupyterInterpreterService {
         const result = await this.interpreterConfiguration.installMissingDependencies(interpreter, undefined, token);
         switch (result) {
             case JupyterInterpreterDependencyResponse.ok: {
+                // Make sure that we have set our initial path before the user sets it
+                await this.setInitialInterpreter(token);
                 this.setAsSelectedInterpreter(interpreter);
                 return interpreter;
             }
@@ -126,22 +129,27 @@ export class JupyterInterpreterService {
         pythonPath: string,
         token?: CancellationToken
     ): Promise<PythonInterpreter | undefined> {
-        const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
-            cancelAction: 'resolve',
-            defaultValue: undefined,
-            token
-        });
+        try {
+            const resolveToUndefinedWhenCancelled = createPromiseFromCancellation({
+                cancelAction: 'resolve',
+                defaultValue: undefined,
+                token
+            });
 
-        // First see if we can get interpreter details
-        const interpreter = await Promise.race([
-            this.interpreterService.getInterpreterDetails(pythonPath, undefined),
-            resolveToUndefinedWhenCancelled
-        ]);
-        if (interpreter) {
-            // Then check that dependencies are installed
-            if (await this.interpreterConfiguration.areDependenciesInstalled(interpreter)) {
-                return interpreter;
+            // First see if we can get interpreter details
+            const interpreter = await Promise.race([
+                this.interpreterService.getInterpreterDetails(pythonPath, undefined),
+                resolveToUndefinedWhenCancelled
+            ]);
+            if (interpreter) {
+                // Then check that dependencies are installed
+                if (await this.interpreterConfiguration.areDependenciesInstalled(interpreter, token)) {
+                    return interpreter;
+                }
             }
+        } catch (_err) {
+            // For any errors we are ok with just returning undefined for an invalid interpreter
+            noop();
         }
         return undefined;
     }
@@ -171,7 +179,7 @@ export class JupyterInterpreterService {
 
             if (currentInterpreter) {
                 // Ask and give a chance to install dependencies in current interpreter
-                if (await this.interpreterConfiguration.areDependenciesInstalled(currentInterpreter)) {
+                if (await this.interpreterConfiguration.areDependenciesInstalled(currentInterpreter, token)) {
                     interpreter = currentInterpreter;
                 }
             }
