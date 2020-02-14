@@ -203,6 +203,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
 
         const defaultAction = () => {
             if (exception) {
+                traceError(`Exception attempting to enumerate kernelspecs: `, exception);
                 throw exception;
             }
             return output;
@@ -218,10 +219,12 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         try {
             if (args.join(' ').toLowerCase() === 'list --json') {
                 // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
-                return this.getKernelSpecList(interpreter, options);
+                output = await this.getKernelSpecList(interpreter, options);
+                return output;
             } else if (args.join(' ').toLowerCase() === '--version') {
                 // Try getting kernelspec version using python script, if that fails (even if there's output in stderr) rethrow original exception.
-                return this.getKernelSpecVersion(interpreter, options);
+                output = await this.getKernelSpecVersion(interpreter, options);
+                return output;
             }
         } catch (innerEx) {
             traceError('Failed to get a list of the kernelspec using python script', innerEx);

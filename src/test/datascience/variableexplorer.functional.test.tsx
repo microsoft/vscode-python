@@ -184,7 +184,16 @@ myDict = {'a': 1}`;
                 { name: 'myDict', value: "{'a': 1}", supportsDataExplorer: true, type: 'dict', size: 54, shape: '', count: 0, truncated: false },
                 { name: 'myList', value: '[1, 2, 3]', supportsDataExplorer: true, type: 'list', size: 54, shape: '', count: 0, truncated: false },
                 // Set can vary between python versions, so just don't both to check the value, just see that we got it
-                { name: 'mySet', value: undefined, supportsDataExplorer: true, type: 'set', size: 54, shape: '', count: 0, truncated: false }
+                {
+                    name: 'mySet',
+                    value: undefined,
+                    supportsDataExplorer: false,
+                    type: 'set',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
         },
