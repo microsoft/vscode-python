@@ -8,6 +8,7 @@ import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { ProductNames } from '../../../common/installer/productNames';
+import { traceError } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
@@ -302,7 +303,8 @@ export class JupyterInterpreterDependencyService {
         return command
             .exec(['--version'], { throwOnStdErr: true })
             .then(() => true)
-            .catch(() => {
+            .catch(e => {
+                traceError(`Kernel spec not found: `, e);
                 sendTelemetryEvent(Telemetry.KernelSpecNotFound);
                 return false;
             });

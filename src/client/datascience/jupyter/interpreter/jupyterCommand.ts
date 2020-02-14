@@ -224,6 +224,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
 
         const defaultAction = () => {
             if (exception) {
+                traceError(`Exception attempting to enumerate kernelspecs: `, exception);
                 throw exception;
             }
             return output;
