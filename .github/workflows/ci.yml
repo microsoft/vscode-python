@@ -468,24 +468,37 @@ jobs:
       - name: Create a tag object
         # Curl syntax explanation: https://stackoverflow.com/a/36778045
         run: |
-          curl -s -X POST "https://api.github.com/repos/microsoft/vscode-python/git/tags" \
+          # We first need a tag creation date to populate the "tagger" key to make this tag an annotated one.
+          date_now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          # Create the tag object and store the response.
+          response_payload=$(curl -s -X POST "https://api.github.com/repos/microsoft/vscode-python/git/tags" \
           -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" \
           -d @- << EOF
           {
             "tag": "${{env.LKG_TAG}}",
-            "message": "Last known good build of vscode-python via the GitHub Action CI workflow",
+            "message": "Last known good build of vscode-python via the GitHub Action CI workflow.",
             "object": "${{github.sha}}",
-            "type": "commit"
+            "type": "commit",
+            "tagger": {
+                "name": "GitHub Action",
+                "email": "ptvshelp@microsoft.com",
+                "date": "$date_now"
+            }
           }
           EOF
+          )
 
-      - name: Create a tag reference
-        run: |
+          # Pass the JSON response to jq to extract the tag ref SHA.
+          # Response structure: https://developer.github.com/v3/git/tags/#response-1.
+          tag_sha=$(echo $response_payload | jq ".sha") 
+
+          # Finally create the tag ref using the tag SHA.
           curl -s -X POST "https://api.github.com/repos/microsoft/vscode-python/git/refs" \
-          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}"  \
+          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" \
           -d @- << EOF
           {
             "ref": "refs/tags/${{env.LKG_TAG}}",
-            "sha": "${{github.sha}}"
+            "sha": $tag_sha
           }
           EOF
