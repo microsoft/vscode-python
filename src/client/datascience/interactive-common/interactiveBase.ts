@@ -1425,8 +1425,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async openSettings() {
-        // tslint:disable-next-line: prefer-template
-        const uri = Uri.file(EXTENSION_ROOT_DIR + '/.vscode/settings.json');
-        await commands.executeCommand('vscode.open', uri);
+        // Open settings and search for 'python.dataScience.textOutputLimit'
+        await commands.executeCommand('workbench.action.openSettings', 'python.dataScience.textOutputLimit');
     }
 }
