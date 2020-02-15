@@ -1,5 +1,29 @@
 # Changelog
 
+## 2020.2.2 (18 February 2020)
+
+### Fixes
+
+1. Improve error messaging when the jupyter notebook cannot be started.
+   ([#9904](https://github.com/Microsoft/vscode-python/issues/9904))
+1. Clear variables in notebooks and interactive-window when restarting.
+   ([#9991](https://github.com/Microsoft/vscode-python/issues/9991))
+1. Re-install `Jupyter` instead of installing `kernelspec` if `kernelspec` cannot be found in the python environment.
+   ([#10071](https://github.com/Microsoft/vscode-python/issues/10071))
+1. Fixes problem with showing ndarrays in the data viewer.
+   ([#10074](https://github.com/Microsoft/vscode-python/issues/10074))
+1. Fix data viewer not opening on certain data frames.
+   ([#10075](https://github.com/Microsoft/vscode-python/issues/10075))
+
+### Code Health
+
+1. Add telemetry to track notebook languages
+   ([#9819](https://github.com/Microsoft/vscode-python/issues/9819))
+1. Telemetry around kernels not working and installs not working.
+   ([#9883](https://github.com/Microsoft/vscode-python/issues/9883))
+1. Change select kernel telemetry to track duration till quick pick appears.
+   ([#10049](https://github.com/Microsoft/vscode-python/issues/10049))
+
 ## 2020.2.1 (12 February 2020)
 
 ### Fixes
