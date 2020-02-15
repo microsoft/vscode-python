@@ -467,7 +467,7 @@ jobs:
       # We need 2 calls when creating an annotated tag: first create the tag object, then the tag reference.
       # If we only wanted a lightweight tag we would only need to create a tag reference.
       # See https://developer.github.com/v3/git/tags/#create-a-tag-object
-      - name: Create a tag object
+      - name: Tag commit with the LKG_TAG tag
         # Curl syntax explanation: https://stackoverflow.com/a/36778045
         run: |
           # We first need a tag creation date to populate the "tagger" key to make this tag an annotated one.
