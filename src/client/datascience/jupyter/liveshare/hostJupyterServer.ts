@@ -220,7 +220,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             traceInfo(`Finished connecting ${this.id}`);
 
             // Save the notebook
-            this.setNotebook(resource, notebook);
+            this.setNotebook(identity, notebook);
 
             // Return the result.
             return notebook;
