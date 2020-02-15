@@ -1,0 +1,74 @@
+name: Test workflow
+
+on:
+  push:
+    branches:
+      # Run the CI workflow only on master for microsoft/vscode-python for now.
+      - gh-action-*
+
+env:
+  PYTHON_VERSION: 3.8
+  CACHE_NPM_DEPS: cache-npm
+  CACHE_OUT_DIRECTORY: cache-out-directory
+  CACHE_PIP_DEPS: cache-pip
+  # Key for the cache created at the end of the the 'Cache ./pythonFiles/lib/python' step.
+  CACHE_PYTHONFILES: cache-pvsc-pythonFiles
+  ARTIFACT_NAME_VSIX: ms-python-insiders-vsix
+  COVERAGE_REPORTS: tests-coverage-reports
+  TEST_RESULTS_DIRECTORY: .
+  LKG_TAG: ci-lkg
+
+jobs:
+  lkg-tag:
+    # LKG = last known good
+    name: Tag successful build as LKG
+    runs-on: ubuntu-latest
+    needs: [tests, smoke-tests]
+    env:
+      API_URL: https://api.github.com/repos/microsoft/vscode-python/git
+    steps:
+      - name: Delete existing tag
+        run: |
+          curl -s -X DELETE ${{env.API_URL}}/refs/tags/${{env.LKG_TAG}} \
+          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}"
+
+      # We need 2 calls when creating an annotated tag: first create the tag object, then the tag reference.
+      # If we only wanted a lightweight tag we would only need to create a tag reference.
+      # See https://developer.github.com/v3/git/tags/#create-a-tag-object
+      - name: Create a tag object
+        # Curl syntax explanation: https://stackoverflow.com/a/36778045
+        run: |
+          # We first need a tag creation date to populate the "tagger" key to make this tag an annotated one.
+          date_now=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          # Create the tag object and store the response.
+          response_payload=$(curl -s -X POST ${{env.API_URL}}/tags \
+          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" \
+          -d @- << EOF
+          {
+            "tag": "${{env.LKG_TAG}}",
+            "message": "Last known good build of vscode-python via the GitHub Action CI workflow.",
+            "object": "${{github.sha}}",
+            "type": "commit",
+            "tagger": {
+                "name": "GitHub Action",
+                "email": "ptvshelp@microsoft.com",
+                "date": "$date_now"
+            }
+          }
+          EOF
+          )
+
+          # Pass the JSON response to jq to extract the tag ref SHA.
+          # Response structure: https://developer.github.com/v3/git/tags/#response-1.
+          tag_sha=$(echo $response_payload | jq ".sha") 
+
+          # Finally create the tag ref using the tag SHA.
+          curl -s -X POST ${{env.API_URL}}/refs \
+          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" \
+          -d @- << EOF
+          {
+            "ref": "refs/tags/${{env.LKG_TAG}}",
+            "sha": $tag_sha
+          }
+          EOF
