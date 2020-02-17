@@ -85,15 +85,15 @@ class JediCompletion(object):
             return cls._get_top_level_module(_path)
         return path
 
-    def _generate_signature(self, completion):
+    def _generate_signature(self, definition):
         """Generate signature with function arguments.
         """
-        if completion.type in ["module"] or not hasattr(completion, "params"):
+        if completion.type in ["module"]:
             return ""
-        return "%s(%s)" % (
-            completion.name,
-            ", ".join(p.description[6:] for p in completion.params if p),
-        )
+        signatures = definition.get_signatures()
+        if len(signatures) == 0:
+            return ""
+        return signatures[0].to_string()
 
     def _get_call_signatures(self, script):
         """Extract call signatures from jedi.api.Script object in failsafe way.
