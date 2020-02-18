@@ -65,7 +65,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                         return new DebugAdapterExecutable(pythonPath, [configuration.debugAdapterPath, ...logArgs]);
                     }
 
-                    if (await this.useNewDebugpy(pythonPath)) {
+                    if (await this.useNewDebugger(pythonPath)) {
                         sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
                         return new DebugAdapterExecutable(pythonPath, [
                             path.join(debugpyPathToUse, 'wheels', 'debugpy', 'adapter'),
@@ -101,7 +101,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
      * @returns {Promise<boolean>} Whether the user should and can use the new DEBUGPY wheels or not.
      * @memberof DebugAdapterDescriptorFactory
      */
-    public async useNewDebugpy(pythonPath: string): Promise<boolean> {
+    public async useNewDebugger(pythonPath: string): Promise<boolean> {
         const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
         if (!interpreterInfo || !interpreterInfo.version || !interpreterInfo.version.raw.startsWith('3.7')) {
             return false;
@@ -110,11 +110,11 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         return true;
     }
 
-    public getDebugpyPath(): string {
+    public getDebuggerPath(): string {
         return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_debugpy', 'no_wheels', 'debugpy');
     }
 
-    public getRemoteDebugpyArgs(remoteDebugOptions: RemoteDebugOptions): string[] {
+    public getRemoteDebuggerArgs(remoteDebugOptions: RemoteDebugOptions): string[] {
         const waitArgs = remoteDebugOptions.waitUntilDebuggerAttaches ? ['--wait'] : [];
         if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             return ['--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString(), ...waitArgs];
