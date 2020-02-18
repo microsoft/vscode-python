@@ -8,7 +8,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { ILiveShareApi } from '../../common/application/types';
 import '../../common/extensions';
 import { traceError, traceInfo } from '../../common/logger';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -81,7 +81,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public createNotebook(
-        resource: Uri,
+        resource: Resource,
         identity: Uri,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
@@ -199,7 +199,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     protected createNotebookInstance(
-        _resource: Uri,
+        _resource: Resource,
         _identity: Uri,
         _sessionManager: IJupyterSessionManager,
         _savedSession: IJupyterSession | undefined,

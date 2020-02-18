@@ -10,7 +10,7 @@ import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import {
     IConnection,
@@ -107,7 +107,7 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
     }
 
     public async createNotebook(
-        resource: Uri,
+        resource: Resource,
         identity: Uri,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken

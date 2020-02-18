@@ -80,9 +80,11 @@ suite('DataScience Interactive Window output tests', () => {
     });
 
     async function forceSettingsChange(newSettings: IDataScienceSettings) {
-        await getOrCreateInteractiveWindow(ioc);
+        const window = await getOrCreateInteractiveWindow(ioc);
+        await window.show();
+        const update = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
         ioc.forceSettingsChanged(ioc.getSettings().pythonPath, newSettings);
-        return waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
+        return update;
     }
 
     // Uncomment this to debug hangs on exit

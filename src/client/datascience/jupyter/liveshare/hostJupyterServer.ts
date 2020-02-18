@@ -12,7 +12,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
@@ -100,7 +100,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                         // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
                         const notebook = (await this.createNotebook(
                             resource,
-                            identity,
+                            identity!,
                             undefined,
                             cancellation
                         )) as HostJupyterNotebook;
@@ -149,7 +149,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     }
 
     protected async createNotebookInstance(
-        resource: vscode.Uri,
+        resource: Resource,
         identity: vscode.Uri,
         sessionManager: IJupyterSessionManager,
         possibleSession: IJupyterSession | undefined,
@@ -230,7 +230,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     }
 
     private async computeLaunchInfo(
-        resource: vscode.Uri,
+        resource: Resource,
         sessionManager: IJupyterSessionManager,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
@@ -279,9 +279,12 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         return { info: launchInfo, changedKernel };
     }
 
-    private parseUri(uri: string): vscode.Uri {
-        const parsed = vscode.Uri.parse(uri);
-        return parsed.scheme && parsed.scheme !== Identifiers.InteractiveWindowIdentityScheme
+    private parseUri(uri: string | undefined): Resource {
+        const parsed = uri ? vscode.Uri.parse(uri) : undefined;
+        return parsed &&
+            parsed.scheme &&
+            parsed.scheme !== Identifiers.InteractiveWindowIdentityScheme &&
+            parsed.scheme === 'vsls'
             ? this.finishedApi!.convertSharedUriToLocal(parsed)
             : parsed;
     }
