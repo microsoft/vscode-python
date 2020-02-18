@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import { instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -52,7 +52,7 @@ suite('Data Science - ServerCache', () => {
             variableQueries: [],
             jupyterCommandLineArguments: []
         };
-        when(configService.getSettings()).thenReturn(pythonSettings);
+        when(configService.getSettings(anything())).thenReturn(pythonSettings);
         serverCache = new ServerCache(instance(configService), instance(workspaceService), instance(fileSystem));
     });
 

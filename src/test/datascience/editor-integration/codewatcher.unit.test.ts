@@ -132,7 +132,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         documentManager.setup(dm => dm.activeTextEditor).returns(() => textEditor.object);
 
         // Setup config service
-        configService.setup(c => c.getSettings()).returns(() => pythonSettings);
+        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
 
         commandManager
             .setup(c => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))

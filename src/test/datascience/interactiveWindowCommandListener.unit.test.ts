@@ -113,7 +113,7 @@ suite('Interactive window command listener', async () => {
         // Service container needs logger, file system, and config service
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
-        when(configService.getSettings()).thenReturn(pythonSettings);
+        when(configService.getSettings(anything())).thenReturn(pythonSettings);
 
         // Setup default settings
         pythonSettings.datascience = {

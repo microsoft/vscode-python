@@ -83,7 +83,7 @@ suite('Data Science - JupyterConnection', () => {
         getServerInfoStub.resolves(dummyServerInfos);
         when(fs.arePathsSame(anything(), anything())).thenCall((path1, path2) => path1 === path2);
         when(settings.datascience).thenReturn(dsSettings);
-        when(configService.getSettings()).thenReturn(instance(settings));
+        when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fs));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
     });

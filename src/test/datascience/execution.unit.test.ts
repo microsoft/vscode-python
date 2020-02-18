@@ -803,7 +803,7 @@ suite('Jupyter Execution', async () => {
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
         when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
         when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(application));
-        when(configService.getSettings()).thenReturn(pythonSettings);
+        when(configService.getSettings(anything())).thenReturn(pythonSettings);
         when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
         when(application.withProgress(anything(), anything())).thenCall(
             (_, cb: (_: any, token: any) => Promise<any>) => {

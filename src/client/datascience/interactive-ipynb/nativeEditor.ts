@@ -490,7 +490,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     protected async getNotebookIdentity(): Promise<Uri> {
-        await this.loadedPromise.promise;
+        if (this.loadedPromise) {
+            await this.loadedPromise.promise;
+        }
 
         // File should be set now
         return this._file;

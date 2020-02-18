@@ -106,7 +106,7 @@ suite('JupyterVariables', () => {
 
         fileSystem = typemoq.Mock.ofType<IFileSystem>();
         fileSystem.setup(fs => fs.readFile(typemoq.It.isAnyString())).returns(() => Promise.resolve('test'));
-        config.setup(s => s.getSettings()).returns(() => pythonSettings);
+        config.setup(s => s.getSettings(typemoq.It.isAny())).returns(() => pythonSettings);
 
         jupyterVariables = new JupyterVariables(fileSystem.object, config.object);
     });

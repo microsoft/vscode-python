@@ -24,7 +24,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
     ) {
         this.computeDecorations();
         disposables.push(this);
-        disposables.push(this.configuration.getSettings().onDidChange(this.settingsChanged, this));
+        disposables.push(this.configuration.getSettings(undefined).onDidChange(this.settingsChanged, this));
         disposables.push(this.documentManager.onDidChangeActiveTextEditor(this.changedEditor, this));
         disposables.push(this.documentManager.onDidChangeTextEditorSelection(this.changedSelection, this));
         disposables.push(this.documentManager.onDidChangeTextDocument(this.changedDocument, this));

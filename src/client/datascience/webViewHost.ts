@@ -60,7 +60,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
 
         // Listen for settings changes
         this.settingsChangeHandler = this.configService
-            .getSettings()
+            .getSettings(undefined)
             .onDidChange(this.onDataScienceSettingsChanged.bind(this));
 
         // Send the first settings message
@@ -354,9 +354,9 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     };
 
     // Post a message to our webpanel and update our new datascience settings
-    private onDataScienceSettingsChanged = () => {
+    private onDataScienceSettingsChanged = async () => {
         // Stringify our settings to send over to the panel
-        const dsSettings = JSON.stringify(this.generateDataScienceExtraSettings());
+        const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
         this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
     };
 }

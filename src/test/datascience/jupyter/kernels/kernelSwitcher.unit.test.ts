@@ -84,7 +84,7 @@ suite('Data Science - Kernel Switcher', () => {
         // tslint:disable-next-line: no-any
         when(settings.datascience).thenReturn({} as any);
         when(notebook.server).thenReturn(instance(notebookServer));
-        when(configService.getSettings()).thenReturn(instance(settings));
+        when(configService.getSettings(anything())).thenReturn(instance(settings));
         kernelSwitcher = new KernelSwitcher(
             instance(configService),
             instance(sessionManagerFactory),

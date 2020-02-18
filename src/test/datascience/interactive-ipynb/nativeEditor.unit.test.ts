@@ -287,7 +287,7 @@ suite('Data Science - Native Editor', () => {
 
         when(experimentsManager.inExperiment(anything())).thenReturn(false);
         when(settings.onDidChange).thenReturn(settingsChangedEvent.event);
-        when(configService.getSettings()).thenReturn(instance(settings));
+        when(configService.getSettings(anything())).thenReturn(instance(settings));
 
         const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
         when(workspace.onDidChangeConfiguration).thenReturn(configChangeEvent.event);

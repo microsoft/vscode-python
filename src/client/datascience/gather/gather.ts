@@ -32,7 +32,9 @@ export class GatherExecution implements IGatherExecution {
         this._executionSlicer = new ExecutionLogSlicer(this.dataflowAnalyzer);
 
         if (this._enabled) {
-            this.disposables.push(this.configService.getSettings().onDidChange(e => this.updateEnableGather(e)));
+            this.disposables.push(
+                this.configService.getSettings(undefined).onDidChange(e => this.updateEnableGather(e))
+            );
         }
 
         traceInfo('Gathering tools have been activated');
