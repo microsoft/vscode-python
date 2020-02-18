@@ -52,7 +52,7 @@ suite('Debugging - Adapter Factory', () => {
         'python',
         'new_debugpy',
         'wheels',
-        'ptvsd',
+        'debugpy',
         'adapter'
     );
     const ptvsdAdapterPathWithoutWheels = path.join(
@@ -62,7 +62,7 @@ suite('Debugging - Adapter Factory', () => {
         'python',
         'new_debugpy',
         'no_wheels',
-        'ptvsd',
+        'debugpy',
         'adapter'
     );
     const pythonPath = path.join('path', 'to', 'python', 'interpreter');

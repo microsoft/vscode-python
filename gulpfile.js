@@ -305,7 +305,7 @@ gulp.task('installNewDebugpy', async () => {
         });
     if (!successWithWheels) {
         console.info("Failed to install new DEBUGPY wheels using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', wheelsArgs, wheelsEnv).catch(ex => console.error("Failed to install DEBUGPY 5.0 wheels using 'python'", ex));
+        await spawnAsync('python', wheelsArgs, wheelsEnv).catch(ex => console.error("Failed to install DEBUGPY wheels using 'python'", ex));
     }
 
     rmrf.sync('./pythonFiles/lib/temp');
