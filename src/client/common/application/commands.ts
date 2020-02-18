@@ -51,7 +51,6 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.ExecSelectionInInteractiveWindow]: [];
     [DSCommands.SelectJupyterURI]: [];
-    [DSCommands.SelectJupyterCommandLine]: [];
     [DSCommands.ShowHistoryPane]: [];
     [DSCommands.UndoCells]: [];
     [DSCommands.RedoCells]: [];
@@ -154,4 +153,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ScrollToCell]: [string, string];
     [DSCommands.ViewJupyterOutput]: [];
     [DSCommands.SwitchJupyterKernel]: [INotebook | undefined];
+    [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
 }

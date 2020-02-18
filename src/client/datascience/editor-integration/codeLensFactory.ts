@@ -6,7 +6,7 @@ import { CodeLens, Command, Event, EventEmitter, Range, TextDocument } from 'vsc
 
 import { traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { generateCellRangesFromDocument } from '../cellFactory';
@@ -67,9 +67,12 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     }
 
     public createCodeLenses(document: TextDocument): CodeLens[] {
-        const ranges = generateCellRangesFromDocument(document, this.configService.getSettings().datascience);
-        const commands = this.enumerateCommands();
-        const hashes = this.configService.getSettings().datascience.addGotoCodeLenses
+        const ranges = generateCellRangesFromDocument(
+            document,
+            this.configService.getSettings(document.uri).datascience
+        );
+        const commands = this.enumerateCommands(document.uri);
+        const hashes = this.configService.getSettings(document.uri).datascience.addGotoCodeLenses
             ? this.hashProvider.getHashes()
             : [];
         const codeLenses: CodeLens[] = [];
@@ -89,10 +92,10 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         return codeLenses;
     }
 
-    private enumerateCommands(): string[] {
+    private enumerateCommands(resource: Resource): string[] {
         let fullCommandList: string[];
         // Add our non-debug commands
-        const commands = this.configService.getSettings().datascience.codeLenses;
+        const commands = this.configService.getSettings(resource).datascience.codeLenses;
         if (commands) {
             fullCommandList = commands.split(',').map(s => s.trim());
         } else {
@@ -100,7 +103,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         }
 
         // Add our debug commands
-        const debugCommands = this.configService.getSettings().datascience.debugCodeLenses;
+        const debugCommands = this.configService.getSettings(resource).datascience.debugCodeLenses;
         if (debugCommands) {
             fullCommandList = fullCommandList.concat(debugCommands.split(',').map(s => s.trim()));
         } else {

@@ -11,7 +11,8 @@ import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
     IConfigurationService,
-    IDisposableRegistry
+    IDisposableRegistry,
+    Resource
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -89,9 +90,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         throw new Error(localize.DataScience.pythonInteractiveCreateFailed());
     }
 
-    public async getNotebookOptions(): Promise<INotebookServerOptions> {
+    public async getNotebookOptions(resource: Resource): Promise<INotebookServerOptions> {
         // Find the settings that we are going to launch our server with
-        const settings = this.configService.getSettings();
+        const settings = this.configService.getSettings(resource);
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
         const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 

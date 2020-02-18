@@ -166,7 +166,7 @@ export class GuestJupyterNotebook
     }
 
     public async interruptKernel(_timeoutMs: number): Promise<InterruptResult> {
-        const settings = this.configService.getSettings();
+        const settings = this.configService.getSettings(this.resource);
         const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
 
         const response = await this.sendRequest(LiveShareCommands.interrupt, [interruptTimeout]);

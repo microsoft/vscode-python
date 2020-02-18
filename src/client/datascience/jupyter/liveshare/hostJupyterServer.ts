@@ -183,7 +183,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         if (changedKernel && possibleSession && info.kernelSpec) {
             await possibleSession.changeKernel(
                 info.kernelSpec,
-                this.configService.getSettings().datascience.jupyterLaunchTimeout
+                this.configService.getSettings(resource).datascience.jupyterLaunchTimeout
             );
         }
 

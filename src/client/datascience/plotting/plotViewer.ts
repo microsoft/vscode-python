@@ -14,7 +14,7 @@ import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { WebHostNotebook } from '../../common/experimentGroups';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposable, IExperimentsManager } from '../../common/types';
+import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { ICodeCssGenerator, IPlotViewer, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
@@ -84,6 +84,10 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
         if (this.closedEvent) {
             this.closedEvent.fire(this);
         }
+    }
+
+    protected getOwningResource(): Promise<Resource> {
+        return Promise.resolve(undefined);
     }
 
     //tslint:disable-next-line:no-any

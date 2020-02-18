@@ -528,7 +528,7 @@ for _ in range(50):
                 await closeNotebook(editor, wrapper);
                 const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
                 const editorProvider = ioc.serviceManager.get<INotebookEditorProvider>(INotebookEditorProvider);
-                const server = await jupyterExecution.getServer(await editorProvider.getNotebookOptions());
+                const server = await jupyterExecution.getServer(await editorProvider.getNotebookOptions(undefined));
                 assert.ok(server, 'Server was destroyed on notebook shutdown');
 
                 // Reopen, and rerun

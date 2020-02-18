@@ -22,7 +22,8 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IMemento,
-    IPersistentStateFactory
+    IPersistentStateFactory,
+    Resource
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -261,7 +262,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }).ignoreErrors();
     }
 
-    public async getNotebookResource(): Promise<Uri> {
+    protected async getOwningResource(): Promise<Resource> {
         if (this.lastFile) {
             return Uri.file(this.lastFile);
         }
@@ -269,7 +270,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         if (root) {
             return Uri.file(root);
         }
-        return Uri.file('./');
+        return undefined;
     }
     protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
         super.onViewStateChanged(args);
@@ -301,8 +302,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    protected getNotebookOptions(): Promise<INotebookServerOptions> {
-        return this.interactiveWindowProvider.getNotebookOptions();
+    protected async getNotebookOptions(): Promise<INotebookServerOptions> {
+        return this.interactiveWindowProvider.getNotebookOptions(await this.getOwningResource());
     }
 
     protected async getNotebookIdentity(): Promise<Uri> {

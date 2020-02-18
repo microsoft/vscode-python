@@ -31,6 +31,7 @@ import {
     IExperimentsManager,
     IExtensionContext,
     IMemento,
+    Resource,
     WORKSPACE_MEMENTO
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -54,12 +55,12 @@ import {
     IInsertCell,
     INativeCommand,
     InteractiveWindowMessages,
+    IReExecuteCell,
     IRemoveCell,
     ISaveAll,
     ISubmitNewCell,
     ISwapCells,
-    SysInfoReason,
-    IReExecuteCell
+    SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { ProgressReporter } from '../progress/progressReporter';
@@ -328,7 +329,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     public async getNotebookOptions(): Promise<INotebookServerOptions> {
-        const options = await this.ipynbProvider.getNotebookOptions();
+        const options = await this.ipynbProvider.getNotebookOptions(await this.getOwningResource());
         await this.contentsLoadedPromise.promise;
         const metadata = this.notebookJson.metadata;
         return {
@@ -356,7 +357,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.setDirty();
     }
 
-    public getNotebookResource(): Promise<Uri> {
+    public getOwningResource(): Promise<Resource> {
         // Resource to use for loading and our identity are the same.
         return this.getNotebookIdentity();
     }
@@ -885,7 +886,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             // Restart our kernel so that execution counts are reset
             let oldAsk: boolean | undefined = false;
-            const settings = this.configuration.getSettings();
+            const settings = this.configuration.getSettings(await this.getOwningResource());
             if (settings && settings.datascience) {
                 oldAsk = settings.datascience.askForKernelRestart;
                 settings.datascience.askForKernelRestart = false;

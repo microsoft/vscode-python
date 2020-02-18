@@ -303,7 +303,7 @@ export interface IInteractiveWindowProvider {
     onExecutedCode: Event<string>;
     getActive(): IInteractiveWindow | undefined;
     getOrCreateActive(): Promise<IInteractiveWindow>;
-    getNotebookOptions(): Promise<INotebookServerOptions>;
+    getNotebookOptions(resource: Resource): Promise<INotebookServerOptions>;
 }
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
@@ -361,7 +361,7 @@ export interface INotebookEditorProvider {
     open(file: Uri, contents: string): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(contents?: string): Promise<INotebookEditor>;
-    getNotebookOptions(): Promise<INotebookServerOptions>;
+    getNotebookOptions(resource: Resource): Promise<INotebookServerOptions>;
 }
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
@@ -489,8 +489,8 @@ export interface IMessageCell extends nbformat.IBaseCell {
 
 export const ICodeCssGenerator = Symbol('ICodeCssGenerator');
 export interface ICodeCssGenerator {
-    generateThemeCss(isDark: boolean, theme: string): Promise<string>;
-    generateMonacoTheme(isDark: boolean, theme: string): Promise<JSONObject>;
+    generateThemeCss(resource: Resource, isDark: boolean, theme: string): Promise<string>;
+    generateMonacoTheme(resource: Resource, isDark: boolean, theme: string): Promise<JSONObject>;
 }
 
 export const IThemeFinder = Symbol('IThemeFinder');

@@ -10,7 +10,7 @@ import * as path from 'path';
 import { IWorkspaceService } from '../common/application/types';
 import { traceError, traceInfo, traceWarning } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService } from '../common/types';
+import { IConfigurationService, Resource } from '../common/types';
 import { DefaultTheme } from './constants';
 import { ICodeCssGenerator, IThemeFinder } from './types';
 
@@ -102,15 +102,16 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         @inject(IFileSystem) private fs: IFileSystem
     ) {}
 
-    public generateThemeCss(isDark: boolean, theme: string): Promise<string> {
-        return this.applyThemeData(isDark, theme, '', this.generateCss.bind(this));
+    public generateThemeCss(resource: Resource, isDark: boolean, theme: string): Promise<string> {
+        return this.applyThemeData(resource, isDark, theme, '', this.generateCss.bind(this));
     }
 
-    public generateMonacoTheme(isDark: boolean, theme: string): Promise<JSONObject> {
-        return this.applyThemeData(isDark, theme, {} as any, this.generateMonacoThemeObject.bind(this));
+    public generateMonacoTheme(resource: Resource, isDark: boolean, theme: string): Promise<JSONObject> {
+        return this.applyThemeData(resource, isDark, theme, {} as any, this.generateMonacoThemeObject.bind(this));
     }
 
     private async applyThemeData<T>(
+        resource: Resource,
         isDark: boolean,
         theme: string,
         defaultT: T,
@@ -119,7 +120,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         let result = defaultT;
         try {
             // First compute our current theme.
-            const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
+            const ignoreTheme = this.configService.getSettings(resource).datascience.ignoreVscodeTheme ? true : false;
             theme = ignoreTheme ? DefaultTheme : theme;
             const editor = this.workspaceService.getConfiguration('editor', undefined);
             const fontFamily = editor

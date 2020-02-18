@@ -16,6 +16,7 @@ import { IConfigurationService, IExperimentsManager, Version } from '../../commo
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { getCellResource } from '../cellFactory';
 import { Identifiers, Telemetry } from '../constants';
 import {
     CellState,
@@ -144,7 +145,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // If we already have configuration, we're already attached, don't do it again.
         let result = this.configs.get(notebook.identity.toString());
         if (result) {
-            const settings = this.configService.getSettings();
+            const settings = this.configService.getSettings(notebook.resource);
             result.justMyCode = settings.datascience.debugJustMyCode;
             return result;
         }
@@ -207,7 +208,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         // Add the settings path first as it takes precedence over the ptvsd extension path
         // tslint:disable-next-line:no-multiline-string
-        let settingsPath = this.configService.getSettings().datascience.ptvsdDistPath;
+        let settingsPath = this.configService.getSettings(notebook.resource).datascience.ptvsdDistPath;
         // Escape windows path chars so they end up in the source escaped
         if (settingsPath) {
             if (this.platform.isWindows) {
@@ -407,7 +408,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 const debugInfoRegEx = /\('(.*?)', ([0-9]*)\)/;
 
                 const debugInfoMatch = debugInfoRegEx.exec(enableAttachString);
-                const settings = this.configService.getSettings();
+                const settings = this.configService.getSettings(getCellResource(cells[0]));
                 if (debugInfoMatch) {
                     const localConfig: DebugConfiguration = {
                         name: 'IPython',

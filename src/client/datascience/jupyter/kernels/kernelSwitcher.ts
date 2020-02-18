@@ -34,7 +34,7 @@ export class KernelSwitcher {
     private async selectJupyterKernel(notebook: INotebook): Promise<KernelSpecInterpreter | undefined> {
         let kernel: KernelSpecInterpreter | undefined;
 
-        const settings = this.configService.getSettings();
+        const settings = this.configService.getSettings(notebook.resource);
         const isLocalConnection =
             notebook.server.getConnectionInfo()?.localLaunch ??
             settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
@@ -68,7 +68,7 @@ export class KernelSwitcher {
         return this.kernelSelector.selectRemoteKernel(resource, stopWatch, session, undefined, currentKernel);
     }
     private async switchKernelWithRetry(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
-        const settings = this.configService.getSettings();
+        const settings = this.configService.getSettings(notebook.resource);
         const isLocalConnection =
             notebook.server.getConnectionInfo()?.localLaunch ??
             settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;

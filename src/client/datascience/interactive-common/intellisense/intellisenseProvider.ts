@@ -681,7 +681,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private async getNotebook(): Promise<INotebook | undefined> {
         // First get the active server
         const activeServer = await this.jupyterExecution.getServer(
-            await this.interactiveWindowProvider.getNotebookOptions()
+            await this.interactiveWindowProvider.getNotebookOptions(this.potentialResource)
         );
 
         // If that works, see if there's a matching notebook running

@@ -222,7 +222,9 @@ export class JupyterVariables implements IJupyterVariables {
         // We may have cached this information
         let result = this.languageToQueryMap.get(language);
         if (!result) {
-            let query = this.configService.getSettings().datascience.variableQueries.find(v => v.language === language);
+            let query = this.configService
+                .getSettings(notebook.resource)
+                .datascience.variableQueries.find(v => v.language === language);
             if (!query) {
                 query = Settings.DefaultVariableQuery;
             }
@@ -280,7 +282,7 @@ export class JupyterVariables implements IJupyterVariables {
             };
         }
 
-        const exclusionList = this.configService.getSettings().datascience.variableExplorerExclude
+        const exclusionList = this.configService.getSettings(notebook.resource).datascience.variableExplorerExclude
             ? this.configService.getSettings().datascience.variableExplorerExclude?.split(';')
             : [];
 

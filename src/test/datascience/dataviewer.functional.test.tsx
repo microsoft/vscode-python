@@ -99,7 +99,9 @@ suite('DataScience DataViewer tests', () => {
     async function injectCode(code: string): Promise<void> {
         const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
         const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        const server = await exec.connectToNotebookServer(await interactiveWindowProvider.getNotebookOptions());
+        const server = await exec.connectToNotebookServer(
+            await interactiveWindowProvider.getNotebookOptions(undefined)
+        );
         notebook = server
             ? await server.createNotebook(undefined, Uri.parse(Identifiers.InteractiveWindowIdentity))
             : undefined;

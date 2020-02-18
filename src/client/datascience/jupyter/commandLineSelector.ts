@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 // tslint:disable-next-line: import-name
 import parseArgsStringToArgv from 'string-argv';
-import { ConfigurationChangeEvent, ConfigurationTarget, QuickPickItem } from 'vscode';
+import { ConfigurationChangeEvent, ConfigurationTarget, QuickPickItem, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../common/application/types';
 import { IConfigurationService } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
@@ -34,9 +34,9 @@ export class JupyterCommandLineSelector {
     }
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    public selectJupyterCommandLine(): Promise<void> {
+    public selectJupyterCommandLine(file: Uri): Promise<void> {
         const multiStep = this.multiStepFactory.create<{}>();
-        return multiStep.run(this.startSelectingCommandLine.bind(this), {});
+        return multiStep.run(this.startSelectingCommandLine.bind(this, file), {});
     }
 
     private async onDidChangeConfiguration(e: ConfigurationChangeEvent) {
@@ -52,7 +52,11 @@ export class JupyterCommandLineSelector {
         }
     }
 
-    private async startSelectingCommandLine(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
+    private async startSelectingCommandLine(
+        file: Uri,
+        input: IMultiStepInput<{}>,
+        _state: {}
+    ): Promise<InputStep<{}> | void> {
         // First step, show a quick pick to choose either the custom or the default.
         // newChoice element will be set if the user picked 'enter a new server'
         const item = await input.showQuickPick<QuickPickItem, IQuickPickParameters<QuickPickItem>>({
@@ -63,14 +67,18 @@ export class JupyterCommandLineSelector {
         if (item.label === this.defaultLabel) {
             await this.setJupyterCommandLine('');
         } else {
-            return this.selectCustomCommandLine.bind(this);
+            return this.selectCustomCommandLine.bind(this, file);
         }
     }
-    private async selectCustomCommandLine(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
+    private async selectCustomCommandLine(
+        file: Uri,
+        input: IMultiStepInput<{}>,
+        _state: {}
+    ): Promise<InputStep<{}> | void> {
         // Ask the user to enter a command line
         const result = await input.showInputBox({
             title: DataScience.jupyterCommandLinePrompt(),
-            value: this.configuration.getSettings().datascience.jupyterCommandLineArguments.join(' '),
+            value: this.configuration.getSettings(file).datascience.jupyterCommandLineArguments.join(' '),
             validate: this.validate,
             prompt: ''
         });

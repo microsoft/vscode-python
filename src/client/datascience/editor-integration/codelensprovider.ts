@@ -59,7 +59,11 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     // IDataScienceCodeLensProvider interface
     public getCodeWatcher(document: vscode.TextDocument): ICodeWatcher | undefined {
-        return this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
+        return this.matchWatcher(
+            document.fileName,
+            document.version,
+            this.configuration.getSettings(document.uri).datascience
+        );
     }
 
     private onDebugLocationUpdated() {
@@ -90,7 +94,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         editorContext.set(result && result.length > 0).catch();
 
         // Don't provide any code lenses if we have not enabled data science
-        const settings = this.configuration.getSettings();
+        const settings = this.configuration.getSettings(document.uri);
         if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens) {
             // Clear out any existing code watchers, providecodelenses is called on settings change
             // so we don't need to watch the settings change specifically here
@@ -143,7 +147,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(
             document.fileName,
             document.version,
-            this.configuration.getSettings().datascience
+            this.configuration.getSettings(document.uri).datascience
         );
         if (codeWatcher) {
             return codeWatcher.getCodeLenses();

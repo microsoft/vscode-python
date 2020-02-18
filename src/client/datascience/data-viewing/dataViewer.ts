@@ -11,7 +11,7 @@ import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../c
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import { WebHostNotebook } from '../../common/experimentGroups';
 import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposable, IExperimentsManager } from '../../common/types';
+import { IConfigurationService, IDisposable, IExperimentsManager, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -82,6 +82,10 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             // Send a message with our data
             this.postMessage(DataViewerMessages.InitializeData, this.variable).ignoreErrors();
         }
+    }
+
+    protected getOwningResource(): Promise<Resource> {
+        return Promise.resolve(undefined);
     }
 
     //tslint:disable-next-line:no-any

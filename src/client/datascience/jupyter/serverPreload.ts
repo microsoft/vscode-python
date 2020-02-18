@@ -52,7 +52,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
     private async createServerIfNecessary() {
         try {
             traceInfo(`Attempting to start a server because of preload conditions ...`);
-            const options = await this.interactiveProvider.getNotebookOptions();
+            const options = await this.interactiveProvider.getNotebookOptions(undefined);
 
             // Turn off any UI display
             const optionsCopy = { ...options };
@@ -62,7 +62,11 @@ export class ServerPreload implements IExtensionSingleActivationService {
             let server = await this.execution.getServer(optionsCopy);
 
             // If it didn't start, attempt for local and if allowed.
-            if (!server && !optionsCopy.uri && !this.configService.getSettings().datascience.disableJupyterAutoStart) {
+            if (
+                !server &&
+                !optionsCopy.uri &&
+                !this.configService.getSettings(undefined).datascience.disableJupyterAutoStart
+            ) {
                 // Local case, try creating one
                 server = await this.execution.connectToNotebookServer(optionsCopy);
             }

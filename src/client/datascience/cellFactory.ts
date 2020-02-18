@@ -4,13 +4,14 @@
 import '../common/extensions';
 
 import * as uuid from 'uuid/v4';
-import { Range, TextDocument } from 'vscode';
+import { Range, TextDocument, Uri } from 'vscode';
 
 import { parseForComments } from '../../datascience-ui/common';
 import { createCodeCell, createMarkdownCell } from '../../datascience-ui/common/cellFactory';
-import { IDataScienceSettings } from '../common/types';
+import { IDataScienceSettings, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { CellMatcher } from './cellMatcher';
+import { Identifiers } from './constants';
 import { CellState, ICell } from './types';
 
 function generateCodeCell(
@@ -38,6 +39,13 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
         state: CellState.finished,
         data: createMarkdownCell(code)
     };
+}
+
+export function getCellResource(cell: ICell): Resource {
+    if (cell.file !== Identifiers.EmptyFileName) {
+        return Uri.file(cell.file);
+    }
+    return undefined;
 }
 
 export function generateCells(

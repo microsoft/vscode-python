@@ -177,7 +177,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.fileName, file)) {
                 const cells = generateCellsFromDocument(
                     activeEditor.document,
-                    this.configuration.getSettings().datascience
+                    this.configuration.getSettings(activeEditor.document.uri).datascience
                 );
                 if (cells) {
                     const filtersKey = localize.DataScience.exportDialogFilter();
@@ -193,7 +193,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         async () => {
                             if (uri) {
                                 let directoryChange;
-                                const settings = this.configuration.getSettings();
+                                const settings = this.configuration.getSettings(activeEditor.document.uri);
                                 if (settings.datascience.changeDirOnImportExport) {
                                     directoryChange = uri.fsPath;
                                 }
@@ -316,7 +316,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     ): Promise<void> {
         let server: INotebookServer | undefined;
         try {
-            const settings = this.configuration.getSettings();
+            const settings = this.configuration.getSettings(document.uri);
             const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
             // Try starting a server. Purpose should be unique so we

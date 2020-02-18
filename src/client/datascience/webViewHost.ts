@@ -8,7 +8,7 @@ import { ConfigurationChangeEvent, ViewColumn, WorkspaceConfiguration } from 'vs
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
 import { traceInfo, traceWarning } from '../common/logger';
-import { IConfigurationService, IDisposable } from '../common/types';
+import { IConfigurationService, IDisposable, Resource } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -19,7 +19,7 @@ import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } f
 import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from './types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
-export class WebViewHost<IMapping> implements IDisposable {
+export abstract class WebViewHost<IMapping> implements IDisposable {
     protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
     private disposed: boolean = false;
     private webPanel: IWebPanel | undefined;
@@ -120,6 +120,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
+    protected abstract getOwningResource(): Promise<Resource>;
+
     protected get isDisposed(): boolean {
         return this.disposed;
     }
@@ -169,12 +171,13 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
-    protected generateDataScienceExtraSettings(): IDataScienceExtraSettings {
+    protected async generateDataScienceExtraSettings(): Promise<IDataScienceExtraSettings> {
+        const resource = await this.getOwningResource();
         const editor = this.workspaceService.getConfiguration('editor');
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         return {
-            ...this.configService.getSettings().datascience,
+            ...this.configService.getSettings(resource).datascience,
             extraSettings: {
                 editor: {
                     cursor: this.getValue(editor, 'cursorStyle', 'line'),
@@ -230,9 +233,11 @@ export class WebViewHost<IMapping> implements IDisposable {
 
         // Create our web panel (it's the UI that shows up for the history)
         if (this.webPanel === undefined) {
+            const resource = await this.getOwningResource();
+
             // Get our settings to pass along to the react control
-            const settings = this.generateDataScienceExtraSettings();
-            const insiders = this.configService.getSettings().insidersChannel;
+            const settings = await this.generateDataScienceExtraSettings();
+            const insiders = this.configService.getSettings(resource).insidersChannel;
 
             traceInfo('Loading web view...');
 
@@ -285,13 +290,14 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
     private async handleCssRequest(request: IGetCssRequest): Promise<void> {
-        const settings = this.generateDataScienceExtraSettings();
+        const settings = await this.generateDataScienceExtraSettings();
         const requestIsDark = settings.ignoreVscodeTheme ? false : request.isDark;
         this.setTheme(requestIsDark);
         const isDark = settings.ignoreVscodeTheme
             ? false
             : await this.themeFinder.isThemeDark(settings.extraSettings.theme);
-        const css = await this.cssGenerator.generateThemeCss(requestIsDark, settings.extraSettings.theme);
+        const resource = await this.getOwningResource();
+        const css = await this.cssGenerator.generateThemeCss(resource, requestIsDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetCssResponse, {
             css,
             theme: settings.extraSettings.theme,
@@ -301,10 +307,11 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
     private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
-        const settings = this.generateDataScienceExtraSettings();
+        const settings = await this.generateDataScienceExtraSettings();
         const isDark = settings.ignoreVscodeTheme ? false : request.isDark;
         this.setTheme(isDark);
-        const monacoTheme = await this.cssGenerator.generateMonacoTheme(isDark, settings.extraSettings.theme);
+        const resource = await this.getOwningResource();
+        const monacoTheme = await this.cssGenerator.generateMonacoTheme(resource, isDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
     }
 

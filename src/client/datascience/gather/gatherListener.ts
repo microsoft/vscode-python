@@ -96,7 +96,7 @@ export class GatherListener implements IInteractiveWindowListener {
 
         // First get the active server
         const activeServer = await this.jupyterExecution.getServer(
-            await this.interactiveWindowProvider.getNotebookOptions()
+            await this.interactiveWindowProvider.getNotebookOptions(this.notebookUri)
         );
 
         let nb: INotebook | undefined;

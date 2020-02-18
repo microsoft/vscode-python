@@ -16,7 +16,7 @@ import {
 
 import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDataScienceSettings } from '../../common/types';
+import { IConfigurationService, IDataScienceSettings, Resource } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -53,7 +53,7 @@ export class CodeWatcher implements ICodeWatcher {
         this.version = document.version;
 
         // Get document cells here. Make a copy of our settings.
-        this.cachedSettings = JSON.parse(JSON.stringify(this.configService.getSettings().datascience));
+        this.cachedSettings = JSON.parse(JSON.stringify(this.configService.getSettings(document.uri).datascience));
 
         // Use the factory to generate our new code lenses.
         this.codeLenses = this.codeLensFactory.createCodeLenses(document);
@@ -269,7 +269,8 @@ export class CodeWatcher implements ICodeWatcher {
         // Run the cell clicked. Advance if the cursor is inside this cell and we're allowed to
         const advance =
             range.contains(this.documentManager.activeTextEditor.selection.start) &&
-            this.configService.getSettings().datascience.enableAutoMoveToNextCell;
+            this.configService.getSettings(this.documentManager.activeTextEditor.document.uri).datascience
+                .enableAutoMoveToNextCell;
         return this.runMatchingCell(range, advance);
     }
 
@@ -305,7 +306,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     public async addEmptyCellToBottom(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
-        const cellDelineator = this.defaultCellMarker;
+        const cellDelineator = this.getDefaultCellMarker(editor?.document.uri);
         if (editor) {
             editor.edit(editBuilder => {
                 editBuilder.insert(new Position(editor.document.lineCount, 0), `\n\n${cellDelineator}\n`);
@@ -324,7 +325,7 @@ export class CodeWatcher implements ICodeWatcher {
         const editor = this.documentManager.activeTextEditor;
         const cellMatcher = new CellMatcher();
         let index = 0;
-        const cellDelineator = this.defaultCellMarker;
+        const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
 
         if (editor) {
             editor.edit(editBuilder => {
@@ -353,8 +354,10 @@ export class CodeWatcher implements ICodeWatcher {
         );
     }
 
-    private get defaultCellMarker(): string {
-        return this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+    private getDefaultCellMarker(resource: Resource): string {
+        return (
+            this.configService.getSettings(resource).datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker
+        );
     }
 
     private onCodeLensFactoryUpdated(): void {
@@ -482,7 +485,10 @@ export class CodeWatcher implements ICodeWatcher {
 
         if (editor) {
             editor.edit(editBuilder => {
-                editBuilder.insert(new Position(currentRange.end.line + 1, 0), `\n\n${this.defaultCellMarker}\n`);
+                editBuilder.insert(
+                    new Position(currentRange.end.line + 1, 0),
+                    `\n\n${this.getDefaultCellMarker(editor.document.uri)}\n`
+                );
             });
         }
 
