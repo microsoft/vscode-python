@@ -65,7 +65,7 @@ const mimeTypeToImport: TransformData[] = [
         const module = await import(/* webpackChunkName: "plotly" */ '@nteract/transform-plotly');
         return module.PlotlyTransform;
     }),
-    new TransformData('image/svg', async () => {
+    new TransformData('image/svg+xml', async () => {
         const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
         return module.SVGTransform;
     }),

@@ -148,6 +148,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get isDirty(): boolean {
         return this._dirty;
     }
+    private sentExecuteCellTelemetry: boolean = false;
     private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private executedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
@@ -404,8 +405,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         data?: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell,
         debug?: boolean
     ): Promise<boolean> {
+        const stopWatch = new StopWatch();
+        const submitCodePromise = super
+            .submitCode(code, file, line, id, data, debug)
+            .finally(() => this.sendPerceivedCellExecute(stopWatch));
         // When code is executed, update the version number in the metadata.
-        return super.submitCode(code, file, line, id, data, debug).then(value => {
+        return submitCodePromise.then(value => {
             this.updateVersionInfoInNotebook()
                 .then(() => {
                     this.metadataUpdatedEvent.fire(this);
@@ -556,6 +561,18 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         // Actually don't close, just let the error bubble out
+    }
+
+    private sendPerceivedCellExecute(runningStopWatch?: StopWatch) {
+        if (runningStopWatch) {
+            const props = { notebook: true };
+            if (!this.sentExecuteCellTelemetry) {
+                this.sentExecuteCellTelemetry = true;
+                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedCold, runningStopWatch.elapsedTime, props);
+            } else {
+                sendTelemetryEvent(Telemetry.ExecuteCellPerceivedWarm, runningStopWatch.elapsedTime, props);
+            }
+        }
     }
 
     /**

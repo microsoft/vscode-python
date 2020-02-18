@@ -64,7 +64,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             .onDidChange(this.onDataScienceSettingsChanged.bind(this));
 
         // Send the first settings message
-        this.onDataScienceSettingsChanged();
+        this.onDataScienceSettingsChanged().ignoreErrors();
 
         // Send the loc strings
         this.postMessageInternal(SharedMessages.LocInit, localize.getCollectionJSON()).ignoreErrors();
