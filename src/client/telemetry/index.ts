@@ -1483,8 +1483,16 @@ export interface IEventNamePropertyMapping {
     [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
     [Telemetry.ExecuteCell]: never | undefined;
-    [Telemetry.ExecuteCellPerceivedCold]: never | undefined;
-    [Telemetry.ExecuteCellPerceivedWarm]: never | undefined;
+    /**
+     * Telemetry sent to capture first time execution of a cell.
+     * If `notebook = true`, this its telemetry for native editor/notebooks.
+     */
+    [Telemetry.ExecuteCellPerceivedCold]: undefined | { notebook: boolean };
+    /**
+     * Telemetry sent to capture subsequent execution of a cell.
+     * If `notebook = true`, this its telemetry for native editor/notebooks.
+     */
+    [Telemetry.ExecuteCellPerceivedWarm]: undefined | { notebook: boolean };
     [Telemetry.ExecuteNativeCell]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebook]: never | undefined;
