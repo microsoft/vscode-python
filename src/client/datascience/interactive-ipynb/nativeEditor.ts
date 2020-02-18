@@ -466,7 +466,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // Make this error our cell output
             this.sendCellsToWebView([
                 {
-                    data: { ...info.cell.data, outputs: [createErrorOutput(exc)] },
+                    // tslint:disable-next-line: no-any
+                    data: { ...info.cell.data, outputs: [createErrorOutput(exc)] } as any, // nyc compiler issue
                     id: info.cell.id,
                     file: Identifiers.EmptyFileName,
                     line: 0,
