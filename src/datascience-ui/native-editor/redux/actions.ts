@@ -144,6 +144,10 @@ export const actionCreators = {
     editorUnmounted: (): CommonAction<never | undefined> => ({ type: CommonActionType.UNMOUNT }),
     selectKernel: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_KERNEL }),
     selectServer: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_SERVER }),
+    openSettings: (setting?: string): CommonAction<string | undefined> => ({
+        type: CommonActionType.OPEN_SETTINGS,
+        payload: setting
+    }),
     getVariableData: (
         newExecutionCount: number,
         startIndex: number = 0,

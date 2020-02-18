@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import {
     CancellationToken,
+    commands,
     ConfigurationTarget,
     Event,
     EventEmitter,
@@ -22,6 +23,7 @@ import {
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import {
     IApplicationShell,
@@ -52,6 +54,7 @@ import {
     IGotoCode,
     IInteractiveWindowMapping,
     InteractiveWindowMessages,
+    IReExecuteCell,
     IRemoteAddCode,
     IRemoteReexecuteCode,
     IShowDataViewer,
@@ -295,6 +298,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.handleMessage(message, payload, this.selectServer);
                 break;
 
+            case InteractiveWindowMessages.OpenSettings:
+                this.handleMessage(message, payload, this.openSettings);
+                break;
             default:
                 break;
         }
@@ -457,7 +463,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     protected abstract submitNewCell(info: ISubmitNewCell): void;
 
     // Re-executes a cell already in the window
-    protected reexecuteCell(_info: ISubmitNewCell): void {
+    protected reexecuteCell(_info: IReExecuteCell): void {
         // Default is not to do anything. This only works in the native editor
     }
 
@@ -492,7 +498,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         file: string,
         line: number,
         id?: string,
-        _editor?: TextEditor,
+        data?: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell,
         debug?: boolean
     ): Promise<boolean> {
         traceInfo(`Submitting code for ${this.id}`);
@@ -573,7 +579,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // Sign up for cell changes
                 observable.subscribe(
                     (cells: ICell[]) => {
-                        this.sendCellsToWebView(cells);
+                        // Combine the cell data with the possible input data (so we don't lose anything that might have already been in the cells)
+                        const combined = cells.map(this.combineData.bind(undefined, data));
+
+                        // Then send the combined output to the UI
+                        this.sendCellsToWebView(combined);
 
                         // Any errors will move our result to false (if allowed)
                         if (this.configuration.getSettings().datascience.stopOnError) {
@@ -775,6 +785,30 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             this.serverAndNotebookPromise = undefined;
             throw e;
         }
+    }
+
+    private combineData(
+        oldData: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | undefined,
+        cell: ICell
+    ): ICell {
+        if (oldData) {
+            const result = {
+                ...cell,
+                data: {
+                    ...oldData,
+                    ...cell.data,
+                    metadata: {
+                        ...oldData.metadata,
+                        ...cell.data.metadata
+                    }
+                }
+            };
+            // Workaround the nyc compiler problem.
+            // tslint:disable-next-line: no-any
+            return (result as any) as ICell;
+        }
+        // tslint:disable-next-line: no-any
+        return (cell as any) as ICell;
     }
 
     private async ensureServerAndNotebookImpl(): Promise<void> {
@@ -1424,5 +1458,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
     private async kernelChangeHandler(_kernel: IJupyterKernelSpec | LiveKernelModel) {
         await this.addSysInfo(SysInfoReason.New);
+    }
+
+    private openSettings(setting: string | undefined) {
+        if (setting) {
+            commands.executeCommand('workbench.action.openSettings', setting);
+        } else {
+            commands.executeCommand('workbench.action.openSettings');
+        }
     }
 }

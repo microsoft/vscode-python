@@ -759,6 +759,10 @@ export namespace DataScience {
     export const gettingListOfKernelSpecs = localize('DataScience.gettingListOfKernelSpecs', 'Fetching Kernel specs');
     export const startingJupyterNotebook = localize('DataScience.startingJupyterNotebook', 'Starting Jupyter Notebook');
     export const registeringKernel = localize('DataScience.registeringKernel', 'Registering Kernel');
+    export const trimmedOutput = localize(
+        'DataScience.trimmedOutput',
+        'Output was trimmed for performance reasons.\nTo see the full output set the setting "python.dataScience.textOutputLimit" to 0.'
+    );
     export const jupyterCommandLineDefaultLabel = localize('DataScience.jupyterCommandLineDefaultLabel', 'Default');
     export const jupyterCommandLineDefaultDetail = localize(
         'DataScience.jupyterCommandLineDefaultDetail',

@@ -52,7 +52,10 @@ export namespace Execution {
 
                     // Send a message if a code cell
                     queueAction(
-                        createPostableAction(InteractiveWindowMessages.ReExecuteCell, { code, id: orig.cell.id })
+                        createPostableAction(InteractiveWindowMessages.ReExecuteCell, {
+                            newCode: code,
+                            cell: orig.cell
+                        })
                     );
                 } else {
                     // Update our input to be our new code

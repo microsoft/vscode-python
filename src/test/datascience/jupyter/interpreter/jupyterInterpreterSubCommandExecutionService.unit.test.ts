@@ -281,7 +281,7 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
                 undefined
             );
 
-            assert.equal(reason, DataScience.jupyterKernelSpecModuleNotFound());
+            assert.equal(reason, DataScience.jupyterKernelSpecModuleNotFound().format(selectedJupyterInterpreter.path));
         });
         test('Can start jupyer notebook', async () => {
             const output = await jupyterInterpreterExecutionService.startNotebook([], {});

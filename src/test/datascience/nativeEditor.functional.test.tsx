@@ -1871,6 +1871,9 @@ for _ in range(50):
                 const fileContent = await fs.readFile(notebookFile.filePath, 'utf8');
                 const fileObject = JSON.parse(fileContent);
 
+                // First cell should still have the 'collapsed' metadata
+                assert.ok(fileObject.cells[0].metadata.collapsed, 'Metadata erased during execution');
+
                 // The version should be updated to something not "1.2.3"
                 assert.notEqual(fileObject.metadata.language_info.version, '1.2.3');
 

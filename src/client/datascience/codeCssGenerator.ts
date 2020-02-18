@@ -358,29 +358,42 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     };
 
     private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
-        const tokenContent = await this.fs.readFile(themeFile);
-        const theme = parse(tokenContent);
-        const tokenColors = theme.tokenColors as JSONArray;
-        if (tokenColors && tokenColors.length > 0) {
-            // This theme may include others. If so we need to combine the two together
-            const include = theme ? theme.include : undefined;
-            if (include) {
-                const includePath = path.join(path.dirname(themeFile), include.toString());
-                const includedColors = await this.readTokenColors(includePath);
-                return this.mergeColors(tokenColors, includedColors);
+        try {
+            const tokenContent = await this.fs.readFile(themeFile);
+            const theme = parse(tokenContent);
+            let tokenColors: JSONArray = [];
+
+            if (typeof theme.tokenColors === 'string') {
+                const style = await this.fs.readData(theme.tokenColors);
+                tokenColors = JSON.parse(style.toString());
+            } else {
+                tokenColors = theme.tokenColors as JSONArray;
             }
 
-            // Theme is a root, don't need to include others
-            return tokenColors;
-        }
+            if (tokenColors && tokenColors.length > 0) {
+                // This theme may include others. If so we need to combine the two together
+                const include = theme ? theme.include : undefined;
+                if (include) {
+                    const includePath = path.join(path.dirname(themeFile), include.toString());
+                    const includedColors = await this.readTokenColors(includePath);
+                    return this.mergeColors(tokenColors, includedColors);
+                }
 
-        // Might also have a 'settings' object that equates to token colors
-        const settings = theme.settings as JSONArray;
-        if (settings && settings.length > 0) {
-            return settings;
-        }
+                // Theme is a root, don't need to include others
+                return tokenColors;
+            }
 
-        return [];
+            // Might also have a 'settings' object that equates to token colors
+            const settings = theme.settings as JSONArray;
+            if (settings && settings.length > 0) {
+                return settings;
+            }
+
+            return [];
+        } catch (e) {
+            traceError('Python Extension: Error reading custom theme', e);
+            return [];
+        }
     };
 
     private readBaseColors = async (themeFile: string): Promise<JSONObject> => {

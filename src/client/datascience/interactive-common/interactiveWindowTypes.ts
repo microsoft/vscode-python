@@ -92,7 +92,8 @@ export enum InteractiveWindowMessages {
     ClearAllOutputs = 'clear_all_outputs',
     SelectKernel = 'select_kernel',
     UpdateKernel = 'update_kernel',
-    SelectJupyterServer = 'select_jupyter_server'
+    SelectJupyterServer = 'select_jupyter_server',
+    OpenSettings = 'open_settings'
 }
 
 export enum NativeCommandType {
@@ -174,6 +175,11 @@ export interface IRemoteReexecuteCode extends IExecuteInfo {
 export interface ISubmitNewCell {
     code: string;
     id: string;
+}
+
+export interface IReExecuteCell {
+    newCode: string;
+    cell: ICell;
 }
 
 export interface IProvideCompletionItemsRequest {
@@ -308,6 +314,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
     public [InteractiveWindowMessages.SelectKernel]: IServerState | undefined;
     public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
+    public [InteractiveWindowMessages.OpenSettings]: string | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: ICell;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];
@@ -365,7 +372,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
     public [InteractiveWindowMessages.LoadAllCellsComplete]: ILoadAllCells;
     public [InteractiveWindowMessages.ScrollToCell]: IScrollToCell;
-    public [InteractiveWindowMessages.ReExecuteCell]: ISubmitNewCell;
+    public [InteractiveWindowMessages.ReExecuteCell]: IReExecuteCell;
     public [InteractiveWindowMessages.NotebookIdentity]: INotebookIdentity;
     public [InteractiveWindowMessages.NotebookDirty]: never | undefined;
     public [InteractiveWindowMessages.NotebookClean]: never | undefined;

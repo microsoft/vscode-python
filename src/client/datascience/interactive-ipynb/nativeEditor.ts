@@ -8,7 +8,7 @@ import * as detectIndent from 'detect-indent';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell, createErrorOutput } from '../../../datascience-ui/common/cellFactory';
@@ -58,7 +58,8 @@ import {
     ISaveAll,
     ISubmitNewCell,
     ISwapCells,
-    SysInfoReason
+    SysInfoReason,
+    IReExecuteCell
 } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { ProgressReporter } from '../progress/progressReporter';
@@ -399,11 +400,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         file: string,
         line: number,
         id?: string,
-        editor?: TextEditor,
+        data?: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell,
         debug?: boolean
     ): Promise<boolean> {
         // When code is executed, update the version number in the metadata.
-        return super.submitCode(code, file, line, id, editor, debug).then(value => {
+        return super.submitCode(code, file, line, id, data, debug).then(value => {
             this.updateVersionInfoInNotebook()
                 .then(() => {
                     this.metadataUpdatedEvent.fire(this);
@@ -445,23 +446,23 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     // tslint:disable-next-line:no-any
-    protected async reexecuteCell(info: ISubmitNewCell): Promise<void> {
+    protected async reexecuteCell(info: IReExecuteCell): Promise<void> {
         try {
             // If there's any payload, it has the code and the id
-            if (info && info.code && info.id) {
+            if (info && info.newCode && info.cell.id && info.cell.data.cell_type !== 'messages') {
                 // Clear the result if we've run before
-                await this.clearResult(info.id);
+                await this.clearResult(info.cell.id);
 
                 // Send to ourselves.
-                await this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id);
+                await this.submitCode(info.newCode, Identifiers.EmptyFileName, 0, info.cell.id, info.cell.data);
 
                 // Activate the other side, and send as if came from a file
                 await this.ipynbProvider.show(this.file);
                 this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, {
-                    code: info.code,
+                    code: info.newCode,
                     file: Identifiers.EmptyFileName,
                     line: 0,
-                    id: info.id,
+                    id: info.cell.id,
                     originator: this.id,
                     debug: false
                 });
@@ -470,8 +471,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // Make this error our cell output
             this.sendCellsToWebView([
                 {
-                    data: createCodeCell([info.code], [createErrorOutput(exc)]),
-                    id: info.id,
+                    // tslint:disable-next-line: no-any
+                    data: { ...info.cell.data, outputs: [createErrorOutput(exc)] } as any, // nyc compiler issue
+                    id: info.cell.id,
                     file: Identifiers.EmptyFileName,
                     line: 0,
                     state: CellState.error
