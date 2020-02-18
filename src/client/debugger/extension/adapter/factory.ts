@@ -54,7 +54,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
                 // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
                 const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-                const debugpyPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_debugpy');
+                const debuggerPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_debugpy');
 
                 if (pythonPath.length !== 0) {
                     if (processId) {
@@ -68,7 +68,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                     if (await this.useNewDebugger(pythonPath)) {
                         sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
                         return new DebugAdapterExecutable(pythonPath, [
-                            path.join(debugpyPathToUse, 'wheels', 'debugpy', 'adapter'),
+                            path.join(debuggerPathToUse, 'wheels', 'debugpy', 'adapter'),
                             ...logArgs
                         ]);
                     } else {
@@ -76,7 +76,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                             usingWheels: false
                         });
                         return new DebugAdapterExecutable(pythonPath, [
-                            path.join(debugpyPathToUse, 'no_wheels', 'debugpy', 'adapter'),
+                            path.join(debuggerPathToUse, 'no_wheels', 'debugpy', 'adapter'),
                             ...logArgs
                         ]);
                     }
@@ -95,10 +95,10 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     }
 
     /**
-     * Check and return whether the user should and can use the new DEBUGPY wheels or not.
+     * Check and return whether the user should and can use the new Debugger wheels or not.
      *
      * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
-     * @returns {Promise<boolean>} Whether the user should and can use the new DEBUGPY wheels or not.
+     * @returns {Promise<boolean>} Whether the user should and can use the new Debugger wheels or not.
      * @memberof DebugAdapterDescriptorFactory
      */
     public async useNewDebugger(pythonPath: string): Promise<boolean> {
