@@ -60,7 +60,6 @@ export class TestManagerRunner implements ITestManagerRunner {
         options.tests.summary.skipped = 0;
         let failFast = false;
         const testLauncherFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'visualstudio_py_testlauncher.py');
-        // tslint:disable-next-line: no-any
         this.server.on('error', traceError);
         this.server.on('log', (message: string, ...data: string[]) => traceError(`${message} ${data.join(' ')}`));
         this.server.on('connect', noop);
