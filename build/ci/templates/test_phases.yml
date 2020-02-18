@@ -151,12 +151,11 @@ steps:
     displayName: 'pip install jupyter'
     condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'), contains(variables['TestsToRun'], 'testSmoke'))
 
-  - task: PythonScript@0
+  - bash: |
+      python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+      python ./pythonFiles/install_debugpy.py
+    failOnStderr: true
     displayName: 'Install DEBUGPY wheels'
-    inputs:
-      scriptSource: 'filePath'
-      scriptPath: './pythonFiles/install_debugpy.py'
-      failOnStderr: true
     condition: and(eq(variables['NeedsPythonTestReqs'], 'true'), eq(variables['PythonVersion'], '3.7'))
 
   # Run the Python unit tests in our codebase. Produces a JUnit-style log file that
