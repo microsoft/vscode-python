@@ -128,7 +128,7 @@ export function reBroadcastMessageIfRequired(
         };
         // tslint:disable-next-line: no-any
         const syncPayload = { type: message, payload: syncPayloadData } as any;
-        // Send this out.
-        dispatcher(InteractiveWindowMessages.Sync, syncPayload);
+        // First focus on UX perf, hence the setTimeout (i.e. ensure other code in event loop executes).
+        setTimeout(() => dispatcher(InteractiveWindowMessages.Sync, syncPayload), 1);
     }
 }
