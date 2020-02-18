@@ -83,7 +83,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         }
 
         if (productsNotInstalled.length === 1 && productsNotInstalled[0] === Product.kernelspec) {
-            return DataScience.jupyterKernelSpecModuleNotFound();
+            return DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.path);
         }
 
         return getMessageForLibrariesNotInstalled(productsNotInstalled, interpreter.displayName);
