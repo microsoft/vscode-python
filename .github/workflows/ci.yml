@@ -40,12 +40,12 @@ jobs:
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
 
       - name: Install ptvsd wheels
         run: |
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_ptvsd.py
+          python ./pythonFiles/install_debugpy.py
 
       # Retrieve the list of ptvsd versions from PyPI in order to increase the specificity of the pip cache key,
       # so that the cache gets invalidated as necessary.
@@ -237,13 +237,13 @@ jobs:
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
         if: steps.pythonFiles-cache.outputs.cache-hit == false
 
       - name: Install ptvsd wheels if not cached
         run: |
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_ptvsd.py
+          python ./pythonFiles/install_debugpy.py
         if: steps.pythonFiles-cache.outputs.cache-hit == false
 
       - name: Install test requirements

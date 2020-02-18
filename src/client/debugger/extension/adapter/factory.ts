@@ -56,7 +56,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
                 // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
                 const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-                const ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd');
+                const ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_debugpy');
 
                 if (pythonPath.length !== 0) {
                     if (processId) {
@@ -113,7 +113,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     }
 
     public getPtvsdPath(): string {
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd', 'no_wheels', 'ptvsd');
+        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_debugpy', 'no_wheels', 'ptvsd');
     }
 
     public getRemotePtvsdArgs(remoteDebugOptions: RemoteDebugOptions): string[] {

@@ -50,7 +50,7 @@ suite('Debugging - Adapter Factory', () => {
         'pythonFiles',
         'lib',
         'python',
-        'new_ptvsd',
+        'new_debugpy',
         'wheels',
         'ptvsd',
         'adapter'
@@ -60,7 +60,7 @@ suite('Debugging - Adapter Factory', () => {
         'pythonFiles',
         'lib',
         'python',
-        'new_ptvsd',
+        'new_debugpy',
         'no_wheels',
         'ptvsd',
         'adapter'
