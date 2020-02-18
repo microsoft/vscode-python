@@ -452,7 +452,7 @@ jobs:
 
   lkg-tag:
     # LKG = last known good
-    name: Tag successful build as LKG
+    name: Tag successful build as CI LKG
     runs-on: ubuntu-latest
     needs: [tests, smoke-tests]
     if: github.repository == 'microsoft/vscode-python'
@@ -462,23 +462,9 @@ jobs:
           curl -s -X DELETE https://api.github.com/repos/microsoft/vscode-python/git/refs/tags/${{env.LKG_TAG}} \
           -H "Authorization: token ${{secrets.GITHUB_TOKEN}}"
 
-      # We need 2 calls when creating an annotated tag: first create the tag object, then the tag reference.
-      # If we only wanted a lightweight tag we would only need to create a tag reference.
+      # We only need to create a tag reference for lightweight tags.
       # See https://developer.github.com/v3/git/tags/#create-a-tag-object
-      - name: Create a tag object
-        # Curl syntax explanation: https://stackoverflow.com/a/36778045
-        run: |
-          curl -s -X POST "https://api.github.com/repos/microsoft/vscode-python/git/tags" \
-          -H "Authorization: token ${{secrets.GITHUB_TOKEN}}" \
-          -d @- << EOF
-          {
-            "tag": "${{env.LKG_TAG}}",
-            "message": "Last known good build of vscode-python via the GitHub Action CI workflow",
-            "object": "${{github.sha}}",
-            "type": "commit"
-          }
-          EOF
-
+      # And https://developer.github.com/v3/git/refs/#create-a-reference
       - name: Create a tag reference
         run: |
           curl -s -X POST "https://api.github.com/repos/microsoft/vscode-python/git/refs" \
