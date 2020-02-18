@@ -16,6 +16,7 @@ import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../.
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 import { MockMemento } from '../../../mocks/mementos';
 
+// tslint:disable-next-line: max-func-body-length
 suite('Data Science - Jupyter Interpreter Service', () => {
     let jupyterInterpreterService: JupyterInterpreterService;
     let interpreterSelector: JupyterInterpreterSelector;
