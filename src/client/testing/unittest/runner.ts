@@ -3,7 +3,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { traceError, traceInfo } from '../../common/logger';
+import { traceError } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -74,8 +74,8 @@ export class TestManagerRunner implements ITestManagerRunner {
         options.tests.summary.skipped = 0;
         let failFast = false;
         const testLauncherFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'visualstudio_py_testlauncher.py');
-        this.server.on('error', traceError);
-        this.server.on('log', (message: string, ...data: string[]) => traceInfo(`${message} ${data.join(' ')}`));
+        this.server.on('error', (message: string, ...data: string[]) => traceError(`${message} ${data.join(' ')}`));
+        this.server.on('log', noop);
         this.server.on('connect', noop);
         this.server.on('start', noop);
         this.server.on('result', (data: ITestData) => {
