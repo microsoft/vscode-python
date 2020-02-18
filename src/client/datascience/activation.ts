@@ -30,7 +30,7 @@ export class Activation implements IExtensionSingleActivationService {
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
         // Warm up our selected interpreter for the extension
         this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
-        await this.contextService.activate();
+        this.contextService.activate().ignoreErrors();
     }
 
     private onDidOpenNotebookEditor(_: INotebookEditor) {
