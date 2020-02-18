@@ -36,10 +36,10 @@ suite('Extension API Debugger', () => {
 
     function mockInExperiment(host: string, port: number, wait: boolean) {
         when(experimentsManager.inExperiment(anyString())).thenReturn(true);
-        when(debugAdapterFactory.useNewPtvsd(anyString())).thenResolve(true);
-        when(debugAdapterFactory.getPtvsdPath()).thenReturn(ptvsdPath);
+        when(debugAdapterFactory.useNewDebugpy(anyString())).thenResolve(true);
+        when(debugAdapterFactory.getDebugpyPath()).thenReturn(ptvsdPath);
         if (wait) {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+            when(debugAdapterFactory.getRemoteDebugpyArgs(anything())).thenReturn([
                 '--host',
                 host,
                 '--port',
@@ -47,7 +47,7 @@ suite('Extension API Debugger', () => {
                 '--wait'
             ]);
         } else {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+            when(debugAdapterFactory.getRemoteDebugpyArgs(anything())).thenReturn([
                 '--host',
                 host,
                 '--port',
@@ -58,9 +58,9 @@ suite('Extension API Debugger', () => {
 
     function mockNotInExperiment(host: string, port: number, wait: boolean) {
         when(experimentsManager.inExperiment(anyString())).thenReturn(false);
-        when(debugAdapterFactory.useNewPtvsd(anyString())).thenResolve(false);
+        when(debugAdapterFactory.useNewDebugpy(anyString())).thenResolve(false);
         if (wait) {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+            when(debugAdapterFactory.getRemoteDebugpyArgs(anything())).thenReturn([
                 '--default',
                 '--host',
                 host,
@@ -69,7 +69,7 @@ suite('Extension API Debugger', () => {
                 '--wait'
             ]);
         } else {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+            when(debugAdapterFactory.getRemoteDebugpyArgs(anything())).thenReturn([
                 '--default',
                 '--host',
                 host,
