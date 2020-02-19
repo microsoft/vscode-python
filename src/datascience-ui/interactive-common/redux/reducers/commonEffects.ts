@@ -116,6 +116,7 @@ export namespace CommonEffects {
     function focusPending(prevState: IMainState): IMainState {
         return {
             ...prevState,
+            // This is only applicable for interactive window & not native editor.
             focusPending: prevState.focusPending + 1
         };
     }
