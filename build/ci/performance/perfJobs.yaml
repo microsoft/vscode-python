@@ -3,8 +3,9 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      os: 'windows-latest'
-      python: '3.8'
+      'Win-Py3.7':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
@@ -16,8 +17,9 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      os: 'windows-latest'
-      python: '3.8'
+      'Win-Py3.7':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
@@ -29,8 +31,9 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      os: 'windows-latest'
-      python: '3.8'
+      'Win-Py3.7':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
@@ -42,8 +45,9 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      os: 'windows-latest'
-      python: '3.8'
+      'Win-Py3.7':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
@@ -55,8 +59,9 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      os: 'windows-latest'
-      python: '3.8'
+      'Win-Py3.7':
+        PythonVersion: '3.7'
+        VMImageName: 'vs2017-win2016'
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
