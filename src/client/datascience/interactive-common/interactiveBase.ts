@@ -1410,7 +1410,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, s).ignoreErrors();
             })
             .catch(_e => {
-                this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, undefined).ignoreErrors();
+                this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse).ignoreErrors();
             });
     }
 
@@ -1431,13 +1431,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
                 } else {
                     traceWarning('Onigasm file not found. Colorization will not be available.');
-                    this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
+                    this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
                 }
             }
         } else {
             // This happens during testing. Onigasm not needed as we're not testing colorization.
             traceWarning('File system not found. Colorization will not be available.');
-            this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
+            this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse).ignoreErrors();
         }
     }
 
