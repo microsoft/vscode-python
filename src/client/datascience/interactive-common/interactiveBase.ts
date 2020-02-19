@@ -460,7 +460,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     // Submits a new cell to the window
     protected abstract submitNewCell(info: ISubmitNewCell): void;
 
-    // Re-executes a cell already in the window
+    // Re-executes cells already in the window
     protected reexecuteCells(_info: IReExecuteCells): void {
         // Default is not to do anything. This only works in the native editor
     }
