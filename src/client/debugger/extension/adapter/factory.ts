@@ -115,18 +115,13 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     }
 
     public getRemoteDebuggerArgs(remoteDebugOptions: RemoteDebugOptions): string[] {
-        const waitArgs = remoteDebugOptions.waitUntilDebuggerAttaches ? ['--wait'] : [];
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            return ['--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString(), ...waitArgs];
-        }
-        return [
-            '--default',
-            '--host',
-            remoteDebugOptions.host,
-            '--port',
-            remoteDebugOptions.port.toString(),
-            ...waitArgs
-        ];
+        const useNewDADebugger = this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
+        const waitArgs = remoteDebugOptions.waitUntilDebuggerAttaches
+            ? [useNewDADebugger ? '--wait-for-client' : '--wait']
+            : [];
+        return useNewDADebugger
+            ? ['--listen', `${remoteDebugOptions.host}:${remoteDebugOptions.port}`, ...waitArgs]
+            : ['--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString(), ...waitArgs];
     }
 
     /**
