@@ -5,16 +5,14 @@
 # ```
 #
 # Your job using this template *must* supply these values:
-# - VMImageName: '[name]' - the VM image to run the tests on.
 # - TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
 #
 # Your job using this template *may* supply these values:
 # - NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
 # - NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
-# - PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
-# - NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
-# - SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
-# - UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
+# - NeedsIPythonReqs: [true|false] - install the ipython-test-requirements prior to running tests. False if not set.
+# - PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion (from globals.yml) if not set.
+# - NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion (from globals.yml) if not set.
 
 ## Supported `TestsToRun` values, multiples are allowed separated by commas or spaces:
 #

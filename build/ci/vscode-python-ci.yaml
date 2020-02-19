@@ -20,6 +20,10 @@ stages:
   jobs:
   - template: templates/jobs/build_compile.yml
 
+# Each item in each matrix has a number of possible values it may
+# define.  They are detailed in templates/test_phases.yml.  The only
+# required value is "TestsToRun".
+
 - stage: Linux
   dependsOn: []
   jobs:
@@ -28,14 +32,6 @@ stages:
     timeoutInMinutes: 120
     strategy:
       matrix:
-        # Each member of this list must contain these values:
-        # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
-        #
-        # Each member of this list may contain these values:
-        # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
-        # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
-        # NeedsIPythonReqs: [true|false] - install the ipython-test-requirements prior to running tests. False if not set.
-        # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
         'Unit':
           # with mocks
           # focused on small units (i.e. functions)
