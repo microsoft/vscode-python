@@ -39,6 +39,7 @@ body, html {
     max-height: 100%;
     overflow: auto;
 }
+
 #main-panel-footer {
     grid-area: footer;
     overflow: hidden;

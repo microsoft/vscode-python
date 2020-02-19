@@ -41,6 +41,7 @@ export function getDefaultSettings() {
                 fontLigatures: false,
                 scrollBeyondLastLine: true
             },
+            verticalScrollbarSize: 14,
             fontSize: 14,
             fontFamily: "Consolas, 'Courier New', monospace",
             theme: 'Default Dark+'

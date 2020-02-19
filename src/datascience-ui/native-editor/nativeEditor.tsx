@@ -94,7 +94,8 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         return (
             <div id="main-panel" role="Main" style={dynamicFont}>
                 <div className="styleSetter">
-                    <style>{this.props.rootCss}</style>
+                    <style>{`${this.props.settingsCss ? this.props.settingsCss : ''}
+${this.props.rootCss ? this.props.rootCss : ''}`}</style>
                 </div>
                 <header id="main-panel-toolbar">
                     {this.renderToolbarPanel()}

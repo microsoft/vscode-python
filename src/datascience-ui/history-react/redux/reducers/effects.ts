@@ -5,6 +5,7 @@ import { Identifiers } from '../../../../client/datascience/constants';
 import { IScrollToCell } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
+import { buildSettingsCss } from '../../../interactive-common/buildSettingsCss';
 import { IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
@@ -92,6 +93,7 @@ export namespace Effects {
         return {
             ...arg.prevState,
             cellVMs: newVMs,
+            settingsCss: newSettings ? buildSettingsCss(newSettings) : '',
             settings: newSettings,
             editorOptions: newEditorOptions,
             font: {
