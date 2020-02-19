@@ -32,6 +32,7 @@ export namespace Execution {
         queueAction: QueueAnotherFunc<CommonActionType>
     ): IMainState {
         const newVMs = [...prevState.cellVMs];
+        const cellsToExecute = [];
         for (let pos = start; pos <= end; pos += 1) {
             const orig = prevState.cellVMs[pos];
             const code = codes[pos - start];
@@ -49,14 +50,7 @@ export namespace Execution {
                         inputBlockText: code,
                         cell: { ...orig.cell, state: CellState.executing, data: clonedCell }
                     });
-
-                    // Send a message if a code cell
-                    queueAction(
-                        createPostableAction(InteractiveWindowMessages.ReExecuteCell, {
-                            newCode: code,
-                            cell: orig.cell
-                        })
-                    );
+                    cellsToExecute.push({ cell: orig.cell, code });
                 } else {
                     // Update our input to be our new code
                     newVMs[pos] = Helpers.asCellViewModel({
@@ -66,6 +60,16 @@ export namespace Execution {
                     });
                 }
             }
+        }
+
+        // If any cells to execute, execute them all
+        if (cellsToExecute) {
+            // Send a message to reexecute all of the cells in the range
+            queueAction(
+                createPostableAction(InteractiveWindowMessages.ReExecuteCells, {
+                    entries: cellsToExecute
+                })
+            );
         }
 
         return {

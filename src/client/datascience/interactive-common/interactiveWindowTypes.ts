@@ -76,7 +76,7 @@ export enum InteractiveWindowMessages {
     LoadAllCells = 'load_all_cells',
     LoadAllCellsComplete = 'load_all_cells_complete',
     ScrollToCell = 'scroll_to_cell',
-    ReExecuteCell = 'reexecute_cell',
+    ReExecuteCells = 'reexecute_cells',
     NotebookIdentity = 'identity',
     NotebookDirty = 'dirty',
     NotebookClean = 'clean',
@@ -177,9 +177,8 @@ export interface ISubmitNewCell {
     id: string;
 }
 
-export interface IReExecuteCell {
-    newCode: string;
-    cell: ICell;
+export interface IReExecuteCells {
+    entries: { cell: ICell; code: string }[];
 }
 
 export interface IProvideCompletionItemsRequest {
@@ -372,7 +371,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
     public [InteractiveWindowMessages.LoadAllCellsComplete]: ILoadAllCells;
     public [InteractiveWindowMessages.ScrollToCell]: IScrollToCell;
-    public [InteractiveWindowMessages.ReExecuteCell]: IReExecuteCell;
+    public [InteractiveWindowMessages.ReExecuteCells]: IReExecuteCells;
     public [InteractiveWindowMessages.NotebookIdentity]: INotebookIdentity;
     public [InteractiveWindowMessages.NotebookDirty]: never | undefined;
     public [InteractiveWindowMessages.NotebookClean]: never | undefined;

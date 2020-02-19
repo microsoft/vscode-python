@@ -78,7 +78,7 @@ export enum IncomingMessageActions {
     LOADALLCELLS = 'action.load_all_cells',
     LOADALLCELLSCOMPLETE = 'action.load_all_cells_complete',
     SCROLLTOCELL = 'action.scroll_to_cell',
-    REEXECUTECELL = 'action.reexecute_cell',
+    REEXECUTECELLS = 'action.reexecute_cells',
     NOTEBOOKIDENTITY = 'action.identity',
     NOTEBOOKDIRTY = 'action.dirty',
     NOTEBOOKCLEAN = 'action.clean',

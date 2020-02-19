@@ -54,7 +54,7 @@ import {
     IGotoCode,
     IInteractiveWindowMapping,
     InteractiveWindowMessages,
-    IReExecuteCell,
+    IReExecuteCells,
     IRemoteAddCode,
     IRemoteReexecuteCode,
     IShowDataViewer,
@@ -228,8 +228,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.handleMessage(message, payload, this.submitNewCell);
                 break;
 
-            case InteractiveWindowMessages.ReExecuteCell:
-                this.handleMessage(message, payload, this.reexecuteCell);
+            case InteractiveWindowMessages.ReExecuteCells:
+                this.handleMessage(message, payload, this.reexecuteCells);
                 break;
 
             case InteractiveWindowMessages.DeleteAllCells:
@@ -461,7 +461,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     protected abstract submitNewCell(info: ISubmitNewCell): void;
 
     // Re-executes a cell already in the window
-    protected reexecuteCell(_info: IReExecuteCell): void {
+    protected reexecuteCells(_info: IReExecuteCells): void {
         // Default is not to do anything. This only works in the native editor
     }
 

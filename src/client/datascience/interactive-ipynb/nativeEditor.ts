@@ -54,7 +54,7 @@ import {
     IInsertCell,
     INativeCommand,
     InteractiveWindowMessages,
-    IReExecuteCell,
+    IReExecuteCells,
     IRemoveCell,
     ISaveAll,
     ISubmitNewCell,
@@ -278,7 +278,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
         switch (message) {
-            case InteractiveWindowMessages.ReExecuteCell:
+            case InteractiveWindowMessages.ReExecuteCells:
                 this.executedEvent.fire(this);
                 break;
 
@@ -446,40 +446,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     // tslint:disable-next-line:no-any
-    protected async reexecuteCell(info: IReExecuteCell): Promise<void> {
+    protected async reexecuteCells(info: IReExecuteCells): Promise<void> {
         try {
-            // If there's any payload, it has the code and the id
-            if (info && info.newCode && info.cell.id && info.cell.data.cell_type !== 'messages') {
-                // Clear the result if we've run before
-                await this.clearResult(info.cell.id);
-
-                // Send to ourselves.
-                await this.submitCode(info.newCode, Identifiers.EmptyFileName, 0, info.cell.id, info.cell.data);
-
-                // Activate the other side, and send as if came from a file
-                await this.ipynbProvider.show(this.file);
-                this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, {
-                    code: info.newCode,
-                    file: Identifiers.EmptyFileName,
-                    line: 0,
-                    id: info.cell.id,
-                    originator: this.id,
-                    debug: false
-                });
+            if (info && info.entries) {
+                for (const entry of info.entries) {
+                    await this.reexecuteCell(entry);
+                }
             }
         } catch (exc) {
-            // Make this error our cell output
-            this.sendCellsToWebView([
-                {
-                    // tslint:disable-next-line: no-any
-                    data: { ...info.cell.data, outputs: [createErrorOutput(exc)] } as any, // nyc compiler issue
-                    id: info.cell.id,
-                    file: Identifiers.EmptyFileName,
-                    line: 0,
-                    state: CellState.error
-                }
-            ]);
-
             // Tell the other side we restarted the kernel. This will stop all executions
             this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
 
@@ -553,6 +527,44 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         // Actually don't close, just let the error bubble out
+    }
+
+    private async reexecuteCell(entry: { cell: ICell; code: string }): Promise<void> {
+        try {
+            // If there's any payload, it has the code and the id
+            if (entry.code && entry.cell.id && entry.cell.data.cell_type !== 'messages') {
+                // Clear the result if we've run before
+                await this.clearResult(entry.cell.id);
+
+                // Send to ourselves.
+                await this.submitCode(entry.code, Identifiers.EmptyFileName, 0, entry.cell.id, entry.cell.data);
+
+                // Activate the other side, and send as if came from a file
+                await this.ipynbProvider.show(this.file);
+                this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, {
+                    code: entry.code,
+                    file: Identifiers.EmptyFileName,
+                    line: 0,
+                    id: entry.cell.id,
+                    originator: this.id,
+                    debug: false
+                });
+            }
+        } catch (exc) {
+            // Make this error our cell output
+            this.sendCellsToWebView([
+                {
+                    // tslint:disable-next-line: no-any
+                    data: { ...entry.cell.data, outputs: [createErrorOutput(exc)] } as any, // nyc compiler issue
+                    id: entry.cell.id,
+                    file: Identifiers.EmptyFileName,
+                    line: 0,
+                    state: CellState.error
+                }
+            ]);
+
+            throw exc;
+        }
     }
 
     private sendPerceivedCellExecute(runningStopWatch?: StopWatch) {
