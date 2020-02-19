@@ -1460,6 +1460,10 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectFailedJupyter]: never | undefined;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
+    /**
+     * Connecting to an existing Jupyter server, but connecting to localhost.
+     */
+    [Telemetry.ConnectRemoteJupyterViaLocalHost]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
     [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
@@ -1493,6 +1497,14 @@ export interface IEventNamePropertyMapping {
      * If `notebook = true`, this its telemetry for native editor/notebooks.
      */
     [Telemetry.ExecuteCellPerceivedWarm]: undefined | { notebook: boolean };
+    /**
+     * Time take for jupyter server to start and be ready to run first user cell.
+     */
+    [Telemetry.PerceivedJupyterStartup]: never | undefined;
+    /**
+     * Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
+     */
+    [Telemetry.StartExecuteCellPerceivedCold]: never | undefined;
     [Telemetry.ExecuteNativeCell]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebook]: never | undefined;
