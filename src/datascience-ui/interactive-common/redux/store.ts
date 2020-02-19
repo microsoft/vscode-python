@@ -87,7 +87,7 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
         const afterState = store.getState();
 
         // If the action is part of a sync message, then do not send it to the extension.
-        const messageType = (action?.payload as BaseReduxActionPayload).messageType ?? MessageType.userAction;
+        const messageType = (action?.payload as BaseReduxActionPayload).messageType ?? MessageType.other;
         const isSyncMessage =
             (messageType & MessageType.syncAcrossSameNotebooks) === MessageType.syncAcrossSameNotebooks &&
             (messageType & MessageType.syncAcrossSameNotebooks) === MessageType.syncWithLiveShare;
@@ -341,11 +341,13 @@ export function createStore<M>(
                     // This is a message that has been sent from extension purely for synchronization purposes.
                     // Unwrap the message.
                     message = payload.type;
+                    // This is a message that came in as a result of an outgoing message from another view.
+                    basePayload.messageDirection = 'outgoing';
                     basePayload.messageType = payload.payload.messageType ?? MessageType.syncAcrossSameNotebooks;
                     basePayload.data = payload.payload.data;
                 } else {
                     // Messages result of some user action.
-                    basePayload.messageType = basePayload.messageType ?? MessageType.userAction;
+                    basePayload.messageType = basePayload.messageType ?? MessageType.other;
                 }
                 store.dispatch({ type: message, payload: basePayload });
             }

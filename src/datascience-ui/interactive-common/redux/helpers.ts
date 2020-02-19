@@ -13,7 +13,7 @@ import {
     MessageType,
     shouldRebroadcast
 } from '../../../client/datascience/interactive-common/synchronization';
-import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
+import { BaseReduxActionPayload, SyncPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
 import { QueueAnotherFunc } from '../../react-common/reduxUtils';
 import { CommonActionType, CommonActionTypeMapping } from './reducers/types';
@@ -87,7 +87,7 @@ export function postActionToExtension(originalReducerArg: ReducerArg, message: a
     const newPayload: BaseReduxActionPayload<any> = ({
         data: payload,
         messageDirection: 'outgoing',
-        messageType: MessageType.userAction
+        messageType: MessageType.other
         // tslint:disable-next-line: no-any
     } as any) as BaseReduxActionPayload<any>;
     const action = { type: CommonActionType.PostOutgoingMessage, payload: { payload: newPayload, type: message } };
@@ -107,10 +107,11 @@ export function reBroadcastMessageIfRequired(
     message: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages,
     payload?: BaseReduxActionPayload<{}>
 ) {
+    const messageType = payload?.messageType || 0;
     if (
         message === InteractiveWindowMessages.Sync ||
-        payload?.messageType === MessageType.syncAcrossSameNotebooks ||
-        payload?.messageType === MessageType.syncWithLiveShare ||
+        (messageType && MessageType.syncAcrossSameNotebooks) === MessageType.syncAcrossSameNotebooks ||
+        (messageType && MessageType.syncWithLiveShare) === MessageType.syncWithLiveShare ||
         payload?.messageDirection === 'outgoing'
     ) {
         return;
@@ -127,7 +128,7 @@ export function reBroadcastMessageIfRequired(
             messageDirection: 'incoming'
         };
         // tslint:disable-next-line: no-any
-        const syncPayload = { type: message, payload: syncPayloadData } as any;
+        const syncPayload: SyncPayload = { type: message, payload: syncPayloadData };
         // First focus on UX perf, hence the setTimeout (i.e. ensure other code in event loop executes).
         setTimeout(() => dispatcher(InteractiveWindowMessages.Sync, syncPayload), 1);
     }
