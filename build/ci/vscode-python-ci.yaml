@@ -65,45 +65,33 @@ stages:
           TestsToRun: 'testDebugger'
           NeedsPythonTestReqs: true
         'Smoke':
-            TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
-            NeedsIPythonReqs: true
+          TestsToRun: 'testSmoke'
+          NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
     pool:
       vmImage: 'ubuntu-16.04'
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py36'
+  # This is the oldest Python 3 version we support.
+  - job: 'Py35'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
       matrix:
         'Unit':
-          PythonVersion: '3.6'
+          PythonVersion: '3.5'
           TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '3.6'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
         'Venv':
-          PythonVersion: '3.6'
+          PythonVersion: '3.5'
           TestsToRun: 'venvTests'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
           PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
         'Debugger':
-          PythonVersion: '3.6'
+          PythonVersion: '3.5'
           TestsToRun: 'testDebugger'
           NeedsPythonTestReqs: true
     pool:
@@ -142,47 +130,9 @@ stages:
           TestsToRun: 'testDebugger'
           NeedsPythonTestReqs: true
         'Smoke':
-            TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
-            NeedsIPythonReqs: true
-    pool:
-      vmImage: 'macos-10.13'
-    steps:
-      - template: templates/test_phases.yml
-
-  - job: 'Py36'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '3.6'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+          TestsToRun: 'testSmoke'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '3.6'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Venv':
-          PythonVersion: '3.6'
-          TestsToRun: 'venvTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-        'Debugger':
-          PythonVersion: '3.6'
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
     pool:
       vmImage: 'macos-10.13'
     steps:
@@ -219,47 +169,9 @@ stages:
           TestsToRun: 'testDebugger'
           NeedsPythonTestReqs: true
         'Smoke':
-            TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
-            NeedsIPythonReqs: true
-    pool:
-      vmImage: 'vs2017-win2016'
-    steps:
-      - template: templates/test_phases.yml
-
-  - job: 'Py36'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '3.6'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+          TestsToRun: 'testSmoke'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '3.6'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Venv':
-          PythonVersion: '3.6'
-          TestsToRun: 'venvTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-        'Debugger':
-          PythonVersion: '3.6'
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
     pool:
       vmImage: 'vs2017-win2016'
     steps:
