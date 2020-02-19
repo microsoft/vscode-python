@@ -35,7 +35,7 @@ stages:
   dependsOn:
   - Build
   jobs:
-  - job: 'Py3.x'
+  - job: 'Py3x'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -71,7 +71,7 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py3.6'
+  - job: 'Py36'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -109,7 +109,7 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py3.5'
+  - job: 'Py35'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -147,7 +147,7 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py2.7'
+  - job: 'Py27'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -185,7 +185,7 @@ stages:
   dependsOn:
   - Build
   jobs:
-  - job: 'Py3.x'
+  - job: 'Py3x'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -220,7 +220,7 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py3.6'
+  - job: 'Py36'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -258,7 +258,7 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py3.5'
+  - job: 'Py35'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -296,7 +296,7 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py2.7'
+  - job: 'Py27'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -334,7 +334,7 @@ stages:
   dependsOn:
   - Build
   jobs:
-  - job: 'Py3.x'
+  - job: 'Py3x'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -369,7 +369,7 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py3.6'
+  - job: 'Py36'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -407,7 +407,7 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py3.5'
+  - job: 'Py35'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -445,7 +445,7 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py2.7'
+  - job: 'Py27'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
