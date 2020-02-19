@@ -611,11 +611,11 @@ export namespace DataScience {
     );
     export const jupyterDebuggerNotInstalledError = localize(
         'DataScience.jupyterDebuggerNotInstalledError',
-        'Pip module ptvsd is required for debugging cells. You will need to install it to debug cells.'
+        'Pip module {0} is required for debugging cells. You will need to install it to debug cells.'
     );
-    export const jupyterDebuggerPtvsdParseError = localize(
-        'DataScience.jupyterDebuggerPtvsdParseError',
-        'Unable to parse ptvsd output, please log an issue with https://github.com/microsoft/vscode-python'
+    export const jupyterDebuggerOutputParseError = localize(
+        'DataScience.jupyterDebuggerOutputParseError',
+        'Unable to parse {0} output, please log an issue with https://github.com/microsoft/vscode-python'
     );
     export const jupyterDebuggerPortNotAvailableError = localize(
         'DataScience.jupyterDebuggerPortNotAvailableError',
@@ -633,16 +633,16 @@ export namespace DataScience {
         'DataScience.jupyterDebuggerPortBlockedSearchError',
         'A port cannot be connected to for debugging. Please let ports {0}-{1} through your firewall.'
     );
-    export const jupyterDebuggerInstallPtvsdNew = localize(
-        'DataScience.jupyterDebuggerInstallPtvsdNew',
-        'Pip module ptvsd is required for debugging cells. Install ptvsd and continue to debug cell?'
+    export const jupyterDebuggerInstallNew = localize(
+        'DataScience.jupyterDebuggerInstallNew',
+        'Pip module {0} is required for debugging cells. Install {0} and continue to debug cell?'
     );
-    export const jupyterDebuggerInstallPtvsdUpdate = localize(
-        'DataScience.jupyterDebuggerInstallPtvsdUpdate',
-        'The version of ptvsd installed does not support debugging cells. Update ptvsd to newest version and continue to debug cell?'
+    export const jupyterDebuggerInstallUpdate = localize(
+        'DataScience.jupyterDebuggerInstallUpdate',
+        'The version of {0} installed does not support debugging cells. Update {0} to newest version and continue to debug cell?'
     );
-    export const jupyterDebuggerInstallPtvsdYes = localize('DataScience.jupyterDebuggerInstallPtvsdYes', 'Yes');
-    export const jupyterDebuggerInstallPtvsdNo = localize('DataScience.jupyterDebuggerInstallPtvsdNo', 'No');
+    export const jupyterDebuggerInstallYes = localize('DataScience.jupyterDebuggerInstallYes', 'Yes');
+    export const jupyterDebuggerInstallNo = localize('DataScience.jupyterDebuggerInstallNo', 'No');
     export const cellStopOnErrorFormatMessage = localize(
         'DataScience.cellStopOnErrorFormatMessage',
         '{0} cells were canceled due to an error in the previous cell.'
