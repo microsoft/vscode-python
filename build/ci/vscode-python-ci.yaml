@@ -68,6 +68,7 @@ stages:
           TestsToRun: 'testSmoke'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
+      maxParallel: 2
     pool:
       vmImage: 'ubuntu-16.04'
     steps:
@@ -94,6 +95,7 @@ stages:
           PythonVersion: '3.5'
           TestsToRun: 'testDebugger'
           NeedsPythonTestReqs: true
+      maxParallel: 2
     pool:
       vmImage: 'ubuntu-16.04'
     steps:
@@ -133,6 +135,7 @@ stages:
           TestsToRun: 'testSmoke'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
+      maxParallel: 2
     pool:
       vmImage: 'macos-10.13'
     steps:
@@ -172,6 +175,7 @@ stages:
           TestsToRun: 'testSmoke'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
+      maxParallel: 2
     pool:
       vmImage: 'vs2017-win2016'
     steps:
