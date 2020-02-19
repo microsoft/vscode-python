@@ -497,7 +497,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         line: number,
         id?: string,
         data?: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell,
-        debug?: boolean
+        debug?: boolean,
+        cancelToken?: CancellationToken
     ): Promise<boolean> {
         traceInfo(`Submitting code for ${this.id}`);
         let result = true;
@@ -564,7 +565,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                         file,
                         line,
                         uuid(),
-                        undefined,
+                        cancelToken,
                         true
                     );
                 }

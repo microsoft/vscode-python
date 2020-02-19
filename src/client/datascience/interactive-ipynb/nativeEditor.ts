@@ -8,7 +8,7 @@ import * as detectIndent from 'detect-indent';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
 
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell, createErrorOutput } from '../../../datascience-ui/common/cellFactory';
@@ -120,6 +120,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private indentAmount: string = ' ';
     private notebookJson: Partial<nbformat.INotebookContent> = {};
     private debouncedWriteToStorage = debounce(this.writeToStorage.bind(this), 250);
+    private executeCancelTokenSource: CancellationTokenSource | undefined;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -323,6 +324,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.handleMessage(message, payload, this.clearAllOutputs);
                 break;
 
+            case InteractiveWindowMessages.RestartKernel:
+                this.interruptExecution();
+                break;
+
+            case InteractiveWindowMessages.Interrupt:
+                this.interruptExecution();
+                break;
+
             default:
                 break;
         }
@@ -397,11 +406,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         line: number,
         id?: string,
         data?: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell,
-        debug?: boolean
+        debug?: boolean,
+        cancelToken?: CancellationToken
     ): Promise<boolean> {
         const stopWatch = new StopWatch();
         const submitCodePromise = super
-            .submitCode(code, file, line, id, data, debug)
+            .submitCode(code, file, line, id, data, debug, cancelToken)
             .finally(() => this.sendPerceivedCellExecute(stopWatch));
         // When code is executed, update the version number in the metadata.
         return submitCodePromise.then(value => {
@@ -447,10 +457,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     // tslint:disable-next-line:no-any
     protected async reexecuteCells(info: IReExecuteCells): Promise<void> {
+        let finishedPos = info && info.entries ? info.entries.length : -1;
         try {
+            this.executeCancelTokenSource = new CancellationTokenSource();
+            const token = this.executeCancelTokenSource.token;
             if (info && info.entries) {
-                for (const entry of info.entries) {
-                    await this.reexecuteCell(entry);
+                for (let i = 0; i < info.entries.length && !token.isCancellationRequested; i += 1) {
+                    await this.reexecuteCell(info.entries[i], token);
+                    finishedPos = i;
                 }
             }
         } catch (exc) {
@@ -459,6 +473,16 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             // Handle an error
             await this.errorHandler.handleError(exc);
+        } finally {
+            this.executeCancelTokenSource = undefined;
+
+            // Make sure everything is marked as finished or error after the final finished
+            // position
+            if (info && info.entries) {
+                for (let i = finishedPos + 1; i < info.entries.length; i += 1) {
+                    this.finishCell(info.entries[i]);
+                }
+            }
         }
     }
 
@@ -529,7 +553,24 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Actually don't close, just let the error bubble out
     }
 
-    private async reexecuteCell(entry: { cell: ICell; code: string }): Promise<void> {
+    private interruptExecution() {
+        if (this.executeCancelTokenSource) {
+            this.executeCancelTokenSource.cancel();
+        }
+    }
+
+    private finishCell(entry: { cell: ICell; code: string }) {
+        this.sendCellsToWebView([
+            {
+                ...entry.cell,
+                // tslint:disable-next-line: no-any
+                data: { ...entry.cell.data, source: entry.code } as any, // nyc compiler issue
+                state: CellState.finished
+            }
+        ]);
+    }
+
+    private async reexecuteCell(entry: { cell: ICell; code: string }, cancelToken: CancellationToken): Promise<void> {
         try {
             // If there's any payload, it has the code and the id
             if (entry.code && entry.cell.id && entry.cell.data.cell_type !== 'messages') {
@@ -537,18 +578,28 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 await this.clearResult(entry.cell.id);
 
                 // Send to ourselves.
-                await this.submitCode(entry.code, Identifiers.EmptyFileName, 0, entry.cell.id, entry.cell.data);
+                await this.submitCode(
+                    entry.code,
+                    Identifiers.EmptyFileName,
+                    0,
+                    entry.cell.id,
+                    entry.cell.data,
+                    false,
+                    cancelToken
+                );
 
-                // Activate the other side, and send as if came from a file
-                await this.ipynbProvider.show(this.file);
-                this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, {
-                    code: entry.code,
-                    file: Identifiers.EmptyFileName,
-                    line: 0,
-                    id: entry.cell.id,
-                    originator: this.id,
-                    debug: false
-                });
+                if (!cancelToken.isCancellationRequested) {
+                    // Activate the other side, and send as if came from a file
+                    await this.ipynbProvider.show(this.file);
+                    this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, {
+                        code: entry.code,
+                        file: Identifiers.EmptyFileName,
+                        line: 0,
+                        id: entry.cell.id,
+                        originator: this.id,
+                        debug: false
+                    });
+                }
             }
         } catch (exc) {
             // Make this error our cell output

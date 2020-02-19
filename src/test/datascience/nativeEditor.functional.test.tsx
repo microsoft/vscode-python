@@ -454,13 +454,14 @@ for _ in range(50):
         runMountedTest(
             'RunAllCells',
             async wrapper => {
-                addMockData(ioc, 'b=2\nb', 2);
-                addMockData(ioc, 'c=3\nc', 3);
+                addMockData(ioc, 'a3=1', '');
+                addMockData(ioc, 'a3=2', '');
+                addMockData(ioc, 'a3', 2);
 
                 const baseFile = [
-                    { id: 'NotebookImport#0', data: { source: 'a=1\na' } },
-                    { id: 'NotebookImport#1', data: { source: 'b=2\nb' } },
-                    { id: 'NotebookImport#2', data: { source: 'c=3\nc' } }
+                    { id: 'NotebookImport#0', data: { source: 'a3=1' } },
+                    { id: 'NotebookImport#1', data: { source: 'a3=2' } },
+                    { id: 'NotebookImport#2', data: { source: 'a3' } }
                 ];
                 const runAllCells = baseFile.map(cell => {
                     return createFileCell(cell, cell.data);
@@ -478,9 +479,7 @@ for _ in range(50):
                 await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
                 await threeCellsUpdated;
 
-                verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
-                verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 1);
-                verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 2);
+                verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 2);
             },
             () => {
                 return ioc;
