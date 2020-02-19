@@ -29,6 +29,10 @@
    ([#10049](https://github.com/Microsoft/vscode-python/issues/10049))
 1. Track cold/warm times to execute notebook cells.
    ([#10176](https://github.com/Microsoft/vscode-python/issues/10176))
+1. Telemetry to capture connections to `localhost` using the connect to remote Jupyter server feature.
+   ([#10098](https://github.com/Microsoft/vscode-python/issues/10098))
+1. Telemetry to capture perceived startup times of Jupyter and time to execute a cell.
+   ([#10212](https://github.com/Microsoft/vscode-python/issues/10212))
 
 ### Thanks
 
