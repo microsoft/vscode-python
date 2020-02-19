@@ -53,22 +53,29 @@ export namespace Creation {
 
             // No elseif as we want newly visible cells to pick up the correct expand / collapse state
             if (cellVM.inputBlockOpen !== expanded && cellVM.inputBlockCollapseNeeded && cellVM.inputBlockShow) {
-                if (expanded) {
-                    // Expand the cell
-                    const newText = extractInputBlockText(cellVM, settings);
+                let newText = extractInputBlockText(cellVM, settings);
 
-                    newCellVM.inputBlockOpen = true;
-                    newCellVM.inputBlockText = newText;
-                } else {
-                    // Collapse the cell
-                    let newText = extractInputBlockText(cellVM, settings);
-                    if (newText.length > 0) {
-                        newText = newText.split('\n', 1)[0];
-                        newText = newText.slice(0, 255); // Slice to limit length, slicing past length is fine
-                        newText = newText.concat('...');
+                // While extracting the text, we might eliminate all extra lines
+                if (newText.includes('\n')) {
+                    if (expanded) {
+                        // Expand the cell
+                        newCellVM.inputBlockOpen = true;
+                        newCellVM.inputBlockText = newText;
+                    } else {
+                        // Collapse the cell
+                        if (newText.length > 0) {
+                            newText = newText.split('\n', 1)[0];
+                            newText = newText.slice(0, 255); // Slice to limit length, slicing past length is fine
+                            newText = newText.concat('...');
+                        }
+
+                        newCellVM.inputBlockOpen = false;
+                        newCellVM.inputBlockText = newText;
                     }
-
-                    newCellVM.inputBlockOpen = false;
+                } else {
+                    // If all lines eliminated, get rid of the collapse bar.
+                    newCellVM.inputBlockCollapseNeeded = false;
+                    newCellVM.inputBlockOpen = true;
                     newCellVM.inputBlockText = newText;
                 }
             }
