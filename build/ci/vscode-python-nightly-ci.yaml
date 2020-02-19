@@ -330,7 +330,7 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-- stage: Linux
+- stage: Windows
   dependsOn:
   - Build
   jobs:
