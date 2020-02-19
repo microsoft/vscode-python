@@ -342,8 +342,8 @@ gulp.task('installPythonRequirements', async () => {
 });
 
 // See https://github.com/microsoft/vscode-python/issues/7136
-gulp.task('installNewPtvsd', async () => {
-    // Install dependencies needed for 'install_ptvsd.py'
+gulp.task('installNewDebugpy', async () => {
+    // Install dependencies needed for 'install_debugpy.py'
     const depsArgs = [
         '-m',
         'pip',
@@ -357,70 +357,70 @@ gulp.task('installNewPtvsd', async () => {
     const successWithWheelsDeps = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', depsArgs, undefined, true)
         .then(() => true)
         .catch(ex => {
-            console.error("Failed to install new PTVSD wheels using 'python3'", ex);
+            console.error("Failed to install new DEBUGPY wheels using 'python3'", ex);
             return false;
         });
     if (!successWithWheelsDeps) {
         console.info(
-            "Failed to install dependencies need by 'install_ptvsd.py' using 'python3', attempting to install using 'python'"
+            "Failed to install dependencies need by 'install_debugpy.py' using 'python3', attempting to install using 'python'"
         );
         await spawnAsync('python', depsArgs).catch(ex =>
-            console.error("Failed to install dependencies need by 'install_ptvsd.py' using 'python'", ex)
+            console.error("Failed to install dependencies need by 'install_debugpy.py' using 'python'", ex)
         );
     }
 
-    // Install new PTVSD with wheels for python 3.7
-    const wheelsArgs = ['./pythonFiles/install_ptvsd.py'];
+    // Install new DEBUGPY with wheels for python 3.7
+    const wheelsArgs = ['./pythonFiles/install_debugpy.py'];
     const wheelsEnv = { PYTHONPATH: './pythonFiles/lib/temp' };
     const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', wheelsArgs, wheelsEnv, true)
         .then(() => true)
         .catch(ex => {
-            console.error("Failed to install new PTVSD wheels using 'python3'", ex);
+            console.error("Failed to install new DEBUGPY wheels using 'python3'", ex);
             return false;
         });
     if (!successWithWheels) {
-        console.info("Failed to install new PTVSD wheels using 'python3', attempting to install using 'python'");
+        console.info("Failed to install new DEBUGPY wheels using 'python3', attempting to install using 'python'");
         await spawnAsync('python', wheelsArgs, wheelsEnv).catch(ex =>
-            console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex)
+            console.error("Failed to install DEBUGPY wheels using 'python'", ex)
         );
     }
 
     rmrf.sync('./pythonFiles/lib/temp');
 
-    // Install source only version of new PTVSD for use with all other python versions.
+    // Install source only version of new DEBUGPY for use with all other python versions.
     const args = [
         '-m',
         'pip',
         '--disable-pip-version-check',
         'install',
         '-t',
-        './pythonFiles/lib/python/new_ptvsd/no_wheels',
+        './pythonFiles/lib/python/debugpy/no_wheels',
         '--no-cache-dir',
         '--implementation',
         'py',
         '--no-deps',
         '--upgrade',
         '--pre',
-        'ptvsd'
+        'debugpy'
     ];
     const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args, undefined, true)
         .then(() => true)
         .catch(ex => {
-            console.error("Failed to install PTVSD using 'python3'", ex);
+            console.error("Failed to install DEBUGPY using 'python3'", ex);
             return false;
         });
     if (!successWithoutWheels) {
         console.info(
-            "Failed to install source only version of new PTVSD using 'python3', attempting to install using 'python'"
+            "Failed to install source only version of new DEBUGPY using 'python3', attempting to install using 'python'"
         );
         await spawnAsync('python', args).catch(ex =>
-            console.error("Failed to install source only PTVSD 5.0 using 'python'", ex)
+            console.error("Failed to install source only DEBUGPY using 'python'", ex)
         );
     }
 });
 
 // Install the last stable version of old PTVSD (which includes a middle layer adapter and requires ptvsd_launcher.py)
-// until all users have migrated to the new debug adapter + new PTVSD (specified in requirements.txt)
+// until all users have migrated to the new debug adapter + new DEBUGPY (specified in requirements.txt)
 // See https://github.com/microsoft/vscode-python/issues/7136
 gulp.task('installOldPtvsd', async () => {
     const args = [
@@ -449,7 +449,7 @@ gulp.task('installOldPtvsd', async () => {
     }
 });
 
-gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installNewPtvsd'));
+gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installNewDebugpy'));
 
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
