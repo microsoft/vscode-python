@@ -76,7 +76,8 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '3.6'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+          # Note: "pythonInternalTools" tests are 3.7+.
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
         'Functional':
@@ -102,7 +103,8 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '3.5'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+          # Note: "pythonInternalTools" tests are 3.7+.
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
         'Functional':
@@ -178,7 +180,8 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '3.5'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+          # Note: "pythonInternalTools" tests are 3.7+.
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
         'Functional':
@@ -254,7 +257,8 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '3.5'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+          # Note: "pythonInternalTools" tests are 3.7+.
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
         'Functional':

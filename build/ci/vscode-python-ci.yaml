@@ -1,5 +1,7 @@
+# CI build (PR merge)
+
 name: '$(Year:yyyy).$(Month).0.$(BuildID)-ci'
-# CI build.
+
 # Notes: Only trigger a commit for master and release, and skip build/rebuild
 #        on changes in the news and .vscode folders.
 trigger:
@@ -82,7 +84,8 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '3.5'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+          # Note: "pythonInternalTools" tests are 3.7+.
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
         'Venv':
