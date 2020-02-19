@@ -573,10 +573,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 }
                 if (stopWatch && !this.perceivedJupyterStartupTelemetryCaptured) {
                     this.perceivedJupyterStartupTelemetryCaptured = true;
-                    sendTelemetryEvent(Telemetry.PerceivedJupyterStartup, stopWatch?.elapsedTime);
+                    sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch?.elapsedTime);
                     const disposable = this._notebook.onSessionStatusChanged(e => {
                         if (e === ServerStatus.Busy) {
-                            sendTelemetryEvent(Telemetry.StartExecuteCellPerceivedCold, stopWatch?.elapsedTime);
+                            sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch?.elapsedTime);
                             disposable.dispose();
                         }
                     });
