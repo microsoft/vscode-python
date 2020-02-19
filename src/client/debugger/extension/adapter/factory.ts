@@ -54,7 +54,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
                 // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
                 const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-                const debuggerPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_debugpy');
+                const debuggerPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy');
 
                 if (pythonPath.length !== 0) {
                     if (processId) {
@@ -111,7 +111,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     }
 
     public getDebuggerPath(): string {
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_debugpy', 'no_wheels', 'debugpy');
+        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'no_wheels', 'debugpy');
     }
 
     public getRemoteDebuggerArgs(remoteDebugOptions: RemoteDebugOptions): string[] {

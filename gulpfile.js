@@ -394,7 +394,7 @@ gulp.task('installNewDebugpy', async () => {
         '--disable-pip-version-check',
         'install',
         '-t',
-        './pythonFiles/lib/python/new_debugpy/no_wheels',
+        './pythonFiles/lib/python/debugpy/no_wheels',
         '--no-cache-dir',
         '--implementation',
         'py',
