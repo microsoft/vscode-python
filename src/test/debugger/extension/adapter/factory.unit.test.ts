@@ -496,26 +496,6 @@ suite('Debugging - Adapter Factory', () => {
         ]);
     });
 
-    test('Expected remote arguments are returned if not in DebugAdapterNewPtvsd experiment', async () => {
-        const remoteDebugOptions = {
-            waitUntilDebuggerAttaches: true,
-            host: 'host',
-            port: 999
-        };
-        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(false);
-
-        // tslint:disable-next-line:no-any
-        const args = factory.getRemoteDebuggerArgs(remoteDebugOptions as any);
-
-        assert.deepEqual(args, [
-            '--host',
-            remoteDebugOptions.host,
-            '--port',
-            remoteDebugOptions.port.toString(),
-            '--wait'
-        ]);
-    });
-
     test('Wait args is empty if `waitUntilDebuggerAttaches` is set to false', async () => {
         const remoteDebugOptions = {
             waitUntilDebuggerAttaches: false,
