@@ -1,0 +1,148 @@
+jobs:
+- job: Testing_Round_1
+  timeoutInMinutes: 120
+  strategy:
+    matrix:
+      ${{ each job in parameters.jobs }}:
+        ${{ each py in parameters.pythonVersions }}:
+          ${{ if not(contains('mac')) }}:
+            ${{ format('Mac{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "macos-latest"
+
+          ${{ if not(contains('win')) }}:
+            ${{ format('Win{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "vs2017-win2016"
+
+          ${{ if not(contains('linux')) }}:
+            ${{ format('Linux{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "ubuntu-latest"
+  steps:
+    - bash: |
+        mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
+        node .\savePerformanceResults.js
+
+- job: Testing_Round_2
+  dependsOn:
+  - Testing_Round_1
+  timeoutInMinutes: 120
+  strategy:
+    matrix:
+      ${{ each job in parameters.jobs }}:
+        ${{ each py in parameters.pythonVersions }}:
+          ${{ if not(contains('mac')) }}:
+            ${{ format('Mac{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "macos-latest"
+
+          ${{ if not(contains('win')) }}:
+            ${{ format('Win{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "vs2017-win2016"
+
+          ${{ if not(contains('linux')) }}:
+            ${{ format('Linux{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "ubuntu-latest"
+  steps:
+    - bash: |
+        mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
+        node .\savePerformanceResults.js
+
+- job: Testing_Round_3
+  dependsOn:
+  - Testing_Round_2
+  timeoutInMinutes: 120
+  strategy:
+    matrix:
+      ${{ each job in parameters.jobs }}:
+        ${{ each py in parameters.pythonVersions }}:
+          ${{ if not(contains('mac')) }}:
+            ${{ format('Mac{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "macos-latest"
+
+          ${{ if not(contains('win')) }}:
+            ${{ format('Win{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "vs2017-win2016"
+
+          ${{ if not(contains('linux')) }}:
+            ${{ format('Linux{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "ubuntu-latest"
+  steps:
+    - bash: |
+        mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
+        node .\savePerformanceResults.js
+
+- job: Testing_Round_4
+  dependsOn:
+  - Testing_Round_3
+  timeoutInMinutes: 120
+  strategy:
+    matrix:
+      ${{ each job in parameters.jobs }}:
+        ${{ each py in parameters.pythonVersions }}:
+          ${{ if not(contains('mac')) }}:
+            ${{ format('Mac{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "macos-latest"
+
+          ${{ if not(contains('win')) }}:
+            ${{ format('Win{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "vs2017-win2016"
+
+          ${{ if not(contains('linux')) }}:
+            ${{ format('Linux{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "ubuntu-latest"
+  steps:
+    - bash: |
+        mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
+        node .\savePerformanceResults.js
+
+- job: Testing_Round_5
+  dependsOn:
+  - Testing_Round_4
+  timeoutInMinutes: 120
+  strategy:
+    matrix:
+      ${{ each job in parameters.jobs }}:
+        ${{ each py in parameters.pythonVersions }}:
+          ${{ if not(contains('mac')) }}:
+            ${{ format('Mac{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "macos-latest"
+
+          ${{ if not(contains('win')) }}:
+            ${{ format('Win{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "vs2017-win2016"
+
+          ${{ if not(contains('linux')) }}:
+            ${{ format('Linux{2}{0}{1}', py.displayName, job.test) }}:
+              PythonVersion: ${{ py.version }}
+              VSCodeChannel: "stable"
+              VMImageName: "ubuntu-latest"
+  steps:
+    - bash: |
+        mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
+        node .\savePerformanceResults.js
