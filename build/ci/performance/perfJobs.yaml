@@ -3,20 +3,8 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      Mac37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "macos-latest"
-
-      Win37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "vs2017-win2016"
-
-      Linux37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "ubuntu-latest"
+      os: [ubuntu-latest, windows-latest]
+      python: [3.8]
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
@@ -28,20 +16,8 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      Mac37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "macos-latest"
-
-      Win37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "vs2017-win2016"
-
-      Linux37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "ubuntu-latest"
+      os: [ubuntu-latest, windows-latest]
+      python: [3.8]
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
@@ -53,20 +29,8 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      Mac37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "macos-latest"
-
-      Win37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "vs2017-win2016"
-
-      Linux37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "ubuntu-latest"
+      os: [ubuntu-latest, windows-latest]
+      python: [3.8]
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
@@ -78,20 +42,8 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      Mac37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "macos-latest"
-
-      Win37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "vs2017-win2016"
-
-      Linux37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "ubuntu-latest"
+      os: [ubuntu-latest, windows-latest]
+      python: [3.8]
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
@@ -103,20 +55,8 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      Mac37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "macos-latest"
-
-      Win37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "vs2017-win2016"
-
-      Linux37:
-        PythonVersion: "3.7"
-        VSCodeChannel: "stable"
-        VMImageName: "ubuntu-latest"
+      os: [ubuntu-latest, windows-latest]
+      python: [3.8]
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
