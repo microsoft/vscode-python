@@ -20,6 +20,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
@@ -78,6 +79,7 @@ import { InteractiveWindowMessageListener } from './interactiveWindowMessageList
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
+    private perceivedJupyterStartupTelemetryCaptured: boolean = false;
     private potentiallyUnfinishedStatus: Disposable[] = [];
     private addSysInfoPromise: Deferred<boolean> | undefined;
     private _notebook: INotebook | undefined;
@@ -457,8 +459,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     // tslint:disable-next-line: max-func-body-length
     protected async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, debug?: boolean): Promise<boolean> {
         traceInfo(`Submitting code for ${this.id}`);
+        const stopWatch =
+            this._notebook && !this.perceivedJupyterStartupTelemetryCaptured ? new StopWatch() : undefined;
         let result = true;
-
         // Do not execute or render empty code cells
         const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
         if (cellMatcher.stripFirstMarker(code).length === 0) {
@@ -511,7 +514,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 if (file !== Identifiers.EmptyFileName) {
                     await this._notebook.execute(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, line, uuid(), undefined, true);
                 }
-
+                if (stopWatch && !this.perceivedJupyterStartupTelemetryCaptured) {
+                    this.perceivedJupyterStartupTelemetryCaptured = true;
+                    sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch?.elapsedTime);
+                    const disposable = this._notebook.onSessionStatusChanged(e => {
+                        if (e === ServerStatus.Busy) {
+                            sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch?.elapsedTime);
+                            disposable.dispose();
+                        }
+                    });
+                }
                 const observable = this._notebook.executeObservable(code, file, line, id, false);
 
                 // Indicate we executed some code

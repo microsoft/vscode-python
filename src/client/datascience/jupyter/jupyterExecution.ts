@@ -31,6 +31,8 @@ import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { KernelSelector, KernelSpecInterpreter } from './kernels/kernelSelector';
 import { NotebookStarter } from './notebookStarter';
 
+const LocalHosts = ['localhost', '127.0.0.1', '::1'];
+
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonInterpreter | undefined;
     private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
@@ -143,6 +145,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 try {
                     // Start or connect to the process
                     [connection, kernelSpecInterpreter] = await Promise.all([this.startOrConnect(options, cancelToken), kernelSpecInterpreterPromise]);
+                    if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
+                        sendTelemetryEvent(Telemetry.ConnectRemoteJupyterViaLocalHost);
+                    }
                     // Create a server tha  t we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
