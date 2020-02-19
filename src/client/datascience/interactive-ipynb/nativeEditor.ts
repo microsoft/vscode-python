@@ -120,7 +120,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private indentAmount: string = ' ';
     private notebookJson: Partial<nbformat.INotebookContent> = {};
     private debouncedWriteToStorage = debounce(this.writeToStorage.bind(this), 250);
-    private executeCancelTokenSource: CancellationTokenSource | undefined;
+    private executeCancelTokens = new Set<CancellationTokenSource>();
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -457,14 +457,16 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     @captureTelemetry(Telemetry.ExecuteNativeCell, undefined, true)
     // tslint:disable-next-line:no-any
     protected async reexecuteCells(info: IReExecuteCells): Promise<void> {
+        const tokenSource = new CancellationTokenSource();
+        this.executeCancelTokens.add(tokenSource);
         let finishedPos = info && info.entries ? info.entries.length : -1;
         try {
-            this.executeCancelTokenSource = new CancellationTokenSource();
-            const token = this.executeCancelTokenSource.token;
             if (info && info.entries) {
-                for (let i = 0; i < info.entries.length && !token.isCancellationRequested; i += 1) {
-                    await this.reexecuteCell(info.entries[i], token);
-                    finishedPos = i;
+                for (let i = 0; i < info.entries.length && !tokenSource.token.isCancellationRequested; i += 1) {
+                    await this.reexecuteCell(info.entries[i], tokenSource.token);
+                    if (!tokenSource.token.isCancellationRequested) {
+                        finishedPos = i;
+                    }
                 }
             }
         } catch (exc) {
@@ -474,7 +476,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // Handle an error
             await this.errorHandler.handleError(exc);
         } finally {
-            this.executeCancelTokenSource = undefined;
+            this.executeCancelTokens.delete(tokenSource);
 
             // Make sure everything is marked as finished or error after the final finished
             // position
@@ -554,9 +556,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private interruptExecution() {
-        if (this.executeCancelTokenSource) {
-            this.executeCancelTokenSource.cancel();
-        }
+        this.executeCancelTokens.forEach(t => t.cancel());
     }
 
     private finishCell(entry: { cell: ICell; code: string }) {
