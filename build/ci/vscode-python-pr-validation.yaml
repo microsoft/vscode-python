@@ -57,10 +57,15 @@ stages:
     dependsOn: []
     strategy:
       matrix:
-        'Unit+Single':
+        'Unit':
           PythonVersion: '2.7'
-          TestsToRun: 'pythonUnitTests, testSingleWorkspace'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
           NeedsPythonTestReqs: true
+        'Functional':
+          PythonVersion: '2.7'
+          TestsToRun: 'testfunctional'
+          NeedsPythonTestReqs: true
+          NeedsPythonFunctionalReqs: true
     pool:
       vmImage: 'ubuntu-16.04'
     steps:
@@ -73,30 +78,11 @@ stages:
     dependsOn: []
     strategy:
       matrix:
-        'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+        # This gives us our best functional coverage for the OS.
+        'Functional+Single':
+          TestsToRun: 'testfunctional, testSingleWorkspace'
           NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Single Workspace':
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Smoke':
-          TestsToRun: 'testSmoke'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-    pool:
-      vmImage: 'macos-10.13'
-    steps:
-      - template: templates/test_phases.yml
-
-  - job: 'Py27'
-    dependsOn: []
-    strategy:
-      matrix:
-        'Unit+Single':
-          PythonVersion: '2.7'
-          TestsToRun: 'pythonUnitTests, testSingleWorkspace'
-          NeedsPythonTestReqs: true
+          NeedsPythonFunctionalReqs: true
     pool:
       vmImage: 'macos-10.13'
     steps:
@@ -109,27 +95,11 @@ stages:
     dependsOn: []
     strategy:
       matrix:
-        'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+        # This gives us our best functional coverage for the OS.
+        'Functional+Single':
+          TestsToRun: 'testfunctional, testSingleWorkspace'
           NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Smoke':
-          TestsToRun: 'testSmoke'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-    pool:
-      vmImage: 'vs2017-win2016'
-    steps:
-      - template: templates/test_phases.yml
-
-  - job: 'Py27'
-    dependsOn: []
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '2.7'
-          TestsToRun: 'pythonUnitTests'
-          NeedsPythonTestReqs: true
+          NeedsPythonFunctionalReqs: true
     pool:
       vmImage: 'vs2017-win2016'
     steps:
