@@ -10,7 +10,6 @@ schedules:
     - master
 
 parameters:
-    jobs: []
     pythonVersions: [
       # All scenarios tagged with `@noNeedToTestInAllPython`, will run in the latest version of Python.
       # When using other versions of Python, ignore `@noNeedToTestInAllPython`.
