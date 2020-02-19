@@ -24,8 +24,6 @@ import { RemoteDebugOptions } from '../../debugAdapter/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugAdapterDescriptorFactory } from '../types';
 
-export const ptvsdPathStorageKey = 'PTVSD_PATH_STORAGE_KEY';
-
 @injectable()
 export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFactory {
     constructor(
@@ -56,7 +54,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
                 // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
                 const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-                const ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd');
+                const debuggerPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy');
 
                 if (pythonPath.length !== 0) {
                     if (processId) {
@@ -67,10 +65,10 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                         return new DebugAdapterExecutable(pythonPath, [configuration.debugAdapterPath, ...logArgs]);
                     }
 
-                    if (await this.useNewPtvsd(pythonPath)) {
+                    if (await this.useNewDebugger(pythonPath)) {
                         sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
                         return new DebugAdapterExecutable(pythonPath, [
-                            path.join(ptvsdPathToUse, 'wheels', 'ptvsd', 'adapter'),
+                            path.join(debuggerPathToUse, 'wheels', 'debugpy', 'adapter'),
                             ...logArgs
                         ]);
                     } else {
@@ -78,7 +76,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                             usingWheels: false
                         });
                         return new DebugAdapterExecutable(pythonPath, [
-                            path.join(ptvsdPathToUse, 'no_wheels', 'ptvsd', 'adapter'),
+                            path.join(debuggerPathToUse, 'no_wheels', 'debugpy', 'adapter'),
                             ...logArgs
                         ]);
                     }
@@ -97,13 +95,13 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     }
 
     /**
-     * Check and return whether the user should and can use the new PTVSD wheels or not.
+     * Check and return whether the user should and can use the new Debugger wheels or not.
      *
      * @param {string} pythonPath Path to the python executable used to launch the Python Debug Adapter (result of `this.getPythonPath()`)
-     * @returns {Promise<boolean>} Whether the user should and can use the new PTVSD wheels or not.
+     * @returns {Promise<boolean>} Whether the user should and can use the new Debugger wheels or not.
      * @memberof DebugAdapterDescriptorFactory
      */
-    public async useNewPtvsd(pythonPath: string): Promise<boolean> {
+    public async useNewDebugger(pythonPath: string): Promise<boolean> {
         const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
         if (!interpreterInfo || !interpreterInfo.version || !interpreterInfo.version.raw.startsWith('3.7')) {
             return false;
@@ -112,23 +110,18 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         return true;
     }
 
-    public getPtvsdPath(): string {
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd', 'no_wheels', 'ptvsd');
+    public getDebuggerPath(): string {
+        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'no_wheels', 'debugpy');
     }
 
-    public getRemotePtvsdArgs(remoteDebugOptions: RemoteDebugOptions): string[] {
-        const waitArgs = remoteDebugOptions.waitUntilDebuggerAttaches ? ['--wait'] : [];
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            return ['--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString(), ...waitArgs];
-        }
-        return [
-            '--default',
-            '--host',
-            remoteDebugOptions.host,
-            '--port',
-            remoteDebugOptions.port.toString(),
-            ...waitArgs
-        ];
+    public getRemoteDebuggerArgs(remoteDebugOptions: RemoteDebugOptions): string[] {
+        const useNewDADebugger = this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
+        const waitArgs = remoteDebugOptions.waitUntilDebuggerAttaches
+            ? [useNewDADebugger ? '--wait-for-client' : '--wait']
+            : [];
+        return useNewDADebugger
+            ? ['--listen', `${remoteDebugOptions.host}:${remoteDebugOptions.port}`, ...waitArgs]
+            : ['--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString(), ...waitArgs];
     }
 
     /**

@@ -36,10 +36,10 @@ suite('Extension API Debugger', () => {
 
     function mockInExperiment(host: string, port: number, wait: boolean) {
         when(experimentsManager.inExperiment(anyString())).thenReturn(true);
-        when(debugAdapterFactory.useNewPtvsd(anyString())).thenResolve(true);
-        when(debugAdapterFactory.getPtvsdPath()).thenReturn(ptvsdPath);
+        when(debugAdapterFactory.useNewDebugger(anyString())).thenResolve(true);
+        when(debugAdapterFactory.getDebuggerPath()).thenReturn(ptvsdPath);
         if (wait) {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+            when(debugAdapterFactory.getRemoteDebuggerArgs(anything())).thenReturn([
                 '--host',
                 host,
                 '--port',
@@ -47,7 +47,7 @@ suite('Extension API Debugger', () => {
                 '--wait'
             ]);
         } else {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+            when(debugAdapterFactory.getRemoteDebuggerArgs(anything())).thenReturn([
                 '--host',
                 host,
                 '--port',
@@ -58,9 +58,9 @@ suite('Extension API Debugger', () => {
 
     function mockNotInExperiment(host: string, port: number, wait: boolean) {
         when(experimentsManager.inExperiment(anyString())).thenReturn(false);
-        when(debugAdapterFactory.useNewPtvsd(anyString())).thenResolve(false);
+        when(debugAdapterFactory.useNewDebugger(anyString())).thenResolve(false);
         if (wait) {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+            when(debugAdapterFactory.getRemoteDebuggerArgs(anything())).thenReturn([
                 '--default',
                 '--host',
                 host,
@@ -69,7 +69,7 @@ suite('Extension API Debugger', () => {
                 '--wait'
             ]);
         } else {
-            when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn([
+            when(debugAdapterFactory.getRemoteDebuggerArgs(anything())).thenReturn([
                 '--default',
                 '--host',
                 host,

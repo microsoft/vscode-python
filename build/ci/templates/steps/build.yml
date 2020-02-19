@@ -12,50 +12,50 @@
 #   If `true`, means we need to build the VSIX, else just compile.
 
 steps:
-    - template: initialization.yml
-      parameters:
-          PythonVersion: $(PythonVersion)
-          workingDirectory: $(Build.SourcesDirectory)
-          compile: 'false'
+  - template: initialization.yml
+    parameters:
+      PythonVersion: $(PythonVersion)
+      workingDirectory: $(Build.SourcesDirectory)
+      compile: 'false'
 
-    - bash: |
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
-      failOnStderr: true
-      displayName: 'pip install requirements'
+  - bash: |
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+    failOnStderr: true
+    displayName: 'pip install requirements'
 
-    - bash: |
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_ptvsd.py
-      failOnStderr: true
-      displayName: 'Install PTVSD wheels'
+  - bash: |
+      python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+      python ./pythonFiles/install_debugpy.py
+    failOnStderr: true
+    displayName: 'Install DEBUGPY wheels'
 
-    - bash: npm run clean
-      displayName: 'Clean'
+  - bash: npm run clean
+    displayName: 'Clean'
 
-    - bash: |
-          npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
-      displayName: 'Update dev Version of Extension'
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
+  - bash: |
+      npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
+    displayName: 'Update dev Version of Extension'
+    condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
 
-    - bash: |
-          npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID --updateChangelog
-      displayName: 'Update release Version of Extension'
-      condition: and(succeeded(), startsWith(variables['Build.SourceBranchName'], 'release'))
+  - bash: |
+      npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID --updateChangelog
+    displayName: 'Update release Version of Extension'
+    condition: and(succeeded(), startsWith(variables['Build.SourceBranchName'], 'release'))
 
-    - bash: |
-          npm run package
-      displayName: 'Build VSIX'
+  - bash: |
+      npm run package
+    displayName: 'Build VSIX'
 
-    - task: CopyFiles@2
-      inputs:
-          contents: '*.vsix'
-          targetFolder: $(Build.ArtifactStagingDirectory)
-      displayName: 'Copy VSIX'
+  - task: CopyFiles@2
+    inputs:
+      contents: '*.vsix'
+      targetFolder: $(Build.ArtifactStagingDirectory)
+    displayName: 'Copy VSIX'
 
-    - task: PublishBuildArtifacts@1
-      inputs:
-          pathtoPublish: $(Build.ArtifactStagingDirectory)
-          artifactName: VSIX
-      displayName: 'Publish VSIX to Artifacts'
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: $(Build.ArtifactStagingDirectory)
+      artifactName: VSIX
+    displayName: 'Publish VSIX to Artifacts'
