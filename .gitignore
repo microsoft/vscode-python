@@ -27,9 +27,6 @@ pythonFiles/lib/**
 debug_coverage*/**
 languageServer/**
 languageServer.*/**
-!uitests/features/languageServer/**
-!uitests/src/languageServer/**
-!uitests/code/**/languageServer/**
 bin/**
 obj/**
 .pytest_cache
@@ -37,7 +34,6 @@ tmp/**
 .python-version
 .vs/
 test-results.xml
-uitests/out/**
 !build/
 debug*.log
 ptvsd*.log

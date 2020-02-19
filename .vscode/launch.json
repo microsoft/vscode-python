@@ -263,23 +263,6 @@
             "skipFiles": [
                 "<node_internals>/**"
             ]
-        },
-        {
-            "name": "Behave Smoke Tests",
-            "type": "python",
-            "request": "launch",
-            "program": "${workspaceFolder}/uitests/__main__.py",
-            "args": [
-                "test",
-                "--",
-                "--format",
-                "progress3",
-                // Change the tag `@wip` to what ever you want to run.
-                // Default is assumed to be somethign that's a work in progress (wip).
-                "--tags=@wip"
-            ],
-            "justMyCode": false,
-            "console": "internalConsole"
         }
     ],
     "compounds": [

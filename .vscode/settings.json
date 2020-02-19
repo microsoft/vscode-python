@@ -2,7 +2,6 @@
 {
     "files.exclude": {
         "out": true, // set this to true to hide the "out" folder with the compiled JS files
-        "uitests/out": true,
         "**/*.pyc": true,
         ".nyc_output": true,
         "obj": true,
@@ -16,7 +15,6 @@
     },
     "search.exclude": {
         "out": true, // set this to false to include "out" folder in search results
-        "uitests/out": true,
         "**/node_modules": true,
         "coverage": true,
         "languageServer*/**": true,
