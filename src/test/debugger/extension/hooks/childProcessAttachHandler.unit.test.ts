@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { ChildProcessAttachEventHandler } from '../../../../client/debugger/extension/hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from '../../../../client/debugger/extension/hooks/childProcessAttachService';
-import { PTVSDEvents } from '../../../../client/debugger/extension/hooks/constants';
+import { DebuggerEvents } from '../../../../client/debugger/extension/hooks/constants';
 import { ChildProcessLaunchData } from '../../../../client/debugger/extension/hooks/types';
 
 suite('Debug - Child Process', () => {
@@ -32,7 +32,7 @@ suite('Debug - Child Process', () => {
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
         const body: any = {};
         const session: any = {};
-        await handler.handleCustomEvent({ event: PTVSDEvents.ChildProcessLaunched, body, session });
+        await handler.handleCustomEvent({ event: DebuggerEvents.ChildProcessLaunched, body, session });
         verify(attachService.attach(body, session)).never();
     });
     test('Do not attach to child process if ptvsd_attach event is invalid', async () => {
@@ -40,7 +40,15 @@ suite('Debug - Child Process', () => {
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
         const body: any = {};
         const session: any = {};
-        await handler.handleCustomEvent({ event: PTVSDEvents.AttachToSubprocess, body, session });
+        await handler.handleCustomEvent({ event: DebuggerEvents.PtvsdAttachToSubprocess, body, session });
+        verify(attachService.attach(body, session)).never();
+    });
+    test('Do not attach to child process if debugpy_attach event is invalid', async () => {
+        const attachService = mock(ChildProcessAttachService);
+        const handler = new ChildProcessAttachEventHandler(instance(attachService));
+        const body: any = {};
+        const session: any = {};
+        await handler.handleCustomEvent({ event: DebuggerEvents.DebugpyAttachToSubprocess, body, session });
         verify(attachService.attach(body, session)).never();
     });
     test('Exceptions are not bubbled up if exceptions are thrown', async () => {
@@ -64,7 +72,7 @@ suite('Debug - Child Process', () => {
         };
         const session: any = {};
         when(attachService.attach(body, session)).thenThrow(new Error('Kaboom'));
-        await handler.handleCustomEvent({ event: PTVSDEvents.ChildProcessLaunched, body, session: {} as any });
+        await handler.handleCustomEvent({ event: DebuggerEvents.ChildProcessLaunched, body, session: {} as any });
         verify(attachService.attach(body, anything())).once();
         const [, secondArg] = capture(attachService.attach).last();
         expect(secondArg).to.deep.equal(session);

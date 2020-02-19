@@ -197,11 +197,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Code can be found here (src/client/debugger/extension/adapter/factory.ts).
         if (pythonVersion && pythonVersion.major === 3 && pythonVersion.minor === 7) {
             // Return debugger with wheels
-            return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd', 'wheels');
+            return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'wheels');
         }
 
         // We are here so this is NOT python 3.7, return debugger without wheels
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd', 'no_wheels');
+        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy', 'no_wheels');
     }
     private async calculatePtvsdPathList(notebook: INotebook): Promise<string | undefined> {
         const extraPaths: string[] = [];

@@ -53,12 +53,12 @@ export function buildApi(
                 port: number,
                 waitUntilDebuggerAttaches: boolean = true
             ): Promise<string[]> {
-                const useNewDAPtvsd = experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
+                const useNewDADebugger = experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
 
-                if (useNewDAPtvsd) {
+                if (useNewDADebugger) {
                     // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
-                    const args = debugFactory.getRemotePtvsdArgs({ host, port, waitUntilDebuggerAttaches });
-                    return [debugFactory.getPtvsdPath(), ...args];
+                    const args = debugFactory.getRemoteDebuggerArgs({ host, port, waitUntilDebuggerAttaches });
+                    return [debugFactory.getDebuggerPath(), ...args];
                 }
 
                 return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({

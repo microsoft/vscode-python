@@ -40,30 +40,30 @@ jobs:
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
 
-      - name: Install ptvsd wheels
+      - name: Install debugpy wheels
         run: |
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_ptvsd.py
+          python ./pythonFiles/install_debugpy.py
 
-      # Retrieve the list of ptvsd versions from PyPI in order to increase the specificity of the pip cache key,
+      # Retrieve the list of debugpy versions from PyPI in order to increase the specificity of the pip cache key,
       # so that the cache gets invalidated as necessary.
       # See https://github.com/microsoft/vscode-python/pull/9843#discussion_r373635221
-      - name: curl PyPI to get ptvsd versions
-        run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+      - name: curl PyPI to get debugpy versions
+        run: curl --output debugpy.json https://pypi.org/pypi/debugpy/json
 
       - name: Cache pip files
         uses: actions/cache@v1
         with:
           path: ~/.cache/pip
-          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+          key: ${{runner.os}}-${{env.CACHE_PIP_DEPS}}-pip-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('debugpy.json')}}
 
       - name: Cache ./pythonFiles/lib/python
         uses: actions/cache@v1
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('debugpy.json')}}
 
   js-ts-deps:
     name: Install npm dependencies
@@ -148,14 +148,14 @@ jobs:
           path: ~/.npm
           key: ${{runner.os}}-${{env.CACHE_NPM_DEPS}}-${{hashFiles('package-lock.json')}}
 
-      - name: curl PyPI to get ptvsd versions
-        run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+      - name: curl PyPI to get debugpy versions
+        run: curl --output debugpy.json https://pypi.org/pypi/debugpy/json
 
       - name: Retrieve cached pythonFiles/ directory
         uses: actions/cache@v1
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('debugpy.json')}}
 
       - name: Install dependencies (npm ci)
         run: npm ci --prefer-offline
@@ -222,8 +222,8 @@ jobs:
         with:
           python-version: ${{matrix.python}}
 
-      - name: curl PyPI to get ptvsd versions
-        run: curl --output ptvsd.json https://pypi.org/pypi/ptvsd/json
+      - name: curl PyPI to get debugpy versions
+        run: curl --output debugpy.json https://pypi.org/pypi/debugpy/json
 
       - name: Retrieve cached pythonFiles/ directory
         uses: actions/cache@v1
@@ -231,19 +231,19 @@ jobs:
         id: pythonFiles-cache
         with:
           path: ./pythonFiles/lib/python
-          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('ptvsd.json')}}
+          key: ${{runner.os}}-${{env.CACHE_PYTHONFILES}}-pythonFiles-${{env.PYTHON_VERSION}}-${{hashFiles('requirements.txt')}}-${{hashFiles('build/debugger-install-requirements.txt')}}-${{hashFiles('debugpy.json')}}
 
       - name: Install Python requirements if not cached
         run: |
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
         if: steps.pythonFiles-cache.outputs.cache-hit == false
 
-      - name: Install ptvsd wheels if not cached
+      - name: Install debugpy wheels if not cached
         run: |
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_ptvsd.py
+          python ./pythonFiles/install_debugpy.py
         if: steps.pythonFiles-cache.outputs.cache-hit == false
 
       - name: Install test requirements
