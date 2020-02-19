@@ -21,7 +21,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
-import { traceError } from '../../common/logger';
+import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import {
     GLOBAL_MEMENTO,
@@ -574,6 +574,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         try {
             // If there's any payload, it has the code and the id
             if (entry.code && entry.cell.id && entry.cell.data.cell_type !== 'messages') {
+                traceInfo(`Executing cell ${entry.cell.id}`);
+
                 // Clear the result if we've run before
                 await this.clearResult(entry.cell.id);
 
@@ -615,6 +617,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             ]);
 
             throw exc;
+        } finally {
+            if (entry && entry.cell.id) {
+                traceInfo(`Finished executing cell ${entry.cell.id}`);
+            }
         }
     }
 
