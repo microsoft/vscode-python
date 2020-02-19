@@ -60,7 +60,8 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '2.7'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+          # Note: "pythonInternalTools" tests are 3.7+.
+          TestsToRun: 'testUnitTests, pythonUnitTests'
           NeedsPythonTestReqs: true
         'Functional':
           PythonVersion: '2.7'
