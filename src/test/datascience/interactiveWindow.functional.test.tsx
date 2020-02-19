@@ -968,7 +968,8 @@ Type:      builtin_function_or_method`,
             const docManager = ioc.get<IDocumentManager>(IDocumentManager);
             docManager.showTextDocument(docManager.textDocuments[0]);
             const window = (await getOrCreateInteractiveWindow(ioc)) as InteractiveWindow;
-            window.copyCode({ source: 'print("baz")' });
+            await window.show();
+            await window.copyCode({ source: 'print("baz")' });
             assert.equal(
                 docManager.textDocuments[0].getText(),
                 `${defaultCellMarker}${os.EOL}print("baz")${os.EOL}${defaultCellMarker}${os.EOL}print("bar")`,
@@ -976,7 +977,7 @@ Type:      builtin_function_or_method`,
             );
             const activeEditor = docManager.activeTextEditor as MockEditor;
             activeEditor.selection = new Selection(1, 2, 1, 2);
-            window.copyCode({ source: 'print("baz")' });
+            await window.copyCode({ source: 'print("baz")' });
             assert.equal(
                 docManager.textDocuments[0].getText(),
                 `${defaultCellMarker}${os.EOL}${defaultCellMarker}${os.EOL}print("baz")${os.EOL}${defaultCellMarker}${os.EOL}print("baz")${os.EOL}${defaultCellMarker}${os.EOL}print("bar")`,

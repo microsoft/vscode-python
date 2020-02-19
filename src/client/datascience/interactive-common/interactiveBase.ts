@@ -420,7 +420,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     @captureTelemetry(Telemetry.CopySourceCode, undefined, false)
     public copyCode(args: ICopyCode) {
-        this.copyCodeInternal(args.source).catch(err => {
+        return this.copyCodeInternal(args.source).catch(err => {
             this.applicationShell.showErrorMessage(err);
         });
     }

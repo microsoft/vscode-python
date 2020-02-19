@@ -68,7 +68,7 @@ export class DataScience implements IDataScience {
     }
 
     private onSettingsChanged = () => {
-        const settings = this.configuration.getSettings();
+        const settings = this.configuration.getSettings(undefined);
         const enabled = settings.datascience.enabled;
         let editorContext = new ContextKey(EditorContexts.DataScienceEnabled, this.commandManager);
         editorContext.set(enabled).catch();
