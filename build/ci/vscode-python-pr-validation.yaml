@@ -22,112 +22,125 @@ stages:
   jobs:
   - template: templates/jobs/build_compile.yml
 
-- stage: Tests
+- stage: Linux
   dependsOn: []
   jobs:
-  - job: 'Test'
+  - job: 'Py3.x'
     dependsOn: []
     strategy:
       matrix:
         # Each member of this list must contain these values:
-        # VMImageName: '[name]' - the VM image to run the tests on.
         # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
+        #
         # Each member of this list may contain these values:
         # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
         # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
+        # NeedsIPythonReqs: [true|false] - install the ipython-test-requirements prior to running tests. False if not set.
         # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
-        # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
-        # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
-        # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
-        'Win-Py3.7 Unit':
-          PythonVersion: '3.7'
-          VMImageName: 'vs2017-win2016'
+        'Unit':
           TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
           NeedsPythonTestReqs: true
-        'Win-Py2.7 Unit':
-          PythonVersion: '2.7'
-          VMImageName: 'vs2017-win2016'
-          TestsToRun: 'pythonUnitTests'
-          NeedsPythonTestReqs: true
-        'Mac-Py3.7 Unit':
-          PythonVersion: '3.7'
-          VMImageName: 'macos-10.13'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
-          NeedsPythonTestReqs: true
-        'Mac-Py3.7 Single Workspace':
-          PythonVersion: '3.7'
-          VMImageName: 'macos-10.13'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Mac-Py2.7 Unit+Single':
-          PythonVersion: '2.7'
-          VMImageName: 'macos-10.13'
-          TestsToRun: 'pythonUnitTests, testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Linux-Py3.7 Unit':
-          PythonVersion: '3.7'
-          VMImageName: 'ubuntu-16.04'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
-          NeedsPythonTestReqs: true
-        'Linux-Py3.7 Single Workspace':
-          PythonVersion: '3.7'
-          VMImageName: 'ubuntu-16.04'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Linux-Py2.7 Unit+Single':
-          PythonVersion: '2.7'
-          VMImageName: 'ubuntu-16.04'
-          TestsToRun: 'pythonUnitTests, testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Linux-Py3.7 Functional':
-          PythonVersion: '3.7'
-          VMImageName: 'ubuntu-16.04'
+        'Functional':
           TestsToRun: 'testfunctional'
           NeedsPythonTestReqs: true
           NeedsPythonFunctionalReqs: true
-
+        'Single Workspace':
+          TestsToRun: 'testSingleWorkspace'
+          NeedsPythonTestReqs: true
+        'Smoke':
+          TestsToRun: 'testSmoke'
+          NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
     pool:
-      vmImage: $(VMImageName)
-
+      vmImage: 'ubuntu-16.04'
     steps:
       - template: templates/test_phases.yml
 
-- stage: Smoke
-  dependsOn: []
-  jobs:
-  - job: 'Smoke'
+  - job: 'Py2.7'
     dependsOn: []
     strategy:
       matrix:
-        'Mac-Py3.7':
-            PythonVersion: '3.7'
-            VMImageName: 'macos-10.13'
-            TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
-            NeedsIPythonReqs: true
-        'Linux-Py3.7':
-            PythonVersion: '3.7'
-            VMImageName: 'ubuntu-16.04'
-            TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
-            NeedsIPythonReqs: true
-        'Win-Py3.7':
-            PythonVersion: '3.7'
-            VMImageName: 'vs2017-win2016'
-            TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
-            NeedsIPythonReqs: true
-
+        'Unit+Single':
+          PythonVersion: '2.7'
+          TestsToRun: 'pythonUnitTests, testSingleWorkspace'
+          NeedsPythonTestReqs: true
     pool:
-      vmImage: $(VMImageName)
+      vmImage: 'ubuntu-16.04'
+    steps:
+      - template: templates/test_phases.yml
 
+- stage: Mac
+  dependsOn: []
+  jobs:
+  - job: 'Py3.x'
+    dependsOn: []
+    strategy:
+      matrix:
+        'Unit':
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+          NeedsPythonTestReqs: true
+        'Single Workspace':
+          TestsToRun: 'testSingleWorkspace'
+          NeedsPythonTestReqs: true
+        'Smoke':
+          TestsToRun: 'testSmoke'
+          NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
+    pool:
+      vmImage: 'macos-10.13'
+    steps:
+      - template: templates/test_phases.yml
+
+  - job: 'Py2.7'
+    dependsOn: []
+    strategy:
+      matrix:
+        'Unit+Single':
+          PythonVersion: '2.7'
+          TestsToRun: 'pythonUnitTests, testSingleWorkspace'
+          NeedsPythonTestReqs: true
+    pool:
+      vmImage: 'macos-10.13'
+    steps:
+      - template: templates/test_phases.yml
+
+- stage: Windows
+  dependsOn: []
+  jobs:
+  - job: 'Py3.x'
+    dependsOn: []
+    strategy:
+      matrix:
+        'Unit':
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+          NeedsPythonTestReqs: true
+        'Smoke':
+          TestsToRun: 'testSmoke'
+          NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
+    pool:
+      vmImage: 'vs2017-win2016'
+    steps:
+      - template: templates/test_phases.yml
+
+  - job: 'Py2.7'
+    dependsOn: []
+    strategy:
+      matrix:
+        'Unit':
+          PythonVersion: '2.7'
+          TestsToRun: 'pythonUnitTests'
+          NeedsPythonTestReqs: true
+    pool:
+      vmImage: 'vs2017-win2016'
     steps:
       - template: templates/test_phases.yml
 
 - stage: Reports
   dependsOn:
-  - Smoke
-  - Tests
+  - Linux
+  - Mac
+  - Windows
   condition: always()
   jobs:
   - template: templates/jobs/coverage.yml
