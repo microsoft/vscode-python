@@ -10,13 +10,13 @@ schedules:
     - master
 
 stages:
-- stage: Test performance
+- stage: Test_performance
   jobs:
   - template: perfJobs.yaml
 
 - stage: Results
   dependsOn:
-  - Test performance
+  - Test_performance
   jobs:
   - job: CheckResults
     timeoutInMinutes: 5
