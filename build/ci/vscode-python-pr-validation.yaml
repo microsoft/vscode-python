@@ -34,8 +34,9 @@ stages:
     strategy:
       matrix:
         'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
         'Functional':
           TestsToRun: 'testfunctional'
           NeedsPythonTestReqs: true
@@ -73,8 +74,9 @@ stages:
     strategy:
       matrix:
         'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
         'Single Workspace':
           TestsToRun: 'testSingleWorkspace'
           NeedsPythonTestReqs: true
@@ -108,8 +110,9 @@ stages:
     strategy:
       matrix:
         'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
         'Smoke':
           TestsToRun: 'testSmoke'
           NeedsPythonTestReqs: true

@@ -41,9 +41,9 @@ stages:
     strategy:
       matrix:
         'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           TestsToRun: 'testfunctional'
           NeedsPythonTestReqs: true
@@ -78,9 +78,9 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '3.6'
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           PythonVersion: '3.6'
           TestsToRun: 'testfunctional'
@@ -116,9 +116,9 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '3.5'
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           PythonVersion: '3.5'
           TestsToRun: 'testfunctional'
@@ -154,9 +154,9 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '2.7'
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           PythonVersion: '2.7'
           TestsToRun: 'testfunctional'
@@ -191,9 +191,9 @@ stages:
     strategy:
       matrix:
         'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           TestsToRun: 'testfunctional'
           NeedsPythonTestReqs: true
@@ -227,9 +227,9 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '3.6'
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           PythonVersion: '3.6'
           TestsToRun: 'testfunctional'
@@ -265,9 +265,9 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '3.5'
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           PythonVersion: '3.5'
           TestsToRun: 'testfunctional'
@@ -303,9 +303,9 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '2.7'
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           PythonVersion: '2.7'
           TestsToRun: 'testfunctional'
@@ -340,9 +340,9 @@ stages:
     strategy:
       matrix:
         'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           TestsToRun: 'testfunctional'
           NeedsPythonTestReqs: true
@@ -376,9 +376,9 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '3.6'
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           PythonVersion: '3.6'
           TestsToRun: 'testfunctional'
@@ -414,9 +414,9 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '3.5'
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           PythonVersion: '3.5'
           TestsToRun: 'testfunctional'
@@ -452,9 +452,9 @@ stages:
       matrix:
         'Unit':
           PythonVersion: '2.7'
-          TestsToRun: 'testUnitTests, pythonUnitTests'
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+          NeedsIPythonReqs: true
         'Functional':
           PythonVersion: '2.7'
           TestsToRun: 'testfunctional'
