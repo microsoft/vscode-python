@@ -9,6 +9,7 @@ schedules:
     include:
     - master
 
+stages:
 - stage: Test performance
   jobs:
   - job: Testing Round 1
