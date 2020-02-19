@@ -143,7 +143,7 @@ export class ServerCache implements IAsyncDisposable {
     private async calculateWorkingDirectory(): Promise<string | undefined> {
         let workingDir: string | undefined;
         // For a local launch calculate the working directory that we should switch into
-        const settings = this.configService.getSettings();
+        const settings = this.configService.getSettings(undefined);
         const fileRoot = settings.datascience.notebookFileRoot;
 
         // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)

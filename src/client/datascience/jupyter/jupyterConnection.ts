@@ -60,7 +60,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         this.startPromise = createDeferred<IConnection>();
 
         // We want to reject our Jupyter connection after a specific timeout
-        const settings = this.configService.getSettings();
+        const settings = this.configService.getSettings(undefined);
         const jupyterLaunchTimeout = settings.datascience.jupyterLaunchTimeout;
 
         this.launchTimeout = setTimeout(() => {

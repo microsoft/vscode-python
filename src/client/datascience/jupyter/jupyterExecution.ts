@@ -151,7 +151,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 0;
-            const maxTries = this.configuration.getSettings().datascience.jupyterLaunchRetries;
+            const maxTries = this.configuration.getSettings(undefined).datascience.jupyterLaunchRetries;
             const stopWatch = new StopWatch();
             while (tryCount < maxTries) {
                 try {
@@ -333,7 +333,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             const useDefaultConfig = options && options.useDefaultConfig ? true : false;
             const connection = await this.startNotebookServer(
                 useDefaultConfig,
-                this.configuration.getSettings().datascience.jupyterCommandLineArguments,
+                this.configuration.getSettings(undefined).datascience.jupyterCommandLineArguments,
                 cancelToken
             );
             if (connection) {
@@ -347,7 +347,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
         } else {
             // If we have a URI spec up a connection info for it
-            return createRemoteConnectionInfo(options.uri, this.configuration.getSettings().datascience);
+            return createRemoteConnectionInfo(options.uri, this.configuration.getSettings(undefined).datascience);
         }
     }
 

@@ -1072,8 +1072,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
         // If we have a notebook dispose of it
         if (this._notebook) {
-            const server = this._notebook;
+            const notebook = this._notebook;
             this._notebook = undefined;
+            await notebook.dispose();
+        }
+        // If we have a server, dispose of it too. We are requesting total shutdown
+        const options = await this.getNotebookOptions();
+        const server = await this.jupyterExecution.getServer(options);
+        if (server) {
             await server.dispose();
         }
     }
@@ -1162,7 +1168,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async reloadAfterShutdown(): Promise<void> {
         try {
-            this.stopServer().ignoreErrors();
+            await this.stopServer();
         } catch {
             // We just switched from host to guest mode. Don't really care
             // if closing the host server kills it.
@@ -1365,7 +1371,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         try {
             const options = await this.getNotebookOptions();
             if (options && !options.uri) {
-                activeInterpreter = await this.interpreterService.getActiveInterpreter();
+                activeInterpreter = await this.interpreterService.getActiveInterpreter(await this.getOwningResource());
                 const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
                 return usableInterpreter ? true : false;
             } else {

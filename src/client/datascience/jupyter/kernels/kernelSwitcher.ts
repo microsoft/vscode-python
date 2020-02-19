@@ -122,7 +122,7 @@ export class KernelSwitcher {
             // Change the kernel. A status update should fire that changes our display
             await notebook.setKernelSpec(
                 newKernel.kernelSpec || newKernel.kernelModel!,
-                this.configService.getSettings().datascience.jupyterLaunchTimeout
+                this.configService.getSettings(notebook.resource).datascience.jupyterLaunchTimeout
             );
 
             if (newKernel.interpreter) {

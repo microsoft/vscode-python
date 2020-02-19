@@ -735,13 +735,13 @@ suite('Jupyter Execution', async () => {
         skipSearch?: boolean,
         runInDocker?: boolean
     ): {
-        workingPythonExecutionService: TypeMoq.IMock<IPythonExecutionService>;
+        executionService: IPythonExecutionService;
         jupyterExecutionFactory: JupyterExecutionFactory;
     } {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
-        when(interpreterService.getActiveInterpreter()).thenResolve(activeInterpreter);
-        when(interpreterService.getInterpreters()).thenResolve([
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(activeInterpreter);
+        when(interpreterService.getInterpreters(anything())).thenResolve([
             workingPython,
             missingKernelPython,
             missingNotebookPython
@@ -781,19 +781,52 @@ suite('Jupyter Execution', async () => {
             executionFactory.create(argThat(o => o.pythonPath && o.pythonPath === missingNotebookPython2.path))
         ).thenResolve(missingNotebookService2.object);
 
-        // Special case, nothing passed in. Match the active
-        let activeService = workingService.object;
+        when(
+            executionFactory.createDaemon(argThat(o => o.pythonPath && o.pythonPath === workingPython.path))
+        ).thenResolve(workingService.object);
+
+        when(
+            executionFactory.createDaemon(argThat(o => o.pythonPath && o.pythonPath === missingKernelPython.path))
+        ).thenResolve(missingKernelService.object);
+
+        when(
+            executionFactory.createDaemon(argThat(o => o.pythonPath && o.pythonPath === missingNotebookPython.path))
+        ).thenResolve(missingNotebookService.object);
+
+        when(
+            executionFactory.createDaemon(argThat(o => o.pythonPath && o.pythonPath === missingNotebookPython2.path))
+        ).thenResolve(missingNotebookService2.object);
+
+        let activeService = workingService;
         if (activeInterpreter === missingKernelPython) {
-            activeService = missingKernelService.object;
+            activeService = missingKernelService;
         } else if (activeInterpreter === missingNotebookPython) {
-            activeService = missingNotebookService.object;
+            activeService = missingNotebookService;
         } else if (activeInterpreter === missingNotebookPython2) {
-            activeService = missingNotebookService2.object;
+            activeService = missingNotebookService2;
         }
-        when(executionFactory.create(argThat(o => !o || !o.pythonPath))).thenResolve(activeService);
+        when(executionFactory.create(argThat(o => !o || !o.pythonPath))).thenResolve(activeService.object);
         when(
             executionFactory.createActivatedEnvironment(argThat(o => !o || o.interpreter === activeInterpreter))
-        ).thenResolve(activeService);
+        ).thenResolve(activeService.object);
+        when(
+            executionFactory.createActivatedEnvironment(argThat(o => o && o.interpreter.path === workingPython.path))
+        ).thenResolve(workingService.object);
+        when(
+            executionFactory.createActivatedEnvironment(
+                argThat(o => o && o.interpreter.path === missingKernelPython.path)
+            )
+        ).thenResolve(missingKernelService.object);
+        when(
+            executionFactory.createActivatedEnvironment(
+                argThat(o => o && o.interpreter.path === missingNotebookPython.path)
+            )
+        ).thenResolve(missingNotebookService.object);
+        when(
+            executionFactory.createActivatedEnvironment(
+                argThat(o => o && o.interpreter.path === missingNotebookPython2.path)
+            )
+        ).thenResolve(missingNotebookService2.object);
         when(processServiceFactory.create()).thenResolve(processService.object);
 
         when(liveShare.getApi()).thenResolve(null);
@@ -938,7 +971,7 @@ suite('Jupyter Execution', async () => {
         when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
         return {
-            workingPythonExecutionService: workingService,
+            executionService: activeService.object,
             jupyterExecutionFactory: new JupyterExecutionFactory(
                 instance(liveShare),
                 instance(interpreterService),
@@ -957,14 +990,7 @@ suite('Jupyter Execution', async () => {
     }
 
     test('Working notebook and commands found', async () => {
-        const { workingPythonExecutionService, jupyterExecutionFactory } = createExecutionAndReturnProcessService(
-            workingPython
-        );
-        when(
-            executionFactory.createDaemon(
-                deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path })
-            )
-        ).thenResolve(workingPythonExecutionService.object);
+        const jupyterExecutionFactory = createExecution(workingPython);
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         await assert.eventually.equal(jupyterExecutionFactory.isImportSupported(), true, 'Import not supported');
@@ -974,17 +1000,12 @@ suite('Jupyter Execution', async () => {
     }).timeout(10000);
 
     test('Includes correct args for running in docker', async () => {
-        const { workingPythonExecutionService, jupyterExecutionFactory } = createExecutionAndReturnProcessService(
+        const { jupyterExecutionFactory } = createExecutionAndReturnProcessService(
             workingPython,
             undefined,
             undefined,
             true
         );
-        when(
-            executionFactory.createDaemon(
-                deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path })
-            )
-        ).thenResolve(workingPythonExecutionService.object);
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         await assert.eventually.equal(jupyterExecutionFactory.isImportSupported(), true, 'Import not supported');
@@ -995,13 +1016,16 @@ suite('Jupyter Execution', async () => {
 
     test('Failing notebook throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
-        when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
+        when(interpreterService.getInterpreters(anything())).thenResolve([missingNotebookPython]);
         await assert.isRejected(execution.connectToNotebookServer(), 'cant exec');
     }).timeout(10000);
 
     test('Failing others throws exception', async () => {
         const execution = createExecution(missingNotebookPython);
-        when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython, missingNotebookPython2]);
+        when(interpreterService.getInterpreters(anything())).thenResolve([
+            missingNotebookPython,
+            missingNotebookPython2
+        ]);
         await assert.isRejected(execution.connectToNotebookServer(), 'cant exec');
     }).timeout(10000);
 
@@ -1018,7 +1042,7 @@ suite('Jupyter Execution', async () => {
 
     test('Missing kernel python still finds interpreter', async () => {
         const execution = createExecution(missingKernelPython);
-        when(interpreterService.getActiveInterpreter()).thenResolve(missingKernelPython);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(missingKernelPython);
         await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
@@ -1040,7 +1064,7 @@ suite('Jupyter Execution', async () => {
 
     test('Other than active finds closest match', async () => {
         const execution = createExecution(missingNotebookPython);
-        when(interpreterService.getActiveInterpreter()).thenResolve(missingNotebookPython);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(missingNotebookPython);
         await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
@@ -1117,7 +1141,7 @@ suite('Jupyter Execution', async () => {
         );
 
         // Now interpreters = fast discovery (less time for display of progress).
-        when(interpreterService.getInterpreters()).thenReturn(Promise.resolve([]));
+        when(interpreterService.getInterpreters(anything())).thenReturn(Promise.resolve([]));
 
         // The call to isNotebookSupported should not timeout in 1 seconds.
         const isNotebookSupported = execution.isNotebookSupported();
@@ -1143,7 +1167,7 @@ suite('Jupyter Execution', async () => {
         );
 
         const slowInterpreterDiscovery = createDeferred<PythonInterpreter[]>();
-        when(interpreterService.getInterpreters()).thenReturn(slowInterpreterDiscovery.promise);
+        when(interpreterService.getInterpreters(anything())).thenReturn(slowInterpreterDiscovery.promise);
 
         // The call to interpreterService.getInterpreters shoud not complete, it is very slow.
         const isNotebookSupported = execution.isNotebookSupported();
@@ -1165,7 +1189,7 @@ suite('Jupyter Execution', async () => {
         // Make sure we can find jupyter on the path if we
         // can't find it in a python module.
         const execution = createExecution(missingNotebookPython);
-        when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
+        when(interpreterService.getInterpreters(anything())).thenResolve([missingNotebookPython]);
         when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
         await assert.isFulfilled(execution.connectToNotebookServer(), 'Should be able to start a server');
     }).timeout(10000);
@@ -1174,7 +1198,7 @@ suite('Jupyter Execution', async () => {
         // Make sure we can find jupyter on the path if we
         // can't find it in a python module.
         const execution = createExecution(missingNotebookPython, undefined, true);
-        when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython]);
+        when(interpreterService.getInterpreters(anything())).thenResolve([missingNotebookPython]);
         when(fileSystem.getFiles(anyString())).thenResolve([jupyterOnPath]);
         await assert.isRejected(execution.connectToNotebookServer(), 'cant exec');
     }).timeout(10000);

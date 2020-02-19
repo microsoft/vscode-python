@@ -234,7 +234,7 @@ export class JupyterCommandFinderImpl {
 
     private supportsSearchingForCommands(): boolean {
         if (this.configuration) {
-            const settings = this.configuration.getSettings();
+            const settings = this.configuration.getSettings(undefined);
             if (settings) {
                 return settings.datascience.searchForJupyter;
             }
@@ -252,7 +252,7 @@ export class JupyterCommandFinderImpl {
         let firstError: string | undefined;
 
         // First we look in the current interpreter
-        const current = await this.interpreterService.getActiveInterpreter();
+        const current = await this.interpreterService.getActiveInterpreter(undefined);
         const stopWatch = new StopWatch();
 
         if (isCommandFinderCancelled(command, cancelToken)) {
@@ -354,7 +354,7 @@ export class JupyterCommandFinderImpl {
             cancelAction: 'resolve',
             token: cancelToken
         });
-        const all = await Promise.race([this.interpreterService.getInterpreters(), cancelGetInterpreters]);
+        const all = await Promise.race([this.interpreterService.getInterpreters(undefined), cancelGetInterpreters]);
 
         if (isCommandFinderCancelled(command, cancelToken)) {
             return cancelledResult;

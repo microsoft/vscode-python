@@ -81,7 +81,7 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
         const [interpreter, activeInterpreter] = await Promise.all([
             this.getSelectedInterpreter(token),
-            this.interpreterService.getActiveInterpreter()
+            this.interpreterService.getActiveInterpreter(undefined)
         ]);
         if (!interpreter) {
             return;
