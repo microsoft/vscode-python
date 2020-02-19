@@ -571,6 +571,7 @@ function enterKey(
 export function getInteractiveEditor(
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
 ): ReactWrapper<any, Readonly<{}>, React.Component> {
+    wrapper.update();
     // Find the last cell. It should have a monacoEditor object
     const cells = wrapper.find('InteractiveCell');
     const lastCell = cells.last();

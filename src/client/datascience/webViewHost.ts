@@ -327,7 +327,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     }
 
     // Post a message to our webpanel and update our new datascience settings
-    private onPossibleSettingsChange = (event: ConfigurationChangeEvent) => {
+    private onPossibleSettingsChange = async (event: ConfigurationChangeEvent) => {
         if (
             event.affectsConfiguration('workbench.colorTheme') ||
             event.affectsConfiguration('editor.fontSize') ||
@@ -345,7 +345,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             event.affectsConfiguration('python.dataScience.enableGather')
         ) {
             // See if the theme changed
-            const newSettings = this.generateDataScienceExtraSettings();
+            const newSettings = await this.generateDataScienceExtraSettings();
             if (newSettings) {
                 const dsSettings = JSON.stringify(newSettings);
                 this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();

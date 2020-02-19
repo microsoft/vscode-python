@@ -102,7 +102,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             .setup(i => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(this.activeInterpreter));
         this.interpreterService
-            .setup(i => i.getInterpreters())
+            .setup(i => i.getInterpreters(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(this.installedInterpreters));
         this.interpreterService
             .setup(i => i.getInterpreterDetails(TypeMoq.It.isAnyString()))

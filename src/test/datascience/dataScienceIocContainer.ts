@@ -1154,7 +1154,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Force a new config setting to appear.
         if (!pythonPath) {
             const active = await this.get<IInterpreterService>(IInterpreterService).getActiveInterpreter(undefined);
-            const list = await this.get<IInterpreterService>(IInterpreterService).getInterpreters();
+            const list = await this.get<IInterpreterService>(IInterpreterService).getInterpreters(undefined);
 
             // Should support jupyter? How to enforce this
             const supportsJupyter = list.filter(l => l.path !== active?.path).filter(f => this.hasJupyter(f.path));
