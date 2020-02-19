@@ -459,8 +459,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     // tslint:disable-next-line: max-func-body-length
     protected async submitCode(code: string, file: string, line: number, id?: string, _editor?: TextEditor, debug?: boolean): Promise<boolean> {
         traceInfo(`Submitting code for ${this.id}`);
-        const stopWatch =
-            this._notebook && !this.perceivedJupyterStartupTelemetryCaptured ? new StopWatch() : undefined;
+        const stopWatch = this._notebook && !this.perceivedJupyterStartupTelemetryCaptured ? new StopWatch() : undefined;
         let result = true;
         // Do not execute or render empty code cells
         const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
