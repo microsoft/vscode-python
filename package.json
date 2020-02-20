@@ -1504,7 +1504,7 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Enables/disables A/B tests.",
-                    "scope": "application"
+                    "scope": "machine"
                 },
                 "python.experiments.optInto": {
                     "type": "array",
@@ -1524,7 +1524,7 @@
                         ]
                     },
                     "description": "List of experiment to opt into. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-python/wiki/Experiments for more details.",
-                    "scope": "application"
+                    "scope": "machine"
                 },
                 "python.experiments.optOutFrom": {
                     "type": "array",
@@ -1544,7 +1544,7 @@
                         ]
                     },
                     "description": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-python/wiki/Experiments for more details.",
-                    "scope": "application"
+                    "scope": "machine"
                 },
                 "python.dataScience.allowImportFromNotebook": {
                     "type": "boolean",
