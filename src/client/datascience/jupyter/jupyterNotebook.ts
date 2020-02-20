@@ -463,8 +463,8 @@ export class JupyterNotebookBase implements INotebook {
             const restarted = createDeferred<CellState[]>();
 
             // Listen to status change events so we can tell if we're restarting
-            const restartHandler = () => {
-                if (status === ServerStatus.Restarting) {
+            const restartHandler = (e: ServerStatus) => {
+                if (e === ServerStatus.Restarting) {
                     // We restarted the kernel.
                     this.sessionStartTime = Date.now();
                     traceWarning('Kernel restarting during interrupt');
@@ -483,13 +483,10 @@ export class JupyterNotebookBase implements INotebook {
             const restartHandlerToken = this.session.onSessionStatusChanged(restartHandler);
 
             // Start our interrupt. If it fails, indicate a restart
-            this.session
-                .interrupt(timeoutMs)
-                .then(() => restarted.resolve([]))
-                .catch(exc => {
-                    traceWarning(`Error during interrupt: ${exc}`);
-                    restarted.resolve([]);
-                });
+            this.session.interrupt(timeoutMs).catch(exc => {
+                traceWarning(`Error during interrupt: ${exc}`);
+                restarted.resolve([]);
+            });
 
             try {
                 // Wait for all of the pending cells to finish or the timeout to fire

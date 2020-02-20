@@ -984,8 +984,8 @@ suite('DataScience notebook tests', () => {
         assert.equal(finishedBefore, false, 'Finished before the interruption');
         assert.equal(error, undefined, 'Error thrown during interrupt');
         assert.ok(
-            finishedPromise.completed || result === InterruptResult.TimedOut || result === InterruptResult.Restarted,
-            `Timed out before interrupt for result: ${result}: ${code}`
+            finishedPromise.completed || result === InterruptResult.TimedOut || result === InterruptResult.Success,
+            `Interrupt restarted ${result} for: ${code}`
         );
 
         return result;
