@@ -25,6 +25,7 @@ import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import {
     GLOBAL_MEMENTO,
+    IAsyncDisposableRegistry,
     IConfigurationService,
     ICryptoUtils,
     IDisposableRegistry,
@@ -121,6 +122,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private notebookJson: Partial<nbformat.INotebookContent> = {};
     private debouncedWriteToStorage = debounce(this.writeToStorage.bind(this), 250);
     private executeCancelTokens = new Set<CancellationTokenSource>();
+    private _disposed = false;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -150,7 +152,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(ICryptoUtils) private crypto: ICryptoUtils,
         @inject(IExtensionContext) private context: IExtensionContext,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry
     ) {
         super(
             progressReporter,
@@ -186,6 +189,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             ViewColumn.Active,
             experimentsManager
         );
+        asyncRegistry.push(this);
     }
 
     public get visible(): boolean {
@@ -205,6 +209,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return baseName.includes(localize.DataScience.untitledNotebookFileName());
     }
     public dispose(): Promise<void> {
+        this._disposed = true;
         super.dispose();
         return this.close();
     }
@@ -943,11 +948,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async writeToStorage(filePath: string, contents?: string): Promise<void> {
         try {
-            if (contents) {
-                await this.fileSystem.createDirectory(path.dirname(filePath));
-                return this.fileSystem.writeFile(filePath, contents);
-            } else {
-                return this.fileSystem.deleteFile(filePath);
+            if (!this._disposed) {
+                if (contents) {
+                    await this.fileSystem.createDirectory(path.dirname(filePath));
+                    return this.fileSystem.writeFile(filePath, contents);
+                } else {
+                    return this.fileSystem.deleteFile(filePath);
+                }
             }
         } catch (exc) {
             traceError(`Error writing storage for ${filePath}: `, exc);
