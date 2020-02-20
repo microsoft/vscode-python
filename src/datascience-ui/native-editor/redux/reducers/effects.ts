@@ -3,7 +3,6 @@
 'use strict';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
-import { buildSettingsCss } from '../../../interactive-common/buildSettingsCss';
 import { IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
@@ -230,9 +229,11 @@ export namespace Effects {
         const newSettings = <IDataScienceExtraSettings>newSettingsJSON;
         const newEditorOptions = computeEditorOptions(newSettings);
         const newFontFamily = newSettings.extraSettings
-            ? newSettings.extraSettings.fontFamily
+            ? newSettings.extraSettings.editor.fontFamily
             : arg.prevState.font.family;
-        const newFontSize = newSettings.extraSettings ? newSettings.extraSettings.fontSize : arg.prevState.font.size;
+        const newFontSize = newSettings.extraSettings
+            ? newSettings.extraSettings.editor.fontSize
+            : arg.prevState.font.size;
 
         // Ask for new theme data if necessary
         if (
@@ -249,7 +250,6 @@ export namespace Effects {
         return {
             ...arg.prevState,
             settings: newSettings,
-            settingsCss: newSettings ? buildSettingsCss(newSettings) : '',
             editorOptions: { ...newEditorOptions, lineDecorationsWidth: 5 },
             font: {
                 size: newFontSize,

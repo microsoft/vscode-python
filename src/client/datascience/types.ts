@@ -556,10 +556,10 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
             autoSurround: string;
             autoIndent: boolean;
             scrollBeyondLastLine: boolean;
+            verticalScrollbarSize: number;
+            fontSize: number;
+            fontFamily: string;
         };
-        verticalScrollbarSize: number;
-        fontSize: number;
-        fontFamily: string;
         theme: string;
     };
     intellisenseOptions: {

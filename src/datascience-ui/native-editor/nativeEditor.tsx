@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 import { OSType } from '../../client/common/utils/platform';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { concatMultilineStringInput } from '../common';
+import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
 import { KernelSelection } from '../interactive-common/kernelSelection';
@@ -94,8 +95,8 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         return (
             <div id="main-panel" role="Main" style={dynamicFont}>
                 <div className="styleSetter">
-                    <style>{`${this.props.settingsCss ? this.props.settingsCss : ''}
-${this.props.rootCss ? this.props.rootCss : ''}`}</style>
+                    <style>{`${this.props.rootCss ? this.props.rootCss : ''}
+${buildSettingsCss(this.props.settings)}`}</style>
                 </div>
                 <header id="main-panel-toolbar">
                     {this.renderToolbarPanel()}

@@ -39,11 +39,12 @@ export function getDefaultSettings() {
                 autoSurround: 'languageDefined',
                 autoIndent: false,
                 fontLigatures: false,
-                scrollBeyondLastLine: true
+                scrollBeyondLastLine: true,
+                // VS Code puts a value for this, but it's 10 (the explorer bar size) not 14 the editor size
+                verticalScrollbarSize: 14,
+                fontSize: 14,
+                fontFamily: "Consolas, 'Courier New', monospace"
             },
-            verticalScrollbarSize: 14,
-            fontSize: 14,
-            fontFamily: "Consolas, 'Courier New', monospace",
             theme: 'Default Dark+'
         },
         intellisenseOptions: {

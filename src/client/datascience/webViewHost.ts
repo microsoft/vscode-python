@@ -184,11 +184,12 @@ export class WebViewHost<IMapping> implements IDisposable {
                     autoSurround: this.getValue(editor, 'autoSurround', 'languageDefined'),
                     autoIndent: this.getValue(editor, 'autoIndent', false),
                     fontLigatures: this.getValue(editor, 'fontLigatures', false),
-                    scrollBeyondLastLine: this.getValue(editor, 'scrollBeyondLastLine', true)
+                    scrollBeyondLastLine: this.getValue(editor, 'scrollBeyondLastLine', true),
+                    // VS Code puts a value for this, but it's 10 (the explorer bar size) not 14 the editor size
+                    verticalScrollbarSize: this.getValue(editor, 'scrollbar.verticalScrollbarSize', 14),
+                    fontSize: this.getValue(editor, 'fontSize', 14),
+                    fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
-                verticalScrollbarSize: this.getValue(editor, 'scrollbar.verticalScrollbarSize', 14),
-                fontSize: this.getValue(editor, 'fontSize', 14),
-                fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace"),
                 theme: theme
             },
             intellisenseOptions: {

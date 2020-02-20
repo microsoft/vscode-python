@@ -51,7 +51,6 @@ export type IMainState = {
     submittedText: boolean;
     rootStyle?: string;
     rootCss?: string;
-    settingsCss?: string;
     font: IFont;
     vscodeThemeName?: string;
     baseTheme: string;

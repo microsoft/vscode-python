@@ -226,17 +226,17 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
         // Use these values to fill in our format string
         return `
-        :root {
-            --code-comment-color: ${commentStyle.color};
-            --code-numeric-color: ${numericStyle.color};
-            --code-string-color: ${stringStyle.color};
-            --code-variable-color: ${variableStyle.color};
-            --code-type-color: ${entityTypeStyle.color};
-            --code-font-family: ${args.fontFamily};
-            --code-font-size: ${args.fontSize}px;
-        }
+:root {
+    --code-comment-color: ${commentStyle.color};
+    --code-numeric-color: ${numericStyle.color};
+    --code-string-color: ${stringStyle.color};
+    --code-variable-color: ${variableStyle.color};
+    --code-type-color: ${entityTypeStyle.color};
+    --code-font-family: ${args.fontFamily};
+    --code-font-size: ${args.fontSize}px;
+}
 
-        ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : undefined}
+${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
 `;
     }
 
