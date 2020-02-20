@@ -44,14 +44,6 @@ export namespace Creation {
         return cellVM;
     }
 
-    function findFirstCodeCellAbove(cellVMs: ICellViewModel[], start: number): string | undefined {
-        for (let index = start; index >= 0; index -= 1) {
-            if (cellVMs[index].cell.data.cell_type === 'code') {
-                return cellVMs[index].cell.id;
-            }
-        }
-    }
-
     export function addAndFocusCell(arg: NativeEditorReducerArg<IAddCellAction>): IMainState {
         queueIncomingActionWithPayload(arg, CommonActionType.ADD_NEW_CELL, { newCellId: arg.payload.data.newCellId });
         queueIncomingActionWithPayload(arg, CommonActionType.FOCUS_CELL, {
@@ -116,7 +108,7 @@ export namespace Creation {
         };
 
         // Send a messsage that we inserted a cell
-        Transfer.postModelInsert(arg, position, newVM.cell, findFirstCodeCellAbove(newList, position));
+        Transfer.postModelInsert(arg, position, newVM.cell, arg.payload.data.cellId);
 
         return result;
     }
@@ -128,10 +120,11 @@ export namespace Creation {
         // Find the position where we want to insert
         let position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (position >= 0) {
-            newList.splice(position + 1, 0, newVM);
+            position += 1;
+            newList.splice(position, 0, newVM);
         } else {
             newList.push(newVM);
-            position = newList.length - 2;
+            position = newList.length;
         }
 
         const result = {
@@ -141,12 +134,7 @@ export namespace Creation {
         };
 
         // Send a messsage that we inserted a cell
-        Transfer.postModelInsert(
-            arg,
-            arg.prevState.cellVMs.length,
-            newVM.cell,
-            findFirstCodeCellAbove(newList, position)
-        );
+        Transfer.postModelInsert(arg, position, newVM.cell, arg.payload.data.cellId);
 
         return result;
     }
