@@ -178,6 +178,7 @@
     "DataScience.pythonVersionHeader": "Python version:",
     "DataScience.pythonRestartHeader": "Restarted kernel:",
     "DataScience.pythonNewHeader": "Started new kernel:",
+    "DataScience.pythonConnectHeader": "Connected to kernel:",
     "DataScience.executingCodeFailure": "Executing code failed : {0}",
     "DataScience.inputWatermark": "Type code here and press shift-enter to run",
     "DataScience.deleteButtonTooltip": "Remove cell",
