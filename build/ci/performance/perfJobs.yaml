@@ -11,7 +11,7 @@ jobs:
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
-        node .\savePerformanceResults.js
+        node ./savePerformanceResults.js
 
 - job: Testing_Round_2
   dependsOn:
@@ -27,7 +27,7 @@ jobs:
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
-        node .\savePerformanceResults.js
+        node ./savePerformanceResults.js
 
 - job: Testing_Round_3
   dependsOn:
@@ -43,7 +43,7 @@ jobs:
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
-        node .\savePerformanceResults.js
+        node ./savePerformanceResults.js
 
 - job: Testing_Round_4
   dependsOn:
@@ -59,7 +59,7 @@ jobs:
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
-        node .\savePerformanceResults.js
+        node ./savePerformanceResults.js
 
 - job: Testing_Round_5
   dependsOn:
@@ -75,4 +75,4 @@ jobs:
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
-        node .\savePerformanceResults.js
+        node ./savePerformanceResults.js
