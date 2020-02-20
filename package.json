@@ -2844,6 +2844,7 @@
         "test:unittests": "mocha --opts ./build/.mocha.unittests.js.opts",
         "test:unittests:cover": "nyc --no-clean --nycrc-path build/.nycrc mocha --opts ./build/.mocha.unittests.ts.opts",
         "test:functional": "mocha --require source-map-support/register --opts ./build/.mocha.functional.opts",
+        "test:functional:perf": "node --inspect-brk ./node_modules/mocha/bin/_mocha --require source-map-support/register --opts ./build/.mocha.functional.perf.opts",
         "test:functional:cover": "npm run test:functional",
         "test:cover:report": "nyc --nycrc-path build/.nycrc  report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",

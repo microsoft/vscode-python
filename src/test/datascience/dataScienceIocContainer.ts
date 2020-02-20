@@ -16,6 +16,7 @@ import {
     Event,
     EventEmitter,
     FileSystemWatcher,
+    Memento,
     Uri,
     WorkspaceConfiguration,
     WorkspaceFolder,
@@ -99,7 +100,6 @@ import {
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
-import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { RegistryImplementation } from '../../client/common/platform/registry';
@@ -130,6 +130,7 @@ import {
 } from '../../client/common/terminal/types';
 import {
     BANNER_NAME_LS_SURVEY,
+    GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
     IConfigurationService,
     ICryptoUtils,
@@ -139,12 +140,14 @@ import {
     IExtensionContext,
     IExtensions,
     IInstaller,
+    IMemento,
     IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
     IPythonExtensionBanner,
     IsWindows,
-    ProductType
+    ProductType,
+    WORKSPACE_MEMENTO
 } from '../../client/common/types';
 import { Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -333,6 +336,7 @@ import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { blurWindow, createMessageEvent } from './reactHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
+import { TestPersistentStateFactory } from './testPersistentStateFactory';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public webPanelListener: IWebPanelMessageListener | undefined;
@@ -914,7 +918,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IInterpreterVersionService,
             InterpreterVersionService
         );
-        this.serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
+
+        const globalStorage = this.serviceManager.get<Memento>(IMemento, GLOBAL_MEMENTO);
+        const localStorage = this.serviceManager.get<Memento>(IMemento, WORKSPACE_MEMENTO);
+
+        // Create a custom persistent state factory that remembers specific things between tests
+        this.serviceManager.addSingletonInstance<IPersistentStateFactory>(
+            IPersistentStateFactory,
+            new TestPersistentStateFactory(globalStorage, localStorage)
+        );
         this.serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
 
         this.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(

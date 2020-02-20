@@ -42,39 +42,44 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     @traceDecorators.verbose('Get Interpreters in CacheableLocatorService')
     public async getInterpreters(resource?: Uri, ignoreCache?: boolean): Promise<PythonInterpreter[]> {
         const cacheKey = this.getCacheKey(resource);
+        let cachedInterpreters = ignoreCache ? undefined : this.getCachedInterpreters(resource);
         let deferred = this.promisesPerResource.get(cacheKey);
-
         if (!deferred || ignoreCache) {
             deferred = createDeferred<PythonInterpreter[]>();
             this.promisesPerResource.set(cacheKey, deferred);
+            if (Array.isArray(cachedInterpreters)) {
+                deferred.resolve(cachedInterpreters);
+            } else {
+                this.addHandlersForInterpreterWatchers(cacheKey, resource).ignoreErrors();
 
-            this.addHandlersForInterpreterWatchers(cacheKey, resource).ignoreErrors();
-
-            const stopWatch = new StopWatch();
-            this.getInterpretersImplementation(resource)
-                .then(async items => {
-                    await this.cacheInterpreters(items, resource);
-                    traceVerbose(
-                        `Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`
-                    );
-                    traceVerbose(`Interpreters returned by ${this.name} are ${JSON.stringify(items)}`);
-                    sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
-                        locator: this.name,
-                        interpreters: Array.isArray(items) ? items.length : 0
+                const stopWatch = new StopWatch();
+                this.getInterpretersImplementation(resource)
+                    .then(async items => {
+                        await this.cacheInterpreters(items, resource);
+                        traceVerbose(
+                            `Interpreters returned by ${this.name} are of count ${
+                                Array.isArray(items) ? items.length : 0
+                            }`
+                        );
+                        traceVerbose(`Interpreters returned by ${this.name} are ${JSON.stringify(items)}`);
+                        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
+                            locator: this.name,
+                            interpreters: Array.isArray(items) ? items.length : 0
+                        });
+                        deferred!.resolve(items);
+                    })
+                    .catch(ex => {
+                        sendTelemetryEvent(
+                            EventName.PYTHON_INTERPRETER_DISCOVERY,
+                            stopWatch.elapsedTime,
+                            { locator: this.name },
+                            ex
+                        );
+                        deferred!.reject(ex);
                     });
-                    deferred!.resolve(items);
-                })
-                .catch(ex => {
-                    sendTelemetryEvent(
-                        EventName.PYTHON_INTERPRETER_DISCOVERY,
-                        stopWatch.elapsedTime,
-                        { locator: this.name },
-                        ex
-                    );
-                    deferred!.reject(ex);
-                });
 
-            this.locating.fire(deferred.promise);
+                this.locating.fire(deferred.promise);
+            }
         }
         deferred.promise
             .then(items => this._hasInterpreters.resolve(items.length > 0))
@@ -84,7 +89,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             return deferred.promise;
         }
 
-        const cachedInterpreters = ignoreCache ? undefined : this.getCachedInterpreters(resource);
+        cachedInterpreters = ignoreCache ? undefined : this.getCachedInterpreters(resource);
         return Array.isArray(cachedInterpreters) ? cachedInterpreters : deferred.promise;
     }
     protected async addHandlersForInterpreterWatchers(cacheKey: string, resource: Uri | undefined): Promise<void> {
