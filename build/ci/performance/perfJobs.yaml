@@ -13,6 +13,7 @@ jobs:
         npm install
         npm install -g mocha
         npm install -g source-map-support
+        tsc -p ./
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
         node ./build/ci/performance/savePerformanceResults.js
 
