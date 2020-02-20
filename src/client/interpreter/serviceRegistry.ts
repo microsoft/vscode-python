@@ -5,7 +5,6 @@
 
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
-import { QuickFixService } from '../language/quickFixes/main';
 import { PreWarmActivatedEnvironmentVariables } from './activation/preWarmVariables';
 import { EnvironmentActivationService } from './activation/service';
 import { TerminalEnvironmentActivationService } from './activation/terminalEnvironmentActivationService';
@@ -106,7 +105,6 @@ import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
  */
 // tslint:disable-next-line: max-func-body-length
 export function registerInterpreterTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, QuickFixService);
     serviceManager.addSingleton<IKnownSearchPathsForInterpreters>(
         IKnownSearchPathsForInterpreters,
         KnownSearchPathsForInterpreters

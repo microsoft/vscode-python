@@ -6,9 +6,9 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationToken, CodeActionContext, CodeActionKind, Range, TextDocument } from 'vscode';
-import { PythonCodeActionProvider } from '../../client/providers/codeActionsProvider';
+import { PythonCodeActionProvider } from '../../client/providers/quickFixes/codeActionsProvider';
 
-suite('CodeAction Provider', () => {
+suite('xCodeAction Provider', () => {
     let codeActionsProvider: PythonCodeActionProvider;
     let document: TypeMoq.IMock<TextDocument>;
     let range: TypeMoq.IMock<Range>;
