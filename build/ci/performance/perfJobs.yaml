@@ -11,6 +11,7 @@ jobs:
   steps:
     - bash: |
         npm install
+        npm install -g mocha
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
         node ./build/ci/performance/savePerformanceResults.js
 
