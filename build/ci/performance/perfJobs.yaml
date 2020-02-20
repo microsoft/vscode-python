@@ -11,6 +11,7 @@ jobs:
   steps:
     - bash: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
+        npm install
         node ./build/ci/performance/savePerformanceResults.js
 
 - job: Testing_Round_2
