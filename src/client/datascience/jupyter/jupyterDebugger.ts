@@ -38,6 +38,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private requiredPtvsdVersion: Version = { major: 4, minor: 3, patch: 0, build: [], prerelease: [], raw: '' };
     private requiredDebugpyVersion: Version = { major: 1, minor: 0, patch: 0, build: [], prerelease: [], raw: '' };
     private configs: Map<string, DebugConfiguration> = new Map<string, DebugConfiguration>();
+    private readonly debuggerPackage: string;
+    private readonly enableDebuggerCode: string;
+    private readonly waitForDebugClientCode: string;
+    private readonly tracingEnableCode: string;
+    private readonly tracingDisableCode: string;
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IConfigurationService) private configService: IConfigurationService,
@@ -46,7 +51,21 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
-    ) {}
+    ) {
+        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
+            this.debuggerPackage = 'debugpy';
+            this.enableDebuggerCode = `import debugpy;debugpy.listen(('localhost', 0))`;
+            this.waitForDebugClientCode = `import debugpy;debugpy.wait_for_client()`;
+            this.tracingEnableCode = `from debugpy import trace_this_thread;trace_this_thread(True)`;
+            this.tracingDisableCode = `from debugpy import trace_this_thread;trace_this_thread(False)`;
+        } else {
+            this.debuggerPackage = 'ptvsd';
+            this.enableDebuggerCode = `import ptvsd;ptvsd.enable_attach(('localhost', 0))`;
+            this.waitForDebugClientCode = `import ptvsd;ptvsd.wait_for_attach()`;
+            this.tracingEnableCode = `from ptvsd import tracing;tracing(True)`;
+            this.tracingDisableCode = `from ptvsd import tracing;tracing(False)`;
+        }
+    }
 
     public async startDebugging(notebook: INotebook): Promise<void> {
         traceInfo('start debugging');
@@ -69,27 +88,16 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 this.debugService.removeBreakpoints([]);
             }
 
-            let waitForDebugClientCode = `import ptvsd\nptvsd.wait_for_attach()`;
-            let tracingCode = `from ptvsd import tracing\ntracing(True)`;
-            let debuggerPackage = 'ptvsd';
-            if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-                waitForDebugClientCode = `import debugpy\ndebugpy.wait_for_client()`;
-                tracingCode = `from debugpy import trace_this_thread\ntrace_this_thread(True)`;
-                debuggerPackage = 'debugpy';
-            }
-
             // Wait for attach before we turn on tracing and allow the code to run, if the IDE is already attached this is just a no-op
-            // tslint:disable-next-line:no-multiline-string
-            const importResults = await this.executeSilently(notebook, waitForDebugClientCode);
+            const importResults = await this.executeSilently(notebook, this.waitForDebugClientCode);
             if (importResults.length === 0 || importResults[0].state === CellState.error) {
-                traceWarning(`${debuggerPackage} not found in path.`);
+                traceWarning(`${this.debuggerPackage} not found in path.`);
             } else {
                 this.traceCellResults('import startup', importResults);
             }
 
             // Then enable tracing
-            // tslint:disable-next-line:no-multiline-string
-            await this.executeSilently(notebook, tracingCode);
+            await this.executeSilently(notebook, this.tracingEnableCode);
         }
     }
 
@@ -101,15 +109,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             // Stop our debugging UI session, no await as we just want it stopped
             this.commandManager.executeCommand('workbench.action.debug.stop');
 
-            let tracingCode = `from ptvsd import tracing\ntracing(False)`;
-            if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-                tracingCode = `from debugpy import trace_this_thread\ntrace_this_thread(False)`;
-            }
-
             // Disable tracing after we disconnect because we don't want to step through this
             // code if the user was in step mode.
-            // tslint:disable-next-line:no-multiline-string
-            await this.executeSilently(notebook, tracingCode);
+            await this.executeSilently(notebook, this.tracingDisableCode);
         }
     }
 
@@ -162,9 +164,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
         // Check the version of debugger that we have already installed
         const debuggerVersion = await this.debuggerCheck(notebook);
+        const requiredVersion =
+            this.debuggerPackage === 'ptvsd' ? this.requiredPtvsdVersion : this.requiredDebugpyVersion;
 
         // If we don't have debugger installed or the version is too old then we need to install it
-        if (!debuggerVersion || !this.debuggerMeetsRequirement(debuggerVersion)) {
+        if (!debuggerVersion || !this.debuggerMeetsRequirement(debuggerVersion, requiredVersion)) {
             await this.promptToInstallDebugger(notebook, debuggerVersion);
         }
 
@@ -194,9 +198,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
      * @memberof JupyterDebugger
      */
     private async getDebuggerPath(notebook: INotebook): Promise<string> {
-        const oldPtvsd = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'old_ptvsd');
-        if (!this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            return oldPtvsd;
+        if (this.debuggerPackage === 'ptvsd') {
+            return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'old_ptvsd');
         }
         const pythonVersion = await this.getKernelPythonVersion(notebook);
         // The new debug adapter with wheels is only supported in 3.7
@@ -296,20 +299,15 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // tslint:disable-next-line:no-multiline-string
         const debuggerPathList = await this.calculateDebuggerPathList(notebook);
 
-        let debuggerPackage = 'ptvsd';
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            debuggerPackage = 'debugpy';
-        }
-
         let code;
         if (debuggerPathList) {
-            code = `import sys\r\n${pythonShellCommand} -c "import sys;sys.path.extend([${debuggerPathList}]);sys.path;import ${debuggerPackage};print(${debuggerPackage}.__version__)"`;
+            code = `import sys\r\n${pythonShellCommand} -c "import sys;sys.path.extend([${debuggerPathList}]);sys.path;import ${this.debuggerPackage};print(${this.debuggerPackage}.__version__)"`;
         } else {
-            code = `import sys\r\n${pythonShellCommand} -c "import ${debuggerPackage};print(${debuggerPackage}.__version__)"`;
+            code = `import sys\r\n${pythonShellCommand} -c "import ${this.debuggerPackage};print(${this.debuggerPackage}.__version__)"`;
         }
 
         const debuggerVersionResults = await this.executeSilently(notebook, code);
-        const purpose = debuggerPackage === 'ptvsd' ? 'parsePtvsdVersionInfo' : 'parseDebugpyVersionInfo';
+        const purpose = this.debuggerPackage === 'ptvsd' ? 'parsePtvsdVersionInfo' : 'parseDebugpyVersionInfo';
         return this.parseVersionInfo(debuggerVersionResults, purpose);
     }
 
@@ -352,25 +350,15 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     // Check to see if the we have the required version of debugger to support debugging
-    private debuggerMeetsRequirement(version: Version): boolean {
-        let required = this.requiredPtvsdVersion;
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            required = this.requiredDebugpyVersion;
-        }
-
+    private debuggerMeetsRequirement(version: Version, required: Version): boolean {
         return version.major > required.major || (version.major === required.major && version.minor >= required.minor);
     }
 
     @captureTelemetry(Telemetry.PtvsdPromptToInstall)
     private async promptToInstallDebugger(notebook: INotebook, oldVersion: Version | undefined): Promise<void> {
-        let debuggerPackage = 'ptvsd';
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            debuggerPackage = 'debugpy';
-        }
-
         const promptMessage = oldVersion
-            ? localize.DataScience.jupyterDebuggerInstallUpdate().format(debuggerPackage)
-            : localize.DataScience.jupyterDebuggerInstallNew().format(debuggerPackage);
+            ? localize.DataScience.jupyterDebuggerInstallUpdate().format(this.debuggerPackage)
+            : localize.DataScience.jupyterDebuggerInstallNew().format(this.debuggerPackage);
         const result = await this.appShell.showInformationMessage(
             promptMessage,
             localize.DataScience.jupyterDebuggerInstallYes(),
@@ -378,45 +366,40 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         );
 
         if (result === localize.DataScience.jupyterDebuggerInstallYes()) {
-            await this.installDebugger(notebook, debuggerPackage);
+            await this.installDebugger(notebook);
         } else {
             // If they don't want to install, throw so we exit out of debugging
             sendTelemetryEvent(Telemetry.PtvsdInstallCancelled);
-            throw new JupyterDebuggerNotInstalledError(debuggerPackage);
+            throw new JupyterDebuggerNotInstalledError(this.debuggerPackage);
         }
     }
 
-    private async installDebugger(notebook: INotebook, debuggerPackage: string): Promise<void> {
+    private async installDebugger(notebook: INotebook): Promise<void> {
         // tslint:disable-next-line:no-multiline-string
         const debuggerInstallResults = await this.executeSilently(
             notebook,
-            `import sys\r\n${pythonShellCommand} -m pip install -U ${debuggerPackage}`
+            `import sys\r\n${pythonShellCommand} -m pip install -U ${this.debuggerPackage}`
         );
-        traceInfo(`Installing ${debuggerPackage}`);
+        traceInfo(`Installing ${this.debuggerPackage}`);
 
         if (debuggerInstallResults.length > 0) {
             const installResultsString = this.extractOutput(debuggerInstallResults[0]);
 
             if (installResultsString && installResultsString.includes('Successfully installed')) {
                 sendTelemetryEvent(Telemetry.PtvsdSuccessfullyInstalled);
-                traceInfo(`${debuggerPackage} successfully installed`);
+                traceInfo(`${this.debuggerPackage} successfully installed`);
                 return;
             }
         }
-        this.traceCellResults(`Installing ${debuggerPackage}`, debuggerInstallResults);
+        this.traceCellResults(`Installing ${this.debuggerPackage}`, debuggerInstallResults);
         sendTelemetryEvent(Telemetry.PtvsdInstallFailed);
-        traceError(`Failed to install ${debuggerPackage}`);
+        traceError(`Failed to install ${this.debuggerPackage}`);
         // Failed to install debugger, throw to exit debugging
-        throw new JupyterDebuggerNotInstalledError(debuggerPackage);
+        throw new JupyterDebuggerNotInstalledError(this.debuggerPackage);
     }
 
     // Pull our connection info out from the cells returned by enable_attach
     private parseConnectInfo(cells: ICell[], local: boolean): DebugConfiguration | undefined {
-        let debuggerPackage = 'ptvsd';
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            debuggerPackage = 'debugpy';
-        }
-
         if (cells.length > 0) {
             let enableAttachString = this.extractOutput(cells[0]);
             if (enableAttachString) {
@@ -457,11 +440,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                     const outputs = cells[0].data.outputs as nbformat.IOutput[];
                     if (outputs[0]) {
                         const error = outputs[0] as nbformat.IError;
-                        throw new JupyterDebuggerNotInstalledError(debuggerPackage, error.ename);
+                        throw new JupyterDebuggerNotInstalledError(this.debuggerPackage, error.ename);
                     }
                 }
                 throw new JupyterDebuggerNotInstalledError(
-                    localize.DataScience.jupyterDebuggerOutputParseError().format(debuggerPackage)
+                    localize.DataScience.jupyterDebuggerOutputParseError().format(this.debuggerPackage)
                 );
             }
         }
@@ -487,13 +470,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     private async connectToLocal(notebook: INotebook): Promise<DebugConfiguration | undefined> {
-        let enableDebuggerCode = `import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`;
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            enableDebuggerCode = `import debugpy\r\ndebugpy.listen(('localhost', 0))`;
-        }
-
-        // tslint:disable-next-line: no-multiline-string
-        const enableDebuggerResults = await this.executeSilently(notebook, enableDebuggerCode);
+        const enableDebuggerResults = await this.executeSilently(notebook, this.enableDebuggerCode);
 
         // Save our connection info to this notebook
         return this.parseConnectInfo(enableDebuggerResults, true);
