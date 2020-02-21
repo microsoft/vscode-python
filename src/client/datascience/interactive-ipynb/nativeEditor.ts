@@ -524,19 +524,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     false,
                     cancelToken
                 );
-
-                if (!cancelToken.isCancellationRequested) {
-                    // Activate the other side, and send as if came from a file
-                    await this.editorProvider.show(this.file);
-                    this.shareMessage(InteractiveWindowMessages.RemoteReexecuteCode, {
-                        code: entry.code,
-                        file: Identifiers.EmptyFileName,
-                        line: 0,
-                        id: entry.cell.id,
-                        originator: this.id,
-                        debug: false
-                    });
-                }
             }
         } catch (exc) {
             // Make this error our cell output
