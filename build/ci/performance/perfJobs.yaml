@@ -6,6 +6,7 @@ jobs:
       'Win-Py3.7':
         PythonVersion: '3.7'
         VMImageName: 'vs2017-win2016'
+        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
   pool:
     vmImage: $(VMImageName)
   steps:
