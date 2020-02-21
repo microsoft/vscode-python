@@ -13,11 +13,7 @@ import { IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
-<<<<<<< HEAD
-import { cacheResourceSpecificInterpreterData, clearCachedResourceSpecificIngterpreterData } from '../../common/utils/decorators';
-=======
 import { InMemoryCache } from '../../common/utils/cacheUtils';
->>>>>>> ae86ae46f... Fix to return env variables of interpreter that is not current interpreter (#10251)
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
