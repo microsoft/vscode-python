@@ -135,12 +135,3 @@ stages:
       vmImage: 'vs2017-win2016'
     steps:
       - template: templates/test_phases.yml
-
-- stage: Reports
-  dependsOn:
-  - Linux
-  - Mac
-  - Windows
-  condition: always()
-  jobs:
-  - template: templates/jobs/coverage.yml
