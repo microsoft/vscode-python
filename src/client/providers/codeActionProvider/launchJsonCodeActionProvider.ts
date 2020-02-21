@@ -15,13 +15,8 @@ import {
 /**
  * Provides code actions for launch.json
  */
-export class QuickFixLaunchJson implements CodeActionProvider {
-    public provideCodeActions(
-        document: TextDocument,
-        _range: Range | Selection,
-        context: CodeActionContext
-    ): CodeAction[] {
-        // for each diagnostic entry that has the matching `code`, create a code action command
+export class LaunchJsonCodeActionProvider implements CodeActionProvider {
+    public provideCodeActions(document: TextDocument, _: Range, context: CodeActionContext): CodeAction[] {
         return context.diagnostics
             .filter(diagnostic => diagnostic.message === 'Incorrect type. Expected "string".')
             .map(diagnostic => this.createFix(document, diagnostic));

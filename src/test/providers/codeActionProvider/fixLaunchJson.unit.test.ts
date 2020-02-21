@@ -6,7 +6,7 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { CancellationToken, CodeActionContext, CodeActionKind, Range, TextDocument } from 'vscode';
-import { PythonCodeActionProvider } from '../../client/providers/quickFixes/codeActionsProvider';
+import { PythonCodeActionProvider } from '../../../client/providers/codeActionProvider/pythonCodeActionProvider';
 
 suite('CodeAction Provider', () => {
     let codeActionsProvider: PythonCodeActionProvider;

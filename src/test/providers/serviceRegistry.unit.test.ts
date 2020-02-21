@@ -7,8 +7,8 @@ import { instance, mock, verify } from 'ts-mockito';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceManager } from '../../client/ioc/types';
+import { QuickFixService } from '../../client/providers/codeActionProvider/main';
 import { SortImportsEditingProvider } from '../../client/providers/importSortProvider';
-import { QuickFixService } from '../../client/providers/quickFixes/main';
 import { registerTypes } from '../../client/providers/serviceRegistry';
 import { ISortImportsEditingProvider } from '../../client/providers/types';
 

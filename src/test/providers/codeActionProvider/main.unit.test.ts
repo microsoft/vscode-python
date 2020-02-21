@@ -7,8 +7,8 @@
 import { assert, expect } from 'chai';
 import rewiremock from 'rewiremock';
 import { CodeActionProvider, CodeActionProviderMetadata, DocumentSelector } from 'vscode';
-import { QuickFixLaunchJson } from '../../../client/providers/quickFixes/fixLaunchJson';
-import { QuickFixService } from '../../../client/providers/quickFixes/main';
+import { LaunchJsonCodeActionProvider } from '../../../client/providers/codeActionProvider/launchJsonCodeActionProvider';
+import { QuickFixService } from '../../../client/providers/codeActionProvider/main';
 
 suite('Quick fix service', async () => {
     setup(() => {
@@ -50,6 +50,6 @@ suite('Quick fix service', async () => {
             // tslint:disable-next-line:no-any
             providedCodeActionKinds: ['CodeAction' as any]
         });
-        expect(provider!).instanceOf(QuickFixLaunchJson);
+        expect(provider!).instanceOf(LaunchJsonCodeActionProvider);
     });
 });

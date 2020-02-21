@@ -4,7 +4,7 @@
 import { injectable } from 'inversify';
 import * as vscodeTypes from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
-import { QuickFixLaunchJson } from './fixLaunchJson';
+import { LaunchJsonCodeActionProvider } from './launchJsonCodeActionProvider';
 
 @injectable()
 export class QuickFixService implements IExtensionSingleActivationService {
@@ -16,7 +16,7 @@ export class QuickFixService implements IExtensionSingleActivationService {
             language: 'jsonc',
             pattern: '**/launch.json'
         };
-        vscode.languages.registerCodeActionsProvider(documentSelector, new QuickFixLaunchJson(), {
+        vscode.languages.registerCodeActionsProvider(documentSelector, new LaunchJsonCodeActionProvider(), {
             providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
         });
     }

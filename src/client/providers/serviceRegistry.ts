@@ -5,8 +5,8 @@
 
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
+import { QuickFixService } from './codeActionProvider/main';
 import { SortImportsEditingProvider } from './importSortProvider';
-import { QuickFixService } from './quickFixes/main';
 import { ISortImportsEditingProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
