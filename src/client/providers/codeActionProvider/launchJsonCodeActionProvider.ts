@@ -26,7 +26,7 @@ export class LaunchJsonCodeActionProvider implements CodeActionProvider {
         const finalText = `"${document.getText(diagnostic.range)}"`;
         const fix = new CodeAction(`Convert to ${finalText}`, CodeActionKind.QuickFix);
         fix.edit = new WorkspaceEdit();
-        fix.edit.replace(document.uri, new Range(diagnostic.range.start, diagnostic.range.end), finalText);
+        fix.edit.replace(document.uri, diagnostic.range, finalText);
         return fix;
     }
 }
