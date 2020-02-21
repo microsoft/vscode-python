@@ -50,6 +50,7 @@ export function initialize() {
 }
 
 mockedVSCode.Disposable = vscodeMocks.vscMock.Disposable as any;
+mockedVSCode.CodeAction = vscodeMocks.vscMock.CodeAction;
 mockedVSCode.EventEmitter = vscodeMocks.vscMock.EventEmitter;
 mockedVSCode.CancellationTokenSource = vscodeMocks.vscMock.CancellationTokenSource;
 mockedVSCode.CompletionItemKind = vscodeMocks.vscMock.CompletionItemKind;
