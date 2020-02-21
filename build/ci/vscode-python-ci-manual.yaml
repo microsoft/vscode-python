@@ -1,16 +1,8 @@
-# CI build (PR merge)
+# manual CI build
 
-name: '$(Year:yyyy).$(Month).0.$(BuildID)-ci'
+name: '$(Year:yyyy).$(Month).0.$(BuildID)-manual'
 
-# Notes: Only trigger a commit for master and release, and skip build/rebuild
-#        on changes in the news and .vscode folders.
-trigger:
-  branches:
-    include: ["master", "release*"]
-  paths:
-    exclude: ["/news/1 Enhancements", "/news/2 Fixes", "/news/3 Code Health", "/.vscode"]
-
-# Not the PR build for merges to master and release.
+trigger: none
 pr: none
 
 # Variables that are available for the entire pipeline.
@@ -70,7 +62,34 @@ stages:
           TestsToRun: 'testSmoke'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
-      maxParallel: 2
+      #maxParallel: 3
+    pool:
+      vmImage: 'ubuntu-16.04'
+    steps:
+      - template: templates/test_phases.yml
+
+  # This is the oldest Python 3 version we support.
+  - job: 'Py36'
+    dependsOn: []
+    timeoutInMinutes: 120
+    strategy:
+      matrix:
+        'Unit':
+          PythonVersion: '3.6'
+          # Note: "pythonInternalTools" tests are 3.7+.
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+          NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
+        'Functional':
+          PythonVersion: '3.6'
+          TestsToRun: 'testfunctional'
+          NeedsPythonTestReqs: true
+          NeedsPythonFunctionalReqs: true
+        'Single Workspace':
+          PythonVersion: '3.6'
+          TestsToRun: 'testSingleWorkspace'
+          NeedsPythonTestReqs: true
+      #maxParallel: 3
     pool:
       vmImage: 'ubuntu-16.04'
     steps:
@@ -88,6 +107,15 @@ stages:
           TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
+        'Functional':
+          PythonVersion: '3.5'
+          TestsToRun: 'testfunctional'
+          NeedsPythonTestReqs: true
+          NeedsPythonFunctionalReqs: true
+        'Single Workspace':
+          PythonVersion: '3.5'
+          TestsToRun: 'testSingleWorkspace'
+          NeedsPythonTestReqs: true
         'Venv':
           PythonVersion: '3.5'
           TestsToRun: 'venvTests'
@@ -98,7 +126,7 @@ stages:
           PythonVersion: '3.5'
           TestsToRun: 'testDebugger'
           NeedsPythonTestReqs: true
-      maxParallel: 2
+      #maxParallel: 3
     pool:
       vmImage: 'ubuntu-16.04'
     steps:
@@ -138,7 +166,44 @@ stages:
           TestsToRun: 'testSmoke'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
-      maxParallel: 2
+      #maxParallel: 3
+    pool:
+      vmImage: 'macos-10.13'
+    steps:
+      - template: templates/test_phases.yml
+
+  # This is the oldest Python 3 version we support.
+  - job: 'Py35'
+    dependsOn: []
+    timeoutInMinutes: 120
+    strategy:
+      matrix:
+        'Unit':
+          PythonVersion: '3.5'
+          # Note: "pythonInternalTools" tests are 3.7+.
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+          NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
+        'Functional':
+          PythonVersion: '3.5'
+          TestsToRun: 'testfunctional'
+          NeedsPythonTestReqs: true
+          NeedsPythonFunctionalReqs: true
+        'Single Workspace':
+          PythonVersion: '3.5'
+          TestsToRun: 'testSingleWorkspace'
+          NeedsPythonTestReqs: true
+        'Venv':
+          PythonVersion: '3.5'
+          TestsToRun: 'venvTests'
+          NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
+          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+        'Debugger':
+          PythonVersion: '3.5'
+          TestsToRun: 'testDebugger'
+          NeedsPythonTestReqs: true
+      #maxParallel: 3
     pool:
       vmImage: 'macos-10.13'
     steps:
@@ -178,7 +243,44 @@ stages:
           TestsToRun: 'testSmoke'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
-      maxParallel: 2
+      #maxParallel: 3
+    pool:
+      vmImage: 'vs2017-win2016'
+    steps:
+      - template: templates/test_phases.yml
+
+  # This is the oldest Python 3 version we support.
+  - job: 'Py35'
+    dependsOn: []
+    timeoutInMinutes: 120
+    strategy:
+      matrix:
+        'Unit':
+          PythonVersion: '3.5'
+          # Note: "pythonInternalTools" tests are 3.7+.
+          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+          NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
+        'Functional':
+          PythonVersion: '3.5'
+          TestsToRun: 'testfunctional'
+          NeedsPythonTestReqs: true
+          NeedsPythonFunctionalReqs: true
+        'Single Workspace':
+          PythonVersion: '3.5'
+          TestsToRun: 'testSingleWorkspace'
+          NeedsPythonTestReqs: true
+        'Venv':
+          PythonVersion: '3.5'
+          TestsToRun: 'venvTests'
+          NeedsPythonTestReqs: true
+          NeedsIPythonReqs: true
+          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+        'Debugger':
+          PythonVersion: '3.5'
+          TestsToRun: 'testDebugger'
+          NeedsPythonTestReqs: true
+      #maxParallel: 3
     pool:
       vmImage: 'vs2017-win2016'
     steps:

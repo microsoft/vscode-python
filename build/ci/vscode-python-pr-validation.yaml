@@ -1,6 +1,7 @@
+# PR Validation build.
+
 name: '$(Year:yyyy).$(Month).0.$(BuildID)-pr'
 
-# PR Validation build.
 # Notes: Only trigger a PR build for master and release, and skip build/rebuild
 #        on changes in the news and .vscode folders.
 pr:
@@ -57,10 +58,16 @@ stages:
     dependsOn: []
     strategy:
       matrix:
-        'Unit+Single':
+        'Unit':
           PythonVersion: '2.7'
-          TestsToRun: 'pythonUnitTests, testSingleWorkspace'
+          # Note: "pythonInternalTools" tests are 3.7+.
+          TestsToRun: 'testUnitTests, pythonUnitTests'
           NeedsPythonTestReqs: true
+        'Functional':
+          PythonVersion: '2.7'
+          TestsToRun: 'testfunctional'
+          NeedsPythonTestReqs: true
+          NeedsPythonFunctionalReqs: true
     pool:
       vmImage: 'ubuntu-16.04'
     steps:
@@ -73,30 +80,11 @@ stages:
     dependsOn: []
     strategy:
       matrix:
-        'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+        # This gives us our best functional coverage for the OS.
+        'Functional+Single':
+          TestsToRun: 'testfunctional, testSingleWorkspace'
           NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Single Workspace':
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Smoke':
-          TestsToRun: 'testSmoke'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-    pool:
-      vmImage: 'macos-10.13'
-    steps:
-      - template: templates/test_phases.yml
-
-  - job: 'Py27'
-    dependsOn: []
-    strategy:
-      matrix:
-        'Unit+Single':
-          PythonVersion: '2.7'
-          TestsToRun: 'pythonUnitTests, testSingleWorkspace'
-          NeedsPythonTestReqs: true
+          NeedsPythonFunctionalReqs: true
     pool:
       vmImage: 'macos-10.13'
     steps:
@@ -109,27 +97,11 @@ stages:
     dependsOn: []
     strategy:
       matrix:
-        'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+        # This gives us our best functional coverage for the OS.
+        'Functional+Single':
+          TestsToRun: 'testfunctional, testSingleWorkspace'
           NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Smoke':
-          TestsToRun: 'testSmoke'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-    pool:
-      vmImage: 'vs2017-win2016'
-    steps:
-      - template: templates/test_phases.yml
-
-  - job: 'Py27'
-    dependsOn: []
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '2.7'
-          TestsToRun: 'pythonUnitTests'
-          NeedsPythonTestReqs: true
+          NeedsPythonFunctionalReqs: true
     pool:
       vmImage: 'vs2017-win2016'
     steps:
@@ -143,25 +115,3 @@ stages:
   condition: always()
   jobs:
   - template: templates/jobs/coverage.yml
-
-# The following is a temporary workaround for transitioning the
-# job names for 2 jobs set as required checks in GitHub.  It will
-# be removed once we adjust the GitHub configuration.
-
-- stage: Tests
-  dependsOn: []
-  jobs:
-  - job: 'Test'
-    dependsOn: []
-    strategy:
-      matrix:
-        'Linux-Py3.7 Functional':
-            noop: true
-        'Linux-Py3.7 Unit':
-            noop: true
-    # Essentially, this is a noop.
-    steps:
-      - task: Delay@1
-        inputs:
-          delayForMinutes: '0'
-    pool: server
