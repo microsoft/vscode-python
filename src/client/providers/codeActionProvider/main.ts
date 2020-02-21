@@ -8,7 +8,7 @@ import { IDisposableRegistry } from '../../common/types';
 import { LaunchJsonCodeActionProvider } from './launchJsonCodeActionProvider';
 
 @injectable()
-export class QuickFixService implements IExtensionSingleActivationService {
+export class CodeActionProviderService implements IExtensionSingleActivationService {
     constructor(@inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry) {}
     public async activate(): Promise<void> {
         // tslint:disable-next-line:no-require-imports
