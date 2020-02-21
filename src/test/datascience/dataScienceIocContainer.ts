@@ -286,6 +286,7 @@ import { InterpreterService } from '../../client/interpreter/interpreterService'
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
 import { PythonInterpreterLocatorService } from '../../client/interpreter/locators';
 import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
+import { CacheableLocatorPromiseCache } from '../../client/interpreter/locators/services/cacheableLocatorService';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
 import {
@@ -927,6 +928,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IPersistentStateFactory,
             new TestPersistentStateFactory(globalStorage, localStorage)
         );
+
+        // Inform the cacheable locator service to use a static map so that it stays in memory in between tests
+        CacheableLocatorPromiseCache.forceUseStatic();
+
         this.serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
 
         this.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(
