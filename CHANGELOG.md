@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.2.3 (20 February 2020)
+## 2020.2.3 (21 February 2020)
 
 ### Fixes
 
