@@ -290,7 +290,11 @@ function trace(message: string, options: LogOptions = LogOptions.None, logLevel?
             // tslint:disable-next-line:no-any
             function writeToLog(elapsedTime: number, returnValue?: any, ex?: Error) {
                 const messagesToLog = [message];
-                messagesToLog.push(`Class name = ${className}, completed in ${elapsedTime}ms`);
+                messagesToLog.push(
+                    `Class name = ${className}, completed in ${elapsedTime}ms, has a ${
+                        returnValue ? 'truthy' : 'falsy'
+                    } return value`
+                );
                 if ((options && LogOptions.Arguments) === LogOptions.Arguments) {
                     messagesToLog.push(argsToLogString(args));
                 }
