@@ -9,6 +9,16 @@ jobs:
   pool:
     vmImage: $(VMImageName)
   steps:
+    - bash: |
+        python -m pip install --upgrade -r build/test-requirements.txt
+        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
+        sudo apt-get install libsqlite3-dev
+        python -m pip install pysqlite
+        python -m pip install numpy
+        python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+        python -m pip install --upgrade pywin32==224
     - pwsh: |
           # venv/bin or venv\\Scripts (windows)?
           $environmentExecutableFolder = 'bin'
@@ -52,15 +62,6 @@ jobs:
           # Set the TEST_FILES_SUFFIX
           Write-Host '##vso[task.setvariable variable=TEST_FILES_SUFFIX;]testvirtualenvs'
     - bash: |
-        python -m pip install --upgrade -r build/test-requirements.txt
-        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-        python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
-        sudo apt-get install libsqlite3-dev
-        python -m pip install pysqlite
-        python -m pip install numpy
-        python -m pip install --upgrade -r ./build/functional-test-requirements.txt
-        python -m pip install --upgrade pywin32==224
         npm install
         npm install -g mocha
         npm install -g source-map-support
