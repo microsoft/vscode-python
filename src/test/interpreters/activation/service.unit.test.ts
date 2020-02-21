@@ -37,7 +37,7 @@ const defaultShells = {
 };
 
 // tslint:disable:no-unnecessary-override no-any max-func-body-length
-suite('xInterpreters Activation - Python Environment Variables', () => {
+suite('Interpreters Activation - Python Environment Variables', () => {
     let service: EnvironmentActivationService;
     let helper: ITerminalHelper;
     let platform: IPlatformService;

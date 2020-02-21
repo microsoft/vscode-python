@@ -72,9 +72,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     ): Promise<NodeJS.ProcessEnv | undefined> {
         // Cache key = resource + interpreter.
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
-        const interpreterPath = this.platform.isWindows
-            ? interpreter?.path.toLowerCase()
-            : interpreter?.path.toLowerCase();
+        const interpreterPath = this.platform.isWindows ? interpreter?.path.toLowerCase() : interpreter?.path;
         const cacheKey = `${workspaceKey}_${interpreterPath}`;
 
         if (this.activatedEnvVariablesCache.get(cacheKey)?.hasData) {
