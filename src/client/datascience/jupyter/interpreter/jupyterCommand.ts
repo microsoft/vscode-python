@@ -241,6 +241,8 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         }
 
         // Otherwise try running a script instead.
+
+        // Otherwise try running a script instead.
         try {
             if (args.join(' ').toLowerCase() === 'list --json') {
                 // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.

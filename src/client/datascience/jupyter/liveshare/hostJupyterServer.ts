@@ -193,7 +193,30 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 this.configService.getSettings(resource).datascience.jupyterLaunchTimeout
             );
         }
+        // Create a copy of launch info, cuz we're modifying it here.
+        // This launch info contains the server connection info (that could be shared across other nbs).
+        // However the kernel info is different. The kernel info is stored as a  property of this, hence create a separate instance for each nb.
+        launchInfo = {
+            ...launchInfo
+        };
 
+        // Find a kernel that can be used.
+        // Do this only if kernel information has been provided in the metadata, else use the default.
+        let defaultKernelInfoToUse = launchInfo.kernelSpec;
+        if (notebookMetadata?.kernelspec) {
+            const kernelInfo = await (launchInfo.connectionInfo.localLaunch
+                ? this.kernelSelector.getKernelForLocalConnection(sessionManager, notebookMetadata, false, cancelToken)
+                : this.kernelSelector.getKernelForRemoteConnection(sessionManager, notebookMetadata, cancelToken));
+
+            const kernelInfoToUse = kernelInfo?.kernelSpec || kernelInfo?.kernelModel;
+            if (kernelInfoToUse) {
+                defaultKernelInfoToUse = kernelInfoToUse;
+            }
+            if (possibleSession && kernelInfoToUse) {
+                await possibleSession.changeKernel(kernelInfoToUse, this.configService.getSettings().datascience.jupyterLaunchTimeout);
+            }
+            launchInfo.kernelSpec = defaultKernelInfoToUse;
+        }
         // Start a session (or use the existing one)
         const session = possibleSession || (await sessionManager.startNew(info.kernelSpec, cancelToken));
         traceInfo(`Started session ${this.id}`);
