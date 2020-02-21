@@ -17,10 +17,42 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IInterpreterLocatorService, IInterpreterWatcher, PythonInterpreter } from '../../contracts';
 
+export class CacheableLocatorPromiseCache {
+    private static useStatic = false;
+    private static staticMap = new Map<string, Deferred<PythonInterpreter[]>>();
+    private normalMap = new Map<string, Deferred<PythonInterpreter[]>>();
+
+    public static forceUseStatic() {
+        CacheableLocatorPromiseCache.useStatic = true;
+    }
+    public get(key: string): Deferred<PythonInterpreter[]> | undefined {
+        if (CacheableLocatorPromiseCache.useStatic) {
+            return CacheableLocatorPromiseCache.staticMap.get(key);
+        }
+        return this.normalMap.get(key);
+    }
+
+    public set(key: string, value: Deferred<PythonInterpreter[]>) {
+        if (CacheableLocatorPromiseCache.useStatic) {
+            CacheableLocatorPromiseCache.staticMap.set(key, value);
+        } else {
+            this.normalMap.set(key, value);
+        }
+    }
+
+    public delete(key: string) {
+        if (CacheableLocatorPromiseCache.useStatic) {
+            CacheableLocatorPromiseCache.staticMap.delete(key);
+        } else {
+            this.normalMap.delete(key);
+        }
+    }
+}
+
 @injectable()
 export abstract class CacheableLocatorService implements IInterpreterLocatorService {
     protected readonly _hasInterpreters: Deferred<boolean>;
-    private readonly promisesPerResource = new Map<string, Deferred<PythonInterpreter[]>>();
+    private readonly promisesPerResource = new CacheableLocatorPromiseCache();
     private readonly handlersAddedToResource = new Set<string>();
     private readonly cacheKeyPrefix: string;
     private readonly locating = new EventEmitter<Promise<PythonInterpreter[]>>();
@@ -32,6 +64,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         this._hasInterpreters = createDeferred<boolean>();
         this.cacheKeyPrefix = `INTERPRETERS_CACHE_v3_${name}`;
     }
+
     public get onLocating(): Event<Promise<PythonInterpreter[]>> {
         return this.locating.event;
     }
@@ -43,7 +76,6 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     public async getInterpreters(resource?: Uri, ignoreCache?: boolean): Promise<PythonInterpreter[]> {
         const cacheKey = this.getCacheKey(resource);
         let deferred = this.promisesPerResource.get(cacheKey);
-
         if (!deferred || ignoreCache) {
             deferred = createDeferred<PythonInterpreter[]>();
             this.promisesPerResource.set(cacheKey, deferred);
