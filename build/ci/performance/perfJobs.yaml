@@ -19,6 +19,7 @@ jobs:
         python -m pip install numpy
         python -m pip install --upgrade -r ./build/functional-test-requirements.txt
         python -m pip install --upgrade pywin32==224
+        npm install
         npm install -g mocha
         npm install -g source-map-support
         npm install -g mocha-multi-reporters
