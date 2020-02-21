@@ -1,5 +1,7 @@
 # Changelog
 
+## 2020.2.2 (20 February 2020)
+
 ## 2020.2.2 (19 February 2020)
 
 ### Fixes
