@@ -20,7 +20,6 @@ import {
     JupyterInterpreterDependencyService
 } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../../../client/datascience/types';
-import { IJupyterCommand, IJupyterCommandFactory } from '../../../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 
 // tslint:disable: max-func-body-length no-any

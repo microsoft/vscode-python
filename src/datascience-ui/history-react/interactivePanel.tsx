@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 import * as React from 'react';
 import { connect } from 'react-redux';
-import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
 import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
