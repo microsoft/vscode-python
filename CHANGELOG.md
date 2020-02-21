@@ -256,7 +256,7 @@ part of!
 1. Update Chinese (Traditional) translation.
    (thanks [pan93412](https://github.com/pan93412))
    ([#9548](https://github.com/Microsoft/vscode-python/issues/9548))
-1. Look for Conda interpreters in '~/opt/_conda_/' directory as well.
+1. Look for Conda interpreters in `~/opt/*conda*/` directory as well.
    ([#9701](https://github.com/Microsoft/vscode-python/issues/9701))
 
 ### Fixes
