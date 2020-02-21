@@ -47,17 +47,9 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider
     ) {
-        this.envVarsService.onDidEnvironmentVariablesChange(
-            () => this.activatedEnvVariablesCache.clear(),
-            this,
-            this.disposables
-        );
+        this.envVarsService.onDidEnvironmentVariablesChange(() => this.activatedEnvVariablesCache.clear(), this, this.disposables);
 
-        this.interpreterService.onDidChangeInterpreter(
-            () => this.activatedEnvVariablesCache.clear(),
-            this,
-            this.disposables
-        );
+        this.interpreterService.onDidChangeInterpreter(() => this.activatedEnvVariablesCache.clear(), this, this.disposables);
     }
 
     public dispose(): void {
@@ -65,11 +57,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     @traceDecorators.verbose('getActivatedEnvironmentVariables', LogOptions.Arguments)
     @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
-    public async getActivatedEnvironmentVariables(
-        resource: Resource,
-        interpreter?: PythonInterpreter,
-        allowExceptions?: boolean
-    ): Promise<NodeJS.ProcessEnv | undefined> {
+    public async getActivatedEnvironmentVariables(resource: Resource, interpreter?: PythonInterpreter, allowExceptions?: boolean): Promise<NodeJS.ProcessEnv | undefined> {
         // Cache key = resource + interpreter.
         const workspaceKey = this.workspace.getWorkspaceFolderIdentifier(resource);
         const interpreterPath = this.platform.isWindows ? interpreter?.path.toLowerCase() : interpreter?.path;
@@ -88,11 +76,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         });
     }
 
-    public async getActivatedEnvironmentVariablesImpl(
-        resource: Resource,
-        interpreter?: PythonInterpreter,
-        allowExceptions?: boolean
-    ): Promise<NodeJS.ProcessEnv | undefined> {
+    public async getActivatedEnvironmentVariablesImpl(resource: Resource, interpreter?: PythonInterpreter, allowExceptions?: boolean): Promise<NodeJS.ProcessEnv | undefined> {
         const shellInfo = defaultShells[this.platform.osType];
         if (!shellInfo) {
             return;
