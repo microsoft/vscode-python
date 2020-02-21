@@ -152,7 +152,8 @@ export enum SysInfoReason {
     Start,
     Restart,
     Interrupt,
-    New
+    New,
+    Connect
 }
 
 export interface IAddedSysInfo {

@@ -1299,6 +1299,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             case SysInfoReason.New:
                 return localize.DataScience.pythonNewHeader();
                 break;
+            case SysInfoReason.Connect:
+                return localize.DataScience.pythonConnectHeader();
+                break;
             default:
                 traceError('Invalid SysInfoReason');
                 return '';
@@ -1417,8 +1420,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
         await this.commandManager.executeCommand(Commands.SwitchJupyterKernel, this._notebook);
     }
-    private async kernelChangeHandler(_kernel: IJupyterKernelSpec | LiveKernelModel) {
-        await this.addSysInfo(SysInfoReason.New);
+    private async kernelChangeHandler(kernel: IJupyterKernelSpec | LiveKernelModel) {
+        // Check if we are changing to LiveKernelModel
+        if (kernel.hasOwnProperty('numberOfConnections')) {
+            await this.addSysInfo(SysInfoReason.Connect);
+        } else {
+            await this.addSysInfo(SysInfoReason.New);
+        }
     }
 
     private openSettings(setting: string | undefined) {
