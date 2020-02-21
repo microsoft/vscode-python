@@ -469,7 +469,10 @@ suite('FileSystem - raw', () => {
     });
 
     suite('listdir', () => {
-        test('mixed', async () => {
+        test('mixed', async function() {
+            // https://github.com/microsoft/vscode-python/issues/10240
+            // tslint:disable-next-line: no-invalid-this
+            return this.skip();
             // Create the target directory and its contents.
             const dirname = await fix.createDirectory('x/y/z');
             const file1 = await fix.createFile('x/y/z/__init__.py', '');
