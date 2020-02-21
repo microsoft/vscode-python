@@ -19,6 +19,7 @@ import { ServerStatus } from '../../../datascience-ui/interactive-common/mainSta
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
 import { traceInfo, traceWarning } from '../../common/logger';
+import { IOutputChannel } from '../../common/types';
 import { sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -69,7 +70,8 @@ export class JupyterSession implements IJupyterSession {
         private kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager,
-        private readonly kernelSelector: KernelSelector
+        private readonly kernelSelector: KernelSelector,
+        private readonly outputChannel: IOutputChannel
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
     }
@@ -386,9 +388,23 @@ export class JupyterSession implements IJupyterSession {
         };
 
         return Cancellation.race(
-            () => this.sessionManager!.startNew(options).catch(ex => Promise.reject(new JupyterSessionStartError(ex))),
+            () =>
+                this.sessionManager!.startNew(options)
+                    .then(s => {
+                        this.logRemoteOutput(
+                            localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, s.kernel.id)
+                        );
+                        return s;
+                    })
+                    .catch(ex => Promise.reject(new JupyterSessionStartError(ex))),
             cancelToken
         );
+    }
+
+    private logRemoteOutput(output: string) {
+        if (this.connInfo && !this.connInfo.localLaunch) {
+            this.outputChannel.appendLine(output);
+        }
     }
 
     private async waitForKernelPromise(

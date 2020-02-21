@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-import { inject, injectable, multiInject, optional } from 'inversify';
+import { inject, injectable, multiInject, named, optional } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -10,8 +10,15 @@ import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel,
+    Resource
+} from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import {
     IConnection,
     IDataScience,
@@ -43,7 +50,8 @@ type JupyterServerClassType = {
         appShell: IApplicationShell,
         fs: IFileSystem,
         kernelSelector: KernelSelector,
-        interpreterService: IInterpreterService
+        interpreterService: IInterpreterService,
+        outputChannel: IOutputChannel
     ): IJupyterServerInterface;
 };
 // tslint:enable:callable-types
@@ -69,7 +77,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
-        @inject(KernelSelector) kernelSelector: KernelSelector
+        @inject(KernelSelector) kernelSelector: KernelSelector,
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel
     ) {
         // The server factory will create the appropriate HostJupyterServer or GuestJupyterServer based on
         // the liveshare state.
@@ -88,7 +97,8 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             appShell,
             fs,
             kernelSelector,
-            interpreterService
+            interpreterService,
+            jupyterOutput
         );
     }
 
