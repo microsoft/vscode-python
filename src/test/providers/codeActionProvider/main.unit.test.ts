@@ -6,7 +6,9 @@
 // tslint:disable: match-default-export-name
 import { assert, expect } from 'chai';
 import rewiremock from 'rewiremock';
+import * as typemoq from 'typemoq';
 import { CodeActionProvider, CodeActionProviderMetadata, DocumentSelector } from 'vscode';
+import { IDisposableRegistry } from '../../../client/common/types';
 import { LaunchJsonCodeActionProvider } from '../../../client/providers/codeActionProvider/launchJsonCodeActionProvider';
 import { QuickFixService } from '../../../client/providers/codeActionProvider/main';
 
@@ -36,7 +38,7 @@ suite('Quick fix service', async () => {
         };
         rewiremock.enable();
         rewiremock('vscode').with(vscodeMock);
-        const quickFixService = new QuickFixService();
+        const quickFixService = new QuickFixService(typemoq.Mock.ofType<IDisposableRegistry>().object);
 
         await quickFixService.activate();
 

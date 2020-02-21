@@ -1,13 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { injectable } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as vscodeTypes from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
+import { IDisposableRegistry } from '../../common/types';
 import { LaunchJsonCodeActionProvider } from './launchJsonCodeActionProvider';
 
 @injectable()
 export class QuickFixService implements IExtensionSingleActivationService {
+    constructor(@inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry) {}
     public async activate(): Promise<void> {
         // tslint:disable-next-line:no-require-imports
         const vscode = require('vscode') as typeof vscodeTypes;
@@ -16,8 +18,10 @@ export class QuickFixService implements IExtensionSingleActivationService {
             language: 'jsonc',
             pattern: '**/launch.json'
         };
-        vscode.languages.registerCodeActionsProvider(documentSelector, new LaunchJsonCodeActionProvider(), {
-            providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
-        });
+        this.disposableRegistry.push(
+            vscode.languages.registerCodeActionsProvider(documentSelector, new LaunchJsonCodeActionProvider(), {
+                providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
+            })
+        );
     }
 }
