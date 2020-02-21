@@ -6,7 +6,7 @@ import { Agent as HttpsAgent } from 'https';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { traceInfo } from '../../common/logger';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import {
     IConnection,
@@ -33,7 +33,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private jupyterPasswordConnect: IJupyterPasswordConnect,
         private config: IConfigurationService,
         private failOnPassword: boolean | undefined,
-        private kernelSelector: KernelSelector
+        private kernelSelector: KernelSelector,
+        private outputChannel: IOutputChannel
     ) {}
 
     public async dispose() {
@@ -115,7 +116,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             kernelSpec,
             this.sessionManager,
             this.contentsManager,
-            this.kernelSelector
+            this.kernelSelector,
+            this.outputChannel
         );
         try {
             await session.connect(cancelToken);

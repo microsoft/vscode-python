@@ -443,5 +443,8 @@
     "DataScience.gettingListOfKernelSpecs": "Fetching Kernel specs",
     "DataScience.startingJupyterNotebook": "Starting Jupyter Notebook",
     "DataScience.registeringKernel": "Registering Kernel",
-    "DataScience.trimmedOutput": "Output was trimmed for performance reasons.\nTo see the full output set the setting \"python.dataScience.textOutputLimit\" to 0."
+    "DataScience.trimmedOutput": "Output was trimmed for performance reasons.\nTo see the full output set the setting \"python.dataScience.textOutputLimit\" to 0.",
+    "DataScience.connectingToJupyterUri" : "Connecting to Jupyter server at {0}",
+    "DataScience.createdNewNotebook" : "{0}: Creating new notebook ",
+    "DataScience.createdNewKernel" : "{0}: Kernel started: {1}"
 }

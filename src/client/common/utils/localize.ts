@@ -791,6 +791,14 @@ export namespace DataScience {
         'DataScience.jupyterCommandLinePrompt',
         'Enter your custom command line for Jupyter'
     );
+
+    export const connectingToJupyterUri = localize(
+        'DataScience.connectingToJupyterUri',
+        'Connecting to Jupyter server at {0}'
+    );
+    export const createdNewNotebook = localize('DataScience.createdNewNotebook', '{0}: Creating new notebook ');
+
+    export const createdNewKernel = localize('DataScience.createdNewKernel', '{0}: Kernel started: {1}');
 }
 
 export namespace DebugConfigStrings {

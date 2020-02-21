@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IOutputChannel } from '../../common/types';
+import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import { IConnection, IJupyterPasswordConnect, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../types';
 import { JupyterSessionManager } from './jupyterSessionManager';
 import { KernelSelector } from './kernels/kernelSelector';
@@ -13,7 +14,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
     constructor(
         @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
         @inject(IConfigurationService) private config: IConfigurationService,
-        @inject(KernelSelector) private kernelSelector: KernelSelector
+        @inject(KernelSelector) private kernelSelector: KernelSelector,
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel
     ) {}
 
     /**
@@ -26,7 +28,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
             this.jupyterPasswordConnect,
             this.config,
             failOnPassword,
-            this.kernelSelector
+            this.kernelSelector,
+            this.jupyterOutput
         );
         await result.initialize(connInfo);
         return result;

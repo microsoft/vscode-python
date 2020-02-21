@@ -12,7 +12,13 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel,
+    Resource
+} from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
@@ -52,9 +58,10 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         private appService: IApplicationShell,
         private fs: IFileSystem,
         private readonly kernelSelector: KernelSelector,
-        private readonly interpreterService: IInterpreterService
+        private readonly interpreterService: IInterpreterService,
+        outputChannel: IOutputChannel
     ) {
-        super(liveShare, asyncRegistry, disposableRegistry, configService, sessionManager, loggers);
+        super(liveShare, asyncRegistry, disposableRegistry, configService, sessionManager, loggers, outputChannel);
     }
 
     public async dispose(): Promise<void> {

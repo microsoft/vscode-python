@@ -8,7 +8,13 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { ILiveShareApi } from '../../common/application/types';
 import '../../common/extensions';
 import { traceError, traceInfo } from '../../common/logger';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel,
+    Resource
+} from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -42,7 +48,8 @@ export class JupyterServerBase implements INotebookServer {
         private disposableRegistry: IDisposableRegistry,
         protected readonly configService: IConfigurationService,
         private sessionManagerFactory: IJupyterSessionManagerFactory,
-        private loggers: INotebookExecutionLogger[]
+        private loggers: INotebookExecutionLogger[],
+        private jupyterOutputChannel: IOutputChannel
     ) {
         this.asyncRegistry.push(this);
     }
@@ -66,6 +73,9 @@ export class JupyterServerBase implements INotebookServer {
                 this.shutdown().ignoreErrors();
             });
         }
+
+        // Indicate we have a new session on the output channel
+        this.logRemoteOutput(localize.DataScience.connectingToJupyterUri().format(launchInfo.connectionInfo.baseUrl));
 
         // Create our session manager
         this.sessionManager = await this.sessionManagerFactory.create(launchInfo.connectionInfo);
@@ -104,7 +114,11 @@ export class JupyterServerBase implements INotebookServer {
             this.loggers,
             notebookMetadata,
             cancelToken
-        );
+        ).then(r => {
+            const baseUrl = this.launchInfo?.connectionInfo.baseUrl || '';
+            this.logRemoteOutput(localize.DataScience.createdNewNotebook().format(baseUrl));
+            return r;
+        });
     }
 
     public async shutdown(): Promise<void> {
@@ -215,6 +229,12 @@ export class JupyterServerBase implements INotebookServer {
     private async destroyKernelSpec() {
         if (this.launchInfo) {
             this.launchInfo.kernelSpec = undefined;
+        }
+    }
+
+    private logRemoteOutput(output: string) {
+        if (this.launchInfo && !this.launchInfo.connectionInfo.localLaunch) {
+            this.jupyterOutputChannel.appendLine(output);
         }
     }
 }

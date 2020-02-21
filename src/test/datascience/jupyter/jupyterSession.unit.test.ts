@@ -17,6 +17,7 @@ import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSessi
 import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
 import { IConnection, IJupyterKernelSpec } from '../../../client/datascience/types';
+import { MockOutputChannel } from '../../mockClasses';
 
 // tslint:disable: max-func-body-length
 suite('Data Science - JupyterSession', () => {
@@ -63,6 +64,7 @@ suite('Data Science - JupyterSession', () => {
         kernelChangedSignal = mock(Signal);
         when(session.statusChanged).thenReturn(instance(statusChangedSignal));
         when(session.kernelChanged).thenReturn(instance(kernelChangedSignal));
+        const channel = new MockOutputChannel('JUPYTER');
         // tslint:disable-next-line: no-any
         (instance(session) as any).then = undefined;
         sessionManager = mock(SessionManager);
@@ -73,7 +75,8 @@ suite('Data Science - JupyterSession', () => {
             kernelSpec.object,
             instance(sessionManager),
             instance(contentsManager),
-            instance(kernelSelector)
+            instance(kernelSelector),
+            channel
         );
     });
 
