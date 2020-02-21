@@ -6,7 +6,7 @@ const cloneDeep = require('lodash/cloneDeep');
 import * as uuid from 'uuid/v4';
 import { CellMatcher } from '../../../../client/datascience/cellMatcher';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CellState } from '../../../../client/datascience/types';
+import { CellState, ICell } from '../../../../client/datascience/types';
 import { concatMultilineStringInput } from '../../../common';
 import { createCellFrom } from '../../../common/cellFactory';
 import {
@@ -38,7 +38,7 @@ export namespace Execution {
         originalArg: NativeEditorReducerArg<any>
     ): IMainState {
         const newVMs = [...prevState.cellVMs];
-        const cellsToExecute = [];
+        const cellsToExecute: { cell: ICell; code: string }[] = [];
         for (let pos = start; pos <= end; pos += 1) {
             const orig = prevState.cellVMs[pos];
             const code = codes[pos - start];
@@ -56,6 +56,7 @@ export namespace Execution {
                         inputBlockText: code,
                         cell: { ...orig.cell, state: CellState.executing, data: clonedCell }
                     });
+                    cellsToExecute.push({ cell: orig.cell, code });
                 } else {
                     // Update our input to be our new code
                     newVMs[pos] = Helpers.asCellViewModel({
@@ -64,7 +65,6 @@ export namespace Execution {
                         cell: { ...orig.cell, data: clonedCell }
                     });
                 }
-                cellsToExecute.push(clonedCell);
             }
         }
 

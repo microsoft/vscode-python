@@ -132,7 +132,7 @@ export class NativeEditorProvider
             return editor.load(model, panel).then(() => this.openedEditor(editor));
         } catch (exc) {
             // Send telemetry indicating a failure
-            sendTelemetryEvent(Telemetry.OpenNotebookFailure, { message: exc.message });
+            sendTelemetryEvent(Telemetry.OpenNotebookFailure);
         }
     }
     public get editingDelegate(): WebviewCustomEditorEditingDelegate<unknown> | undefined {
