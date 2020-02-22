@@ -284,6 +284,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             testMode: this.props.testMode,
             codeTheme: this.props.codeTheme,
             submittedText: this.props.submittedText,
+            settings: this.props.settings,
             skipNextScroll: this.props.skipNextScroll ? true : false,
             editable: false,
             renderCell: this.renderCell,

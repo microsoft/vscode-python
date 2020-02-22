@@ -310,12 +310,8 @@ body, html {
 }
 
 #cell-table {
-    display: table;
+    display: block;
     width: 100%;
-}
-
-#cell-table-body {
-    display: table-row-group;
 }
 
 .flash {
