@@ -624,7 +624,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private renderInput = () => {
         if (this.shouldRenderInput()) {
             return (
-                <div>
+                <div className="cell-input-wrapper">
                     {this.renderMiddleToolbar()}
                     <CellInput
                         cellVM={this.props.cellVM}
@@ -674,7 +674,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const toolbar = this.props.cellVM.cell.data.cell_type === 'markdown' ? this.renderMiddleToolbar() : null;
         if (this.shouldRenderOutput()) {
             return (
-                <div>
+                <div className="cell-output-wrapper">
                     {toolbar}
                     <CellOutput
                         cellVM={this.props.cellVM}
