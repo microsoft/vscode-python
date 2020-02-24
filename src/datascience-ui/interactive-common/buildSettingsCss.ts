@@ -11,6 +11,10 @@ export function buildSettingsCss(settings: IDataScienceExtraSettings | undefined
     return settings
         ? `#main-panel-content::-webkit-scrollbar {
     width: ${settings.extraSettings.editor.verticalScrollbarSize}px;
+}
+
+.cell-output > *::-webkit-scrollbar {
+    width: ${settings.extraSettings.editor.verticalScrollbarSize}px;
 }`
         : '';
 }
