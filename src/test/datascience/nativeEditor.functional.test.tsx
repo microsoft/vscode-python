@@ -540,9 +540,6 @@ df.head()`;
                     numberOfTimes: 3
                 });
                 runAllButton = findButton(newWrapper!, NativeEditor, 0);
-                threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                    numberOfTimes: 3
-                });
                 await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
                 await threeCellsUpdated;
                 verifyHtmlOnCell(newWrapper!, 'NativeCell', `1`, 0);
@@ -554,7 +551,7 @@ df.head()`;
             }
         );
 
-        test('xFailure', async () => {
+        test('Failure', async () => {
             let fail = true;
             const errorThrownDeferred = createDeferred<Error>();
             // Make a dummy class that will fail during launch
