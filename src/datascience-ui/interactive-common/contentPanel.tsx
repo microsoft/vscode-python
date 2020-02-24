@@ -51,19 +51,6 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         return false;
     }
 
-    //public render() {
-    //const className = `${this.props.scrollBeyondLastLine ? 'content-panel-scrollBeyondLastLine' : ''}`;
-    //return (
-    //<div id="content-panel-div" ref={this.containerRef} className={className}>
-    //<div id="cell-table">
-    //<div id="cell-table-body" role="list">
-    //{this.renderCells()}
-    //</div>
-    //</div>
-    //<div ref={this.bottomRef} />
-    //</div>
-    //);
-    //}
     public render() {
         const className = `${this.props.scrollBeyondLastLine ? 'content-panel-scrollBeyondLastLine' : ''}`;
         return (
