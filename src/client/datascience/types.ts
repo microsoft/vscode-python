@@ -558,6 +558,7 @@ export interface IDataScienceExtraSettings extends IDataScienceSettings {
             autoSurround: string;
             autoIndent: boolean;
             scrollBeyondLastLine: boolean;
+            horizontalScrollbarSize: number;
             verticalScrollbarSize: number;
             fontSize: number;
             fontFamily: string;

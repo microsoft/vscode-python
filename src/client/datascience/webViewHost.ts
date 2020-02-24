@@ -188,8 +188,9 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                     autoIndent: this.getValue(editor, 'autoIndent', false),
                     fontLigatures: this.getValue(editor, 'fontLigatures', false),
                     scrollBeyondLastLine: this.getValue(editor, 'scrollBeyondLastLine', true),
-                    // VS Code puts a value for this, but it's 10 (the explorer bar size) not 14 the editor size
+                    // VS Code puts a value for this, but it's 10 (the explorer bar size) not 14 the editor size for vert
                     verticalScrollbarSize: this.getValue(editor, 'scrollbar.verticalScrollbarSize', 14),
+                    horizontalScrollbarSize: this.getValue(editor, 'scrollbar.horizontalScrollbarSize', 10),
                     fontSize: this.getValue(editor, 'fontSize', 14),
                     fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
@@ -343,6 +344,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             event.affectsConfiguration('editor.scrollBeyondLastLine') ||
             event.affectsConfiguration('editor.fontLigatures') ||
             event.affectsConfiguration('editor.scrollbar.verticalScrollbarSize') ||
+            event.affectsConfiguration('editor.scrollbar.horizontalScrollbarSize') ||
             event.affectsConfiguration('files.autoSave') ||
             event.affectsConfiguration('files.autoSaveDelay') ||
             event.affectsConfiguration('python.dataScience.enableGather')
