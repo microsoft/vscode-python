@@ -43,6 +43,7 @@ interface INativeCellBaseProps {
     editorOptions: monacoEditor.editor.IEditorOptions;
     themeMatplotlibPlots: boolean | undefined;
     focusPending: number;
+    busy: boolean;
 }
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
@@ -567,6 +568,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         onClick={runCell}
                         tooltip={getLocString('DataScience.runCell', 'Run cell')}
                         hidden={this.isMarkdownCell()}
+                        disabled={this.props.busy}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Run} />
                     </ImageButton>

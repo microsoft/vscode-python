@@ -1480,7 +1480,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         if (!this._notebook) {
             return;
         }
-        await this.commandManager.executeCommand(Commands.SwitchJupyterKernel, this._notebook);
+        try {
+            this.startProgress();
+            await this.commandManager.executeCommand(Commands.SwitchJupyterKernel, this._notebook);
+        } finally {
+            this.stopProgress();
+        }
     }
     private async kernelChangeHandler(kernel: IJupyterKernelSpec | LiveKernelModel) {
         // Check if we are changing to LiveKernelModel
