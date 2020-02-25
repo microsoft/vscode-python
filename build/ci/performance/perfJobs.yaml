@@ -8,6 +8,10 @@ jobs:
         PythonVersion: '3.7'
   pool: DSPerf
   steps:
+    - task: Gulp@0
+      displayName: 'gulp prePublishNonBundle'
+      inputs:
+          targets: 'prePublishNonBundle'
     - powershell: |
         npm install
         npm install -g mocha
