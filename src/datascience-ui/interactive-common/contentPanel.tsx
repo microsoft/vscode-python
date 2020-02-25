@@ -32,12 +32,10 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     constructor(prop: IContentPanelProps) {
         super(prop);
     }
-
     public componentDidMount() {
         this.scrollToBottom();
     }
-
-    public componentDidUpdate() {
+    public componentWillReceiveProps() {
         this.scrollToBottom();
     }
 
@@ -58,7 +56,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
                         {this.renderCells()}
                     </div>
                 </div>
-                <div ref={this.bottomRef} />
+                <div id="bottomDiv" ref={this.bottomRef} />
             </div>
         );
     }
