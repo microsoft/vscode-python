@@ -3,13 +3,11 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      'Win-Py3.7':
+      Python37:
         PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
-        PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
   pool: DSPerf
   steps:
-    - pwsh: |
+    - powershell: |
         npm install
         npm install -g mocha
         npm install -g source-map-support
@@ -29,7 +27,7 @@ jobs:
         VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
-    - pwsh: |
+    - powershell: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
         node ./build/ci/performance/savePerformanceResults.js
 
@@ -44,7 +42,7 @@ jobs:
         VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
-    - pwsh: |
+    - powershell: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
         node ./build/ci/performance/savePerformanceResults.js
 
@@ -59,7 +57,7 @@ jobs:
         VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
-    - pwsh: |
+    - powershell: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
         node ./build/ci/performance/savePerformanceResults.js
 
@@ -74,6 +72,6 @@ jobs:
         VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
-    - pwsh: |
+    - powershell: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
         node ./build/ci/performance/savePerformanceResults.js

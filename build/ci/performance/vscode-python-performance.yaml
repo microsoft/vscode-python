@@ -21,4 +21,4 @@ stages:
   - job: CheckResults
     timeoutInMinutes: 5
     steps:
-      - pwsh: node ./build/ci/performance/checkPerformanceResults.js
+      - powershell: node ./build/ci/performance/checkPerformanceResults.js
