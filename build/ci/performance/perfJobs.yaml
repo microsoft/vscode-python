@@ -9,7 +9,7 @@ jobs:
         PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
   pool: DSPerf
   steps:
-    - bash: |
+    - pwsh: |
         npm install
         npm install -g mocha
         npm install -g source-map-support
@@ -29,7 +29,7 @@ jobs:
         VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
-    - bash: |
+    - pwsh: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
         node ./build/ci/performance/savePerformanceResults.js
 
@@ -44,7 +44,7 @@ jobs:
         VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
-    - bash: |
+    - pwsh: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
         node ./build/ci/performance/savePerformanceResults.js
 
@@ -59,7 +59,7 @@ jobs:
         VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
-    - bash: |
+    - pwsh: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
         node ./build/ci/performance/savePerformanceResults.js
 
@@ -74,6 +74,6 @@ jobs:
         VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
-    - bash: |
+    - pwsh: |
         mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
         node ./build/ci/performance/savePerformanceResults.js
