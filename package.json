@@ -2540,6 +2540,12 @@
                     "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
                     "scope": "resource"
                 },
+                "python.defaultInterpreterPath": {
+                    "type": "string",
+                    "default": "python",
+                    "description": "Path to Python, you can use a custom version of Python by modifying this setting to include the full path.",
+                    "scope": "machine"
+                },
                 "python.condaPath": {
                     "type": "string",
                     "default": "",

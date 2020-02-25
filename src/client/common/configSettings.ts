@@ -77,6 +77,7 @@ export class PythonSettings implements IPythonSettings {
     private disposables: Disposable[] = [];
     // tslint:disable-next-line:variable-name
     private _pythonPath = '';
+    private _defaultInterpreterPath = '';
     private readonly workspace: IWorkspaceService;
     public get onDidChange(): Event<void> {
         return this.changed.event;
@@ -168,6 +169,10 @@ export class PythonSettings implements IPythonSettings {
             this.pythonPath = autoSelectedPythonInterpreter ? autoSelectedPythonInterpreter.path : this.pythonPath;
         }
         this.pythonPath = getAbsolutePath(this.pythonPath, workspaceRoot);
+
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
+        this.defaultInterpreterPath = systemVariables.resolveAny(pythonSettings.get<string>('defaultInterpreterPath'))!;
+        this.defaultInterpreterPath = getAbsolutePath(this.defaultInterpreterPath, workspaceRoot);
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
@@ -504,6 +509,22 @@ export class PythonSettings implements IPythonSettings {
             this._pythonPath = this.getPythonExecutable(value);
         } catch (ex) {
             this._pythonPath = value;
+        }
+    }
+
+    public get defaultInterpreterPath(): string {
+        return this._defaultInterpreterPath;
+    }
+    public set defaultInterpreterPath(value: string) {
+        if (this._defaultInterpreterPath === value) {
+            return;
+        }
+        // Add support for specifying just the directory where the python executable will be located.
+        // E.g. virtual directory name.
+        try {
+            this._defaultInterpreterPath = this.getPythonExecutable(value);
+        } catch (ex) {
+            this._defaultInterpreterPath = value;
         }
     }
     protected getPythonExecutable(pythonPath: string) {
