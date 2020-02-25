@@ -302,7 +302,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
             truncated: true,
             count: 0,
             shape: '',
-            value: '(1+1j)',
+            value: ' (1+1j)',
             supportsDataExplorer: false
         };
 
