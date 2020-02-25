@@ -482,6 +482,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
                         themeMatplotlibPlots={this.props.settings.themeMatplotlibPlots}
                         // Focus pending does not apply to native editor.
                         focusPending={0}
+                        busy={this.props.busy}
                     />
                 </ErrorBoundary>
                 {lastLine}

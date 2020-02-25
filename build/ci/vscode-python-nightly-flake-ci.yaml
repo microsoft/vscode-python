@@ -81,7 +81,7 @@ stages:
           NeedsPythonFunctionalReqs: true
           VSCODE_PYTHON_ROLLING: true
     pool:
-      vmImage: 'macos-10.13'
+      vmImage: '$(vmImageMacOS)'
     steps:
       - template: templates/test_phases.yml
 
@@ -97,7 +97,7 @@ stages:
           NeedsPythonFunctionalReqs: true
           VSCODE_PYTHON_ROLLING: true
     pool:
-      vmImage: 'macos-10.13'
+      vmImage: '$(vmImageMacOS)'
     steps:
       - template: templates/test_phases.yml
 

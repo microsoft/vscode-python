@@ -1,10 +1,6 @@
 /* Import common styles and then override them below */
 @import "../interactive-common/common.css";
 
-:root {
-    --right-offset-px: 94px;
-}
-
 .toolbar-panel-button {
     border-width: 1px;
     border-style: solid;
@@ -16,12 +12,6 @@
     padding: 2px;
     background-color: transparent;
     cursor: hand;
-}
-
-.measure-editor-div {
-    width: 90vw;
-	visibility: hidden;
-	position: absolute;
 }
 
 .cell-wrapper {
@@ -42,16 +32,16 @@
     justify-self: right;
 }
 
-// make the width of the div be a bit less than the width of the window,
-// the 85 pixels removed account for the space the padding and controls
-// on the left take in the native Editor.
+.cell-output-wrapper {
+    grid-row: 1;
+    grid-column: 3;
+}
+
 .cell-output {
     margin-top: 5px;
     background: transparent;
-    width: calc(100vw - var(--right-offset-px));
+    width: 100%;
     overflow-x: scroll;
-    grid-row: 1;
-    grid-column: 3;
 }
 
 .cell-output-text {
@@ -66,18 +56,18 @@
 }
 
 .markdown-cell-output {
-    width: calc(100vw - var(--right-offset-px));
+    width: 100%;
     overflow-x: scroll;
 }
 
 .cell-outer {
     display:grid;
-    grid-template-columns:auto auto 1fr;
+    grid-template-columns:auto auto minmax(0, 1fr);
 }
 
 .cell-outer-editable {
     display:grid;
-    grid-template-columns:auto auto 1fr;
+    grid-template-columns:auto auto minmax(0, 1fr);
     margin-top: 0px;
 }
 
@@ -126,11 +116,13 @@
     top: 5px; /* Account for extra padding and border in native editor */
 }
 
-.cell-input {
-    margin: 2px 10px 0px 0px;
+.cell-input-wrapper {
     grid-column: 3;
     grid-row: 1;
-    min-width: calc(100% - var(--right-offset-px));
+}
+
+.cell-input {
+    margin: 2px 10px 0px 0px;
 }
 
 .content-div {
@@ -374,7 +366,7 @@
 .add-cell-line-divider {
     margin-top: 8px;
     margin-left: 2px;
-    width: calc(100vw - 40px);
+    width: calc(100% - 40px);
     border-width: 0px;
     border-top-color: var(--override-badge-background, var(--vscode-badge-background));
     border-top-width: 1px;
@@ -401,7 +393,7 @@ collapse-bar        controls-div        [cell-input, cell-output, markdown-cell-
 */
 .cell-row-container {
     display: grid;
-    grid-template-columns: auto auto 1fr;
+    grid-template-columns: auto auto minmax(0, 1fr);
     grid-template-rows: 1fr auto;
 }
 

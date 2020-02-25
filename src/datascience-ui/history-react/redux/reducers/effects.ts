@@ -113,8 +113,7 @@ export namespace Effects {
             newVMs[index] = { ...newVMs[index], scrollCount: newVMs[index].scrollCount + 1 };
             return {
                 ...arg.prevState,
-                cellVMs: newVMs,
-                isAtBottom: false
+                cellVMs: newVMs
             };
         }
 

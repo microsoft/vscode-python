@@ -10,6 +10,22 @@ _VSCode_supportsDataExplorer = "['list', 'Series', 'dict', 'ndarray', 'DataFrame
 # Indexes off of _VSCODE_targetVariable need to index types that are part of IJupyterVariable
 _VSCODE_targetVariable = _VSCODE_json.loads("""_VSCode_JupyterTestValue""")
 
+# Function to compute row count for a value
+def _VSCODE_getRowCount(var):
+    if hasattr(var, "shape"):
+        try:
+            # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
+            if isinstance(var.shape, tuple):
+                return var.shape[0]
+        except TypeError:
+            return 0
+    elif hasattr(var, "__len__"):
+        try:
+            return len(var)
+        except TypeError:
+            return 0
+
+
 # First check to see if we are a supported type, this prevents us from adding types that are not supported
 # and also keeps our types in sync with what the variable explorer says that we support
 if _VSCODE_targetVariable["type"] not in _VSCode_supportsDataExplorer:
@@ -21,18 +37,7 @@ else:
     _VSCODE_evalResult = eval(_VSCODE_targetVariable["name"])
 
     # Figure out shape if not already there. Use the shape to compute the row count
-    if hasattr(_VSCODE_evalResult, "shape"):
-        try:
-            # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
-            if isinstance(_VSCODE_evalResult.shape, tuple):
-                _VSCODE_targetVariable["rowCount"] = _VSCODE_evalResult.shape[0]
-        except TypeError:
-            _VSCODE_targetVariable["rowCount"] = 0
-    elif hasattr(_VSCODE_evalResult, "__len__"):
-        try:
-            _VSCODE_targetVariable["rowCount"] = len(_VSCODE_evalResult)
-        except TypeError:
-            _VSCODE_targetVariable["rowCount"] = 0
+    _VSCODE_targetVariable["rowCount"] = _VSCODE_getRowCount(_VSCODE_evalResult)
 
     # Turn the eval result into a df
     _VSCODE_df = _VSCODE_evalResult
@@ -45,6 +50,9 @@ else:
         _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
     elif _VSCODE_targetVariable["type"] == "ndarray":
         _VSCODE_df = _VSCODE_pd.DataFrame(_VSCODE_evalResult)
+    elif hasattr(_VSCODE_df, "toPandas"):
+        _VSCODE_df = _VSCODE_df.toPandas()
+        _VSCODE_targetVariable["rowCount"] = _VSCODE_getRowCount(_VSCODE_df)
 
     # If any rows, use pandas json to convert a single row to json. Extract
     # the column names and types from the json so we match what we'll fetch when

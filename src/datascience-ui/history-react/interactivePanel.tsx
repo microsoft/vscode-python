@@ -284,6 +284,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             testMode: this.props.testMode,
             codeTheme: this.props.codeTheme,
             submittedText: this.props.submittedText,
+            settings: this.props.settings,
             skipNextScroll: this.props.skipNextScroll ? true : false,
             editable: false,
             renderCell: this.renderCell,
@@ -354,11 +355,8 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             this.internalScrollCount += 1;
             // Force auto here as smooth scrolling can be canceled by updates to the window
             // from elsewhere (and keeping track of these would make this hard to maintain)
-            // tslint:disable: no-any
-            if ((div as any).scrollIntoViewIfNeeded) {
-                (div as any).scrollIntoViewIfNeeded(false);
-            } else if (div && div.scrollIntoView) {
-                div.scrollIntoView(false);
+            if (div && div.scrollIntoView) {
+                div.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
             }
         }
     };
