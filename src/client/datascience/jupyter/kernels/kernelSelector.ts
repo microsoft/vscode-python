@@ -184,6 +184,13 @@ export class KernelSelector {
                     cancelToken
                 );
                 sendTelemetryEvent(Telemetry.UseExistingKernel);
+
+                // Make sure we update the environment in the kernel before using it
+                await this.kernelService.updateKernelEnvironment(
+                    selection.interpreter,
+                    selection.kernelSpec,
+                    cancelToken
+                );
             } else {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
@@ -341,6 +348,7 @@ export class KernelSelector {
             const interpreter = selection.selection.kernelSpec
                 ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken)
                 : undefined;
+            await this.kernelService.updateKernelEnvironment(interpreter, selection.selection.kernelSpec, cancelToken);
             return { kernelSpec: selection.selection.kernelSpec, interpreter };
         } else {
             return {};
@@ -376,17 +384,8 @@ export class KernelSelector {
 
             if (kernelSpec) {
                 traceVerbose(`ipykernel installed in ${interpreter.path}, and matching found.`);
-                // If we have a display name of a kernel that could not be found,
-                // then notify user that we're using current interpreter instead.
-                if (displayNameOfKernelNotFound && !disableUI) {
-                    this.applicationShell
-                        .showInformationMessage(
-                            localize.DataScience.fallbackToUseActiveInterpeterAsKernel().format(
-                                displayNameOfKernelNotFound
-                            )
-                        )
-                        .then(noop, noop);
-                }
+                // Make sure the environment matches.
+                await this.kernelService.updateKernelEnvironment(interpreter, kernelSpec, cancelToken);
 
                 sendTelemetryEvent(Telemetry.UseInterpreterAsKernel);
                 return { kernelSpec, interpreter };
