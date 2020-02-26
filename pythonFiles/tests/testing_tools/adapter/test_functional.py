@@ -15,6 +15,11 @@ import pytest
 from ...__main__ import TESTING_TOOLS_ROOT
 from testing_tools.adapter.util import fix_path, PATH_SEP
 
+try:
+    from pathlib import Path, PurePath
+except ImportError:
+    from pathlib2 import Path, PurePath
+
 
 CWD = os.getcwd()
 DATA_DIR = os.path.join(os.path.dirname(__file__), ".data")
@@ -90,7 +95,7 @@ class PytestTests(unittest.TestCase):
 
     def complex(self, testroot):
         results = COMPLEX.copy()
-        results["root"] = testroot
+        results["root"] = Path(testroot).resolve()
         return [results]
 
     def test_discover_simple(self):
