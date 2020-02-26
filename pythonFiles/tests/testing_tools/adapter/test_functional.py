@@ -16,9 +16,9 @@ from ...__main__ import TESTING_TOOLS_ROOT
 from testing_tools.adapter.util import fix_path, PATH_SEP
 
 try:
-    from pathlib import Path, PurePath
+    from pathlib import Path
 except ImportError:
-    from pathlib2 import Path, PurePath
+    from pathlib2 import Path
 
 
 CWD = os.getcwd()
