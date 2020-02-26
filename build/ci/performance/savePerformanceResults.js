@@ -36,11 +36,13 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                                 performanceData.push(test);
                             });
                         } else {
-                            const test = {
-                                name: suite.testcase.name,
-                                times: [parseFloat(suite.testcase.time)]
-                            };
-                            performanceData.push(test);
+                            try {
+                                const test = {
+                                    name: suite.testcase.name,
+                                    times: [parseFloat(suite.testcase.time)]
+                                };
+                                performanceData.push(test);
+                            } catch {}
                         }
                     }
                 });
@@ -71,13 +73,15 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                                 // if the test name is already there, we add the new time
                                 test.times.push(parseFloat(suite.testcase.time));
                             } else {
-                                // if its not there, we add the whole thing
-                                test = {
-                                    name: suite.testcase.name,
-                                    times: [parseFloat(suite.testcase.time)]
-                                };
+                                try {
+                                    // if its not there, we add the whole thing
+                                    test = {
+                                        name: suite.testcase.name,
+                                        times: [parseFloat(suite.testcase.time)]
+                                    };
 
-                                performanceData.push(test);
+                                    performanceData.push(test);
+                                } catch {}
                             }
                         }
                     }
