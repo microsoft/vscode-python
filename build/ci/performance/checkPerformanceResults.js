@@ -58,16 +58,19 @@ fs.readFile(xmlFile, 'utf8', (xmlFileError, xmlData) => {
                 });
             });
 
-            if (failedTests.length > 0) {
-                throw new Error(failedTests);
-            }
-
             // Delete performance-results.json
             fs.unlink(performanceResultsFile, deleteError => {
                 if (deleteError) {
+                    if (failedTests.length > 0) {
+                        console.log(failedTests);
+                    }
                     throw deleteError;
                 }
             });
+
+            if (failedTests.length > 0) {
+                throw new Error(failedTests);
+            }
         });
     }
 });
