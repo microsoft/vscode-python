@@ -31,7 +31,12 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
-import { InteractiveWindowMessages, ISubmitNewCell, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
+import {
+    InteractiveWindowMessages,
+    ISubmitNewCell,
+    NotebookModelChange,
+    SysInfoReason
+} from '../interactive-common/interactiveWindowTypes';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ICell,
@@ -45,7 +50,6 @@ import {
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterVariables,
-    INotebookEditorProvider,
     INotebookExporter,
     INotebookServerOptions,
     IStatusProvider,
@@ -97,7 +101,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
-        @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
@@ -124,7 +127,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             dataExplorerProvider,
             jupyterVariables,
             jupyterDebugger,
-            editorProvider,
             errorHandler,
             commandManager,
             globalStorage,
@@ -209,6 +211,10 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
             case InteractiveWindowMessages.ReturnAllCells:
                 this.handleMessage(message, payload, this.handleReturnAllCells);
+                break;
+
+            case InteractiveWindowMessages.UpdateModel:
+                this.handleMessage(message, payload, this.handleModelChange);
                 break;
 
             default:
@@ -365,10 +371,21 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                     filters: filtersObject
                 });
                 if (uri) {
-                    await this.exportToFile(cells, uri.fsPath);
+                    await this.jupyterExporter.exportToFile(cells, uri.fsPath);
                 }
             } finally {
                 this.stopProgress();
+            }
+        }
+    }
+
+    private handleModelChange(update: NotebookModelChange) {
+        // Send telemetry for delete and delete all. We don't send telemetry for the other updates yet
+        if (update.source === 'user') {
+            if (update.kind === 'remove_all') {
+                sendTelemetryEvent(Telemetry.DeleteAllCells);
+            } else if (update.kind === 'remove') {
+                sendTelemetryEvent(Telemetry.DeleteCell);
             }
         }
     }

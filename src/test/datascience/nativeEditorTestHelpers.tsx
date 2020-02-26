@@ -24,16 +24,12 @@ import {
 
 // tslint:disable: no-any
 
-async function getOrCreateNativeEditor(
-    ioc: DataScienceIocContainer,
-    uri?: Uri,
-    contents?: string
-): Promise<INotebookEditor> {
+async function getOrCreateNativeEditor(ioc: DataScienceIocContainer, uri?: Uri): Promise<INotebookEditor> {
     const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
     let editor: INotebookEditor | undefined;
     const messageWaiter = waitForMessage(ioc, InteractiveWindowMessages.LoadAllCellsComplete);
-    if (uri && contents) {
-        editor = await notebookProvider.open(uri, contents);
+    if (uri) {
+        editor = await notebookProvider.open(uri);
     } else {
         editor = await notebookProvider.createNew();
     }
@@ -54,7 +50,8 @@ export async function openEditor(
     filePath: string = '/usr/home/test.ipynb'
 ): Promise<INotebookEditor> {
     const uri = Uri.file(filePath);
-    return getOrCreateNativeEditor(ioc, uri, contents);
+    ioc.setFileContents(uri, contents);
+    return getOrCreateNativeEditor(ioc, uri);
 }
 
 // tslint:disable-next-line: no-any

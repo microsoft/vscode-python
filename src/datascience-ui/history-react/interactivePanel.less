@@ -1,11 +1,6 @@
 /* Import common styles and then override them below */
 @import "../interactive-common/common.css";
 
-:root {
-    --messages-offset-px: 20px;
-    --output-offset-px: 45px;
-}
-
 .toolbar-menu-bar-child {
     background: var(--override-background, var(--vscode-editor-background));
     z-index: 10;
@@ -19,7 +14,7 @@
 }
 
 .messages-result-container {
-    width: calc(100vw - var(--messages-offset-px));
+    width: 100%;
 }
 
 .messages-result-container pre {
@@ -38,11 +33,12 @@
 .cell-result-container {
     margin: 0px;
     display: grid;
+    grid-auto-columns: minmax(0, 1fr);
 }
 
 .cell-outer {
     display:grid;
-    grid-template-columns: auto 1fr 8px;
+    grid-template-columns: auto minmax(0, 1fr) 8px;
     grid-column-gap: 3px;
     width: 100%;
 }
@@ -50,7 +46,7 @@
 
 .cell-output {
     margin: 0px;
-    width: calc(100vw - var(--output-offset-px));
+    width: 100%;
     overflow-x: scroll;
     background: transparent;
 }
@@ -68,7 +64,7 @@ xmp {
 }
 
 .markdown-cell-output {
-    width: calc(100vw - var(--output-offset-px));
+    width: 100%;
     overflow-x: scroll;
 }
 

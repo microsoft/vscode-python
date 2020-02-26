@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
+import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { CssMessages, SharedMessages } from '../../../../client/datascience/messages';
 import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
@@ -12,20 +13,18 @@ import { Effects } from './effects';
 import { Execution } from './execution';
 
 // The list of reducers. 1 per message/action.
-export const reducerMap: IInteractiveActionMapping = {
+export const reducerMap: Partial<IInteractiveActionMapping> = {
     // State updates
     [CommonActionType.RESTART_KERNEL]: Kernel.restartKernel,
     [CommonActionType.INTERRUPT_KERNEL]: Kernel.interruptKernel,
-    [CommonActionType.SELECT_KERNEL]: Kernel.selectKernel,
+    [InteractiveWindowMessages.SelectKernel]: Kernel.selectKernel,
     [CommonActionType.SELECT_SERVER]: Kernel.selectJupyterURI,
     [CommonActionType.OPEN_SETTINGS]: CommonEffects.openSettings,
     [CommonActionType.EXPORT]: Transfer.exportCells,
     [CommonActionType.SAVE]: Transfer.save,
     [CommonActionType.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
     [CommonActionType.DELETE_CELL]: Creation.deleteCell,
-    [CommonActionType.UNDO]: Execution.undo,
-    [CommonActionType.REDO]: Execution.redo,
-    [CommonActionType.SHOW_PLOT]: Transfer.showPlot,
+    [InteractiveWindowMessages.ShowPlot]: Transfer.showPlot,
     [CommonActionType.LINK_CLICK]: Transfer.linkClick,
     [CommonActionType.GOTO_CELL]: Transfer.gotoCell,
     [CommonActionType.TOGGLE_INPUT_BLOCK]: Effects.toggleInputBlock,
@@ -33,9 +32,7 @@ export const reducerMap: IInteractiveActionMapping = {
     [CommonActionType.GATHER_CELL]: Transfer.gather,
     [CommonActionType.EDIT_CELL]: Transfer.editCell,
     [CommonActionType.SUBMIT_INPUT]: Execution.submitInput,
-    [CommonActionType.DELETE_ALL_CELLS]: Creation.deleteAllCells,
-    [CommonActionType.EXPAND_ALL]: Effects.expandAll,
-    [CommonActionType.COLLAPSE_ALL]: Effects.collapseAll,
+    [InteractiveWindowMessages.ExpandAll]: Effects.expandAll,
     [CommonActionType.EDITOR_LOADED]: Transfer.started,
     [CommonActionType.SCROLL]: Effects.scrolled,
     [CommonActionType.CLICK_CELL]: Effects.clickCell,
@@ -44,24 +41,26 @@ export const reducerMap: IInteractiveActionMapping = {
     [CommonActionType.FOCUS_INPUT]: CommonEffects.focusInput,
 
     // Messages from the webview (some are ignored)
-    [IncomingMessageActions.STARTCELL]: Creation.startCell,
-    [IncomingMessageActions.FINISHCELL]: Creation.finishCell,
-    [IncomingMessageActions.UPDATECELL]: Creation.updateCell,
-    [IncomingMessageActions.ACTIVATE]: CommonEffects.activate,
-    [IncomingMessageActions.RESTARTKERNEL]: Kernel.handleRestarted,
-    [IncomingMessageActions.GETCSSRESPONSE]: CommonEffects.handleCss,
-    [IncomingMessageActions.MONACOREADY]: CommonEffects.monacoReady,
-    [IncomingMessageActions.GETMONACOTHEMERESPONSE]: CommonEffects.monacoThemeChange,
-    [IncomingMessageActions.GETALLCELLS]: Transfer.getAllCells,
-    [IncomingMessageActions.EXPANDALL]: Effects.expandAll,
-    [IncomingMessageActions.COLLAPSEALL]: Effects.collapseAll,
-    [IncomingMessageActions.DELETEALLCELLS]: Creation.deleteAllCells,
-    [IncomingMessageActions.STARTPROGRESS]: CommonEffects.startProgress,
-    [IncomingMessageActions.STOPPROGRESS]: CommonEffects.stopProgress,
-    [IncomingMessageActions.UPDATESETTINGS]: Effects.updateSettings,
-    [IncomingMessageActions.STARTDEBUGGING]: Execution.startDebugging,
-    [IncomingMessageActions.STOPDEBUGGING]: Execution.stopDebugging,
-    [IncomingMessageActions.SCROLLTOCELL]: Effects.scrollToCell,
-    [IncomingMessageActions.UPDATEKERNEL]: Kernel.updateStatus,
-    [IncomingMessageActions.LOCINIT]: CommonEffects.handleLocInit
+    [InteractiveWindowMessages.Undo]: Execution.undo,
+    [InteractiveWindowMessages.Redo]: Execution.redo,
+    [InteractiveWindowMessages.StartCell]: Creation.startCell,
+    [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
+    [InteractiveWindowMessages.UpdateCell]: Creation.updateCell,
+    [InteractiveWindowMessages.Activate]: CommonEffects.activate,
+    [InteractiveWindowMessages.RestartKernel]: Kernel.handleRestarted,
+    [CssMessages.GetCssResponse]: CommonEffects.handleCss,
+    [InteractiveWindowMessages.MonacoReady]: CommonEffects.monacoReady,
+    [CssMessages.GetMonacoThemeResponse]: CommonEffects.monacoThemeChange,
+    [InteractiveWindowMessages.GetAllCells]: Transfer.getAllCells,
+    [InteractiveWindowMessages.ExpandAll]: Effects.expandAll,
+    [InteractiveWindowMessages.CollapseAll]: Effects.collapseAll,
+    [InteractiveWindowMessages.DeleteAllCells]: Creation.deleteAllCells,
+    [InteractiveWindowMessages.StartProgress]: CommonEffects.startProgress,
+    [InteractiveWindowMessages.StopProgress]: CommonEffects.stopProgress,
+    [SharedMessages.UpdateSettings]: Effects.updateSettings,
+    [InteractiveWindowMessages.StartDebugging]: Execution.startDebugging,
+    [InteractiveWindowMessages.StopDebugging]: Execution.stopDebugging,
+    [InteractiveWindowMessages.ScrollToCell]: Effects.scrollToCell,
+    [InteractiveWindowMessages.UpdateKernel]: Kernel.updateStatus,
+    [SharedMessages.LocInit]: CommonEffects.handleLocInit
 };

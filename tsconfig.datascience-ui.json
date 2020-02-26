@@ -6,18 +6,13 @@
         "importHelpers": true,
         "target": "es5",
         "outDir": "out",
-        "lib": [
-            "es6",
-            "dom"
-        ],
+        "lib": ["es6", "dom"],
         "jsx": "react",
         "sourceMap": true,
-        "rootDirs": [
-            "node_modules/vsls",
-            "src",
-            "types"
-        ],
-        "paths": { "*": ["types/*"] },
+        "rootDirs": ["node_modules/vsls", "src", "types"],
+        "paths": {
+            "*": ["types/*"]
+        },
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": true,
         "noImplicitThis": false,
@@ -25,12 +20,5 @@
         "noUnusedParameters": false,
         "strict": true
     },
-    "exclude": [
-        ".vscode-test",
-        ".vscode test",
-        "src/test",
-        "src/server",
-        "src/client",
-        "build"
-    ]
+    "exclude": [".vscode-test", ".vscode test", "src/test", "src/server", "src/client", "build"]
 }

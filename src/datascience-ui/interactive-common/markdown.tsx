@@ -5,11 +5,14 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
 import { IKeyboardEvent } from '../react-common/event';
+import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { Editor } from './editor';
 import { CursorPos, IFont } from './mainState';
 
 export interface IMarkdownProps {
     markdown: string;
+    previousMarkdown: string | undefined;
+    version: number;
     codeTheme: string;
     testMode: boolean;
     monacoTheme: string | undefined;
@@ -20,9 +23,10 @@ export interface IMarkdownProps {
     useQuickEdit?: boolean;
     font: IFont;
     hasFocus: boolean;
-    cursorPos: CursorPos;
+    cursorPos: CursorPos | monacoEditor.IPosition;
+    disableUndoStack: boolean;
     onCreated(code: string, modelId: string): void;
-    onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
+    onChange(e: IMonacoModelContentChangeEvent): void;
     focused?(): void;
     unfocused?(): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -46,7 +50,7 @@ export class Markdown extends React.Component<IMarkdownProps> {
                     readOnly={false}
                     history={undefined}
                     onCreated={this.props.onCreated}
-                    onChange={this.onModelChanged}
+                    onChange={this.props.onChange}
                     testMode={this.props.testMode}
                     content={this.props.markdown}
                     outermostParentClass={this.props.outermostParentClass}
@@ -64,6 +68,9 @@ export class Markdown extends React.Component<IMarkdownProps> {
                     showLineNumbers={this.props.showLineNumbers}
                     useQuickEdit={this.props.useQuickEdit}
                     font={this.props.font}
+                    disableUndoStack={this.props.disableUndoStack}
+                    version={this.props.version}
+                    previousContent={this.props.previousMarkdown}
                 />
             </div>
         );
@@ -74,11 +81,4 @@ export class Markdown extends React.Component<IMarkdownProps> {
             return this.editorRef.current.getContents();
         }
     }
-
-    private onModelChanged = (
-        changes: monacoEditor.editor.IModelContentChange[],
-        model: monacoEditor.editor.ITextModel
-    ) => {
-        this.props.onChange(changes, model.id);
-    };
 }

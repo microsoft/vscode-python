@@ -88,6 +88,9 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
     ['vscode.open']: [Uri];
     ['python.viewLanguageServerOutput']: [];
+    ['vscode.open']: [Uri];
+    ['workbench.action.files.saveAs']: [Uri];
+    ['workbench.action.files.save']: [Uri];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
@@ -154,4 +157,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ViewJupyterOutput]: [];
     [DSCommands.SwitchJupyterKernel]: [INotebook | undefined];
     [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
+    [DSCommands.SaveNotebookNonCustomEditor]: [Uri];
+    [DSCommands.SaveAsNotebookNonCustomEditor]: [Uri, Uri];
+    [DSCommands.OpenNotebookNonCustomEditor]: [Uri];
 }

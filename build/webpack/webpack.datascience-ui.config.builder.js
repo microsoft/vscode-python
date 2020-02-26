@@ -100,7 +100,7 @@ function buildConfiguration(isNotebook) {
             chunkFilename: `[name].bundle.js`
         },
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
-        devtool: 'source-map',
+        devtool: isProdBuild ? 'source-map' : 'inline-source-map',
         optimization: {
             minimize: isProdBuild,
             minimizer: isProdBuild ? [new TerserPlugin({ sourceMap: true })] : [],

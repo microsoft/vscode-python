@@ -139,6 +139,7 @@ async function getExpectedLocationStackFromTestDetails(
     return locationStack;
 }
 
+// tslint:disable-next-line: max-func-body-length
 suite('Unit Tests - PyTest - TestMessageService', () => {
     let ioc: UnitTestIocContainer;
     const filesystem = new FileSystem();

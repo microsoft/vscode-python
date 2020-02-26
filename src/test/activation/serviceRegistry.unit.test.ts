@@ -72,6 +72,7 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         serviceManager = mock(ServiceManager);
     });
 
+    // tslint:disable-next-line: max-func-body-length
     test('Ensure services are registered', async () => {
         registerTypes(instance(serviceManager), LanguageServerType.Microsoft);
 

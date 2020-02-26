@@ -30,13 +30,16 @@ import { noop } from '../../../common/utils/misc';
 import { HiddenFileFormatString } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryWhenDone } from '../../../telemetry';
-import { Identifiers, Settings, Telemetry } from '../../constants';
-import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../types';
+import { Settings, Telemetry } from '../../constants';
 import {
-    IAddCell,
+    ICell,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
+    IJupyterExecution,
+    INotebook
+} from '../../types';
+import {
     ICancelIntellisenseRequest,
-    IEditCell,
-    IInsertCell,
     IInteractiveWindowMapping,
     ILoadAllCells,
     INotebookIdentity,
@@ -44,9 +47,8 @@ import {
     IProvideCompletionItemsRequest,
     IProvideHoverRequest,
     IProvideSignatureHelpRequest,
-    IRemoveCell,
     IResolveCompletionItemRequest,
-    ISwapCells
+    NotebookModelChange
 } from '../interactiveWindowTypes';
 import {
     convertStringsToSuggestions,
@@ -61,6 +63,9 @@ import { IntellisenseDocument } from './intellisenseDocument';
 // tslint:disable:no-any
 @injectable()
 export class IntellisenseProvider implements IInteractiveWindowListener {
+    public get postMessage(): Event<{ message: string; payload: any }> {
+        return this.postEmitter.event;
+    }
     private documentPromise: Deferred<IntellisenseDocument> | undefined;
     private temporaryFile: TemporaryFile | undefined;
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
@@ -94,10 +99,6 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         }
     }
 
-    public get postMessage(): Event<{ message: string; payload: any }> {
-        return this.postEmitter.event;
-    }
-
     public onMessage(message: string, payload?: any) {
         switch (message) {
             case InteractiveWindowMessages.CancelCompletionItemsRequest:
@@ -121,28 +122,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 this.dispatchMessage(message, payload, this.handleResolveCompletionItemRequest);
                 break;
 
-            case InteractiveWindowMessages.EditCell:
-                this.dispatchMessage(message, payload, this.editCell);
-                break;
-
-            case InteractiveWindowMessages.AddCell:
-                this.dispatchMessage(message, payload, this.addCell);
-                break;
-
-            case InteractiveWindowMessages.InsertCell:
-                this.dispatchMessage(message, payload, this.insertCell);
-                break;
-
-            case InteractiveWindowMessages.RemoveCell:
-                this.dispatchMessage(message, payload, this.removeCell);
-                break;
-
-            case InteractiveWindowMessages.SwapCells:
-                this.dispatchMessage(message, payload, this.swapCells);
-                break;
-
-            case InteractiveWindowMessages.DeleteAllCells:
-                this.dispatchMessage(message, payload, this.removeAllCells);
+            case InteractiveWindowMessages.UpdateModel:
+                this.dispatchMessage(message, payload, this.update);
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
@@ -160,6 +141,32 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             default:
                 break;
         }
+    }
+
+    public getDocument(resource?: Uri): Promise<IntellisenseDocument> {
+        if (!this.documentPromise) {
+            this.documentPromise = createDeferred<IntellisenseDocument>();
+
+            // Create our dummy document. Compute a file path for it.
+            if (this.workspaceService.rootPath || resource) {
+                const dir = resource ? path.dirname(resource.fsPath) : this.workspaceService.rootPath!;
+                const dummyFilePath = path.join(dir, HiddenFileFormatString.format(uuid().replace(/-/g, '')));
+                this.documentPromise.resolve(new IntellisenseDocument(dummyFilePath));
+            } else {
+                this.fileSystem
+                    .createTemporaryFile('.py')
+                    .then(t => {
+                        this.temporaryFile = t;
+                        const dummyFilePath = this.temporaryFile.filePath;
+                        this.documentPromise!.resolve(new IntellisenseDocument(dummyFilePath));
+                    })
+                    .catch(e => {
+                        this.documentPromise!.reject(e);
+                    });
+            }
+        }
+
+        return this.documentPromise.promise;
     }
 
     protected async getLanguageServer(): Promise<ILanguageServer | undefined> {
@@ -211,32 +218,6 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             }
         }
         return this.languageServer;
-    }
-
-    protected getDocument(resource?: Uri): Promise<IntellisenseDocument> {
-        if (!this.documentPromise) {
-            this.documentPromise = createDeferred<IntellisenseDocument>();
-
-            // Create our dummy document. Compute a file path for it.
-            if (this.workspaceService.rootPath || resource) {
-                const dir = resource ? path.dirname(resource.fsPath) : this.workspaceService.rootPath!;
-                const dummyFilePath = path.join(dir, HiddenFileFormatString.format(uuid().replace(/-/g, '')));
-                this.documentPromise.resolve(new IntellisenseDocument(dummyFilePath));
-            } else {
-                this.fileSystem
-                    .createTemporaryFile('.py')
-                    .then(t => {
-                        this.temporaryFile = t;
-                        const dummyFilePath = this.temporaryFile.filePath;
-                        this.documentPromise!.resolve(new IntellisenseDocument(dummyFilePath));
-                    })
-                    .catch(e => {
-                        this.documentPromise!.reject(e);
-                    });
-            }
-        }
-
-        return this.documentPromise.promise;
     }
 
     protected async provideCompletionItems(
@@ -584,65 +565,107 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         );
     }
 
-    private async addCell(request: IAddCell): Promise<void> {
-        // Save this request file as our potential resource
-        if (request.cell.file !== Identifiers.EmptyFileName) {
-            this.potentialResource = Uri.file(request.cell.file);
-        }
-
-        // Get the document and then pass onto the sub class
-        const document = await this.getDocument(
-            request.cell.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.cell.file)
-        );
-        if (document) {
-            const changes = document.addCell(request.fullText, request.currentText, request.cell.id);
-            return this.handleChanges(document, changes);
+    private async update(request: NotebookModelChange): Promise<void> {
+        // See where this request is coming from
+        switch (request.source) {
+            case 'redo':
+            case 'user':
+                return this.handleRedo(request);
+            case 'undo':
+                return this.handleUndo(request);
+            default:
+                break;
         }
     }
 
-    private async insertCell(request: IInsertCell): Promise<void> {
-        // Get the document and then pass onto the sub class
-        const document = await this.getDocument();
-        if (document) {
-            const changes = document.insertCell(request.cell.id, request.code, request.codeCellAboveId);
-            return this.handleChanges(document, changes);
-        }
+    private convertToDocCells(cells: ICell[]): { code: string; id: string }[] {
+        return cells
+            .filter(c => c.data.cell_type === 'code')
+            .map(c => {
+                return { code: concatMultilineStringInput(c.data.source), id: c.id };
+            });
     }
 
-    private async editCell(request: IEditCell): Promise<void> {
-        // First get the document
+    private async handleUndo(request: NotebookModelChange): Promise<void> {
         const document = await this.getDocument();
-        if (document) {
-            const changes = document.edit(request.changes, request.id);
-            return this.handleChanges(document, changes);
+        let changes: TextDocumentContentChangeEvent[] = [];
+        switch (request.kind) {
+            case 'clear':
+                // This one can be ignored, it only clears outputs
+                break;
+            case 'edit':
+                changes = document.editCell(request.reverse, request.id);
+                break;
+            case 'add':
+            case 'insert':
+                changes = document.remove(request.cell.id);
+                break;
+            case 'modify':
+                // This one can be ignored. it's only used for updating cell finished state.
+                break;
+            case 'remove':
+                changes = document.insertCell(
+                    request.cell.id,
+                    concatMultilineStringInput(request.cell.data.source),
+                    request.index
+                );
+                break;
+            case 'remove_all':
+                changes = document.reloadCells(this.convertToDocCells(request.oldCells));
+                break;
+            case 'swap':
+                changes = document.swap(request.secondCellId, request.firstCellId);
+                break;
+            case 'version':
+                // Also ignored. updates version which we don't keep track of.
+                break;
+            default:
+                break;
         }
+
+        return this.handleChanges(document, changes);
     }
 
-    private async removeCell(request: IRemoveCell): Promise<void> {
-        // First get the document
+    private async handleRedo(request: NotebookModelChange): Promise<void> {
         const document = await this.getDocument();
-        if (document) {
-            const changes = document.remove(request.id);
-            return this.handleChanges(document, changes);
+        let changes: TextDocumentContentChangeEvent[] = [];
+        switch (request.kind) {
+            case 'clear':
+                // This one can be ignored, it only clears outputs
+                break;
+            case 'edit':
+                changes = document.editCell(request.forward, request.id);
+                break;
+            case 'add':
+                changes = document.addCell(request.fullText, request.currentText, request.cell.id);
+                break;
+            case 'insert':
+                changes = document.insertCell(
+                    request.cell.id,
+                    concatMultilineStringInput(request.cell.data.source),
+                    request.codeCellAboveId || request.index
+                );
+                break;
+            case 'modify':
+                // This one can be ignored. it's only used for updating cell finished state.
+                break;
+            case 'remove':
+                changes = document.remove(request.cell.id);
+                break;
+            case 'remove_all':
+                changes = document.removeAll();
+                break;
+            case 'swap':
+                changes = document.swap(request.firstCellId, request.secondCellId);
+                break;
+            case 'version':
+                // Also ignored. updates version which we don't keep track of.
+                break;
+            default:
+                break;
         }
-    }
 
-    private async swapCells(request: ISwapCells): Promise<void> {
-        // First get the document
-        const document = await this.getDocument();
-        if (document) {
-            const changes = document.swap(request.firstCellId, request.secondCellId);
-            return this.handleChanges(document, changes);
-        }
-    }
-
-    private async removeAllCells(): Promise<void> {
-        // First get the document
-        const document = await this.getDocument();
-        if (document) {
-            const changes = document.removeAll();
-            return this.handleChanges(document, changes);
-        }
+        return this.handleChanges(document, changes);
     }
 
     private async loadAllCells(payload: ILoadAllCells) {

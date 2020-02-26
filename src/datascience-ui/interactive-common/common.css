@@ -79,7 +79,7 @@ body, html {
 /* Cell */
 .cell-wrapper {
     margin: 0px;
-    padding: 2px;
+    padding: 2px 5px 2px 2px;
     display: block;
 }
 
@@ -310,12 +310,8 @@ body, html {
 }
 
 #cell-table {
-    display: table;
+    display: block;
     width: 100%;
-}
-
-#cell-table-body {
-    display: table-row-group;
 }
 
 .flash {

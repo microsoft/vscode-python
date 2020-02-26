@@ -117,8 +117,32 @@ gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies()
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
 async function buildDataScienceUI() {
-    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-notebooks.config.js', '--mode', 'production'], webpackEnv);
-    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-viewers.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync(
+        'npm',
+        [
+            'run',
+            'webpack',
+            '--',
+            '--config',
+            './build/webpack/webpack.datascience-ui-notebooks.config.js',
+            '--mode',
+            'production'
+        ],
+        webpackEnv
+    );
+    await spawnAsync(
+        'npm',
+        [
+            'run',
+            'webpack',
+            '--',
+            '--config',
+            './build/webpack/webpack.datascience-ui-viewers.config.js',
+            '--mode',
+            'production'
+        ],
+        webpackEnv
+    );
 }
 
 gulp.task('compile-webviews', async () => {
@@ -127,17 +151,37 @@ gulp.task('compile-webviews', async () => {
 
 gulp.task('webpack', async () => {
     // Build node_modules.
-    await buildWebPack('production', ['--config', './build/webpack/webpack.extension.dependencies.config.js'], webpackEnv);
+    await buildWebPack(
+        'production',
+        ['--config', './build/webpack/webpack.extension.dependencies.config.js'],
+        webpackEnv
+    );
     // Build DS stuff (separately as it uses far too much memory and slows down CI).
     // Individually is faster on CI.
-    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-notebooks.config.js'], webpackEnv);
-    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-viewers.config.js'], webpackEnv);
+    await buildWebPack(
+        'production',
+        ['--config', './build/webpack/webpack.datascience-ui-notebooks.config.js'],
+        webpackEnv
+    );
+    await buildWebPack(
+        'production',
+        ['--config', './build/webpack/webpack.datascience-ui-viewers.config.js'],
+        webpackEnv
+    );
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
     if (isCI) {
-        const buildExtension = buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], webpackEnv);
-        const buildDebugAdapter = buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], webpackEnv);
+        const buildExtension = buildWebPack(
+            'extension',
+            ['--config', './build/webpack/webpack.extension.config.js'],
+            webpackEnv
+        );
+        const buildDebugAdapter = buildWebPack(
+            'debugAdapter',
+            ['--config', './build/webpack/webpack.debugadapter.config.js'],
+            webpackEnv
+        );
         await Promise.all([buildExtension, buildDebugAdapter]);
     } else {
         await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], webpackEnv);
@@ -157,8 +201,12 @@ async function updateBuildNumber(args) {
 
         // Change version number
         const versionParts = packageJson['version'].split('.');
-        const buildNumberPortion = versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
-        const newVersion = versionParts.length > 1 ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}` : packageJson['version'];
+        const buildNumberPortion =
+            versionParts.length > 2 ? versionParts[2].replace(/(\d+)/, args.buildNumber) : args.buildNumber;
+        const newVersion =
+            versionParts.length > 1
+                ? `${versionParts[0]}.${versionParts[1]}.${buildNumberPortion}`
+                : packageJson['version'];
         packageJson['version'] = newVersion;
 
         // Write back to the package json
@@ -167,7 +215,10 @@ async function updateBuildNumber(args) {
         // Update the changelog.md if we are told to (this should happen on the release branch)
         if (args.updateChangelog) {
             const changeLogContents = await fsExtra.readFile('CHANGELOG.md', 'utf-8');
-            const fixedContents = changeLogContents.replace(/##\s*(\d+)\.(\d+)\.(\d+)\s*\(/, `## $1.$2.${buildNumberPortion} (`);
+            const fixedContents = changeLogContents.replace(
+                /##\s*(\d+)\.(\d+)\.(\d+)\s*\(/,
+                `## $1.$2.${buildNumberPortion} (`
+            );
 
             // Write back to changelog.md
             await fsExtra.writeFile('CHANGELOG.md', fixedContents, 'utf-8');
@@ -180,7 +231,11 @@ async function updateBuildNumber(args) {
 async function buildWebPack(webpackConfigName, args, env) {
     // Remember to perform a case insensitive search.
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map(item => item.toLowerCase());
-    const stdOut = await spawnAsync('npm', ['run', 'webpack', '--', ...args, ...['--mode', 'production', '--devtool', 'source-map']], env);
+    const stdOut = await spawnAsync(
+        'npm',
+        ['run', 'webpack', '--', ...args, ...['--mode', 'production', '--devtool', 'source-map']],
+        env
+    );
     const stdOutLines = stdOut
         .split(os.EOL)
         .map(item => item.trim())
@@ -188,13 +243,20 @@ async function buildWebPack(webpackConfigName, args, env) {
     // Remember to perform a case insensitive search.
     const warnings = stdOutLines
         .filter(item => item.startsWith('WARNING in '))
-        .filter(item => allowedWarnings.findIndex(allowedWarning => item.toLowerCase().startsWith(allowedWarning.toLowerCase())) == -1);
+        .filter(
+            item =>
+                allowedWarnings.findIndex(allowedWarning =>
+                    item.toLowerCase().startsWith(allowedWarning.toLowerCase())
+                ) == -1
+        );
     const errors = stdOutLines.some(item => item.startsWith('ERROR in'));
     if (errors) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
     if (warnings.length > 0) {
-        throw new Error(`Warnings in ${webpackConfigName}, Check gulpfile.js to see if the warning should be allowed., \n\n${stdOut}`);
+        throw new Error(
+            `Warnings in ${webpackConfigName}, Check gulpfile.js to see if the warning should be allowed., \n\n${stdOut}`
+        );
     }
 }
 function getAllowedWarningsForWebPack(buildConfig) {
@@ -282,7 +344,16 @@ gulp.task('installPythonRequirements', async () => {
 // See https://github.com/microsoft/vscode-python/issues/7136
 gulp.task('installNewPtvsd', async () => {
     // Install dependencies needed for 'install_ptvsd.py'
-    const depsArgs = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/temp', '-r', './build/debugger-install-requirements.txt'];
+    const depsArgs = [
+        '-m',
+        'pip',
+        '--disable-pip-version-check',
+        'install',
+        '-t',
+        './pythonFiles/lib/temp',
+        '-r',
+        './build/debugger-install-requirements.txt'
+    ];
     const successWithWheelsDeps = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', depsArgs, undefined, true)
         .then(() => true)
         .catch(ex => {
@@ -290,8 +361,12 @@ gulp.task('installNewPtvsd', async () => {
             return false;
         });
     if (!successWithWheelsDeps) {
-        console.info("Failed to install dependencies need by 'install_ptvsd.py' using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', depsArgs).catch(ex => console.error("Failed to install dependencies need by 'install_ptvsd.py' using 'python'", ex));
+        console.info(
+            "Failed to install dependencies need by 'install_ptvsd.py' using 'python3', attempting to install using 'python'"
+        );
+        await spawnAsync('python', depsArgs).catch(ex =>
+            console.error("Failed to install dependencies need by 'install_ptvsd.py' using 'python'", ex)
+        );
     }
 
     // Install new PTVSD with wheels for python 3.7
@@ -305,7 +380,9 @@ gulp.task('installNewPtvsd', async () => {
         });
     if (!successWithWheels) {
         console.info("Failed to install new PTVSD wheels using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', wheelsArgs, wheelsEnv).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
+        await spawnAsync('python', wheelsArgs, wheelsEnv).catch(ex =>
+            console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex)
+        );
     }
 
     rmrf.sync('./pythonFiles/lib/temp');
@@ -333,8 +410,12 @@ gulp.task('installNewPtvsd', async () => {
             return false;
         });
     if (!successWithoutWheels) {
-        console.info("Failed to install source only version of new PTVSD using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args).catch(ex => console.error("Failed to install source only PTVSD 5.0 using 'python'", ex));
+        console.info(
+            "Failed to install source only version of new PTVSD using 'python3', attempting to install using 'python'"
+        );
+        await spawnAsync('python', args).catch(ex =>
+            console.error("Failed to install source only PTVSD 5.0 using 'python'", ex)
+        );
     }
 });
 
@@ -386,7 +467,9 @@ function uploadExtension(uploadBlobName) {
 }
 
 gulp.task('uploadDeveloperExtension', () => uploadExtension('ms-python-insiders.vsix'));
-gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH || process.env.BUILD_SOURCEBRANCHNAME}.vsix`));
+gulp.task('uploadReleaseExtension', () =>
+    uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH || process.env.BUILD_SOURCEBRANCHNAME}.vsix`)
+);
 
 function spawnAsync(command, args, env, rejectOnStdErr = false) {
     env = env || {};
@@ -473,10 +556,14 @@ async function checkDatascienceDependencies() {
         if (name.includes('loader') && (name.includes('?') || name.includes('!'))) {
             return;
         }
-        const matchedModules = modulesInPackageLock.filter(dependency => dependency === moduleName2 || dependency === moduleName1 || dependency === name);
+        const matchedModules = modulesInPackageLock.filter(
+            dependency => dependency === moduleName2 || dependency === moduleName1 || dependency === name
+        );
         switch (matchedModules.length) {
             case 0:
-                throwAndLogError(`Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`);
+                throwAndLogError(
+                    `Dependency not found in package-lock.json, Dependency = '${name}, ${moduleName1}, ${moduleName2}'`
+                );
                 break;
             case 1:
                 break;
@@ -523,7 +610,9 @@ async function checkDatascienceDependencies() {
         let nameWithoutNodeModules = name.substring('/node_modules'.length);
         // Special case expose-loader.
         if (nameWithoutNodeModules.startsWith('/expose-loader')) {
-            nameWithoutNodeModules = nameWithoutNodeModules.substring(nameWithoutNodeModules.indexOf('/node_modules') + '/node_modules'.length);
+            nameWithoutNodeModules = nameWithoutNodeModules.substring(
+                nameWithoutNodeModules.indexOf('/node_modules') + '/node_modules'.length
+            );
         }
 
         let moduleName1 = nameWithoutNodeModules.split('/')[1];
@@ -555,7 +644,9 @@ async function checkDatascienceDependencies() {
         let nameWithoutNodeModules = name.substring('/node_modules'.length);
         // Special case expose-loader.
         if (nameWithoutNodeModules.startsWith('/expose-loader')) {
-            nameWithoutNodeModules = nameWithoutNodeModules.substring(nameWithoutNodeModules.indexOf('/node_modules') + '/node_modules'.length);
+            nameWithoutNodeModules = nameWithoutNodeModules.substring(
+                nameWithoutNodeModules.indexOf('/node_modules') + '/node_modules'.length
+            );
         }
 
         let moduleName1 = nameWithoutNodeModules.split('/')[1];
@@ -573,7 +664,9 @@ async function checkDatascienceDependencies() {
      * @param {*} reasons
      */
     function processReasons(reasons) {
-        reasons = (reasons || []).map(reason => reason.userRequest).filter(item => typeof item === 'string' && !item.startsWith('.'));
+        reasons = (reasons || [])
+            .map(reason => reason.userRequest)
+            .filter(item => typeof item === 'string' && !item.startsWith('.'));
         reasons.forEach(item => processOriginOrReason(item));
     }
 
@@ -582,10 +675,18 @@ async function checkDatascienceDependencies() {
 
     const errorMessages = [];
     if (newModules.size > 0) {
-        errorMessages.push(`Add the untracked dependencies '${Array.from(newModules.values()).join(', ')}' to ${existingModulesFileName}`);
+        errorMessages.push(
+            `Add the untracked dependencies '${Array.from(newModules.values()).join(
+                ', '
+            )}' to ${existingModulesFileName}`
+        );
     }
     if (existingModulesCopy.size > 0) {
-        errorMessages.push(`Remove the unused '${Array.from(existingModulesCopy.values()).join(', ')}' dependencies from ${existingModulesFileName}`);
+        errorMessages.push(
+            `Remove the unused '${Array.from(existingModulesCopy.values()).join(
+                ', '
+            )}' dependencies from ${existingModulesFileName}`
+        );
     }
     if (errorMessages.length > 0) {
         throwAndLogError(errorMessages.join('\n'));
@@ -604,9 +705,16 @@ function hasNativeDependencies() {
     }
     const dependencies = JSON.parse(spawn.sync('npm', ['ls', '--json', '--prod']).stdout.toString());
     const jsonProperties = Object.keys(flat.flatten(dependencies));
-    nativeDependencies = _.flatMap(nativeDependencies, item => path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep))
+    nativeDependencies = _.flatMap(nativeDependencies, item =>
+        path.dirname(item.substring(item.indexOf('node_modules') + 'node_modules'.length)).split(path.sep)
+    )
         .filter(item => item.length > 0)
-        .filter(item => jsonProperties.findIndex(flattenedDependency => flattenedDependency.endsWith(`dependencies.${item}.version`)) >= 0);
+        .filter(
+            item =>
+                jsonProperties.findIndex(flattenedDependency =>
+                    flattenedDependency.endsWith(`dependencies.${item}.version`)
+                ) >= 0
+        );
     if (nativeDependencies.length > 0) {
         console.error('Native dependencies detected', nativeDependencies);
         return true;
@@ -655,7 +763,11 @@ const hygiene = (options, done) => {
         return done();
     }
     const fileListToProcess = options.mode === 'compile' ? undefined : getFileListToProcess(options);
-    if (Array.isArray(fileListToProcess) && fileListToProcess !== all && fileListToProcess.filter(item => item.endsWith('.ts')).length === 0) {
+    if (
+        Array.isArray(fileListToProcess) &&
+        fileListToProcess !== all &&
+        fileListToProcess.filter(item => item.endsWith('.ts')).length === 0
+    ) {
         return done();
     }
 
@@ -674,7 +786,12 @@ const hygiene = (options, done) => {
                 } else if (/^(\s\s\s\s)+.*/.test(line)) {
                     // Good indent.
                 } else if (/^[\t]+.*/.test(line)) {
-                    console.error(file.relative + '(' + (i + 1) + ',1): Bad whitespace indentation (use 4 spaces instead of tabs or other)');
+                    console.error(
+                        file.relative +
+                            '(' +
+                            (i + 1) +
+                            ',1): Bad whitespace indentation (use 4 spaces instead of tabs or other)'
+                    );
                     errorCount++;
                 }
             });
@@ -724,10 +841,13 @@ const hygiene = (options, done) => {
                     const name = failure.name || failure.fileName;
                     const position = failure.startPosition;
                     const line = position.lineAndCharacter ? position.lineAndCharacter.line : position.line;
-                    const character = position.lineAndCharacter ? position.lineAndCharacter.character : position.character;
+                    const character = position.lineAndCharacter
+                        ? position.lineAndCharacter.character
+                        : position.character;
 
                     // Output in format similar to tslint for the linter to pickup.
-                    const message = `ERROR: (${failure.ruleName}) ${relative(__dirname, name)}[${line + 1}, ${character + 1}]: ${failure.failure}`;
+                    const message = `ERROR: (${failure.ruleName}) ${relative(__dirname, name)}[${line +
+                        1}, ${character + 1}]: ${failure.failure}`;
                     if (reportedLinterFailures.indexOf(message) === -1) {
                         console.error(message);
                         reportedLinterFailures.push(message);
@@ -844,11 +964,16 @@ const hygiene = (options, done) => {
         .pipe(
             es.through(null, function() {
                 if (errorCount > 0) {
-                    const errorMessage = `Hygiene failed with errors 👎 . Check 'gulpfile.js' (completed in ${new Date().getTime() - started}ms).`;
+                    const errorMessage = `Hygiene failed with errors 👎 . Check 'gulpfile.js' (completed in ${new Date().getTime() -
+                        started}ms).`;
                     console.error(colors.red(errorMessage));
                     exitHandler(options);
                 } else {
-                    console.log(colors.green(`Hygiene passed with 0 errors 👍 (completed in ${new Date().getTime() - started}ms).`));
+                    console.log(
+                        colors.green(
+                            `Hygiene passed with 0 errors 👍 (completed in ${new Date().getTime() - started}ms).`
+                        )
+                    );
                 }
                 // Reset error counter.
                 errorCount = 0;
@@ -963,12 +1088,19 @@ function getModifiedFilesSync() {
         }
 
         const repo = process.env.TRAVIS_REPO_SLUG || getAzureDevOpsVarValue('Build.Repository.Name');
-        const originOrUpstream = repo.toUpperCase() === 'MICROSOFT/VSCODE-PYTHON' || repo.toUpperCase() === 'VSCODE-PYTHON-DATASCIENCE/VSCODE-PYTHON' ? 'origin' : 'upstream';
+        const originOrUpstream =
+            repo.toUpperCase() === 'MICROSOFT/VSCODE-PYTHON' ||
+            repo.toUpperCase() === 'VSCODE-PYTHON-DATASCIENCE/VSCODE-PYTHON'
+                ? 'origin'
+                : 'upstream';
 
         // If on CI, get a list of modified files comparing against
         // PR branch and master of current (assumed 'origin') repo.
         try {
-            cp.execSync(`git remote set-branches --add ${originOrUpstream} master`, { encoding: 'utf8', cwd: __dirname });
+            cp.execSync(`git remote set-branches --add ${originOrUpstream} master`, {
+                encoding: 'utf8',
+                cwd: __dirname
+            });
             cp.execSync('git fetch', { encoding: 'utf8', cwd: __dirname });
         } catch (ex) {
             return [];

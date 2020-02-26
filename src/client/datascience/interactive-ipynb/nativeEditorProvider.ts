@@ -2,12 +2,16 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
-import { Event, EventEmitter, TextDocument, TextEditor, Uri } from 'vscode';
-
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
-import { JUPYTER_LANGUAGE } from '../../common/constants';
-import { IFileSystem } from '../../common/platform/types';
+import * as uuid from 'uuid/v4';
+import { Disposable, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
+import {
+    ICustomEditorService,
+    IWorkspaceService,
+    WebviewCustomEditorEditingDelegate,
+    WebviewCustomEditorProvider
+} from '../../common/application/types';
+import { traceInfo } from '../../common/logger';
 import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
@@ -15,70 +19,124 @@ import {
     IDisposableRegistry,
     Resource
 } from '../../common/types';
+import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../constants';
-import { IDataScienceErrorHandler, INotebookEditor, INotebookEditorProvider, INotebookServerOptions } from '../types';
+import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
+import {
+    INotebookEditor,
+    INotebookEditorProvider,
+    INotebookModel,
+    INotebookServerOptions,
+    INotebookStorage
+} from '../types';
 
+// Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
+// opening an ipynb file. This class then creates a backing storage, model, and opens a view for the file.
 @injectable()
-export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisposable {
+export class NativeEditorProvider
+    implements
+        INotebookEditorProvider,
+        WebviewCustomEditorProvider,
+        WebviewCustomEditorEditingDelegate<NotebookModelChange>,
+        IAsyncDisposable {
     public get onDidChangeActiveNotebookEditor(): Event<INotebookEditor | undefined> {
         return this._onDidChangeActiveNotebookEditor.event;
     }
-    private readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
-    private activeEditors: Map<string, INotebookEditor> = new Map<string, INotebookEditor>();
-    private executedEditors: Set<string> = new Set<string>();
-    private _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
-    private notebookCount: number = 0;
-    private openedNotebookCount: number = 0;
-    private nextNumber: number = 1;
+    public get onDidCloseNotebookEditor(): Event<INotebookEditor> {
+        return this._onDidCloseNotebookEditor.event;
+    }
+    public get onEdit(): Event<{ readonly resource: Uri; readonly edit: NotebookModelChange }> {
+        return this._editEventEmitter.event;
+    }
+
+    public get editingDelegate(): WebviewCustomEditorEditingDelegate<unknown> | undefined {
+        return this;
+    }
+
     public get onDidOpenNotebookEditor(): Event<INotebookEditor> {
         return this._onDidOpenNotebookEditor.event;
     }
-    constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService,
-        @inject(IConfigurationService) private configuration: IConfigurationService,
-        @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(ICommandManager) private readonly cmdManager: ICommandManager,
-        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
-    ) {
-        asyncRegistry.push(this);
+    public get activeEditor(): INotebookEditor | undefined {
+        return this.editors.find(e => e.visible && e.active);
+    }
 
-        // No live share sync required as open document from vscode will give us our contents.
+    public get editors(): INotebookEditor[] {
+        return [...this.openedEditors];
+    }
+    // Note, this constant has to match the value used in the package.json to register the webview custom editor.
+    public static readonly customEditorViewType = 'NativeEditorProvider.ipynb';
+    protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
+    protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
+    private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
+    private readonly _editEventEmitter = new EventEmitter<{
+        readonly resource: Uri;
+        readonly edit: NotebookModelChange;
+    }>();
+    private openedEditors: Set<INotebookEditor> = new Set<INotebookEditor>();
+    private models = new Map<string, Promise<{ model: INotebookModel; storage: INotebookStorage }>>();
+    private modelChangedHandlers: Map<string, Disposable> = new Map<string, Disposable>();
+    private executedEditors: Set<string> = new Set<string>();
+    private notebookCount: number = 0;
+    private openedNotebookCount: number = 0;
+    private _id = uuid();
+    constructor(
+        @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
+        @inject(IAsyncDisposableRegistry) protected readonly asyncRegistry: IAsyncDisposableRegistry,
+        @inject(IDisposableRegistry) protected readonly disposables: IDisposableRegistry,
+        @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
+        @inject(IConfigurationService) protected readonly configuration: IConfigurationService,
+        @inject(ICustomEditorService) private customEditorService: ICustomEditorService
+    ) {
+        traceInfo(`id is ${this._id}`);
+        asyncRegistry.push(this);
 
         // Look through the file system for ipynb files to see how many we have in the workspace. Don't wait
         // on this though.
-        const findFilesPromise = this.workspace.findFiles('**/*.ipynb');
+        const findFilesPromise = workspace.findFiles('**/*.ipynb');
         if (findFilesPromise && findFilesPromise.then) {
             findFilesPromise.then(r => (this.notebookCount += r.length));
         }
 
-        this.disposables.push(
-            this.documentManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditorHandler.bind(this))
-        );
+        // Register for the custom editor service.
+        customEditorService.registerWebviewCustomEditorProvider(NativeEditorProvider.customEditorViewType, this, {
+            enableFindWidget: true,
+            retainContextWhenHidden: true
+        });
+    }
 
-        // Since we may have activated after a document was opened, also run open document for all documents.
-        // This needs to be async though. Iterating over all of these in the .ctor is crashing the extension
-        // host, so postpone till after the ctor is finished.
-        setTimeout(() => {
-            if (this.documentManager.textDocuments && this.documentManager.textDocuments.forEach) {
-                this.documentManager.textDocuments.forEach(doc => this.openNotebookAndCloseEditor(doc, false));
+    public save(resource: Uri): Promise<void> {
+        return this.loadStorage(resource).then(async s => {
+            if (s) {
+                await s.save();
             }
-        }, 0);
-
-        // // Reopen our list of files that were open during shutdown. Actually not doing this for now. The files
-        // don't open until the extension loads and all they all steal focus.
-        // const uriList = this.workspaceStorage.get<Uri[]>(NotebookUriListStorageKey);
-        // if (uriList && uriList.length) {
-        //     uriList.forEach(u => {
-        //         this.fileSystem.readFile(u.fsPath).then(c => this.open(u, c).ignoreErrors()).ignoreErrors();
-        //     });
-        // }
+        });
+    }
+    public saveAs(resource: Uri, targetResource: Uri): Promise<void> {
+        return this.loadStorage(resource).then(async s => {
+            if (s) {
+                await s.saveAs(targetResource);
+            }
+        });
+    }
+    public applyEdits(resource: Uri, edits: readonly NotebookModelChange[]): Promise<void> {
+        return this.loadModel(resource).then(s => {
+            if (s) {
+                edits.forEach(e => s.update({ ...e, source: 'redo' }));
+            }
+        });
+    }
+    public undoEdits(resource: Uri, edits: readonly NotebookModelChange[]): Promise<void> {
+        return this.loadModel(resource).then(s => {
+            if (s) {
+                edits.forEach(e => s.update({ ...e, source: 'undo' }));
+            }
+        });
+    }
+    public async resolveWebviewEditor(resource: Uri, panel: WebviewPanel) {
+        await this.createNotebookEditor(resource, panel);
     }
 
     public async dispose(): Promise<void> {
@@ -93,48 +151,47 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
             sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, undefined, { count: this.notebookCount });
         }
     }
-    public get activeEditor(): INotebookEditor | undefined {
-        const active = [...this.activeEditors.entries()].find(e => e[1].active);
-        if (active) {
-            return active[1];
-        }
-    }
 
-    public get editors(): INotebookEditor[] {
-        return [...this.activeEditors.values()];
-    }
+    public async open(file: Uri): Promise<INotebookEditor> {
+        // Create a deferred promise that will fire when the notebook
+        // actually opens
+        const deferred = createDeferred<INotebookEditor>();
 
-    public async open(file: Uri, contents: string): Promise<INotebookEditor> {
-        // See if this file is open or not already
-        let editor = this.activeEditors.get(file.fsPath);
-        if (!editor) {
-            editor = await this.create(file, contents);
-            this.onOpenedEditor(editor);
-        } else {
-            await this.showEditor(editor);
-        }
-        return editor;
+        // Sign up for open event once it does open
+        let disposable: Disposable | undefined;
+        const handler = (e: INotebookEditor) => {
+            if (arePathsSame(e.file.fsPath, file.fsPath)) {
+                if (disposable) {
+                    disposable.dispose();
+                }
+                deferred.resolve(e);
+            }
+        };
+        disposable = this._onDidOpenNotebookEditor.event(handler);
+
+        // Send an open command.
+        this.customEditorService.openEditor(file).ignoreErrors();
+
+        // Promise should resolve when the file opens.
+        return deferred.promise;
     }
 
     public async show(file: Uri): Promise<INotebookEditor | undefined> {
-        // See if this file is open or not already
-        const editor = this.activeEditors.get(file.fsPath);
-        if (editor) {
-            await this.showEditor(editor);
-        }
-        return editor;
+        return this.open(file);
     }
 
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
     public async createNew(contents?: string): Promise<INotebookEditor> {
         // Create a new URI for the dummy file using our root workspace path
         const uri = await this.getNextNewNotebookUri();
+
+        // Update number of notebooks in the workspace
         this.notebookCount += 1;
-        if (contents) {
-            return this.open(uri, contents);
-        } else {
-            return this.open(uri, '');
-        }
+
+        // Set these contents into the storage before the file opens
+        await this.loadStorage(uri, contents);
+
+        return this.open(uri);
     }
 
     public async getNotebookOptions(resource: Resource): Promise<INotebookServerOptions> {
@@ -154,181 +211,115 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
             purpose: Identifiers.HistoryPurpose // Share the same one as the interactive window. Just need a new session
         };
     }
+    protected async createNotebookEditor(resource: Uri, panel?: WebviewPanel) {
+        try {
+            // Get the model
+            const model = await this.loadModel(resource);
 
-    /**
-     * Open ipynb files when user opens an ipynb file.
-     *
-     * @private
-     * @memberof NativeEditorProvider
-     */
-    private onDidChangeActiveTextEditorHandler(editor?: TextEditor) {
-        // I we're a source control diff view, then ignore this editor.
-        if (!editor || this.isEditorPartOfDiffView(editor)) {
-            return;
+            // Create a new editor
+            const editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
+
+            // Load it (should already be visible)
+            return editor
+                .load(model, panel)
+                .then(() => this.openedEditor(editor))
+                .then(() => editor);
+        } catch (exc) {
+            // Send telemetry indicating a failure
+            sendTelemetryEvent(Telemetry.OpenNotebookFailure);
+            throw exc;
         }
-        this.openNotebookAndCloseEditor(editor.document, true).ignoreErrors();
     }
 
-    private async showEditor(editor: INotebookEditor) {
-        await editor.show();
-        this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
-    }
-
-    private async create(file: Uri, contents: string): Promise<INotebookEditor> {
-        const editor = this.serviceContainer.get<INotebookEditor>(INotebookEditor);
-        await editor.load(contents, file);
-        this.disposables.push(editor.closed(this.onClosedEditor.bind(this)));
-        this.disposables.push(editor.executed(this.onExecutedEditor.bind(this)));
-        await this.showEditor(editor);
-        return editor;
-    }
-
-    private onClosedEditor(e: INotebookEditor) {
-        this.activeEditors.delete(e.file.fsPath);
-        this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
-    }
-
-    private onExecutedEditor(e: INotebookEditor) {
-        this.executedEditors.add(e.file.fsPath);
-    }
-
-    private onOpenedEditor(e: INotebookEditor) {
-        this.activeEditors.set(e.file.fsPath, e);
-        this.disposables.push(e.saved(this.onSavedEditor.bind(this, e.file.fsPath)));
+    protected openedEditor(editor: INotebookEditor): void {
         this.openedNotebookCount += 1;
-        this._onDidOpenNotebookEditor.fire(e);
-        this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
-        this.disposables.push(e.onDidChangeViewState(this.onDidChangeViewState, this));
+        if (!this.executedEditors.has(editor.file.fsPath)) {
+            editor.executed(this.onExecuted.bind(this));
+        }
+        this.disposables.push(editor.onDidChangeViewState(this.onChangedViewState, this));
+        this.openedEditors.add(editor);
+        editor.closed(this.closedEditor.bind(this));
+        this._onDidOpenNotebookEditor.fire(editor);
     }
-    private onDidChangeViewState() {
+
+    private closedEditor(editor: INotebookEditor): void {
+        this.openedEditors.delete(editor);
+        // If last editor, dispose of the storage
+        const key = editor.file.toString();
+        if (![...this.openedEditors].find(e => e.file.toString() === key)) {
+            this.modelChangedHandlers.delete(key);
+            this.models.delete(key);
+        }
+        this._onDidCloseNotebookEditor.fire(editor);
+    }
+
+    private onChangedViewState(): void {
         this._onDidChangeActiveNotebookEditor.fire(this.activeEditor);
     }
 
-    private onSavedEditor(oldPath: string, e: INotebookEditor) {
-        // Switch our key for this editor
-        if (this.activeEditors.has(oldPath)) {
-            this.activeEditors.delete(oldPath);
+    private onExecuted(editor: INotebookEditor): void {
+        if (editor) {
+            this.executedEditors.add(editor.file.fsPath);
         }
-        this.activeEditors.set(e.file.fsPath, e);
+    }
+
+    private async modelChanged(file: Uri, change: NotebookModelChange): Promise<void> {
+        // If the cells change because of a UI event, tell VS code about it
+        if (change.source === 'user') {
+            // Skip version and file changes. They can't be undone
+            switch (change.kind) {
+                case 'version':
+                    break;
+                case 'file':
+                    // Update our storage
+                    const promise = this.models.get(change.oldFile.toString());
+                    this.models.delete(change.oldFile.toString());
+                    this.models.set(change.newFile.toString(), promise!);
+                    break;
+                default:
+                    this._editEventEmitter.fire({ resource: file, edit: change });
+                    break;
+            }
+        }
+    }
+
+    private async loadModel(file: Uri, contents?: string): Promise<INotebookModel> {
+        const modelAndStorage = await this.loadModelAndStorage(file, contents);
+        return modelAndStorage.model;
+    }
+
+    private async loadStorage(file: Uri, contents?: string): Promise<INotebookStorage> {
+        const modelAndStorage = await this.loadModelAndStorage(file, contents);
+        return modelAndStorage.storage;
+    }
+
+    private loadModelAndStorage(file: Uri, contents?: string) {
+        const key = file.toString();
+        let modelPromise = this.models.get(key);
+        if (!modelPromise) {
+            const storage = this.serviceContainer.get<INotebookStorage>(INotebookStorage);
+            modelPromise = storage.load(file, contents).then(m => {
+                if (!this.modelChangedHandlers.has(key)) {
+                    this.modelChangedHandlers.set(key, m.changed(this.modelChanged.bind(this, file)));
+                }
+                return { model: m, storage };
+            });
+
+            this.models.set(key, modelPromise);
+        }
+        return modelPromise;
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {
-        // Start in the root and look for files starting with untitled
-        let number = 1;
-        const dir = this.workspace.rootPath;
-        if (dir) {
-            const existing = await this.fileSystem.search(
-                path.join(dir, `${localize.DataScience.untitledNotebookFileName()}-*.ipynb`)
-            );
+        // See if we have any untitled storage already
+        const untitledStorage = [...this.models.keys()].filter(k => Uri.parse(k).scheme === 'untitled');
 
-            // Sort by number
-            existing.sort();
+        // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
+        // our map, so we'll keep creating new untitled notebooks.
+        const fileName = `${localize.DataScience.untitledNotebookFileName()}-${untitledStorage.length + 1}.ipynb`;
+        const fileUri = Uri.file(fileName);
 
-            // Add one onto the end of the last one
-            if (existing.length > 0) {
-                const match = /(\w+)-(\d+)\.ipynb/.exec(path.basename(existing[existing.length - 1]));
-                if (match && match.length > 1) {
-                    number = parseInt(match[2], 10);
-                }
-                return Uri.file(path.join(dir, `${localize.DataScience.untitledNotebookFileName()}-${number + 1}`));
-            }
-        }
-
-        const result = Uri.file(`${localize.DataScience.untitledNotebookFileName()}-${this.nextNumber}`);
-        this.nextNumber += 1;
-        return result;
-    }
-
-    private openNotebookAndCloseEditor = async (
-        document: TextDocument,
-        closeDocumentBeforeOpeningNotebook: boolean
-    ) => {
-        // See if this is an ipynb file
-        if (this.isNotebook(document) && this.configuration.getSettings(document.uri).datascience.useNotebookEditor) {
-            const closeActiveEditorCommand = 'workbench.action.closeActiveEditor';
-            try {
-                const contents = document.getText();
-                const uri = document.uri;
-
-                if (closeDocumentBeforeOpeningNotebook) {
-                    if (
-                        !this.documentManager.activeTextEditor ||
-                        this.documentManager.activeTextEditor.document !== document
-                    ) {
-                        await this.documentManager.showTextDocument(document);
-                    }
-                    await this.cmdManager.executeCommand(closeActiveEditorCommand);
-                }
-
-                // Open our own editor.
-                await this.open(uri, contents);
-
-                if (!closeDocumentBeforeOpeningNotebook) {
-                    // Then switch back to the ipynb and close it.
-                    // If we don't do it in this order, the close will switch to the wrong item
-                    await this.documentManager.showTextDocument(document);
-                    await this.cmdManager.executeCommand(closeActiveEditorCommand);
-                }
-            } catch (e) {
-                return this.dataScienceErrorHandler.handleError(e);
-            }
-        }
-    };
-    /**
-     * Check if user is attempting to compare two ipynb files.
-     * If yes, then return `true`, else `false`.
-     *
-     * @private
-     * @param {TextEditor} editor
-     * @memberof NativeEditorProvider
-     */
-    private isEditorPartOfDiffView(editor?: TextEditor) {
-        if (!editor) {
-            return false;
-        }
-        // There's no easy way to determine if the user is openeing a diff view.
-        // One simple way is to check if there are 2 editor opened, and if both editors point to the same file
-        // One file with the `file` scheme and the other with the `git` scheme.
-        if (this.documentManager.visibleTextEditors.length <= 1) {
-            return false;
-        }
-
-        // If we have both `git` & `file` schemes for the same file, then we're most likely looking at a diff view.
-        // Also ensure both editors are in the same view column.
-        // Possible we have a git diff view (with two editors git and file scheme), and we open the file view
-        // on the side (different view column).
-        const gitSchemeEditor = this.documentManager.visibleTextEditors.find(
-            editorUri =>
-                editorUri.document.uri.scheme === 'git' &&
-                this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath)
-        );
-
-        if (!gitSchemeEditor) {
-            return false;
-        }
-
-        const fileSchemeEditor = this.documentManager.visibleTextEditors.find(
-            editorUri =>
-                editorUri.document.uri.scheme === 'file' &&
-                this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
-                editorUri.viewColumn === gitSchemeEditor.viewColumn
-        );
-        if (!fileSchemeEditor) {
-            return false;
-        }
-
-        // Also confirm the document we have passed in, belongs to one of the editors.
-        // If its not, then its another document (that is not in the diff view).
-        return gitSchemeEditor === editor || fileSchemeEditor === editor;
-    }
-    private isNotebook(document: TextDocument) {
-        // Only support file uris (we don't want to automatically open any other ipynb file from another resource as a notebook).
-        // E.g. when opening a document for comparison, the scheme is `git`, in live share the scheme is `vsls`.
-        const validUriScheme = document.uri.scheme === 'file' || document.uri.scheme === 'vsls';
-        return (
-            validUriScheme &&
-            (document.languageId === JUPYTER_LANGUAGE ||
-                path.extname(document.fileName).toLocaleLowerCase() === '.ipynb')
-        );
+        // Turn this back into an untitled
+        return fileUri.with({ scheme: 'untitled', path: fileName });
     }
 }

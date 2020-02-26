@@ -1754,6 +1754,10 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.StartSessionFailedJupyter]: undefined | never;
     /**
+     * Telemetry event fired if a failure occurs loading a notebook
+     */
+    [Telemetry.OpenNotebookFailure]: undefined | never;
+    /**
      * Telemetry event sent to capture total time taken for completions list to be provided by LS.
      * This is used to compare against time taken by Jupyter.
      *

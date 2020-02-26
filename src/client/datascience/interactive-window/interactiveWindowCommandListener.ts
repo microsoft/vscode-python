@@ -217,7 +217,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                             ...questions
                         );
                         if (selection === openQuestion1) {
-                            await this.ipynbProvider.open(uri, await this.fileSystem.readFile(uri.fsPath));
+                            await this.ipynbProvider.open(uri);
                         }
                         if (selection === openQuestion2) {
                             // If the user wants to, open the notebook they just generated.
@@ -287,7 +287,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                             ...questions
                         );
                         if (selection === openQuestion1) {
-                            await this.ipynbProvider.open(Uri.file(output), await this.fileSystem.readFile(output));
+                            await this.ipynbProvider.open(Uri.file(output));
                         }
                         if (selection === openQuestion2) {
                             // If the user wants to, open the notebook they just generated.

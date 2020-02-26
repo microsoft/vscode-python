@@ -1,18 +1,9 @@
 {
-    "rulesDirectory": [
-        "./build/tslint-rules"
-    ],
+    "rulesDirectory": ["./build/tslint-rules"],
     "linterOptions": {
-        "exclude": [
-            "src/ipywidgets"
-        ]
+        "exclude": ["src/ipywidgets"]
     },
-    "extends": [
-        "tslint-eslint-rules",
-        "tslint-microsoft-contrib",
-        "tslint-plugin-prettier",
-        "tslint-config-prettier"
-    ],
+    "extends": ["tslint-eslint-rules", "tslint-microsoft-contrib", "tslint-plugin-prettier", "tslint-config-prettier"],
     "rules": {
         "prettier": true,
         "messages-must-be-localized": true,
@@ -22,21 +13,14 @@
         "non-literal-fs-path": false,
         "newline-per-chained-call": false,
         "class-name": true,
-        "semicolon": [
-            true, "always", "strict-bound-class-methods"
-        ],
+        "semicolon": [true, "always", "strict-bound-class-methods"],
         "triple-equals": true,
         "no-relative-imports": false,
         "max-line-length": false,
         "typedef": false,
         "no-string-throw": true,
         "missing-jsdoc": false,
-        "one-line": [
-            true,
-            "check-catch",
-            "check-finally",
-            "check-else"
-        ],
+        "one-line": [true, "check-catch", "check-finally", "check-else"],
         "no-parameter-properties": false,
         "no-parameter-reassignment": false,
         "no-reserved-keywords": false,
@@ -45,11 +29,7 @@
         "align": false,
         "linebreak-style": false,
         "strict-boolean-expressions": false,
-        "await-promise": [
-            true,
-            "Thenable",
-            "PromiseLike"
-        ],
+        "await-promise": [true, "Thenable", "PromiseLike"],
         "completed-docs": false,
         "no-unsafe-any": false,
         "no-backbone-get-set-outside-model": false,
@@ -67,9 +47,7 @@
         "no-bitwise": false,
         "eofline": true,
         "switch-final-break": false,
-        "no-implicit-dependencies": [
-            "vscode"
-        ],
+        "no-implicit-dependencies": ["vscode"],
         "no-unnecessary-type-assertion": false,
         "no-submodule-imports": false,
         "no-redundant-jsdoc": false,

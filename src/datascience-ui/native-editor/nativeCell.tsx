@@ -19,11 +19,12 @@ import { CellOutput } from '../interactive-common/cellOutput';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
 import { CursorPos, ICellViewModel, IFont } from '../interactive-common/mainState';
-import { getOSType } from '../react-common/constants';
+import { getOSType, UseCustomEditor } from '../react-common/constants';
 import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
+import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { AddCellLine } from './addCellLine';
 import { actionCreators } from './redux/actions';
 
@@ -43,6 +44,7 @@ interface INativeCellBaseProps {
     editorOptions: monacoEditor.editor.IEditorOptions;
     themeMatplotlibPlots: boolean | undefined;
     focusPending: number;
+    busy: boolean;
 }
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
@@ -283,6 +285,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
             case 'l':
                 if (!this.isFocused() && this.isSelected()) {
                     e.stopPropagation();
+                    e.preventDefault();
                     this.props.toggleLineNumbers(cellId);
                     this.props.sendCommand(NativeCommandType.ToggleLineNumbers, 'keyboard');
                 }
@@ -290,10 +293,12 @@ export class NativeCell extends React.Component<INativeCellProps> {
             case 'o':
                 if (!this.isFocused() && this.isSelected()) {
                     e.stopPropagation();
+                    e.preventDefault();
                     this.props.toggleOutput(cellId);
                     this.props.sendCommand(NativeCommandType.ToggleOutput, 'keyboard');
                 }
                 break;
+            case 'NumpadEnter':
             case 'Enter':
                 if (e.shiftKey) {
                     this.shiftEnterCell(e);
@@ -316,20 +321,22 @@ export class NativeCell extends React.Component<INativeCellProps> {
             case 'a':
                 if (!this.isFocused()) {
                     e.stopPropagation();
-                    this.props.insertAbove(cellId);
+                    e.preventDefault();
+                    setTimeout(() => this.props.insertAbove(cellId), 1);
                     this.props.sendCommand(NativeCommandType.InsertAbove, 'keyboard');
                 }
                 break;
             case 'b':
                 if (!this.isFocused()) {
                     e.stopPropagation();
-                    this.props.insertBelow(cellId);
+                    e.preventDefault();
+                    setTimeout(() => this.props.insertBelow(cellId), 1);
                     this.props.sendCommand(NativeCommandType.InsertBelow, 'keyboard');
                 }
                 break;
             case 'z':
             case 'Z':
-                if (!this.isFocused()) {
+                if (!this.isFocused() && !UseCustomEditor) {
                     if (e.shiftKey && !e.ctrlKey && !e.altKey) {
                         e.stopPropagation();
                         this.props.redo();
@@ -341,7 +348,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     }
                 }
                 break;
-
             default:
                 break;
         }
@@ -445,7 +451,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private addNewCell = () => {
-        this.props.insertBelow(this.cellId);
+        setTimeout(() => this.props.insertBelow(this.cellId), 1);
         this.props.sendCommand(NativeCommandType.AddToEnd, 'mouse');
     };
 
@@ -567,6 +573,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         onClick={runCell}
                         tooltip={getLocString('DataScience.runCell', 'Run cell')}
                         hidden={this.isMarkdownCell()}
+                        disabled={this.props.busy}
                     >
                         <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Run} />
                     </ImageButton>
@@ -624,7 +631,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private renderInput = () => {
         if (this.shouldRenderInput()) {
             return (
-                <div>
+                <div className="cell-input-wrapper">
                     {this.renderMiddleToolbar()}
                     <CellInput
                         cellVM={this.props.cellVM}
@@ -644,6 +651,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         keyDown={this.keyDownInput}
                         showLineNumbers={this.props.cellVM.showLineNumbers}
                         font={this.props.font}
+                        disableUndoStack={UseCustomEditor}
+                        codeVersion={this.props.cellVM.codeVersion ? this.props.cellVM.codeVersion : 1}
                         focusPending={this.props.focusPending}
                     />
                 </div>
@@ -661,8 +670,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
         this.props.unfocusCell(this.cellId, this.getCurrentCode());
     };
 
-    private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string) => {
-        this.props.editCell(cellId, changes, modelId, this.getCurrentCode());
+    private onCodeChange = (e: IMonacoModelContentChangeEvent) => {
+        this.props.editCell(this.getCell().id, e);
     };
 
     private onCodeCreated = (_code: string, _file: string, cellId: string, modelId: string) => {
@@ -674,7 +683,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const toolbar = this.props.cellVM.cell.data.cell_type === 'markdown' ? this.renderMiddleToolbar() : null;
         if (this.shouldRenderOutput()) {
             return (
-                <div>
+                <div className="cell-output-wrapper">
                     {toolbar}
                     <CellOutput
                         cellVM={this.props.cellVM}

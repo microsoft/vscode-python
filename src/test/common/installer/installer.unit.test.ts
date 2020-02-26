@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length no-invalid-this messages-must-be-localized
+// tslint:disable:max-func-body-length no-invalid-this messages-must-be-localized no-any
 
 import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';

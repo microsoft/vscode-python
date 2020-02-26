@@ -8,7 +8,6 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 
 import { ICommandManager } from '../../common/application/types';
-import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
@@ -20,8 +19,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     constructor(
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
-        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
-        @inject(IFileSystem) private fileSystem: IFileSystem
+        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
     ) {}
 
     public register(commandManager: ICommandManager): void {
@@ -117,9 +115,8 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
     private async openNotebook(file?: Uri): Promise<void> {
         if (file && path.extname(file.fsPath).toLocaleLowerCase() === '.ipynb') {
             try {
-                const contents = await this.fileSystem.readFile(file.fsPath);
                 // Then take the contents and load it.
-                await this.provider.open(file, contents);
+                await this.provider.open(file);
             } catch (e) {
                 return this.dataScienceErrorHandler.handleError(e);
             }

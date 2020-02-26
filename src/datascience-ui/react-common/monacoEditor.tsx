@@ -18,7 +18,9 @@ const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 
 import { noop } from '../../client/common/utils/misc';
+import { CursorPos } from '../interactive-common/mainState';
 import './monacoEditor.css';
+import { generateChangeEvent, IMonacoModelContentChangeEvent } from './monacoHelpers';
 
 const LINE_HEIGHT = 18;
 
@@ -39,12 +41,16 @@ enum WidgetCSSSelector {
 export interface IMonacoEditorProps {
     language: string;
     value: string;
+    previousValue: string | undefined;
     theme?: string;
     outermostParentClass: string;
     options: monacoEditor.editor.IEditorConstructionOptions;
     testMode?: boolean;
     forceBackground?: string;
     measureWidthClassName?: string;
+    version: number;
+    cursorPos: CursorPos | monacoEditor.IPosition;
+    modelChanged(e: IMonacoModelContentChangeEvent): void;
     editorMounted(editor: monacoEditor.editor.IStandaloneCodeEditor): void;
     openLink(uri: monacoEditor.Uri): void;
 }
@@ -78,6 +84,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private monacoContainer: HTMLDivElement | undefined;
     private lineTops: { top: number; index: number }[] = [];
     private debouncedComputeLineTops = debounce(this.computeLineTops.bind(this), 100);
+    private skipNotifications = false;
 
     /**
      * Reference to parameter widget (used by monaco to display parameter docs).
@@ -135,6 +142,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const model = editor.getModel();
             if (model) {
                 model.setEOL(monacoEditor.editor.EndOfLineSequence.LF);
+
+                // Listen to model changes too.
+                this.subscriptions.push(model?.onDidChangeContent(this.onModelChanged));
             }
 
             // When testing, eliminate the _assertNotDisposed call. It can break tests if autocomplete
@@ -314,7 +324,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 this.state.model &&
                 this.state.model.getValue() !== this.props.value
             ) {
-                this.state.model.setValue(this.props.value);
+                this.forceValue(this.props.value, this.props.cursorPos);
+            } else if (
+                prevProps.version !== this.props.version &&
+                this.state.model &&
+                this.state.model.getVersionId() < this.props.version
+            ) {
+                this.forceValue(this.props.value, this.props.cursorPos);
             }
         }
 
@@ -381,6 +397,91 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     public getVisibleLineCount(): number {
         return this.getVisibleLines().length;
     }
+
+    public giveFocus(cursorPos: CursorPos | monacoEditor.IPosition) {
+        const readOnly = this.props.options.readOnly;
+        if (this.state.editor && !readOnly) {
+            this.state.editor.focus();
+        }
+        if (this.state.editor && cursorPos !== CursorPos.Current) {
+            const current = this.state.editor.getPosition();
+            const lineNumber = cursorPos === CursorPos.Top ? 1 : this.state.editor.getModel()!.getLineCount();
+            const column = current && current.lineNumber === lineNumber ? current.column : 1;
+            this.state.editor.setPosition({ lineNumber, column });
+        }
+    }
+
+    public getContents(): string {
+        if (this.state.model) {
+            // Make sure to remove any carriage returns as they're not expected
+            // in an ipynb file (and would mess up updates from the file)
+            return this.state.model.getValue().replace(/\r/g, '');
+        }
+        return '';
+    }
+
+    public getVersionId(): number {
+        return this.state.model ? this.state.model.getVersionId() : 1;
+    }
+
+    public getPosition(): monacoEditor.Position | null {
+        return this.state.editor!.getPosition();
+    }
+
+    public setValue(text: string, cursorPos: CursorPos) {
+        if (this.state.model && this.state.editor && this.state.model.getValue() !== text) {
+            this.forceValue(text, cursorPos);
+        }
+    }
+
+    private closeSuggestWidget() {
+        // tslint:disable-next-line: no-any
+        const suggest = this.state.editor?.getContribution('editor.contrib.suggestController') as any;
+        if (suggest && suggest._widget) {
+            suggest._widget.getValue().hideWidget();
+        }
+    }
+
+    private forceValue(text: string, cursorPos: CursorPos | monacoEditor.IPosition) {
+        if (this.state.model && this.state.editor) {
+            // Save current position. May need it to update after setting.
+            const current = this.state.editor.getPosition();
+
+            // Disable change notifications as we know this
+            // is different.
+            this.skipNotifications = true;
+
+            // Close any suggestions that are open
+            this.closeSuggestWidget();
+
+            // Change our text. This shouldn't fire an update to the model
+            this.state.model.setValue(text);
+
+            this.skipNotifications = false;
+
+            // Compute new position
+            if (typeof cursorPos !== 'object') {
+                const lineNumber = cursorPos === CursorPos.Top ? 1 : this.state.editor.getModel()!.getLineCount();
+                const column = current && current.lineNumber === lineNumber ? current.column : 1;
+                this.state.editor.setPosition({ lineNumber, column });
+            } else {
+                this.state.editor.setPosition(cursorPos);
+            }
+        }
+    }
+
+    private onModelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
+        // If not skipping notifications, send an event
+        if (!this.skipNotifications && this.state.model && this.state.editor) {
+            this.props.modelChanged(
+                generateChangeEvent(
+                    e,
+                    this.state.model,
+                    this.props.previousValue ? this.props.previousValue : this.props.value
+                )
+            );
+        }
+    };
 
     private getCurrentVisibleLinePosOrIndex(pickResult: (pos: number, index: number) => number): number | undefined {
         // Convert the current cursor into a top and use that to find which visible
@@ -658,7 +759,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
         // Find the parameter widget the user is currently hovering over.
         this.parameterWidget = hoverElements.find(item => {
-            if (!item.className) {
+            if (typeof item.className !== 'string') {
                 return false;
             }
             // Check if user is hovering over a parameter widget.

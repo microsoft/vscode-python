@@ -4,7 +4,13 @@
 import { inject, injectable } from 'inversify';
 import { Event, Uri } from 'vscode';
 
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import {
+    ICommandManager,
+    ICustomEditorService,
+    IDocumentManager,
+    IWorkspaceService
+} from '../../client/common/application/types';
+import { UseCustomEditorApi } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
 import {
     IAsyncDisposableRegistry,
@@ -16,6 +22,7 @@ import { InteractiveWindowMessageListener } from '../../client/datascience/inter
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { NativeEditorProviderOld } from '../../client/datascience/interactive-ipynb/nativeEditorProviderOld';
 import {
     IDataScienceErrorHandler,
     INotebookEditor,
@@ -29,33 +36,50 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
     public get onDidChangeActiveNotebookEditor() {
         return this.realProvider.onDidChangeActiveNotebookEditor;
     }
+    public get onDidCloseNotebookEditor() {
+        return this.realProvider.onDidCloseNotebookEditor;
+    }
     private realProvider: NativeEditorProvider;
     public get onDidOpenNotebookEditor(): Event<INotebookEditor> {
         return this.realProvider.onDidOpenNotebookEditor;
     }
 
     constructor(
+        @inject(UseCustomEditorApi) useCustomEditor: boolean,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(ICustomEditorService) customEditorService: ICustomEditorService,
+        @inject(IFileSystem) fs: IFileSystem,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(ICommandManager) cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) dataScienceErrorHandler: IDataScienceErrorHandler
     ) {
-        this.realProvider = new NativeEditorProvider(
-            serviceContainer,
-            asyncRegistry,
-            disposables,
-            workspace,
-            configuration,
-            fileSystem,
-            documentManager,
-            cmdManager,
-            dataScienceErrorHandler
-        );
+        if (useCustomEditor) {
+            this.realProvider = new NativeEditorProvider(
+                serviceContainer,
+                asyncRegistry,
+                disposables,
+                workspace,
+                configuration,
+                customEditorService
+            );
+        } else {
+            this.realProvider = new NativeEditorProviderOld(
+                serviceContainer,
+                asyncRegistry,
+                disposables,
+                workspace,
+                configuration,
+                customEditorService,
+                fs,
+                documentManager,
+                cmdManager,
+                dataScienceErrorHandler
+            );
+        }
     }
 
     public get activeEditor(): INotebookEditor | undefined {
@@ -66,8 +90,8 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
         return this.realProvider.editors;
     }
 
-    public async open(file: Uri, contents: string): Promise<INotebookEditor> {
-        const result = await this.realProvider.open(file, contents);
+    public async open(file: Uri): Promise<INotebookEditor> {
+        const result = await this.realProvider.open(file);
 
         // During testing the MainPanel sends the init message before our interactive window is created.
         // Pretend like it's happening now

@@ -24,6 +24,8 @@ elif isinstance(_VSCODE_evalResult, dict):
     _VSCODE_df = _VSCODE_pd.Series.to_frame(_VSCODE_evalResult)
 elif _VSCODE_targetVariable["type"] == "ndarray":
     _VSCODE_df = _VSCODE_pd.DataFrame(_VSCODE_evalResult)
+elif hasattr(_VSCODE_df, "toPandas"):
+    _VSCODE_df = _VSCODE_df.toPandas()
 # If not a known type, then just let pandas handle it.
 elif not (hasattr(_VSCODE_df, "iloc")):
     _VSCODE_df = _VSCODE_pd.DataFrame(_VSCODE_evalResult)

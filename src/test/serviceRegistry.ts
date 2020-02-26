@@ -182,7 +182,7 @@ class FakeVSCodeFileSystemAPI {
         return fsextra.rename(src.fsPath, dest.fsPath);
     }
 }
-class LegacyFileSystem extends FileSystem {
+export class LegacyFileSystem extends FileSystem {
     constructor() {
         super();
         const vscfs = new FakeVSCodeFileSystemAPI();
