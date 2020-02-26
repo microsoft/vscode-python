@@ -18,6 +18,7 @@ const OptionsWithArguments = [
     '-n', // -n is a pytest-xdist option
     '--assert',
     '--basetemp',
+    '--cache-show',
     '--capture',
     '--color',
     '--confcutdir',
@@ -31,6 +32,7 @@ const OptionsWithArguments = [
     '--doctest-report',
     '--durations',
     '--ignore',
+    '--ignore-glob',
     '--import-mode',
     '--junit-prefix',
     '--junit-xml',
@@ -65,7 +67,6 @@ const OptionsWithArguments = [
 
 const OptionsWithoutArguments = [
     '--cache-clear',
-    '--cache-show',
     '--collect-in-virtualenv',
     '--collect-only',
     '--continue-on-collection-errors',
@@ -106,7 +107,11 @@ const OptionsWithoutArguments = [
     '--setup-plan',
     '--setup-show',
     '--showlocals',
+    '--stepwise',
+    '--sw',
+    '--stepwise-skip',
     '--strict',
+    '--strict-markers',
     '--trace-config',
     '--verbose',
     '--version',
