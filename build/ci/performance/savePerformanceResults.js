@@ -26,72 +26,36 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
             if (jsonReadError) {
                 // File doesn't exist, so we create it
                 jsonObj.testsuites.testsuite.forEach(suite => {
-                    console.log('==========');
-                    console.log(suite);
-                    console.log('==========');
-                    if (parseInt(suite.tests, 10) > 0) {
-                        if (Array.isArray(suite.testcase)) {
-                            suite.testcase.forEach(testcase => {
-                                const test = {
-                                    name: testcase.name,
-                                    times: [parseFloat(testcase.time)]
-                                };
-                                performanceData.push(test);
-                            });
-                        } else {
-                            try {
-                                const test = {
-                                    name: suite.testcase.name,
-                                    times: [parseFloat(suite.testcase.time)]
-                                };
-                                performanceData.push(test);
-                            } catch {}
-                        }
+                    if (parseInt(suite.tests, 10) > 0 && Array.isArray(suite.testcase)) {
+                        suite.testcase.forEach(testcase => {
+                            const test = {
+                                name: testcase.name,
+                                times: [parseFloat(testcase.time)]
+                            };
+                            performanceData.push(test);
+                        });
                     }
                 });
             } else {
                 performanceData = JSON.parse(data);
 
                 jsonObj.testsuites.testsuite.forEach(suite => {
-                    console.log('==========');
-                    console.log(suite);
-                    console.log('==========');
-                    if (parseInt(suite.tests, 10) > 0) {
-                        if (Array.isArray(suite.testcase)) {
-                            suite.testcase.forEach(testcase => {
-                                let test = performanceData.find(x => x.name === testcase.name);
-                                if (test) {
-                                    // if the test name is already there, we add the new time
-                                    test.times.push(parseFloat(testcase.time));
-                                } else {
-                                    // if its not there, we add the whole thing
-                                    const test = {
-                                        name: testcase.name,
-                                        times: [parseFloat(testcase.time)]
-                                    };
+                    if (parseInt(suite.tests, 10) > 0 && Array.isArray(suite.testcase)) {
+                        suite.testcase.forEach(testcase => {
+                            let test = performanceData.find(x => x.name === testcase.name);
+                            if (test) {
+                                // if the test name is already there, we add the new time
+                                test.times.push(parseFloat(testcase.time));
+                            } else {
+                                // if its not there, we add the whole thing
+                                const test = {
+                                    name: testcase.name,
+                                    times: [parseFloat(testcase.time)]
+                                };
 
-                                    performanceData.push(test);
-                                }
-                            });
-                        } else {
-                            if (suite.testcase && suite.testcase.name) {
-                                let test = performanceData.find(x => x.name === suite.testcase.name);
-                                if (test) {
-                                    // if the test name is already there, we add the new time
-                                    test.times.push(parseFloat(suite.testcase.time));
-                                } else {
-                                    try {
-                                        // if its not there, we add the whole thing
-                                        test = {
-                                            name: suite.testcase.name,
-                                            times: [parseFloat(suite.testcase.time)]
-                                        };
-
-                                        performanceData.push(test);
-                                    } catch {}
-                                }
+                                performanceData.push(test);
                             }
-                        }
+                        });
                     }
                 });
             }

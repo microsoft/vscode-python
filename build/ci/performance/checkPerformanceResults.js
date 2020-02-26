@@ -40,36 +40,19 @@ fs.readFile(xmlFile, 'utf8', (xmlFileError, xmlData) => {
                 const avg = result.times.reduce((a, b) => parseFloat(a) + parseFloat(b)) / result.times.length;
 
                 resultsJson.testsuites.testsuite.forEach(suite => {
-                    if (parseInt(suite.tests, 10) > 0) {
-                        if (Array.isArray(suite.testcase)) {
-                            const testcase = suite.testcase.find(x => x.name === result.name);
+                    if (parseInt(suite.tests, 10) > 0 && Array.isArray(suite.testcase)) {
+                        const testcase = suite.testcase.find(x => x.name === result.name);
 
-                            // compare the average result to the base JSON
-                            if (testcase && avg > parseFloat(testcase.time) + errorMargin) {
-                                failedTests +=
-                                    'Performance is slow in: ' +
-                                    testcase.name +
-                                    ', Benchmark time: ' +
-                                    testcase.time +
-                                    ', Average test time: ' +
-                                    avg +
-                                    '\n';
-                            }
-                        } else {
-                            // compare the average result to the base JSON
-                            if (
-                                suite.testcase.name === result.name &&
-                                avg > parseFloat(suite.testcase.time) + errorMargin
-                            ) {
-                                failedTests +=
-                                    'Performance is slow in: ' +
-                                    testcase.name +
-                                    ', Benchmark time: ' +
-                                    testcase.time +
-                                    ', Average test time: ' +
-                                    avg +
-                                    '\n';
-                            }
+                        // compare the average result to the base JSON
+                        if (testcase && avg > parseFloat(testcase.time) + errorMargin) {
+                            failedTests +=
+                                'Performance is slow in: ' +
+                                testcase.name +
+                                ', Benchmark time: ' +
+                                testcase.time +
+                                ', Average test time: ' +
+                                avg +
+                                '\n';
                         }
                     }
                 });
