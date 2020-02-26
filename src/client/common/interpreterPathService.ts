@@ -51,7 +51,11 @@ export class InterpreterPathService implements IInterpreterPathService {
             : 'python';
     }
 
-    public async update(resource: Resource, configTarget: ConfigurationTarget, pythonPath: string): Promise<void> {
+    public async update(
+        resource: Resource,
+        configTarget: ConfigurationTarget,
+        pythonPath: {} | undefined
+    ): Promise<void> {
         if (configTarget === ConfigurationTarget.Global) {
             const pythonConfig = this.workspaceService.getConfiguration('python');
             await pythonConfig.update('defaultInterpreterPath', pythonPath, true);

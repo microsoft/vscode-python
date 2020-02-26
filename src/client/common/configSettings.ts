@@ -70,7 +70,6 @@ export class PythonSettings implements IPythonSettings {
     public datascience!: IDataScienceSettings;
     public insidersChannel!: ExtensionChannels;
     public experiments!: IExperiments;
-    public interpreterPath: string | undefined;
     public languageServer: LanguageServerType = LanguageServerType.Microsoft;
 
     protected readonly changed = new EventEmitter<void>();

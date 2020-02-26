@@ -627,5 +627,5 @@ export interface IInterpreterPathService {
         workspaceValue?: string;
         workspaceFolderValue?: string;
     };
-    update(resource: Resource, configTarget: ConfigurationTarget, value: string): Promise<void>;
+    update(resource: Resource, configTarget: ConfigurationTarget, value: {} | undefined): Promise<void>;
 }

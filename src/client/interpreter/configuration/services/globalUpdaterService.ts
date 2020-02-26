@@ -26,5 +26,6 @@ export class GlobalPythonPathUpdaterService implements IPythonPathUpdaterService
         } else {
             await pythonConfig.update('pythonPath', pythonPath, true);
         }
+        this.experiments.inExperiment(DeprecatePythonPath.control);
     }
 }

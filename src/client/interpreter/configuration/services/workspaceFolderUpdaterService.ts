@@ -34,5 +34,6 @@ export class WorkspaceFolderPythonPathUpdaterService implements IPythonPathUpdat
         } else {
             await pythonConfig.update('pythonPath', pythonPath, ConfigurationTarget.WorkspaceFolder);
         }
+        this.experiments.inExperiment(DeprecatePythonPath.control);
     }
 }

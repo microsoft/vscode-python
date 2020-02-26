@@ -60,9 +60,15 @@ export class ConfigurationService implements IConfigurationService {
         ) {
             return;
         }
-
-        await configSection.update(setting, value, settingsInfo.target);
-        await this.verifySetting(configSection, settingsInfo.target, setting, value);
+        if (section === 'python' && setting === 'pythonPath') {
+            if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+                await this.interpreterPathService.update(settingsInfo.uri, settingsInfo.target, value);
+            }
+            this.experiments.inExperiment(DeprecatePythonPath.control);
+        } else {
+            await configSection.update(setting, value, settingsInfo.target);
+            await this.verifySetting(configSection, settingsInfo.target, setting, value);
+        }
     }
 
     public async updateSetting(
