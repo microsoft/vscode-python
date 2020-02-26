@@ -26,9 +26,8 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      'Win-Py3.7':
+      Python37:
         PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
     - powershell: |
@@ -41,9 +40,8 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      'Win-Py3.7':
+      Python37:
         PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
     - powershell: |
@@ -56,9 +54,8 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      'Win-Py3.7':
+      Python37:
         PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
     - powershell: |
@@ -71,9 +68,8 @@ jobs:
   timeoutInMinutes: 120
   strategy:
     matrix:
-      'Win-Py3.7':
+      Python37:
         PythonVersion: '3.7'
-        VMImageName: 'vs2017-win2016'
   pool: DSPerf
   steps:
     - powershell: |

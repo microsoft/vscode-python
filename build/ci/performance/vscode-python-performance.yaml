@@ -20,5 +20,6 @@ stages:
   jobs:
   - job: CheckResults
     timeoutInMinutes: 5
+    pool: DSPerf
     steps:
       - powershell: node ./build/ci/performance/checkPerformanceResults.js

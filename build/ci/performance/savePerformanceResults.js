@@ -21,12 +21,14 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
             ignoreAttributes: false
         };
         const jsonObj = fastXmlParser.parse(xmlData, defaultOptions);
-        console.log(jsonObj);
 
         fs.readFile(jsonFile, 'utf8', (jsonReadError, data) => {
             if (jsonReadError) {
                 // File doesn't exist, so we create it
                 jsonObj.testsuites.testsuite.forEach(suite => {
+                    console.log('==========');
+                    console.log(suite);
+                    console.log('==========');
                     if (parseInt(suite.tests, 10) > 0) {
                         if (Array.isArray(suite.testcase)) {
                             suite.testcase.forEach(testcase => {
@@ -51,6 +53,9 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                 performanceData = JSON.parse(data);
 
                 jsonObj.testsuites.testsuite.forEach(suite => {
+                    console.log('==========');
+                    console.log(suite);
+                    console.log('==========');
                     if (parseInt(suite.tests, 10) > 0) {
                         if (Array.isArray(suite.testcase)) {
                             suite.testcase.forEach(testcase => {
