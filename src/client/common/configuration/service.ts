@@ -7,19 +7,29 @@ import { IInterpreterAutoSeletionProxyService } from '../../interpreter/autoSele
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
-import { IConfigurationService, IPythonSettings } from '../types';
+import { DeprecatePythonPath } from '../experimentGroups';
+import { IConfigurationService, IExperimentsManager, IInterpreterPathService, IPythonSettings } from '../types';
 
 @injectable()
 export class ConfigurationService implements IConfigurationService {
     private readonly workspaceService: IWorkspaceService;
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
+    constructor(
+        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
+        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService
+    ) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
     public getSettings(resource?: Uri): IPythonSettings {
         const InterpreterAutoSelectionService = this.serviceContainer.get<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService
         );
-        return PythonSettings.getInstance(resource, InterpreterAutoSelectionService, this.workspaceService);
+        const settings = PythonSettings.getInstance(resource, InterpreterAutoSelectionService, this.workspaceService);
+        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+            settings.pythonPath = this.interpreterPathService.interpreterPath(resource);
+        }
+        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+        return settings;
     }
 
     public async updateSectionSetting(

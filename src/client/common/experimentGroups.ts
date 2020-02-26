@@ -70,3 +70,9 @@ export enum CollectNodeLSRequestTiming {
     control = 'CollectNodeLSRequestTiming - control',
     experiment = 'CollectNodeLSRequestTiming - experiment'
 }
+
+// Experiment to check whether the extension should deprecate `python.pythonPath` setting
+export enum DeprecatePythonPath {
+    control = 'DeprecatePythonPath - control',
+    experiment = 'DeprecatePythonPath - experiment'
+}

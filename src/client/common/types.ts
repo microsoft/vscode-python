@@ -613,3 +613,19 @@ export interface IExperimentsManager {
      */
     sendTelemetryIfInExperiment(experimentName: string): void;
 }
+
+/**
+ * Interface used to access current Interpreter Path
+ */
+export const IInterpreterPathService = Symbol('IInterpreterPathService');
+export interface IInterpreterPathService {
+    interpreterPath(resource: Resource): string;
+    inspectInterpreterPath(
+        resource: Resource
+    ): {
+        globalValue?: string;
+        workspaceValue?: string;
+        workspaceFolderValue?: string;
+    };
+    update(resource: Resource, configTarget: ConfigurationTarget, value: string): Promise<void>;
+}

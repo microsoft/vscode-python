@@ -49,6 +49,7 @@ import {
     IInsiderExtensionPrompt
 } from '../../client/common/insidersBuild/types';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
+import { InterpreterPathService } from '../../client/common/interpreterPathService';
 import { BrowserService } from '../../client/common/net/browser';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { NugetService } from '../../client/common/nuget/nugetService';
@@ -91,6 +92,7 @@ import {
     IFeatureDeprecationManager,
     IHttpClient,
     IInstaller,
+    IInterpreterPathService,
     IPathUtils,
     IPersistentStateFactory,
     IRandom
@@ -107,6 +109,7 @@ suite('Common - Service Registry', () => {
         const serviceManager = typemoq.Mock.ofType<IServiceManager>();
 
         [
+            [IInterpreterPathService, InterpreterPathService],
             [IExtensions, Extensions],
             [IRandom, Random],
             [IPersistentStateFactory, PersistentStateFactory],
