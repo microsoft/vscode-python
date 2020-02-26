@@ -749,6 +749,7 @@ suite('DataScience notebook tests', () => {
         // Instead of default, manually set a working directory
         const notebook = await createNotebook(true, undefined, undefined, undefined, EXTENSION_ROOT_DIR);
         await verifySimple(notebook, 'import os\nos.getcwd()', EXTENSION_ROOT_DIR, true);
+        await verifySimple(notebook, 'import sys\nsys.path[0]', EXTENSION_ROOT_DIR, true);
     });
 
     // tslint:disable-next-line:no-invalid-template-strings
@@ -764,6 +765,7 @@ suite('DataScience notebook tests', () => {
             path.join(srcDirectory(), 'foo.py')
         );
         await verifySimple(notebook, 'import os\nos.getcwd()', srcDirectory(), true);
+        await verifySimple(notebook, 'import sys\nsys.path[0]', srcDirectory(), true);
     });
 
     runTest('Change Interpreter', async () => {

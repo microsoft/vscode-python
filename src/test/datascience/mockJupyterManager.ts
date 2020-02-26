@@ -143,6 +143,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.addCell(CodeSnippits.MatplotLibInitPng);
         this.addCell(CodeSnippits.ConfigSvg);
         this.addCell(CodeSnippits.ConfigPng);
+        this.addCell(CodeSnippits.UpdateCWDAndPath.format(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')));
         this.addCell(`import sys\r\nsys.path.append('undefined')\r\nsys.path`);
         this.addCell(`import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
         this.addCell("matplotlib.style.use('dark_background')");
@@ -174,6 +175,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.addCell(`__file__ = '${Uri.file('foo').fsPath.replace(/\\/g, '\\\\')}'`);
         this.addCell(`__file__ = '${Uri.file('test.py').fsPath.replace(/\\/g, '\\\\')}'`);
         this.addCell('import os\nos.getcwd()', `'${path.join(EXTENSION_ROOT_DIR)}'`);
+        this.addCell('import sys\nsys.path[0]', `'${path.join(EXTENSION_ROOT_DIR)}'`);
     }
 
     public getConnInfo(): IConnection {
@@ -405,7 +407,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public changeWorkingDirectory(workingDir: string) {
+        this.addCell(CodeSnippits.UpdateCWDAndPath.format(workingDir));
         this.addCell('import os\nos.getcwd()', path.join(workingDir));
+        this.addCell('import sys\nsys.path[0]', path.join(workingDir));
     }
 
     private addCellOutput(
