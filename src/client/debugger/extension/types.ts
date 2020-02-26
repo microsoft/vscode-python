@@ -61,3 +61,7 @@ export type DebugAdapterPtvsdPathInfo = { extensionVersion: string; ptvsdPath: s
 export const IDebugSessionLoggingFactory = Symbol('IDebugSessionLoggingFactory');
 
 export interface IDebugSessionLoggingFactory extends DebugAdapterTrackerFactory {}
+
+export const IOutdatedDebuggerPromptFactory = Symbol('IOutdatedDebuggerPromptFactory');
+
+export interface IOutdatedDebuggerPromptFactory extends DebugAdapterTrackerFactory {}

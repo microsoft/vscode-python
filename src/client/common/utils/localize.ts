@@ -923,6 +923,13 @@ export namespace Testing {
     export const disableTests = localize('Testing.disableTests', 'Disable Tests');
 }
 
+export namespace OutdatedDebugger {
+    export const outdatedDebuggerMessage = localize(
+        'OutdatedDebugger.updateDebuggerMessage',
+        'We noticed you are attaching to ptvsd, which will be deprecated on May 1st, 2020. Please update to the new debugger, debugpy.'
+    );
+}
+
 // Skip using vscode-nls and instead just compute our strings based on key values. Key values
 // can be loaded out of the nls.<locale>.json files
 let loadedCollection: Record<string, string> | undefined;
