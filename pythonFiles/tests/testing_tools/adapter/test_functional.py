@@ -28,7 +28,8 @@ SCRIPT = os.path.join(TESTING_TOOLS_ROOT, "run_adapter.py")
 
 def resolve_testroot(name):
     projroot = os.path.join(DATA_DIR, name)
-    return projroot, os.path.join(projroot, "tests")
+    testroot = os.path.join(projroot, "tests")
+    return projroot, str(Path(testroot).resolve())
 
 
 def run_adapter(cmd, tool, *cliargs):
@@ -95,7 +96,7 @@ class PytestTests(unittest.TestCase):
 
     def complex(self, testroot):
         results = COMPLEX.copy()
-        results["root"] = str(Path(testroot).resolve())
+        results["root"] = testroot
         return [results]
 
     def test_discover_simple(self):
