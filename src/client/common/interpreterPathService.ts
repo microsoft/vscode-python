@@ -23,11 +23,11 @@ export class InterpreterPathService implements IInterpreterPathService {
         workspaceFolderValue?: string;
     } {
         const workspaceFolderSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
-            'workspaceFolderSettingKey',
+            this.getSettingKey(resource, ConfigurationTarget.WorkspaceFolder),
             undefined
         );
         const workspaceSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
-            'workspaceSettingKey',
+            this.getSettingKey(resource, ConfigurationTarget.Workspace),
             undefined
         );
         const globalSetting = this.workspaceService
@@ -52,35 +52,42 @@ export class InterpreterPathService implements IInterpreterPathService {
     }
 
     public async update(resource: Resource, configTarget: ConfigurationTarget, pythonPath: string): Promise<void> {
-        let settingKey: string;
-        switch (configTarget) {
-            case ConfigurationTarget.Global: {
-                const pythonConfig = this.workspaceService.getConfiguration('python');
-                await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
-                return;
-            }
-            case ConfigurationTarget.Workspace: {
-                if (!resource) {
-                    throw new Error('Workspace Uri not defined');
-                }
-                settingKey = `WORKSPACE_INTERPRETER_PATH_${resource.fsPath}`;
-                break;
-            }
-            default: {
-                if (!resource) {
-                    throw new Error('Workspace Uri not defined');
-                }
-                const fsPathKey = this.workspaceService.workspaceFile
-                    ? this.workspaceService.workspaceFile.fsPath
-                    : // Only a single folder is opened, use fsPath of the folder as key
-                      resource.fsPath;
-                settingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${fsPathKey}`;
-            }
+        if (configTarget === ConfigurationTarget.Global) {
+            const pythonConfig = this.workspaceService.getConfiguration('python');
+            await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
+            return;
         }
+        const settingKey = this.getSettingKey(resource, configTarget);
         const persistentSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
             settingKey,
             undefined
         );
         await persistentSetting.updateValue(pythonPath);
+    }
+
+    public getSettingKey(
+        resource: Resource,
+        configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder
+    ): string {
+        switch (configTarget) {
+            case ConfigurationTarget.WorkspaceFolder: {
+                if (!resource) {
+                    throw new Error('No resource provided');
+                }
+                return `WORKSPACE_FOLDER_INTERPRETER_PATH_${this.workspaceService.getWorkspaceFolderIdentifier(
+                    resource
+                )}`;
+            }
+            default: {
+                if (!resource) {
+                    throw new Error('No resource provided');
+                }
+                const fsPathKey = this.workspaceService.workspaceFile
+                    ? this.workspaceService.workspaceFile.fsPath
+                    : // Only a single folder is opened, use fsPath of the folder as key
+                      this.workspaceService.getWorkspaceFolderIdentifier(resource);
+                return `WORKSPACE_INTERPRETER_PATH_${fsPathKey}`;
+            }
+        }
     }
 }
