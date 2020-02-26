@@ -95,7 +95,7 @@ class PytestTests(unittest.TestCase):
 
     def complex(self, testroot):
         results = COMPLEX.copy()
-        results["root"] = Path(testroot).resolve()
+        results["root"] = str(Path(testroot).resolve())
         return [results]
 
     def test_discover_simple(self):
