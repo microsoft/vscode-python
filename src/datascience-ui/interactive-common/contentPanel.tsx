@@ -3,6 +3,7 @@
 'use strict';
 import * as React from 'react';
 
+import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { InputHistory } from './inputHistory';
 import { ICellViewModel } from './mainState';
 
@@ -16,6 +17,7 @@ export interface IContentPanelProps {
     cellVMs: ICellViewModel[];
     history?: InputHistory;
     testMode?: boolean;
+    settings?: IDataScienceExtraSettings;
     codeTheme: string;
     submittedText: boolean;
     skipNextScroll: boolean;
@@ -32,12 +34,10 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     constructor(prop: IContentPanelProps) {
         super(prop);
     }
-
     public componentDidMount() {
         this.scrollToBottom();
     }
-
-    public componentDidUpdate() {
+    public componentWillReceiveProps() {
         this.scrollToBottom();
     }
 
@@ -53,12 +53,10 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         const className = `${this.props.scrollBeyondLastLine ? 'content-panel-scrollBeyondLastLine' : ''}`;
         return (
             <div id="content-panel-div" ref={this.containerRef} className={className}>
-                <div id="cell-table">
-                    <div id="cell-table-body" role="list">
-                        {this.renderCells()}
-                    </div>
+                <div id="cell-table" role="list">
+                    {this.renderCells()}
                 </div>
-                <div ref={this.bottomRef} />
+                <div id="bottomDiv" ref={this.bottomRef} />
             </div>
         );
     }

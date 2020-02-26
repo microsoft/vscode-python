@@ -140,7 +140,7 @@ stages:
           NeedsIPythonReqs: true
       maxParallel: 2
     pool:
-      vmImage: 'macos-10.13'
+      vmImage: '$(vmImageMacOS)'
     steps:
       - template: templates/test_phases.yml
 

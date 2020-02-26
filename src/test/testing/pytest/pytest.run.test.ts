@@ -510,6 +510,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 await ioc.dispose();
                 await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
             });
+            // tslint:disable: max-func-body-length
             const shouldRunProperly = (suiteName: string, failedRun = false) => {
                 suite(suiteName, () => {
                     testDetails = getScenarioTestDetails(scenario, failedRun);

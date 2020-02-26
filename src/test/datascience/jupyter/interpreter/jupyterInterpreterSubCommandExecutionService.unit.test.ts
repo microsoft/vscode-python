@@ -82,6 +82,7 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
         when(interperterService.getActiveInterpreter()).thenResolve(activePythonInterpreter);
         when(interperterService.getActiveInterpreter(undefined)).thenResolve(activePythonInterpreter);
     });
+    // tslint:disable-next-line: max-func-body-length
     suite('Interpreter is not selected', () => {
         setup(() => {
             when(jupyterInterpreter.getSelectedInterpreter()).thenResolve(undefined);

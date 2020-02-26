@@ -76,7 +76,6 @@ export class TestsParser implements ITestsParser {
         }
     }
 
-    // tslint:disable-next-line: max-func-body-length
     private parseNoseTestModuleCollectionResult(rootDirectory: string, lines: string[], testFiles: TestFile[]) {
         let currentPackage: string = '';
         let fileName = '';

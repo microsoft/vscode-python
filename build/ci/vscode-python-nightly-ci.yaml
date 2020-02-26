@@ -224,7 +224,7 @@ stages:
           NeedsIPythonReqs: true
       maxParallel: 1
     pool:
-      vmImage: 'macos-10.13'
+      vmImage: '$(vmImageMacOS)'
     steps:
       - template: templates/test_phases.yml
 
@@ -264,7 +264,7 @@ stages:
         # Note: We only run the smoke tests with the latest Python release.
       maxParallel: 1
     pool:
-      vmImage: 'macos-10.13'
+      vmImage: '$(vmImageMacOS)'
     steps:
       - template: templates/test_phases.yml
 
@@ -304,7 +304,7 @@ stages:
         # Note: We only run the smoke tests with the latest Python release.
       maxParallel: 1
     pool:
-      vmImage: 'macos-10.13'
+      vmImage: '$(vmImageMacOS)'
     steps:
       - template: templates/test_phases.yml
 
@@ -340,7 +340,7 @@ stages:
         # Note: We only run the smoke tests with the latest Python release.
       maxParallel: 1
     pool:
-      vmImage: 'macos-10.13'
+      vmImage: '$(vmImageMacOS)'
     steps:
       - template: templates/test_phases.yml
 

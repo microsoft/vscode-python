@@ -21,6 +21,7 @@ suite('Language Server Folder Service', () => {
     let languageServerFolderService: DotNetLanguageServerFolderService;
     const resource = Uri.parse('a');
 
+    // tslint:disable-next-line:max-func-body-length
     suite('Method getLanguageServerFolderName()', async () => {
         // tslint:disable-next-line: no-any
         let shouldLookForNewLS: sinon.SinonStub<any>;

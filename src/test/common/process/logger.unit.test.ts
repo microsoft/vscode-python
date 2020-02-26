@@ -16,7 +16,6 @@ import { Logging } from '../../../client/common/utils/localize';
 import { getOSType, OSType } from '../../common';
 
 // tslint:disable: max-func-body-length
-
 suite('ProcessLogger suite', () => {
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
     let pathUtils: PathUtils;

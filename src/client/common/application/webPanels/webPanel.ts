@@ -4,7 +4,7 @@
 import '../../extensions';
 
 import * as uuid from 'uuid/v4';
-import { Uri, Webview, WebviewPanel, window } from 'vscode';
+import { Uri, Webview, WebviewOptions, WebviewPanel, window } from 'vscode';
 
 import { Identifiers } from '../../../datascience/constants';
 import { InteractiveWindowMessages } from '../../../datascience/interactive-common/interactiveWindowTypes';
@@ -31,18 +31,26 @@ export class WebPanel implements IWebPanel {
         private token: string | undefined,
         private options: IWebPanelOptions
     ) {
-        this.panel = window.createWebviewPanel(
-            options.title.toLowerCase().replace(' ', ''),
-            options.title,
-            { viewColumn: options.viewColumn, preserveFocus: true },
-            {
-                enableScripts: true,
-                retainContextWhenHidden: true,
-                localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)],
-                enableFindWidget: true,
-                portMapping: port ? [{ webviewPort: RemappedPort, extensionHostPort: port }] : undefined
-            }
-        );
+        const webViewOptions: WebviewOptions = {
+            enableScripts: true,
+            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)],
+            portMapping: port ? [{ webviewPort: RemappedPort, extensionHostPort: port }] : undefined
+        };
+        if (options.webViewPanel) {
+            this.panel = options.webViewPanel;
+            this.panel.webview.options = webViewOptions;
+        } else {
+            this.panel = window.createWebviewPanel(
+                options.title.toLowerCase().replace(' ', ''),
+                options.title,
+                { viewColumn: options.viewColumn, preserveFocus: true },
+                {
+                    retainContextWhenHidden: true,
+                    enableFindWidget: true,
+                    ...webViewOptions
+                }
+            );
+        }
         this.loadPromise = this.load();
     }
 

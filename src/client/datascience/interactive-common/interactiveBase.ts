@@ -86,7 +86,6 @@ import {
     IJupyterVariablesResponse,
     IMessageCell,
     INotebook,
-    INotebookEditorProvider,
     INotebookExporter,
     INotebookServer,
     INotebookServerOptions,
@@ -143,7 +142,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() private dataExplorerProvider: IDataViewerProvider,
         @unmanaged() private jupyterVariables: IJupyterVariables,
         @unmanaged() private jupyterDebugger: IJupyterDebugger,
-        @unmanaged() protected ipynbProvider: INotebookEditorProvider,
         @unmanaged() protected errorHandler: IDataScienceErrorHandler,
         @unmanaged() protected readonly commandManager: ICommandManager,
         @unmanaged() protected globalStorage: Memento,
@@ -232,14 +230,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             case InteractiveWindowMessages.ReExecuteCells:
                 this.handleMessage(message, payload, this.reexecuteCells);
-                break;
-
-            case InteractiveWindowMessages.DeleteAllCells:
-                this.logTelemetry(Telemetry.DeleteAllCells);
-                break;
-
-            case InteractiveWindowMessages.DeleteCell:
-                this.logTelemetry(Telemetry.DeleteCell);
                 break;
 
             case InteractiveWindowMessages.Undo:
@@ -477,6 +467,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
 
     protected async clearResult(id: string): Promise<void> {
+        await this.ensureServerAndNotebook();
         if (this._notebook) {
             this._notebook.clear(id);
         }
@@ -700,47 +691,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const args = payload as M[T];
         handler.bind(this)(args);
     }
-
-    protected exportToFile = async (cells: ICell[], file: string) => {
-        // Take the list of cells, convert them to a notebook json format and write to disk
-        if (this._notebook) {
-            let directoryChange;
-            const settings = this.configuration.getSettings(await this.getOwningResource());
-            if (settings.datascience.changeDirOnImportExport) {
-                directoryChange = file;
-            }
-
-            const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
-
-            try {
-                const contents = JSON.stringify(notebook);
-                await this.fileSystem.writeFile(file, contents, { encoding: 'utf8', flag: 'w' });
-                const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
-                    ? localize.DataScience.exportOpenQuestion()
-                    : undefined;
-                this.showInformationMessage(
-                    localize.DataScience.exportDialogComplete().format(file),
-                    openQuestion1,
-                    openQuestion2
-                ).then(async (str: string | undefined) => {
-                    try {
-                        if (str === openQuestion2 && openQuestion2 && this._notebook) {
-                            // If the user wants to, open the notebook they just generated.
-                            await this.jupyterExecution.spawnNotebook(file);
-                        } else if (str === openQuestion1) {
-                            await this.ipynbProvider.open(Uri.file(file), contents);
-                        }
-                    } catch (e) {
-                        await this.errorHandler.handleError(e);
-                    }
-                });
-            } catch (exc) {
-                traceError('Error in exporting notebook file');
-                this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
-            }
-        }
-    };
 
     protected setStatus = (message: string, showInWebView: boolean): Disposable => {
         const result = this.statusProvider.set(message, showInWebView, undefined, undefined, this);
@@ -1269,18 +1219,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             // paste will be right after
             const selectionLine = line + newCode.split('\n').length - 1;
             editor.selection = new Selection(new Position(selectionLine, 0), new Position(selectionLine, 0));
-        }
-    }
-
-    private showInformationMessage(
-        message: string,
-        question1: string,
-        question2?: string
-    ): Thenable<string | undefined> {
-        if (question2) {
-            return this.applicationShell.showInformationMessage(message, question1, question2);
-        } else {
-            return this.applicationShell.showInformationMessage(message, question1);
         }
     }
 

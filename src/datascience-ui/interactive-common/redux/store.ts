@@ -6,20 +6,19 @@ import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { MessageType } from '../../../client/datascience/interactive-common/synchronization';
+import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
+import { CssMessages } from '../../../client/datascience/messages';
 import { CellState } from '../../../client/datascience/types';
-import { IMainState, ServerStatus } from '../../interactive-common/mainState';
+import { getSelectedAndFocusedInfo, IMainState, ServerStatus } from '../../interactive-common/mainState';
 import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { forceLoad } from '../transforms';
-import {
-    AllowedMessages,
-    createPostableAction,
-    generatePostOfficeSendReducer,
-    IncomingMessageActions
-} from './postOffice';
+import { isAllowedAction, isAllowedMessage, postActionToExtension } from './helpers';
+import { generatePostOfficeSendReducer } from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
@@ -45,6 +44,7 @@ function generateDefaultState(
             currentExecutionCount: 0,
             debugging: false,
             knownDark: false,
+            dirty: false,
             editCellVM: editable ? undefined : createEditableCellVM(0),
             isAtBottom: true,
             font: {
@@ -86,21 +86,29 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
         const res = next(action);
         const afterState = store.getState();
 
+        // If the action is part of a sync message, then do not send it to the extension.
+        const messageType = (action?.payload as BaseReduxActionPayload).messageType ?? MessageType.userAction;
+        const isSyncMessage =
+            (messageType & MessageType.syncAcrossSameNotebooks) === MessageType.syncAcrossSameNotebooks &&
+            (messageType & MessageType.syncAcrossSameNotebooks) === MessageType.syncWithLiveShare;
+        if (isSyncMessage) {
+            return res;
+        }
+
         // If cell vm count changed or selected cell changed, send the message
+        const currentSelection = getSelectedAndFocusedInfo(afterState.main);
         if (
             prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
-            prevState.main.selectedCellId !== afterState.main.selectedCellId ||
+            getSelectedAndFocusedInfo(prevState.main).selectedCellId !== currentSelection.selectedCellId ||
             prevState.main.undoStack.length !== afterState.main.undoStack.length ||
             prevState.main.redoStack.length !== afterState.main.redoStack.length
         ) {
-            store.dispatch(
-                createPostableAction(InteractiveWindowMessages.SendInfo, {
-                    cellCount: afterState.main.cellVMs.length,
-                    undoCount: afterState.main.undoStack.length,
-                    redoCount: afterState.main.redoStack.length,
-                    selectedCell: afterState.main.selectedCellId
-                })
-            );
+            postActionToExtension({ queueAction: store.dispatch }, InteractiveWindowMessages.SendInfo, {
+                cellCount: afterState.main.cellVMs.length,
+                undoCount: afterState.main.undoStack.length,
+                redoCount: afterState.main.redoStack.length,
+                selectedCell: currentSelection.selectedCellId
+            });
         }
         return res;
     };
@@ -118,17 +126,22 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         const sendMessage = (message: any, payload?: any) => {
             setTimeout(() => {
                 transformPromise
-                    .then(() => {
-                        store.dispatch(createPostableAction(message, payload));
-                    })
+                    .then(() => postActionToExtension({ queueAction: store.dispatch }, message, payload))
                     .ignoreErrors();
             });
         };
 
         // Special case for focusing a cell
-        if (prevState.main.focusedCellId !== afterState.main.focusedCellId && afterState.main.focusedCellId) {
+        const previousSelection = getSelectedAndFocusedInfo(prevState.main);
+        const currentSelection = getSelectedAndFocusedInfo(afterState.main);
+        if (previousSelection.focusedCellId !== currentSelection.focusedCellId && currentSelection.focusedCellId) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
             sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId });
+        }
+        // Special case for unfocusing a cell
+        if (previousSelection.focusedCellId !== currentSelection.focusedCellId && !currentSelection.focusedCellId) {
+            // Send async so happens after render state changes (so our enzyme wrapper is up to date)
+            sendMessage(InteractiveWindowMessages.UnfocusedCellEditor);
         }
 
         // Indicate settings updates
@@ -152,6 +165,11 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             sendMessage(InteractiveWindowMessages.VariablesComplete);
         }
 
+        // Indicate update from extension side
+        if (action.type && action.type === InteractiveWindowMessages.UpdateModel) {
+            sendMessage(InteractiveWindowMessages.ReceivedUpdateModel);
+        }
+
         // Special case for rendering complete
         const prevFinished = prevState.main.cellVMs
             .filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error)
@@ -169,6 +187,9 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
         }
 
+        if (action.type !== 'action.postOutgoingMessage') {
+            sendMessage(`DISPATCHED_ACTION_${action.type}`, {});
+        }
         return res;
     };
 }
@@ -187,9 +208,9 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
     const actionsWithLargePayload = [
-        IncomingMessageActions.LOADONIGASMASSEMBLYRESPONSE,
-        IncomingMessageActions.GETCSSRESPONSE,
-        IncomingMessageActions.LOADTMLANGUAGERESPONSE
+        InteractiveWindowMessages.LoadOnigasmAssemblyResponse,
+        CssMessages.GetCssResponse,
+        InteractiveWindowMessages.LoadTmLanguageResponse
     ];
     const logger = createLogger({
         // tslint:disable-next-line: no-any
@@ -228,7 +249,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
         process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode)
             ? logger
             : undefined;
-
+    // tslint:disable-next-line: no-console
     const results: Redux.Middleware<{}, IStore>[] = [];
     results.push(queueableActions);
     results.push(updateContext);
@@ -252,6 +273,21 @@ export interface IStore {
 export interface IMainWithVariables extends IMainState {
     variableState: IVariableState;
 }
+
+/**
+ * Middleware that will ensure all actions have `messageDirection` property.
+ */
+const addMessageDirectionMiddleware: Redux.Middleware = _store => next => (action: Redux.AnyAction) => {
+    if (isAllowedAction(action)) {
+        // Ensure all dispatched messages have been flagged as `incoming`.
+        const payload: BaseReduxActionPayload<{}> = action.payload || {};
+        if (!payload.messageDirection) {
+            action.payload = { ...payload, messageDirection: 'incoming' };
+        }
+    }
+
+    return next(action);
+};
 
 export function createStore<M>(
     skipDefault: boolean,
@@ -285,7 +321,7 @@ export function createStore<M>(
     });
 
     // Create our middleware
-    const middleware = createMiddleWare(testMode);
+    const middleware = createMiddleWare(testMode).concat([addMessageDirectionMiddleware]);
 
     // Use this reducer and middle ware to create a store
     const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));
@@ -294,14 +330,23 @@ export function createStore<M>(
     // turn them into actions.
     postOffice.addHandler({
         // tslint:disable-next-line: no-any
-        handleMessage(message: string, payload: any): boolean {
+        handleMessage(message: string, payload?: any): boolean {
             // Double check this is one of our messages. React will actually post messages here too during development
-            if (AllowedMessages.find(k => k === message)) {
-                // Prefix message type with 'action.' so that we can:
-                // - Have one reducer for incoming
-                // - Have another reducer for outgoing
-                store.dispatch({ type: `action.${message}`, payload });
+            if (isAllowedMessage(message)) {
+                const basePayload: BaseReduxActionPayload = { data: payload };
+                if (message === InteractiveWindowMessages.Sync) {
+                    // This is a message that has been sent from extension purely for synchronization purposes.
+                    // Unwrap the message.
+                    message = payload.type;
+                    basePayload.messageType = payload.payload.messageType ?? MessageType.syncAcrossSameNotebooks;
+                    basePayload.data = payload.payload.data;
+                } else {
+                    // Messages result of some user action.
+                    basePayload.messageType = basePayload.messageType ?? MessageType.userAction;
+                }
+                store.dispatch({ type: message, payload: basePayload });
             }
+
             return true;
         }
     });

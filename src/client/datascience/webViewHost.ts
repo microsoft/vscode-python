@@ -4,7 +4,7 @@
 import '../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, ViewColumn, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationChangeEvent, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
 import { traceInfo, traceWarning } from '../common/logger';
@@ -188,8 +188,9 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                     autoIndent: this.getValue(editor, 'autoIndent', false),
                     fontLigatures: this.getValue(editor, 'fontLigatures', false),
                     scrollBeyondLastLine: this.getValue(editor, 'scrollBeyondLastLine', true),
-                    // VS Code puts a value for this, but it's 10 (the explorer bar size) not 14 the editor size
+                    // VS Code puts a value for this, but it's 10 (the explorer bar size) not 14 the editor size for vert
                     verticalScrollbarSize: this.getValue(editor, 'scrollbar.verticalScrollbarSize', 14),
+                    horizontalScrollbarSize: this.getValue(editor, 'scrollbar.horizontalScrollbarSize', 10),
                     fontSize: this.getValue(editor, 'fontSize', 14),
                     fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
@@ -217,7 +218,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         return this.themeIsDarkPromise ? this.themeIsDarkPromise.promise : Promise.resolve(false);
     }
 
-    protected async loadWebPanel(cwd: string) {
+    protected async loadWebPanel(cwd: string, webViewPanel?: WebviewPanel) {
         // Make not disposed anymore
         this.disposed = false;
 
@@ -266,7 +267,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 scripts: this.scripts,
                 settings,
                 startHttpServer: false,
-                cwd
+                cwd,
+                webViewPanel
             });
 
             traceInfo('Web view created.');
@@ -325,6 +327,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
 
             // Resolve our started promise. This means the webpanel is ready to go.
             this.webPanelInit.resolve();
+
+            traceInfo('Web view react rendered');
         }
     }
 
@@ -343,6 +347,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
             event.affectsConfiguration('editor.scrollBeyondLastLine') ||
             event.affectsConfiguration('editor.fontLigatures') ||
             event.affectsConfiguration('editor.scrollbar.verticalScrollbarSize') ||
+            event.affectsConfiguration('editor.scrollbar.horizontalScrollbarSize') ||
             event.affectsConfiguration('files.autoSave') ||
             event.affectsConfiguration('files.autoSaveDelay') ||
             event.affectsConfiguration('python.dataScience.enableGather')

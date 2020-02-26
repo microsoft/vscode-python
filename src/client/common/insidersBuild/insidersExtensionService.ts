@@ -85,10 +85,7 @@ export class InsidersExtensionService implements IExtensionSingleActivationServi
      * @returns `true` if install channel is handled in these miscellaneous cases, `false` if install channel needs further handling
      */
     public async handleEdgeCases(installChannel: ExtensionChannels, isDefault: boolean): Promise<boolean> {
-        // When running UI Tests we might want to disable these prompts.
-        if (process.env.UITEST_DISABLE_INSIDERS) {
-            return true;
-        } else if (await this.promptToInstallInsidersIfApplicable(isDefault)) {
+        if (await this.promptToInstallInsidersIfApplicable(isDefault)) {
             return true;
         } else if (await this.setInsidersChannelToOffIfApplicable(installChannel)) {
             return true;

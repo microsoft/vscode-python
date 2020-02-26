@@ -40,8 +40,9 @@ export function getDefaultSettings() {
                 autoIndent: false,
                 fontLigatures: false,
                 scrollBeyondLastLine: true,
-                // VS Code puts a value for this, but it's 10 (the explorer bar size) not 14 the editor size
+                // VS Code puts a value for this, but it's 10 (the explorer bar size) not 14 the editor size for vert
                 verticalScrollbarSize: 14,
+                horizontalScrollbarSize: 14,
                 fontSize: 14,
                 fontFamily: "Consolas, 'Courier New', monospace"
             },

@@ -8,4 +8,4 @@ variables:
   VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
   CI_BRANCH_NAME: ${Build.SourceBranchName}
   npm_config_cache: $(Pipeline.Workspace)/.npm
-
+  vmImageMacOS: 'macOS-10.15'

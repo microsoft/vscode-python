@@ -85,8 +85,9 @@ export function waitForMessage(
           }, timeoutMs)
         : undefined;
     let timesMessageReceived = 0;
+    const dispatchedAction = `DISPATCHED_ACTION_${message}`;
     handler = (m: string, _p: any) => {
-        if (m === message) {
+        if (m === message || m === dispatchedAction) {
             timesMessageReceived += 1;
             if (timesMessageReceived < numberOfTimes) {
                 return;
@@ -95,7 +96,22 @@ export function waitForMessage(
                 clearTimeout(timer);
             }
             ioc.removeMessageListener(handler);
-            promise.resolve();
+            // Make sure to rerender current state.
+            if (ioc.wrapper) {
+                ioc.wrapper.update();
+            }
+            if (m === message) {
+                promise.resolve();
+            } else {
+                // It could a redux dispatched message.
+                // Wait for 10ms, wait for other stuff to finish.
+                // We can wait for 100ms or 1s. But thats too long.
+                // The assumption is that currently we do not have any setTimeouts
+                // in UI code that's in the magnitude of 100ms or more.
+                // We do have a couple of setTiemout's, but they wait for 1ms, not 100ms.
+                // 10ms more than sufficient for all the UI timeouts.
+                setTimeout(() => promise.resolve(), 10);
+            }
         }
     };
     ioc.addMessageListener(handler);

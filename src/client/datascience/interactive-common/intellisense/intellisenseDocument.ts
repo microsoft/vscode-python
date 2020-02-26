@@ -3,12 +3,12 @@
 'use strict';
 import '../../../common/extensions';
 
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEvent, TextLine, Uri } from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient';
 
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { Identifiers } from '../../constants';
+import { IEditorContentChange } from '../interactiveWindowTypes';
 import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from './wordHelper';
 
 class IntellisenseLine implements TextLine {
@@ -208,54 +208,57 @@ export class IntellisenseDocument implements TextDocument {
     }
 
     public loadAllCells(cells: { code: string; id: string }[]): TextDocumentContentChangeEvent[] {
-        let changes: TextDocumentContentChangeEvent[] = [];
         if (!this.inEditMode) {
             this.inEditMode = true;
-            this._version += 1;
-
-            // Normalize all of the cells, removing \r and separating each
-            // with a newline
-            const normalized = cells.map(c => {
-                return {
-                    id: c.id,
-                    code: `${c.code.replace(/\r/g, '')}\n`
-                };
-            });
-
-            // Contents are easy, just load all of the code in a row
-            this._contents = normalized
-                .map(c => c.code)
-                .reduce((p, c) => {
-                    return `${p}${c}`;
-                });
-
-            // Cell ranges are slightly more complicated
-            let prev: number = 0;
-            this._cellRanges = normalized.map(c => {
-                const result = {
-                    id: c.id,
-                    start: prev,
-                    fullEnd: prev + c.code.length,
-                    currentEnd: prev + c.code.length
-                };
-                prev += c.code.length;
-                return result;
-            });
-
-            // Then create the lines.
-            this._lines = this.createLines();
-
-            // Return our changes
-            changes = [
-                {
-                    range: this.createSerializableRange(new Position(0, 0), new Position(0, 0)),
-                    rangeOffset: 0,
-                    rangeLength: 0, // Adds are always zero
-                    text: this._contents
-                }
-            ];
+            return this.reloadCells(cells);
         }
-        return changes;
+        return [];
+    }
+
+    public reloadCells(cells: { code: string; id: string }[]): TextDocumentContentChangeEvent[] {
+        this._version += 1;
+
+        // Normalize all of the cells, removing \r and separating each
+        // with a newline
+        const normalized = cells.map(c => {
+            return {
+                id: c.id,
+                code: `${c.code.replace(/\r/g, '')}\n`
+            };
+        });
+
+        // Contents are easy, just load all of the code in a row
+        this._contents = normalized
+            .map(c => c.code)
+            .reduce((p, c) => {
+                return `${p}${c}`;
+            });
+
+        // Cell ranges are slightly more complicated
+        let prev: number = 0;
+        this._cellRanges = normalized.map(c => {
+            const result = {
+                id: c.id,
+                start: prev,
+                fullEnd: prev + c.code.length,
+                currentEnd: prev + c.code.length
+            };
+            prev += c.code.length;
+            return result;
+        });
+
+        // Then create the lines.
+        this._lines = this.createLines();
+
+        // Return our changes
+        return [
+            {
+                range: this.createSerializableRange(new Position(0, 0), new Position(0, 0)),
+                rangeOffset: 0,
+                rangeLength: 0, // Adds are always zero
+                text: this._contents
+            }
+        ];
     }
 
     public addCell(fullCode: string, currentCode: string, id: string): TextDocumentContentChangeEvent[] {
@@ -305,7 +308,28 @@ export class IntellisenseDocument implements TextDocument {
         ];
     }
 
-    public insertCell(id: string, code: string, codeCellAbove: string | undefined): TextDocumentContentChangeEvent[] {
+    public reloadCell(id: string, code: string): TextDocumentContentChangeEvent[] {
+        this._version += 1;
+
+        // Make sure to put a newline between this code and the next code
+        const newCode = `${code.replace(/\r/g, '')}\n`;
+
+        // Figure where this goes
+        const index = this._cellRanges.findIndex(r => r.id === id);
+        if (index >= 0) {
+            const start = this.positionAt(this._cellRanges[index].start);
+            const end = this.positionAt(this._cellRanges[index].currentEnd);
+            return this.removeRange(newCode, start, end, index);
+        }
+
+        return [];
+    }
+
+    public insertCell(
+        id: string,
+        code: string,
+        codeCellAboveOrIndex: string | undefined | number
+    ): TextDocumentContentChangeEvent[] {
         // This should only happen once for each cell.
         this._version += 1;
 
@@ -313,8 +337,8 @@ export class IntellisenseDocument implements TextDocument {
         const newCode = `${code.replace(/\r/g, '')}\n`;
 
         // Figure where this goes
-        const aboveIndex = this._cellRanges.findIndex(r => r.id === codeCellAbove);
-        const insertIndex = aboveIndex + 1;
+        const aboveIndex = this._cellRanges.findIndex(r => r.id === codeCellAboveOrIndex);
+        const insertIndex = typeof codeCellAboveOrIndex === 'number' ? codeCellAboveOrIndex : aboveIndex + 1;
 
         // Compute where we start from.
         const fromOffset =
@@ -374,10 +398,7 @@ export class IntellisenseDocument implements TextDocument {
         return [];
     }
 
-    public edit(
-        editorChanges: monacoEditor.editor.IModelContentChange[],
-        id: string
-    ): TextDocumentContentChangeEvent[] {
+    public editCell(editorChanges: IEditorContentChange[], id: string): TextDocumentContentChangeEvent[] {
         this._version += 1;
 
         // Convert the range to local (and remove 1 based)

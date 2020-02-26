@@ -7,12 +7,15 @@ import * as React from 'react';
 import { noop } from '../../client/common/utils/misc';
 import { IKeyboardEvent } from '../react-common/event';
 import { MonacoEditor } from '../react-common/monacoEditor';
+import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { InputHistory } from './inputHistory';
 import { CursorPos, IFont } from './mainState';
 
 // tslint:disable-next-line: import-name
 export interface IEditorProps {
     content: string;
+    previousContent: string | undefined;
+    version: number;
     codeTheme: string;
     readOnly: boolean;
     testMode: boolean;
@@ -26,83 +29,53 @@ export interface IEditorProps {
     useQuickEdit?: boolean;
     font: IFont;
     hasFocus: boolean;
-    cursorPos: CursorPos;
+    cursorPos: CursorPos | monacoEditor.IPosition;
+    disableUndoStack: boolean;
     onCreated(code: string, modelId: string): void;
-    onChange(changes: monacoEditor.editor.IModelContentChange[], model: monacoEditor.editor.ITextModel): void;
+    onChange(e: IMonacoModelContentChangeEvent): void;
     openLink(uri: monacoEditor.Uri): void;
     keyDown?(e: IKeyboardEvent): void;
     focused?(): void;
     unfocused?(): void;
 }
 
-interface IEditorState {
-    editor: monacoEditor.editor.IStandaloneCodeEditor | undefined;
-    model: monacoEditor.editor.ITextModel | null;
-    forceMonaco: boolean;
-}
-
-export class Editor extends React.Component<IEditorProps, IEditorState> {
+export class Editor extends React.Component<IEditorProps> {
     private subscriptions: monacoEditor.IDisposable[] = [];
     private lastCleanVersionId: number = 0;
     private monacoRef: React.RefObject<MonacoEditor> = React.createRef<MonacoEditor>();
 
     constructor(prop: IEditorProps) {
         super(prop);
-        this.state = { editor: undefined, model: null, forceMonaco: false };
     }
 
     public componentWillUnmount = () => {
         this.subscriptions.forEach(d => d.dispose());
     };
 
-    public componentDidUpdate(prevProps: IEditorProps, prevState: IEditorState) {
-        if (this.props.hasFocus && (!prevProps.hasFocus || !prevState.editor)) {
+    public componentDidUpdate(prevProps: IEditorProps) {
+        if (this.props.hasFocus && !prevProps.hasFocus) {
             this.giveFocus(this.props.cursorPos);
         }
     }
 
     public render() {
         const classes = this.props.readOnly ? 'editor-area' : 'editor-area editor-area-editable';
-        const renderEditor =
-            this.state.forceMonaco || this.props.useQuickEdit === undefined || this.props.useQuickEdit === false
-                ? this.renderMonacoEditor
-                : this.renderQuickEditor;
+        const renderEditor = this.renderMonacoEditor;
         return <div className={classes}>{renderEditor()}</div>;
     }
 
-    public giveFocus(cursorPos: CursorPos) {
-        const readOnly = this.props.readOnly;
-        if (this.state.editor && !readOnly) {
-            this.state.editor.focus();
-        }
-        if (this.state.editor && cursorPos !== CursorPos.Current) {
-            const current = this.state.editor.getPosition();
-            const lineNumber = cursorPos === CursorPos.Top ? 1 : this.state.editor.getModel()!.getLineCount();
-            const column = current && current.lineNumber === lineNumber ? current.column : 1;
-            this.state.editor.setPosition({ lineNumber, column });
+    public giveFocus(cursorPos: CursorPos | monacoEditor.IPosition) {
+        if (this.monacoRef.current) {
+            this.monacoRef.current.giveFocus(cursorPos);
         }
     }
 
     public getContents(): string {
-        if (this.state.model) {
-            return this.state.model.getValue().replace(/\r/g, '');
+        if (this.monacoRef.current) {
+            return this.monacoRef.current.getContents();
         }
         return '';
     }
-
-    private renderQuickEditor = (): JSX.Element => {
-        const readOnly = this.props.readOnly;
-        return (
-            <textarea
-                className="plain-editor"
-                readOnly={readOnly}
-                value={this.props.content}
-                rows={this.props.content.split('\n').length}
-                onChange={this.onAreaChange}
-                onMouseEnter={this.onAreaEnter}
-            />
-        );
-    };
 
     private renderMonacoEditor = (): JSX.Element => {
         const readOnly = this.props.readOnly;
@@ -141,34 +114,30 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
                 measureWidthClassName={this.props.editorMeasureClassName}
                 testMode={this.props.testMode}
                 value={this.props.content}
+                previousValue={this.props.previousContent}
                 outermostParentClass={this.props.outermostParentClass}
                 theme={this.props.monacoTheme ? this.props.monacoTheme : 'vs'}
                 language={this.props.language}
                 editorMounted={this.editorDidMount}
+                modelChanged={this.props.onChange}
                 options={options}
+                version={this.props.version}
                 openLink={this.props.openLink}
                 ref={this.monacoRef}
+                cursorPos={this.props.cursorPos}
             />
         );
     };
 
-    private onAreaChange = (_event: React.ChangeEvent<HTMLTextAreaElement>) => {
-        // Force switch to monaco
-        this.setState({ forceMonaco: true });
-    };
-
-    private onAreaEnter = (_event: React.MouseEvent<HTMLTextAreaElement, MouseEvent>) => {
-        // Force switch to monaco
-        this.setState({ forceMonaco: true });
-    };
-
     private editorDidMount = (editor: monacoEditor.editor.IStandaloneCodeEditor) => {
-        // Update our state
         const model = editor.getModel();
-        this.setState({ editor, model: editor.getModel() });
 
-        // Listen for model changes
-        this.subscriptions.push(editor.onDidChangeModelContent(this.modelChanged));
+        // Disable undo/redo on the model if asked
+        // tslint:disable: no-any
+        if (this.props.disableUndoStack && (model as any).undo && (model as any).redo) {
+            (model as any).undo = noop;
+            (model as any).redo = noop;
+        }
 
         // List for key up/down events if not read only
         if (!this.props.readOnly) {
@@ -184,44 +153,32 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         this.subscriptions.push(editor.onDidBlurEditorWidget(this.props.unfocused ? this.props.unfocused : noop));
     };
 
-    private modelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
-        if (this.state.model) {
-            this.props.onChange(e.changes, this.state.model);
-        }
-    };
-
     // tslint:disable-next-line: cyclomatic-complexity
     private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
-        if (this.state.editor && this.state.model && this.monacoRef && this.monacoRef.current) {
-            const cursor = this.state.editor.getPosition();
+        if (this.monacoRef.current) {
+            const cursor = this.monacoRef.current.getPosition();
             const currentLine = this.monacoRef.current.getCurrentVisibleLine();
             const visibleLineCount = this.monacoRef.current.getVisibleLineCount();
             const isSuggesting = this.monacoRef.current.isSuggesting();
             const isFirstLine = currentLine === 0;
             const isLastLine = currentLine === visibleLineCount - 1;
-            const isDirty = this.state.model!.getVersionId() > this.lastCleanVersionId;
+            const isDirty = this.monacoRef.current.getVersionId() > this.lastCleanVersionId;
 
             // See if we need to use the history or not
             if (cursor && this.props.history && e.code === 'ArrowUp' && isFirstLine && !isSuggesting) {
                 const currentValue = this.getContents();
                 const newValue = this.props.history.completeUp(currentValue);
                 if (newValue !== currentValue) {
-                    this.state.model.setValue(newValue);
-                    this.lastCleanVersionId = this.state.model.getVersionId();
-                    this.state.editor.setPosition({ lineNumber: 1, column: 1 });
+                    this.monacoRef.current.setValue(newValue, CursorPos.Top);
+                    this.lastCleanVersionId = this.monacoRef.current.getVersionId();
                     e.stopPropagation();
                 }
             } else if (cursor && this.props.history && e.code === 'ArrowDown' && isLastLine && !isSuggesting) {
                 const currentValue = this.getContents();
                 const newValue = this.props.history.completeDown(currentValue);
                 if (newValue !== currentValue) {
-                    this.state.model.setValue(newValue);
-                    this.lastCleanVersionId = this.state.model.getVersionId();
-                    const lastLine = this.state.model.getLineCount();
-                    this.state.editor.setPosition({
-                        lineNumber: lastLine,
-                        column: this.state.model.getLineLength(lastLine) + 1
-                    });
+                    this.monacoRef.current.setValue(newValue, CursorPos.Bottom);
+                    this.lastCleanVersionId = this.monacoRef.current.getVersionId();
                     e.stopPropagation();
                 }
             } else if (this.props.keyDown) {
@@ -257,8 +214,8 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
     };
 
     private clear = () => {
-        if (this.state.editor) {
-            this.state.editor.setValue('');
+        if (this.monacoRef.current) {
+            this.monacoRef.current.setValue('', CursorPos.Top);
         }
     };
 }

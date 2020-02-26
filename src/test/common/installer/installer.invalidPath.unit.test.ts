@@ -21,7 +21,6 @@ import { IServiceContainer } from '../../../client/ioc/types';
 use(chaiAsPromised);
 
 // tslint:disable: max-func-body-length
-
 suite('Module Installer - Invalid Paths', () => {
     [undefined, Uri.file('resource')].forEach(resource => {
         ['moduleName', path.join('users', 'dev', 'tool', 'executable')].forEach(pathToExecutable => {
