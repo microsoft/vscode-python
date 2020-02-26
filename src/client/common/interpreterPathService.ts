@@ -32,7 +32,7 @@ export class InterpreterPathService implements IInterpreterPathService {
         );
         const globalSetting = this.workspaceService
             .getConfiguration('python', resource)!
-            .inspect<string>('pythonPath')!;
+            .inspect<string>('defaultInterpreterPath')!;
         return {
             globalValue: globalSetting.globalValue,
             workspaceFolderValue: workspaceFolderSetting.value,
@@ -54,7 +54,7 @@ export class InterpreterPathService implements IInterpreterPathService {
     public async update(
         resource: Resource,
         configTarget: ConfigurationTarget,
-        pythonPath: {} | undefined
+        pythonPath: string | undefined
     ): Promise<void> {
         if (configTarget === ConfigurationTarget.Global) {
             const pythonConfig = this.workspaceService.getConfiguration('python');

@@ -30,6 +30,6 @@ export class WorkspacePythonPathUpdaterService implements IPythonPathUpdaterServ
         } else {
             await pythonConfig.update('pythonPath', pythonPath, false);
         }
-        this.experiments.inExperiment(DeprecatePythonPath.cont;rol);
+        this.experiments.inExperiment(DeprecatePythonPath.control);
     }
 }
