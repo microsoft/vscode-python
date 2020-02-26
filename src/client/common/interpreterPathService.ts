@@ -22,21 +22,25 @@ export class InterpreterPathService implements IInterpreterPathService {
         workspaceValue?: string;
         workspaceFolderValue?: string;
     } {
-        const workspaceFolderSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
-            this.getSettingKey(resource, ConfigurationTarget.WorkspaceFolder),
-            undefined
-        );
-        const workspaceSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
-            this.getSettingKey(resource, ConfigurationTarget.Workspace),
-            undefined
-        );
+        const workspaceFolderSetting = resource
+            ? this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
+                  this.getSettingKey(resource, ConfigurationTarget.WorkspaceFolder),
+                  undefined
+              )
+            : undefined;
+        const workspaceSetting = resource
+            ? this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
+                  this.getSettingKey(resource, ConfigurationTarget.Workspace),
+                  undefined
+              )
+            : undefined;
         const globalSetting = this.workspaceService
             .getConfiguration('python', resource)!
             .inspect<string>('defaultInterpreterPath')!;
         return {
             globalValue: globalSetting.globalValue,
-            workspaceFolderValue: workspaceFolderSetting.value,
-            workspaceValue: workspaceSetting.value
+            workspaceFolderValue: workspaceFolderSetting?.value,
+            workspaceValue: workspaceSetting?.value
         };
     }
 
