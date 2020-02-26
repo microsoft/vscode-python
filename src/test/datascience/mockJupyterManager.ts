@@ -144,6 +144,15 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.addCell(CodeSnippits.ConfigSvg);
         this.addCell(CodeSnippits.ConfigPng);
         this.addCell(CodeSnippits.UpdateCWDAndPath.format(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')));
+        this.addCell(
+            CodeSnippits.UpdateCWDAndPath.format(
+                Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')).fsPath
+            )
+        );
+        tmp.file((_e, p, _fd, cleanup) => {
+            this.addCell(CodeSnippits.UpdateCWDAndPath.format(path.dirname(p).toLowerCase()));
+            this.cleanTemp = cleanup;
+        });
         this.addCell(`import sys\r\nsys.path.append('undefined')\r\nsys.path`);
         this.addCell(`import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
         this.addCell("matplotlib.style.use('dark_background')");
