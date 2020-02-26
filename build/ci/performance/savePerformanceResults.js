@@ -21,6 +21,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
             ignoreAttributes: false
         };
         const jsonObj = fastXmlParser.parse(xmlData, defaultOptions);
+        console.log(jsonObj);
 
         fs.readFile(jsonFile, 'utf8', (jsonReadError, data) => {
             if (jsonReadError) {
@@ -68,20 +69,22 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                                 }
                             });
                         } else {
-                            let test = performanceData.find(x => x.name === suite.testcase.name);
-                            if (test) {
-                                // if the test name is already there, we add the new time
-                                test.times.push(parseFloat(suite.testcase.time));
-                            } else {
-                                try {
-                                    // if its not there, we add the whole thing
-                                    test = {
-                                        name: suite.testcase.name,
-                                        times: [parseFloat(suite.testcase.time)]
-                                    };
+                            if (suite.testcase && suite.testcase.name) {
+                                let test = performanceData.find(x => x.name === suite.testcase.name);
+                                if (test) {
+                                    // if the test name is already there, we add the new time
+                                    test.times.push(parseFloat(suite.testcase.time));
+                                } else {
+                                    try {
+                                        // if its not there, we add the whole thing
+                                        test = {
+                                            name: suite.testcase.name,
+                                            times: [parseFloat(suite.testcase.time)]
+                                        };
 
-                                    performanceData.push(test);
-                                } catch {}
+                                        performanceData.push(test);
+                                    } catch {}
+                                }
                             }
                         }
                     }
