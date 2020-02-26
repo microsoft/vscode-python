@@ -70,7 +70,11 @@ export class InterpreterPathService implements IInterpreterPathService {
                 if (!resource) {
                     throw new Error('Workspace Uri not defined');
                 }
-                settingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${resource.fsPath}`;
+                const fsPathKey = this.workspaceService.workspaceFile
+                    ? this.workspaceService.workspaceFile.fsPath
+                    : // Only a single folder is opened, use fsPath of the folder as key
+                      resource.fsPath;
+                settingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${fsPathKey}`;
             }
         }
         const persistentSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(

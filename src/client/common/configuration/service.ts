@@ -13,12 +13,12 @@ import { IConfigurationService, IExperimentsManager, IInterpreterPathService, IP
 @injectable()
 export class ConfigurationService implements IConfigurationService {
     private readonly workspaceService: IWorkspaceService;
-    constructor(
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager,
-        @inject(IInterpreterPathService) private readonly interpreterPathService: IInterpreterPathService
-    ) {
+    private readonly experiments: IExperimentsManager;
+    private readonly interpreterPathService: IInterpreterPathService;
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
     }
     public getSettings(resource?: Uri): IPythonSettings {
         const InterpreterAutoSelectionService = this.serviceContainer.get<IInterpreterAutoSeletionProxyService>(
