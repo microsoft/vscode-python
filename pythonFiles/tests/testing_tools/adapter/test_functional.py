@@ -29,7 +29,7 @@ SCRIPT = os.path.join(TESTING_TOOLS_ROOT, "run_adapter.py")
 def resolve_testroot(name):
     projroot = os.path.join(DATA_DIR, name)
     testroot = os.path.join(projroot, "tests")
-    return projroot, str(Path(testroot).resolve())
+    return str(Path(projroot).resolve()), str(Path(testroot).resolve())
 
 
 def run_adapter(cmd, tool, *cliargs):
