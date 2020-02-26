@@ -11,8 +11,10 @@ import * as path from 'path';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
+import { DeprecatePythonPath } from '../client/common/experimentGroups';
 import { IProcessService } from '../client/common/process/types';
-import { IPythonSettings, Resource } from '../client/common/types';
+import { IExperimentsManager, IInterpreterPathService, IPythonSettings, Resource } from '../client/common/types';
+import { ACTIVATED_SERVICE_CONTAINER } from '../client/extension';
 import { PythonInterpreter } from '../client/interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
@@ -202,7 +204,7 @@ async function setAutoSaveDelay(resource: string | Uri | undefined, config: Conf
 
 async function setPythonPathInWorkspace(
     resource: string | Uri | undefined,
-    config: ConfigurationTarget,
+    config: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder,
     pythonPath?: string
 ) {
     const vscode = require('vscode') as typeof import('vscode');
@@ -211,11 +213,19 @@ async function setPythonPathInWorkspace(
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
     const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
-    const value = settings.inspect<string>('pythonPath');
+    const interpreterPathService = ACTIVATED_SERVICE_CONTAINER!.get<IInterpreterPathService>(IInterpreterPathService);
+    const abExperiments = ACTIVATED_SERVICE_CONTAINER!.get<IExperimentsManager>(IExperimentsManager);
+    const value = abExperiments.inExperiment(DeprecatePythonPath.experiment)
+        ? interpreterPathService.inspectInterpreterPath(vscode.Uri.file(__filename))
+        : settings.inspect<string>('pythonPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (value && value[prop] !== pythonPath) {
-        await settings.update('pythonPath', pythonPath, config);
+        if (abExperiments.inExperiment(DeprecatePythonPath.experiment)) {
+            await interpreterPathService.update(resourceUri, config, pythonPath);
+        } else {
+            await settings.update('pythonPath', pythonPath, config);
+        }
         await disposePythonSettings();
     }
 }

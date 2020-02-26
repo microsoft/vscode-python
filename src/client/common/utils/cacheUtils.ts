@@ -32,8 +32,8 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'))
     if (!section) {
         return 'python';
     }
-    const interpreterPathService = ACTIVATED_SERVICE_CONTAINER.get<IInterpreterPathService>(IInterpreterPathService);
-    const abExperiments = ACTIVATED_SERVICE_CONTAINER.get<IExperimentsManager>(IExperimentsManager);
+    const interpreterPathService = ACTIVATED_SERVICE_CONTAINER!.get<IInterpreterPathService>(IInterpreterPathService);
+    const abExperiments = ACTIVATED_SERVICE_CONTAINER!.get<IExperimentsManager>(IExperimentsManager);
     const inExperiment = abExperiments.inExperiment(DeprecatePythonPath.experiment);
     abExperiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
     const globalPythonPath = inExperiment
