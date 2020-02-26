@@ -7,7 +7,9 @@
 
 import { Uri } from 'vscode';
 import '../../common/extensions';
-import { Resource } from '../types';
+import { ACTIVATED_SERVICE_CONTAINER } from '../../extension';
+import { DeprecatePythonPath } from '../experimentGroups';
+import { IExperimentsManager, IInterpreterPathService, Resource } from '../types';
 
 type VSCodeType = typeof import('vscode');
 type CacheData = {
@@ -30,7 +32,13 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'))
     if (!section) {
         return 'python';
     }
-    const globalPythonPath = section.inspect<string>('pythonPath')!.globalValue || 'python';
+    const interpreterPathService = ACTIVATED_SERVICE_CONTAINER.get<IInterpreterPathService>(IInterpreterPathService);
+    const abExperiments = ACTIVATED_SERVICE_CONTAINER.get<IExperimentsManager>(IExperimentsManager);
+    const inExperiment = abExperiments.inExperiment(DeprecatePythonPath.experiment);
+    abExperiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+    const globalPythonPath = inExperiment
+        ? interpreterPathService.inspectInterpreterPath(vscode.Uri.file(__filename)).globalValue || 'python'
+        : section.inspect<string>('pythonPath')!.globalValue || 'python';
     // Get the workspace related to this resource.
     if (
         !resource ||
@@ -43,8 +51,9 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'))
     if (!folder) {
         return globalPythonPath;
     }
-    const workspacePythonPath =
-        vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
+    const workspacePythonPath = inExperiment
+        ? interpreterPathService.interpreterPath(resource)
+        : vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
     return `${folder.uri.fsPath}-${workspacePythonPath}`;
 }
 /**
