@@ -42,7 +42,7 @@ import { noop } from '../core';
 
 // tslint:disable: max-func-body-length
 
-suite('xA/B experiments', () => {
+suite('A/B experiments', () => {
     let workspaceService: IWorkspaceService;
     let httpClient: IHttpClient;
     let crypto: ICryptoUtils;

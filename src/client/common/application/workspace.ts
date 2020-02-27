@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
+import * as path from 'path';
 import {
     CancellationToken,
     ConfigurationChangeEvent,
@@ -69,6 +70,6 @@ export class WorkspaceService implements IWorkspaceService {
     }
     public getWorkspaceFolderIdentifier(resource: Resource, defaultValue: string = ''): string {
         const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
-        return workspaceFolder ? workspaceFolder.uri.fsPath : defaultValue;
+        return workspaceFolder ? path.normalize(workspaceFolder.uri.fsPath).toUpperCase() : defaultValue;
     }
 }

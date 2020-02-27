@@ -6,7 +6,8 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Event, EventEmitter } from 'vscode';
 import { IInterpreterAutoSeletionProxyService } from '../interpreter/autoSelection/types';
-import { IWorkspaceService } from './application/types';
+import { ICommandManager, IWorkspaceService } from './application/types';
+import { Commands } from './constants';
 import {
     IDisposableRegistry,
     IInterpreterPathService,
@@ -17,20 +18,28 @@ import {
 
 @injectable()
 export class InterpreterPathService implements IInterpreterPathService {
+    public readonly settingKeys = new Set<string>();
     private readonly didChangeInterpreterEmitter = new EventEmitter<InterpreterConfigurationScope>();
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IInterpreterAutoSeletionProxyService)
         private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {
-        const disposable = workspaceService.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration('python.defaultInterpreterPath', undefined)) {
-                this.didChangeInterpreterEmitter.fire({ uri: undefined, configTarget: ConfigurationTarget.Global });
-            }
-        });
-        disposableRegistry.push(disposable);
+        disposableRegistry.push(
+            workspaceService.onDidChangeConfiguration(e => {
+                if (e.affectsConfiguration('python.defaultInterpreterPath', undefined)) {
+                    this.didChangeInterpreterEmitter.fire({ uri: undefined, configTarget: ConfigurationTarget.Global });
+                }
+            })
+        );
+        disposableRegistry.push(
+            this.commandManager.registerCommand(Commands.ResetPythonInterpreters, () =>
+                this.clearAllInterpreterPathSettings().ignoreErrors()
+            )
+        );
     }
 
     public inspectInterpreterPath(
@@ -114,14 +123,15 @@ export class InterpreterPathService implements IInterpreterPathService {
         resource: Resource,
         configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder
     ): string {
+        let settingKey: string;
+        const folderKey = this.workspaceService.getWorkspaceFolderIdentifier(resource);
         switch (configTarget) {
             case ConfigurationTarget.WorkspaceFolder: {
                 if (!resource) {
                     throw new Error('No resource provided');
                 }
-                return `WORKSPACE_FOLDER_INTERPRETER_PATH_${this.workspaceService.getWorkspaceFolderIdentifier(
-                    resource
-                )}`;
+                settingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${folderKey}`;
+                break;
             }
             default: {
                 if (!resource) {
@@ -130,9 +140,23 @@ export class InterpreterPathService implements IInterpreterPathService {
                 const fsPathKey = this.workspaceService.workspaceFile
                     ? this.workspaceService.workspaceFile.fsPath
                     : // Only a single folder is opened, use fsPath of the folder as key
-                      this.workspaceService.getWorkspaceFolderIdentifier(resource);
-                return `WORKSPACE_INTERPRETER_PATH_${fsPathKey}`;
+                      folderKey;
+                settingKey = `WORKSPACE_INTERPRETER_PATH_${fsPathKey}`;
             }
         }
+        this.settingKeys.add(settingKey);
+        return settingKey;
+    }
+
+    public async clearAllInterpreterPathSettings(): Promise<void> {
+        const settingKeys = Array.from(this.settingKeys.keys());
+        for (const key of settingKeys) {
+            const persistentSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
+                key,
+                undefined
+            );
+            await persistentSetting.updateValue(undefined);
+        }
+        this.settingKeys.clear();
     }
 }
