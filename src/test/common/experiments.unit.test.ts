@@ -42,7 +42,7 @@ import { noop } from '../core';
 
 // tslint:disable: max-func-body-length
 
-suite('A/B experiments', () => {
+suite('xA/B experiments', () => {
     let workspaceService: IWorkspaceService;
     let httpClient: IHttpClient;
     let crypto: ICryptoUtils;
@@ -256,10 +256,6 @@ suite('A/B experiments', () => {
     async function testEnablingExperimentsToCheckIfInExperiment(enabled: boolean) {
         const sendTelemetry = sinon.stub(ExperimentsManager.prototype, 'sendTelemetryIfInExperiment');
         sendTelemetry.callsFake((_: string) => noop());
-        experiments
-            .setup(e => e.enabled)
-            .returns(() => enabled)
-            .verifiable(TypeMoq.Times.atLeastOnce());
 
         expManager = new ExperimentsManager(
             instance(persistentStateFactory),
@@ -271,6 +267,8 @@ suite('A/B experiments', () => {
             instance(fs),
             instance(configurationService)
         );
+
+        expManager._enabled = enabled;
         expManager.userExperiments.push({ name: 'this should be in experiment', max: 0, min: 0, salt: '' });
 
         // If experiments are disabled, then `inExperiment` will return false & vice versa.

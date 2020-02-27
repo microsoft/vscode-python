@@ -12,23 +12,26 @@ import { IConfigurationService, IExperimentsManager, IInterpreterPathService, IP
 
 @injectable()
 export class ConfigurationService implements IConfigurationService {
-    private readonly workspaceService: IWorkspaceService;
-    private readonly experiments: IExperimentsManager;
-    private readonly interpreterPathService: IInterpreterPathService;
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
-        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        this.experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-    }
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
     public getSettings(resource?: Uri): IPythonSettings {
         const InterpreterAutoSelectionService = this.serviceContainer.get<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService
         );
-        const settings = PythonSettings.getInstance(resource, InterpreterAutoSelectionService, this.workspaceService);
-        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
-            settings.pythonPath = this.interpreterPathService.interpreterPath(resource);
+        const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
+        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        const settings = PythonSettings.getInstance(resource, InterpreterAutoSelectionService, workspaceService);
+        /**
+         * Note that while calling `IExperimentsManager.inExperiment()`, we assume `IExperimentsManager.activate()` is already called.
+         * That's not true here, as `IConfigurationService.getSettings()` is often called in the constructor,which runs before `.activate()` methods.
+         * But we can still use it here for this particular experiment. Reason being that this experiment only changes
+         * `IConfigurationService.getSettings().pythonPath` setting, and I've checked that `IConfigurationService.getSettings().pythonPath`
+         * setting is not accessed anywhere in the constructor.
+         */
+        if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
+            settings.pythonPath = interpreterPathService.interpreterPath(resource);
         }
-        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+        experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         return settings;
     }
 
@@ -45,7 +48,8 @@ export class ConfigurationService implements IConfigurationService {
         };
         let settingsInfo = defaultSetting;
         if (section === 'python' && configTarget !== ConfigurationTarget.Global) {
-            settingsInfo = PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService);
+            const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+            settingsInfo = PythonSettings.getSettingsUriAndTarget(resource, workspaceService);
         }
 
         const configSection = workspace.getConfiguration(section, settingsInfo.uri ? settingsInfo.uri : null);
@@ -60,12 +64,16 @@ export class ConfigurationService implements IConfigurationService {
         ) {
             return;
         }
+        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         if (section === 'python' && setting === 'pythonPath') {
-            if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+            if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
+                const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(
+                    IInterpreterPathService
+                );
                 // tslint:disable-next-line: no-any
-                await this.interpreterPathService.update(settingsInfo.uri, settingsInfo.target, value as any);
+                await interpreterPathService.update(settingsInfo.uri, settingsInfo.target, value as any);
             }
-            this.experiments.inExperiment(DeprecatePythonPath.control);
+            experiments.inExperiment(DeprecatePythonPath.control);
         } else {
             await configSection.update(setting, value, settingsInfo.target);
             await this.verifySetting(configSection, settingsInfo.target, setting, value);
