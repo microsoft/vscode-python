@@ -4,8 +4,6 @@
 'use strict';
 
 import * as assert from 'assert';
-// tslint:disable-next-line: match-default-export-name
-import rewiremock from 'rewiremock';
 import { anyString, anything, instance, mock, spy, verify, when } from 'ts-mockito';
 import { DebugSession, WorkspaceFolder } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -50,26 +48,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         body: { category: 'telemetry', output: 'debugpy', data: { packageVersion: '1.0.0' } }
     };
 
-    const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
-    const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
-
-    class Reporter {
-        public static eventNames: string[] = [];
-        public static properties: Record<string, string>[] = [];
-        public static measures: {}[] = [];
-        public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
-            Reporter.eventNames.push(eventName);
-            Reporter.properties.push(properties!);
-            Reporter.measures.push(measures!);
-        }
-    }
-
     setup(() => {
-        process.env.VSC_PYTHON_UNIT_TEST = undefined;
-        process.env.VSC_PYTHON_CI_TEST = undefined;
-        rewiremock.enable();
-        rewiremock('vscode-extension-telemetry').with({ default: Reporter });
-
         const workspaceService = mock(WorkspaceService);
         const httpClient = mock(HttpClient);
         const crypto = mock(CryptoUtils);
@@ -105,12 +84,6 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
     });
 
     teardown(() => {
-        process.env.VSC_PYTHON_UNIT_TEST = oldValueOfVSC_PYTHON_UNIT_TEST;
-        process.env.VSC_PYTHON_CI_TEST = oldValueOfVSC_PYTHON_CI_TEST;
-        Reporter.properties = [];
-        Reporter.eventNames = [];
-        Reporter.measures = [];
-        rewiremock.disable();
         clearTelemetryReporter();
     });
 
