@@ -249,10 +249,16 @@ export class JupyterSession implements IJupyterSession {
     }
 
     public async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void> {
-        let newSession: Session.ISession | undefined;
+        let newSession: ISession | undefined;
         try {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
-            newSession = await this.createSession(this.serverSettings, kernel, this.contentsManager);
+            if (kernel.id && this.session && 'session' in kernel) {
+                // Remote case.
+                newSession = this.sessionManager.connectTo(kernel.session);
+                newSession.isRemoteSession = true;
+            } else {
+                newSession = await this.createSession(this.serverSettings, kernel, this.contentsManager);
+            }
 
             // Make sure it is idle before we return
             await this.waitForIdleOnSession(newSession, timeoutMS);
@@ -261,19 +267,8 @@ export class JupyterSession implements IJupyterSession {
             throw new JupyterSessionStartError(exc);
         }
 
-        if (kernel.id && this.session && 'session' in kernel) {
-            // Shutdown the current session
-            this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
-
-            this.kernelSpec = kernel;
-            this.session = this.sessionManager.connectTo(kernel.session);
-            this.session.isRemoteSession = true;
-            this.session.statusChanged.connect(this.statusHandler);
-            return this.waitForIdleOnSession(this.session, timeoutMS);
-        }
-
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
-        if (this.session?.kernel) {
+        if (this.session) {
             this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
             this.restartSessionPromise?.then(r => this.shutdownSession(r, undefined)).ignoreErrors();
         }
