@@ -150,7 +150,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             )
         );
         tmp.file((_e, p, _fd, cleanup) => {
-            this.addCell(CodeSnippits.UpdateCWDAndPath.format(path.dirname(p).toLowerCase()));
+            this.addCell(CodeSnippits.UpdateCWDAndPath.format(path.dirname(p)));
             this.cleanTemp = cleanup;
         });
         this.addCell(`import sys\r\nsys.path.append('undefined')\r\nsys.path`);
