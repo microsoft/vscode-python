@@ -801,7 +801,7 @@ export namespace DataScience {
     export const createdNewKernel = localize('DataScience.createdNewKernel', '{0}: Kernel started: {1}');
     export const kernelIsDead = localize(
         'DataScience.kernelIsDead',
-        'Kernel died while starting. Check the Jupyter output tab.'
+        'Kernel {0} died while starting. Check the Jupyter output tab for more information.'
     );
 }
 

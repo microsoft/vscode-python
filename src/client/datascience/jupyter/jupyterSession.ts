@@ -335,7 +335,9 @@ export class JupyterSession implements IJupyterSession {
                     resolve();
                 } else if (e === 'dead') {
                     traceError('Kernel died while waiting for idle');
-                    reject(new JupyterWaitForIdleError(localize.DataScience.kernelIsDead()));
+                    reject(
+                        new JupyterWaitForIdleError(localize.DataScience.kernelIsDead().format(session.kernel.name))
+                    );
                 }
             };
 
