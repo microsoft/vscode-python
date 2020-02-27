@@ -617,8 +617,11 @@ export interface IExperimentsManager {
 /**
  * Interface used to access current Interpreter Path
  */
+
+export type InterpreterConfigurationScope = { uri: Resource; configTarget: ConfigurationTarget };
 export const IInterpreterPathService = Symbol('IInterpreterPathService');
 export interface IInterpreterPathService {
+    onDidChangeInterpreter: Event<InterpreterConfigurationScope>;
     interpreterPath(resource: Resource): string;
     inspectInterpreterPath(
         resource: Resource

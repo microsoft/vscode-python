@@ -4,16 +4,34 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter } from 'vscode';
+import { IInterpreterAutoSeletionProxyService } from '../interpreter/autoSelection/types';
 import { IWorkspaceService } from './application/types';
-import { IInterpreterPathService, IPersistentStateFactory, Resource } from './types';
+import {
+    IDisposableRegistry,
+    IInterpreterPathService,
+    InterpreterConfigurationScope,
+    IPersistentStateFactory,
+    Resource
+} from './types';
 
 @injectable()
 export class InterpreterPathService implements IInterpreterPathService {
+    private readonly didChangeInterpreterEmitter = new EventEmitter<InterpreterConfigurationScope>();
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) {}
+        @inject(IInterpreterAutoSeletionProxyService)
+        private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+    ) {
+        const disposable = workspaceService.onDidChangeConfiguration(e => {
+            if (e.affectsConfiguration('python.defaultInterpreterPath', undefined)) {
+                this.didChangeInterpreterEmitter.fire({ uri: undefined, configTarget: ConfigurationTarget.Global });
+            }
+        });
+        disposableRegistry.push(disposable);
+    }
 
     public inspectInterpreterPath(
         resource: Resource
@@ -46,13 +64,26 @@ export class InterpreterPathService implements IInterpreterPathService {
 
     public interpreterPath(resource: Resource): string {
         const settings = this.inspectInterpreterPath(resource);
-        return settings.workspaceFolderValue !== undefined
-            ? settings.workspaceFolderValue
-            : settings.workspaceValue !== undefined
-            ? settings.workspaceValue
-            : settings.globalValue !== undefined
-            ? settings.globalValue
-            : 'python';
+        let interpreterPath =
+            settings.workspaceFolderValue !== undefined
+                ? settings.workspaceFolderValue
+                : settings.workspaceValue !== undefined
+                ? settings.workspaceValue
+                : settings.globalValue !== undefined
+                ? settings.globalValue
+                : 'python';
+        if (resource && interpreterPath === 'python') {
+            const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
+                resource
+            );
+            if (autoSelectedPythonInterpreter) {
+                this.interpreterAutoSelectionService
+                    .setWorkspaceInterpreter(resource, autoSelectedPythonInterpreter)
+                    .ignoreErrors();
+            }
+            interpreterPath = autoSelectedPythonInterpreter ? autoSelectedPythonInterpreter.path : interpreterPath;
+        }
+        return interpreterPath;
     }
 
     public async update(
@@ -63,6 +94,7 @@ export class InterpreterPathService implements IInterpreterPathService {
         if (configTarget === ConfigurationTarget.Global) {
             const pythonConfig = this.workspaceService.getConfiguration('python');
             await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
+            this.didChangeInterpreterEmitter.fire({ uri: undefined, configTarget });
             return;
         }
         const settingKey = this.getSettingKey(resource, configTarget);
@@ -71,6 +103,11 @@ export class InterpreterPathService implements IInterpreterPathService {
             undefined
         );
         await persistentSetting.updateValue(pythonPath);
+        this.didChangeInterpreterEmitter.fire({ uri: resource, configTarget });
+    }
+
+    public get onDidChangeInterpreter(): Event<InterpreterConfigurationScope> {
+        return this.didChangeInterpreterEmitter.event;
     }
 
     public getSettingKey(
