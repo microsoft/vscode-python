@@ -13,6 +13,7 @@ import unittest
 
 import pytest
 
+# Pytest 3.7 and later uses pathlib/pathlib2 for path resolution.
 try:
     from pathlib import Path
 except ImportError:

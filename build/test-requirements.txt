@@ -15,4 +15,4 @@ rope
 flask
 django
 isort
-pathlib2>=2.2.0 ; python_version<'3.6' # Same requirements as pytest 4.6.9
+pathlib2>=2.2.0 ; python_version<'3.6' # Python 2.7 compatibility (pytest)
