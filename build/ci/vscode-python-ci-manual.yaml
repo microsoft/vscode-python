@@ -221,10 +221,10 @@ stages:
           TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
           NeedsPythonTestReqs: true
           NeedsIPythonReqs: true
-        # 'Functional':
-        #   TestsToRun: 'testfunctional'
-        #   NeedsPythonTestReqs: true
-        #   NeedsPythonFunctionalReqs: true
+        'Functional':
+          TestsToRun: 'testfunctional'
+          NeedsPythonTestReqs: true
+          NeedsPythonFunctionalReqs: true
         'Single Workspace':
           TestsToRun: 'testSingleWorkspace'
           NeedsPythonTestReqs: true
