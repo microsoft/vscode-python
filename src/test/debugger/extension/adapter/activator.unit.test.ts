@@ -13,11 +13,13 @@ import { IDisposableRegistry, IPythonSettings } from '../../../../client/common/
 import { DebugAdapterActivator } from '../../../../client/debugger/extension/adapter/activator';
 import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
 import { DebugSessionLoggingFactory } from '../../../../client/debugger/extension/adapter/logging';
+import { OutdatedDebuggerPromptFactory } from '../../../../client/debugger/extension/adapter/outdatedDebuggerPrompt';
 import { AttachProcessProviderFactory } from '../../../../client/debugger/extension/attachQuickPick/factory';
 import { IAttachProcessProviderFactory } from '../../../../client/debugger/extension/attachQuickPick/types';
 import {
     IDebugAdapterDescriptorFactory,
-    IDebugSessionLoggingFactory
+    IDebugSessionLoggingFactory,
+    IOutdatedDebuggerPromptFactory
 } from '../../../../client/debugger/extension/types';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
 import { noop } from '../../../core';
@@ -28,6 +30,7 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
     let debugService: IDebugService;
     let descriptorFactory: IDebugAdapterDescriptorFactory;
     let loggingFactory: IDebugSessionLoggingFactory;
+    let debuggerPromptFactory: IOutdatedDebuggerPromptFactory;
     let disposableRegistry: IDisposableRegistry;
     let attachFactory: IAttachProcessProviderFactory;
 
@@ -43,11 +46,13 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
         debugService = mock(DebugService);
         descriptorFactory = mock(DebugAdapterDescriptorFactory);
         loggingFactory = mock(DebugSessionLoggingFactory);
+        debuggerPromptFactory = mock(OutdatedDebuggerPromptFactory);
         disposableRegistry = [];
         activator = new DebugAdapterActivator(
             instance(debugService),
             instance(descriptorFactory),
             instance(loggingFactory),
+            instance(debuggerPromptFactory),
             disposableRegistry,
             instance(attachFactory)
         );
@@ -61,6 +66,7 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
         await activator.activate();
 
         verify(debugService.registerDebugAdapterTrackerFactory('python', instance(loggingFactory))).once();
+        verify(debugService.registerDebugAdapterTrackerFactory('python', instance(debuggerPromptFactory))).once();
         verify(debugService.registerDebugAdapterDescriptorFactory('python', instance(descriptorFactory))).once();
     });
 
@@ -71,6 +77,6 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
 
         await activator.activate();
 
-        assert.deepEqual(disposableRegistry, [disposable, disposable]);
+        assert.deepEqual(disposableRegistry, [disposable, disposable, disposable]);
     });
 });
