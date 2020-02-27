@@ -6,6 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Event, EventEmitter } from 'vscode';
 import { IInterpreterAutoSeletionProxyService } from '../interpreter/autoSelection/types';
+import { PythonInterpreter } from '../interpreter/contracts';
 import { ICommandManager, IWorkspaceService } from './application/types';
 import { Commands } from './constants';
 import {
@@ -19,6 +20,7 @@ import {
 @injectable()
 export class InterpreterPathService implements IInterpreterPathService {
     public readonly settingKeys = new Set<string>();
+    private autoSelectedPythonInterpreter: PythonInterpreter | undefined;
     private readonly didChangeInterpreterEmitter = new EventEmitter<InterpreterConfigurationScope>();
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -81,7 +83,7 @@ export class InterpreterPathService implements IInterpreterPathService {
                 : settings.globalValue !== undefined
                 ? settings.globalValue
                 : 'python';
-        if (resource && interpreterPath === 'python') {
+        if (!this.autoSelectedPythonInterpreter && resource && interpreterPath === 'python') {
             const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
                 resource
             );
@@ -90,8 +92,10 @@ export class InterpreterPathService implements IInterpreterPathService {
                     .setWorkspaceInterpreter(resource, autoSelectedPythonInterpreter)
                     .ignoreErrors();
             }
-            interpreterPath = autoSelectedPythonInterpreter ? autoSelectedPythonInterpreter.path : interpreterPath;
         }
+        interpreterPath = this.autoSelectedPythonInterpreter
+            ? this.autoSelectedPythonInterpreter.path
+            : interpreterPath;
         return interpreterPath;
     }
 
