@@ -160,7 +160,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Save the editor and the model in our state.
             this.setState({ editor, model });
-            this.giveFocusToEditor(editor, this.props.cursorPos, this.props.options.readOnly);
+            if (this.props.hasFocus) {
+                this.giveFocusToEditor(editor, this.props.cursorPos, this.props.options.readOnly);
+            }
             if (this.props.theme) {
                 monacoEditor.editor.setTheme(this.props.theme);
             }
