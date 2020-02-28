@@ -818,7 +818,7 @@ df.head()`;
                     execution_count: null,
                     metadata: {},
                     outputs: [],
-                    source: []
+                    source: ['a']
                 });
 
                 const addedJSONFile = JSON.stringify(addedJSON, null, ' ');
@@ -893,6 +893,30 @@ df.head()`;
                     } else {
                         simulateKeyPressOnCellInner(cellIndex, keyboardEvent);
                     }
+                }
+
+                async function addMarkdown(code: string): Promise<void> {
+                    const totalCells = wrapper.find('NativeCell').length;
+                    const newCellIndex = totalCells;
+                    await addCell(wrapper, ioc, code, false);
+                    assert.equal(wrapper.find('NativeCell').length, totalCells + 1);
+
+                    // First lose focus
+                    clickCell(newCellIndex);
+                    let update = waitForMessage(ioc, InteractiveWindowMessages.UnfocusedCellEditor);
+                    simulateKeyPressOnCell(1, { code: 'Escape' });
+                    await update;
+
+                    // Switch to markdown
+                    update = waitForMessage(ioc, CommonActionType.CHANGE_CELL_TYPE);
+                    simulateKeyPressOnCell(newCellIndex, { code: 'm' });
+                    await update;
+
+                    clickCell(newCellIndex);
+
+                    // Monaco editor should be rendered and the cell should be markdown
+                    assert.ok(!isCellFocused(wrapper, 'NativeCell', newCellIndex));
+                    assert.ok(isCellMarkdown(wrapper, 'NativeCell', newCellIndex));
                 }
 
                 function simulateKeyPressOnEditor(
@@ -1065,8 +1089,9 @@ df.head()`;
                         return update;
                     }
                     test('Add a cell and undo', async () => {
-                        addMockData(ioc, 'c=4\nc', '4');
-                        await addCell(wrapper, ioc, 'c=4\nc', false);
+                        // Add empty cell, else adding text is yet another thing that needs to be undone,
+                        // we have tests for that.
+                        await addCell(wrapper, ioc, '', false);
 
                         // Should have 4 cells
                         assert.equal(wrapper.find('NativeCell').length, 4, 'Cell not added');
@@ -1586,6 +1611,49 @@ df.head()`;
                             isCellSelected(wrapper, 'NativeCell', secondCell),
                             'Second new cell must not be selected'
                         );
+                    });
+
+                    test('Navigating cells using up/down keys through code & markdown cells, while focus is set to editor', async () => {
+                        // Previously when pressing ArrowDown with mixture of markdown and code cells,
+                        // the cursor would not go past a markdown cell (i.e. markdown editor will not get focus for ArrowDown to work).
+
+                        wrapper.update();
+
+                        // Add a markdown cell at the end.
+                        await addMarkdown('4');
+                        await addCell(wrapper, ioc, '5', false);
+                        await addMarkdown('6');
+                        await addCell(wrapper, ioc, '7', false);
+
+                        // Access the code in the cells.
+                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const model = (notebookProvider.editors[0] as NativeEditorWebView).model;
+
+                        // Set focus to the first cell.
+                        let update = waitForUpdate(wrapper, NativeEditor, 1);
+                        clickCell(0);
+                        await update;
+                        update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                        simulateKeyPressOnCell(0, { code: 'Enter' });
+                        await update;
+                        assert.ok(isCellFocused(wrapper, 'NativeCell', 0));
+
+                        for (let index = 0; index < 5; index += 1) {
+                            // 1. Now press the down arrow, and focus should go to the next cell.
+                            update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                            const monacoEditor = getNativeFocusedEditor(wrapper)!.instance() as MonacoEditor;
+                            monacoEditor.getCurrentVisibleLine = () => 0;
+                            monacoEditor.getVisibleLineCount = () => 1;
+                            simulateKeyPressOnCell(index, { code: 'ArrowDown' });
+                            await update;
+
+                            // Next cell.
+                            const expectedActiveCell = model?.cells[index + 1];
+                            // The editor has focus, confirm the value in the active element/editor is the code.
+                            const codeInActiveElement = ((document.activeElement as any).value as string).trim();
+                            const expectedCode = concatMultilineStringInput(expectedActiveCell!.data.source!).trim();
+                            assert.equal(codeInActiveElement, expectedCode);
+                        }
                     });
 
                     test("Pressing 'd' on a selected cell twice deletes the cell", async () => {

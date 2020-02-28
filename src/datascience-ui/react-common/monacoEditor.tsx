@@ -65,6 +65,18 @@ export interface IMonacoEditorState {
 // Need this to prevent wiping of the current value on a componentUpdate. react-monaco-editor has that problem.
 
 export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEditorState> {
+    /**
+     * Keeps track of the last editor controls that was to get focus,
+     * along with the cursor position and whether it was readonly.
+     * Note: Static to ensure we only set focus to one monaco editor in entire notebook.
+     * Also, last one to initialize this wins.
+     * This also ensures that only one editor will ever have focus.
+     */
+    private static LastEditorToGetFocus?: {
+        editor: MonacoEditor;
+        cursorPos: CursorPos | monacoEditor.IPosition;
+        readonly?: boolean;
+    };
     private containerRef: React.RefObject<HTMLDivElement>;
     private measureWidthRef: React.RefObject<HTMLDivElement>;
     private resizeTimer?: number;
@@ -85,13 +97,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private debouncedComputeLineTops = debounce(this.computeLineTops.bind(this), 100);
     private skipNotifications = false;
     private previousModelValue: string = '';
-
     /**
      * Reference to parameter widget (used by monaco to display parameter docs).
-     *
-     * @private
-     * @type {Element}
-     * @memberof MonacoEditor
      */
     private parameterWidget?: Element;
 
@@ -164,6 +171,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Save the editor and the model in our state.
             this.setState({ editor, model });
+            this.giveFocusIfNecessary(editor);
             if (this.props.theme) {
                 monacoEditor.editor.setTheme(this.props.theme);
             }
@@ -345,6 +353,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (!prevState.editor && this.state.editor && this.containerRef.current) {
             this.updateBackgroundStyle();
         }
+        if (this.state.editor) {
+            this.giveFocusIfNecessary(this.state.editor);
+        }
     }
     public shouldComponentUpdate(
         nextProps: Readonly<IMonacoEditorProps>,
@@ -399,15 +410,16 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     }
 
     public giveFocus(cursorPos: CursorPos | monacoEditor.IPosition) {
-        const readOnly = this.props.options.readOnly;
-        if (this.state.editor && !readOnly) {
-            this.state.editor.focus();
-        }
-        if (this.state.editor && cursorPos !== CursorPos.Current) {
-            const current = this.state.editor.getPosition();
-            const lineNumber = cursorPos === CursorPos.Top ? 1 : this.state.editor.getModel()!.getLineCount();
-            const column = current && current.lineNumber === lineNumber ? current.column : 1;
-            this.state.editor.setPosition({ lineNumber, column });
+        if (this.state.editor) {
+            this.giveFocusToEditor(this.state.editor, cursorPos, this.props.options.readOnly);
+        } else {
+            // Keep track of this react component and focus information.
+            // When editor control is available we can set focus.
+            MonacoEditor.LastEditorToGetFocus = {
+                editor: this,
+                cursorPos: cursorPos,
+                readonly: this.props.options.readOnly
+            };
         }
     }
 
@@ -432,6 +444,41 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (this.state.model && this.state.editor && this.state.model.getValue() !== text) {
             this.forceValue(text, cursorPos);
         }
+    }
+
+    /**
+     * Give focus to the specified editor and clear the property used to track whether to set focus to an editor or not.
+     */
+    private giveFocusToEditor(
+        editor: monacoEditor.editor.IStandaloneCodeEditor,
+        cursorPos: CursorPos | monacoEditor.IPosition,
+        readonly?: boolean
+    ) {
+        if (!readonly) {
+            editor.focus();
+        }
+        if (cursorPos !== CursorPos.Current) {
+            const current = editor.getPosition();
+            const lineNumber = cursorPos === CursorPos.Top ? 1 : editor.getModel()!.getLineCount();
+            const column = current && current.lineNumber === lineNumber ? current.column : 1;
+            editor.setPosition({ lineNumber, column });
+        }
+        MonacoEditor.LastEditorToGetFocus = undefined;
+    }
+
+    /**
+     * Check if we need to set focus to the editor of this react component.
+     * We will only ever set focus in one editor at a time.
+     * The last one that initializes the `LastEditorToGetFocus` property wins.
+     * Once it has been updated, clear that propery, to prevent future unnecessary focusing.
+     */
+    private giveFocusIfNecessary(editor: monacoEditor.editor.IStandaloneCodeEditor) {
+        if (MonacoEditor.LastEditorToGetFocus?.editor !== this) {
+            return;
+        }
+        // Give preference to current props.
+        const readonly = this.props.options.readOnly ?? MonacoEditor.LastEditorToGetFocus.readonly;
+        this.giveFocusToEditor(editor, MonacoEditor.LastEditorToGetFocus.cursorPos, readonly);
     }
 
     private closeSuggestWidget() {

@@ -127,19 +127,19 @@ export async function addCell(
     let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
     addButton.simulate('click');
 
-    if (submit) {
-        await update;
+    await update;
 
+    let textArea: HTMLTextAreaElement | null;
+    if (code) {
         // Type in the code
         const editorEnzyme = getNativeFocusedEditor(wrapper);
-        const textArea = injectCode(editorEnzyme, code);
+        textArea = injectCode(editorEnzyme, code);
+    }
 
+    if (submit) {
         // Then run the cell (use ctrl+enter so we don't add another cell)
         update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
         simulateKey(textArea!, 'Enter', false, true);
-
-        return update;
-    } else {
         return update;
     }
 }

@@ -57,6 +57,13 @@ export class Editor extends React.Component<IEditorProps> {
         }
     }
 
+    public componentDidMount() {
+        // Set focus if this is the first time.
+        if (this.props.hasFocus) {
+            this.giveFocus(this.props.cursorPos);
+        }
+    }
+
     public render() {
         const classes = this.props.readOnly ? 'editor-area' : 'editor-area editor-area-editable';
         const renderEditor = this.renderMonacoEditor;
