@@ -48,6 +48,7 @@ export interface IMonacoEditorProps {
     forceBackground?: string;
     measureWidthClassName?: string;
     version: number;
+    hasFocus: boolean;
     cursorPos: CursorPos | monacoEditor.IPosition;
     modelChanged(e: IMonacoModelContentChangeEvent): void;
     editorMounted(editor: monacoEditor.editor.IStandaloneCodeEditor): void;
@@ -65,14 +66,6 @@ export interface IMonacoEditorState {
 // Need this to prevent wiping of the current value on a componentUpdate. react-monaco-editor has that problem.
 
 export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEditorState> {
-    /**
-     * Keeps track of the fact that we need to set focus to the editor,
-     * along with the cursor position and whether it was readonly.
-     */
-    private pendingFocus?: {
-        cursorPos: CursorPos | monacoEditor.IPosition;
-        readonly?: boolean;
-    };
     private containerRef: React.RefObject<HTMLDivElement>;
     private measureWidthRef: React.RefObject<HTMLDivElement>;
     private resizeTimer?: number;
@@ -167,7 +160,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Save the editor and the model in our state.
             this.setState({ editor, model });
-            this.giveFocusIfNecessary(editor);
+            this.giveFocusToEditor(editor, this.props.cursorPos, this.props.options.readOnly);
             if (this.props.theme) {
                 monacoEditor.editor.setTheme(this.props.theme);
             }
@@ -309,6 +302,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         }
     };
 
+    // tslint:disable-next-line: cyclomatic-complexity
     public componentDidUpdate(prevProps: IMonacoEditorProps, prevState: IMonacoEditorState) {
         if (this.state.editor) {
             if (prevProps.language !== this.props.language && this.state.model) {
@@ -349,8 +343,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (!prevState.editor && this.state.editor && this.containerRef.current) {
             this.updateBackgroundStyle();
         }
-        if (this.state.editor) {
-            this.giveFocusIfNecessary(this.state.editor);
+        if (this.state.editor && !prevProps.hasFocus && this.props.hasFocus) {
+            this.giveFocusToEditor(this.state.editor, this.props.cursorPos, this.props.options.readOnly);
         }
     }
     public shouldComponentUpdate(
@@ -408,13 +402,6 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     public giveFocus(cursorPos: CursorPos | monacoEditor.IPosition) {
         if (this.state.editor) {
             this.giveFocusToEditor(this.state.editor, cursorPos, this.props.options.readOnly);
-        } else {
-            // Keep track of this react component and focus information.
-            // When editor control is available we can set focus.
-            this.pendingFocus = {
-                cursorPos: cursorPos,
-                readonly: this.props.options.readOnly
-            };
         }
     }
 
@@ -458,22 +445,6 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const column = current && current.lineNumber === lineNumber ? current.column : 1;
             editor.setPosition({ lineNumber, column });
         }
-        this.pendingFocus = undefined;
-    }
-
-    /**
-     * Check if we need to set focus to the editor of this react component.
-     * We will only ever set focus in one editor at a time.
-     * The last one that initializes the `LastEditorToGetFocus` property wins.
-     * Once it has been updated, clear that propery, to prevent future unnecessary focusing.
-     */
-    private giveFocusIfNecessary(editor: monacoEditor.editor.IStandaloneCodeEditor) {
-        if (!this.pendingFocus) {
-            return;
-        }
-        // Give preference to current props.
-        const readonly = this.props.options.readOnly ?? this.pendingFocus.readonly;
-        this.giveFocusToEditor(editor, this.pendingFocus.cursorPos, readonly);
     }
 
     private closeSuggestWidget() {

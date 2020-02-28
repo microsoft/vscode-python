@@ -1425,7 +1425,7 @@ df.head()`;
                         assert.equal(isCellFocused(wrapper, 'NativeCell', 1), true);
 
                         // Now hit escape.
-                        update = waitForUpdate(wrapper, NativeEditor, 1);
+                        update = waitForMessage(ioc, InteractiveWindowMessages.UnfocusedCellEditor);
                         simulateKeyPressOnCell(1, { code: 'Escape' });
                         await update;
 

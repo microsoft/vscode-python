@@ -256,7 +256,14 @@ export function createCellVM(
 
     // Update the input text
     let inputLinesCount = 0;
-    const inputText = inputCell.data.cell_type === 'code' ? extractInputText(vm, settings) : '';
+    // If the cell is markdown, initialize inputBlockText with the mardown value.
+    // `inputBlockText` will be used to maintain diffs of editor changes. So whether its markdown or code, we need to generate it.
+    const inputText =
+        inputCell.data.cell_type === 'code'
+            ? extractInputText(vm, settings)
+            : inputCell.data.cell_type === 'markdown'
+            ? concatMultilineStringInput(vm.cell.data.source)
+            : '';
     if (inputText) {
         inputLinesCount = inputText.split('\n').length;
     }
