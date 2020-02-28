@@ -703,7 +703,7 @@ df.head()`;
                     const runButton = imageButtons.findWhere(w => w.props().tooltip === 'Run cell');
                     assert.equal(runButton.length, 1, 'No run button found');
                     const update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                        numberOfTimes: 2
+                        numberOfTimes: 3
                     });
                     runButton.simulate('click');
                     await update;
