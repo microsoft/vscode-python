@@ -216,6 +216,9 @@ suite('Data Science - JupyterSession', () => {
                 remoteSessionInstance = instance(remoteSession);
                 remoteSessionInstance.isRemoteSession = false;
                 when(remoteSession.kernel).thenReturn(instance(remoteKernel));
+                when(sessionManager.startNew(anything())).thenCall(() => {
+                    return Promise.resolve(instance(remoteSession));
+                });
             });
             suite('Switching kernels', () => {
                 setup(async () => {
@@ -232,7 +235,6 @@ suite('Data Science - JupyterSession', () => {
                 });
                 test('Will shutdown to old session', async () => {
                     verify(session.shutdown()).once();
-                    verify(session.dispose()).once();
                 });
                 test('Will connect to existing session', async () => {
                     verify(sessionManager.connectTo(newActiveRemoteKernel.session)).once();
@@ -241,8 +243,8 @@ suite('Data Science - JupyterSession', () => {
                     // Confirm the new session is flagged as remote
                     assert.isTrue(newActiveRemoteKernel.session.isRemoteSession);
                 });
-                test('Will note create a new session', async () => {
-                    verify(sessionManager.startNew(anything())).once();
+                test('Will not create a new session', async () => {
+                    verify(sessionManager.startNew(anything())).twice();
                 });
                 test('Restart should restart the new remote kernel', async () => {
                     when(remoteKernel.restart()).thenResolve();

@@ -296,6 +296,21 @@ suite('Data Science - KernelService', () => {
             resources: {},
             env: {},
             metadata: {
+                something: '1',
+                interpreter: {
+                    path: interpreter.path,
+                    type: interpreter.type
+                }
+            }
+        };
+        const userKernelSpecModel: Readonly<Kernel.ISpecModel> = {
+            argv: ['python', '-m', 'ipykernel'],
+            display_name: interpreter.displayName!,
+            language: PYTHON_LANGUAGE,
+            name: 'somme name',
+            resources: {},
+            env: {},
+            metadata: {
                 something: '1'
             }
         };
@@ -475,6 +490,53 @@ suite('Data Science - KernelService', () => {
             verify(fs.writeFile(kernelJsonFile, anything(), anything())).once();
             // Verify the contents of JSON written to the file match as expected.
             assert.deepEqual(JSON.parse(capture(fs.writeFile).first()[1] as string), expectedKernelJsonContent);
+        });
+        test('Kernel is found and spec file is updated with interpreter information in metadata along with environment variables', async () => {
+            when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
+            const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
+            when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve([kernel]);
+            when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
+            when(fs.writeFile(kernelJsonFile, anything())).thenResolve();
+            const envVariables = { MYVAR: '1' };
+            when(activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)).thenResolve(
+                envVariables
+            );
+            findMatchingKernelSpecStub.resolves(kernel);
+            const expectedKernelJsonContent: ReadWrite<Kernel.ISpecModel> = cloneDeep(kernelSpecModel);
+            // Fully qualified path must be injected into `argv`.
+            expectedKernelJsonContent.argv = [interpreter.path, '-m', 'ipykernel'];
+            // tslint:disable-next-line: no-any
+            expectedKernelJsonContent.metadata!.interpreter = interpreter as any;
+            // tslint:disable-next-line: no-any
+            expectedKernelJsonContent.env = envVariables as any;
+
+            const installedKernel = await kernelService.searchAndRegisterKernel(interpreter, true);
+
+            // tslint:disable-next-line: no-any
+            assert.deepEqual(kernel, installedKernel as any);
+            verify(fs.writeFile(kernelJsonFile, anything(), anything())).once();
+            // Verify the contents of JSON written to the file match as expected.
+            assert.deepEqual(JSON.parse(capture(fs.writeFile).first()[1] as string), expectedKernelJsonContent);
+        });
+        test('Kernel is found and spec file is not updated with interpreter information when user spec file', async () => {
+            when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
+            const kernel = new JupyterKernelSpec(userKernelSpecModel, kernelJsonFile);
+            when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve([kernel]);
+            when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(userKernelSpecModel));
+            when(fs.writeFile(kernelJsonFile, anything())).thenResolve();
+            const envVariables = { MYVAR: '1' };
+            when(activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)).thenResolve(
+                envVariables
+            );
+            findMatchingKernelSpecStub.resolves(kernel);
+
+            const installedKernel = await kernelService.searchAndRegisterKernel(interpreter, true);
+
+            // tslint:disable-next-line: no-any
+            assert.deepEqual(kernel, installedKernel as any);
+            verify(fs.writeFile(anything(), anything(), anything())).never();
         });
     });
 });

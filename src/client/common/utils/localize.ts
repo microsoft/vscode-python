@@ -799,6 +799,10 @@ export namespace DataScience {
     export const createdNewNotebook = localize('DataScience.createdNewNotebook', '{0}: Creating new notebook ');
 
     export const createdNewKernel = localize('DataScience.createdNewKernel', '{0}: Kernel started: {1}');
+    export const kernelIsDead = localize(
+        'DataScience.kernelIsDead',
+        'Kernel {0} died while starting. Check the Jupyter output tab for more information.'
+    );
 }
 
 export namespace DebugConfigStrings {

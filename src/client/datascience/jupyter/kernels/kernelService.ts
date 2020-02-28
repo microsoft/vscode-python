@@ -233,6 +233,11 @@ export class KernelService {
         const found = await this.findMatchingKernelSpec(interpreter, undefined, cancelToken);
         if (found) {
             sendTelemetryEvent(Telemetry.UseExistingKernel);
+
+            // Make sure the kernel is up to date with the current environment before
+            // we return it.
+            await this.updateKernelEnvironment(interpreter, found, cancelToken);
+
             return found;
         }
         return this.registerKernel(interpreter, disableUI, cancelToken);
@@ -350,56 +355,76 @@ export class KernelService {
             const error = `kernel.json not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
             throw new Error(error);
         }
-        const specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(await this.fileSystem.readFile(kernel.specFile));
 
-        // Ensure we use a fully qualified path to the python interpreter in `argv`.
-        if (specModel.argv[0].toLowerCase() === 'conda') {
-            // If conda is the first word, its possible its a conda activation command.
-            traceInfo(`Spec argv[0], not updated as it is using conda.`);
-        } else {
-            traceInfo(`Spec argv[0] updated from '${specModel.argv[0]}' to '${interpreter.path}'`);
-            specModel.argv[0] = interpreter.path;
-        }
-
-        // Get the activated environment variables (as a work around for `conda run` and similar).
-        // This ensures the code runs within the context of an activated environment.
-        specModel.env = await this.activationHelper
-            .getActivatedEnvironmentVariables(undefined, interpreter, true)
-            .catch(noop)
-            // tslint:disable-next-line: no-any
-            .then(env => (env || {}) as any);
-        if (Cancellation.isCanceled(cancelToken)) {
-            return;
-        }
-
-        // Special case, modify the PYTHONWARNINGS env to the global value.
-        // otherwise it's forced to 'ignore' because activated variables are cached.
-        if (specModel.env && process.env[PYTHON_WARNINGS]) {
-            // tslint:disable-next-line:no-any
-            specModel.env[PYTHON_WARNINGS] = process.env[PYTHON_WARNINGS] as any;
-        } else if (specModel.env && specModel.env[PYTHON_WARNINGS]) {
-            delete specModel.env[PYTHON_WARNINGS];
-        }
-
-        // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
-        // We'll need information such as interpreter type, display name, path, etc...
-        // Its just a JSON file, and the information is small, hence might as well store everything.
-        specModel.metadata = specModel.metadata || {};
-        // tslint:disable-next-line: no-any
-        specModel.metadata.interpreter = interpreter as any;
-
-        // Update the kernel.json with our new stuff.
-        await this.fileSystem.writeFile(kernel.specFile, JSON.stringify(specModel, undefined, 2), {
-            flag: 'w',
-            encoding: 'utf8'
-        });
-        kernel.metadata = specModel.metadata;
+        // Update the json with our environment.
+        await this.updateKernelEnvironment(interpreter, kernel, cancelToken, true);
 
         sendTelemetryEvent(Telemetry.RegisterAndUseInterpreterAsKernel);
         traceInfo(
             `Kernel successfully registered for ${interpreter.path} with the name=${name} and spec can be found here ${kernel.specFile}`
         );
         return kernel;
+    }
+    public async updateKernelEnvironment(
+        interpreter: PythonInterpreter | undefined,
+        kernel: IJupyterKernelSpec,
+        cancelToken?: CancellationToken,
+        forceWrite?: boolean
+    ) {
+        const specedKernel = kernel as JupyterKernelSpec;
+        if (specedKernel.specFile && interpreter) {
+            const specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(
+                await this.fileSystem.readFile(specedKernel.specFile)
+            );
+
+            // Make sure the specmodel has an interpreter or already in the metadata or we
+            // may overwrite a kernel created by the user
+            if (specModel.metadata?.interpreter || forceWrite) {
+                // Ensure we use a fully qualified path to the python interpreter in `argv`.
+                if (specModel.argv[0].toLowerCase() === 'conda') {
+                    // If conda is the first word, its possible its a conda activation command.
+                    traceInfo(`Spec argv[0], not updated as it is using conda.`);
+                } else {
+                    traceInfo(`Spec argv[0] updated from '${specModel.argv[0]}' to '${interpreter.path}'`);
+                    specModel.argv[0] = interpreter.path;
+                }
+
+                // Get the activated environment variables (as a work around for `conda run` and similar).
+                // This ensures the code runs within the context of an activated environment.
+                specModel.env = await this.activationHelper
+                    .getActivatedEnvironmentVariables(undefined, interpreter, true)
+                    .catch(noop)
+                    // tslint:disable-next-line: no-any
+                    .then(env => (env || {}) as any);
+                if (Cancellation.isCanceled(cancelToken)) {
+                    return;
+                }
+
+                // Special case, modify the PYTHONWARNINGS env to the global value.
+                // otherwise it's forced to 'ignore' because activated variables are cached.
+                if (specModel.env && process.env[PYTHON_WARNINGS]) {
+                    // tslint:disable-next-line:no-any
+                    specModel.env[PYTHON_WARNINGS] = process.env[PYTHON_WARNINGS] as any;
+                } else if (specModel.env && specModel.env[PYTHON_WARNINGS]) {
+                    delete specModel.env[PYTHON_WARNINGS];
+                }
+                // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
+                // We'll need information such as interpreter type, display name, path, etc...
+                // Its just a JSON file, and the information is small, hence might as well store everything.
+                specModel.metadata = specModel.metadata || {};
+                // tslint:disable-next-line: no-any
+                specModel.metadata.interpreter = interpreter as any;
+
+                // Update the kernel.json with our new stuff.
+                await this.fileSystem.writeFile(specedKernel.specFile, JSON.stringify(specModel, undefined, 2), {
+                    flag: 'w',
+                    encoding: 'utf8'
+                });
+            }
+
+            // Always update the metadata for the original kernel.
+            specedKernel.metadata = specModel.metadata;
+        }
     }
     /**
      * Gets a list of all kernel specs.

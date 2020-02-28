@@ -520,3 +520,10 @@ body, html {
     cursor: unset;
 }
 
+.toolbar-menu-bar .image-button {
+    margin-right: 12px;
+}
+
+.image-button:focus {
+    outline: none;
+}

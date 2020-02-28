@@ -15,6 +15,12 @@ import pytest
 from ...__main__ import TESTING_TOOLS_ROOT
 from testing_tools.adapter.util import fix_path, PATH_SEP
 
+# Pytest 3.7 and later uses pathlib/pathlib2 for path resolution.
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
+
 
 CWD = os.getcwd()
 DATA_DIR = os.path.join(os.path.dirname(__file__), ".data")
@@ -23,7 +29,8 @@ SCRIPT = os.path.join(TESTING_TOOLS_ROOT, "run_adapter.py")
 
 def resolve_testroot(name):
     projroot = os.path.join(DATA_DIR, name)
-    return projroot, os.path.join(projroot, "tests")
+    testroot = os.path.join(projroot, "tests")
+    return str(Path(projroot).resolve()), str(Path(testroot).resolve())
 
 
 def run_adapter(cmd, tool, *cliargs):

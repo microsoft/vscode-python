@@ -18,7 +18,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
 import { sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -156,7 +156,11 @@ export class JupyterSession implements IJupyterSession {
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createRestartSession(oldSession.serverSettings, this.contentsManager);
+            this.restartSessionPromise = this.createRestartSession(
+                oldSession.serverSettings,
+                this.kernelSpec,
+                this.contentsManager
+            );
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
@@ -226,7 +230,12 @@ export class JupyterSession implements IJupyterSession {
         }
 
         // Start a new session
-        this.session = await this.createSession(this.serverSettings, this.contentsManager, cancelToken);
+        this.session = await this.createSession(
+            this.serverSettings,
+            this.kernelSpec,
+            this.contentsManager,
+            cancelToken
+        );
 
         // Listen for session status changes
         this.session.statusChanged.connect(this.statusHandler);
@@ -240,19 +249,26 @@ export class JupyterSession implements IJupyterSession {
     }
 
     public async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void> {
-        if (kernel.id && this.session && 'session' in kernel) {
-            // Shutdown the current session
-            this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
+        let newSession: ISession | undefined;
+        try {
+            // Don't immediately assume this kernel is valid. Try creating a session with it first.
+            if (kernel.id && this.session && 'session' in kernel) {
+                // Remote case.
+                newSession = this.sessionManager.connectTo(kernel.session);
+                newSession.isRemoteSession = true;
+            } else {
+                newSession = await this.createSession(this.serverSettings, kernel, this.contentsManager);
+            }
 
-            this.kernelSpec = kernel;
-            this.session = this.sessionManager.connectTo(kernel.session);
-            this.session.isRemoteSession = true;
-            this.session.statusChanged.connect(this.statusHandler);
-            return this.waitForIdleOnSession(this.session, timeoutMS);
+            // Make sure it is idle before we return
+            await this.waitForIdleOnSession(newSession, timeoutMS);
+        } catch (exc) {
+            // Throw a new exception indicating we cannot change.
+            throw new JupyterSessionStartError(exc);
         }
 
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
-        if (this.session?.kernel) {
+        if (this.session) {
             this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
             this.restartSessionPromise?.then(r => this.shutdownSession(r, undefined)).ignoreErrors();
         }
@@ -260,17 +276,14 @@ export class JupyterSession implements IJupyterSession {
         // Update our kernel spec
         this.kernelSpec = kernel;
 
-        // Start a new session
-        this.session = await this.createSession(this.serverSettings, this.contentsManager);
-
-        // Make sure it is idle before we return
-        await this.waitForIdleOnSession(this.session, timeoutMS);
+        // Save the new session
+        this.session = newSession;
 
         // Listen for session status changes
         this.session.statusChanged.connect(this.statusHandler);
 
         // Start the restart session promise too.
-        this.restartSessionPromise = this.createRestartSession(this.serverSettings, this.contentsManager);
+        this.restartSessionPromise = this.createRestartSession(this.serverSettings, kernel, this.contentsManager);
     }
 
     private getServerStatus(): ServerStatus {
@@ -299,7 +312,11 @@ export class JupyterSession implements IJupyterSession {
 
     private startRestartSession() {
         if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            this.restartSessionPromise = this.createRestartSession(this.session.serverSettings, this.contentsManager);
+            this.restartSessionPromise = this.createRestartSession(
+                this.session.serverSettings,
+                this.kernelSpec,
+                this.contentsManager
+            );
         }
     }
 
@@ -307,14 +324,23 @@ export class JupyterSession implements IJupyterSession {
     private async waitForIdleOnSession(session: ISession | undefined, timeout: number): Promise<void> {
         if (session && session.kernel) {
             traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
+            // tslint:disable-next-line: no-any
+            const statusHandler = (resolve: () => void, reject: (exc: any) => void, e: Kernel.Status | undefined) => {
+                if (e === 'idle') {
+                    resolve();
+                } else if (e === 'dead') {
+                    traceError('Kernel died while waiting for idle');
+                    reject(
+                        new JupyterWaitForIdleError(localize.DataScience.kernelIsDead().format(session.kernel.name))
+                    );
+                }
+            };
 
-            const kernelStatusChangedPromise = new Promise(resolve =>
-                session.statusChanged.connect((_, e) => (e === 'idle' ? resolve() : undefined))
+            const kernelStatusChangedPromise = new Promise((resolve, reject) =>
+                session.statusChanged.connect((_, e) => statusHandler(resolve, reject, e))
             );
-            const statusChangedPromise = new Promise(resolve =>
-                session.kernelChanged.connect((_, e) =>
-                    e.newValue && e.newValue.status === 'idle' ? resolve() : undefined
-                )
+            const statusChangedPromise = new Promise((resolve, reject) =>
+                session.kernelChanged.connect((_, e) => statusHandler(resolve, reject, e.newValue?.status))
             );
             const checkStatusPromise = new Promise(async resolve => {
                 // This function seems to cause CI builds to timeout randomly on
@@ -345,6 +371,7 @@ export class JupyterSession implements IJupyterSession {
 
     private async createRestartSession(
         serverSettings: ServerConnection.ISettings,
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         contentsManager: ContentsManager,
         cancelToken?: CancellationToken
     ): Promise<ISession> {
@@ -354,7 +381,7 @@ export class JupyterSession implements IJupyterSession {
         let exception: any;
         while (tryCount < 3) {
             try {
-                result = await this.createSession(serverSettings, contentsManager, cancelToken);
+                result = await this.createSession(serverSettings, kernelSpec, contentsManager, cancelToken);
                 await this.waitForIdleOnSession(result, 30000);
                 this.kernelSelector.addKernelToIgnoreList(result.kernel);
                 return result;
@@ -373,6 +400,7 @@ export class JupyterSession implements IJupyterSession {
 
     private async createSession(
         serverSettings: ServerConnection.ISettings,
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         contentsManager: ContentsManager,
         cancelToken?: CancellationToken
     ): Promise<Session.ISession> {
@@ -382,7 +410,7 @@ export class JupyterSession implements IJupyterSession {
         // Create our session options using this temporary notebook and our connection info
         const options: Session.IOptions = {
             path: this.notebookFiles[this.notebookFiles.length - 1].path,
-            kernelName: this.kernelSpec ? this.kernelSpec.name : '',
+            kernelName: kernelSpec ? kernelSpec.name : '',
             name: uuid(), // This is crucial to distinguish this session from any other.
             serverSettings: serverSettings
         };

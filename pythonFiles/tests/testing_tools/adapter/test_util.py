@@ -13,6 +13,12 @@ import unittest
 
 import pytest
 
+# Pytest 3.7 and later uses pathlib/pathlib2 for path resolution.
+try:
+    from pathlib import Path
+except ImportError:
+    from pathlib2 import Path
+
 from testing_tools.adapter.util import (
     fix_path,
     fix_relpath,
@@ -30,9 +36,9 @@ class FilePathTests(unittest.TestCase):
         from . import test_functional
 
         ignored = {
-            os.path.abspath(__file__),
-            os.path.abspath(util.__file__),
-            os.path.abspath(test_functional.__file__),
+            str(Path(os.path.abspath(__file__)).resolve()),
+            str(Path(os.path.abspath(util.__file__)).resolve()),
+            str(Path(os.path.abspath(test_functional.__file__)).resolve()),
         }
         adapter = os.path.abspath(os.path.dirname(testing_tools.adapter.__file__))
         tests = os.path.join(

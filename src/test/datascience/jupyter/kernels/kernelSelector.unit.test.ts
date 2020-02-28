@@ -573,6 +573,7 @@ suite('Data Science - KernelSelector', () => {
             verify(
                 kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())
             ).once();
+            verify(kernelService.updateKernelEnvironment(interpreter, anything(), anything())).never();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
             verify(appShell.showQuickPick(anything(), anything(), anything())).never();
             verify(kernelService.registerKernel(anything(), anything(), anything())).once();

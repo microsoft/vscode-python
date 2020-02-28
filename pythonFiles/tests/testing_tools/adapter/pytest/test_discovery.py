@@ -20,6 +20,9 @@ from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
 from testing_tools.adapter.pytest import _pytest_item as pytest_item
 from testing_tools.adapter.pytest._discovery import discover, TestCollector
 
+# In Python 3.8 __len__ is called twice, which impacts some of the test assertions we do below.
+PYTHON_38_OR_LATER = sys.version_info[0] >= 3 and sys.version_info[1] >= 8
+
 
 class StubPyTest(StubProxy):
     def __init__(self, stub=None):
@@ -255,20 +258,22 @@ class DiscoverTests(unittest.TestCase):
         plugin = StubPlugin(stub)
         expected = []
         plugin.discovered = expected
+        calls = [
+            ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
+            ("discovered.parents", None, None),
+            ("discovered.__len__", None, None),
+            ("discovered.__getitem__", (0,), None),
+        ]
+
+        # In Python 3.8 __len__ is called twice.
+        if PYTHON_38_OR_LATER:
+            calls.insert(3, ("discovered.__len__", None, None))
 
         parents, tests = discover([], _pytest_main=stubpytest.main, _plugin=plugin)
 
         self.assertEqual(parents, [])
         self.assertEqual(tests, expected)
-        self.assertEqual(
-            stub.calls,
-            [
-                ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
-                ("discovered.parents", None, None),
-                ("discovered.__len__", None, None),
-                ("discovered.__getitem__", (0,), None),
-            ],
-        )
+        self.assertEqual(stub.calls, calls)
 
     def test_failure(self):
         stub = Stub()
@@ -291,20 +296,22 @@ class DiscoverTests(unittest.TestCase):
         plugin = StubPlugin(stub)
         expected = []
         plugin.discovered = expected
+        calls = [
+            ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
+            ("discovered.parents", None, None),
+            ("discovered.__len__", None, None),
+            ("discovered.__getitem__", (0,), None),
+        ]
+
+        # In Python 3.8 __len__ is called twice.
+        if PYTHON_38_OR_LATER:
+            calls.insert(3, ("discovered.__len__", None, None))
 
         parents, tests = discover([], _pytest_main=pytest.main, _plugin=plugin)
 
         self.assertEqual(parents, [])
         self.assertEqual(tests, expected)
-        self.assertEqual(
-            stub.calls,
-            [
-                ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
-                ("discovered.parents", None, None),
-                ("discovered.__len__", None, None),
-                ("discovered.__getitem__", (0,), None),
-            ],
-        )
+        self.assertEqual(stub.calls, calls)
 
     def test_stdio_hidden(self):
         pytest_stdout = "spamspamspamspamspamspamspammityspam"
@@ -317,6 +324,17 @@ class DiscoverTests(unittest.TestCase):
 
         plugin = StubPlugin(stub)
         plugin.discovered = []
+        calls = [
+            ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
+            ("discovered.parents", None, None),
+            ("discovered.__len__", None, None),
+            ("discovered.__getitem__", (0,), None),
+        ]
+
+        # In Python 3.8 __len__ is called twice.
+        if PYTHON_38_OR_LATER:
+            calls.insert(3, ("discovered.__len__", None, None))
+
         buf = StringIO()
 
         sys.stdout = buf
@@ -327,15 +345,7 @@ class DiscoverTests(unittest.TestCase):
         captured = buf.getvalue()
 
         self.assertEqual(captured, "")
-        self.assertEqual(
-            stub.calls,
-            [
-                ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
-                ("discovered.parents", None, None),
-                ("discovered.__len__", None, None),
-                ("discovered.__getitem__", (0,), None),
-            ],
-        )
+        self.assertEqual(stub.calls, calls)
 
     def test_stdio_not_hidden(self):
         pytest_stdout = "spamspamspamspamspamspamspammityspam"
@@ -348,6 +358,17 @@ class DiscoverTests(unittest.TestCase):
 
         plugin = StubPlugin(stub)
         plugin.discovered = []
+        calls = [
+            ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
+            ("discovered.parents", None, None),
+            ("discovered.__len__", None, None),
+            ("discovered.__getitem__", (0,), None),
+        ]
+
+        # In Python 3.8 __len__ is called twice.
+        if PYTHON_38_OR_LATER:
+            calls.insert(3, ("discovered.__len__", None, None))
+
         buf = StringIO()
 
         sys.stdout = buf
@@ -358,15 +379,7 @@ class DiscoverTests(unittest.TestCase):
         captured = buf.getvalue()
 
         self.assertEqual(captured, pytest_stdout)
-        self.assertEqual(
-            stub.calls,
-            [
-                ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
-                ("discovered.parents", None, None),
-                ("discovered.__len__", None, None),
-                ("discovered.__getitem__", (0,), None),
-            ],
-        )
+        self.assertEqual(stub.calls, calls)
 
 
 class CollectorTests(unittest.TestCase):
