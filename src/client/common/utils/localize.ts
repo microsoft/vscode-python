@@ -145,6 +145,7 @@ export namespace Interpreters {
         'Interpreters.selectInterpreterTip',
         'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar'
     );
+    export const pythonInterpreterPath = localize('Interpreters.pythonInterpreterPath', 'Python interpreter path: {0}');
 }
 export namespace ExtensionChannels {
     export const yesWeekly = localize('ExtensionChannels.yesWeekly', 'Yes, weekly');
