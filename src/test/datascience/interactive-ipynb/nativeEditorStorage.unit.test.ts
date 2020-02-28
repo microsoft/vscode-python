@@ -41,9 +41,9 @@ import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jup
 import { ICell, IJupyterExecution, INotebookServerOptions } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { MockMemento } from '../../mocks/mementos';
-import { concatMultilineStringInput } from '../../../datascience-ui/common';
 
 // tslint:disable: no-any chai-vague-errors no-unused-expression
 class MockWorkspaceConfiguration implements WorkspaceConfiguration {
