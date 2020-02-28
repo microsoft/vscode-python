@@ -23,7 +23,6 @@ import { JupyterInstallError } from '../jupyterInstallError';
 import { JupyterKernelSpec, parseKernelSpecs } from '../kernels/jupyterKernelSpec';
 import {
     getMessageForLibrariesNotInstalled,
-    JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService
 } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
@@ -227,22 +226,9 @@ export class JupyterInterpreterSubCommandExecutionService
     }
 
     public async installMissingDependencies(err?: JupyterInstallError): Promise<void> {
-        let interpreter = await this.jupyterInterpreter.getSelectedInterpreter();
-        if (!interpreter) {
-            // Use current interpreter.
-            interpreter = await this.interpreterService.getActiveInterpreter(undefined);
-            if (!interpreter) {
-                // Unlikely scenario, user hasn't selected python, python extension will fall over.
-                // Get user to select something.
-                await this.jupyterInterpreter.selectInterpreter();
-                return;
-            }
-        }
-        const response = await this.jupyterDependencyService.installMissingDependencies(interpreter, err);
-        if (response === JupyterInterpreterDependencyResponse.selectAnotherInterpreter) {
-            await this.jupyterInterpreter.selectInterpreter();
-        }
+        await this.jupyterInterpreter.installMissingDependencies(err);
     }
+
     private async getSelectedInterpreterAndThrowIfNotAvailable(token?: CancellationToken): Promise<PythonInterpreter> {
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {

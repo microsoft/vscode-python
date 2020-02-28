@@ -12,6 +12,7 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
+import { JupyterInstallError } from '../jupyterInstallError';
 import {
     JupyterInterpreterDependencyResponse,
     JupyterInterpreterDependencyService
@@ -108,6 +109,36 @@ export class JupyterInterpreterService {
         }
     }
 
+    // Install jupyter dependencies in the current jupyter selected interpreter
+    // If there is no jupyter selected interpreter, prompt for install into the
+    // current active interpreter and set as active if successful
+    public async installMissingDependencies(err?: JupyterInstallError): Promise<void> {
+        const jupyterInterpreter = await this.getSelectedInterpreter();
+        let interpreter = jupyterInterpreter;
+        if (!interpreter) {
+            // Use current interpreter.
+            interpreter = await this.interpreterService.getActiveInterpreter(undefined);
+            if (!interpreter) {
+                // Unlikely scenario, user hasn't selected python, python extension will fall over.
+                // Get user to select something.
+                await this.selectInterpreter();
+                return;
+            }
+        }
+
+        const response = await this.interpreterConfiguration.installMissingDependencies(interpreter, err);
+        if (response === JupyterInterpreterDependencyResponse.selectAnotherInterpreter) {
+            await this.selectInterpreter();
+        } else if (response === JupyterInterpreterDependencyResponse.ok) {
+            // We might have installed jupyter in a new active interpreter here, if we did and the install
+            // went ok we also want to select that interpreter as our jupyter selected interperter
+            // so that on next launch we use it correctly
+            if (interpreter !== jupyterInterpreter) {
+                await this.setAsSelectedInterpreter(interpreter);
+            }
+        }
+    }
+
     // Check the location that we stored jupyter launch path in the old version
     // if it's there, return it and clear the location
     private getInterpreterFromChangeOfOlderVersionOfExtension(): string | undefined {
@@ -191,7 +222,7 @@ export class JupyterInterpreterService {
             const currentInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
 
             if (currentInterpreter) {
-                // Ask and give a chance to install dependencies in current interpreter
+                // If the current active interpreter has everything installed already just use that
                 if (await this.interpreterConfiguration.areDependenciesInstalled(currentInterpreter, token)) {
                     interpreter = currentInterpreter;
                 }
