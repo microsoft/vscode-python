@@ -247,20 +247,20 @@ export class ExperimentsManager implements IExperimentsManager {
     @swallowExceptions('Failed to update experiment storage')
     public async updateExperimentStorage(): Promise<void> {
         // Step 1. Update experiment storage using downloaded experiments in the last session if any
-        // if (Array.isArray(this.downloadedExperimentsStorage.value)) {
-        //     await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
-        //     return this.downloadedExperimentsStorage.updateValue(undefined);
-        // }
+        if (Array.isArray(this.downloadedExperimentsStorage.value)) {
+            await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
+            return this.downloadedExperimentsStorage.updateValue(undefined);
+        }
 
-        // if (Array.isArray(this.experimentStorage.value)) {
-        //     // Experiment storage already contains latest experiments, do not use the following techniques
-        //     return;
-        // }
+        if (Array.isArray(this.experimentStorage.value)) {
+            // Experiment storage already contains latest experiments, do not use the following techniques
+            return;
+        }
 
-        // // Step 2. Do best effort to download the experiments within timeout and use it in the current session only
-        // if ((await this.doBestEffortToPopulateExperiments()) === true) {
-        //     return;
-        // }
+        // Step 2. Do best effort to download the experiments within timeout and use it in the current session only
+        if ((await this.doBestEffortToPopulateExperiments()) === true) {
+            return;
+        }
 
         // Step 3. Update experiment storage using local experiments file if available
         if (await this.fs.fileExists(configFile)) {
