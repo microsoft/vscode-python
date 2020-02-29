@@ -32,7 +32,6 @@ suite('Data Science - Jupyter Interpreter Service', () => {
     let interpreterSelectionState: JupyterInterpreterStateStore;
     let oldVersionCacheStateStore: JupyterInterpreterOldCacheStateStore;
     const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
-    const activePythonInterpreter = createPythonInterpreter({ displayName: 'activePythonInterpreter' });
     const pythonInterpreter: PythonInterpreter = {
         path: 'some path',
         architecture: Architecture.Unknown,
