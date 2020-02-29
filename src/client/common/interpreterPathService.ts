@@ -18,7 +18,6 @@ import {
 
 @injectable()
 export class InterpreterPathService implements IInterpreterPathService {
-    public readonly settingKeys = new Set<string>();
     private readonly didChangeInterpreterEmitter = new EventEmitter<InterpreterConfigurationScope>();
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
@@ -132,12 +131,18 @@ export class InterpreterPathService implements IInterpreterPathService {
                 settingKey = `WORKSPACE_INTERPRETER_PATH_${fsPathKey}`;
             }
         }
-        this.settingKeys.add(settingKey);
         return settingKey;
     }
 
     public async clearAllInterpreterPathSettings(): Promise<void> {
-        const settingKeys = Array.from(this.settingKeys.keys());
+        if (!this.workspaceService.hasWorkspaceFolders) {
+            return;
+        }
+        const settingKeys = this.workspaceService
+            .workspaceFolders!.map(workspaceFolder =>
+                this.getSettingKey(workspaceFolder.uri, ConfigurationTarget.WorkspaceFolder)
+            )
+            .concat(this.getSettingKey(this.workspaceService.workspaceFolders![0].uri, ConfigurationTarget.Workspace));
         for (const key of settingKeys) {
             const persistentSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
                 key,
@@ -145,6 +150,5 @@ export class InterpreterPathService implements IInterpreterPathService {
             );
             await persistentSetting.updateValue(undefined);
         }
-        this.settingKeys.clear();
     }
 }
