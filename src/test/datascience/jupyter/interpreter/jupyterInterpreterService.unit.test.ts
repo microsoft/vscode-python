@@ -18,6 +18,7 @@ import { JupyterInterpreterStateStore } from '../../../../client/datascience/jup
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 import { MockMemento } from '../../../mocks/mementos';
+import { createPythonInterpreter } from '../../../utils/interpreters';
 
 // tslint:disable: max-func-body-length
 
@@ -30,6 +31,8 @@ suite('Data Science - Jupyter Interpreter Service', () => {
     let memento: Memento;
     let interpreterSelectionState: JupyterInterpreterStateStore;
     let oldVersionCacheStateStore: JupyterInterpreterOldCacheStateStore;
+    const selectedJupyterInterpreter = createPythonInterpreter({ displayName: 'JupyterInterpreter' });
+    const activePythonInterpreter = createPythonInterpreter({ displayName: 'activePythonInterpreter' });
     const pythonInterpreter: PythonInterpreter = {
         path: 'some path',
         architecture: Architecture.Unknown,
@@ -149,5 +152,30 @@ suite('Data Science - Jupyter Interpreter Service', () => {
         // it should have been cleared to undefined, then set to a new value
         verify(interpreterSelectionState.updateSelectedPythonPath(undefined)).once();
         verify(interpreterSelectionState.updateSelectedPythonPath(anyString())).once();
+    });
+    test('Install missing dependencies into active interpreter', async () => {
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(pythonInterpreter);
+        await jupyterInterpreterService.installMissingDependencies(undefined);
+        verify(interpreterConfiguration.installMissingDependencies(pythonInterpreter, undefined)).once();
+    });
+    test('Install missing dependencies into jupyter interpreter', async () => {
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(undefined);
+        when(interpreterSelector.selectInterpreter()).thenResolve(selectedJupyterInterpreter);
+        when(
+            interpreterConfiguration.installMissingDependencies(selectedJupyterInterpreter, anything(), anything())
+        ).thenResolve(JupyterInterpreterDependencyResponse.ok);
+        // First select our interpreter
+        await jupyterInterpreterService.selectInterpreter();
+        await jupyterInterpreterService.installMissingDependencies(undefined);
+        verify(interpreterConfiguration.installMissingDependencies(selectedJupyterInterpreter, undefined)).once();
+    });
+    test('Display picker if no interpreters are selected', async () => {
+        when(interpreterService.getActiveInterpreter(undefined)).thenResolve(undefined);
+        when(interpreterSelector.selectInterpreter()).thenResolve(selectedJupyterInterpreter);
+        when(
+            interpreterConfiguration.installMissingDependencies(selectedJupyterInterpreter, anything(), anything())
+        ).thenResolve(JupyterInterpreterDependencyResponse.ok);
+        await jupyterInterpreterService.installMissingDependencies(undefined);
+        verify(interpreterSelector.selectInterpreter()).once();
     });
 });

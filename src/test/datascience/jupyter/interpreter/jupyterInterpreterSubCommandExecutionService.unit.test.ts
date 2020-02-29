@@ -100,15 +100,6 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
             const isSupported = await jupyterInterpreterExecutionService.isExportSupported(undefined);
             assert.isFalse(isSupported);
         });
-        test('Install missing dependencies into active interpreter', async () => {
-            await jupyterInterpreterExecutionService.installMissingDependencies(undefined);
-            verify(jupyterDependencyService.installMissingDependencies(activePythonInterpreter, undefined)).once();
-        });
-        test('Display picker if no interpreters are seleced', async () => {
-            when(interperterService.getActiveInterpreter(undefined)).thenResolve(undefined);
-            await jupyterInterpreterExecutionService.installMissingDependencies(undefined);
-            verify(jupyterInterpreter.selectInterpreter()).once();
-        });
         test('Jupyter cannot be started because no interpreter has been selected', async () => {
             when(interperterService.getActiveInterpreter(undefined)).thenResolve(undefined);
             const reason = await jupyterInterpreterExecutionService.getReasonForJupyterNotebookNotBeingSupported(
@@ -237,11 +228,6 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
             const isSupported = await jupyterInterpreterExecutionService.isNotebookSupported(undefined);
 
             assert.isOk(isSupported);
-        });
-        test('Install missing dependencies into jupyter interpreter', async () => {
-            await jupyterInterpreterExecutionService.installMissingDependencies(undefined);
-
-            verify(jupyterDependencyService.installMissingDependencies(selectedJupyterInterpreter, undefined)).once();
         });
         test('Jupyter cannot be started because jupyter is not installed', async () => {
             const expectedReason = DataScience.libraryRequiredToLaunchJupyterNotInstalledInterpreter().format(
