@@ -85,8 +85,8 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         // See if this file is open or not already
         let editor = this.activeEditors.get(file.fsPath);
         if (!editor) {
+            // Note: create will fire the open event.
             editor = await this.create(file);
-            this.onOpenedEditor(editor);
         } else {
             await this.showEditor(editor);
         }
