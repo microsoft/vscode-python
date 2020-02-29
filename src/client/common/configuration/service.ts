@@ -12,27 +12,23 @@ import { IConfigurationService, IExperimentsManager, IInterpreterPathService, IP
 
 @injectable()
 export class ConfigurationService implements IConfigurationService {
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
+    private readonly workspaceService: IWorkspaceService;
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {
+        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    }
     public getSettings(resource?: Uri): IPythonSettings {
         const InterpreterAutoSelectionService = this.serviceContainer.get<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService
         );
         const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        const settings = PythonSettings.getInstance(resource, InterpreterAutoSelectionService, workspaceService);
-        /**
-         * Note that while calling `IExperimentsManager.inExperiment()`, we assume `IExperimentsManager.activate()` is already called.
-         * That's not true here, as `IConfigurationService.getSettings()` is often called in the constructor,which runs before `.activate()` methods.
-         * But we can still use it here for this particular experiment. Reason being that this experiment only changes
-         * `IConfigurationService.getSettings().pythonPath` setting, and I've checked that `IConfigurationService.getSettings().pythonPath`
-         * setting is not accessed anywhere in the constructor.
-         */
-        if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
-            settings.pythonPath = interpreterPathService.interpreterPath(resource);
-        }
-        experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
-        return settings;
+        return PythonSettings.getInstance(
+            resource,
+            InterpreterAutoSelectionService,
+            this.workspaceService,
+            experiments,
+            interpreterPathService
+        );
     }
 
     public async updateSectionSetting(
@@ -48,8 +44,7 @@ export class ConfigurationService implements IConfigurationService {
         };
         let settingsInfo = defaultSetting;
         if (section === 'python' && configTarget !== ConfigurationTarget.Global) {
-            const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-            settingsInfo = PythonSettings.getSettingsUriAndTarget(resource, workspaceService);
+            settingsInfo = PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService);
         }
 
         const configSection = workspace.getConfiguration(section, settingsInfo.uri ? settingsInfo.uri : null);

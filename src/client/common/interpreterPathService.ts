@@ -5,9 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Event, EventEmitter } from 'vscode';
-import { IInterpreterAutoSeletionProxyService } from '../interpreter/autoSelection/types';
-import { PythonInterpreter } from '../interpreter/contracts';
 import { ICommandManager, IWorkspaceService } from './application/types';
+import { PythonSettings } from './configSettings';
 import { Commands } from './constants';
 import {
     IDisposableRegistry,
@@ -20,12 +19,9 @@ import {
 @injectable()
 export class InterpreterPathService implements IInterpreterPathService {
     public readonly settingKeys = new Set<string>();
-    private autoSelectedPythonInterpreter: PythonInterpreter | undefined;
     private readonly didChangeInterpreterEmitter = new EventEmitter<InterpreterConfigurationScope>();
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
-        @inject(IInterpreterAutoSeletionProxyService)
-        private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager
@@ -51,6 +47,7 @@ export class InterpreterPathService implements IInterpreterPathService {
         workspaceValue?: string;
         workspaceFolderValue?: string;
     } {
+        resource = resource ? resource : PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
         const workspaceFolderSetting = resource
             ? this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
                   this.getSettingKey(resource, ConfigurationTarget.WorkspaceFolder),
@@ -65,38 +62,24 @@ export class InterpreterPathService implements IInterpreterPathService {
             : undefined;
         const globalSetting = this.workspaceService
             .getConfiguration('python', resource)!
-            .inspect<string>('defaultInterpreterPath')!;
+            .get<string>('defaultInterpreterPath')!;
         return {
-            globalValue: globalSetting.globalValue,
+            globalValue: globalSetting,
             workspaceFolderValue: workspaceFolderSetting?.value,
             workspaceValue: workspaceSetting?.value
         };
     }
 
     public interpreterPath(resource: Resource): string {
+        resource = resource ? resource : PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
         const settings = this.inspectInterpreterPath(resource);
-        let interpreterPath =
-            settings.workspaceFolderValue !== undefined
-                ? settings.workspaceFolderValue
-                : settings.workspaceValue !== undefined
-                ? settings.workspaceValue
-                : settings.globalValue !== undefined
-                ? settings.globalValue
-                : 'python';
-        if (!this.autoSelectedPythonInterpreter && resource && interpreterPath === 'python') {
-            const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
-                resource
-            );
-            if (autoSelectedPythonInterpreter) {
-                this.interpreterAutoSelectionService
-                    .setWorkspaceInterpreter(resource, autoSelectedPythonInterpreter)
-                    .ignoreErrors();
-            }
-        }
-        interpreterPath = this.autoSelectedPythonInterpreter
-            ? this.autoSelectedPythonInterpreter.path
-            : interpreterPath;
-        return interpreterPath;
+        return settings.workspaceFolderValue !== undefined
+            ? settings.workspaceFolderValue
+            : settings.workspaceValue !== undefined
+            ? settings.workspaceValue
+            : settings.globalValue !== undefined
+            ? settings.globalValue
+            : 'python';
     }
 
     public async update(
@@ -104,6 +87,7 @@ export class InterpreterPathService implements IInterpreterPathService {
         configTarget: ConfigurationTarget,
         pythonPath: string | undefined
     ): Promise<void> {
+        resource = resource ? resource : PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
         if (configTarget === ConfigurationTarget.Global) {
             const pythonConfig = this.workspaceService.getConfiguration('python');
             await pythonConfig.update('defaultInterpreterPath', pythonPath, true);

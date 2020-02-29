@@ -7,6 +7,7 @@ import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
+import { ActiveResourceService } from './application/activeResource';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
 import { ClipboardService } from './application/clipboard';
@@ -20,6 +21,7 @@ import { Extensions } from './application/extensions';
 import { LanguageService } from './application/languageService';
 import { TerminalManager } from './application/terminalManager';
 import {
+    IActiveResourceService,
     IApplicationEnvironment,
     IApplicationShell,
     IClipboard,
@@ -111,6 +113,7 @@ import { Random } from './utils/random';
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 
+    serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
     serviceManager.addSingleton<IInterpreterPathService>(IInterpreterPathService, InterpreterPathService);
     serviceManager.addSingleton<IExtensions>(IExtensions, Extensions);
     serviceManager.addSingleton<IRandom>(IRandom, Random);

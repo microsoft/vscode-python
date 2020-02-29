@@ -20,6 +20,7 @@ import { EventName } from '../telemetry/constants';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
+import { DeprecatePythonPath } from './experimentGroups';
 import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
 import {
@@ -27,7 +28,9 @@ import {
     IAutoCompleteSettings,
     IDataScienceSettings,
     IExperiments,
+    IExperimentsManager,
     IFormattingSettings,
+    IInterpreterPathService,
     ILintingSettings,
     IPythonSettings,
     ISortImportSettings,
@@ -86,7 +89,9 @@ export class PythonSettings implements IPythonSettings {
     constructor(
         workspaceFolder: Resource,
         private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
-        workspace?: IWorkspaceService
+        workspace?: IWorkspaceService,
+        private readonly experimentsManager?: IExperimentsManager,
+        private readonly interpreterPathService?: IInterpreterPathService
     ) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
@@ -96,14 +101,22 @@ export class PythonSettings implements IPythonSettings {
     public static getInstance(
         resource: Uri | undefined,
         interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
-        workspace?: IWorkspaceService
+        workspace?: IWorkspaceService,
+        experimentsManager?: IExperimentsManager,
+        interpreterPathService?: IInterpreterPathService
     ): PythonSettings {
         workspace = workspace || new WorkspaceService();
         const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
         const workspaceFolderKey = workspaceFolderUri ? workspaceFolderUri.fsPath : '';
 
         if (!PythonSettings.pythonSettings.has(workspaceFolderKey)) {
-            const settings = new PythonSettings(workspaceFolderUri, interpreterAutoSelectionService, workspace);
+            const settings = new PythonSettings(
+                workspaceFolderUri,
+                interpreterAutoSelectionService,
+                workspace,
+                experimentsManager,
+                interpreterPathService
+            );
             PythonSettings.pythonSettings.set(workspaceFolderKey, settings);
             // Pass null to avoid VSC from complaining about not passing in a value.
             // tslint:disable-next-line:no-any
@@ -154,8 +167,22 @@ export class PythonSettings implements IPythonSettings {
         const workspaceRoot = this.workspaceRoot.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this.workspace);
 
-        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
+        /**
+         * Note that while calling `IExperimentsManager.inExperiment()`, we assume `IExperimentsManager.activate()` is already called.
+         * That's not true here, as this method is often called in the constructor,which runs before `.activate()` methods.
+         * But we can still use it here for this particular experiment. Reason being that this experiment only changes
+         * `pythonPath` setting, and I've checked that `pythonPath` setting is not accessed anywhere in the constructor.
+         */
+        if (this.experimentsManager && this.interpreterPathService) {
+            if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
+                this.pythonPath = systemVariables.resolveAny(
+                    this.interpreterPathService.interpreterPath(this.workspaceRoot)
+                )!;
+            }
+            this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+        } else {
+            this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
+        }
         // If user has defined a custom value, use it else try to get the best interpreter ourselves.
         if (this.pythonPath.length === 0 || this.pythonPath === 'python') {
             const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
@@ -561,6 +588,9 @@ export class PythonSettings implements IPythonSettings {
                 }
             })
         );
+        if (this.interpreterPathService) {
+            this.disposables.push(this.interpreterPathService.onDidChangeInterpreter(onDidChange.bind(this)));
+        }
 
         const initialConfig = this.workspace.getConfiguration('python', this.workspaceRoot);
         if (initialConfig) {

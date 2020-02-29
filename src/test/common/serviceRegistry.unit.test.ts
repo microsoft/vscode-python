@@ -8,6 +8,7 @@
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
+import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
@@ -17,6 +18,7 @@ import { Extensions } from '../../client/common/application/extensions';
 import { LanguageService } from '../../client/common/application/languageService';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
+    IActiveResourceService,
     IApplicationEnvironment,
     IApplicationShell,
     ICommandManager,
@@ -109,6 +111,7 @@ suite('Common - Service Registry', () => {
         const serviceManager = typemoq.Mock.ofType<IServiceManager>();
 
         [
+            [IActiveResourceService, ActiveResourceService],
             [IInterpreterPathService, InterpreterPathService],
             [IExtensions, Extensions],
             [IRandom, Random],
