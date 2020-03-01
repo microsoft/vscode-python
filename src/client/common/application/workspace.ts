@@ -16,6 +16,7 @@ import {
     WorkspaceFoldersChangeEvent
 } from 'vscode';
 import { Resource } from '../types';
+import { getOSType, OSType } from '../utils/platform';
 import { IWorkspaceService } from './types';
 
 @injectable()
@@ -70,6 +71,10 @@ export class WorkspaceService implements IWorkspaceService {
     }
     public getWorkspaceFolderIdentifier(resource: Resource, defaultValue: string = ''): string {
         const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
-        return workspaceFolder ? path.normalize(workspaceFolder.uri.fsPath).toUpperCase() : defaultValue;
+        return workspaceFolder
+            ? path.normalize(
+                  getOSType() === OSType.Unknown ? workspaceFolder.uri.fsPath.toUpperCase() : workspaceFolder.uri.fsPath
+              )
+            : defaultValue;
     }
 }
