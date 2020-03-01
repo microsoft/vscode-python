@@ -10,6 +10,7 @@
     "python.command.python.switchOffInsidersChannel.title": "Switch to Default Channel",
     "python.command.python.switchToDailyChannel.title": "Switch to Insiders Daily Channel",
     "python.command.python.switchToWeeklyChannel.title": "Switch to Insiders Weekly Channel",
+    "python.command.python.resetPythonInterpreter.title": "Reset Python Interpreter",
     "python.command.python.refactorExtractVariable.title": "Extract Variable",
     "python.command.python.refactorExtractMethod.title": "Extract Method",
     "python.command.python.viewOutput.title": "Show Output",

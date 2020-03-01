@@ -44,6 +44,9 @@ export class InterpreterSelector implements IInterpreterSelector {
             this.commandManager.registerCommand(Commands.Set_Interpreter, this.setInterpreter.bind(this))
         );
         this.disposables.push(
+            this.commandManager.registerCommand(Commands.ResetPythonInterpreter, this.resetInterpreter.bind(this))
+        );
+        this.disposables.push(
             this.commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this))
         );
     }
@@ -52,6 +55,24 @@ export class InterpreterSelector implements IInterpreterSelector {
         const interpreters = await this.interpreterManager.getInterpreters(resource);
         interpreters.sort(this.interpreterComparer.compare.bind(this.interpreterComparer));
         return Promise.all(interpreters.map(item => this.suggestionToQuickPickItem(item, resource)));
+    }
+
+    protected async resetInterpreter() {
+        const setInterpreterGlobally =
+            !Array.isArray(this.workspaceService.workspaceFolders) ||
+            this.workspaceService.workspaceFolders.length === 0;
+        let configTarget = ConfigurationTarget.Global;
+        let wkspace: Uri | undefined;
+        if (!setInterpreterGlobally) {
+            const targetConfig = await this.getWorkspaceToSetPythonPath();
+            if (!targetConfig) {
+                return;
+            }
+            configTarget = targetConfig.configTarget;
+            wkspace = targetConfig.folderUri;
+        }
+
+        await this.pythonPathUpdaterService.updatePythonPath(undefined, configTarget, 'ui', wkspace);
     }
     protected async suggestionToQuickPickItem(
         suggestion: PythonInterpreter,

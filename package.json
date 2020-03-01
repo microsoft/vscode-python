@@ -73,6 +73,7 @@
         "onCommand:python.switchOffInsidersChannel",
         "onCommand:python.switchToDailyChannel",
         "onCommand:python.switchToWeeklyChannel",
+        "onCommand:python.resetPythonInterpreter",
         "onCommand:python.datascience.createnewnotebook",
         "onCommand:python.datascience.showhistorypane",
         "onCommand:python.datascience.importnotebook",
@@ -220,6 +221,11 @@
             {
                 "command": "python.switchToWeeklyChannel",
                 "title": "%python.command.python.switchToWeeklyChannel.title%",
+                "category": "Python"
+            },
+            {
+                "command": "python.resetPythonInterpreter",
+                "title": "%python.command.python.resetPythonInterpreter.title%",
                 "category": "Python"
             },
             {
@@ -745,6 +751,11 @@
                     "title": "%python.command.python.switchToWeeklyChannel.title%",
                     "category": "Python",
                     "when": "config.python.insidersChannel != 'weekly'"
+                },
+                {
+                    "command": "python.resetPythonInterpreter",
+                    "title": "%python.command.python.resetPythonInterpreter.title%",
+                    "category": "Python"
                 },
                 {
                     "command": "python.viewOutput",

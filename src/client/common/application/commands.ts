@@ -22,6 +22,7 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
 interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.SwitchToInsidersDaily]: [];
     [Commands.SwitchToInsidersWeekly]: [];
+    [Commands.ResetPythonInterpreter]: [];
     [Commands.SwitchOffInsidersChannel]: [];
     [Commands.Set_Interpreter]: [];
     [Commands.Set_ShebangInterpreter]: [];
