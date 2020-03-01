@@ -5,9 +5,8 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationTarget, Event, EventEmitter } from 'vscode';
-import { ICommandManager, IWorkspaceService } from './application/types';
+import { IWorkspaceService } from './application/types';
 import { PythonSettings } from './configSettings';
-import { Commands } from './constants';
 import {
     IDisposableRegistry,
     IInterpreterPathService,
@@ -22,8 +21,7 @@ export class InterpreterPathService implements IInterpreterPathService {
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
     ) {
         disposableRegistry.push(
             workspaceService.onDidChangeConfiguration(e => {
@@ -31,11 +29,6 @@ export class InterpreterPathService implements IInterpreterPathService {
                     this.didChangeInterpreterEmitter.fire({ uri: undefined, configTarget: ConfigurationTarget.Global });
                 }
             })
-        );
-        disposableRegistry.push(
-            this.commandManager.registerCommand(Commands.ResetPythonInterpreters, () =>
-                this.clearAllInterpreterPathSettings().ignoreErrors()
-            )
         );
     }
 
@@ -132,23 +125,5 @@ export class InterpreterPathService implements IInterpreterPathService {
             }
         }
         return settingKey;
-    }
-
-    public async clearAllInterpreterPathSettings(): Promise<void> {
-        if (!this.workspaceService.hasWorkspaceFolders) {
-            return;
-        }
-        const settingKeys = this.workspaceService
-            .workspaceFolders!.map(workspaceFolder =>
-                this.getSettingKey(workspaceFolder.uri, ConfigurationTarget.WorkspaceFolder)
-            )
-            .concat(this.getSettingKey(this.workspaceService.workspaceFolders![0].uri, ConfigurationTarget.Workspace));
-        for (const key of settingKeys) {
-            const persistentSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
-                key,
-                undefined
-            );
-            await persistentSetting.updateValue(undefined);
-        }
     }
 }
