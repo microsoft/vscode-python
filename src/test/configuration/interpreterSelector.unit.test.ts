@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import * as assert from 'assert';
+import * as path from 'path';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri } from 'vscode';
@@ -14,6 +15,7 @@ import {
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
+import { Interpreters } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
 import {
@@ -258,7 +260,7 @@ suite('Interpreters - selector', () => {
         workspace.verifyAll();
         pythonPathUpdater.verifyAll();
     });
-    test('Update seleted workspace folder settings when there is more than one workspace folder', async () => {
+    test('Update selected workspace folder settings when there is more than one workspace folder', async () => {
         const selector = new TestInterpreterSelector(
             interpreterService.object,
             workspace.object,
@@ -284,15 +286,36 @@ suite('Interpreters - selector', () => {
         const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
         const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
         workspace.setup(w => w.workspaceFolders).returns(() => [folder1, folder2]);
-
+        const expectedItems = [
+            {
+                label: 'one',
+                description: path.dirname(folder1.uri.fsPath),
+                uri: folder1.uri
+            },
+            {
+                label: 'two',
+                description: path.dirname(folder2.uri.fsPath),
+                uri: folder2.uri
+            },
+            {
+                label: Interpreters.entireWorkspace(),
+                uri: folder1.uri
+            }
+        ];
         selector.getSuggestions = () => Promise.resolve([]);
         appShell
-            .setup(s => s.showQuickPick<IInterpreterQuickPickItem>(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(s => s.showQuickPick<IInterpreterQuickPickItem>(TypeMoq.It.isValue([]), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(selectedItem))
             .verifiable(TypeMoq.Times.once());
         appShell
-            .setup(s => s.showWorkspaceFolderPick(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(folder2))
+            .setup(s => s.showQuickPick(TypeMoq.It.isValue(expectedItems), TypeMoq.It.isAny()))
+            .returns(() =>
+                Promise.resolve({
+                    label: 'two',
+                    description: path.dirname(folder2.uri.fsPath),
+                    uri: folder2.uri
+                })
+            )
             .verifiable(TypeMoq.Times.once());
         pythonPathUpdater
             .setup(p =>
@@ -301,6 +324,82 @@ suite('Interpreters - selector', () => {
                     TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder),
                     TypeMoq.It.isValue('ui'),
                     TypeMoq.It.isValue(folder2.uri)
+                )
+            )
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
+
+        await selector.setInterpreter();
+
+        appShell.verifyAll();
+        workspace.verifyAll();
+        pythonPathUpdater.verifyAll();
+    });
+    test('Update entire workspace settings when there is more than one workspace folder and `Entire workspace` is selected', async () => {
+        const selector = new TestInterpreterSelector(
+            interpreterService.object,
+            workspace.object,
+            appShell.object,
+            documentManager.object,
+            new PathUtils(false),
+            comparer.object,
+            pythonPathUpdater.object,
+            shebangProvider.object,
+            configurationService.object,
+            commandManager.object
+        );
+        pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
+        const selectedItem: IInterpreterQuickPickItem = {
+            description: '',
+            detail: '',
+            label: '',
+            path: 'This is the selected Python path',
+            // tslint:disable-next-line: no-any
+            interpreter: {} as any
+        };
+
+        const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
+        const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
+        workspace.setup(w => w.workspaceFolders).returns(() => [folder1, folder2]);
+        const expectedItems = [
+            {
+                label: 'one',
+                description: path.dirname(folder1.uri.fsPath),
+                uri: folder1.uri
+            },
+            {
+                label: 'two',
+                description: path.dirname(folder2.uri.fsPath),
+                uri: folder2.uri
+            },
+            {
+                label: Interpreters.entireWorkspace(),
+                uri: folder1.uri
+            }
+        ];
+        selector.getSuggestions = () => Promise.resolve([selectedItem]);
+        appShell
+            .setup(s =>
+                s.showQuickPick<IInterpreterQuickPickItem>(TypeMoq.It.isValue([selectedItem]), TypeMoq.It.isAny())
+            )
+            .returns(() => Promise.resolve(selectedItem))
+            .verifiable(TypeMoq.Times.once());
+        appShell
+            .setup(s => s.showQuickPick(TypeMoq.It.isValue(expectedItems), TypeMoq.It.isAny()))
+            .returns(() =>
+                Promise.resolve({
+                    label: Interpreters.entireWorkspace(),
+                    uri: folder1.uri
+                })
+            )
+            .verifiable(TypeMoq.Times.once());
+        pythonPathUpdater
+            .setup(p =>
+                p.updatePythonPath(
+                    TypeMoq.It.isValue(selectedItem.path),
+                    TypeMoq.It.isValue(ConfigurationTarget.Workspace),
+                    TypeMoq.It.isValue('ui'),
+                    TypeMoq.It.isValue(folder1.uri)
                 )
             )
             .returns(() => Promise.resolve())
@@ -341,11 +440,29 @@ suite('Interpreters - selector', () => {
 
         selector.getSuggestions = () => Promise.resolve([]);
         appShell
-            .setup(s => s.showQuickPick<IInterpreterQuickPickItem>(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(s => s.showQuickPick<IInterpreterQuickPickItem>(TypeMoq.It.isValue([]), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(selectedItem))
             .verifiable(TypeMoq.Times.never());
+
+        const expectedItems = [
+            {
+                label: 'one',
+                description: path.dirname(folder1.uri.fsPath),
+                uri: folder1.uri
+            },
+            {
+                label: 'two',
+                description: path.dirname(folder2.uri.fsPath),
+                uri: folder2.uri
+            },
+            {
+                label: Interpreters.entireWorkspace(),
+                uri: folder1.uri
+            }
+        ];
+
         appShell
-            .setup(s => s.showWorkspaceFolderPick(TypeMoq.It.isAny()))
+            .setup(s => s.showQuickPick(TypeMoq.It.isValue(expectedItems), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         pythonPathUpdater
