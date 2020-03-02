@@ -1562,7 +1562,9 @@ export interface IEventNamePropertyMapping {
         command: JupyterCommands;
     };
     [Telemetry.UserInstalledJupyter]: never | undefined;
+    [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
+    [Telemetry.UserDidNotInstallPandas]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;

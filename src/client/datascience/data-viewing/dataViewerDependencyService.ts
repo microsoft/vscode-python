@@ -81,10 +81,10 @@ export class DataViewerDependencyService {
                 cancellatonPromise
             ]);
             if (response === InstallerResponse.Installed) {
-                sendTelemetryEvent(Telemetry.UserInstalledJupyter);
+                sendTelemetryEvent(Telemetry.UserInstalledPandas);
             }
         } else {
-            sendTelemetryEvent(Telemetry.UserDidNotInstallJupyter);
+            sendTelemetryEvent(Telemetry.UserDidNotInstallPandas);
             throw new Error(DataScience.pandasRequiredForViewing());
         }
     }
