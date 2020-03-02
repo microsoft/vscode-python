@@ -120,7 +120,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         };
     }
 
-    protected onOpenedEditor(e: INotebookEditor) {
+    protected openedEditor(e: INotebookEditor) {
         super.openedEditor(e);
         this.activeEditors.set(e.file.fsPath, e);
         this.disposables.push(e.saved(this.onSavedEditor.bind(this, e.file.fsPath)));
