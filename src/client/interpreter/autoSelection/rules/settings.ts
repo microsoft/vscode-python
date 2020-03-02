@@ -31,7 +31,7 @@ export class SettingsInterpretersAutoSelectionRule extends BaseRuleService {
         const pythonPathInConfig = this.experiments.inExperiment(DeprecatePythonPath.experiment)
             ? this.interpreterPathService.inspectInterpreterPath(undefined)
             : pythonConfig.inspect<string>('pythonPath')!;
-        this.experiments.inExperiment(DeprecatePythonPath.control);
+        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         // No need to store python paths defined in settings in our caches, they can be retrieved from the settings directly.
         return pythonPathInConfig.globalValue && pythonPathInConfig.globalValue !== 'python'
             ? NextAction.exit

@@ -52,7 +52,7 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'))
         return globalPythonPath;
     }
     const workspacePythonPath = inExperiment
-        ? interpreterPathService.interpreterPath(resource)
+        ? interpreterPathService.getInterpreterPath(resource)
         : vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
     return `${folder.uri.fsPath}-${workspacePythonPath}`;
 }

@@ -168,8 +168,12 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                 return;
             }
             workspaceUri = workspacesUris[workspaceUriIndex];
+        } else if (interpreterConfigurationScope) {
+            workspaceUri = interpreterConfigurationScope.uri;
         } else {
-            workspaceUri = interpreterConfigurationScope!.uri;
+            throw new Error(
+                'One of `interpreterConfigurationScope` & `event` should be defined when calling the method'
+            );
         }
         // Lets wait, for more changes, dirty simple throttling.
         if (this.timeOut) {

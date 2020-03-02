@@ -57,7 +57,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         const pythonPathInConfig = this.experiments.inExperiment(DeprecatePythonPath.experiment)
             ? this.interpreterPathService.inspectInterpreterPath(workspacePath.folderUri)
             : pythonConfig.inspect<string>('pythonPath')!;
-        this.experiments.inExperiment(DeprecatePythonPath.control);
+        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         // If user has defined custom values in settings for this workspace folder, then use that.
         if (pythonPathInConfig.workspaceFolderValue) {
             return NextAction.runNextRule;

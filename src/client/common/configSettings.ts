@@ -176,7 +176,7 @@ export class PythonSettings implements IPythonSettings {
         if (this.experimentsManager && this.interpreterPathService) {
             if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
                 this.pythonPath = systemVariables.resolveAny(
-                    this.interpreterPathService.interpreterPath(this.workspaceRoot)
+                    this.interpreterPathService.getInterpreterPath(this.workspaceRoot)
                 )!;
             }
             this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);

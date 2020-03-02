@@ -622,7 +622,7 @@ export type InterpreterConfigurationScope = { uri: Resource; configTarget: Confi
 export const IInterpreterPathService = Symbol('IInterpreterPathService');
 export interface IInterpreterPathService {
     onDidChangeInterpreter: Event<InterpreterConfigurationScope>;
-    interpreterPath(resource: Resource): string;
+    getInterpreterPath(resource: Resource): string;
     inspectInterpreterPath(
         resource: Resource
     ): {

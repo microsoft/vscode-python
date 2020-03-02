@@ -68,7 +68,7 @@ export class ConfigurationService implements IConfigurationService {
                 // tslint:disable-next-line: no-any
                 await interpreterPathService.update(settingsInfo.uri, settingsInfo.target, value as any);
             }
-            experiments.inExperiment(DeprecatePythonPath.control);
+            experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         } else {
             await configSection.update(setting, value, settingsInfo.target);
             await this.verifySetting(configSection, settingsInfo.target, setting, value);

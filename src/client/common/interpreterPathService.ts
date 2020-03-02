@@ -11,6 +11,7 @@ import {
     IDisposableRegistry,
     IInterpreterPathService,
     InterpreterConfigurationScope,
+    IPersistentState,
     IPersistentStateFactory,
     Resource
 } from './types';
@@ -40,38 +41,32 @@ export class InterpreterPathService implements IInterpreterPathService {
         workspaceFolderValue?: string;
     } {
         resource = resource ? resource : PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
-        const workspaceFolderSetting = resource
-            ? this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
-                  this.getSettingKey(resource, ConfigurationTarget.WorkspaceFolder),
-                  undefined
-              )
-            : undefined;
-        const workspaceSetting = resource
-            ? this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
-                  this.getSettingKey(resource, ConfigurationTarget.Workspace),
-                  undefined
-              )
-            : undefined;
-        const globalSetting = this.workspaceService
+        let workspaceFolderSetting: IPersistentState<string | undefined> | undefined;
+        let workspaceSetting: IPersistentState<string | undefined> | undefined;
+        if (resource) {
+            workspaceFolderSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
+                this.getSettingKey(resource, ConfigurationTarget.WorkspaceFolder),
+                undefined
+            );
+            workspaceSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
+                this.getSettingKey(resource, ConfigurationTarget.Workspace),
+                undefined
+            );
+        }
+        const globalValue = this.workspaceService
             .getConfiguration('python', resource)!
             .get<string>('defaultInterpreterPath')!;
         return {
-            globalValue: globalSetting,
+            globalValue,
             workspaceFolderValue: workspaceFolderSetting?.value,
             workspaceValue: workspaceSetting?.value
         };
     }
 
-    public interpreterPath(resource: Resource): string {
+    public getInterpreterPath(resource: Resource): string {
         resource = resource ? resource : PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
         const settings = this.inspectInterpreterPath(resource);
-        return settings.workspaceFolderValue !== undefined
-            ? settings.workspaceFolderValue
-            : settings.workspaceValue !== undefined
-            ? settings.workspaceValue
-            : settings.globalValue !== undefined
-            ? settings.globalValue
-            : 'python';
+        return settings.workspaceFolderValue || settings.workspaceValue || settings.globalValue || 'python';
     }
 
     public async update(
