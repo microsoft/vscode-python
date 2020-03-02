@@ -200,6 +200,7 @@ import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariab
 import { KernelSelectionProvider } from '../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../client/datascience/jupyter/kernels/kernelService';
+import { KernelSwitcher } from '../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
@@ -642,6 +643,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
         this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
         this.serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
+        this.serviceManager.addSingleton<KernelSwitcher>(KernelSwitcher, KernelSwitcher);
         this.serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
         this.serviceManager.addSingleton<IShebangCodeLensProvider>(IShebangCodeLensProvider, ShebangCodeLensProvider);
         this.serviceManager.addSingleton<IProductService>(IProductService, ProductService);
