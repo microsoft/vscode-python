@@ -218,7 +218,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             return false;
         }
 
-        // If we have both `git` & `file` schemes for the same file, then we're most likely looking at a diff view.
+        // If we have both `git` & `file`/`git` schemes for the same file, then we're most likely looking at a diff view.
         // Also ensure both editors are in the same view column.
         // Possible we have a git diff view (with two editors git and file scheme), and we open the file view
         // on the side (different view column).
@@ -232,9 +232,11 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             return false;
         }
 
+        // Look for other editors with the same file name that have a scheme of file/git and same viewcolumn.
         const fileSchemeEditor = this.documentManager.visibleTextEditors.find(
             editorUri =>
-                editorUri.document.uri.scheme === 'file' &&
+                (editorUri.document.uri.scheme === 'file' || editorUri.document.uri.scheme === 'git') &&
+                editorUri !== gitSchemeEditor &&
                 this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
                 editorUri.viewColumn === gitSchemeEditor.viewColumn
         );
