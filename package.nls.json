@@ -447,5 +447,5 @@
     "DataScience.connectingToJupyterUri": "Connecting to Jupyter server at {0}",
     "DataScience.createdNewNotebook": "{0}: Creating new notebook ",
     "DataScience.createdNewKernel": "{0}: Kernel started: {1}",
-    "DataScience.kernelIsDead": "Kernel {0} died while starting. Check the Jupyter output tab for more information."
+    "DataScience.kernelInvalid": "Kernel {0} is not usable. Check the Jupyter output tab for more information."
 }

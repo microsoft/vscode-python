@@ -228,11 +228,14 @@ export class IntellisenseDocument implements TextDocument {
         });
 
         // Contents are easy, just load all of the code in a row
-        this._contents = normalized
-            .map(c => c.code)
-            .reduce((p, c) => {
-                return `${p}${c}`;
-            });
+        this._contents =
+            normalized && normalized.length
+                ? normalized
+                      .map(c => c.code)
+                      .reduce((p, c) => {
+                          return `${p}${c}`;
+                      })
+                : '';
 
         // Cell ranges are slightly more complicated
         let prev: number = 0;

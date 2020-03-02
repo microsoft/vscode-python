@@ -1850,4 +1850,10 @@ export interface IEventNamePropertyMapping {
      * @memberof IEventNamePropertyMapping
      */
     [Telemetry.NewFileForInteractiveWindow]: undefined | never;
+    /**
+     * Telemetry event sent when a kernel picked crashes on startup
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.KernelIdleDead]: undefined | never;
 }

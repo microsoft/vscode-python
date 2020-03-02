@@ -11,6 +11,7 @@ import { Common, DataScience } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { Commands, Settings } from '../../constants';
 import { IConnection, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebook } from '../../types';
+import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
 import { JupyterSessionStartError } from '../jupyterSession';
 import { KernelSelector, KernelSpecInterpreter } from './kernelSelector';
 import { LiveKernelModel } from './types';
@@ -31,6 +32,21 @@ export class KernelSwitcher {
             return kernel;
         }
     }
+
+    public async askForLocalKernel(
+        resource: Resource,
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
+    ): Promise<KernelSpecInterpreter | undefined> {
+        const displayName = kernelSpec?.display_name || kernelSpec?.name || '';
+        const message = DataScience.sessionStartFailedWithKernel().format(displayName, Commands.ViewJupyterOutput);
+        const selectKernel = DataScience.selectDifferentKernel();
+        const cancel = Common.cancel();
+        const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
+        if (selection === selectKernel) {
+            return this.selectLocalJupyterKernel(resource, kernelSpec);
+        }
+    }
+
     private async selectJupyterKernel(notebook: INotebook): Promise<KernelSpecInterpreter | undefined> {
         let kernel: KernelSpecInterpreter | undefined;
 
@@ -86,31 +102,20 @@ export class KernelSwitcher {
                 await this.switchToKernel(notebook, kernel);
                 return;
             } catch (ex) {
-                if (ex instanceof JupyterSessionStartError && isLocalConnection) {
+                if (
+                    isLocalConnection &&
+                    (ex instanceof JupyterSessionStartError || ex instanceof JupyterInvalidKernelError)
+                ) {
                     // Looks like we were unable to start a session for the local connection.
                     // Possibly something wrong with the kernel.
                     // At this point we have a valid jupyter server.
-                    const displayName =
-                        kernel.kernelSpec?.display_name ||
-                        kernel.kernelModel?.display_name ||
-                        kernel.kernelSpec?.name ||
-                        kernel.kernelModel?.name ||
-                        '';
-                    const message = DataScience.sessionStartFailedWithKernel().format(
-                        displayName,
-                        Commands.ViewJupyterOutput
+                    const potential = await this.askForLocalKernel(
+                        notebook.resource,
+                        kernel.kernelSpec || kernel.kernelModel
                     );
-                    const selectKernel = DataScience.selectDifferentKernel();
-                    const cancel = Common.cancel();
-                    const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
-                    if (selection === selectKernel) {
-                        kernel = await this.selectLocalJupyterKernel(
-                            notebook.resource,
-                            kernel.kernelSpec || kernel.kernelModel
-                        );
-                        if (Object.keys(kernel).length > 0) {
-                            continue;
-                        }
+                    if (potential && Object.keys(potential).length > 0) {
+                        kernel = potential;
+                        continue;
                     }
                 }
                 throw ex;

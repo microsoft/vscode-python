@@ -63,8 +63,10 @@ import {
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
+import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
+import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages } from '../messages';
 import { ProgressReporter } from '../progress/progressReporter';
@@ -149,7 +151,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() scripts: string[],
         @unmanaged() title: string,
         @unmanaged() viewColumn: ViewColumn,
-        @unmanaged() experimentsManager: IExperimentsManager
+        @unmanaged() experimentsManager: IExperimentsManager,
+        @unmanaged() private switcher: KernelSwitcher
     ) {
         super(
             configuration,
@@ -465,6 +468,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     protected abstract getNotebookIdentity(): Promise<Uri>;
 
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
+
+    protected abstract updateNotebookOptions(
+        kernelSpec: IJupyterKernelSpec,
+        interpreter: PythonInterpreter | undefined
+    ): Promise<void>;
 
     protected async clearResult(id: string): Promise<void> {
         await this.ensureServerAndNotebook();
@@ -1058,61 +1066,102 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } catch (e) {
             // Reset the load promise. Don't want to keep hitting the same error
             this.notebookPromise = undefined;
+
             throw e;
         }
     }
 
-    private async ensureNotebookImpl(server: INotebookServer): Promise<void> {
-        // Create a new notebook if we need to.
-        if (!this._notebook) {
+    private async createNotebook(server: INotebookServer): Promise<INotebook> {
+        let notebook: INotebook | undefined;
+        while (!notebook) {
             const [resource, uri, options] = await Promise.all([
                 this.getOwningResource(),
                 this.getNotebookIdentity(),
                 this.getNotebookOptions()
             ]);
-            this._notebook = uri ? await server.createNotebook(resource, uri, options?.metadata) : undefined;
-            if (this._notebook && uri) {
-                this.postMessage(InteractiveWindowMessages.NotebookExecutionActivated, uri.toString()).ignoreErrors();
-
-                const statusChangeHandler = async (status: ServerStatus) => {
-                    if (this._notebook) {
-                        const kernelSpec = this._notebook.getKernelSpec();
-
-                        if (kernelSpec) {
-                            const connectionInfo = this._notebook.server.getConnectionInfo();
-                            let localizedUri = '';
-
-                            // Determine the connection URI of the connected server to display
-                            if (connectionInfo) {
-                                if (connectionInfo.localLaunch) {
-                                    localizedUri = localize.DataScience.localJupyterServer();
-                                } else {
-                                    if (connectionInfo.token) {
-                                        localizedUri = `${connectionInfo.baseUrl}?token=${connectionInfo.token}`;
-                                    } else {
-                                        localizedUri = connectionInfo.baseUrl;
-                                    }
-
-                                    // Log this remote URI into our MRU list
-                                    addToUriList(this.globalStorage, localizedUri, Date.now());
-                                }
-                            }
-
-                            const name = kernelSpec.display_name || kernelSpec.name;
-
-                            await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                                jupyterServerStatus: status,
-                                localizedUri,
-                                displayName: name
-                            });
-                        }
+            try {
+                notebook = uri ? await server.createNotebook(resource, uri, options?.metadata) : undefined;
+            } catch (e) {
+                // If we get an invalid kernel error, make sure to ask the user to switch
+                if (e instanceof JupyterInvalidKernelError && server && server.getConnectionInfo()?.localLaunch) {
+                    // Ask the user for a new local kernel
+                    const newKernel = await this.switcher.askForLocalKernel(resource, e.kernelSpec);
+                    if (newKernel?.kernelSpec) {
+                        // Update the notebook metadata
+                        await this.updateNotebookOptions(newKernel.kernelSpec, newKernel.interpreter);
                     }
-                };
-                this._notebook.onSessionStatusChanged(statusChangeHandler);
-                this.disposables.push(this._notebook.onKernelChanged(this.kernelChangeHandler.bind(this)));
+                } else {
+                    throw e;
+                }
+            }
+        }
+        return notebook;
+    }
 
-                // Fire the status changed handler at least once (might have already been running and so won't show a status update)
-                statusChangeHandler(this._notebook.status).ignoreErrors();
+    private getServerUri(server: INotebookServer): string {
+        const connectionInfo = server.getConnectionInfo();
+        let localizedUri = '';
+
+        // Determine the connection URI of the connected server to display
+        if (connectionInfo) {
+            if (connectionInfo.localLaunch) {
+                localizedUri = localize.DataScience.localJupyterServer();
+            } else {
+                if (connectionInfo.token) {
+                    localizedUri = `${connectionInfo.baseUrl}?token=${connectionInfo.token}`;
+                } else {
+                    localizedUri = connectionInfo.baseUrl;
+                }
+
+                // Log this remote URI into our MRU list
+                addToUriList(this.globalStorage, localizedUri, Date.now());
+            }
+        }
+
+        return localizedUri;
+    }
+
+    private async listenToNotebookStatus(notebook: INotebook): Promise<void> {
+        const statusChangeHandler = async (status: ServerStatus) => {
+            const kernelSpec = notebook.getKernelSpec();
+
+            if (kernelSpec) {
+                const name = kernelSpec.display_name || kernelSpec.name;
+
+                await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                    jupyterServerStatus: status,
+                    localizedUri: this.getServerUri(notebook.server),
+                    displayName: name
+                });
+            }
+        };
+        notebook.onSessionStatusChanged(statusChangeHandler);
+        this.disposables.push(notebook.onKernelChanged(this.kernelChangeHandler.bind(this)));
+
+        // Fire the status changed handler at least once (might have already been running and so won't show a status update)
+        statusChangeHandler(notebook.status).ignoreErrors();
+    }
+
+    private async ensureNotebookImpl(server: INotebookServer): Promise<void> {
+        // Create a new notebook if we need to.
+        if (!this._notebook) {
+            // While waiting make the notebook look busy
+            await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                jupyterServerStatus: ServerStatus.Busy,
+                localizedUri: this.getServerUri(server),
+                displayName: ''
+            });
+
+            this._notebook = await this.createNotebook(server);
+
+            // If that works notify the UI and listen to status changes.
+            if (this._notebook && this._notebook.identity) {
+                this.postMessage(
+                    InteractiveWindowMessages.NotebookExecutionActivated,
+                    this._notebook.identity.toString()
+                ).ignoreErrors();
+
+                return this.listenToNotebookStatus(this._notebook);
             }
         }
     }
@@ -1125,7 +1174,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // This means a server that matches our options has started already. Use
         // it to ensure we have a notebook to run.
         if (server) {
-            await this.ensureNotebook(server);
+            try {
+                await this.ensureNotebook(server);
+            } catch (e) {
+                this.errorHandler.handleError(e).ignoreErrors();
+            }
         }
     }
 

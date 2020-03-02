@@ -27,7 +27,7 @@ import {
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -37,6 +37,7 @@ import {
     NotebookModelChange,
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
+import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ICell,
@@ -49,6 +50,7 @@ import {
     IInteractiveWindowProvider,
     IJupyterDebugger,
     IJupyterExecution,
+    IJupyterKernelSpec,
     IJupyterVariables,
     INotebookExporter,
     INotebookServerOptions,
@@ -105,7 +107,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
-        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
+        @inject(KernelSwitcher) switcher: KernelSwitcher
     ) {
         super(
             progressReporter,
@@ -138,7 +141,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             ],
             localize.DataScience.historyTitle(),
             ViewColumn.Two,
-            experimentsManager
+            experimentsManager,
+            switcher
         );
 
         // Send a telemetry event to indicate window is opening
@@ -310,6 +314,13 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
     protected async getNotebookOptions(): Promise<INotebookServerOptions> {
         return this.interactiveWindowProvider.getNotebookOptions(await this.getOwningResource());
+    }
+
+    protected async updateNotebookOptions(
+        _kernelSpec: IJupyterKernelSpec,
+        _interpreter: PythonInterpreter | undefined
+    ): Promise<void> {
+        // Do nothing as this data isn't stored in our options.
     }
 
     protected async getNotebookIdentity(): Promise<Uri> {
