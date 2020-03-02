@@ -5,14 +5,14 @@ import { IPythonPathUpdaterService } from '../types';
 
 export class WorkspaceFolderPythonPathUpdaterService implements IPythonPathUpdaterService {
     constructor(private workspaceFolder: Uri, private readonly workspaceService: IWorkspaceService) {}
-    public async updatePythonPath(pythonPath: string): Promise<void> {
+    public async updatePythonPath(pythonPath: string | undefined): Promise<void> {
         const pythonConfig = this.workspaceService.getConfiguration('python', this.workspaceFolder);
         const pythonPathValue = pythonConfig.inspect<string>('pythonPath');
 
         if (pythonPathValue && pythonPathValue.workspaceFolderValue === pythonPath) {
             return;
         }
-        if (pythonPath.startsWith(this.workspaceFolder.fsPath)) {
+        if (pythonPath && pythonPath.startsWith(this.workspaceFolder.fsPath)) {
             pythonPath = path.relative(this.workspaceFolder.fsPath, pythonPath);
         }
         await pythonConfig.update('pythonPath', pythonPath, ConfigurationTarget.WorkspaceFolder);
