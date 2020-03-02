@@ -10,7 +10,7 @@ import {
 import { Commands } from '../../common/constants';
 import { IConfigurationService, IPathUtils, Resource } from '../../common/types';
 import { Interpreters } from '../../common/utils/localize';
-import { IInterpreterService, IShebangCodeLensProvider, PythonInterpreter, WorkspacePythonPath } from '../contracts';
+import { IInterpreterService, IShebangCodeLensProvider, PythonInterpreter } from '../contracts';
 import {
     IInterpreterComparer,
     IInterpreterQuickPickItem,
@@ -58,19 +58,12 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     protected async resetInterpreter() {
-        const setInterpreterGlobally =
-            !Array.isArray(this.workspaceService.workspaceFolders) ||
-            this.workspaceService.workspaceFolders.length === 0;
-        let configTarget = ConfigurationTarget.Global;
-        let wkspace: Uri | undefined;
-        if (!setInterpreterGlobally) {
-            const targetConfig = await this.getWorkspaceToSetPythonPath();
-            if (!targetConfig) {
-                return;
-            }
-            configTarget = targetConfig.configTarget;
-            wkspace = targetConfig.folderUri;
+        const targetConfig = await this.getConfigTarget();
+        if (!targetConfig) {
+            return;
         }
+        const configTarget = targetConfig.configTarget;
+        const wkspace = targetConfig.folderUri;
 
         await this.pythonPathUpdaterService.updatePythonPath(undefined, configTarget, 'ui', wkspace);
     }
@@ -90,19 +83,12 @@ export class InterpreterSelector implements IInterpreterSelector {
     }
 
     protected async setInterpreter() {
-        const setInterpreterGlobally =
-            !Array.isArray(this.workspaceService.workspaceFolders) ||
-            this.workspaceService.workspaceFolders.length === 0;
-        let configTarget = ConfigurationTarget.Global;
-        let wkspace: Uri | undefined;
-        if (!setInterpreterGlobally) {
-            const targetConfig = await this.getWorkspaceToSetPythonPath();
-            if (!targetConfig) {
-                return;
-            }
-            configTarget = targetConfig.configTarget;
-            wkspace = targetConfig.folderUri;
+        const targetConfig = await this.getConfigTarget();
+        if (!targetConfig) {
+            return;
         }
+        const configTarget = targetConfig.configTarget;
+        const wkspace = targetConfig.folderUri;
 
         const suggestions = await this.getSuggestions(wkspace);
         const currentPythonPath = this.pathUtils.getDisplayName(
@@ -161,12 +147,21 @@ export class InterpreterSelector implements IInterpreterSelector {
             workspaceFolder.uri
         );
     }
-    private async getWorkspaceToSetPythonPath(): Promise<WorkspacePythonPath | undefined> {
+    private async getConfigTarget(): Promise<
+        | {
+              folderUri: Resource;
+              configTarget: ConfigurationTarget;
+          }
+        | undefined
+    > {
         if (
             !Array.isArray(this.workspaceService.workspaceFolders) ||
             this.workspaceService.workspaceFolders.length === 0
         ) {
-            return undefined;
+            return {
+                folderUri: undefined,
+                configTarget: ConfigurationTarget.Global
+            };
         }
         if (this.workspaceService.workspaceFolders.length === 1) {
             return {
