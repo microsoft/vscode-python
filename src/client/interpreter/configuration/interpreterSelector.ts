@@ -175,11 +175,11 @@ export class InterpreterSelector implements IInterpreterSelector {
         type WorkspaceSelectionQuickPickItem = QuickPickItem & { uri: Uri };
         const quickPickItems: WorkspaceSelectionQuickPickItem[] = [
             ...this.workspaceService.workspaceFolders.map(w => {
-                return {
+                ({
                     label: w.name,
                     description: path.dirname(w.uri.fsPath),
                     uri: w.uri
-                };
+                })
             }),
             {
                 label: Interpreters.entireWorkspace(),
