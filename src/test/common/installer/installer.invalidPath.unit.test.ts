@@ -84,6 +84,7 @@ suite('Module Installer - Invalid Paths', () => {
                     case Product.kernelspec:
                     case Product.nbconvert:
                     case Product.notebook:
+                    case Product.pandas:
                     case Product.jupyter: {
                         return;
                     }

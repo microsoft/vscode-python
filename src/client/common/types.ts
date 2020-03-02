@@ -108,7 +108,8 @@ export enum Product {
     ipykernel = 19,
     notebook = 20,
     kernelspec = 21,
-    nbconvert = 22
+    nbconvert = 22,
+    pandas = 23
 }
 
 export enum ModuleNamePurpose {

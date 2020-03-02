@@ -477,6 +477,8 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
             return 'jupyter';
         case Product.notebook:
             return 'notebook';
+        case Product.pandas:
+            return 'pandas';
         case Product.ipykernel:
             return 'ipykernel';
         case Product.nbconvert:

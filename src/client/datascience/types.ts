@@ -635,7 +635,6 @@ export interface IJupyterVariablesResponse {
 export const IDataViewerProvider = Symbol('IDataViewerProvider');
 export interface IDataViewerProvider {
     create(variable: IJupyterVariable, notebook: INotebook): Promise<IDataViewer>;
-    getPandasVersion(notebook: INotebook): Promise<{ major: number; minor: number; build: number } | undefined>;
 }
 export const IDataViewer = Symbol('IDataViewer');
 

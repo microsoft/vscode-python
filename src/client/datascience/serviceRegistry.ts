@@ -13,6 +13,7 @@ import { KernelSwitcherCommand } from './commands/kernelSwitcher';
 import { JupyterServerSelectorCommand } from './commands/serverSelector';
 import { ActiveEditorContextService } from './context/activeEditorContext';
 import { DataViewer } from './data-viewing/dataViewer';
+import { DataViewerDependencyService } from './data-viewing/dataViewerDependencyService';
 import { DataViewerProvider } from './data-viewing/dataViewerProvider';
 import { DataScience } from './datascience';
 import { DataScienceSurveyBannerLogger } from './dataScienceSurveyBanner';
@@ -215,6 +216,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
+    serviceManager.addSingleton<DataViewerDependencyService>(DataViewerDependencyService, DataViewerDependencyService);
 
     // Temporary code, to allow users to revert to the old behavior.
     const cfg = serviceManager

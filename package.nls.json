@@ -138,6 +138,7 @@
     "Common.reload": "Reload",
     "Common.moreInfo": "More Info",
     "Common.and": "and",
+    "Common.install": "Install",
     "OutputChannelNames.languageServer": "Python Language Server",
     "OutputChannelNames.python": "Python",
     "OutputChannelNames.pythonTest": "Python Test Log",
