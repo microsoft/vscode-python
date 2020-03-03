@@ -4,7 +4,7 @@ on:
   push:
     branches:
       # Run the CI workflow only on master for microsoft/vscode-python for now.
-      - master
+      - gha-*
 
 env:
   PYTHON_VERSION: 3.8
@@ -23,7 +23,7 @@ jobs:
   python-deps:
     name: Install Python Requirements
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -68,7 +68,7 @@ jobs:
   js-ts-deps:
     name: Install npm dependencies
     runs-on: ubuntu-latest
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -182,16 +182,19 @@ jobs:
     name: Tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     needs: [python-deps, js-ts-deps]
     strategy:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest, windows-latest]
+        # os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: [2.7, 3.8]
-        test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
+        python: [3.8]
+        # test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
+        test-suite: [debugger]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
