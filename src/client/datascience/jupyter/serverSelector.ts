@@ -5,8 +5,7 @@
 
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Memento, QuickPickItem, Uri } from 'vscode';
-import { ICommandManager } from '../../common/application/types';
-import { IClipboard } from '../../common/application/types';
+import { IClipboard, ICommandManager } from '../../common/application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IMemento } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
