@@ -196,7 +196,7 @@ jobs:
         # test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
         test-suite: [debugger]
     env:
-      NODE_VERSION: 12.13.0
+      NODE_VERSION: 12.14.1
     steps:
       - name: Checkout
         uses: actions/checkout@v2
