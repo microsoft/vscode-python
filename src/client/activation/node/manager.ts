@@ -95,6 +95,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
             this.surveyBanner,
+            true,
             LanguageServerType.Node,
             versionPair?.version.format()
         );

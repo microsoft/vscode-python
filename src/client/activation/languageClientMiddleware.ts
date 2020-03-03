@@ -80,6 +80,7 @@ export class LanguageClientMiddleware implements Middleware {
 
     public constructor(
         private readonly surveyBanner: IPythonExtensionBanner,
+        public readonly collectTelemetry: boolean = false,
         public readonly serverType?: LanguageServerType,
         public readonly serverVersion?: string
     ) {
@@ -356,6 +357,10 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
 
         // tslint:disable-next-line:no-any
         descriptor.value = function(this: LanguageClientMiddleware, ...args: any[]) {
+            if (!this.collectTelemetry) {
+                return originalMethod.apply(this, args);
+            }
+
             let eventName: EventName;
 
             if (this.serverType === LanguageServerType.Microsoft) {
