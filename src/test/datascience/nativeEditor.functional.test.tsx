@@ -481,15 +481,13 @@ df.head()`;
                             const editor = await createNewEditor(ioc);
 
                             // Wait a bit to let async activation to work
-                            await sleep(500);
+                            await sleep(2000);
 
                             // Make sure it has a server
                             assert.ok(editor.notebook, 'Notebook did not start with a server');
                         } else {
                             context.skip();
                         }
-                        // Do the same thing again, but disable auto start
-                        ioc.getSettings().datascience.disableJupyterAutoStart = true;
                     },
                     () => {
                         return ioc;
