@@ -396,6 +396,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private webPanelProvider: TypeMoq.IMock<IWebPanelProvider> | undefined;
     private settingsMap = new Map<string, any>();
+    private kernelServiceMock = mock(KernelService);
 
     constructor() {
         super();
@@ -1028,9 +1029,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (this.shouldMockJupyter) {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
-            const kernelService = mock(KernelService);
-            when(kernelService.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
-            this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(kernelService));
+            when(this.kernelServiceMock.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
+            this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
         } else {
             this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
             this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
@@ -1090,6 +1090,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IExtensionSingleActivationService
         );
         await Promise.all(activationServices.map(a => a.activate()));
+    }
+
+    public get kernelService() {
+        return this.kernelServiceMock;
     }
 
     public createWebPanel(): IWebPanel {

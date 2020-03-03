@@ -10,7 +10,7 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { anything, when } from 'ts-mockito';
+import { anything, objectContaining, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
 import { IApplicationShell, ICustomEditorService, IDocumentManager } from '../../client/common/application/types';
@@ -193,6 +193,79 @@ suite('DataScience Native Editor', () => {
                         await addCell(wrapper, ioc, 'a=1\na');
 
                         verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
+                    },
+                    () => {
+                        return ioc;
+                    }
+                );
+
+                runMountedTest(
+                    'Invalid session still runs',
+                    async (wrapper, context) => {
+                        if (ioc.mockJupyter) {
+                            // Can only do this with the mock. Have to force the first call to waitForIdle on the
+                            // the jupyter session to fail
+                            ioc.mockJupyter.forcePendingIdleFailure();
+
+                            // Create an editor so something is listening to messages
+                            await createNewEditor(ioc);
+
+                            // Run the first cell. Should fail but then ask for another
+                            await addCell(wrapper, ioc, 'a=1\na');
+
+                            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
+                        } else {
+                            context.skip();
+                        }
+                    },
+                    () => {
+                        return ioc;
+                    }
+                );
+
+                runMountedTest(
+                    'Invalid kernel still runs',
+                    async (wrapper, context) => {
+                        if (ioc.mockJupyter) {
+                            const kernelDesc = {
+                                name: 'foobar',
+                                display_name: 'foobar'
+                            };
+                            const invalidKernel = {
+                                name: 'foobar',
+                                display_name: 'foobar',
+                                language: 'python',
+                                path: '/foo/bar/python',
+                                argv: []
+                            };
+
+                            // Allow the invalid kernel to be used
+                            const kernelServiceMock = ioc.kernelService;
+                            when(
+                                kernelServiceMock.findMatchingKernelSpec(
+                                    objectContaining(kernelDesc),
+                                    anything(),
+                                    anything()
+                                )
+                            ).thenResolve(invalidKernel);
+
+                            // Can only do this with the mock. Have to force the first call to changeKernel on the
+                            // the jupyter session to fail
+                            ioc.mockJupyter.forcePendingKernelChangeFailure();
+
+                            // Create an editor so something is listening to messages
+                            const editor = (await createNewEditor(ioc)) as NativeEditorWebView;
+
+                            // Force an update to the editor so that it has a new kernel
+                            await editor.updateNotebookOptions(invalidKernel, undefined);
+
+                            // Run the first cell. Should fail but then ask for another
+                            await addCell(wrapper, ioc, 'a=1\na');
+
+                            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
+                        } else {
+                            context.skip();
+                        }
                     },
                     () => {
                         return ioc;

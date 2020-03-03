@@ -5,6 +5,8 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
+import { JupyterInvalidKernelError } from '../../client/datascience/jupyter/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from '../../client/datascience/jupyter/jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
 import { ICell, IJupyterKernelSpec, IJupyterSession } from '../../client/datascience/types';
@@ -26,7 +28,12 @@ export class MockJupyterSession implements IJupyterSession {
     private forceRestartTimeout: boolean = false;
     private completionTimeout: number = 1;
     private lastRequest: MockJupyterRequest | undefined;
-    constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
+    constructor(
+        cellDictionary: Record<string, ICell>,
+        timedelay: number,
+        private pendingIdleFailure: boolean = false,
+        private pendingKernelChangeFailure: boolean = false
+    ) {
         this.dict = cellDictionary;
         this.timedelay = timedelay;
     }
@@ -63,6 +70,10 @@ export class MockJupyterSession implements IJupyterSession {
         return sleep(this.timedelay);
     }
     public waitForIdle(_timeout: number): Promise<void> {
+        if (this.pendingIdleFailure) {
+            this.pendingIdleFailure = false;
+            return Promise.reject(new JupyterWaitForIdleError('Kernel is dead'));
+        }
         return sleep(this.timedelay);
     }
 
@@ -173,7 +184,11 @@ export class MockJupyterSession implements IJupyterSession {
         this.completionTimeout = timeout;
     }
 
-    public changeKernel(_kernel: IJupyterKernelSpec | LiveKernelModel, _timeoutMS: number): Promise<void> {
+    public changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, _timeoutMS: number): Promise<void> {
+        if (this.pendingKernelChangeFailure) {
+            this.pendingKernelChangeFailure = false;
+            return Promise.reject(new JupyterInvalidKernelError(kernel));
+        }
         return Promise.resolve();
     }
 
