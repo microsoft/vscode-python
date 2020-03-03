@@ -195,6 +195,8 @@ jobs:
         python: [3.7]
         # test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
         test-suite: [debugger]
+    env:
+      NODE_VERSION: 12.13.0
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -225,10 +227,10 @@ jobs:
         with:
           python-version: ${{matrix.python}}
 
-      - name: Use Node 12.4.0
+      - name: Use Node ${{env.NODE_VERSION}}
         uses: actions/setup-node@v1
         with:
-          node-version: '12.4.0'
+          node-version: ${{env.NODE_VERSION}}
 
       - name: curl PyPI to get debugpy versions
         run: curl --output debugpy.json https://pypi.org/pypi/debugpy/json
