@@ -25,5 +25,6 @@ export class WorkspacePythonPathUpdaterService implements IPythonPathUpdaterServ
             await this.interpreterPathService.update(this.workspace, ConfigurationTarget.Workspace, pythonPath);
         } else {
             await pythonConfig.update('pythonPath', pythonPath, false);
+        }
     }
 }
