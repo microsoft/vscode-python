@@ -13,7 +13,6 @@ export class ClipboardService implements IClipboard {
         return env.clipboard.readText();
     }
     public async writeText(value: string): Promise<void> {
-
         await env.clipboard.writeText(value);
     }
 }
