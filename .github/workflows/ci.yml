@@ -191,7 +191,7 @@ jobs:
         # os: [ubuntu-latest, windows-latest]
         os: [ubuntu-latest]
         # Run the tests on the oldest and most recent versions of Python.
-        python: [2.7, 3.8]
+        # python: [2.7, 3.8]
         python: [3.8]
         # test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
         test-suite: [debugger]
