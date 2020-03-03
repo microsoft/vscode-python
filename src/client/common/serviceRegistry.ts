@@ -3,6 +3,7 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IFileDownloader, IHttpClient } from '../common/types';
 import { LiveShareApi } from '../datascience/liveshare/liveshare';
+import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
@@ -167,6 +168,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
+    serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);
+    serviceManager.addBinding(IImportTracker, INotebookExecutionLogger);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, SettingsShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);

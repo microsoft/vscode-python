@@ -104,7 +104,7 @@ import { TerminalProvider } from './providers/terminalProvider';
 import { ISortImportsEditingProvider } from './providers/types';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
-import { EditorLoadTelemetry, IImportTracker } from './telemetry/types';
+import { EditorLoadTelemetry } from './telemetry/types';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
@@ -170,10 +170,6 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     // Activate data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);
     dataScience.activate().ignoreErrors();
-
-    // Activate import tracking
-    const importTracker = serviceManager.get<IImportTracker>(IImportTracker);
-    importTracker.activate().ignoreErrors();
 
     context.subscriptions.push(new LinterCommands(serviceManager));
 
