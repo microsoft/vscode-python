@@ -154,7 +154,6 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                         expandImage={this.props.showPlot}
                                         maxTextSize={this.props.maxTextSize}
                                         themeMatplotlibPlots={themeMatplotlibPlots}
-                                        openSettings={this.props.openSettings}
                                     />
                                 </div>
                             </div>
