@@ -155,6 +155,7 @@
     "ExtensionChannels.downloadCompletedOutputMessage": "Insiders build download complete.",
     "ExtensionChannels.startingDownloadOutputMessage": "Starting download for Insiders build.",
     "Interpreters.environmentPromptMessage": "We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?",
+    "DataScience.reloadAfterChangingJupyterServerConnection": "Please reload VS Code when changing the Jupyter Server connection.",
     "DataScience.restartKernelMessage": "Do you want to restart the IPython kernel? All variables will be lost.",
     "DataScience.restartKernelMessageYes": "Yes",
     "DataScience.restartKernelMessageNo": "No",

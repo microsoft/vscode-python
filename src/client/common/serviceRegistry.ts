@@ -9,6 +9,7 @@ import { IImportTracker } from '../telemetry/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
 import { CommandManager } from './application/commandManager';
+import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
 import { CustomEditorService } from './application/customEditorService';
 import { DebugService } from './application/debugService';
 import { DebugSessionTelemetry } from './application/debugSessionTelemetry';
@@ -175,6 +176,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         InsidersExtensionService
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        ReloadVSCodeCommandHandler
     );
     serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
     serviceManager.addSingleton<IExtensionChannelRule>(

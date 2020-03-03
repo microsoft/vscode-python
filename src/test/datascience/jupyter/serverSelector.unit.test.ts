@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { assert } from 'chai';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 
 import { QuickPickItem } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
+import { CommandManager } from '../../../client/common/application/commandManager';
+import { ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
@@ -19,6 +21,7 @@ import { MockQuickPick } from '../mockQuickPick';
 // tslint:disable: max-func-body-length
 suite('Data Science - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
+    let cmdManager: ICommandManager;
 
     function createDataScienceObject(
         quickPickSelection: string,
@@ -28,9 +31,11 @@ suite('Data Science - Jupyter Server URI Selector', () => {
     ): JupyterServerSelector {
         const configService = mock(ConfigurationService);
         const applicationShell = mock(ApplicationShell);
+        cmdManager = mock(CommandManager);
         const storage = mockStorage ? mockStorage : new MockMemento();
         quickPick = new MockQuickPick(quickPickSelection);
         const input = new MockInputBox(inputSelection);
+        when(cmdManager.executeCommand(anything(), anything())).thenResolve();
         when(applicationShell.createQuickPick()).thenReturn(quickPick!);
         when(applicationShell.createInputBox()).thenReturn(input);
         const multiStepFactory = new MultiStepInputFactory(instance(applicationShell));
@@ -41,7 +46,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
             }
         );
 
-        return new JupyterServerSelector(storage, multiStepFactory, instance(configService));
+        return new JupyterServerSelector(storage, multiStepFactory, instance(configService), instance(cmdManager));
     }
 
     test('Local pick server uri', async () => {
@@ -128,6 +133,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
         const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', v => (value = v));
         await ds.selectJupyterURI();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
+        verify(cmdManager.executeCommand(anything(), anything())).once();
     });
 
     test('Invalid server uri', async () => {

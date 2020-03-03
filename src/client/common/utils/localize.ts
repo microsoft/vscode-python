@@ -458,6 +458,10 @@ export namespace DataScience {
         'DataScience.jupyterNotebookConnectFailed',
         'Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}'
     );
+    export const reloadAfterChangingJupyterServerConnection = localize(
+        'DataScience.reloadAfterChangingJupyterServerConnection',
+        'Please reload VS Code when changing the Jupyter Server connection.'
+    );
     export const jupyterNotebookRemoteConnectFailed = localize(
         'DataScience.jupyterNotebookRemoteConnectFailed',
         'Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}'
