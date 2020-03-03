@@ -44,6 +44,7 @@ suite('Data Science - Native Editor Provider', () => {
     });
 
     function createNotebookProvider() {
+        const dummyEvent = new EventEmitter<void>();
         editor = typemoq.Mock.ofType<INotebookEditor>();
         when(configService.getSettings(anything())).thenReturn({ datascience: { useNotebookEditor: true } } as any);
         editor.setup(e => e.closed).returns(() => new EventEmitter<INotebookEditor>().event);
@@ -68,7 +69,10 @@ suite('Data Science - Native Editor Provider', () => {
         customEditorService
             .setup(c => c.openEditor(typemoq.It.isAny()))
             .returns(async f => {
-                return registeredProvider.resolveCustomEditor(f, panel.object);
+                return registeredProvider.resolveCustomEditor(
+                    { uri: f, viewType: 'f', onDidDispose: dummyEvent.event },
+                    panel.object
+                );
             });
 
         editor
