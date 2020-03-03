@@ -15,8 +15,10 @@ import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import {
     ILanguageServerAnalysisOptions,
     ILanguageServerExtension,
+    ILanguageServerFolderService,
     ILanguageServerManager,
-    ILanguageServerProxy
+    ILanguageServerProxy,
+    LanguageServerType
 } from '../types';
 
 @injectable()
@@ -90,8 +92,16 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
     @traceDecorators.verbose('Starting Language Server')
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
+
+        const folderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
+        const versionPair = await folderService.getCurrentLanguageServerDirectory();
+
         const options = await this.analysisOptions!.getAnalysisOptions();
-        options.middleware = this.middleware = new LanguageClientMiddleware(this.surveyBanner);
+        options.middleware = this.middleware = new LanguageClientMiddleware(
+            this.surveyBanner,
+            LanguageServerType.Node,
+            versionPair?.version.format()
+        );
 
         // Make sure the middleware is connected if we restart and we we're already connected.
         if (this.connected) {

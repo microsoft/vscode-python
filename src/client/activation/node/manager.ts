@@ -12,7 +12,13 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
-import { ILanguageServerAnalysisOptions, ILanguageServerManager, ILanguageServerProxy } from '../types';
+import {
+    ILanguageServerAnalysisOptions,
+    ILanguageServerFolderService,
+    ILanguageServerManager,
+    ILanguageServerProxy,
+    LanguageServerType
+} from '../types';
 
 @injectable()
 export class NodeLanguageServerManager implements ILanguageServerManager {
@@ -82,8 +88,16 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     @traceDecorators.verbose('Starting Language Server')
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
+
+        const folderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
+        const versionPair = await folderService.getCurrentLanguageServerDirectory();
+
         const options = await this.analysisOptions!.getAnalysisOptions();
-        options.middleware = this.middleware = new LanguageClientMiddleware(this.surveyBanner);
+        options.middleware = this.middleware = new LanguageClientMiddleware(
+            this.surveyBanner,
+            LanguageServerType.Node,
+            versionPair?.version.format()
+        );
 
         // Make sure the middleware is connected if we restart and we we're already connected.
         if (this.connected) {

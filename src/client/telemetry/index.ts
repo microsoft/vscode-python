@@ -1128,6 +1128,10 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
     /**
+     * Telemetry sent when the client makes a request to the Language Server
+     */
+    [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: any;
+    /**
      * Telemetry event sent with details when inExperiment() API is called
      */
     [EventName.PYTHON_EXPERIMENTS]: {
@@ -1185,6 +1189,10 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
      */
     [EventName.PYTHON_NODE_SERVER_TELEMETRY]: any;
+    /**
+     * Telemetry sent when the client makes a request to the Node.js server
+     */
+    [EventName.PYTHON_NODE_SERVER_REQUEST]: any;
     /**
      * Telemetry captured for enabling reload.
      */
