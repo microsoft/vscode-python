@@ -99,7 +99,7 @@ export class JupyterServerSelector {
         );
 
         // Reload if there's a change
-        if (previousValue !== Settings.JupyterServerLocalLaunch) {
+        if (previousValue !== userURI) {
             this.cmdManager
                 .executeCommand('python.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
                 .then(noop, noop);
