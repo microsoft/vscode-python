@@ -1197,3 +1197,16 @@ export interface ICustomEditorService {
      */
     openEditor(file: Uri): Promise<void>;
 }
+
+export const IClipboard = Symbol('IClipboard');
+export interface IClipboard {
+    /**
+     * Read the current clipboard contents as text.
+     */
+    readText(): Promise<string>;
+
+    /**
+     * Writes text into the clipboard.
+     */
+    writeText(value: string): Promise<void>;
+}

@@ -3,15 +3,17 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 
+import * as sinon from 'sinon';
 import { QuickPickItem } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
+import { ClipboardService } from '../../../client/common/application/clipboard';
 import { CommandManager } from '../../../client/common/application/commandManager';
-import { ICommandManager } from '../../../client/common/application/types';
+import { IClipboard, ICommandManager } from '../../../client/common/application/types';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IDataScienceSettings } from '../../../client/common/types';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
-import { MultiStepInputFactory } from '../../../client/common/utils/multiStepInput';
+import { MultiStepInput, MultiStepInputFactory } from '../../../client/common/utils/multiStepInput';
 import { addToUriList } from '../../../client/datascience/common';
 import { Settings } from '../../../client/datascience/constants';
 import { JupyterServerSelector } from '../../../client/datascience/jupyter/serverSelector';
@@ -24,6 +26,8 @@ suite('Data Science - Jupyter Server URI Selector', () => {
     let quickPick: MockQuickPick | undefined;
     let cmdManager: ICommandManager;
     let dsSettings: IDataScienceSettings;
+    let clipboard: IClipboard;
+
     function createDataScienceObject(
         quickPickSelection: string,
         inputSelection: string,
@@ -34,6 +38,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
             jupyterServerURI: Settings.JupyterServerLocalLaunch
             // tslint:disable-next-line: no-any
         } as any;
+        clipboard = mock(ClipboardService);
         const configService = mock(ConfigurationService);
         const applicationShell = mock(ApplicationShell);
         cmdManager = mock(CommandManager);
@@ -53,8 +58,16 @@ suite('Data Science - Jupyter Server URI Selector', () => {
             }
         );
 
-        return new JupyterServerSelector(storage, multiStepFactory, instance(configService), instance(cmdManager));
+        return new JupyterServerSelector(
+            storage,
+            instance(clipboard),
+            multiStepFactory,
+            instance(configService),
+            instance(cmdManager)
+        );
     }
+
+    teardown(() => sinon.restore());
 
     test('Local pick server uri', async () => {
         let value = '';
@@ -165,5 +178,37 @@ suite('Data Science - Jupyter Server URI Selector', () => {
         await ds.selectJupyterURI();
         assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
         assert.equal(value, '', 'Validation failed');
+    });
+
+    suite('Default Uri when selecting remote uri', () => {
+        const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
+
+        async function testDefaultUri(expectedDefaultUri: string, clipboardValue?: string) {
+            const showInputBox = sinon.spy(MultiStepInput.prototype, 'showInputBox');
+            const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', noop);
+            when(clipboard.readText()).thenResolve(clipboardValue || '');
+
+            await ds.selectJupyterURI();
+
+            assert.equal(showInputBox.firstCall.args[0].value, expectedDefaultUri);
+        }
+
+        test('Display default uri', async () => {
+            await testDefaultUri(defaultUri);
+        });
+        test('Display default uri if clipboard is empty', async () => {
+            await testDefaultUri(defaultUri, '');
+        });
+        test('Display default uri if clipboard contains invalid uri, display default uri', async () => {
+            await testDefaultUri(defaultUri, 'Hello World!');
+        });
+        test('Display default uri if clipboard contains invalid file uri, display default uri', async () => {
+            await testDefaultUri(defaultUri, 'file://test.pdf');
+        });
+        test('Display default uri if clipboard contains a valid uri, display uri from clipboard', async () => {
+            const validUri = 'https://wow:0909/?password=1234';
+
+            await testDefaultUri(validUri, validUri);
+        });
     });
 });

@@ -23,6 +23,15 @@ function generateMock<K extends keyof VSCode>(name: K): void {
     mockedVSCodeNamespaces[name] = mockedObj as any;
 }
 
+class MockClipboard {
+    private text: string = '';
+    public readText(): Promise<string> {
+        return Promise.resolve(this.text);
+    }
+    public async writeText(value: string): Promise<void> {
+        this.text = value;
+    }
+}
 export function initialize() {
     generateMock('workspace');
     generateMock('window');
@@ -31,6 +40,10 @@ export function initialize() {
     generateMock('env');
     generateMock('debug');
     generateMock('scm');
+
+    // Use mock clipboard fo testing purposes.
+    const clipboard = new MockClipboard();
+    mockedVSCodeNamespaces.env?.setup(e => e.clipboard).returns(() => clipboard);
 
     // When upgrading to npm 9-10, this might have to change, as we could have explicit imports (named imports).
     Module._load = function(request: any, _parent: any) {
