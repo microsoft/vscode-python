@@ -63,7 +63,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         // Do nothing on pre execute
     }
     public async postExecute(cell: ICell, silent: boolean): Promise<void> {
-        // Check for imports in the cell itself. Use the file/line/length as a key
+        // Check for imports in the cell itself.
         if (!silent && cell.data.cell_type === 'code') {
             this.scheduleCheck(this.createCellKey(cell), this.checkCell.bind(this, cell));
         }
