@@ -520,6 +520,10 @@ body, html {
     cursor: unset;
 }
 
+.outputTrimmedSettingsLink {
+    text-decoration: underline;
+}
+
 .toolbar-menu-bar .image-button {
     margin-right: 12px;
 }

@@ -177,7 +177,11 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private getTrimMessage() {
         const newLine = '\n...\n';
         return (
-            <a onClick={this.changeTextOutputLimit} role="button" className="image-button-image">
+            <a
+                onClick={this.changeTextOutputLimit}
+                role="button"
+                className="image-button-image outputTrimmedSettingsLink"
+            >
                 {getLocString(
                     'DataScience.trimmedOutput',
                     'Output was trimmed for performance reasons.\nTo see the full output set the setting "python.dataScience.textOutputLimit" to 0.'
