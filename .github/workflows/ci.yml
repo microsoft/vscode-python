@@ -25,9 +25,6 @@ jobs:
     runs-on: ubuntu-latest
     # if: github.repository == 'microsoft/vscode-python'
     steps:
-      - name: Node version?
-        run: node --version
-
       - name: Checkout
         uses: actions/checkout@v2
 
@@ -185,7 +182,7 @@ jobs:
     name: Tests
     # The value of runs-on is the OS of the current job (specified in the strategy matrix below) instead of being hardcoded.
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'microsoft/vscode-python'
+    # if: github.repository == 'microsoft/vscode-python'
     needs: [python-deps, js-ts-deps]
     strategy:
       matrix:
@@ -227,6 +224,11 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{matrix.python}}
+
+      - name: Use Node 12.4.0
+        uses: actions/setup-node@v1
+        with:
+          node-version: '12.4.0'
 
       - name: curl PyPI to get debugpy versions
         run: curl --output debugpy.json https://pypi.org/pypi/debugpy/json
