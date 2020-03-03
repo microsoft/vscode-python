@@ -614,21 +614,20 @@ export interface IExperimentsManager {
     sendTelemetryIfInExperiment(experimentName: string): void;
 }
 
+export type InterpreterConfigurationScope = { uri: Resource; configTarget: ConfigurationTarget };
+export type InspectInterpreterSettingType = {
+    globalValue?: string;
+    workspaceValue?: string;
+    workspaceFolderValue?: string;
+};
+
 /**
  * Interface used to access current Interpreter Path
  */
-
-export type InterpreterConfigurationScope = { uri: Resource; configTarget: ConfigurationTarget };
 export const IInterpreterPathService = Symbol('IInterpreterPathService');
 export interface IInterpreterPathService {
     onDidChangeInterpreter: Event<InterpreterConfigurationScope>;
     getInterpreterPath(resource: Resource): string;
-    inspectInterpreterPath(
-        resource: Resource
-    ): {
-        globalValue?: string;
-        workspaceValue?: string;
-        workspaceFolderValue?: string;
-    };
+    inspectInterpreterPath(resource: Resource): InspectInterpreterSettingType;
     update(resource: Resource, configTarget: ConfigurationTarget, value: string | undefined): Promise<void>;
 }

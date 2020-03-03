@@ -22,7 +22,7 @@ export class WorkspacePythonPathUpdaterService implements IPythonPathUpdaterServ
             pythonPath = path.relative(this.workspace.fsPath, pythonPath);
         }
         if (this.inDeprecatePythonPathExperiment) {
-            await this.interpreterPathService.update(this.workspace, ConfigurationTarget.WorkspaceFolder, pythonPath);
+            await this.interpreterPathService.update(this.workspace, ConfigurationTarget.Workspace, pythonPath);
         } else {
             await pythonConfig.update('pythonPath', pythonPath, false);
     }

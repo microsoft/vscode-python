@@ -73,7 +73,7 @@ export class WorkspaceService implements IWorkspaceService {
         const workspaceFolder = resource ? workspace.getWorkspaceFolder(resource) : undefined;
         return workspaceFolder
             ? path.normalize(
-                  getOSType() === OSType.Unknown ? workspaceFolder.uri.fsPath.toUpperCase() : workspaceFolder.uri.fsPath
+                  getOSType() === OSType.Windows ? workspaceFolder.uri.fsPath.toUpperCase() : workspaceFolder.uri.fsPath
               )
             : defaultValue;
     }

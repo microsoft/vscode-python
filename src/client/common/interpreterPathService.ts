@@ -10,6 +10,7 @@ import { PythonSettings } from './configSettings';
 import {
     IDisposableRegistry,
     IInterpreterPathService,
+    InspectInterpreterSettingType,
     InterpreterConfigurationScope,
     IPersistentState,
     IPersistentStateFactory,
@@ -33,13 +34,7 @@ export class InterpreterPathService implements IInterpreterPathService {
         );
     }
 
-    public inspectInterpreterPath(
-        resource: Resource
-    ): {
-        globalValue?: string;
-        workspaceValue?: string;
-        workspaceFolderValue?: string;
-    } {
+    public inspectInterpreterPath(resource: Resource): InspectInterpreterSettingType {
         resource = resource ? resource : PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
         let workspaceFolderSetting: IPersistentState<string | undefined> | undefined;
         let workspaceSetting: IPersistentState<string | undefined> | undefined;
