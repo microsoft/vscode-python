@@ -377,12 +377,21 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 request.cellId,
                 cancelSource.token
             );
-            const jupyterCompletions = this.provideJupyterCompletionItems(
-                request.position,
-                request.context,
-                request.cellId,
-                cancelSource.token
-            );
+
+            let jupyterCompletions = Promise.resolve(emptyList);
+            const isEmptyOrWhitespace = await this.includeJupyterCompletionItems(request.position, request.cellId);
+            let sleepTime = 0;
+
+            if (isEmptyOrWhitespace) {
+                jupyterCompletions = this.provideJupyterCompletionItems(
+                    request.position,
+                    request.context,
+                    request.cellId,
+                    cancelSource.token
+                );
+
+                sleepTime = Settings.IntellisenseTimeout;
+            }
 
             // Capture telemetry for each of the two providers.
             // Telemetry will be used to improve how we handle intellisense to improve response times for code completion.
@@ -397,7 +406,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                     // Telemetry will prove/disprove this assumption and we'll change this code accordingly.
                     lsCompletions,
                     // Wait for a max of n ms before ignoring results from jupyter (jupyter completion is generally slower).
-                    Promise.race([jupyterCompletions, sleep(Settings.IntellisenseTimeout).then(() => emptyList)])
+                    Promise.race([jupyterCompletions, sleep(sleepTime).then(() => emptyList)])
                 ])
             );
         };
@@ -407,6 +416,16 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             const list = this.combineCompletions(c);
             return { list, requestId: request.requestId };
         });
+    }
+
+    // This function returns weather the line the user is using intellisense on is an empty line or not.
+    // If it is not, handleCompletionItemsRequest will ignore jupyter compeltion items becasue its
+    // confusing to the user to receive magic commands in a function.
+    private async includeJupyterCompletionItems(position: monacoEditor.Position, cellId: string): Promise<Boolean> {
+        const doc = await this.getDocument();
+        const pos = doc.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+        const line = doc.lineAt(pos);
+        return line.isEmptyOrWhitespace;
     }
 
     private handleResolveCompletionItemRequest(request: IResolveCompletionItemRequest) {
