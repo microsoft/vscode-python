@@ -8,9 +8,9 @@ from packaging.version import parse as version_parser
 
 EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEBUGGER_DEST = os.path.join(
-    EXTENSION_ROOT, "pythonFiles", "lib", "python", "new_ptvsd", "wheels"
+    EXTENSION_ROOT, "pythonFiles", "lib", "python", "debugpy", "wheels"
 )
-DEBUGGER_PACKAGE = "ptvsd"
+DEBUGGER_PACKAGE = "debugpy"
 DEBUGGER_PYTHON_VERSIONS = ("cp37",)
 
 
@@ -36,10 +36,10 @@ def _get_debugger_wheel_urls(data, version):
 
 def _download_and_extract(root, url, version):
     root = os.getcwd() if root is None or root == "." else root
-    prefix = os.path.join("ptvsd-{0}.data".format(version), "purelib")
+    prefix = os.path.join("debugpy-{0}.data".format(version), "purelib")
     with url_lib.urlopen(url) as response:
-        # Extract only the contents of the purelib subfolder (parent folder of ptvsd),
-        # since ptvsd files rely on the presence of a 'ptvsd' folder.
+        # Extract only the contents of the purelib subfolder (parent folder of debugpy),
+        # since debugpy files rely on the presence of a 'debugpy' folder.
         with zipfile.ZipFile(io.BytesIO(response.read()), "r") as wheel:
             for zip_info in wheel.infolist():
                 # Ignore dist info since we are merging multiple wheels

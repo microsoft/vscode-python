@@ -51,9 +51,9 @@ export enum PythonPathSource {
 
 export const IDebugAdapterDescriptorFactory = Symbol('IDebugAdapterDescriptorFactory');
 export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFactory {
-    useNewPtvsd(pythonPath: string): Promise<boolean>;
-    getPtvsdPath(): string;
-    getRemotePtvsdArgs(remoteDebugOptions: RemoteDebugOptions): string[];
+    useNewDebugger(pythonPath: string): Promise<boolean>;
+    getDebuggerPath(): string;
+    getRemoteDebuggerArgs(remoteDebugOptions: RemoteDebugOptions): string[];
 }
 
 export type DebugAdapterPtvsdPathInfo = { extensionVersion: string; ptvsdPath: string };
@@ -61,3 +61,7 @@ export type DebugAdapterPtvsdPathInfo = { extensionVersion: string; ptvsdPath: s
 export const IDebugSessionLoggingFactory = Symbol('IDebugSessionLoggingFactory');
 
 export interface IDebugSessionLoggingFactory extends DebugAdapterTrackerFactory {}
+
+export const IOutdatedDebuggerPromptFactory = Symbol('IOutdatedDebuggerPromptFactory');
+
+export interface IOutdatedDebuggerPromptFactory extends DebugAdapterTrackerFactory {}

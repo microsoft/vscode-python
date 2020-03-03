@@ -6,10 +6,14 @@
 // tslint:disable:no-any max-func-body-length
 
 import { expect } from 'chai';
+import { instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
+import { EventEmitter } from 'vscode';
 import { IApplicationShell } from '../../client/common/application/types';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
 import { DataScienceSurveyBanner, DSSurveyStateKeys } from '../../client/datascience/dataScienceSurveyBanner';
+import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { INotebookEditor } from '../../client/datascience/types';
 
 suite('Data Science Survey Banner', () => {
     let appShell: typemoq.IMock<IApplicationShell>;
@@ -25,13 +29,13 @@ suite('Data Science Survey Banner', () => {
         appShell = typemoq.Mock.ofType<IApplicationShell>();
         browser = typemoq.Mock.ofType<IBrowserService>();
     });
-    test('Data science banner should be enabled after we hit our command execution count', async () => {
+    test('Data science banner should be enabled after we hit our execution count', async () => {
         const enabledValue: boolean = true;
-        const attemptCounter: number = 1000;
+        const executionCount: number = 1000;
         const testBanner: DataScienceSurveyBanner = preparePopup(
-            attemptCounter,
-            enabledValue,
+            executionCount,
             0,
+            enabledValue,
             appShell.object,
             browser.object,
             targetUri
@@ -57,6 +61,39 @@ suite('Data Science Survey Banner', () => {
         browser.verifyAll();
         browser.reset();
     });
+
+    test('Data science banner should be enabled after we hit our notebook count', async () => {
+        const enabledValue: boolean = true;
+        const testBanner: DataScienceSurveyBanner = preparePopup(
+            0,
+            15,
+            enabledValue,
+            appShell.object,
+            browser.object,
+            targetUri
+        );
+        const expectedUri: string = targetUri;
+        let receivedUri: string = '';
+        browser
+            .setup(b =>
+                b.launch(
+                    typemoq.It.is((a: string) => {
+                        receivedUri = a;
+                        return a === expectedUri;
+                    })
+                )
+            )
+            .verifiable(typemoq.Times.once());
+        await testBanner.launchSurvey();
+        // This is technically not necessary, but it gives
+        // better output than the .verifyAll messages do.
+        expect(receivedUri).is.equal(expectedUri, 'Uri given to launch mock is incorrect.');
+
+        // verify that the calls expected were indeed made.
+        browser.verifyAll();
+        browser.reset();
+    });
+
     test('Do not show data science banner when it is disabled', () => {
         appShell
             .setup(a =>
@@ -64,29 +101,29 @@ suite('Data Science Survey Banner', () => {
             )
             .verifiable(typemoq.Times.never());
         const enabledValue: boolean = false;
-        const attemptCounter: number = 0;
+        const executionCount: number = 0;
+        const notebookCount: number = 200;
         const testBanner: DataScienceSurveyBanner = preparePopup(
-            attemptCounter,
+            executionCount,
+            notebookCount,
             enabledValue,
-            0,
             appShell.object,
             browser.object,
             targetUri
         );
         testBanner.showBanner().ignoreErrors();
     });
-    test('Do not show data science banner if we have not hit our command count', () => {
+    test('Do not show data science banner if we have not hit our execution count or our notebook count', () => {
         appShell
             .setup(a =>
                 a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
             )
             .verifiable(typemoq.Times.never());
         const enabledValue: boolean = true;
-        const attemptCounter: number = 100;
         const testBanner: DataScienceSurveyBanner = preparePopup(
-            attemptCounter,
+            99,
+            4,
             enabledValue,
-            1000,
             appShell.object,
             browser.object,
             targetUri
@@ -96,16 +133,24 @@ suite('Data Science Survey Banner', () => {
 });
 
 function preparePopup(
-    commandCounter: number,
+    executionCount: number,
+    initialOpenCount: number,
     enabledValue: boolean,
-    commandThreshold: number,
     appShell: IApplicationShell,
     browser: IBrowserService,
     targetUri: string
 ): DataScienceSurveyBanner {
+    let openCount = 0;
     const myfactory: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
     const enabledValState: typemoq.IMock<IPersistentState<boolean>> = typemoq.Mock.ofType<IPersistentState<boolean>>();
-    const attemptCountState: typemoq.IMock<IPersistentState<number>> = typemoq.Mock.ofType<IPersistentState<number>>();
+    const executionCountState: typemoq.IMock<IPersistentState<number>> = typemoq.Mock.ofType<
+        IPersistentState<number>
+    >();
+    const openCountState: typemoq.IMock<IPersistentState<number>> = typemoq.Mock.ofType<IPersistentState<number>>();
+    const provider = mock(NativeEditorProvider);
+    (instance(provider) as any).then = undefined;
+    const openedEventEmitter = new EventEmitter<INotebookEditor>();
+    when(provider.onDidOpenNotebookEditor).thenReturn(openedEventEmitter.event);
     enabledValState
         .setup(a => a.updateValue(typemoq.It.isValue(true)))
         .returns(() => {
@@ -119,15 +164,22 @@ function preparePopup(
             return Promise.resolve();
         });
 
-    attemptCountState
+    executionCountState
         .setup(a => a.updateValue(typemoq.It.isAnyNumber()))
         .returns(() => {
-            commandCounter += 1;
+            executionCount += 1;
+            return Promise.resolve();
+        });
+    openCountState
+        .setup(a => a.updateValue(typemoq.It.isAnyNumber()))
+        .returns(v => {
+            openCount = v;
             return Promise.resolve();
         });
 
     enabledValState.setup(a => a.value).returns(() => enabledValue);
-    attemptCountState.setup(a => a.value).returns(() => commandCounter);
+    executionCountState.setup(a => a.value).returns(() => executionCount);
+    openCountState.setup(a => a.value).returns(() => openCount);
 
     myfactory
         .setup(a =>
@@ -146,12 +198,29 @@ function preparePopup(
     myfactory
         .setup(a =>
             a.createGlobalPersistentState(
-                typemoq.It.isValue(DSSurveyStateKeys.ShowAttemptCounter),
+                typemoq.It.isValue(DSSurveyStateKeys.ExecutionCount),
                 typemoq.It.isAnyNumber()
             )
         )
         .returns(() => {
-            return attemptCountState.object;
+            return executionCountState.object;
         });
-    return new DataScienceSurveyBanner(appShell, myfactory.object, browser, commandThreshold, targetUri);
+    myfactory
+        .setup(a =>
+            a.createGlobalPersistentState(
+                typemoq.It.isValue(DSSurveyStateKeys.OpenNotebookCount),
+                typemoq.It.isAnyNumber()
+            )
+        )
+        .returns(() => {
+            return openCountState.object;
+        });
+    const result = new DataScienceSurveyBanner(appShell, myfactory.object, browser, instance(provider), targetUri);
+
+    // Fire the number of opens specifed so that it behaves like the real editor
+    for (let i = 0; i < initialOpenCount; i += 1) {
+        openedEventEmitter.fire();
+    }
+
+    return result;
 }

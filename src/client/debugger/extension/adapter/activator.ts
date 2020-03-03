@@ -9,7 +9,7 @@ import { IDebugService } from '../../../common/application/types';
 import { IDisposableRegistry } from '../../../common/types';
 import { DebuggerTypeName } from '../../constants';
 import { IAttachProcessProviderFactory } from '../attachQuickPick/types';
-import { IDebugAdapterDescriptorFactory, IDebugSessionLoggingFactory } from '../types';
+import { IDebugAdapterDescriptorFactory, IDebugSessionLoggingFactory, IOutdatedDebuggerPromptFactory } from '../types';
 
 @injectable()
 export class DebugAdapterActivator implements IExtensionSingleActivationService {
@@ -17,6 +17,7 @@ export class DebugAdapterActivator implements IExtensionSingleActivationService 
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IDebugAdapterDescriptorFactory) private descriptorFactory: IDebugAdapterDescriptorFactory,
         @inject(IDebugSessionLoggingFactory) private debugSessionLoggingFactory: IDebugSessionLoggingFactory,
+        @inject(IOutdatedDebuggerPromptFactory) private debuggerPromptFactory: IOutdatedDebuggerPromptFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IAttachProcessProviderFactory)
         private readonly attachProcessProviderFactory: IAttachProcessProviderFactory
@@ -26,6 +27,9 @@ export class DebugAdapterActivator implements IExtensionSingleActivationService 
 
         this.disposables.push(
             this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.debugSessionLoggingFactory)
+        );
+        this.disposables.push(
+            this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.debuggerPromptFactory)
         );
         this.disposables.push(
             this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.descriptorFactory)

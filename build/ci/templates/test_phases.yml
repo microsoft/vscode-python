@@ -27,470 +27,469 @@
 # 'venvTests'
 
 steps:
-    - template: steps/initialization.yml
-      parameters:
-          PythonVersion: $(PythonVersion)
-          workingDirectory: $(Build.SourcesDirectory)
-          compile: 'false'
-          sqlite: 'true'
+  - template: steps/initialization.yml
+    parameters:
+      PythonVersion: $(PythonVersion)
+      workingDirectory: $(Build.SourcesDirectory)
+      compile: 'false'
+      sqlite: 'true'
 
-    # Run the `prePublishNonBundle` gulp task to build the binaries we will be testing.
-    # This produces the .js files required into the out/ folder.
-    # Example command line (windows pwsh):
-    # > gulp prePublishNonBundle
-    - task: Gulp@0
-      displayName: 'gulp prePublishNonBundle'
-      inputs:
-          targets: 'prePublishNonBundle'
-      condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
+  # Run the `prePublishNonBundle` gulp task to build the binaries we will be testing.
+  # This produces the .js files required into the out/ folder.
+  # Example command line (windows pwsh):
+  # > gulp prePublishNonBundle
+  - task: Gulp@0
+    displayName: 'gulp prePublishNonBundle'
+    inputs:
+      targets: 'prePublishNonBundle'
+    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
 
-    # Run the typescript unit tests.
-    #
-    # This will only run if the string 'testUnitTests' exists in variable `TestsToRun`
-    #
-    # Example command line (windows pwsh):
-    # > npm run test:unittests:cover
-    - bash: |
-          npm run test:unittests:cover
-      displayName: 'run test:unittests'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
+  # Run the typescript unit tests.
+  #
+  # This will only run if the string 'testUnitTests' exists in variable `TestsToRun`
+  #
+  # Example command line (windows pwsh):
+  # > npm run test:unittests:cover
+  - bash: |
+      npm run test:unittests:cover
+    displayName: 'run test:unittests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testUnitTests'))
 
-    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-    - task: PublishTestResults@2
-      displayName: 'Publish test:unittests results'
-      condition: contains(variables['TestsToRun'], 'testUnitTests')
-      inputs:
-          testResultsFiles: '$(MOCHA_FILE)'
-          testRunTitle: 'unittests-$(Agent.Os)-Py$(pythonVersion)'
-          buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-          buildConfiguration: 'UnitTests'
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish test:unittests results'
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
+    inputs:
+      testResultsFiles: '$(MOCHA_FILE)'
+      testRunTitle: 'unittests-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'UnitTests'
 
-    - task: CopyFiles@2
-      inputs:
-          sourceFolder: '$(Build.SourcesDirectory)/.nyc_output'
-          targetFolder: '$(Build.ArtifactStagingDirectory)/nyc/.nyc_output'
-      displayName: 'Copy nyc_output to publish as artificat'
-      condition: contains(variables['TestsToRun'], 'testUnitTests')
+  - task: CopyFiles@2
+    inputs:
+      sourceFolder: '$(Build.SourcesDirectory)/.nyc_output'
+      targetFolder: '$(Build.ArtifactStagingDirectory)/nyc/.nyc_output'
+    displayName: 'Copy nyc_output to publish as artificat'
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
 
-    # Upload Code Coverage Results (to be merged later).
-    - task: PublishBuildArtifacts@1
-      inputs:
-          pathtoPublish: '$(Build.ArtifactStagingDirectory)/nyc'
-          artifactName: 'coverage-output-$(Agent.Os)'
-      condition: contains(variables['TestsToRun'], 'testUnitTests')
+  # Upload Code Coverage Results (to be merged later).
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)/nyc'
+      artifactName: 'coverage-output-$(Agent.Os)'
+    condition: contains(variables['TestsToRun'], 'testUnitTests')
 
-    - template: steps/generate_upload_coverage.yml
+  - template: steps/generate_upload_coverage.yml
 
-    # Install the requirements for the Python or the system tests. This includes the supporting libs that
-    # we ship in our extension such as PTVSD and Jedi.
-    #
-    # This task will only run if variable `NeedsPythonTestReqs` is true.
-    #
-    # Example command line (windows pwsh):
-    # > python -m pip install -m -U pip
-    # > python -m pip install --upgrade -r build/test-requirements.txt
-    # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-    - bash: |
-          python -m pip install --upgrade -r build/test-requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
-      displayName: 'pip install system test requirements'
-      condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
+  # Install the requirements for the Python or the system tests. This includes the supporting libs that
+  # we ship in our extension such as PTVSD, DEBUGPY and Jedi.
+  #
+  # This task will only run if variable `NeedsPythonTestReqs` is true.
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install -m -U pip
+  # > python -m pip install --upgrade -r build/test-requirements.txt
+  # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+  - bash: |
+      python -m pip install --upgrade -r build/test-requirements.txt
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+    displayName: 'pip install system test requirements'
+    condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
 
-    # Install the additional sqlite requirements
-    #
-    # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
-    - bash: |
-          sudo apt-get install libsqlite3-dev
-          python -m pip install pysqlite
-      displayName: 'Setup python to run with sqlite on 2.7'
-      condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), eq(variables['PythonVersion'], '2.7'))
+  # Install the additional sqlite requirements
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      sudo apt-get install libsqlite3-dev
+      python -m pip install pysqlite
+    displayName: 'Setup python to run with sqlite on 2.7'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), eq(variables['PythonVersion'], '2.7'))
 
-    # Install the requirements for functional tests.
-    #
-    # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
-    #
-    # Example command line (windows pwsh):
-    # > python -m pip install numpy
-    # > python -m pip install --upgrade -r build/functional-test-requirements.txt
-    # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-    - bash: |
-          python -m pip install numpy
-          python -m pip install --upgrade -r ./build/functional-test-requirements.txt
-      displayName: 'pip install functional requirements'
-      condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
+  # Install the requirements for functional tests.
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install numpy
+  # > python -m pip install --upgrade -r build/functional-test-requirements.txt
+  # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+  - bash: |
+      python -m pip install numpy
+      python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+    displayName: 'pip install functional requirements'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
-    # Downgrade pywin32 on Windows due to bug https://github.com/jupyter/notebook/issues/4909
-    #
-    # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
-    - bash: |
-          python -m pip install --upgrade pywin32==224
-      displayName: 'Downgrade pywin32 on Windows / Python 3.6'
-      condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['PythonVersion'], '3.6'))
+  # Downgrade pywin32 on Windows due to bug https://github.com/jupyter/notebook/issues/4909
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      python -m pip install --upgrade pywin32==224
+    displayName: 'Downgrade pywin32 on Windows / Python 3.6'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['PythonVersion'], '3.6'))
 
-    # Install the requirements for ipython tests.
-    #
-    # This task will only run if variable `NeedsIPythonReqs` is true.
-    #
-    # Example command line (windows pwsh):
-    # > python -m pip install numpy
-    # > python -m pip install --upgrade -r build/ipython-test-requirements.txt
-    # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-    - bash: |
-          python -m pip install numpy
-          python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
-      displayName: 'pip install ipython requirements'
-      condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'))
+  # Install the requirements for ipython tests.
+  #
+  # This task will only run if variable `NeedsIPythonReqs` is true.
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install numpy
+  # > python -m pip install --upgrade -r build/ipython-test-requirements.txt
+  # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+  - bash: |
+      python -m pip install numpy
+      python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
+    displayName: 'pip install ipython requirements'
+    condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'))
 
-    # Install jupyter for smoke tests.
-    - bash: |
-          python -m pip install --upgrade jupyter
-      displayName: 'pip install jupyter'
-      condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'), contains(variables['TestsToRun'], 'testSmoke'))
+  # Install jupyter for smoke tests.
+  - bash: |
+      python -m pip install --upgrade jupyter
+    displayName: 'pip install jupyter'
+    condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'), contains(variables['TestsToRun'], 'testSmoke'))
 
-    - task: PythonScript@0
-      displayName: 'Install PTVSD wheels'
-      inputs:
-          scriptSource: 'filePath'
-          scriptPath: './pythonFiles/install_ptvsd.py'
-          failOnStderr: true
-      condition: and(eq(variables['NeedsPythonTestReqs'], 'true'), eq(variables['PythonVersion'], '3.7'))
+  - bash: |
+      python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+      python ./pythonFiles/install_debugpy.py
+    failOnStderr: true
+    displayName: 'Install DEBUGPY wheels'
+    condition: and(eq(variables['NeedsPythonTestReqs'], 'true'), eq(variables['PythonVersion'], '3.7'))
 
-    # Run the Python unit tests in our codebase. Produces a JUnit-style log file that
-    # will be uploaded after all tests are complete.
-    #
-    # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`.
-    #
-    # Example command line (windows pwsh):
-    # > python -m pip install -m -U pip
-    # > python -m pip install -U -r build/test-requirements.txt
-    # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
-    - bash: |
-          python pythonFiles/tests/run_all.py --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tests-junit.xml
-      displayName: 'Python unittests'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'))
+  # Run the Python unit tests in our codebase. Produces a JUnit-style log file that
+  # will be uploaded after all tests are complete.
+  #
+  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`.
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install -m -U pip
+  # > python -m pip install -U -r build/test-requirements.txt
+  # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
+  - bash: |
+      python pythonFiles/tests/run_all.py --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tests-junit.xml
+    displayName: 'Python unittests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonUnitTests'))
 
-    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-    - task: PublishTestResults@2
-      displayName: 'Publish Python unittests results'
-      condition: contains(variables['TestsToRun'], 'pythonUnitTests')
-      inputs:
-          testResultsFiles: 'python-tests-junit.xml'
-          searchFolder: '$(Common.TestResultsDirectory)'
-          testRunTitle: 'pythonUnitTests-$(Agent.Os)-Py$(pythonVersion)'
-          buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-          buildConfiguration: 'UnitTests'
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish Python unittests results'
+    condition: contains(variables['TestsToRun'], 'pythonUnitTests')
+    inputs:
+      testResultsFiles: 'python-tests-junit.xml'
+      searchFolder: '$(Common.TestResultsDirectory)'
+      testRunTitle: 'pythonUnitTests-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'UnitTests'
 
-    # Run the Python IPython tests in our codebase. Produces a JUnit-style log file that
-    # will be uploaded after all tests are complete.
-    #
-    # This task only runs if the string 'pythonIPythonTests' exists in variable `TestsToRun`.
-    #
-    # Example command line (windows pwsh):
-    # > python -m pip install -m -U pip
-    # > python -m pip install -U -r build/test-requirements.txt
-    # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
-    - bash: |
-          python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
-      displayName: 'Python ipython tests'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonIPythonTests'))
+  # Run the Python IPython tests in our codebase. Produces a JUnit-style log file that
+  # will be uploaded after all tests are complete.
+  #
+  # This task only runs if the string 'pythonIPythonTests' exists in variable `TestsToRun`.
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install -m -U pip
+  # > python -m pip install -U -r build/test-requirements.txt
+  # > python pythonFiles/tests/run_all.py --color=yes --junit-xml=python-tests-junit.xml
+  - bash: |
+      python -m IPython pythonFiles/tests/run_all.py -- --color=no --junit-xml=$COMMON_TESTRESULTSDIRECTORY/ipython-tests-junit.xml
+    displayName: 'Python ipython tests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonIPythonTests'))
 
-    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-    - task: PublishTestResults@2
-      displayName: 'Publish IPython test results'
-      condition: contains(variables['TestsToRun'], 'pythonIPythonTests')
-      inputs:
-          testResultsFiles: 'ipython-tests-junit.xml'
-          searchFolder: '$(Common.TestResultsDirectory)'
-          testRunTitle: 'pythonIPythonTests-$(Agent.Os)-Py$(pythonVersion)'
-          buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-          buildConfiguration: 'UnitTests'
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish IPython test results'
+    condition: contains(variables['TestsToRun'], 'pythonIPythonTests')
+    inputs:
+      testResultsFiles: 'ipython-tests-junit.xml'
+      searchFolder: '$(Common.TestResultsDirectory)'
+      testRunTitle: 'pythonIPythonTests-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'UnitTests'
 
-    # Run the News tool tests.
-    #
-    # This task only runs if the string 'pythonInternalTools' exists in variable `TestsToRun`
-    #
-    # Example command line (windows pwsh):
-    # > python -m pip install -U -r news/requirements.txt
-    # > python -m pytest tpn --color=yes --junit-xml=python-news-junit.xml
-    - script: |
-          python -m pip install --upgrade -r news/requirements.txt
-          python -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
-      displayName: 'Run Python tests for news'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonInternalTools'))
+  # Run the News tool tests.
+  #
+  # This task only runs if the string 'pythonInternalTools' exists in variable `TestsToRun`
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install -U -r news/requirements.txt
+  # > python -m pytest tpn --color=yes --junit-xml=python-news-junit.xml
+  - script: |
+      python -m pip install --upgrade -r news/requirements.txt
+      python -m pytest news --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-news-junit.xml
+    displayName: 'Run Python tests for news'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonInternalTools'))
 
-    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-    - task: PublishTestResults@2
-      displayName: 'Publish Python tests for news results'
-      condition: contains(variables['TestsToRun'], 'pythonInternalTools')
-      inputs:
-          testResultsFiles: 'python-news-junit.xml'
-          searchFolder: '$(Common.TestResultsDirectory)'
-          testRunTitle: 'news-$(Agent.Os)-Py$(pythonVersion)'
-          buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-          buildConfiguration: 'UnitTests'
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish Python tests for news results'
+    condition: contains(variables['TestsToRun'], 'pythonInternalTools')
+    inputs:
+      testResultsFiles: 'python-news-junit.xml'
+      searchFolder: '$(Common.TestResultsDirectory)'
+      testRunTitle: 'news-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'UnitTests'
 
-    # Run the TPN tool tests.
-    #
-    # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`
-    #
-    # Example command line (windows pwsh):
-    # > python -m pip install -U -r tpn/requirements.txt
-    # > python -m pytest tpn --color=yes --junit-xml=python-tpn-junit.xml
-    - script: |
-          python -m pip install --upgrade -r tpn/requirements.txt
-          python -m pytest tpn --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tpn-junit.xml
-      displayName: 'Run Python tests for TPN tool'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonInternalTools'))
+  # Run the TPN tool tests.
+  #
+  # This task only runs if the string 'pythonUnitTests' exists in variable `TestsToRun`
+  #
+  # Example command line (windows pwsh):
+  # > python -m pip install -U -r tpn/requirements.txt
+  # > python -m pytest tpn --color=yes --junit-xml=python-tpn-junit.xml
+  - script: |
+      python -m pip install --upgrade -r tpn/requirements.txt
+      python -m pytest tpn --color=yes --junit-xml=$COMMON_TESTRESULTSDIRECTORY/python-tpn-junit.xml
+    displayName: 'Run Python tests for TPN tool'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'pythonInternalTools'))
 
-    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-    - task: PublishTestResults@2
-      displayName: 'Publish Python tests for TPN tool results'
-      condition: contains(variables['TestsToRun'], 'pythonInternalTools')
-      inputs:
-          testResultsFiles: 'python-tpn-junit.xml'
-          searchFolder: '$(Common.TestResultsDirectory)'
-          testRunTitle: 'tpn-$(Agent.Os)-Py$(pythonVersion)'
-          buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-          buildConfiguration: 'UnitTests'
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish Python tests for TPN tool results'
+    condition: contains(variables['TestsToRun'], 'pythonInternalTools')
+    inputs:
+      testResultsFiles: 'python-tpn-junit.xml'
+      searchFolder: '$(Common.TestResultsDirectory)'
+      testRunTitle: 'tpn-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'UnitTests'
 
-    # Venv tests: Prepare the various virtual environments and record their details into the
-    # JSON file that venvTests require to run.
-    #
-    # This task only runs if the string 'venvTests' exists in variable 'TestsToRun'
-    #
-    # This task has a bunch of steps, all of which are to fill the `EnvPath` struct found in
-    # the file:
-    # `src/test/common/terminals/environmentActionProviders/terminalActivation.testvirtualenvs.ts`
-    #
-    # Example command line (windows pwsh):
-    # // This is done in powershell. Copy/paste the code below.
-    - pwsh: |
-          # venv/bin or venv\\Scripts (windows)?
-          $environmentExecutableFolder = 'bin'
-          if ($Env:AGENT_OS -match '.*Windows.*') {
-            $environmentExecutableFolder = 'Scripts'
-          }
+  # Venv tests: Prepare the various virtual environments and record their details into the
+  # JSON file that venvTests require to run.
+  #
+  # This task only runs if the string 'venvTests' exists in variable 'TestsToRun'
+  #
+  # This task has a bunch of steps, all of which are to fill the `EnvPath` struct found in
+  # the file:
+  # `src/test/common/terminals/environmentActionProviders/terminalActivation.testvirtualenvs.ts`
+  #
+  # Example command line (windows pwsh):
+  # // This is done in powershell. Copy/paste the code below.
+  - pwsh: |
+      # venv/bin or venv\\Scripts (windows)?
+      $environmentExecutableFolder = 'bin'
+      if ($Env:AGENT_OS -match '.*Windows.*') {
+        $environmentExecutableFolder = 'Scripts'
+      }
 
-          # pipenv
-          python -m pip install pipenv
-          python -m pipenv run python build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) pipenvPath
+      # pipenv
+      python -m pip install pipenv
+      python -m pipenv run python build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) pipenvPath
 
-          # venv
-          # what happens when running under Python 2.7?
-          python -m venv .venv
-          & ".venv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) venvPath
+      # venv
+      # what happens when running under Python 2.7?
+      python -m venv .venv
+      & ".venv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) venvPath
 
-          # virtualenv
-          python -m pip install virtualenv
-          python -m virtualenv .virtualenv
-          & ".virtualenv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) virtualEnvPath
+      # virtualenv
+      python -m pip install virtualenv
+      python -m virtualenv .virtualenv
+      & ".virtualenv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) virtualEnvPath
 
-          # conda
+      # conda
 
-          # 1. For `terminalActivation.testvirtualenvs.test.ts`
+      # 1. For `terminalActivation.testvirtualenvs.test.ts`
 
-          $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
-          if( '$(Agent.Os)' -match '.*Windows.*' ){
-              $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
-          } else{
-              $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath python
-              & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaExecPath $condaExecPath
-          }
-          & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
+      $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
+      if( '$(Agent.Os)' -match '.*Windows.*' ){
+          $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
+      } else{
+          $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath python
+          & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaExecPath $condaExecPath
+      }
+      & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
 
-          # 2. For `interpreterLocatorService.testvirtualenvs.ts`
+      # 2. For `interpreterLocatorService.testvirtualenvs.ts`
 
-          & $condaExecPath create -n "test_env1" -y python
-          & $condaExecPath create -p "./test_env2" -y python
-          & $condaExecPath create -p "$Env:HOME/test_env3" -y python
+      & $condaExecPath create -n "test_env1" -y python
+      & $condaExecPath create -p "./test_env2" -y python
+      & $condaExecPath create -p "$Env:HOME/test_env3" -y python
 
-          # Set the TEST_FILES_SUFFIX
-          Write-Host '##vso[task.setvariable variable=TEST_FILES_SUFFIX;]testvirtualenvs'
+      # Set the TEST_FILES_SUFFIX
+      Write-Host '##vso[task.setvariable variable=TEST_FILES_SUFFIX;]testvirtualenvs'
 
-      displayName: 'Prepare Venv-Test Environment'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'venvTests'))
+    displayName: 'Prepare Venv-Test Environment'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'venvTests'))
 
-    # Run the virtual environment based tests.
-    # This set of tests is simply using the `testSingleWorkspace` set of tests, but
-    # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`, which
-    # got set in the Prepare Venv-Test Environment task above.
-    # **Note**: Azure DevOps tasks set environment variables via a specially formatted
-    # string sent to stdout.
-    #
-    # This task only runs if the string 'venvTests' exists in variable 'TestsToRun'
-    #
-    # Example command line (windows pwsh):
-    # > $Env:TEST_FILES_SUFFIX=testvirtualenvs
-    # > npm run testSingleWorkspace
-    - script: |
-          cat $PYTHON_VIRTUAL_ENVS_LOCATION
+  # Run the virtual environment based tests.
+  # This set of tests is simply using the `testSingleWorkspace` set of tests, but
+  # with the environment variable `TEST_FILES_SUFFIX` set to `testvirtualenvs`, which
+  # got set in the Prepare Venv-Test Environment task above.
+  # **Note**: Azure DevOps tasks set environment variables via a specially formatted
+  # string sent to stdout.
+  #
+  # This task only runs if the string 'venvTests' exists in variable 'TestsToRun'
+  #
+  # Example command line (windows pwsh):
+  # > $Env:TEST_FILES_SUFFIX=testvirtualenvs
+  # > npm run testSingleWorkspace
+  - script: |
+      cat $PYTHON_VIRTUAL_ENVS_LOCATION
 
-          npm run testSingleWorkspace
+      npm run testSingleWorkspace
 
-      displayName: 'Run Venv-Tests'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'venvTests'))
-      env:
-          DISPLAY: :10
+    displayName: 'Run Venv-Tests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'venvTests'))
+    env:
+      DISPLAY: :10
 
-    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-    - task: PublishTestResults@2
-      displayName: 'Publish Venv-Tests results'
-      condition: contains(variables['TestsToRun'], 'venvTests')
-      inputs:
-          testResultsFiles: '$(MOCHA_FILE)'
-          testRunTitle: 'venvTest-$(Agent.Os)-Py$(pythonVersion)'
-          buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-          buildConfiguration: 'SystemTests'
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish Venv-Tests results'
+    condition: contains(variables['TestsToRun'], 'venvTests')
+    inputs:
+      testResultsFiles: '$(MOCHA_FILE)'
+      testRunTitle: 'venvTest-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'SystemTests'
 
-    # Set the CI_PYTHON_PATH variable that forces VS Code system tests to use
-    # the specified Python interpreter.
-    #
-    # This is how to set an environment variable in the Azure DevOps pipeline, write
-    # a specially formatted string to stdout. For details, please see
-    # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#set-in-script
-    #
-    # Example command line (windows pwsd):
-    # > $Env:CI_PYTHON_PATH=(& python -c 'import sys;print(sys.executable)')
-    - script: |
-          python -c "from __future__ import print_function;import sys;print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))"
-      displayName: 'Set CI_PYTHON_PATH'
+  # Set the CI_PYTHON_PATH variable that forces VS Code system tests to use
+  # the specified Python interpreter.
+  #
+  # This is how to set an environment variable in the Azure DevOps pipeline, write
+  # a specially formatted string to stdout. For details, please see
+  # https://docs.microsoft.com/en-us/azure/devops/pipelines/process/variables?view=azure-devops&tabs=yaml%2Cbatch#set-in-script
+  #
+  # Example command line (windows pwsd):
+  # > $Env:CI_PYTHON_PATH=(& python -c 'import sys;print(sys.executable)')
+  - script: |
+      python -c "from __future__ import print_function;import sys;print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))"
+    displayName: 'Set CI_PYTHON_PATH'
 
-    # Run the functional tests.
-    #
-    # This task only runs if the string 'testFunctional' exists in variable `TestsToRun`.
-    #
-    # Example command line (windows pwsh):
-    # > npm run test:functional
-    - script: |
-          npm run test:functional
-      displayName: 'Run functional tests'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctional'))
-      env:
-          DISPLAY: :10
+  # Run the functional tests.
+  #
+  # This task only runs if the string 'testFunctional' exists in variable `TestsToRun`.
+  #
+  # Example command line (windows pwsh):
+  # > npm run test:functional
+  - script: |
+      npm run test:functional
+    displayName: 'Run functional tests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctional'))
+    env:
+      DISPLAY: :10
 
-    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-    - task: PublishTestResults@2
-      displayName: 'Publish functional tests results'
-      condition: contains(variables['TestsToRun'], 'testFunctional')
-      inputs:
-          testResultsFiles: '$(MOCHA_FILE)'
-          testRunTitle: 'functional-$(Agent.Os)-Py$(pythonVersion)'
-          buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-          buildConfiguration: 'FunctionalTests'
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish functional tests results'
+    condition: contains(variables['TestsToRun'], 'testFunctional')
+    inputs:
+      testResultsFiles: '$(MOCHA_FILE)'
+      testRunTitle: 'functional-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'FunctionalTests'
 
-    # Run the single workspace tests.
-    #
-    # This task only runs if the string 'testSingleWorkspace' exists in variable `TestsToRun`.
-    #
-    # Example command line (windows pwsh):
-    # > npm run testSingleWorkspace
-    - script: |
-          npm run testSingleWorkspace
-      displayName: 'Run single workspace tests'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'testSingleWorkspace'))
-      env:
-          DISPLAY: :10
+  # Run the single workspace tests.
+  #
+  # This task only runs if the string 'testSingleWorkspace' exists in variable `TestsToRun`.
+  #
+  # Example command line (windows pwsh):
+  # > npm run testSingleWorkspace
+  - script: |
+      npm run testSingleWorkspace
+    displayName: 'Run single workspace tests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testSingleWorkspace'))
+    env:
+      DISPLAY: :10
 
-    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-    - task: PublishTestResults@2
-      displayName: 'Publish single workspace tests results'
-      condition: contains(variables['TestsToRun'], 'testSingleWorkspace')
-      inputs:
-          testResultsFiles: '$(MOCHA_FILE)'
-          testRunTitle: 'singleWorkspace-$(Agent.Os)-Py$(pythonVersion)'
-          buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-          buildConfiguration: 'SystemTests'
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish single workspace tests results'
+    condition: contains(variables['TestsToRun'], 'testSingleWorkspace')
+    inputs:
+      testResultsFiles: '$(MOCHA_FILE)'
+      testRunTitle: 'singleWorkspace-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'SystemTests'
 
-    # Run the multi-workspace tests.
-    #
-    # This task only runs if the string 'testMultiWorkspace' exists in variable `TestsToRun`.
-    #
-    # Example command line (windows pwsh):
-    # > npm run testMultiWorkspace
-    - script: |
-          npm run testMultiWorkspace
-      displayName: 'Run multi-workspace tests'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'testMultiWorkspace'))
-      env:
-          DISPLAY: :10
+  # Run the multi-workspace tests.
+  #
+  # This task only runs if the string 'testMultiWorkspace' exists in variable `TestsToRun`.
+  #
+  # Example command line (windows pwsh):
+  # > npm run testMultiWorkspace
+  - script: |
+      npm run testMultiWorkspace
+    displayName: 'Run multi-workspace tests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testMultiWorkspace'))
+    env:
+      DISPLAY: :10
 
-    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-    - task: PublishTestResults@2
-      displayName: 'Publish multi-workspace tests results'
-      condition: contains(variables['TestsToRun'], 'testMultiWorkspace')
-      inputs:
-          testResultsFiles: '$(MOCHA_FILE)'
-          testRunTitle: 'multiWorkspace-$(Agent.Os)-Py$(pythonVersion)'
-          buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-          buildConfiguration: 'SystemTests'
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish multi-workspace tests results'
+    condition: contains(variables['TestsToRun'], 'testMultiWorkspace')
+    inputs:
+      testResultsFiles: '$(MOCHA_FILE)'
+      testRunTitle: 'multiWorkspace-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'SystemTests'
 
-    # Run the debugger integration tests.
-    #
-    # This task only runs if the string 'testDebugger' exists in variable `TestsToRun`.
-    #
-    # Example command line (windows pwsh):
-    # > npm run testDebugger
-    - script: |
-          npm run testDebugger
-      displayName: 'Run debugger tests'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'testDebugger'))
-      env:
-          DISPLAY: :10
+  # Run the debugger integration tests.
+  #
+  # This task only runs if the string 'testDebugger' exists in variable `TestsToRun`.
+  #
+  # Example command line (windows pwsh):
+  # > npm run testDebugger
+  - script: |
+      npm run testDebugger
+    displayName: 'Run debugger tests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testDebugger'))
+    env:
+      DISPLAY: :10
 
-    # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
-    - task: PublishTestResults@2
-      displayName: 'Publish debugger tests results'
-      condition: contains(variables['TestsToRun'], 'testDebugger')
-      inputs:
-          testResultsFiles: '$(MOCHA_FILE)'
-          testRunTitle: 'debugger-$(Agent.Os)-Py$(pythonVersion)'
-          buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
-          buildConfiguration: 'SystemTests'
+  # Upload the test results to Azure DevOps to facilitate test reporting in their UX.
+  - task: PublishTestResults@2
+    displayName: 'Publish debugger tests results'
+    condition: contains(variables['TestsToRun'], 'testDebugger')
+    inputs:
+      testResultsFiles: '$(MOCHA_FILE)'
+      testRunTitle: 'debugger-$(Agent.Os)-Py$(pythonVersion)'
+      buildPlatform: '$(Agent.Os)-Py$(pythonVersion)'
+      buildConfiguration: 'SystemTests'
 
-    # Run the performance tests.
-    #
-    # This task only runs if the string 'testPerformance' exists in variable `TestsToRun`.
-    #
-    # Example command line (windows pwsh):
-    # > npm run testPerformance
-    - script: |
-          npm run testPerformance
-      displayName: 'Run Performance Tests'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'testPerformance'))
-      env:
-          DISPLAY: :10
+  # Run the performance tests.
+  #
+  # This task only runs if the string 'testPerformance' exists in variable `TestsToRun`.
+  #
+  # Example command line (windows pwsh):
+  # > npm run testPerformance
+  - script: |
+      npm run testPerformance
+    displayName: 'Run Performance Tests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testPerformance'))
+    env:
+      DISPLAY: :10
 
-    # Run the smoke tests.
-    #
-    # This task only runs if the string 'testSmoke' exists in variable `TestsToRun`.
-    #
-    # Example command line (windows pwsh):
-    # > npm run clean
-    # > npm run updateBuildNumber -- --buildNumber 0.0.0-local
-    # > npm run package
-    # > npx gulp clean:cleanExceptTests
-    # > npm run testSmoke
-    - bash: |
-          npm install -g vsce
-          npm run clean
-          npx tsc -p ./
-          npx gulp clean:cleanExceptTests
-          mkdir -p ./tmp
-          cp -r ./out/test ./tmp/test
-          npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
-          npm run package
-          npx gulp clean:cleanExceptTests
-          cp -r ./tmp/test ./out/test
-          node ./out/test/smokeTest.js
-      displayName: 'Run Smoke Tests'
-      condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
-      env:
-          DISPLAY: :10
+  # Run the smoke tests.
+  #
+  # This task only runs if the string 'testSmoke' exists in variable `TestsToRun`.
+  #
+  # Example command line (windows pwsh):
+  # > npm run clean
+  # > npm run updateBuildNumber -- --buildNumber 0.0.0-local
+  # > npm run package
+  # > npx gulp clean:cleanExceptTests
+  # > npm run testSmoke
+  - bash: |
+      npm install -g vsce
+      npm run clean
+      npx tsc -p ./
+      npx gulp clean:cleanExceptTests
+      mkdir -p ./tmp
+      cp -r ./out/test ./tmp/test
+      npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
+      npm run package
+      npx gulp clean:cleanExceptTests
+      cp -r ./tmp/test ./out/test
+      node ./out/test/smokeTest.js
+    displayName: 'Run Smoke Tests'
+    condition: and(succeeded(), contains(variables['TestsToRun'], 'testSmoke'))
+    env:
+      DISPLAY: :10
 
-    - task: PublishBuildArtifacts@1
-      inputs:
-          pathtoPublish: $(Build.ArtifactStagingDirectory)
-          artifactName: $(Agent.JobName)
-      condition: always()
+  - task: PublishBuildArtifacts@1
+    inputs:
+      pathtoPublish: $(Build.ArtifactStagingDirectory)
+      artifactName: $(Agent.JobName)
+    condition: always()

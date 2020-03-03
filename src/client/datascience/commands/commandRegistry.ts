@@ -7,7 +7,7 @@ import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { CodeLens, Range } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
-import { BANNER_NAME_DS_SURVEY, IDisposable, IOutputChannel, IPythonExtensionBanner } from '../../common/types';
+import { IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
@@ -35,9 +35,6 @@ export class CommandRegistry implements IDisposable {
         @inject(KernelSwitcherCommand) private readonly kernelSwitcherCommand: KernelSwitcherCommand,
         @inject(JupyterCommandLineSelectorCommand)
         private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
-        @inject(IPythonExtensionBanner)
-        @named(BANNER_NAME_DS_SURVEY)
-        private readonly dataScienceSurveyBanner: IPythonExtensionBanner,
         @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel
@@ -101,8 +98,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runAllCells(file: string): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         let codeWatcher = this.getCodeWatcher(file);
         if (!codeWatcher) {
             codeWatcher = this.getCurrentCodeWatcher();
@@ -115,8 +110,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runFileInteractive(file: string): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         let codeWatcher = this.getCodeWatcher(file);
         if (!codeWatcher) {
             codeWatcher = this.getCurrentCodeWatcher();
@@ -129,8 +122,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async debugFileInteractive(file: string): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         let codeWatcher = this.getCodeWatcher(file);
         if (!codeWatcher) {
             codeWatcher = this.getCurrentCodeWatcher();
@@ -151,7 +142,6 @@ export class CommandRegistry implements IDisposable {
         endLine: number,
         endChar: number
     ): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
         const codeWatcher = this.getCodeWatcher(file);
         if (codeWatcher) {
             return codeWatcher.runCell(new Range(startLine, startChar, endLine, endChar));
@@ -159,8 +149,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runAllCellsAbove(file: string, stopLine: number, stopCharacter: number): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         if (file) {
             const codeWatcher = this.getCodeWatcher(file);
 
@@ -171,8 +159,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runCellAndAllBelow(file: string, startLine: number, startCharacter: number): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         if (file) {
             const codeWatcher = this.getCodeWatcher(file);
 
@@ -183,8 +169,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runToLine(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         const textEditor = this.documentManager.activeTextEditor;
 
@@ -194,8 +178,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runFromLine(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         const textEditor = this.documentManager.activeTextEditor;
 
@@ -205,8 +187,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runCurrentCell(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
             return activeCodeWatcher.runCurrentCell();
@@ -216,8 +196,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runCurrentCellAndAdvance(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
             return activeCodeWatcher.runCurrentCellAndAdvance();
@@ -227,8 +205,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runSelectionOrLine(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
             return activeCodeWatcher.runSelectionOrLine(this.documentManager.activeTextEditor);
@@ -244,8 +220,6 @@ export class CommandRegistry implements IDisposable {
         endLine: number,
         endChar: number
     ): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         if (file) {
             const codeWatcher = this.getCodeWatcher(file);
 
@@ -257,8 +231,6 @@ export class CommandRegistry implements IDisposable {
 
     @captureTelemetry(Telemetry.DebugStepOver)
     private async debugStepOver(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         // Make sure that we are in debug mode
         if (this.debugService.activeDebugSession) {
             this.commandManager.executeCommand('workbench.action.debug.stepOver');
@@ -267,8 +239,6 @@ export class CommandRegistry implements IDisposable {
 
     @captureTelemetry(Telemetry.DebugStop)
     private async debugStop(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         // Make sure that we are in debug mode
         if (this.debugService.activeDebugSession) {
             this.commandManager.executeCommand('workbench.action.debug.stop');
@@ -277,8 +247,6 @@ export class CommandRegistry implements IDisposable {
 
     @captureTelemetry(Telemetry.DebugContinue)
     private async debugContinue(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         // Make sure that we are in debug mode
         if (this.debugService.activeDebugSession) {
             this.commandManager.executeCommand('workbench.action.debug.continue');
@@ -293,8 +261,6 @@ export class CommandRegistry implements IDisposable {
         }
     }
     private async runCurrentCellAndAddBelow(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         const activeCodeWatcher = this.getCurrentCodeWatcher();
         if (activeCodeWatcher) {
             return activeCodeWatcher.runCurrentCellAndAddBelow();
@@ -304,8 +270,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runAllCellsAboveFromCursor(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         const currentCodeLens = this.getCurrentCodeLens();
         if (currentCodeLens) {
             const activeCodeWatcher = this.getCurrentCodeWatcher();
@@ -321,8 +285,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async runCellAndAllBelowFromCursor(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         const currentCodeLens = this.getCurrentCodeLens();
         if (currentCodeLens) {
             const activeCodeWatcher = this.getCurrentCodeWatcher();
@@ -338,8 +300,6 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async debugCurrentCellFromCursor(): Promise<void> {
-        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
-
         const currentCodeLens = this.getCurrentCodeLens();
         if (currentCodeLens) {
             const activeCodeWatcher = this.getCurrentCodeWatcher();

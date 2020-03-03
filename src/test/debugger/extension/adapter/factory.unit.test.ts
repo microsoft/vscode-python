@@ -50,9 +50,9 @@ suite('Debugging - Adapter Factory', () => {
         'pythonFiles',
         'lib',
         'python',
-        'new_ptvsd',
+        'debugpy',
         'wheels',
-        'ptvsd',
+        'debugpy',
         'adapter'
     );
     const ptvsdAdapterPathWithoutWheels = path.join(
@@ -60,9 +60,9 @@ suite('Debugging - Adapter Factory', () => {
         'pythonFiles',
         'lib',
         'python',
-        'new_ptvsd',
+        'debugpy',
         'no_wheels',
-        'ptvsd',
+        'debugpy',
         'adapter'
     );
     const pythonPath = path.join('path', 'to', 'python', 'interpreter');
@@ -456,5 +456,57 @@ suite('Debugging - Adapter Factory', () => {
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
         assert.deepEqual(descriptor, debugExecutable);
+    });
+
+    test('Expected remote arguments are returned if in DebugAdapterNewPtvsd experiment', async () => {
+        const remoteDebugOptions = {
+            waitUntilDebuggerAttaches: true,
+            host: 'host',
+            port: 999
+        };
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+
+        // tslint:disable-next-line:no-any
+        const args = factory.getRemoteDebuggerArgs(remoteDebugOptions as any);
+
+        assert.deepEqual(args, [
+            '--listen',
+            `${remoteDebugOptions.host}:${remoteDebugOptions.port}`,
+            '--wait-for-client'
+        ]);
+    });
+
+    test('Expected remote arguments are returned if not in DebugAdapterNewPtvsd experiment', async () => {
+        const remoteDebugOptions = {
+            waitUntilDebuggerAttaches: true,
+            host: 'host',
+            port: 999
+        };
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(false);
+
+        // tslint:disable-next-line:no-any
+        const args = factory.getRemoteDebuggerArgs(remoteDebugOptions as any);
+
+        assert.deepEqual(args, [
+            '--host',
+            remoteDebugOptions.host,
+            '--port',
+            remoteDebugOptions.port.toString(),
+            '--wait'
+        ]);
+    });
+
+    test('Wait args is empty if `waitUntilDebuggerAttaches` is set to false', async () => {
+        const remoteDebugOptions = {
+            waitUntilDebuggerAttaches: false,
+            host: 'host',
+            port: 999
+        };
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(false);
+
+        // tslint:disable-next-line:no-any
+        const args = factory.getRemoteDebuggerArgs(remoteDebugOptions as any);
+
+        assert.deepEqual(args, ['--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString()]);
     });
 });

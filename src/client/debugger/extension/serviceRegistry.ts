@@ -9,6 +9,7 @@ import { AttachRequestArguments, LaunchRequestArguments } from '../types';
 import { DebugAdapterActivator } from './adapter/activator';
 import { DebugAdapterDescriptorFactory } from './adapter/factory';
 import { DebugSessionLoggingFactory } from './adapter/logging';
+import { OutdatedDebuggerPromptFactory } from './adapter/outdatedDebuggerPrompt';
 import { AttachProcessProviderFactory } from './attachQuickPick/factory';
 import { IAttachProcessProviderFactory } from './attachQuickPick/types';
 import { DebuggerBanner } from './banner';
@@ -41,7 +42,8 @@ import {
     IDebugConfigurationProvider,
     IDebugConfigurationService,
     IDebuggerBanner,
-    IDebugSessionLoggingFactory
+    IDebugSessionLoggingFactory,
+    IOutdatedDebuggerPromptFactory
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -122,6 +124,10 @@ export function registerTypes(serviceManager: IServiceManager) {
         DebugAdapterDescriptorFactory
     );
     serviceManager.addSingleton<IDebugSessionLoggingFactory>(IDebugSessionLoggingFactory, DebugSessionLoggingFactory);
+    serviceManager.addSingleton<IOutdatedDebuggerPromptFactory>(
+        IOutdatedDebuggerPromptFactory,
+        OutdatedDebuggerPromptFactory
+    );
     serviceManager.addSingleton<ILaunchDebugConfigurationResolverExperiment>(
         ILaunchDebugConfigurationResolverExperiment,
         LaunchDebugConfigurationExperiment
