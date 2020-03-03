@@ -64,8 +64,8 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
     }
     public async postExecute(cell: ICell, silent: boolean): Promise<void> {
         // Check for imports in the cell itself. Use the file/line/length as a key
-        if (!silent) {
-            this.scheduleCheck(`${cell.file}${cell.id}`, this.checkCell.bind(this, cell));
+        if (!silent && cell.data.cell_type === 'code') {
+            this.scheduleCheck(this.createCellKey(cell), this.checkCell.bind(this, cell));
         }
     }
 
@@ -91,12 +91,14 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
     private getNotebookLines(e: INotebookEditor): (string | undefined)[] {
         let result: (string | undefined)[] = [];
         if (e.model) {
-            e.model.cells.forEach(c => {
-                const cellArray = this.getCellLines(c);
-                if (result.length < MAX_DOCUMENT_LINES) {
-                    result = [...result, ...cellArray];
-                }
-            });
+            e.model.cells
+                .filter(c => c.data.cell_type === 'code')
+                .forEach(c => {
+                    const cellArray = this.getCellLines(c);
+                    if (result.length < MAX_DOCUMENT_LINES) {
+                        result = [...result, ...cellArray];
+                    }
+                });
         }
         return result;
     }
@@ -142,9 +144,13 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
         }
     }
 
+    private createCellKey(cell: ICell): string {
+        return `${cell.file}${cell.id}`;
+    }
+
     @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
     private checkCell(cell: ICell) {
-        this.pendingChecks.delete(`${cell.file}${cell.id}`);
+        this.pendingChecks.delete(this.createCellKey(cell));
         const lines = this.getCellLines(cell);
         this.lookForImports(lines);
     }
