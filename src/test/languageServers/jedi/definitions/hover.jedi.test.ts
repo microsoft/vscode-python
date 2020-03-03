@@ -8,6 +8,7 @@ import { EOL } from 'os';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
+import { isOs, isPythonVersion, OSType } from '../../../common';
 import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
 import { normalizeMarkedString } from '../../../textUtils';
 
@@ -22,7 +23,11 @@ const fileStringFormat = path.join(hoverPath, 'functionHover.py');
 
 // tslint:disable-next-line:max-func-body-length
 suite('Hover Definition (Jedi)', () => {
-    suiteSetup(initialize);
+    let isPy38: boolean;
+    suiteSetup(async () => {
+        await initialize();
+        isPy38 = await isPythonVersion('3.8');
+    });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
@@ -69,7 +74,13 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Across files', done => {
+    test('Across files', function(done) {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO (GH-10399) Fix this test.
+        if (isOs(OSType.Windows) && isPy38) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileThree)
@@ -159,7 +170,13 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Across files with Unicode Characters', done => {
+    test('Across files with Unicode Characters', function(done) {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO (GH-10399) Fix this test.
+        if (isOs(OSType.Windows) && isPy38) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileEncodingUsed)
@@ -253,7 +270,13 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Highlighting Class', done => {
+    test('Highlighting Class', function(done) {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO (GH-10399) Fix this test.
+        if (isOs(OSType.Windows) && isPy38) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileHover)
@@ -316,7 +339,13 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Highlight Method', done => {
+    test('Highlight Method', function(done) {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO (GH-10399) Fix this test.
+        if (isOs(OSType.Windows) && isPy38) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileHover)
@@ -408,7 +437,13 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Highlight Multiline Method Signature', done => {
+    test('Highlight Multiline Method Signature', function(done) {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO (GH-10399) Fix this test.
+        if (isOs(OSType.Windows) && isPy38) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileHover)

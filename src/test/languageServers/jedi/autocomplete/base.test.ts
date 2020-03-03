@@ -8,7 +8,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
-import { isPythonVersion } from '../../../common';
+import { isOs, isPythonVersion, OSType } from '../../../common';
 import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
 import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 
@@ -28,6 +28,7 @@ suite('Autocomplete Base Tests', function() {
     // tslint:disable-next-line:no-invalid-this
     this.timeout(60000);
     let ioc: UnitTestIocContainer;
+    let isPy38: boolean;
 
     suiteSetup(async function() {
         // Attempt to fix #1301
@@ -35,6 +36,7 @@ suite('Autocomplete Base Tests', function() {
         this.timeout(60000);
         await initialize();
         initializeDI();
+        isPy38 = await isPythonVersion('3.8');
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -249,7 +251,13 @@ suite('Autocomplete Base Tests', function() {
             .then(done, done);
     });
 
-    test('Across files With Unicode Characters', done => {
+    test('Across files With Unicode Characters', function(done) {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO (GH-10399) Fix this test.
+        if (isOs(OSType.Windows) && isPy38) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileEncodingUsed)
