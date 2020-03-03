@@ -1855,5 +1855,5 @@ export interface IEventNamePropertyMapping {
      * @type {(undefined | never)}
      * @memberof IEventNamePropertyMapping
      */
-    [Telemetry.KernelIdleDead]: undefined | never;
+    [Telemetry.KernelInvalid]: undefined | never;
 }

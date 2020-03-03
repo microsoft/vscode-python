@@ -10,7 +10,7 @@ import { LiveKernelModel } from './kernels/types';
 export class JupyterInvalidKernelError extends Error {
     constructor(private _kernelSpec: IJupyterKernelSpec | LiveKernelModel) {
         super(localize.DataScience.kernelInvalid().format(_kernelSpec.display_name || _kernelSpec.name));
-        sendTelemetryEvent(Telemetry.KernelIdleDead);
+        sendTelemetryEvent(Telemetry.KernelInvalid);
     }
 
     public get kernelSpec(): IJupyterKernelSpec | LiveKernelModel {

@@ -276,7 +276,7 @@ export enum Telemetry {
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
-    KernelIdleDead = 'DS_INTERNAL.KERNEL_IDLE_DEAD'
+    KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED'
 }
 
 export enum NativeKeyboardCommandTelemetry {
