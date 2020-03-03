@@ -33,10 +33,10 @@ import { ShowPlotListener } from './interactive-common/showPlotListener';
 import { AutoSaveService } from './interactive-ipynb/autoSaveService';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
+import { NativeEditorModel } from './interactive-ipynb/nativeEditorModel';
 import { NativeEditorOldWebView } from './interactive-ipynb/nativeEditorOldWebView';
 import { NativeEditorProvider } from './interactive-ipynb/nativeEditorProvider';
 import { NativeEditorProviderOld } from './interactive-ipynb/nativeEditorProviderOld';
-import { NativeEditorStorage } from './interactive-ipynb/nativeEditorStorage';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
@@ -167,7 +167,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         INotebookEditorProvider,
         useCustomEditorApi ? NativeEditorProvider : NativeEditorProviderOld
     );
-    serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorStorage);
+    serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorModel);
     serviceManager.add<INotebookEditor>(INotebookEditor, useCustomEditorApi ? NativeEditor : NativeEditorOldWebView);
     serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
     serviceManager.addBinding(ICodeLensFactory, IInteractiveWindowListener);

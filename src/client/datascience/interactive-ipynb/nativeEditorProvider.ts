@@ -105,20 +105,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, CustomEdit
             }
         });
     }
-    public applyEdits(resource: Uri, edits: readonly NotebookModelChange[]): Promise<void> {
-        return this.loadModel(resource).then(s => {
-            if (s) {
-                edits.forEach(e => s.update({ ...e, source: 'redo' }));
-            }
-        });
-    }
-    public undoEdits(resource: Uri, edits: readonly NotebookModelChange[]): Promise<void> {
-        return this.loadModel(resource).then(s => {
-            if (s) {
-                edits.forEach(e => s.update({ ...e, source: 'undo' }));
-            }
-        });
-    }
     public async resolveCustomEditor(document: CustomDocument, panel: WebviewPanel) {
         await this.createNotebookEditor(document.uri, panel);
     }

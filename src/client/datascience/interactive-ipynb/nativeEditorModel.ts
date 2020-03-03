@@ -27,7 +27,7 @@ const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
 
-interface INativeEditorStorageState {
+interface INativeEditorModelState {
     file: Uri;
     cells: ICell[];
     changeCount: number;
@@ -36,7 +36,7 @@ interface INativeEditorStorageState {
 }
 
 @injectable()
-export class NativeEditorStorage
+export class NativeEditorModel
     implements INotebookModel, INotebookStorage, CustomEditorEditingCapability<NotebookModelChange> {
     public get isDirty(): boolean {
         return this._state.changeCount !== this._state.saveChangeCount;
@@ -60,7 +60,7 @@ export class NativeEditorStorage
 
     private _changedEmitter = new EventEmitter<NotebookModelChange>();
     private _editEventEmitter = new EventEmitter<NotebookModelChange>();
-    private _state: INativeEditorStorageState = {
+    private _state: INativeEditorModelState = {
         file: Uri.file(''),
         changeCount: 0,
         saveChangeCount: 0,

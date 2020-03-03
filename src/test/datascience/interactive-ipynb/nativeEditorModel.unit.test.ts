@@ -36,7 +36,7 @@ import {
     IEditorContentChange,
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
+import { NativeEditorModel } from '../../../client/datascience/interactive-ipynb/nativeEditorModel';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
 import { ICell, IJupyterExecution, INotebookServerOptions } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -87,7 +87,7 @@ class MockWorkspaceConfiguration implements WorkspaceConfiguration {
 }
 
 // tslint:disable: max-func-body-length
-suite('Data Science - Native Editor Storage', () => {
+suite('Data Science - Native Editor Model', () => {
     let workspace: IWorkspaceService;
     let configService: IConfigurationService;
     let fileSystem: typemoq.IMock<IFileSystem>;
@@ -103,7 +103,7 @@ suite('Data Science - Native Editor Storage', () => {
     let wroteToFileEvent: EventEmitter<string> = new EventEmitter<string>();
     let filesConfig: MockWorkspaceConfiguration | undefined;
     let testIndex = 0;
-    let storage: NativeEditorStorage;
+    let storage: NativeEditorModel;
     const disposables: IDisposable[] = [];
     const baseUri = Uri.parse('file:///foo.ipynb');
     const baseFile = `{
@@ -352,7 +352,7 @@ suite('Data Science - Native Editor Storage', () => {
                 return Promise.resolve(lastWriteFileValue);
             });
 
-        storage = new NativeEditorStorage(
+        storage = new NativeEditorModel(
             instance(executionProvider),
             fileSystem.object, // Use typemoq so can save values in returns
             instance(crypto),

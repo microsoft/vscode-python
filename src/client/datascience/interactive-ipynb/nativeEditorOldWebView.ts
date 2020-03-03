@@ -49,7 +49,7 @@ import {
     IThemeFinder
 } from '../types';
 import { NativeEditor } from './nativeEditor';
-import { NativeEditorStorage } from './nativeEditorStorage';
+import { NativeEditorModel } from './nativeEditorModel';
 
 enum AskForSaveResult {
     Yes,
@@ -190,7 +190,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             const filesConfig = this.workspaceService.getConfiguration('files', this.file);
             const autoSave = filesConfig.get('autoSave', 'off');
             if (autoSave === 'off') {
-                const model = this.model as NativeEditorStorage;
+                const model = this.model as NativeEditorModel;
                 await model.storeContentsInHotExitFile();
             }
             this.commandManager.executeCommand(Commands.OpenNotebookNonCustomEditor, this.model.file).then(noop, noop);

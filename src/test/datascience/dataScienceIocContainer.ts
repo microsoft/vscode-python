@@ -175,8 +175,8 @@ import { IntellisenseProvider } from '../../client/datascience/interactive-commo
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
+import { NativeEditorModel } from '../../client/datascience/interactive-ipynb/nativeEditorModel';
 import { NativeEditorOldWebView } from '../../client/datascience/interactive-ipynb/nativeEditorOldWebView';
-import { NativeEditorStorage } from '../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
@@ -523,7 +523,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             useCustomEditor ? NativeEditor : NativeEditorOldWebView
         );
 
-        this.serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorStorage);
+        this.serviceManager.add<INotebookStorage>(INotebookStorage, NativeEditorModel);
         this.serviceManager.addSingletonInstance<ICustomEditorService>(
             ICustomEditorService,
             new MockCustomEditorService(this.asyncRegistry, this.commandManager)
