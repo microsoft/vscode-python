@@ -40,7 +40,9 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_LS_SURVEY)
-        private readonly surveyBanner: IPythonExtensionBanner
+        private readonly surveyBanner: IPythonExtensionBanner,
+        @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {}
 
     public dispose() {
@@ -96,13 +98,10 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
 
-        const folderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
-        const versionPair = await folderService.getCurrentLanguageServerDirectory();
-
-        const expManager = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        const collect = expManager.inExperiment(CollectNodeLSRequestTiming.experiment);
+        const versionPair = await this.folderService.getCurrentLanguageServerDirectory();
+        const collect = this.experimentsManager.inExperiment(CollectNodeLSRequestTiming.experiment);
         if (!collect) {
-            expManager.sendTelemetryIfInExperiment(CollectNodeLSRequestTiming.control);
+            this.experimentsManager.sendTelemetryIfInExperiment(CollectNodeLSRequestTiming.control);
         }
 
         const options = await this.analysisOptions!.getAnalysisOptions();

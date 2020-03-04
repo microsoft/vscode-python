@@ -42,7 +42,9 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension,
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_LS_SURVEY)
-        private readonly surveyBanner: IPythonExtensionBanner
+        private readonly surveyBanner: IPythonExtensionBanner,
+        @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {}
     public dispose() {
         if (this.languageProxy) {
@@ -100,13 +102,10 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
 
-        const folderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
-        const versionPair = await folderService.getCurrentLanguageServerDirectory();
-
-        const expManager = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        const collect = expManager.inExperiment(CollectLSRequestTiming.experiment);
+        const versionPair = await this.folderService.getCurrentLanguageServerDirectory();
+        const collect = this.experimentsManager.inExperiment(CollectLSRequestTiming.experiment);
         if (!collect) {
-            expManager.sendTelemetryIfInExperiment(CollectLSRequestTiming.control);
+            this.experimentsManager.sendTelemetryIfInExperiment(CollectLSRequestTiming.control);
         }
 
         const options = await this.analysisOptions!.getAnalysisOptions();
