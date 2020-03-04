@@ -64,9 +64,11 @@ import {
     IDiagnosticHandlerService,
     IDiagnosticsService
 } from '../../client/application/diagnostics/types';
+import { ClipboardService } from '../../client/common/application/clipboard';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
+    IClipboard,
     ICommandManager,
     ICustomEditorService,
     IDebugService,
@@ -861,6 +863,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
 
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
+        this.serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
         this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
         this.serviceManager.addSingletonInstance<IConfigurationService>(

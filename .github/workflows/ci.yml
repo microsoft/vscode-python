@@ -192,6 +192,11 @@ jobs:
         # Run the tests on the oldest and most recent versions of Python.
         python: [2.7, 3.8]
         test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
+    env:
+      # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
+      # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
+      # See https://github.com/microsoft/ptvsd/issues/2068
+      NODE_VERSION: 12.15.0
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -221,6 +226,11 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: ${{matrix.python}}
+
+      - name: Use Node ${{env.NODE_VERSION}}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{env.NODE_VERSION}}
 
       - name: curl PyPI to get debugpy versions
         run: curl --output debugpy.json https://pypi.org/pypi/debugpy/json
