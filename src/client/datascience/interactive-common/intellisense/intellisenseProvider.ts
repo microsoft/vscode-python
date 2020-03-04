@@ -378,20 +378,12 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 cancelSource.token
             );
 
-            let jupyterCompletions = Promise.resolve(emptyList);
-            const isEmptyOrWhitespace = await this.includeJupyterCompletionItems(request.position, request.cellId);
-            let sleepTime = 0;
-
-            if (isEmptyOrWhitespace) {
-                jupyterCompletions = this.provideJupyterCompletionItems(
-                    request.position,
-                    request.context,
-                    request.cellId,
-                    cancelSource.token
-                );
-
-                sleepTime = Settings.IntellisenseTimeout;
-            }
+            const jupyterCompletions = this.provideJupyterCompletionItems(
+                request.position,
+                request.context,
+                request.cellId,
+                cancelSource.token
+            );
 
             // Capture telemetry for each of the two providers.
             // Telemetry will be used to improve how we handle intellisense to improve response times for code completion.
@@ -406,7 +398,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                     // Telemetry will prove/disprove this assumption and we'll change this code accordingly.
                     lsCompletions,
                     // Wait for a max of n ms before ignoring results from jupyter (jupyter completion is generally slower).
-                    Promise.race([jupyterCompletions, sleep(sleepTime).then(() => emptyList)])
+                    Promise.race([jupyterCompletions, sleep(Settings.IntellisenseTimeout).then(() => emptyList)])
                 ])
             );
         };
@@ -416,16 +408,6 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             const list = this.combineCompletions(c);
             return { list, requestId: request.requestId };
         });
-    }
-
-    // This function returns weather the line the user is using intellisense on is an empty line or not.
-    // If it is not, handleCompletionItemsRequest will ignore jupyter compeltion items becasue its
-    // confusing to the user to receive magic commands in a function.
-    private async includeJupyterCompletionItems(position: monacoEditor.Position, cellId: string): Promise<Boolean> {
-        const doc = await this.getDocument();
-        const pos = doc.convertToDocumentPosition(cellId, position.lineNumber, position.column);
-        const line = doc.lineAt(pos);
-        return line.isEmptyOrWhitespace;
     }
 
     private handleResolveCompletionItemRequest(request: IResolveCompletionItemRequest) {
@@ -488,6 +470,14 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
                     const jupyterResults = await activeNotebook.getCompletion(data.text, offsetInCode, cancelToken);
                     if (jupyterResults && jupyterResults.matches) {
+                        // If the line we're analyzing is empty or a whitespace, we filter out the magic commands
+                        // as its confusing to see them appear after a . or inside ().
+                        const pos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+                        const line = document.lineAt(pos);
+                        const filteredMatches = line.isEmptyOrWhitespace
+                            ? jupyterResults.matches
+                            : jupyterResults.matches.filter(match => !match.startsWith('%'));
+
                         const baseOffset = data.offset;
                         const basePosition = document.positionAt(baseOffset);
                         const startPosition = document.positionAt(jupyterResults.cursor.start + baseOffset);
@@ -499,11 +489,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                             endColumn: endPosition.character + 1
                         };
                         return {
-                            suggestions: convertStringsToSuggestions(
-                                jupyterResults.matches,
-                                range,
-                                jupyterResults.metadata
-                            ),
+                            suggestions: convertStringsToSuggestions(filteredMatches, range, jupyterResults.metadata),
                             incomplete: false
                         };
                     }
