@@ -1521,6 +1521,7 @@
                             "WebHostNotebook - experiment",
                             "UseTerminalToGetActivatedEnvVars - experiment",
                             "CollectLSRequestTiming - experiment",
+                            "CollectNodeLSRequestTiming - experiment",
                             "All"
                         ]
                     },
@@ -1542,6 +1543,7 @@
                             "WebHostNotebook - experiment",
                             "UseTerminalToGetActivatedEnvVars - experiment",
                             "CollectLSRequestTiming - experiment",
+                            "CollectNodeLSRequestTiming - experiment",
                             "All"
                         ]
                     },
