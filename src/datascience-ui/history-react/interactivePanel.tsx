@@ -240,7 +240,13 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     private renderFooterPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
-        if (!this.props.monacoReady || !this.props.editCellVM || !this.props.settings || !this.props.editorOptions) {
+        if (
+            !this.props.monacoReady ||
+            !this.props.editCellVM ||
+            !this.props.settings ||
+            !this.props.editorOptions ||
+            !this.props.settings.allowInput
+        ) {
             return null;
         }
 
