@@ -323,6 +323,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         super.dispose();
         this.listeners.forEach(l => l.dispose());
         this.updateContexts(undefined);
+
+        // When closing an editor, dispose of the notebook associated with it.
+        // This won't work when we have multiple views of the notebook though. Notebook ownership
+        // should probably move to whatever owns the backing model.
+        return this.notebook?.dispose().then(() => {
+            this._notebook = undefined;
+        });
     }
 
     public startProgress() {

@@ -579,6 +579,14 @@ Type:      builtin_function_or_method`,
                 const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
                 const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
                 const interpreters = await ioc.getJupyterInterpreters();
+                if (interpreters.length < 2) {
+                    // tslint:disable-next-line: no-console
+                    console.log(
+                        'Multiple interpreters skipped because local machine does not have more than one jupyter environment'
+                    );
+                    context.skip();
+                    return;
+                }
                 const window = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
                 await addCode(ioc, wrapper, 'a=1\na');
                 const activeInterpreter = await interpreterService.getActiveInterpreter(
@@ -594,17 +602,20 @@ Type:      builtin_function_or_method`,
 
                 // Add another python path
                 const secondUri = Uri.file('bar.py');
-                await ioc.addNewSetting(secondUri, interpreters[1].path);
+                await ioc.addNewSetting(
+                    secondUri,
+                    interpreters.filter(i => i.path !== activeInterpreter?.path)[0].path
+                );
                 const newWrapper = mountWebView(ioc, 'interactive');
                 assert.ok(newWrapper, 'Could not mount a second time');
                 const newWindow = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
-                await addCode(ioc, wrapper, 'a=1\na', false, secondUri);
-                verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+                await addCode(ioc, newWrapper, 'a=1\na', false, secondUri);
                 assert.notEqual(
                     newWindow.notebook!.getMatchingInterpreter()?.path,
                     activeInterpreter?.path,
                     'Active intrepreter used to launch second notebook when it should not have'
                 );
+                verifyHtmlOnCell(newWrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
             } else {
                 context.skip();
             }

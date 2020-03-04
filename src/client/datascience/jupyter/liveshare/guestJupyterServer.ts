@@ -74,7 +74,7 @@ export class GuestJupyterServer
             this.dataScience.activationStartTime
         );
         this.notebooks.set(identity.toString(), result);
-        const oldDispose = result.dispose;
+        const oldDispose = result.dispose.bind(result);
         result.dispose = () => {
             this.notebooks.delete(identity.toString());
             return oldDispose();
