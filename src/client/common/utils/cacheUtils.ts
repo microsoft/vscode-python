@@ -32,13 +32,18 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'))
     if (!section) {
         return 'python';
     }
-    const interpreterPathService = ACTIVATED_SERVICE_CONTAINER!.get<IInterpreterPathService>(IInterpreterPathService);
-    const abExperiments = ACTIVATED_SERVICE_CONTAINER!.get<IExperimentsManager>(IExperimentsManager);
-    const inExperiment = abExperiments.inExperiment(DeprecatePythonPath.experiment);
-    abExperiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
-    const globalPythonPath = inExperiment
-        ? interpreterPathService.inspectInterpreterPath(vscode.Uri.file(__filename)).globalValue || 'python'
-        : section.inspect<string>('pythonPath')!.globalValue || 'python';
+    let interpreterPathService: IInterpreterPathService | undefined;
+    let inExperiment: boolean | undefined;
+    if (ACTIVATED_SERVICE_CONTAINER) {
+        interpreterPathService = ACTIVATED_SERVICE_CONTAINER.get<IInterpreterPathService>(IInterpreterPathService);
+        const abExperiments = ACTIVATED_SERVICE_CONTAINER.get<IExperimentsManager>(IExperimentsManager);
+        inExperiment = abExperiments.inExperiment(DeprecatePythonPath.experiment);
+        abExperiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+    }
+    const globalPythonPath =
+        inExperiment && interpreterPathService
+            ? interpreterPathService.inspectInterpreterPath(vscode.Uri.file(__filename)).globalValue || 'python'
+            : section.inspect<string>('pythonPath')!.globalValue || 'python';
     // Get the workspace related to this resource.
     if (
         !resource ||
@@ -51,9 +56,10 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'))
     if (!folder) {
         return globalPythonPath;
     }
-    const workspacePythonPath = inExperiment
-        ? interpreterPathService.getInterpreterPath(resource)
-        : vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
+    const workspacePythonPath =
+        inExperiment && interpreterPathService
+            ? interpreterPathService.getInterpreterPath(resource)
+            : vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
     return `${folder.uri.fsPath}-${workspacePythonPath}`;
 }
 /**

@@ -213,15 +213,21 @@ async function setPythonPathInWorkspace(
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
     const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
-    const interpreterPathService = ACTIVATED_SERVICE_CONTAINER!.get<IInterpreterPathService>(IInterpreterPathService);
-    const abExperiments = ACTIVATED_SERVICE_CONTAINER!.get<IExperimentsManager>(IExperimentsManager);
-    const value = abExperiments.inExperiment(DeprecatePythonPath.experiment)
-        ? interpreterPathService.inspectInterpreterPath(vscode.Uri.file(__filename))
-        : settings.inspect<string>('pythonPath');
+    let interpreterPathService: IInterpreterPathService | undefined;
+    let inExperiment: boolean | undefined;
+    if (ACTIVATED_SERVICE_CONTAINER) {
+        interpreterPathService = ACTIVATED_SERVICE_CONTAINER.get<IInterpreterPathService>(IInterpreterPathService);
+        const abExperiments = ACTIVATED_SERVICE_CONTAINER.get<IExperimentsManager>(IExperimentsManager);
+        inExperiment = abExperiments.inExperiment(DeprecatePythonPath.experiment);
+    }
+    const value =
+        inExperiment && interpreterPathService
+            ? interpreterPathService.inspectInterpreterPath(vscode.Uri.file(__filename))
+            : settings.inspect<string>('pythonPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (value && value[prop] !== pythonPath) {
-        if (abExperiments.inExperiment(DeprecatePythonPath.experiment)) {
+        if (inExperiment && interpreterPathService) {
             await interpreterPathService.update(resourceUri, config, pythonPath);
         } else {
             await settings.update('pythonPath', pythonPath, config);
