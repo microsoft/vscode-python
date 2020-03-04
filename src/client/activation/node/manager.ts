@@ -4,7 +4,6 @@ import '../../common/extensions';
 
 import { inject, injectable, named } from 'inversify';
 
-import { CollectNodeLSRequestTiming } from '../../common/experimentGroups';
 import { traceDecorators } from '../../common/logger';
 import {
     BANNER_NAME_LS_SURVEY,
@@ -99,15 +98,11 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
 
         const versionPair = await this.folderService.getCurrentLanguageServerDirectory();
-        const collect = this.experimentsManager.inExperiment(CollectNodeLSRequestTiming.experiment);
-        if (!collect) {
-            this.experimentsManager.sendTelemetryIfInExperiment(CollectNodeLSRequestTiming.control);
-        }
 
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
             this.surveyBanner,
-            collect,
+            this.experimentsManager,
             LanguageServerType.Node,
             versionPair?.version.format()
         );

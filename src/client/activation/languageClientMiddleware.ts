@@ -55,7 +55,8 @@ import {
 
 import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/declaration';
 import { HiddenFilePrefix } from '../common/constants';
-import { IPythonExtensionBanner } from '../common/types';
+import { CollectLSRequestTiming, CollectNodeLSRequestTiming } from '../common/experimentGroups';
+import { IExperimentsManager, IPythonExtensionBanner } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -72,7 +73,9 @@ const debounceFrequentCall = 1000 * 60 * 5;
 const debounceRareCall = 1000 * 60;
 
 export class LanguageClientMiddleware implements Middleware {
-    public lastCaptured: Map<string, number> = new Map<string, number>();
+    // These are public so that the captureTelemetryForLSPMethod decorator can access them.
+    public readonly eventName: EventName | undefined;
+    public readonly lastCaptured = new Map<string, number>();
     public nextWindow: number = 0;
     public eventCount: number = 0;
 
@@ -80,11 +83,28 @@ export class LanguageClientMiddleware implements Middleware {
 
     public constructor(
         private readonly surveyBanner: IPythonExtensionBanner,
-        public readonly collectTelemetry: boolean = false,
-        public readonly serverType?: LanguageServerType,
+        experimentsManager: IExperimentsManager,
+        serverType: LanguageServerType,
         public readonly serverVersion?: string
     ) {
         this.handleDiagnostics = this.handleDiagnostics.bind(this); // VS Code calls function without context.
+
+        let group: { experiment: string; control: string } | undefined;
+
+        if (serverType === LanguageServerType.Microsoft) {
+            this.eventName = EventName.PYTHON_LANGUAGE_SERVER_REQUEST;
+            group = CollectLSRequestTiming;
+        } else if (serverType === LanguageServerType.Node) {
+            this.eventName = EventName.PYTHON_NODE_SERVER_REQUEST;
+            group = CollectNodeLSRequestTiming;
+        } else {
+            return;
+        }
+
+        if (!experimentsManager.inExperiment(group.experiment)) {
+            this.eventName = undefined;
+            experimentsManager.sendTelemetryIfInExperiment(group.control);
+        }
     }
 
     public connect() {
@@ -357,17 +377,8 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
 
         // tslint:disable-next-line:no-any
         descriptor.value = function(this: LanguageClientMiddleware, ...args: any[]) {
-            if (!this.collectTelemetry) {
-                return originalMethod.apply(this, args);
-            }
-
-            let eventName: EventName;
-
-            if (this.serverType === LanguageServerType.Microsoft) {
-                eventName = EventName.PYTHON_LANGUAGE_SERVER_REQUEST;
-            } else if (this.serverType === LanguageServerType.Node) {
-                eventName = EventName.PYTHON_NODE_SERVER_REQUEST;
-            } else {
+            const eventName = this.eventName;
+            if (!eventName) {
                 return originalMethod.apply(this, args);
             }
 
