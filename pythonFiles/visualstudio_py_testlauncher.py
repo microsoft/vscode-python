@@ -283,7 +283,7 @@ def main():
         sys.stdout = _TestOutput(sys.stdout, is_stdout=True)
         sys.stderr = _TestOutput(sys.stderr, is_stdout=False)
 
-    elif opts.mixed_mode:
+    if opts.mixed_mode:
         # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(),
         # so we have to use Win32 API in a loop to do the same thing.
         from time import sleep
