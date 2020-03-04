@@ -82,9 +82,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const pySettings = this.configService.getSettings();
         this.pythonPathSetting = pySettings.pythonPath;
         if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
-            this.interpreterPathService.onDidChangeInterpreter(i => {
-                this.onConfigChanged(i.uri);
-            });
+            disposables.push(
+                this.interpreterPathService.onDidChangeInterpreter(i => {
+                    this.onConfigChanged(i.uri);
+                })
+            );
         } else {
             const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
                 ? workspaceService.workspaceFolders!.map(workspace => workspace.uri)

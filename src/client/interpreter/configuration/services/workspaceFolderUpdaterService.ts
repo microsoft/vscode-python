@@ -13,7 +13,9 @@ export class WorkspaceFolderPythonPathUpdaterService implements IPythonPathUpdat
     ) {}
     public async updatePythonPath(pythonPath: string | undefined): Promise<void> {
         const pythonConfig = this.workspaceService.getConfiguration('python', this.workspaceFolder);
-        const pythonPathValue = pythonConfig.inspect<string>('pythonPath');
+        const pythonPathValue = this.inDeprecatePythonPathExperiment
+            ? this.interpreterPathService.inspectInterpreterPath(this.workspaceFolder)
+            : pythonConfig.inspect<string>('pythonPath')!;
 
         if (pythonPathValue && pythonPathValue.workspaceFolderValue === pythonPath) {
             return;
