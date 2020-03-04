@@ -194,7 +194,7 @@ jobs:
         test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
     env:
       # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
-      # We can remove this when we switch over to the python-based DA.
+      # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
       # See https://github.com/microsoft/ptvsd/issues/2068
       NODE_VERSION: 12.15.0
     steps:
