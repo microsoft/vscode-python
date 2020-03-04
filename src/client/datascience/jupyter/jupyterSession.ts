@@ -251,6 +251,12 @@ export class JupyterSession implements IJupyterSession {
 
     public async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void> {
         let newSession: ISession | undefined;
+
+        // If we are already using this kernel in an active session just return back
+        if (this.kernelSpec?.name === kernel.name && this.session) {
+            return;
+        }
+
         try {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
             if (kernel.id && this.session && 'session' in kernel) {
