@@ -64,9 +64,6 @@ export class InterpreterSelector implements IInterpreterSelector {
         }
         const configTarget = targetConfig.configTarget;
         const wkspace = targetConfig.folderUri;
-        const hasfolders = this.workspaceService.hasWorkspaceFolders;
-        const folders = this.workspaceService.workspaceFolders;
-        const workspaceFile = this.workspaceService.workspaceFile;
 
         await this.pythonPathUpdaterService.updatePythonPath(undefined, configTarget, 'ui', wkspace);
     }

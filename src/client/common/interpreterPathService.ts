@@ -39,12 +39,10 @@ export class InterpreterPathService implements IInterpreterPathService {
         let workspaceFolderSetting: IPersistentState<string | undefined> | undefined;
         let workspaceSetting: IPersistentState<string | undefined> | undefined;
         if (resource) {
-            workspaceFolderSetting = this.workspaceService.workspaceFile
-                ? this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
-                      this.getSettingKey(resource, ConfigurationTarget.WorkspaceFolder),
-                      undefined
-                  )
-                : undefined;
+            workspaceFolderSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
+                this.getSettingKey(resource, ConfigurationTarget.WorkspaceFolder),
+                undefined
+            );
             workspaceSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
                 this.getSettingKey(resource, ConfigurationTarget.Workspace),
                 undefined

@@ -305,7 +305,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private onConfigChanged = (resource?: Uri) => {
         // Check if we actually changed our python path
         const pySettings = this.configService.getSettings(resource);
-        if (this.pythonPathSetting !== pySettings.pythonPath) {
+        if (this.pythonPathSetting === '' || this.pythonPathSetting !== pySettings.pythonPath) {
             this.pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();
             const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
