@@ -17,6 +17,8 @@ import { generateCellsFromDocument } from '../../client/datascience/cellFactory'
 import { EditorContexts } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
+import { IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
@@ -25,6 +27,7 @@ import { createDocument } from './editor-integration/helpers';
 import { defaultDataScienceSettings } from './helpers';
 import {
     addCode,
+    closeInteractiveWindow,
     getInteractiveCellResults,
     getOrCreateInteractiveWindow,
     runMountedTest
@@ -43,6 +46,7 @@ import {
     findButton,
     getInteractiveEditor,
     getLastOutputCell,
+    mountWebView,
     srcDirectory,
     submitInput,
     toggleCellExpansion,
@@ -570,42 +574,40 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Multiple Interpreters',
-        async _wrapper => {
-            // if (!ioc.mockJupyter) {
-            //     const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-            //     const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
-            //     const window = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
-            //     await addCode(ioc, wrapper, 'a=1\na');
-            //     const activeInterpreter = await interpreterService.getActiveInterpreter(
-            //         await window.getNotebookResource()
-            //     );
-            //     verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
-            //     assert.equal(
-            //         window.notebook!.getMatchingInterpreter()?.path,
-            //         activeInterpreter?.path,
-            //         'Active intrepreter not used to launch notebook'
-            //     );
-            //     await closeInteractiveWindow(window, wrapper);
+        async (wrapper, context) => {
+            if (!ioc.mockJupyter) {
+                const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+                const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
+                const interpreters = await ioc.getJupyterInterpreters();
+                const window = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
+                await addCode(ioc, wrapper, 'a=1\na');
+                const activeInterpreter = await interpreterService.getActiveInterpreter(
+                    await window.getOwningResource()
+                );
+                verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+                assert.equal(
+                    window.notebook!.getMatchingInterpreter()?.path,
+                    activeInterpreter?.path,
+                    'Active intrepreter not used to launch notebook'
+                );
+                await closeInteractiveWindow(window, wrapper);
 
-            //     // Add another python path (hopefully there's more than one on the machine?)
-            //     const secondUri = Uri.file('bar.py');
-            //     await ioc.addNewSetting(secondUri, undefined);
-            //     const newWrapper = mountWebView(ioc, 'interactive');
-            //     assert.ok(newWrapper, 'Could not mount a second time');
-            //     const newWindow = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
-            //     await addCode(ioc, wrapper, 'a=1\na', false, secondUri);
-            //     verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
-            //     assert.notEqual(
-            //         newWindow.notebook!.getMatchingInterpreter()?.path,
-            //         activeInterpreter?.path,
-            //         'Active intrepreter used to launch second notebook when it should not have'
-            //     );
-            // } else {
-            // tslint:disable-next-line: no-console
-            console.log(
-                'Multiple interpreters test skipped for now. Reenable after fixing https://github.com/microsoft/vscode-python/issues/10134'
-            );
-            //            }
+                // Add another python path
+                const secondUri = Uri.file('bar.py');
+                await ioc.addNewSetting(secondUri, interpreters[1].path);
+                const newWrapper = mountWebView(ioc, 'interactive');
+                assert.ok(newWrapper, 'Could not mount a second time');
+                const newWindow = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
+                await addCode(ioc, wrapper, 'a=1\na', false, secondUri);
+                verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+                assert.notEqual(
+                    newWindow.notebook!.getMatchingInterpreter()?.path,
+                    activeInterpreter?.path,
+                    'Active intrepreter used to launch second notebook when it should not have'
+                );
+            } else {
+                context.skip();
+            }
         },
         () => {
             return ioc;

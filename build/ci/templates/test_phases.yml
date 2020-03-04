@@ -119,8 +119,8 @@ steps:
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
   #
   - script: |
-      conda env create --quiet --force --file ../conda_env_1.yml
-      conda env create --quiet --force --file ../conda_env_2.yml
+      conda env create --quiet --force --file conda_env_1.yml
+      conda env create --quiet --force --file conda_env_2.yml
     displayName: 'Create CONDA Environments'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 

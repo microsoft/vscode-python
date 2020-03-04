@@ -1198,6 +1198,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
     }
 
+    public async getJupyterInterpreters(): Promise<PythonInterpreter[]> {
+        const list = await this.get<IInterpreterService>(IInterpreterService).getInterpreters(undefined);
+        return list.filter(f => this.hasJupyter(f.path));
+    }
+
     public async addNewSetting(resource: Uri, pythonPath: string | undefined) {
         // Force a new config setting to appear.
         if (!pythonPath) {

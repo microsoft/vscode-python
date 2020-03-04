@@ -268,7 +268,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }).ignoreErrors();
     }
 
-    protected async getOwningResource(): Promise<Resource> {
+    public async getOwningResource(): Promise<Resource> {
         if (this.lastFile) {
             return Uri.file(this.lastFile);
         }
