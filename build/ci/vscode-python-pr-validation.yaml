@@ -7,111 +7,114 @@ name: '$(Year:yyyy).$(Month).0.$(BuildID)-pr'
 pr:
   autoCancel: true
   branches:
-    include: ["master", "release*", "ds*"]
+    include: ['master', 'release*', 'ds*']
   paths:
-    exclude: ["/news/1 Enhancements", "/news/2 Fixes", "/news/3 Code Health", "/.vscode"]
+    exclude: ['/news/1 Enhancements', '/news/2 Fixes', '/news/3 Code Health', '/.vscode']
 
 # Not the CI build for merges to master and release.
 trigger: none
 
 # Variables that are available for the entire pipeline.
 variables:
-- template: templates/globals.yml
+  - template: templates/globals.yml
 
 stages:
-- stage: Build
-  jobs:
-  - template: templates/jobs/build_compile.yml
+  - stage: Build
+    jobs:
+      - template: templates/jobs/build_compile.yml
 
-# Each item in each matrix has a number of possible values it may
-# define.  They are detailed in templates/test_phases.yml.  The only
-# required value is "TestsToRun".
+  # Each item in each matrix has a number of possible values it may
+  # define.  They are detailed in templates/test_phases.yml.  The only
+  # required value is "TestsToRun".
 
-- stage: Linux
-  dependsOn: []
-  jobs:
-  - job: 'Py3x'
+  - stage: Linux
     dependsOn: []
-    strategy:
-      matrix:
-        'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Smoke':
-          TestsToRun: 'testSmoke'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-    pool:
-      vmImage: 'ubuntu-16.04'
-    steps:
-      - template: templates/test_phases.yml
+    jobs:
+      - job: 'Py3x'
+        dependsOn: []
+        strategy:
+          matrix:
+            'Unit':
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Smoke':
+              TestsToRun: 'testSmoke'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+        pool:
+          vmImage: 'ubuntu-16.04'
+        steps:
+          - template: templates/test_phases.yml
 
-  - job: 'Py27'
+      - job: 'Py27'
+        dependsOn: []
+        strategy:
+          matrix:
+            'Unit':
+              PythonVersion: '2.7'
+              # Note: "pythonInternalTools" tests are 3.7+.
+              TestsToRun: 'testUnitTests, pythonUnitTests'
+              NeedsPythonTestReqs: true
+            'Functional':
+              PythonVersion: '2.7'
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+        pool:
+          vmImage: 'ubuntu-16.04'
+        steps:
+          - template: templates/test_phases.yml
+
+  - stage: Mac
     dependsOn: []
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '2.7'
-          # Note: "pythonInternalTools" tests are 3.7+.
-          TestsToRun: 'testUnitTests, pythonUnitTests'
-          NeedsPythonTestReqs: true
-        'Functional':
-          PythonVersion: '2.7'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-    pool:
-      vmImage: 'ubuntu-16.04'
-    steps:
-      - template: templates/test_phases.yml
+    jobs:
+      - job: 'Py3x'
+        dependsOn: []
+        strategy:
+          matrix:
+            # This gives us our best functional coverage for the OS.
+            'Functional+Single':
+              TestsToRun: 'testfunctional, testSingleWorkspace'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+        pool:
+          vmImage: '$(vmImageMacOS)'
+        steps:
+          - template: templates/test_phases.yml
 
-- stage: Mac
-  dependsOn: []
-  jobs:
-  - job: 'Py3x'
+  - stage: Windows
     dependsOn: []
-    strategy:
-      matrix:
-        # This gives us our best functional coverage for the OS.
-        'Functional+Single':
-          TestsToRun: 'testfunctional, testSingleWorkspace'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-    pool:
-      vmImage: '$(vmImageMacOS)'
-    steps:
-      - template: templates/test_phases.yml
+    jobs:
+      - job: 'Py3x'
+        dependsOn: []
+        strategy:
+          matrix:
+            # This gives us our best functional coverage for the OS.
+            'Functional':
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+        pool:
+          vmImage: 'vs2017-win2016'
+        steps:
+          - template: templates/test_phases.yml
 
-- stage: Windows
-  dependsOn: []
-  jobs:
-  - job: 'Py3x'
-    dependsOn: []
-    strategy:
-      matrix:
-        # This gives us our best functional coverage for the OS.
-        'Functional+Single':
-          TestsToRun: 'testfunctional, testSingleWorkspace'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-    pool:
-      vmImage: 'vs2017-win2016'
-    steps:
-      - template: templates/test_phases.yml
-
-- stage: Reports
-  dependsOn:
-  - Linux
-  - Mac
-  - Windows
-  condition: always()
-  jobs:
-  - template: templates/jobs/coverage.yml
+  - stage: Reports
+    dependsOn:
+      - Linux
+      - Mac
+      - Windows
+    condition: always()
+    jobs:
+      - template: templates/jobs/coverage.yml
