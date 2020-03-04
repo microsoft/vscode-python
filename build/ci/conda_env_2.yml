@@ -5,5 +5,3 @@ dependencies:
   - jupyter
   - numpy
   - matplotlib
-  - livelossplot
-  - versioneer

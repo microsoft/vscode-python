@@ -1,0 +1,3 @@
+# List of requirements for conda environments that cannot be installed using conda
+livelossplot
+versioneer
