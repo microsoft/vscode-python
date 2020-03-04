@@ -98,27 +98,30 @@ steps:
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
 
-  # Install the additional sqlite requirements
+  # Add CONDA to the path so anaconda works
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
   - bash: |
-      sudo apt-get install libsqlite3-dev
-      python -m pip install pysqlite
-    displayName: 'Setup python to run with sqlite on 2.7'
-    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), eq(variables['PythonVersion'], '2.7'))
+      echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: 'Add conda to the path'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
-  # Install the requirements for functional tests.
+  # On MAC let CONDA update install paths
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      sudo chown -R $USER $CONDA
+    displayName: 'Give CONDA permission to its own files'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Darwin'))
+
+  # Create the two anaconda environments
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
   #
-  # Example command line (windows pwsh):
-  # > python -m pip install numpy
-  # > python -m pip install --upgrade -r build/functional-test-requirements.txt
-  # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
-  - bash: |
-      python -m pip install numpy
-      python -m pip install --upgrade -r ./build/functional-test-requirements.txt
-    displayName: 'pip install functional requirements'
+  - script: |
+      conda env create --quiet --force --file ../conda_env_1.yml
+      conda env create --quiet --force --file ../conda_env_2.yml
+    displayName: 'Create CONDA Environments'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
   # Downgrade pywin32 on Windows due to bug https://github.com/jupyter/notebook/issues/4909
