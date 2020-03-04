@@ -39,10 +39,12 @@ export class InterpreterPathService implements IInterpreterPathService {
         let workspaceFolderSetting: IPersistentState<string | undefined> | undefined;
         let workspaceSetting: IPersistentState<string | undefined> | undefined;
         if (resource) {
-            workspaceFolderSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
-                this.getSettingKey(resource, ConfigurationTarget.WorkspaceFolder),
-                undefined
-            );
+            workspaceFolderSetting = this.workspaceService.workspaceFile
+                ? this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
+                      this.getSettingKey(resource, ConfigurationTarget.WorkspaceFolder),
+                      undefined
+                  )
+                : undefined;
             workspaceSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
                 this.getSettingKey(resource, ConfigurationTarget.Workspace),
                 undefined
@@ -107,11 +109,10 @@ export class InterpreterPathService implements IInterpreterPathService {
                 if (!resource) {
                     throw new Error('No resource provided');
                 }
-                const fsPathKey = this.workspaceService.workspaceFile
-                    ? this.workspaceService.workspaceFile.fsPath
+                settingKey = this.workspaceService.workspaceFile
+                    ? `WORKSPACE_INTERPRETER_PATH_${this.workspaceService.workspaceFile.fsPath}`
                     : // Only a single folder is opened, use fsPath of the folder as key
-                      folderKey;
-                settingKey = `WORKSPACE_INTERPRETER_PATH_${fsPathKey}`;
+                      `WORKSPACE_FOLDER_INTERPRETER_PATH_${folderKey}`;
             }
         }
         return settingKey;

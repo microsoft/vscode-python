@@ -11,7 +11,7 @@ export class WorkspacePythonPathUpdaterService implements IPythonPathUpdaterServ
         private readonly workspaceService: IWorkspaceService,
         private readonly interpreterPathService: IInterpreterPathService
     ) {}
-    public async updatePythonPath(pythonPath: string): Promise<void> {
+    public async updatePythonPath(pythonPath: string | undefined): Promise<void> {
         const pythonConfig = this.workspaceService.getConfiguration('python', this.workspace);
         const pythonPathValue = this.inDeprecatePythonPathExperiment
             ? this.interpreterPathService.inspectInterpreterPath(this.workspace)
@@ -20,7 +20,7 @@ export class WorkspacePythonPathUpdaterService implements IPythonPathUpdaterServ
         if (pythonPathValue && pythonPathValue.workspaceValue === pythonPath) {
             return;
         }
-        if (pythonPath.startsWith(this.workspace.fsPath)) {
+        if (pythonPath && pythonPath.startsWith(this.workspace.fsPath)) {
             pythonPath = path.relative(this.workspace.fsPath, pythonPath);
         }
         if (this.inDeprecatePythonPathExperiment) {

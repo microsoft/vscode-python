@@ -64,6 +64,9 @@ export class InterpreterSelector implements IInterpreterSelector {
         }
         const configTarget = targetConfig.configTarget;
         const wkspace = targetConfig.folderUri;
+        const hasfolders = this.workspaceService.hasWorkspaceFolders;
+        const folders = this.workspaceService.workspaceFolders;
+        const workspaceFile = this.workspaceService.workspaceFile;
 
         await this.pythonPathUpdaterService.updatePythonPath(undefined, configTarget, 'ui', wkspace);
     }
@@ -163,7 +166,7 @@ export class InterpreterSelector implements IInterpreterSelector {
                 configTarget: ConfigurationTarget.Global
             };
         }
-        if (this.workspaceService.workspaceFolders.length === 1) {
+        if (!this.workspaceService.workspaceFile && this.workspaceService.workspaceFolders.length === 1) {
             return {
                 folderUri: this.workspaceService.workspaceFolders[0].uri,
                 configTarget: ConfigurationTarget.WorkspaceFolder
