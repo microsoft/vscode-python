@@ -4,8 +4,15 @@ import '../../common/extensions';
 
 import { inject, injectable, named } from 'inversify';
 
+import { CollectNodeLSRequestTiming } from '../../common/experimentGroups';
 import { traceDecorators } from '../../common/logger';
-import { BANNER_NAME_LS_SURVEY, IDisposable, IPythonExtensionBanner, Resource } from '../../common/types';
+import {
+    BANNER_NAME_LS_SURVEY,
+    IDisposable,
+    IExperimentsManager,
+    IPythonExtensionBanner,
+    Resource
+} from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -92,10 +99,16 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         const folderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
         const versionPair = await folderService.getCurrentLanguageServerDirectory();
 
+        const expManager = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        const collect = expManager.inExperiment(CollectNodeLSRequestTiming.experiment);
+        if (!collect) {
+            expManager.sendTelemetryIfInExperiment(CollectNodeLSRequestTiming.control);
+        }
+
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
             this.surveyBanner,
-            true,
+            collect,
             LanguageServerType.Node,
             versionPair?.version.format()
         );

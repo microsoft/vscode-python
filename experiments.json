@@ -124,5 +124,17 @@
         "salt": "CollectLSRequestTiming",
         "min": 10,
         "max": 100
+    },
+    {
+        "name": "CollectNodeLSRequestTiming - experiment",
+        "salt": "CollectNodeLSRequestTiming",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "name": "CollectNodeLSRequestTiming - control",
+        "salt": "CollectNodeLSRequestTiming",
+        "min": 0,
+        "max": 0
     }
 ]

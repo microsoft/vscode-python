@@ -103,9 +103,11 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         const folderService = this.serviceContainer.get<ILanguageServerFolderService>(ILanguageServerFolderService);
         const versionPair = await folderService.getCurrentLanguageServerDirectory();
 
-        const collect = this.serviceContainer
-            .get<IExperimentsManager>(IExperimentsManager)
-            .inExperiment(CollectLSRequestTiming.experiment);
+        const expManager = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        const collect = expManager.inExperiment(CollectLSRequestTiming.experiment);
+        if (!collect) {
+            expManager.sendTelemetryIfInExperiment(CollectLSRequestTiming.control);
+        }
 
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(
