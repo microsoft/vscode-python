@@ -727,6 +727,29 @@ export interface IEventNamePropertyMapping {
          */
         hashedName: string;
     };
+    [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
+    [Telemetry.HashedNotebookCellOutputMimeTypePerf]: never | undefined;
+    [Telemetry.HashedCellOutputMimeType]: {
+        /**
+         * Hash of the cell output mimetype
+         *
+         * @type {string}
+         */
+        hashedName: string;
+        hasText: boolean;
+        hasLatex: boolean;
+        hasHtml: boolean;
+        hasSvg: boolean;
+        hasXml: boolean;
+        hasJson: boolean;
+        hasImage: boolean;
+        hasGeo: boolean;
+        hasPlotly: boolean;
+        hasVega: boolean;
+        hasWidget: boolean;
+        hasJupyter: boolean;
+        hasVnd: boolean;
+    };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
      * Telemetry event sent with details of selection in prompt
