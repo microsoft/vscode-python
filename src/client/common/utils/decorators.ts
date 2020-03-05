@@ -2,6 +2,7 @@
 
 import { ProgressLocation, ProgressOptions, Uri, window } from 'vscode';
 import '../../common/extensions';
+import { IServiceContainer } from '../../ioc/types';
 import { isTestExecution } from '../constants';
 import { traceError, traceVerbose } from '../logger';
 import { Resource } from '../types';
@@ -131,14 +132,16 @@ type PromiseFunctionWithFirstArgOfResource = (...any: [Uri | undefined, ...any[]
 export function clearCachedResourceSpecificIngterpreterData(
     key: string,
     resource: Resource,
+    serviceContainer: IServiceContainer | undefined,
     vscode: VSCodeType = require('vscode')
 ) {
-    const cacheStore = new InMemoryInterpreterSpecificCache(key, 0, [resource], vscode);
+    const cacheStore = new InMemoryInterpreterSpecificCache(key, 0, [resource], vscode, serviceContainer);
     cacheStore.clear();
 }
 export function cacheResourceSpecificInterpreterData(
     key: string,
     expiryDurationMs: number,
+    serviceContainer: IServiceContainer | undefined,
     vscode: VSCodeType = require('vscode')
 ) {
     return function(
@@ -148,7 +151,17 @@ export function cacheResourceSpecificInterpreterData(
     ) {
         const originalMethod = descriptor.value!;
         descriptor.value = async function(...args: [Uri | undefined, ...any[]]) {
-            const cacheStore = new InMemoryInterpreterSpecificCache(key, expiryDurationMs, args, vscode);
+            if (!serviceContainer) {
+                traceError('No service container passed to `cacheResourceSpecificInterpreterData` decorator');
+                return;
+            }
+            const cacheStore = new InMemoryInterpreterSpecificCache(
+                key,
+                expiryDurationMs,
+                args,
+                vscode,
+                serviceContainer
+            );
             if (cacheStore.hasData) {
                 traceVerbose(`Cached data exists ${key}, ${args[0] ? args[0].fsPath : '<No Resource>'}`);
                 return Promise.resolve(cacheStore.data);

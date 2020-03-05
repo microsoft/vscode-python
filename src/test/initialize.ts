@@ -8,6 +8,7 @@ import {
     IExtensionTestApi,
     PYTHON_PATH,
     resetGlobalPythonPathSetting,
+    setGlobalInterpreterPath,
     setPythonPathInWorkspaceRoot
 } from './common';
 import { IS_SMOKE_TEST, PVSC_EXTENSION_ID_FOR_TESTS } from './constants';
@@ -28,6 +29,7 @@ export async function initializePython() {
     await clearPythonPathInWorkspaceFolder(dummyPythonFile);
     await clearPythonPathInWorkspaceFolder(workspace3Uri);
     await setPythonPathInWorkspaceRoot(PYTHON_PATH);
+    await setGlobalInterpreterPath(PYTHON_PATH);
 }
 
 // tslint:disable-next-line:no-any

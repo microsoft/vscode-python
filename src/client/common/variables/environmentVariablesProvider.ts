@@ -3,6 +3,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri } from 'vscode';
+import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { IPlatformService } from '../platform/types';
 import { IConfigurationService, ICurrentProcess, IDisposableRegistry } from '../types';
@@ -10,6 +11,7 @@ import { cacheResourceSpecificInterpreterData, clearCachedResourceSpecificIngter
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 const cacheDuration = 60 * 60 * 1000;
+let serviceContainerForDecorator: IServiceContainer | undefined;
 @injectable()
 export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvider, Disposable {
     public trackedWorkspaceFolders = new Set<string>();
@@ -22,8 +24,10 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(ICurrentProcess) private process: ICurrentProcess
+        @inject(ICurrentProcess) private process: ICurrentProcess,
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
+        serviceContainerForDecorator = this.serviceContainer;
         disposableRegistry.push(this);
         this.changeEventEmitter = new EventEmitter();
         const disposable = this.workspaceService.onDidChangeConfiguration(this.configurationChanged, this);
@@ -42,7 +46,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             }
         });
     }
-    @cacheResourceSpecificInterpreterData('getEnvironmentVariables', cacheDuration)
+    @cacheResourceSpecificInterpreterData('getEnvironmentVariables', cacheDuration, serviceContainerForDecorator)
     public async getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
         let mergedVars = await this.getCustomEnvironmentVariables(resource);
         if (!mergedVars) {
@@ -94,8 +98,16 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         return workspaceFolder ? workspaceFolder.uri : undefined;
     }
     private onEnvironmentFileChanged(workspaceFolderUri?: Uri) {
-        clearCachedResourceSpecificIngterpreterData('getEnvironmentVariables', workspaceFolderUri);
-        clearCachedResourceSpecificIngterpreterData('CustomEnvironmentVariables', workspaceFolderUri);
+        clearCachedResourceSpecificIngterpreterData(
+            'getEnvironmentVariables',
+            workspaceFolderUri,
+            serviceContainerForDecorator
+        );
+        clearCachedResourceSpecificIngterpreterData(
+            'CustomEnvironmentVariables',
+            workspaceFolderUri,
+            serviceContainerForDecorator
+        );
         this.changeEventEmitter.fire(workspaceFolderUri);
     }
 }

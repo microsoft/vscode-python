@@ -11,9 +11,11 @@ import * as path from 'path';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
+import { DeprecatePythonPath } from '../client/common/experimentGroups';
 import { IProcessService } from '../client/common/process/types';
-import { IPythonSettings, Resource } from '../client/common/types';
+import { IExperimentsManager, IInterpreterPathService, IPythonSettings, Resource } from '../client/common/types';
 import { PythonInterpreter } from '../client/interpreter/contracts';
+import { ServiceContainer } from '../client/ioc/container';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop } from './core';
@@ -108,9 +110,18 @@ export async function clearPythonPathInWorkspaceFolder(resource: string | Uri) {
     return retryAsync(setPythonPathInWorkspace)(resource, vscode.ConfigurationTarget.WorkspaceFolder);
 }
 
-export async function setPythonPathInWorkspaceRoot(pythonPath: string) {
+export async function setPythonPathInWorkspaceRoot(pythonPath: string, serviceContainer?: ServiceContainer) {
     const vscode = require('vscode') as typeof import('vscode');
-    return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, pythonPath);
+    return retryAsync(setPythonPathInWorkspace)(
+        undefined,
+        vscode.ConfigurationTarget.Workspace,
+        pythonPath,
+        serviceContainer
+    );
+}
+
+export async function setGlobalInterpreterPath(pythonPath: string) {
+    return retryAsync(setGlobalPythonPath)(pythonPath);
 }
 
 export async function restorePythonPathInWorkspaceRoot() {
@@ -203,7 +214,8 @@ async function setAutoSaveDelay(resource: string | Uri | undefined, config: Conf
 async function setPythonPathInWorkspace(
     resource: string | Uri | undefined,
     config: ConfigurationTarget,
-    pythonPath?: string
+    pythonPath?: string,
+    serviceContainer?: ServiceContainer
 ) {
     const vscode = require('vscode') as typeof import('vscode');
     if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
@@ -211,7 +223,17 @@ async function setPythonPathInWorkspace(
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
     const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
-    const value = settings.inspect<string>('pythonPath');
+    let interpreterPathService: IInterpreterPathService | undefined;
+    let inExperiment: boolean | undefined;
+    if (serviceContainer) {
+        interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
+        const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        inExperiment = abExperiments.inExperiment(DeprecatePythonPath.experiment);
+    }
+    const value =
+        inExperiment && interpreterPathService
+            ? interpreterPathService.inspectInterpreterPath(resourceUri)
+            : settings.inspect<string>('pythonPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (value && value[prop] !== pythonPath) {
@@ -223,6 +245,14 @@ async function restoreGlobalPythonPathSetting(): Promise<void> {
     const vscode = require('vscode') as typeof import('vscode');
     const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
     await pythonConfig.update('pythonPath', undefined, true);
+    await pythonConfig.update('defaultInterpreterPath', undefined, true);
+    await disposePythonSettings();
+}
+
+async function setGlobalPythonPath(pythonPath?: string): Promise<void> {
+    const vscode = require('vscode') as typeof import('vscode');
+    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
+    await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
     await disposePythonSettings();
 }
 
