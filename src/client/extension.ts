@@ -73,8 +73,8 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
 
 export function deactivate(): Thenable<void> {
     // Make sure to shutdown anybody who needs it.
-    if (ACTIVATED_SERVICE_CONTAINER) {
-        const registry = ACTIVATED_SERVICE_CONTAINER.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
+    if (activatedServiceContainer) {
+        const registry = activatedServiceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
         if (registry) {
             return registry.dispose();
         }
@@ -139,9 +139,9 @@ function notifyUser(msg: string) {
     try {
         // tslint:disable-next-line:no-any
         let appShell: IAppShell = (window as any) as IAppShell;
-        if (ACTIVATED_SERVICE_CONTAINER) {
+        if (activatedServiceContainer) {
             // tslint:disable-next-line:no-any
-            appShell = (ACTIVATED_SERVICE_CONTAINER.get<IApplicationShell>(IApplicationShell) as any) as IAppShell;
+            appShell = (activatedServiceContainer.get<IApplicationShell>(IApplicationShell) as any) as IAppShell;
         }
         appShell.showErrorMessage(msg).ignoreErrors();
     } catch (ex) {

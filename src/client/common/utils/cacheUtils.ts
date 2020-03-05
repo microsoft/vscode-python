@@ -7,9 +7,7 @@
 
 import { Uri } from 'vscode';
 import '../../common/extensions';
-import { ACTIVATED_SERVICE_CONTAINER } from '../../extension';
-import { DeprecatePythonPath } from '../experimentGroups';
-import { IExperimentsManager, IInterpreterPathService, Resource } from '../types';
+import { Resource } from '../types';
 
 type VSCodeType = typeof import('vscode');
 type CacheData = {
@@ -32,18 +30,7 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'))
     if (!section) {
         return 'python';
     }
-    let interpreterPathService: IInterpreterPathService | undefined;
-    let inExperiment: boolean | undefined;
-    if (ACTIVATED_SERVICE_CONTAINER) {
-        interpreterPathService = ACTIVATED_SERVICE_CONTAINER.get<IInterpreterPathService>(IInterpreterPathService);
-        const abExperiments = ACTIVATED_SERVICE_CONTAINER.get<IExperimentsManager>(IExperimentsManager);
-        inExperiment = abExperiments.inExperiment(DeprecatePythonPath.experiment);
-        abExperiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
-    }
-    const globalPythonPath =
-        inExperiment && interpreterPathService
-            ? interpreterPathService.inspectInterpreterPath(vscode.Uri.file(__filename)).globalValue || 'python'
-            : section.inspect<string>('pythonPath')!.globalValue || 'python';
+    const globalPythonPath = section.inspect<string>('pythonPath')!.globalValue || 'python';
     // Get the workspace related to this resource.
     if (
         !resource ||
@@ -57,9 +44,7 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'))
         return globalPythonPath;
     }
     const workspacePythonPath =
-        inExperiment && interpreterPathService
-            ? interpreterPathService.getInterpreterPath(resource)
-            : vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
+        vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
     return `${folder.uri.fsPath}-${workspacePythonPath}`;
 }
 /**
