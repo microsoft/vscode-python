@@ -23,7 +23,6 @@ import {
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { deepEqual } from 'assert';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { LanguageServerDownloader } from '../../client/activation/common/downloader';
 import { JediExtensionActivator } from '../../client/activation/jedi';
@@ -410,7 +409,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private configMap = new Map<string, MockWorkspaceConfiguration>();
     private emptyConfig = new MockWorkspaceConfiguration();
     private workspaceFolders: MockWorkspaceFolder[] = [];
-    private workspaceService: WorkspaceService | undefined;
     private defaultPythonPath: string | undefined;
 
     constructor() {
@@ -464,7 +462,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.defaultPythonPath = this.findPythonPath();
 
         // Create the workspace service first as it's used to set config values.
-        this.workspaceService = this.createWorkspaceService();
+        this.createWorkspaceService();
 
         this.registerFileSystemTypes();
         this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
