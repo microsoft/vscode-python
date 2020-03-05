@@ -15,6 +15,9 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
         throw xmlReadError;
     }
 
+    console.log('=============================');
+    console.log(xmlData);
+    console.log('=============================');
     if (fastXmlParser.validate(xmlData)) {
         const defaultOptions = {
             attributeNamePrefix: '',

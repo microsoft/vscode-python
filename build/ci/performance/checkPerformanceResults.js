@@ -33,6 +33,11 @@ fs.readFile(xmlFile, 'utf8', (xmlFileError, xmlData) => {
                 throw performanceResultsFileError;
             }
 
+            console.log('=============================');
+            console.log(xmlData);
+            console.log('=============================');
+            console.log(performanceData);
+            console.log('=============================');
             const resultsJson = fastXmlParser.parse(xmlData, defaultOptions);
             const performanceJson = JSON.parse(performanceData);
 
