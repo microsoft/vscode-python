@@ -18,7 +18,6 @@ import {
     FileSystemWatcher,
     Memento,
     Uri,
-    WorkspaceConfiguration,
     WorkspaceFolder,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
@@ -349,21 +348,31 @@ import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
+    public get workingInterpreter() {
+        return this.workingPython;
+    }
+
+    public get workingInterpreter2() {
+        return this.workingPython2;
+    }
+
+    public get onContextSet(): Event<{ name: string; value: boolean }> {
+        return this.contextSetEvent.event;
+    }
+
+    public get mockJupyter(): MockJupyterManager | undefined {
+        return this.jupyterMock ? this.jupyterMock.getManager() : undefined;
+    }
     public webPanelListener: IWebPanelMessageListener | undefined;
     public readonly useCommandFinderForJupyterServer = false;
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
     public wrapperCreatedPromise: Deferred<boolean> | undefined;
     public postMessage: ((ev: MessageEvent) => void) | undefined;
-    public mockedWorkspaceConfig!: WorkspaceConfiguration;
     public applicationShell!: TypeMoq.IMock<IApplicationShell>;
     // tslint:disable-next-line:no-any
     public datascience!: TypeMoq.IMock<IDataScience>;
+    public pythonWorkspaceConfig = new MockWorkspaceConfiguration();
     private missedMessages: any[] = [];
-    private pythonSettings = new (class extends PythonSettings {
-        public fireChangeEvent() {
-            this.changed.fire();
-        }
-    })(undefined, new MockAutoSelectionService());
     private commandManager: MockCommandManager = new MockCommandManager();
     private setContexts: Record<string, boolean> = {};
     private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{
@@ -398,6 +407,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private webPanelProvider: TypeMoq.IMock<IWebPanelProvider> | undefined;
     private settingsMap = new Map<string, any>();
+    private workspaceFolders: WorkspaceFolder[] = [];
+    private workspaceService: WorkspaceService | undefined;
 
     constructor() {
         super();
@@ -405,18 +416,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
         this.shouldMockJupyter = !isRollingBuild;
         this.asyncRegistry = new AsyncDisposableRegistry();
-    }
-
-    public get workingInterpreter() {
-        return this.workingPython;
-    }
-
-    public get workingInterpreter2() {
-        return this.workingPython2;
-    }
-
-    public get onContextSet(): Event<{ name: string; value: boolean }> {
-        return this.contextSetEvent.event;
     }
 
     public async dispose(): Promise<void> {
@@ -458,7 +457,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     //tslint:disable:max-func-body-length
     public registerDataScienceTypes(useCustomEditor: boolean = false) {
-        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+        // Make sure the default python path is set.
+        const pythonPath = this.findPythonPath();
+        this.pythonWorkspaceConfig.update('pythonPath', pythonPath).ignoreErrors();
 
         this.registerFileSystemTypes();
         this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
@@ -721,16 +722,18 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
         this.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, this.commandManager);
 
-        // Also setup a mock execution service and interpreter service
+        // Mock the app shell and workspace service
+        this.workspaceService = this.createWorkspaceService();
         const appShell = (this.applicationShell = TypeMoq.Mock.ofType<IApplicationShell>());
-        // const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        const workspaceService = mock(WorkspaceService);
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
         this.datascience = TypeMoq.Mock.ofType<IDataScience>();
 
+        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(this.getSettings.bind(this));
+
         // Setup default settings
-        this.pythonSettings.datascience = {
+        const pythonSettings = this.getSettings(undefined);
+        pythonSettings.datascience = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 60000,
             jupyterLaunchRetries: 3,
@@ -762,65 +765,25 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             variableQueries: [],
             jupyterCommandLineArguments: []
         };
-        this.pythonSettings.jediEnabled = false;
-        this.pythonSettings.downloadLanguageServer = false;
-
-        const workspaceConfig = (this.mockedWorkspaceConfig = mock(MockWorkspaceConfiguration));
-        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(this.getSettings.bind(this));
-        when(workspaceConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
-        when(workspaceConfig.has(anything())).thenReturn(false);
-        when((workspaceConfig as any).then).thenReturn(undefined);
-        when(workspaceService.getConfiguration(anything())).thenReturn(instance(workspaceConfig));
-        when(workspaceService.getConfiguration(anything(), anything())).thenReturn(instance(workspaceConfig));
-        when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
-        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
-
-        interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
-        const startTime = Date.now();
-        this.datascience.setup(d => d.activationStartTime).returns(() => startTime);
-
-        class MockFileSystemWatcher implements FileSystemWatcher {
-            public ignoreCreateEvents: boolean = false;
-            public ignoreChangeEvents: boolean = false;
-            public ignoreDeleteEvents: boolean = false;
-            //tslint:disable-next-line:no-any
-            public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
-                return { dispose: noop };
-            }
-            //tslint:disable-next-line:no-any
-            public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
-                return { dispose: noop };
-            }
-            //tslint:disable-next-line:no-any
-            public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
-                return { dispose: noop };
-            }
-            public dispose() {
-                noop();
-            }
-        }
-        when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(
-            new MockFileSystemWatcher()
-        );
-        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(new MockFileSystemWatcher());
-        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
-        const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
-        when(workspaceService.workspaceFolders).thenReturn([workspaceFolder]);
-        when(workspaceService.rootPath).thenReturn('~');
-
-        // Look on the path for python
-        const pythonPath = this.findPythonPath();
-
-        this.pythonSettings.pythonPath = pythonPath;
+        pythonSettings.jediEnabled = false;
+        pythonSettings.downloadLanguageServer = false;
         const folders = ['Envs', '.virtualenvs'];
-        this.pythonSettings.venvFolders = folders;
-        this.pythonSettings.venvPath = path.join('~', 'foo');
-        this.pythonSettings.terminal = {
+        pythonSettings.venvFolders = folders;
+        pythonSettings.venvPath = path.join('~', 'foo');
+        pythonSettings.terminal = {
             executeInFileDir: false,
             launchArgs: [],
             activateEnvironment: true,
             activateEnvInCurrentTerminal: false
         };
+
+        // Once we have our initial settings, make them the workspace config values
+        const keys = [...Object.keys(pythonSettings)];
+        keys.forEach(k => this.pythonWorkspaceConfig.update(k, pythonSettings[k]));
+
+        interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
+        const startTime = Date.now();
+        this.datascience.setup(d => d.activationStartTime).returns(() => startTime);
 
         this.serviceManager.addSingleton<IEnvironmentVariablesProvider>(
             IEnvironmentVariablesProvider,
@@ -829,7 +792,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
-        this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
         this.serviceManager.addSingletonInstance<IConfigurationService>(
             IConfigurationService,
             configurationService.object
@@ -1025,9 +987,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             const condaService = TypeMoq.Mock.ofType<ICondaService>();
             this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
             condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
-            condaService
-                .setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
-                .returns(() => Promise.resolve(false));
+            condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
             condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);
 
             this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
@@ -1103,9 +1063,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (this.mockJupyter) {
             this.addInterpreter(this.workingPython2, SupportedCommands.all);
             this.addInterpreter(this.workingPython, SupportedCommands.all);
-        } else {
-            // When not mocking jupyter, see if the active intepreter supports jupyter or not
-            this.forceJupyterInterpreter();
         }
     }
     public setFileContents(uri: Uri, contents: string) {
@@ -1118,6 +1075,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const activationServices = this.serviceManager.getAll<IExtensionSingleActivationService>(
             IExtensionSingleActivationService
         );
+
         await Promise.all(activationServices.map(a => a.activate()));
 
         // Then force our interpreter to be one that supports jupyter (unless in a mock state when we don't have to)
@@ -1125,8 +1083,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             const interpreterService = this.serviceManager.get<IInterpreterService>(IInterpreterService);
             const activeInterpreter = await interpreterService.getActiveInterpreter();
             if (!activeInterpreter || !(await this.hasJupyter(activeInterpreter))) {
-                const jupyterInterpreters = await this.getJupyterInterpreters();
-                await this.addNewSetting(undefined);
+                const list = await this.getJupyterInterpreters();
+                this.forceSettingsChanged(undefined, list[0].path);
+
+                // Also set this as the interpreter to use for jupyter
+                await this.serviceManager
+                    .get<JupyterInterpreterService>(JupyterInterpreterService)
+                    .setAsSelectedInterpreter(list[0]);
             }
         }
     }
@@ -1204,12 +1167,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.mountReactControl(mount);
     }
 
-    public createMoqWorkspaceFolder(folderPath: string) {
-        const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
-        folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
-        return folder.object;
-    }
-
     public getContext(name: string): boolean {
         if (this.setContexts.hasOwnProperty(name)) {
             return this.setContexts[name];
@@ -1219,14 +1176,24 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public getSettings(resource?: Uri) {
-        const setting = resource ? this.settingsMap.get(resource.toString()) : this.pythonSettings;
-        return setting ? setting : this.pythonSettings;
+        const key = this.getResourceKey(resource);
+        let setting = this.settingsMap.get(key);
+        if (!setting) {
+            setting = new (class extends PythonSettings {
+                public fireChangeEvent() {
+                    this.changed.fire();
+                }
+            })(resource, new MockAutoSelectionService(), this.serviceManager.get<IWorkspaceService>(IWorkspaceService));
+            this.settingsMap.set(key, setting);
+        }
+        return setting;
     }
 
-    public forceSettingsChanged(newPath: string, datascienceSettings?: IDataScienceSettings) {
-        this.pythonSettings.pythonPath = newPath;
-        this.pythonSettings.datascience = datascienceSettings ? datascienceSettings : this.pythonSettings.datascience;
-        this.pythonSettings.fireChangeEvent();
+    public forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IDataScienceSettings) {
+        const defaultSettings = this.getSettings(resource);
+        defaultSettings.pythonPath = newPath;
+        defaultSettings.datascience = datascienceSettings ? datascienceSettings : defaultSettings.datascience;
+        defaultSettings.fireChangeEvent();
         this.configChangeEvent.fire({
             affectsConfiguration(_s: string, _r?: Uri): boolean {
                 return true;
@@ -1241,21 +1208,24 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return resolved.filter(r => r) as PythonInterpreter[];
     }
 
-    public async addNewSetting(resource: Uri | undefined, pythonPath: string | undefined) {
-        // Force a new config setting to appear.
-        if (!pythonPath) {
-            const active = await this.get<IInterpreterService>(IInterpreterService).getActiveInterpreter(undefined);
-            const list = await this.getJupyterInterpreters();
-            pythonPath = list.filter(l => l.path !== active?.path)[0].path;
-        }
-        if (pythonPath) {
-            const newSettings = { ...this.pythonSettings, pythonPath };
-            this.settingsMap.set(resource.toString(), newSettings);
-        }
+    public addWorkspaceFolder(folderPath: string) {
+        const index = this.workspaceFolders.length;
+        const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
+        folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
+        folder.setup(f => f.index).returns(() => index);
+        folder.setup(f => f.name).returns(() => folderPath);
+        this.workspaceFolders.push(folder.object);
+        return folder.object;
     }
 
-    public get mockJupyter(): MockJupyterManager | undefined {
-        return this.jupyterMock ? this.jupyterMock.getManager() : undefined;
+    public addResourceToFolder(resource: Uri, folderPath: string) {
+        let folder = this.workspaceFolders.find(f => f.uri.fsPath === folderPath);
+        if (!folder) {
+            folder = this.addWorkspaceFolder(folderPath);
+        }
+        if (this.workspaceService) {
+            when(this.workspaceService.getWorkspaceFolder(resource)).thenReturn(folder);
+        }
     }
 
     public get<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, name?: string | number | symbol): T {
@@ -1302,6 +1272,56 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
 
+    private createWorkspaceService() {
+        class MockFileSystemWatcher implements FileSystemWatcher {
+            public ignoreCreateEvents: boolean = false;
+            public ignoreChangeEvents: boolean = false;
+            public ignoreDeleteEvents: boolean = false;
+            //tslint:disable-next-line:no-any
+            public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            //tslint:disable-next-line:no-any
+            public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            //tslint:disable-next-line:no-any
+            public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            public dispose() {
+                noop();
+            }
+        }
+
+        const workspaceService = mock(WorkspaceService);
+        this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
+        when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
+
+        // Create another config for other parts of the workspace config.
+        const otherConfig = mock(MockWorkspaceConfiguration);
+        when(otherConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
+        when(otherConfig.has(anything())).thenReturn(false);
+        when(workspaceService.getConfiguration(anything())).thenCall(key =>
+            key === 'python' ? this.pythonWorkspaceConfig : instance(otherConfig)
+        );
+        when(workspaceService.getConfiguration(anything(), anything())).thenCall(key =>
+            key === 'python' ? this.pythonWorkspaceConfig : instance(otherConfig)
+        );
+        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+
+        when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(
+            new MockFileSystemWatcher()
+        );
+        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(new MockFileSystemWatcher());
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+        when(workspaceService.workspaceFolders).thenReturn(this.workspaceFolders);
+        when(workspaceService.rootPath).thenReturn(testWorkspaceFolder);
+        this.addWorkspaceFolder(testWorkspaceFolder);
+        return workspaceService;
+    }
+
     private getResourceKey(resource: Resource): string {
         const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
         const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
@@ -1310,8 +1330,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private async hasJupyter(interpreter: PythonInterpreter): Promise<boolean | undefined> {
         try {
-            const installer = this.serviceManager.get<IInstaller>(IInstaller);
-            return installer.isInstalled(Product.ipykernel, interpreter);
+            const dependencyChecker = this.serviceManager.get<JupyterInterpreterDependencyService>(
+                JupyterInterpreterDependencyService
+            );
+            return dependencyChecker.areDependenciesInstalled(interpreter);
         } catch (ex) {
             return false;
         }

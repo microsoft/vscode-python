@@ -54,6 +54,7 @@ suite('DataScience Debugger tests', () => {
         ioc = createContainer();
         mockDebuggerService = ioc.serviceManager.get<IDebugService>(IDebugService) as MockDebuggerService;
         processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
+        return ioc.activate();
     });
 
     teardown(async () => {

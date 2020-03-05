@@ -19,9 +19,10 @@ suite('DataScience Intellisense tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        return ioc.activate();
     });
 
     teardown(async () => {
@@ -153,7 +154,7 @@ suite('DataScience Intellisense tests', () => {
             const interpreters = await interpreterService.getInterpreters(undefined);
             if (interpreters.length > 1 && oldActive) {
                 const firstOther = interpreters.filter(i => i.path !== oldActive.path);
-                ioc.forceSettingsChanged(firstOther[0].path);
+                ioc.forceSettingsChanged(undefined, firstOther[0].path);
                 const active = await interpreterService.getActiveInterpreter(undefined);
                 assert.notDeepEqual(active, oldActive, 'Should have changed interpreter');
             }

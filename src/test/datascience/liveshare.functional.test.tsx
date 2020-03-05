@@ -39,9 +39,10 @@ suite('DataScience LiveShare tests', () => {
     let guestContainer: DataScienceIocContainer;
     let lastErrorMessage: string | undefined;
 
-    setup(() => {
+    setup(async () => {
         hostContainer = createContainer(vsls.Role.Host);
         guestContainer = createContainer(vsls.Role.Guest);
+        return Promise.all([hostContainer.activate(), guestContainer.activate()]);
     });
 
     teardown(async () => {

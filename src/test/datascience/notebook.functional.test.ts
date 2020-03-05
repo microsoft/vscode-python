@@ -68,9 +68,10 @@ suite('DataScience notebook tests', () => {
     let modifiedConfig = false;
     const baseUri = Uri.file('foo.py');
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        await ioc.activate();
     });
 
     teardown(async () => {
@@ -923,7 +924,7 @@ suite('DataScience notebook tests', () => {
         }
 
         // Force a settings changed so that all of the cached data is cleared
-        ioc.forceSettingsChanged('/usr/bin/test3/python');
+        ioc.forceSettingsChanged(undefined, '/usr/bin/test3/python');
 
         assert.ok(
             await testCancelableMethod(

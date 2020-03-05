@@ -18,7 +18,7 @@ suite('DataScience Error Handler Functional Tests', () => {
     let ioc: DataScienceIocContainer;
     let channels: TypeMoq.IMock<IInstallationChannelManager>;
     let stubbedInstallMissingDependencies: sinon.SinonStub<[(JupyterInstallError | undefined)?], Promise<void>>;
-    setup(() => {
+    setup(async () => {
         stubbedInstallMissingDependencies = sinon.stub(
             JupyterInterpreterSubCommandExecutionService.prototype,
             'installMissingDependencies'
@@ -26,6 +26,7 @@ suite('DataScience Error Handler Functional Tests', () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         ioc = modifyContainer();
+        return ioc.activate();
     });
 
     teardown(async () => {

@@ -13,6 +13,7 @@ import { IApplicationShell, IDocumentManager } from '../../client/common/applica
 import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
 import { EditorContexts } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -64,9 +65,10 @@ suite('DataScience Interactive Window output tests', () => {
     let ioc: DataScienceIocContainer;
     const defaultCellMarker = '# %%';
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        return ioc.activate();
     });
 
     teardown(async () => {
@@ -87,7 +89,7 @@ suite('DataScience Interactive Window output tests', () => {
         const window = await getOrCreateInteractiveWindow(ioc);
         await window.show();
         const update = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
-        ioc.forceSettingsChanged(ioc.getSettings().pythonPath, newSettings);
+        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, newSettings);
         return update;
     }
 
@@ -602,10 +604,13 @@ Type:      builtin_function_or_method`,
 
                 // Add another python path
                 const secondUri = Uri.file('bar.py');
-                await ioc.addNewSetting(
+                ioc.addResourceToFolder(secondUri, path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience2'));
+                ioc.forceSettingsChanged(
                     secondUri,
                     interpreters.filter(i => i.path !== activeInterpreter?.path)[0].path
                 );
+
+                // Then open a second time and make sure it uses this new path
                 const newWrapper = mountWebView(ioc, 'interactive');
                 assert.ok(newWrapper, 'Could not mount a second time');
                 const newWindow = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
