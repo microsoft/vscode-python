@@ -4,6 +4,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { expect } from 'chai';
 import { sha256 } from 'hash.js';
+// tslint:disable-next-line: match-default-export-name
 import rewiremock from 'rewiremock';
 import { instance, mock, when } from 'ts-mockito';
 import { EventEmitter, Uri } from 'vscode';
