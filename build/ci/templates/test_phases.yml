@@ -104,7 +104,15 @@ steps:
   - bash: |
       echo "##vso[task.prependpath]$CONDA/bin"
     displayName: 'Add conda to the path'
-    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), ne(variables['Agent.Os'], 'Windows_NT'))
+
+  # Add CONDA to the path so anaconda works (windows)
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - powershell: |
+      Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+    displayName: 'Add conda to the path'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'))
 
   # On MAC let CONDA update install paths
   #
@@ -124,14 +132,23 @@ steps:
     displayName: 'Create CONDA Environments'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
-  # Run the pip installs in the two environments
+  # Run the pip installs in the two environments (darwin linux)
   - bash: |
       source activate conda_env_1
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
       source activate conda_env_2
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
     displayName: 'Install Pip requirements for CONDA envs'
-    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), ne(variables['Agent.Os'], 'Windows_NT'))
+
+  # Run the pip installs in the two environments (windows)
+  - script: |
+      call activate conda_env_1
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      call activate conda_env_2
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+    displayName: 'Install Pip requirements for CONDA envs'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'))
 
   # Downgrade pywin32 on Windows due to bug https://github.com/jupyter/notebook/issues/4909
   #
