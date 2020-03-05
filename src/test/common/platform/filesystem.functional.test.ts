@@ -256,6 +256,17 @@ suite('FileSystem - raw', () => {
     });
 
     suite('createWriteStream', () => {
+        setup(function() {
+            if (OSX) {
+                // tslint:disable-next-line:no-suspicious-comment
+                // TODO(GH-10031) This appears to be producing
+                // false negative test results, so we're skipping
+                // it for now.
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+        });
+
         test('returns the correct WriteStream', async () => {
             const filename = await fix.resolve('x/y/z/spam.py');
             const expected = fs.createWriteStream(filename);
@@ -290,15 +301,7 @@ suite('FileSystem - raw', () => {
             await assertFileText(filename, data);
         });
 
-        test('overwrites existing file', async function() {
-            if (OSX) {
-                // tslint:disable-next-line:no-suspicious-comment
-                // TODO(GH-10031) This appears to be producing
-                // false negative test results, so we're skipping
-                // it for now.
-                // tslint:disable-next-line:no-invalid-this
-                this.skip();
-            }
+        test('overwrites existing file', async () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const data = 'line1\nline2\n';
 
