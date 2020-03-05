@@ -240,8 +240,9 @@
             "env": {
                 // Remove `X` prefix to test with real python (for DS functional tests).
                 "XVSCODE_PYTHON_ROLLING": "1",
+                // Remove 'X' to turn on all logging in the debug output
+                "XVSC_PYTHON_FORCE_LOGGING": "1",
                 // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
-                // Do not use a conda environment (as it needs to be activated and the like).
                 "XCI_PYTHON_PATH": "<Python Path>"
             },
             "outFiles": [

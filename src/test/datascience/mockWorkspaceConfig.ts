@@ -9,6 +9,23 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
     // tslint:disable: no-any
     private values = new Map<string, any>();
 
+    constructor(defaultSettings?: any) {
+        if (defaultSettings) {
+            const keys = [...Object.keys(defaultSettings)];
+            keys.forEach(k => this.values.set(k, defaultSettings[k]));
+        }
+
+        // Special case python path (not in the object)
+        if (defaultSettings && defaultSettings.pythonPath) {
+            this.values.set('pythonPath', defaultSettings.pythonPath);
+        }
+
+        // Special case datascience. Not the same case
+        if (defaultSettings && defaultSettings.datascience) {
+            this.values.set('dataScience', defaultSettings.datascience);
+        }
+    }
+
     public get<T>(key: string, defaultValue?: T): T | undefined {
         // tslint:disable-next-line: use-named-parameter
         if (this.values.has(key)) {

@@ -23,6 +23,7 @@ import {
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
+import { deepEqual } from 'assert';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { LanguageServerDownloader } from '../../client/activation/common/downloader';
 import { JediExtensionActivator } from '../../client/activation/jedi';
@@ -146,7 +147,6 @@ import {
     IPersistentStateFactory,
     IPythonExtensionBanner,
     IsWindows,
-    Product,
     ProductType,
     Resource,
     WORKSPACE_MEMENTO
@@ -342,6 +342,7 @@ import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisO
 import { MockLanguageServerProxy } from './mockLanguageServerProxy';
 import { MockLiveShareApi } from './mockLiveShare';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
+import { MockWorkspaceFolder } from './mockWorkspaceFolder';
 import { blurWindow, createMessageEvent } from './reactHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
@@ -371,7 +372,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public applicationShell!: TypeMoq.IMock<IApplicationShell>;
     // tslint:disable-next-line:no-any
     public datascience!: TypeMoq.IMock<IDataScience>;
-    public pythonWorkspaceConfig = new MockWorkspaceConfiguration();
     private missedMessages: any[] = [];
     private commandManager: MockCommandManager = new MockCommandManager();
     private setContexts: Record<string, boolean> = {};
@@ -407,8 +407,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private webPanelProvider: TypeMoq.IMock<IWebPanelProvider> | undefined;
     private settingsMap = new Map<string, any>();
-    private workspaceFolders: WorkspaceFolder[] = [];
+    private configMap = new Map<string, MockWorkspaceConfiguration>();
+    private emptyConfig = new MockWorkspaceConfiguration();
+    private workspaceFolders: MockWorkspaceFolder[] = [];
     private workspaceService: WorkspaceService | undefined;
+    private defaultPythonPath: string | undefined;
 
     constructor() {
         super();
@@ -458,8 +461,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     //tslint:disable:max-func-body-length
     public registerDataScienceTypes(useCustomEditor: boolean = false) {
         // Make sure the default python path is set.
-        const pythonPath = this.findPythonPath();
-        this.pythonWorkspaceConfig.update('pythonPath', pythonPath).ignoreErrors();
+        this.defaultPythonPath = this.findPythonPath();
+
+        // Create the workspace service first as it's used to set config values.
+        this.workspaceService = this.createWorkspaceService();
 
         this.registerFileSystemTypes();
         this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
@@ -722,66 +727,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
         this.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, this.commandManager);
 
-        // Mock the app shell and workspace service
-        this.workspaceService = this.createWorkspaceService();
+        // Mock the app shell
         const appShell = (this.applicationShell = TypeMoq.Mock.ofType<IApplicationShell>());
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
-        const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
         this.datascience = TypeMoq.Mock.ofType<IDataScience>();
 
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(this.getSettings.bind(this));
 
-        // Setup default settings
-        const pythonSettings = this.getSettings(undefined);
-        pythonSettings.datascience = {
-            allowImportFromNotebook: true,
-            jupyterLaunchTimeout: 60000,
-            jupyterLaunchRetries: 3,
-            enabled: true,
-            jupyterServerURI: 'local',
-            // tslint:disable-next-line: no-invalid-template-strings
-            notebookFileRoot: '${fileDirname}',
-            changeDirOnImportExport: false,
-            useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000,
-            searchForJupyter: true,
-            showCellInputCode: true,
-            collapseCellInputCodeByDefault: true,
-            allowInput: true,
-            maxOutputSize: 400,
-            errorBackgroundColor: '#FFFFFF',
-            sendSelectionToInteractiveWindow: false,
-            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            variableExplorerExclude: 'module;function;builtin_function_or_method',
-            liveShareConnectionTimeout: 100,
-            enablePlotViewer: true,
-            stopOnFirstLineWhileDebugging: true,
-            stopOnError: true,
-            addGotoCodeLenses: true,
-            enableCellCodeLens: true,
-            runStartupCommands: '',
-            debugJustMyCode: true,
-            variableQueries: [],
-            jupyterCommandLineArguments: []
-        };
-        pythonSettings.jediEnabled = false;
-        pythonSettings.downloadLanguageServer = false;
-        const folders = ['Envs', '.virtualenvs'];
-        pythonSettings.venvFolders = folders;
-        pythonSettings.venvPath = path.join('~', 'foo');
-        pythonSettings.terminal = {
-            executeInFileDir: false,
-            launchArgs: [],
-            activateEnvironment: true,
-            activateEnvInCurrentTerminal: false
-        };
-
-        // Once we have our initial settings, make them the workspace config values
-        const keys = [...Object.keys(pythonSettings)];
-        keys.forEach(k => this.pythonWorkspaceConfig.update(k, pythonSettings[k]));
-
-        interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         const startTime = Date.now();
         this.datascience.setup(d => d.activationStartTime).returns(() => startTime);
 
@@ -816,8 +768,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Inform the cacheable locator service to use a static map so that it stays in memory in between tests
         CacheableLocatorPromiseCache.forceUseStatic();
-
-        this.serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
 
         const currentProcess = new CurrentProcess();
         this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);
@@ -871,6 +821,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 JupyterInterpreterSubCommandExecutionService
             );
         }
+
+        const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
+        interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
 
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {
@@ -1012,6 +965,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 IPythonInPathCommandProvider,
                 PythonInPathCommandProvider
             );
+            this.serviceManager.addSingletonInstance<IInterpreterDisplay>(
+                IInterpreterDisplay,
+                interpreterDisplay.object
+            );
         } else {
             this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
             this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
@@ -1020,6 +977,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
             // Make sure full interpreter services are available.
             registerInterpreterTypes(this.serviceManager);
+
+            // Rebind the interpreter display as we don't want to use the real one
+            this.serviceManager.rebindInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
 
             this.serviceManager.addSingleton<IJupyterSessionManagerFactory>(
                 IJupyterSessionManagerFactory,
@@ -1179,6 +1139,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const key = this.getResourceKey(resource);
         let setting = this.settingsMap.get(key);
         if (!setting) {
+            // Make sure we have the default config for this resource first.
+            this.getWorkspaceConfig('python', resource);
             setting = new (class extends PythonSettings {
                 public fireChangeEvent() {
                     this.changed.fire();
@@ -1190,10 +1152,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IDataScienceSettings) {
-        const defaultSettings = this.getSettings(resource);
-        defaultSettings.pythonPath = newPath;
-        defaultSettings.datascience = datascienceSettings ? datascienceSettings : defaultSettings.datascience;
-        defaultSettings.fireChangeEvent();
+        const settings = this.getSettings(resource);
+        settings.pythonPath = newPath;
+        settings.datascience = datascienceSettings ? datascienceSettings : settings.datascience;
+
+        // The workspace config must be updated too as a config change event will cause the data to be reread from
+        // the config.
+        const config = this.getWorkspaceConfig('python', resource);
+        config.update('pythonPath', newPath).ignoreErrors();
+        config.update('dataScience', settings.datascience).ignoreErrors();
+        settings.fireChangeEvent();
         this.configChangeEvent.fire({
             affectsConfiguration(_s: string, _r?: Uri): boolean {
                 return true;
@@ -1209,13 +1177,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public addWorkspaceFolder(folderPath: string) {
-        const index = this.workspaceFolders.length;
-        const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
-        folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
-        folder.setup(f => f.index).returns(() => index);
-        folder.setup(f => f.name).returns(() => folderPath);
-        this.workspaceFolders.push(folder.object);
-        return folder.object;
+        const workspaceFolder = new MockWorkspaceFolder(folderPath, this.workspaceFolders.length);
+        this.workspaceFolders.push(workspaceFolder);
+        return workspaceFolder;
     }
 
     public addResourceToFolder(resource: Uri, folderPath: string) {
@@ -1223,9 +1187,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (!folder) {
             folder = this.addWorkspaceFolder(folderPath);
         }
-        if (this.workspaceService) {
-            when(this.workspaceService.getWorkspaceFolder(resource)).thenReturn(folder);
-        }
+        folder.ownedResources.add(resource.toString());
     }
 
     public get<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, name?: string | number | symbol): T {
@@ -1272,6 +1234,71 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
 
+    public getWorkspaceConfig(section: string | undefined, resource?: Resource): MockWorkspaceConfiguration {
+        if (!section || section !== 'python') {
+            return this.emptyConfig;
+        }
+        const key = this.getResourceKey(resource);
+        let result = this.configMap.get(key);
+        if (!result) {
+            result = this.generatePythonWorkspaceConfig();
+            this.configMap.set(key, result);
+        }
+        return result;
+    }
+
+    private generatePythonWorkspaceConfig(): MockWorkspaceConfiguration {
+        // Create a dummy settings just to setup the workspace config
+        const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
+        pythonSettings.pythonPath = this.defaultPythonPath!;
+        pythonSettings.datascience = {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 60000,
+            jupyterLaunchRetries: 3,
+            enabled: true,
+            jupyterServerURI: 'local',
+            // tslint:disable-next-line: no-invalid-template-strings
+            notebookFileRoot: '${fileDirname}',
+            changeDirOnImportExport: false,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true,
+            allowInput: true,
+            maxOutputSize: 400,
+            errorBackgroundColor: '#FFFFFF',
+            sendSelectionToInteractiveWindow: false,
+            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
+            liveShareConnectionTimeout: 100,
+            enablePlotViewer: true,
+            stopOnFirstLineWhileDebugging: true,
+            stopOnError: true,
+            addGotoCodeLenses: true,
+            enableCellCodeLens: true,
+            runStartupCommands: '',
+            debugJustMyCode: true,
+            variableQueries: [],
+            jupyterCommandLineArguments: []
+        };
+        pythonSettings.jediEnabled = false;
+        pythonSettings.downloadLanguageServer = false;
+        const folders = ['Envs', '.virtualenvs'];
+        pythonSettings.venvFolders = folders;
+        pythonSettings.venvPath = path.join('~', 'foo');
+        pythonSettings.terminal = {
+            executeInFileDir: false,
+            launchArgs: [],
+            activateEnvironment: true,
+            activateEnvInCurrentTerminal: false
+        };
+
+        // Use these settings to default all of the settings in a python configuration
+        return new MockWorkspaceConfiguration(pythonSettings);
+    }
+
     private createWorkspaceService() {
         class MockFileSystemWatcher implements FileSystemWatcher {
             public ignoreCreateEvents: boolean = false;
@@ -1300,15 +1327,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
 
         // Create another config for other parts of the workspace config.
-        const otherConfig = mock(MockWorkspaceConfiguration);
-        when(otherConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
-        when(otherConfig.has(anything())).thenReturn(false);
-        when(workspaceService.getConfiguration(anything())).thenCall(key =>
-            key === 'python' ? this.pythonWorkspaceConfig : instance(otherConfig)
-        );
-        when(workspaceService.getConfiguration(anything(), anything())).thenCall(key =>
-            key === 'python' ? this.pythonWorkspaceConfig : instance(otherConfig)
-        );
+        when(workspaceService.getConfiguration(anything())).thenCall(this.getWorkspaceConfig.bind(this));
+        when(workspaceService.getConfiguration(anything(), anything())).thenCall(this.getWorkspaceConfig.bind(this));
         const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
 
         when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(
@@ -1318,8 +1338,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         when(workspaceService.workspaceFolders).thenReturn(this.workspaceFolders);
         when(workspaceService.rootPath).thenReturn(testWorkspaceFolder);
+        when(workspaceService.getWorkspaceFolder(anything())).thenCall(this.getWorkspaceFolder.bind(this));
         this.addWorkspaceFolder(testWorkspaceFolder);
         return workspaceService;
+    }
+
+    private getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined {
+        if (uri) {
+            return this.workspaceFolders.find(w => w.ownedResources.has(uri.toString()));
+        }
+        return undefined;
     }
 
     private getResourceKey(resource: Resource): string {
