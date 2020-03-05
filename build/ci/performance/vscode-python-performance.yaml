@@ -9,6 +9,9 @@ schedules:
     include:
     - master
 
+variables:
+- group: DS_Performance_Benchmark
+
 stages:
 - stage: Test_performance
   jobs:
@@ -22,4 +25,4 @@ stages:
     timeoutInMinutes: 5
     pool: DSPerf
     steps:
-      - powershell: node ./build/ci/performance/checkPerformanceResults.js
+      - powershell: node ./build/ci/performance/checkPerformanceResults.js $(DS_Performance_Benchmark)

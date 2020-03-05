@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const constants = require('../../constants');
 
-const xmlFile = path.join(constants.ExtensionRootDir, 'test-results.xml');
+const xmlFile = path.join(constants.ExtensionRootDir, 'xunit-test-results.xml');
 const jsonFile = path.join(constants.ExtensionRootDir, 'build', 'ci', 'performance', 'performance-results.json');
 let performanceData = [];
 
@@ -15,9 +15,9 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
         throw xmlReadError;
     }
 
-    console.log('=============================');
-    console.log(xmlData);
-    console.log('=============================');
+    // console.log('=============================');
+    // console.log(xmlData);
+    // console.log('=============================');
     if (fastXmlParser.validate(xmlData)) {
         const defaultOptions = {
             attributeNamePrefix: '',
@@ -28,37 +28,33 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
         fs.readFile(jsonFile, 'utf8', (jsonReadError, data) => {
             if (jsonReadError) {
                 // File doesn't exist, so we create it
-                jsonObj.testsuites.testsuite.forEach(suite => {
-                    if (parseInt(suite.tests, 10) > 0 && Array.isArray(suite.testcase)) {
-                        suite.testcase.forEach(testcase => {
-                            const test = {
-                                name: testcase.name,
-                                times: [parseFloat(testcase.time)]
-                            };
-                            performanceData.push(test);
-                        });
-                    }
+
+                jsonObj.testsuite.testcase.forEach(testcase => {
+                    const test = {
+                        name: testcase.classname + ' ' + testcase.name,
+                        times: [testcase.failure || testcase.skipped ? -1 : parseFloat(testcase.time)]
+                    };
+
+                    performanceData.push(test);
                 });
             } else {
                 performanceData = JSON.parse(data);
 
-                jsonObj.testsuites.testsuite.forEach(suite => {
-                    if (parseInt(suite.tests, 10) > 0 && Array.isArray(suite.testcase)) {
-                        suite.testcase.forEach(testcase => {
-                            let test = performanceData.find(x => x.name === testcase.name);
-                            if (test) {
-                                // if the test name is already there, we add the new time
-                                test.times.push(parseFloat(testcase.time));
-                            } else {
-                                // if its not there, we add the whole thing
-                                const test = {
-                                    name: testcase.name,
-                                    times: [parseFloat(testcase.time)]
-                                };
+                jsonObj.testsuite.testcase.forEach(testcase => {
+                    let test = performanceData.find(x => x.name === testcase.classname + ' ' + testcase.name);
+                    let time = testcase.failure || testcase.skipped ? -1 : parseFloat(testcase.time);
 
-                                performanceData.push(test);
-                            }
-                        });
+                    if (test) {
+                        // if the test name is already there, we add the new time
+                        test.times.push(time);
+                    } else {
+                        // if its not there, we add the whole thing
+                        const test = {
+                            name: testcase.classname + ' ' + testcase.name,
+                            times: [time]
+                        };
+
+                        performanceData.push(test);
                     }
                 });
             }

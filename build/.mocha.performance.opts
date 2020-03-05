@@ -6,5 +6,5 @@
 --exit
 --timeout=180000
 --reporter mocha-multi-reporters
---reporter-options configFile=build/.mocha-multi-reporters.config
+--reporter-options configFile=build/.mocha.perf.config
 --grep DataScience
