@@ -66,6 +66,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         try {
             // The daemon should die as a result of this.
             this.connection.sendNotification(new NotificationType('exit'));
+            this.proc.kill();
         } catch {
             noop();
         }
