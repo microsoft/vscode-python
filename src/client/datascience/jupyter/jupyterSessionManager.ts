@@ -45,8 +45,18 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
         if (this.sessionManager && !this.sessionManager.isDisposed) {
             traceInfo('ShutdownSessionAndConnection - dispose session manager');
+            const sessionManager = this.sessionManager as any;
             this.sessionManager.dispose();
             this.sessionManager = undefined;
+
+            // The session manager can actually be stuck in the context of a timer. Clear out the specs inside of
+            // it so the memory for the session is minimized. Otherwise functional tests can run out of memory
+            if (sessionManager._specs) {
+                sessionManager._specs = {};
+            }
+            if (sessionManager._sessions && sessionManager._sessions.clear) {
+                sessionManager._sessions.clear();
+            }
         }
     }
 

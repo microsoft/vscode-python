@@ -1,3 +1,17 @@
 # List of requirements for conda environments that cannot be installed using conda
 livelossplot
 versioneer
+flake8
+autopep8
+bandit
+black ; python_version>='3.6'
+yapf
+pylint
+pycodestyle
+prospector
+pydocstyle
+nose
+rope
+flask
+django
+isort
