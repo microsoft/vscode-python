@@ -9,9 +9,6 @@ schedules:
     include:
     - master
 
-variables:
-- group: DS_Performance_Benchmark
-
 stages:
 - stage: Test_performance
   jobs:
@@ -25,6 +22,10 @@ stages:
     timeoutInMinutes: 5
     pool: DSPerf
     steps:
+    - task: DownloadSecureFile@1
+      name: benchmark
+      inputs:
+        secureFile: 'benchmark.json'
       - powershell: |
-        echo 2020
-        echo $(DataScience DataViewer tests Data Frame)
+        echo "$(benchmark)"
+        node ./build/ci/performance/checkPerformanceResults.js $(benchmark)
