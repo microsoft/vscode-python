@@ -45,6 +45,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
         if (this.sessionManager && !this.sessionManager.isDisposed) {
             traceInfo('ShutdownSessionAndConnection - dispose session manager');
+            // tslint:disable-next-line: no-any
             const sessionManager = this.sessionManager as any;
             this.sessionManager.dispose();
             this.sessionManager = undefined;
