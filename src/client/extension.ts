@@ -54,7 +54,6 @@ import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
-import { ITerminalHelper } from './common/terminal/types';
 import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
@@ -65,7 +64,6 @@ import {
     IFeatureDeprecationManager,
     IMemento,
     IOutputChannel,
-    Resource,
     WORKSPACE_MEMENTO
 } from './common/types';
 import { createDeferred } from './common/utils/async';
@@ -84,18 +82,11 @@ import {
     IDebuggerBanner
 } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import {
-    AutoSelectionRule,
-    IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService
-} from './interpreter/autoSelection/types';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
-    ICondaService,
     IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
-    IInterpreterService,
-    PythonInterpreter
+    IInterpreterService
 } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
@@ -111,9 +102,7 @@ import { registerTypes as providersRegisterTypes } from './providers/serviceRegi
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { TerminalProvider } from './providers/terminalProvider';
 import { ISortImportsEditingProvider } from './providers/types';
-import { sendTelemetryEvent } from './telemetry';
-import { EventName } from './telemetry/constants';
-import { EditorLoadTelemetry } from './telemetry/types';
+import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
@@ -211,18 +200,15 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
-    if (!isTestExecution()) {
-        sendStartupTelemetry(
-            Promise.all([activationDeferred.promise, activationPromise]),
-            serviceContainer
-        ).ignoreErrors();
-    }
-
     //===============================================
     // activation ends here
 
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
+
+    sendStartupTelemetry(activationPromise, durations, stopWatch, serviceContainer)
+        // It will run in the background.
+        .ignoreErrors();
 
     const api = buildApi(
         Promise.all([activationDeferred.promise, activationPromise]),
@@ -330,98 +316,6 @@ async function initializeServices(
     serviceContainer.get<ITestContextService>(ITestContextService).register();
 }
 
-// tslint:disable-next-line:no-any
-async function sendStartupTelemetry(activatedPromise: Promise<any>, serviceContainer: IServiceContainer) {
-    try {
-        await activatedPromise;
-        durations.totalActivateTime = stopWatch.elapsedTime;
-        const props = await getActivationTelemetryProps(serviceContainer);
-        sendTelemetryEvent(EventName.EDITOR_LOAD, durations, props);
-    } catch (ex) {
-        traceError('sendStartupTelemetry() failed.', ex);
-    }
-}
-function isUsingGlobalInterpreterInWorkspace(currentPythonPath: string, serviceContainer: IServiceContainer): boolean {
-    const service = serviceContainer.get<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService);
-    const globalInterpreter = service.getAutoSelectedInterpreter(undefined);
-    if (!globalInterpreter) {
-        return false;
-    }
-    return currentPythonPath === globalInterpreter.path;
-}
-function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    const settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
-    return (settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
-        (settings.workspaceValue && settings.workspaceValue !== 'python') ||
-        (settings.globalValue && settings.globalValue !== 'python')
-        ? true
-        : false;
-}
-
-function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: IServiceContainer) {
-    const workspaceInterpreterSelector = serviceContainer.get<IInterpreterAutoSelectionRule>(
-        IInterpreterAutoSelectionRule,
-        AutoSelectionRule.workspaceVirtualEnvs
-    );
-    const interpreter = workspaceInterpreterSelector.getPreviouslyAutoSelectedInterpreter(resource);
-    return interpreter ? interpreter.path : undefined;
-}
-
-/////////////////////////////
-// telemetry
-
-// tslint:disable-next-line:no-any
-async function getActivationTelemetryProps(serviceContainer: IServiceContainer): Promise<EditorLoadTelemetry> {
-    // tslint:disable-next-line:no-suspicious-comment
-    // TODO: Not all of this data is showing up in the database...
-    // tslint:disable-next-line:no-suspicious-comment
-    // TODO: If any one of these parts fails we send no info.  We should
-    // be able to partially populate as much as possible instead
-    // (through granular try-catch statements).
-    const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
-    const terminalShellType = terminalHelper.identifyTerminalShell();
-    const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
-    const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-    const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-    const mainWorkspaceUri = workspaceService.hasWorkspaceFolders
-        ? workspaceService.workspaceFolders![0].uri
-        : undefined;
-    const settings = configurationService.getSettings(mainWorkspaceUri);
-    const [condaVersion, interpreter, interpreters] = await Promise.all([
-        condaLocator
-            .getCondaVersion()
-            .then(ver => (ver ? ver.raw : ''))
-            .catch<string>(() => ''),
-        interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
-        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
-    ]);
-    const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
-    const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
-    const interpreterType = interpreter ? interpreter.type : undefined;
-    const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
-    const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
-    const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
-    const usingAutoSelectedWorkspaceInterpreter = preferredWorkspaceInterpreter
-        ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer)
-        : false;
-    const hasPython3 =
-        interpreters!.filter(item => (item && item.version ? item.version.major === 3 : false)).length > 0;
-
-    return {
-        condaVersion,
-        terminal: terminalShellType,
-        pythonVersion,
-        interpreterType,
-        workspaceFolderCount,
-        hasPython3,
-        usingUserDefinedInterpreter,
-        usingAutoSelectedWorkspaceInterpreter,
-        usingGlobalInterpreter
-    };
-}
-
 /////////////////////////////
 // error handling
 
@@ -430,7 +324,7 @@ function handleError(ex: Error) {
         "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
     );
     traceError('extension activation failed', ex);
-    sendErrorTelemetry(ex).ignoreErrors();
+    sendErrorTelemetry(ex, durations, activatedServiceContainer).ignoreErrors();
 }
 
 interface IAppShell {
@@ -448,22 +342,5 @@ function notifyUser(msg: string) {
         appShell.showErrorMessage(msg).ignoreErrors();
     } catch (ex) {
         // ignore
-    }
-}
-
-async function sendErrorTelemetry(ex: Error) {
-    try {
-        // tslint:disable-next-line:no-any
-        let props: any = {};
-        if (activatedServiceContainer) {
-            try {
-                props = await getActivationTelemetryProps(activatedServiceContainer);
-            } catch (ex) {
-                // ignore
-            }
-        }
-        sendTelemetryEvent(EventName.EDITOR_LOAD, durations, props, ex);
-    } catch (exc2) {
-        traceError('sendErrorTelemetry() failed.', exc2);
     }
 }
