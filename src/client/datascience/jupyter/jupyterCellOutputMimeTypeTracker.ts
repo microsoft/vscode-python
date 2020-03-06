@@ -39,6 +39,9 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
         }
     }
     private getCellOutputMimeTypes(cell: ICell): string[] {
+        if (cell.data.cell_type === 'markdown') {
+            return ['markdown'];
+        }
         if (cell.data.cell_type !== 'code') {
             return [];
         }

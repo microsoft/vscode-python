@@ -20,7 +20,6 @@ import { FakeClock } from '../../common';
 suite('Data Science - Cell Output Mimetype Tracker', () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
     const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
-    // tslint:disable-next-line:no-require-imports
     let outputMimeTypeTracker: CellOutputMimeTypeTracker;
     let nativeProvider: NativeEditorProvider;
     let openedNotebookEmitter: EventEmitter<INotebookEditor>;
@@ -154,6 +153,16 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
         await fakeTimer.wait();
         Reporter.expectHashes([expectedTelemetry]);
     });
+    test('Send telemetry if output type is markdown', async () => {
+        const expectedTelemetry = generateTelemetry('markdown');
+        const cellTextOutput = generateCellWithOutput([generateStreamedOutput()]);
+        cellTextOutput.data.cell_type = 'markdown';
+
+        emitNotebookEvent([cellTextOutput]);
+
+        await fakeTimer.wait();
+        Reporter.expectHashes([expectedTelemetry]);
+    });
     suite('No telemetry sent', () => {
         test('If cell has error output', async () => {
             const cellTextOutput = generateCellWithOutput([generateErrorOutput()]);
@@ -165,7 +174,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
         });
         test('If cell type is not code', async () => {
             const cellTextOutput = generateCellWithOutput([generateStreamedOutput()]);
-            cellTextOutput.data.cell_type = 'markdown';
+            cellTextOutput.data.cell_type = 'messages';
 
             emitNotebookEvent([cellTextOutput]);
 
