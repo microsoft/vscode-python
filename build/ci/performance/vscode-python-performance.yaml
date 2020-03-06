@@ -26,4 +26,5 @@ stages:
     pool: DSPerf
     steps:
       - powershell: |
-        echo $(DS_Performance_Benchmark)
+        echo 2020
+        echo $(DS_Performance_Benchmark:DataScience DataViewer tests Data Frame)
