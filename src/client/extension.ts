@@ -169,6 +169,14 @@ function displayProgress(promise: Promise<any>) {
     window.withProgress(progressOptions, () => promise);
 }
 
+/////////////////////////////
+// intialization (globals & components)
+
+// The code in this section should do nothing more complex than register
+// objects to DI and simple init (e.g. no side effects).  That implies
+// that constructors are likewise simple and do no work.  It also means
+// that it is inherently synchronous.
+
 function initializeGlobals(context: ExtensionContext): [IServiceManager, IServiceContainer] {
     const cont = new Container();
     const serviceManager = new ServiceManager(cont);
@@ -185,9 +193,6 @@ function initializeGlobals(context: ExtensionContext): [IServiceManager, IServic
 
     return [serviceManager, serviceContainer];
 }
-
-/////////////////////////////
-// component init
 
 function initializeComponents(
     _context: ExtensionContext,
