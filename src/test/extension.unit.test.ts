@@ -18,6 +18,9 @@ import { ExperimentsManager } from '../client/common/experiments';
 import { IExperimentsManager } from '../client/common/types';
 import { DebugAdapterDescriptorFactory } from '../client/debugger/extension/adapter/factory';
 import { IDebugAdapterDescriptorFactory } from '../client/debugger/extension/types';
+import { ServiceContainer } from '../client/ioc/container';
+import { ServiceManager } from '../client/ioc/serviceManager';
+import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Extension API Debugger', () => {
@@ -26,12 +29,23 @@ suite('Extension API Debugger', () => {
     const ptvsdHost = 'somehost';
     const ptvsdPort = 12345;
 
+    let serviceManager: IServiceManager;
+    let serviceContainer: IServiceContainer;
     let experimentsManager: IExperimentsManager;
     let debugAdapterFactory: IDebugAdapterDescriptorFactory;
 
     setup(() => {
+        serviceManager = mock(ServiceManager);
+        serviceContainer = mock(ServiceContainer);
         experimentsManager = mock(ExperimentsManager);
         debugAdapterFactory = mock(DebugAdapterDescriptorFactory);
+
+        when(serviceManager.get(IExperimentsManager))
+            // Return the mock.
+            .thenReturn(Promise.resolve(instance(experimentsManager)));
+        when(serviceManager.get(IDebugAdapterDescriptorFactory))
+            // Return the mock.
+            .thenReturn(Promise.resolve(instance(debugAdapterFactory)));
     });
 
     function mockInExperiment(host: string, port: number, wait: boolean) {
@@ -85,8 +99,8 @@ suite('Extension API Debugger', () => {
 
         const args = await buildApi(
             Promise.resolve(),
-            instance(experimentsManager),
-            instance(debugAdapterFactory)
+            instance(serviceManager),
+            instance(serviceContainer)
         ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [expectedLauncherPath, '--default', '--host', ptvsdHost, '--port', ptvsdPort.toString()];
 
@@ -99,8 +113,8 @@ suite('Extension API Debugger', () => {
 
         const args = await buildApi(
             Promise.resolve(),
-            instance(experimentsManager),
-            instance(debugAdapterFactory)
+            instance(serviceManager),
+            instance(serviceContainer)
         ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [ptvsdPath, '--host', ptvsdHost, '--port', ptvsdPort.toString()];
 
@@ -113,8 +127,8 @@ suite('Extension API Debugger', () => {
 
         const args = await buildApi(
             Promise.resolve(),
-            instance(experimentsManager),
-            instance(debugAdapterFactory)
+            instance(serviceManager),
+            instance(serviceContainer)
         ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [
             expectedLauncherPath,
@@ -135,8 +149,8 @@ suite('Extension API Debugger', () => {
 
         const args = await buildApi(
             Promise.resolve(),
-            instance(experimentsManager),
-            instance(debugAdapterFactory)
+            instance(serviceManager),
+            instance(serviceContainer)
         ).debug.getRemoteLauncherCommand(ptvsdHost, ptvsdPort, waitForAttach);
         const expectedArgs = [ptvsdPath, '--host', ptvsdHost, '--port', ptvsdPort.toString(), '--wait'];
 

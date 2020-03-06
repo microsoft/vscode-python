@@ -48,7 +48,7 @@ import { registerTypes as appRegisterTypes } from './application/serviceRegistry
 import { IApplicationDiagnostics } from './application/types';
 import { DebugService } from './common/application/debugService';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from './common/application/types';
-import { Commands, isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
+import { Commands, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
 import { traceError } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
@@ -76,11 +76,7 @@ import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
-import {
-    IDebugAdapterDescriptorFactory,
-    IDebugConfigurationService,
-    IDebuggerBanner
-} from './debugger/extension/types';
+import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
@@ -210,19 +206,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
         // It will run in the background.
         .ignoreErrors();
 
-    const api = buildApi(
-        Promise.all([activationDeferred.promise, activationPromise]),
-        serviceContainer.get<IExperimentsManager>(IExperimentsManager),
-        serviceContainer.get<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory)
-    );
-    // In test environment return the DI Container.
-    if (isTestExecution()) {
-        // tslint:disable:no-any
-        (api as any).serviceContainer = serviceContainer;
-        (api as any).serviceManager = serviceManager;
-        // tslint:enable:no-any
-    }
-    return api;
+    return buildApi(activationPromise, serviceManager, serviceContainer);
 }
 
 export function deactivate(): Thenable<void> {

@@ -3,11 +3,13 @@
 
 'use strict';
 
+import { isTestExecution } from './common/constants';
 import { DebugAdapterNewPtvsd } from './common/experimentGroups';
 import { traceError } from './common/logger';
 import { IExperimentsManager } from './common/types';
 import { RemoteDebuggerExternalLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
 import { IDebugAdapterDescriptorFactory } from './debugger/extension/types';
+import { IServiceContainer, IServiceManager } from './ioc/types';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -38,10 +40,13 @@ export interface IExtensionApi {
 export function buildApi(
     // tslint:disable-next-line:no-any
     ready: Promise<any>,
-    experimentsManager: IExperimentsManager,
-    debugFactory: IDebugAdapterDescriptorFactory
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer
 ) {
-    return {
+    const experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+    const debugFactory = serviceContainer.get<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory);
+
+    const api = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch(ex => {
             traceError('Failure during activation.', ex);
@@ -69,4 +74,13 @@ export function buildApi(
             }
         }
     };
+
+    // In test environment return the DI Container.
+    if (isTestExecution()) {
+        // tslint:disable:no-any
+        (api as any).serviceContainer = serviceContainer;
+        (api as any).serviceManager = serviceManager;
+        // tslint:enable:no-any
+    }
+    return api;
 }
