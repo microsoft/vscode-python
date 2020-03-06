@@ -27,5 +27,5 @@ stages:
       inputs:
         secureFile: 'benchmark.json'
       - powershell: |
-        echo "$(benchmark)"
-        node ./build/ci/performance/checkPerformanceResults.js $(benchmark)
+        echo "$(benchmark.secureFilePath)"
+        node ./build/ci/performance/checkPerformanceResults.js $(benchmark.secureFilePath)
