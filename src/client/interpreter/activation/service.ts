@@ -10,9 +10,10 @@ import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
 import { LogOptions, traceDecorators, traceError, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
-import { IProcessServiceFactory } from '../../common/process/types';
+import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
+import { sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -136,7 +137,30 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // See the discussion from hidesoon in this issue: https://github.com/Microsoft/vscode-python/issues/4424
             // His issue is conda never finishing during activate. This is a conda issue, but we
             // should at least tell the user.
-            const result = await processService.shellExec(command, {
+            let result: ExecutionResult<string> | undefined;
+            while (!result) {
+                result = await processService.shellExec(command, {
+                    env,
+                    shell: shellInfo.shell,
+                    timeout: getEnvironmentTimeout,
+                    maxBuffer: 1000 * 1000
+                });
+                if (result.stderr && result.stderr.length > 0) {
+                    // Special case. Conda for some versions will state a file is in use. If
+                    // that's the case, wait and try again. This happens especially on AzDo
+                    if (
+                        result.stderr.includes(
+                            'The process cannot access the file because it is being used by another process'
+                        )
+                    ) {
+                        result = undefined;
+                        await sleep(500);
+                    } else {
+                        throw new Error(`StdErr from ShellExec, ${result.stderr}`);
+                    }
+                }
+            }
+            result = await processService.shellExec(command, {
                 env,
                 shell: shellInfo.shell,
                 timeout: getEnvironmentTimeout,
