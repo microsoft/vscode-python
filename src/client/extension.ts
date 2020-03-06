@@ -146,11 +146,65 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     //===============================================
     // activation starts here
 
+    const [serviceManager, serviceContainer] = initializeGlobals(context);
+    initializeComponents(context, serviceManager, serviceContainer);
+    const activationPromise = activateComponents(context, serviceManager, serviceContainer);
+
+    //===============================================
+    // activation ends here
+
+    durations.endActivateTime = stopWatch.elapsedTime;
+    activationDeferred.resolve();
+
+    sendStartupTelemetry(activationPromise, durations, stopWatch, serviceContainer)
+        // It will run in the background.
+        .ignoreErrors();
+
+    return buildApi(activationPromise, serviceManager, serviceContainer);
+}
+
+function initializeGlobals(context: ExtensionContext): [IServiceManager, IServiceContainer] {
     const cont = new Container();
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
     activatedServiceContainer = serviceContainer;
-    registerServices(context, serviceManager, serviceContainer);
+
+    serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
+    serviceManager.addSingletonInstance<IServiceManager>(IServiceManager, serviceManager);
+
+    serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, context.subscriptions);
+    serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
+    serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
+    serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
+
+    return [serviceManager, serviceContainer];
+}
+
+/////////////////////////////
+// component init
+
+function initializeComponents(
+    _context: ExtensionContext,
+    _serviceManager: IServiceManager,
+    _serviceContainer: IServiceContainer
+) {
+    // We will be pulling code over from activateComponents.
+}
+
+/////////////////////////////
+// component activation
+
+async function activateComponents(
+    context: ExtensionContext,
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer
+) {
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO(GH-10454): Gradually move simple initialization
+    // and DI registration currently in this function over
+    // to initializeComponents().
+
+    registerServices(serviceManager);
     await initializeServices(context, serviceManager, serviceContainer);
 
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
@@ -168,6 +222,8 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     sortImports.registerCommands();
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
+
+    // At this point we have enough information to send valid telemetry.
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
@@ -211,17 +267,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
-    //===============================================
-    // activation ends here
-
-    durations.endActivateTime = stopWatch.elapsedTime;
-    activationDeferred.resolve();
-
-    sendStartupTelemetry(activationPromise, durations, stopWatch, serviceContainer)
-        // It will run in the background.
-        .ignoreErrors();
-
-    return buildApi(activationPromise, serviceManager, serviceContainer);
+    return activationPromise;
 }
 
 // tslint:disable-next-line:no-any
@@ -230,18 +276,7 @@ function displayProgress(promise: Promise<any>) {
     window.withProgress(progressOptions, () => promise);
 }
 
-function registerServices(
-    context: ExtensionContext,
-    serviceManager: ServiceManager,
-    serviceContainer: ServiceContainer
-) {
-    serviceManager.addSingletonInstance<IServiceContainer>(IServiceContainer, serviceContainer);
-    serviceManager.addSingletonInstance<IServiceManager>(IServiceManager, serviceManager);
-    serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, context.subscriptions);
-    serviceManager.addSingletonInstance<Memento>(IMemento, context.globalState, GLOBAL_MEMENTO);
-    serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
-    serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
-
+function registerServices(serviceManager: IServiceManager) {
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
     const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
     const jupyterOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
@@ -272,8 +307,8 @@ function registerServices(
 
 async function initializeServices(
     context: ExtensionContext,
-    serviceManager: ServiceManager,
-    serviceContainer: ServiceContainer
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer
 ) {
     const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     await abExperiments.activate();
