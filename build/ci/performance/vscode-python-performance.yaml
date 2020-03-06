@@ -27,4 +27,4 @@ stages:
     steps:
       - powershell: |
         echo 2020
-        echo $(DS_Performance_Benchmark:DataScience DataViewer tests Data Frame)
+        echo $(DataScience DataViewer tests Data Frame)
