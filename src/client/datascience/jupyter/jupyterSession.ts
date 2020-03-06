@@ -330,6 +330,8 @@ export class JupyterSession implements IJupyterSession {
                     resolve();
                 } else if (e === 'dead') {
                     traceError('Kernel died while waiting for idle');
+                    // If we throw an exception, make sure to shutdown the session as it's not usable anymore
+                    this.shutdownSession(session, this.statusHandler).ignoreErrors();
                     reject(
                         new JupyterWaitForIdleError(localize.DataScience.kernelIsDead().format(session.kernel.name))
                     );
@@ -365,6 +367,8 @@ export class JupyterSession implements IJupyterSession {
                 return;
             }
 
+            // If we throw an exception, make sure to shutdown the session as it's not usable anymore
+            this.shutdownSession(session, this.statusHandler).ignoreErrors();
             throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
         }
     }
