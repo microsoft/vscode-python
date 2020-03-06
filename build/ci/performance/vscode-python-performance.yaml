@@ -27,4 +27,3 @@ stages:
     steps:
       - powershell: |
         echo $(DS_Performance_Benchmark)
-        node ./build/ci/performance/checkPerformanceResults.js $(DS_Performance_Benchmark)
