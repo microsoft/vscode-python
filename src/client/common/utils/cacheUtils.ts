@@ -46,7 +46,7 @@ function getCacheKey(
     }
     const globalPythonPath =
         inExperiment && interpreterPathService
-            ? interpreterPathService.inspectInterpreterPath(vscode.Uri.file(__filename)).globalValue || 'python'
+            ? interpreterPathService.inspect(vscode.Uri.file(__filename)).globalValue || 'python'
             : section.inspect<string>('pythonPath')!.globalValue || 'python';
     // Get the workspace related to this resource.
     if (
@@ -62,7 +62,7 @@ function getCacheKey(
     }
     const workspacePythonPath =
         inExperiment && interpreterPathService
-            ? interpreterPathService.getInterpreterPath(resource)
+            ? interpreterPathService.get(resource)
             : vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
     return `${folder.uri.fsPath}-${workspacePythonPath}`;
 }

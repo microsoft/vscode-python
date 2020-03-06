@@ -12,7 +12,7 @@ export class GlobalPythonPathUpdaterService implements IPythonPathUpdaterService
     public async updatePythonPath(pythonPath: string | undefined): Promise<void> {
         const pythonConfig = this.workspaceService.getConfiguration('python');
         const pythonPathValue = this.inDeprecatePythonPathExperiment
-            ? this.interpreterPathService.inspectInterpreterPath(undefined)
+            ? this.interpreterPathService.inspect(undefined)
             : pythonConfig.inspect<string>('pythonPath')!;
 
         if (pythonPathValue && pythonPathValue.globalValue === pythonPath) {

@@ -29,7 +29,7 @@ export class SettingsInterpretersAutoSelectionRule extends BaseRuleService {
         // tslint:disable-next-line:no-any
         const pythonConfig = this.workspaceService.getConfiguration('python', null as any)!;
         const pythonPathInConfig = this.experiments.inExperiment(DeprecatePythonPath.experiment)
-            ? this.interpreterPathService.inspectInterpreterPath(undefined)
+            ? this.interpreterPathService.inspect(undefined)
             : pythonConfig.inspect<string>('pythonPath')!;
         this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         // No need to store python paths defined in settings in our caches, they can be retrieved from the settings directly.

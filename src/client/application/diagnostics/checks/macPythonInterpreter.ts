@@ -145,7 +145,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
             disposables.push(
-                interpreterPathService.onDidChangeInterpreter((i: InterpreterConfigurationScope) =>
+                interpreterPathService.onDidChange((i: InterpreterConfigurationScope) =>
                     this.onDidChangeConfiguration(undefined, i)
                 )
             );

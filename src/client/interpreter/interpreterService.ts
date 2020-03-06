@@ -83,7 +83,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.pythonPathSetting = pySettings.pythonPath;
         if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
             disposables.push(
-                this.interpreterPathService.onDidChangeInterpreter(i => {
+                this.interpreterPathService.onDidChange(i => {
                     this.onConfigChanged(i.uri);
                 })
             );

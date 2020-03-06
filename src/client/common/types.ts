@@ -626,8 +626,8 @@ export type InspectInterpreterSettingType = {
  */
 export const IInterpreterPathService = Symbol('IInterpreterPathService');
 export interface IInterpreterPathService {
-    onDidChangeInterpreter: Event<InterpreterConfigurationScope>;
-    getInterpreterPath(resource: Resource): string;
-    inspectInterpreterPath(resource: Resource): InspectInterpreterSettingType;
+    onDidChange: Event<InterpreterConfigurationScope>;
+    get(resource: Resource): string;
+    inspect(resource: Resource): InspectInterpreterSettingType;
     update(resource: Resource, configTarget: ConfigurationTarget, value: string | undefined): Promise<void>;
 }

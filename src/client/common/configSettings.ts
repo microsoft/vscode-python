@@ -175,9 +175,7 @@ export class PythonSettings implements IPythonSettings {
          */
         if (this.experimentsManager && this.interpreterPathService) {
             if (this.experimentsManager.inExperiment(DeprecatePythonPath.experiment)) {
-                this.pythonPath = systemVariables.resolveAny(
-                    this.interpreterPathService.getInterpreterPath(this.workspaceRoot)
-                )!;
+                this.pythonPath = systemVariables.resolveAny(this.interpreterPathService.get(this.workspaceRoot))!;
             }
             this.experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         } else {
@@ -589,7 +587,7 @@ export class PythonSettings implements IPythonSettings {
             })
         );
         if (this.interpreterPathService) {
-            this.disposables.push(this.interpreterPathService.onDidChangeInterpreter(onDidChange.bind(this)));
+            this.disposables.push(this.interpreterPathService.onDidChange(onDidChange.bind(this)));
         }
 
         const initialConfig = this.workspace.getConfiguration('python', this.workspaceRoot);

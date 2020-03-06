@@ -34,7 +34,7 @@ export class InterpreterPathService implements IInterpreterPathService {
         );
     }
 
-    public inspectInterpreterPath(resource: Resource): InspectInterpreterSettingType {
+    public inspect(resource: Resource): InspectInterpreterSettingType {
         resource = resource ? resource : PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
         let workspaceFolderSetting: IPersistentState<string | undefined> | undefined;
         let workspaceSetting: IPersistentState<string | undefined> | undefined;
@@ -58,9 +58,9 @@ export class InterpreterPathService implements IInterpreterPathService {
         };
     }
 
-    public getInterpreterPath(resource: Resource): string {
+    public get(resource: Resource): string {
         resource = resource ? resource : PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
-        const settings = this.inspectInterpreterPath(resource);
+        const settings = this.inspect(resource);
         return settings.workspaceFolderValue || settings.workspaceValue || settings.globalValue || 'python';
     }
 
@@ -85,7 +85,7 @@ export class InterpreterPathService implements IInterpreterPathService {
         this.didChangeInterpreterEmitter.fire({ uri: resource, configTarget });
     }
 
-    public get onDidChangeInterpreter(): Event<InterpreterConfigurationScope> {
+    public get onDidChange(): Event<InterpreterConfigurationScope> {
         return this.didChangeInterpreterEmitter.event;
     }
 

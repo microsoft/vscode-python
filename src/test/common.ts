@@ -232,7 +232,7 @@ async function setPythonPathInWorkspace(
     }
     const value =
         inExperiment && interpreterPathService
-            ? interpreterPathService.inspectInterpreterPath(resourceUri)
+            ? interpreterPathService.inspect(resourceUri)
             : settings.inspect<string>('pythonPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
