@@ -123,6 +123,21 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     }
 }
 
+export function deactivate(): Thenable<void> {
+    // Make sure to shutdown anybody who needs it.
+    if (activatedServiceContainer) {
+        const registry = activatedServiceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
+        if (registry) {
+            return registry.dispose();
+        }
+    }
+
+    return Promise.resolve();
+}
+
+/////////////////////////////
+// activation
+
 // tslint:disable-next-line:max-func-body-length
 async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi> {
     displayProgress(activationDeferred.promise);
@@ -207,18 +222,6 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
         .ignoreErrors();
 
     return buildApi(activationPromise, serviceManager, serviceContainer);
-}
-
-export function deactivate(): Thenable<void> {
-    // Make sure to shutdown anybody who needs it.
-    if (activatedServiceContainer) {
-        const registry = activatedServiceContainer.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
-        if (registry) {
-            return registry.dispose();
-        }
-    }
-
-    return Promise.resolve();
 }
 
 // tslint:disable-next-line:no-any
