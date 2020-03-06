@@ -74,10 +74,17 @@ export type IMainState = {
     kernel: IServerState;
 };
 
+export type SelectionAndFocusedInfo = {
+    selectedCellId?: string;
+    selectedCellIndex?: number;
+    focusedCellId?: string;
+    focusedCellIndex?: number;
+};
+
 /**
  * Returns the cell id and index of selected and focused cells.
  */
-export function getSelectedAndFocusedInfo(state: IMainState) {
+export function getSelectedAndFocusedInfo(state: { cellVMs: ICellViewModel[] }): SelectionAndFocusedInfo {
     const info: {
         selectedCellId?: string;
         selectedCellIndex?: number;
