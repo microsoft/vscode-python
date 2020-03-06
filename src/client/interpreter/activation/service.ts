@@ -35,6 +35,11 @@ const defaultShells = {
     [OSType.Unknown]: undefined
 };
 
+const condaRetryMessages = [
+    'The process cannot access the file because it is being used by another process',
+    'The directory is not empty'
+];
+
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
@@ -148,16 +153,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         throwOnStdErr: false
                     });
                     if (result.stderr && result.stderr.length > 0) {
-                        throw new Error(`StdErr from ShellExec, ${result.stderr}`);
+                        throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
                     }
                 } catch (exc) {
                     // Special case. Conda for some versions will state a file is in use. If
                     // that's the case, wait and try again. This happens especially on AzDo
-                    if (
-                        exc
-                            .toString()
-                            .includes('The process cannot access the file because it is being used by another process')
-                    ) {
+                    const excString = exc.toString();
+                    if (condaRetryMessages.find(m => excString.includes(m))) {
                         traceInfo(`Conda is busy, attempting to retry ...`);
                         result = undefined;
                         await sleep(500);

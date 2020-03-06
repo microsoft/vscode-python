@@ -5,6 +5,7 @@ import { ContentsManager, Kernel, ServerConnection, Session, SessionManager } fr
 import { Agent as HttpsAgent } from 'https';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import { noop } from 'jquery';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -45,6 +46,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
         if (this.sessionManager && !this.sessionManager.isDisposed) {
             traceInfo('ShutdownSessionAndConnection - dispose session manager');
+            // Make sure it finishes startup.
+            await this.sessionManager.ready;
+
             // tslint:disable-next-line: no-any
             const sessionManager = this.sessionManager as any;
             this.sessionManager.dispose();
@@ -57,6 +61,12 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             }
             if (sessionManager._sessions && sessionManager._sessions.clear) {
                 sessionManager._sessions.clear();
+            }
+            if (sessionManager._pollModels) {
+                this.clearPoll(sessionManager._pollModels);
+            }
+            if (sessionManager._pollSpecs) {
+                this.clearPoll(sessionManager._pollSpecs);
             }
         }
     }
@@ -161,6 +171,15 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         } catch {
             // For some reason this is failing. Just return nothing
             return [];
+        }
+    }
+
+    // tslint:disable-next-line: no-any
+    private clearPoll(poll: { _timeout: any }) {
+        try {
+            clearTimeout(poll._timeout);
+        } catch {
+            noop();
         }
     }
 

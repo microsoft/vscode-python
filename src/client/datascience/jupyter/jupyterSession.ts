@@ -136,6 +136,12 @@ export class JupyterSession implements IJupyterSession {
             await this.session.kernel.restart();
             return;
         }
+
+        // Start the restart session now in case it wasn't started
+        if (!this.restartSessionPromise) {
+            this.startRestartSession();
+        }
+
         // Just kill the current session and switch to the other
         if (this.restartSessionPromise && this.session && this.sessionManager && this.contentsManager) {
             traceInfo(`Restarting ${this.session.kernel.id}`);
@@ -195,7 +201,7 @@ export class JupyterSession implements IJupyterSession {
                 : undefined;
         // It has been observed that starting the restart session slows down first time to execute a cell.
         // Solution is to start the restart session after the first execution of user code.
-        if (!content.silent && result) {
+        if (!content.silent && result && !isTestExecution()) {
             result.done.finally(() => this.startRestartSession()).ignoreErrors();
         }
         return result;
