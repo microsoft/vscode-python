@@ -7,7 +7,7 @@ const path = require('path');
 const constants = require('../../constants');
 
 console.log('wwwwwwwwwwwwwwwwwwwwwwww');
-console.log(process.argv);
+console.log(process.argv.slice(2).join(' '));
 console.log('wwwwwwwwwwwwwwwwwwwwwwww');
 
 const xmlFile = path.join(constants.ExtensionRootDir, 'test-results.xml');
@@ -37,11 +37,6 @@ fs.readFile(xmlFile, 'utf8', (xmlFileError, xmlData) => {
                 throw performanceResultsFileError;
             }
 
-            // console.log('=============================');
-            // console.log(xmlData);
-            // console.log('=============================');
-            // console.log(performanceData);
-            // console.log('=============================');
             const resultsJson = fastXmlParser.parse(xmlData, defaultOptions);
             const performanceJson = JSON.parse(performanceData);
 

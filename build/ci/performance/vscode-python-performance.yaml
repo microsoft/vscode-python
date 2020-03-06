@@ -27,6 +27,5 @@ stages:
       inputs:
         secureFile: 'benchmark.json'
     - powershell: |
-       cat $(benchmark.secureFilePath)
        $A = cat $(benchmark.secureFilePath)
        node ./build/ci/performance/checkPerformanceResults.js $A
