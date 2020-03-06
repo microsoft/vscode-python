@@ -136,7 +136,7 @@ export function deactivate(): Thenable<void> {
 }
 
 /////////////////////////////
-// activation
+// activation helpers
 
 // tslint:disable-next-line:max-func-body-length
 async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi> {
@@ -161,6 +161,12 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
         .ignoreErrors();
 
     return buildApi(activationPromise, serviceManager, serviceContainer);
+}
+
+// tslint:disable-next-line:no-any
+function displayProgress(promise: Promise<any>) {
+    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
+    window.withProgress(progressOptions, () => promise);
 }
 
 function initializeGlobals(context: ExtensionContext): [IServiceManager, IServiceContainer] {
@@ -188,7 +194,7 @@ function initializeComponents(
     _serviceManager: IServiceManager,
     _serviceContainer: IServiceContainer
 ) {
-    // We will be pulling code over from activateComponents.
+    // We will be pulling code over from activateLegacy().
 }
 
 /////////////////////////////
@@ -199,11 +205,25 @@ async function activateComponents(
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer
 ) {
-    // tslint:disable-next-line:no-suspicious-comment
-    // TODO(GH-10454): Gradually move simple initialization
-    // and DI registration currently in this function over
-    // to initializeComponents().
+    // We will be pulling code over from activateLegacy().
 
+    return activateLegacy(context, serviceManager, serviceContainer);
+}
+
+/////////////////////////////
+// old activation code
+
+// tslint:disable-next-line:no-suspicious-comment
+// TODO(GH-10454): Gradually move simple initialization
+// and DI registration currently in this function over
+// to initializeComponents().  Likewise with complex
+// init and activation: move them to activateComponents().
+
+async function activateLegacy(
+    context: ExtensionContext,
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer
+) {
     registerServices(serviceManager);
     await initializeServices(context, serviceManager, serviceContainer);
 
@@ -268,12 +288,6 @@ async function activateComponents(
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
     return activationPromise;
-}
-
-// tslint:disable-next-line:no-any
-function displayProgress(promise: Promise<any>) {
-    const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
-    window.withProgress(progressOptions, () => promise);
 }
 
 function registerServices(serviceManager: IServiceManager) {
