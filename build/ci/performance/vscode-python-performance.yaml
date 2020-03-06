@@ -25,7 +25,7 @@ stages:
     - task: DownloadSecureFile@1
       name: benchmark
       inputs:
-        secureFile: 'benchmark.json'
+        secureFile: 'DS_test_benchmark.json'
     - powershell: |
        $A = cat $(benchmark.secureFilePath)
        node ./build/ci/performance/checkPerformanceResults.js $A
