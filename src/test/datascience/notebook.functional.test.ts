@@ -698,7 +698,7 @@ suite('DataScience notebook tests', () => {
         // Make sure we have a change dir happening
         const settings = { ...ioc.getSettings().datascience };
         settings.changeDirOnImportExport = true;
-        ioc.forceSettingsChanged(ioc.getSettings().pythonPath, settings);
+        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, settings);
 
         const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
         const newFolderPath = path.join(
@@ -1225,7 +1225,7 @@ plt.show()`,
             const tempDir = os.tmpdir();
             const settings = ioc.getSettings();
             settings.datascience.jupyterCommandLineArguments = ['--NotebookApp.port=9975', `--notebook-dir=${tempDir}`];
-            ioc.forceSettingsChanged(settings.pythonPath, settings.datascience);
+            ioc.forceSettingsChanged(undefined, settings.pythonPath, settings.datascience);
             const notebook = await createNotebook(true);
             assert.ok(notebook, 'Server should have started on port 9975');
             const hs = notebook as HostJupyterNotebook;
