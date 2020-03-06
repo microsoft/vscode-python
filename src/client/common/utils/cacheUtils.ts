@@ -27,19 +27,27 @@ const resourceSpecificCacheStores = new Map<string, Map<string, CacheData>>();
  * @param {VSCodeType} [vscode=require('vscode')]
  * @returns
  */
-function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'), serviceContainer: IServiceContainer) {
+function getCacheKey(
+    resource: Resource,
+    vscode: VSCodeType = require('vscode'),
+    serviceContainer: IServiceContainer | undefined
+) {
     const section = vscode.workspace.getConfiguration('python', vscode.Uri.file(__filename));
     if (!section) {
         return 'python';
     }
+    let interpreterPathService: IInterpreterPathService | undefined;
     let inExperiment: boolean | undefined;
-    const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-    const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-    inExperiment = abExperiments.inExperiment(DeprecatePythonPath.experiment);
-    abExperiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
-    const globalPythonPath = inExperiment
-        ? interpreterPathService.inspectInterpreterPath(vscode.Uri.file(__filename)).globalValue || 'python'
-        : section.inspect<string>('pythonPath')!.globalValue || 'python';
+    if (serviceContainer) {
+        interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
+        const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        inExperiment = abExperiments.inExperiment(DeprecatePythonPath.experiment);
+        abExperiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+    }
+    const globalPythonPath =
+        inExperiment && interpreterPathService
+            ? interpreterPathService.inspectInterpreterPath(vscode.Uri.file(__filename)).globalValue || 'python'
+            : section.inspect<string>('pythonPath')!.globalValue || 'python';
     // Get the workspace related to this resource.
     if (
         !resource ||
@@ -52,9 +60,10 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'),
     if (!folder) {
         return globalPythonPath;
     }
-    const workspacePythonPath = inExperiment
-        ? interpreterPathService.getInterpreterPath(resource)
-        : vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
+    const workspacePythonPath =
+        inExperiment && interpreterPathService
+            ? interpreterPathService.getInterpreterPath(resource)
+            : vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
     return `${folder.uri.fsPath}-${workspacePythonPath}`;
 }
 /**
@@ -67,7 +76,7 @@ function getCacheKey(resource: Resource, vscode: VSCodeType = require('vscode'),
 function getCacheStore(
     resource: Resource,
     vscode: VSCodeType = require('vscode'),
-    serviceContainer: IServiceContainer
+    serviceContainer: IServiceContainer | undefined
 ) {
     const key = getCacheKey(resource, vscode, serviceContainer);
     if (!resourceSpecificCacheStores.has(key)) {
@@ -165,7 +174,7 @@ export class InMemoryInterpreterSpecificCache<T> extends InMemoryCache<T> {
         keyPrefix: string,
         expiryDurationMs: number,
         args: [Uri | undefined, ...any[]],
-        private readonly serviceContainer: IServiceContainer,
+        private readonly serviceContainer: IServiceContainer | undefined,
         private readonly vscode: VSCodeType = require('vscode')
     ) {
         super(expiryDurationMs, getCacheKeyFromFunctionArgs(keyPrefix, args.slice(1)));

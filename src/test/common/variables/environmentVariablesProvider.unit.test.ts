@@ -16,10 +16,13 @@ import { PlatformService } from '../../../client/common/platform/platformService
 import { IPlatformService } from '../../../client/common/platform/types';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../../client/common/types';
+import { sleep } from '../../../client/common/utils/async';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
+import { ServiceContainer } from '../../../client/ioc/container';
+import { IServiceContainer } from '../../../client/ioc/types';
 import { noop } from '../../core';
 
 // tslint:disable:no-any max-func-body-length
@@ -31,6 +34,7 @@ suite('Multiroot Environment Variables Provider', () => {
     let configuration: IConfigurationService;
     let currentProcess: ICurrentProcess;
     let settings: IPythonSettings;
+    let serviceContainer: IServiceContainer;
 
     setup(() => {
         envVarsService = mock(EnvironmentVariablesService);
@@ -39,6 +43,7 @@ suite('Multiroot Environment Variables Provider', () => {
         configuration = mock(ConfigurationService);
         currentProcess = mock(CurrentProcess);
         settings = mock(PythonSettings);
+        serviceContainer = mock(ServiceContainer);
 
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         when(workspace.onDidChangeConfiguration).thenReturn(noop as any);
@@ -48,7 +53,8 @@ suite('Multiroot Environment Variables Provider', () => {
             instance(platform),
             instance(workspace),
             instance(configuration),
-            instance(currentProcess)
+            instance(currentProcess),
+            instance(serviceContainer)
         );
 
         clearCache();
@@ -255,6 +261,61 @@ suite('Multiroot Environment Variables Provider', () => {
             verify(envVarsService.appendPythonPath(deepEqual(envFileVars), currentProcEnv.PYTHONPATH)).once();
             verify(platform.pathVariableName).atLeast(1);
             assert.deepEqual(vars, envFileVars);
+        });
+
+        test(`Getting environment variables which are already cached does not reinvoke the method ${workspaceTitle}`, async () => {
+            const envFile = path.join('a', 'b', 'env.file');
+            const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
+            const currentProcEnv = { SOMETHING: 'wow' };
+
+            when(currentProcess.env).thenReturn(currentProcEnv);
+            when(settings.envFile).thenReturn(envFile);
+            when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
+            when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(undefined);
+            when(platform.pathVariableName).thenReturn('PATH');
+
+            const vars = await provider.getEnvironmentVariables(workspaceUri);
+
+            assert.deepEqual(vars, {});
+
+            await provider.getEnvironmentVariables(workspaceUri);
+
+            // Verify that the contents of `_getEnvironmentVariables()` method are only invoked once
+            verify(configuration.getSettings(anything())).once();
+            assert.deepEqual(vars, {});
+        });
+
+        test(`Cache result must be cleared when cache expires ${workspaceTitle}`, async () => {
+            const envFile = path.join('a', 'b', 'env.file');
+            const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
+            const currentProcEnv = { SOMETHING: 'wow' };
+
+            when(currentProcess.env).thenReturn(currentProcEnv);
+            when(settings.envFile).thenReturn(envFile);
+            when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
+            when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(undefined);
+            when(platform.pathVariableName).thenReturn('PATH');
+
+            provider = new EnvironmentVariablesProvider(
+                instance(envVarsService),
+                [],
+                instance(platform),
+                instance(workspace),
+                instance(configuration),
+                instance(currentProcess),
+                instance(serviceContainer),
+                100
+            );
+            const vars = await provider.getEnvironmentVariables(workspaceUri);
+
+            assert.deepEqual(vars, {});
+
+            await sleep(110);
+            await provider.getEnvironmentVariables(workspaceUri);
+
+            // Verify that the contents of `_getEnvironmentVariables()` method are invoked twice
+            verify(configuration.getSettings(anything())).twice();
+            assert.deepEqual(vars, {});
         });
     });
 });

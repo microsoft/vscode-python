@@ -1,6 +1,6 @@
 // tslint:disable:no-any no-require-imports no-function-expression no-invalid-this
 
-import { ProgressLocation, ProgressOptions, Uri, window } from 'vscode';
+import { ProgressLocation, ProgressOptions, window } from 'vscode';
 import '../../common/extensions';
 import { IServiceContainer } from '../../ioc/types';
 import { isTestExecution } from '../constants';
@@ -127,7 +127,6 @@ export function makeDebounceAsyncDecorator(wait?: number) {
 }
 
 type VSCodeType = typeof import('vscode');
-type PromiseFunctionWithFirstArgOfResource = (...any: [Uri | undefined, ...any[]]) => Promise<any>;
 
 export function clearCachedResourceSpecificIngterpreterData(
     key: string,
@@ -137,27 +136,6 @@ export function clearCachedResourceSpecificIngterpreterData(
 ) {
     const cacheStore = new InMemoryInterpreterSpecificCache(key, 0, [resource], serviceContainer, vscode);
     cacheStore.clear();
-}
-
-/**
- * This is intended to be a replacement to a decorator. `serviceContainer` object can't
- * be passed into a normal decorator as decorators are not applied after class is constructed
- */
-export function cacheResourceSpecificInterpreterData(
-    key: string,
-    expiryDurationMs: number,
-    serviceContainer: IServiceContainer,
-    originalMethod: PromiseFunctionWithFirstArgOfResource,
-    ...args: [Uri | undefined, ...any[]]
-) {
-    const cacheStore = new InMemoryInterpreterSpecificCache(key, expiryDurationMs, args, serviceContainer);
-    if (cacheStore.hasData) {
-        traceVerbose(`Cached data exists ${key}, ${args[0] ? args[0].fsPath : '<No Resource>'}`);
-        return Promise.resolve(cacheStore.data);
-    }
-    const promise = originalMethod(...args) as Promise<any>;
-    promise.then(result => (cacheStore.data = result)).ignoreErrors();
-    return promise;
 }
 
 type PromiseFunctionWithAnyArgs = (...any: any) => Promise<any>;
