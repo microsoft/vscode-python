@@ -6,7 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const constants = require('../../constants');
 
-console.log(process.argv);
+console.log(process.argv[2]);
 
 const xmlFile = path.join(constants.ExtensionRootDir, 'test-results.xml');
 const performanceResultsFile = path.join(
