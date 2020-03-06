@@ -8,7 +8,7 @@ import * as path from 'path';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
-import { LogOptions, traceDecorators, traceError, traceVerbose } from '../../common/logger';
+import { LogOptions, traceDecorators, traceError, traceInfo, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
@@ -139,24 +139,30 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // should at least tell the user.
             let result: ExecutionResult<string> | undefined;
             while (!result) {
-                result = await processService.shellExec(command, {
-                    env,
-                    shell: shellInfo.shell,
-                    timeout: getEnvironmentTimeout,
-                    maxBuffer: 1000 * 1000
-                });
-                if (result.stderr && result.stderr.length > 0) {
+                try {
+                    result = await processService.shellExec(command, {
+                        env,
+                        shell: shellInfo.shell,
+                        timeout: getEnvironmentTimeout,
+                        maxBuffer: 1000 * 1000,
+                        throwOnStdErr: false
+                    });
+                    if (result.stderr && result.stderr.length > 0) {
+                        throw new Error(`StdErr from ShellExec, ${result.stderr}`);
+                    }
+                } catch (exc) {
                     // Special case. Conda for some versions will state a file is in use. If
                     // that's the case, wait and try again. This happens especially on AzDo
                     if (
-                        result.stderr.includes(
-                            'The process cannot access the file because it is being used by another process'
-                        )
+                        exc
+                            .toString()
+                            .includes('The process cannot access the file because it is being used by another process')
                     ) {
+                        traceInfo(`Conda is busy, attempting to retry ...`);
                         result = undefined;
                         await sleep(500);
                     } else {
-                        throw new Error(`StdErr from ShellExec, ${result.stderr}`);
+                        throw exc;
                     }
                 }
             }
