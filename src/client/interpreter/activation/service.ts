@@ -160,15 +160,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     }
                 }
             }
-            result = await processService.shellExec(command, {
-                env,
-                shell: shellInfo.shell,
-                timeout: getEnvironmentTimeout,
-                maxBuffer: 1000 * 1000
-            });
-            if (result.stderr && result.stderr.length > 0) {
-                throw new Error(`StdErr from ShellExec, ${result.stderr}`);
-            }
             const returnedEnv = this.parseEnvironmentOutput(result.stdout);
 
             // Put back the PYTHONWARNINGS value
