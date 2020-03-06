@@ -13,10 +13,19 @@ initialize(require('vscode'));
 // Initialize the logger first.
 require('./common/logger');
 
+//===============================================
+// We start tracking the extension's startup time at this point.  The
+// locations at which we record various Intervals are marked below in
+// the same way as this.
+
 const durations: Record<string, number> = {};
 import { StopWatch } from './common/utils/stopWatch';
 // Do not move this line of code (used to measure extension load times).
 const stopWatch = new StopWatch();
+
+//===============================================
+// loading starts here
+
 import { Container } from 'inversify';
 import {
     CodeActionKind,
@@ -113,6 +122,10 @@ import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from '.
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
+
+//===============================================
+// loading ends here
+
 const activationDeferred = createDeferred<void>();
 let activatedServiceContainer: ServiceContainer | undefined;
 
@@ -129,6 +142,10 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
 async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi> {
     displayProgress(activationDeferred.promise);
     durations.startActivateTime = stopWatch.elapsedTime;
+
+    //===============================================
+    // activation starts here
+
     const cont = new Container();
     const serviceManager = new ServiceManager(cont);
     const serviceContainer = new ServiceContainer(cont);
@@ -202,6 +219,10 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     });
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
+
+    //===============================================
+    // activation ends here
+
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
