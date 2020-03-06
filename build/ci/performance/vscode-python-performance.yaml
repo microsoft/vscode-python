@@ -25,4 +25,6 @@ stages:
     timeoutInMinutes: 5
     pool: DSPerf
     steps:
-      - powershell: node ./build/ci/performance/checkPerformanceResults.js $(DS_Performance_Benchmark)
+      - powershell: |
+        echo $(DS_Performance_Benchmark)
+        node ./build/ci/performance/checkPerformanceResults.js $(DS_Performance_Benchmark)
