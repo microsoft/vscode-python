@@ -11,7 +11,6 @@ import { cacheResourceSpecificInterpreterData, clearCachedResourceSpecificIngter
 import { EnvironmentVariables, IEnvironmentVariablesProvider, IEnvironmentVariablesService } from './types';
 
 const cacheDuration = 60 * 60 * 1000;
-let serviceContainerForDecorator: IServiceContainer | undefined;
 @injectable()
 export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvider, Disposable {
     public trackedWorkspaceFolders = new Set<string>();
@@ -27,7 +26,6 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         @inject(ICurrentProcess) private process: ICurrentProcess,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer
     ) {
-        serviceContainerForDecorator = this.serviceContainer;
         disposableRegistry.push(this);
         this.changeEventEmitter = new EventEmitter();
         const disposable = this.workspaceService.onDidChangeConfiguration(this.configurationChanged, this);
@@ -46,8 +44,17 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             }
         });
     }
-    @cacheResourceSpecificInterpreterData('getEnvironmentVariables', cacheDuration, serviceContainerForDecorator)
+
     public async getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
+        return cacheResourceSpecificInterpreterData(
+            'getEnvironmentVariables',
+            cacheDuration,
+            this.serviceContainer,
+            this._getEnvironmentVariables,
+            resource
+        );
+    }
+    public async _getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
         let mergedVars = await this.getCustomEnvironmentVariables(resource);
         if (!mergedVars) {
             mergedVars = {};
@@ -101,12 +108,12 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         clearCachedResourceSpecificIngterpreterData(
             'getEnvironmentVariables',
             workspaceFolderUri,
-            serviceContainerForDecorator
+            this.serviceContainer
         );
         clearCachedResourceSpecificIngterpreterData(
             'CustomEnvironmentVariables',
             workspaceFolderUri,
-            serviceContainerForDecorator
+            this.serviceContainer
         );
         this.changeEventEmitter.fire(workspaceFolderUri);
     }

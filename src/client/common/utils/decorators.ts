@@ -132,45 +132,32 @@ type PromiseFunctionWithFirstArgOfResource = (...any: [Uri | undefined, ...any[]
 export function clearCachedResourceSpecificIngterpreterData(
     key: string,
     resource: Resource,
-    serviceContainer: IServiceContainer | undefined,
+    serviceContainer: IServiceContainer,
     vscode: VSCodeType = require('vscode')
 ) {
-    const cacheStore = new InMemoryInterpreterSpecificCache(key, 0, [resource], vscode, serviceContainer);
+    const cacheStore = new InMemoryInterpreterSpecificCache(key, 0, [resource], serviceContainer, vscode);
     cacheStore.clear();
 }
+
+/**
+ * This is intended to be a replacement to a decorator. `serviceContainer` object can't
+ * be passed into a normal decorator as decorators are not applied after class is constructed
+ */
 export function cacheResourceSpecificInterpreterData(
     key: string,
     expiryDurationMs: number,
-    serviceContainer: IServiceContainer | undefined,
-    vscode: VSCodeType = require('vscode')
+    serviceContainer: IServiceContainer,
+    originalMethod: PromiseFunctionWithFirstArgOfResource,
+    ...args: [Uri | undefined, ...any[]]
 ) {
-    return function(
-        _target: Object,
-        _propertyName: string,
-        descriptor: TypedPropertyDescriptor<PromiseFunctionWithFirstArgOfResource>
-    ) {
-        const originalMethod = descriptor.value!;
-        descriptor.value = async function(...args: [Uri | undefined, ...any[]]) {
-            if (!serviceContainer) {
-                traceError('No service container passed to `cacheResourceSpecificInterpreterData` decorator');
-                return;
-            }
-            const cacheStore = new InMemoryInterpreterSpecificCache(
-                key,
-                expiryDurationMs,
-                args,
-                vscode,
-                serviceContainer
-            );
-            if (cacheStore.hasData) {
-                traceVerbose(`Cached data exists ${key}, ${args[0] ? args[0].fsPath : '<No Resource>'}`);
-                return Promise.resolve(cacheStore.data);
-            }
-            const promise = originalMethod.apply(this, args) as Promise<any>;
-            promise.then(result => (cacheStore.data = result)).ignoreErrors();
-            return promise;
-        };
-    };
+    const cacheStore = new InMemoryInterpreterSpecificCache(key, expiryDurationMs, args, serviceContainer);
+    if (cacheStore.hasData) {
+        traceVerbose(`Cached data exists ${key}, ${args[0] ? args[0].fsPath : '<No Resource>'}`);
+        return Promise.resolve(cacheStore.data);
+    }
+    const promise = originalMethod(...args) as Promise<any>;
+    promise.then(result => (cacheStore.data = result)).ignoreErrors();
+    return promise;
 }
 
 type PromiseFunctionWithAnyArgs = (...any: any) => Promise<any>;
