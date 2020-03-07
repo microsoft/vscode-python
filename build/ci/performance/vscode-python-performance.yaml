@@ -28,5 +28,6 @@ stages:
         secureFile: 'DS_test_benchmark.json'
     - powershell: |
        cat $(benchmark.secureFilePath)
+       cat $benchmark.secureFilePath
        $arg = cat $(benchmark.secureFilePath) -Raw
        node ./build/ci/performance/checkPerformanceResults.js $arg
