@@ -6,6 +6,7 @@ const path = require('path');
 const constants = require('../../constants');
 
 const benchmark = process.argv.slice(2).join(' ');
+console.log(benchmark);
 const performanceResultsFile = path.join(
     constants.ExtensionRootDir,
     'build',
