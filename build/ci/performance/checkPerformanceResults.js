@@ -5,19 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const constants = require('../../constants');
 
-// function insert(str, index, value) {
-//     return str.substr(0, index) + value + str.substr(index);
-// }
-
-// function fixSecureFile(rawJson) {
-//     let index = 0;
-//     let nameIndex = rawJson.search('name');
-//     rawJson = insert(rawJson, nameIndex, '"');
-//     return rawJson;
-// }
-
 const benchmark = process.argv.slice(2).join(' ');
-console.log(benchmark);
 const performanceResultsFile = path.join(
     constants.ExtensionRootDir,
     'build',
@@ -37,18 +25,21 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
     const performanceJson = JSON.parse(performanceData);
 
     performanceJson.forEach(result => {
-        const avg = result.times.reduce((a, b) => parseFloat(a) + parseFloat(b)) / result.times.length;
+        const cleanTimes = result.times.filter(x => x !== -1);
+        const avg =
+            cleanTimes.length === 0
+                ? 999
+                : cleanTimes.reduce((a, b) => parseFloat(a) + parseFloat(b)) / cleanTimes.length;
         const testcase = benchmarkJson.find(x => x.name === result.name);
 
         // compare the average result to the base JSON
         if (testcase && testcase.time !== -1 && avg > parseFloat(testcase.time) + errorMargin) {
-            console.log(testcase);
             failedTests +=
                 'Performance is slow in: ' +
                 testcase.name +
-                ', Benchmark time: ' +
+                '.\n\tBenchmark time: ' +
                 testcase.time +
-                ', Average test time: ' +
+                '\n\tAverage test time: ' +
                 avg +
                 '\n';
         }

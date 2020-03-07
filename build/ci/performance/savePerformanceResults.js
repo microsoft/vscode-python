@@ -28,7 +28,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                 jsonObj.testsuite.testcase.forEach(testcase => {
                     const test = {
                         name: testcase.classname + ' ' + testcase.name,
-                        times: [testcase.failure || testcase.skipped ? -1 : parseFloat(testcase.time)]
+                        times: [testcase.failure || testcase.skipped === '' ? -1 : parseFloat(testcase.time)]
                     };
 
                     performanceData.push(test);
@@ -38,7 +38,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
 
                 jsonObj.testsuite.testcase.forEach(testcase => {
                     let test = performanceData.find(x => x.name === testcase.classname + ' ' + testcase.name);
-                    let time = testcase.failure || testcase.skipped ? -1 : parseFloat(testcase.time);
+                    let time = testcase.failure || testcase.skipped === '' ? -1 : parseFloat(testcase.time);
 
                     if (test) {
                         // if the test name is already there, we add the new time
