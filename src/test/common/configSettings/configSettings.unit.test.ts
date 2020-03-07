@@ -46,6 +46,7 @@ suite('Python Settings', async () => {
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
         expected = new CustomPythonSettings(undefined, new MockAutoSelectionService());
         settings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
+        expected.defaultInterpreterPath = 'python';
     });
 
     function initializeConfig(sourceSettings: PythonSettings) {
@@ -57,7 +58,8 @@ suite('Python Settings', async () => {
             'pipenvPath',
             'envFile',
             'poetryPath',
-            'insidersChannel'
+            'insidersChannel',
+            'defaultInterpreterPath'
         ]) {
             config
                 .setup(c => c.get<string>(name))
@@ -129,11 +131,18 @@ suite('Python Settings', async () => {
     }
 
     suite('String settings', async () => {
-        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(
-            async settingName => {
-                testIfValueIsUpdated(settingName, 'stringValue');
-            }
-        );
+        [
+            'pythonPath',
+            'venvPath',
+            'condaPath',
+            'pipenvPath',
+            'envFile',
+            'poetryPath',
+            'insidersChannel',
+            'defaultInterpreterPath'
+        ].forEach(async settingName => {
+            testIfValueIsUpdated(settingName, 'stringValue');
+        });
     });
 
     suite('Boolean settings', async () => {
