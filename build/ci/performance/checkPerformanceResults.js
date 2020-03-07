@@ -5,6 +5,17 @@ const fs = require('fs');
 const path = require('path');
 const constants = require('../../constants');
 
+// function insert(str, index, value) {
+//     return str.substr(0, index) + value + str.substr(index);
+// }
+
+// function fixSecureFile(rawJson) {
+//     let index = 0;
+//     let nameIndex = rawJson.search('name');
+//     rawJson = insert(rawJson, nameIndex, '"');
+//     return rawJson;
+// }
+
 const benchmark = process.argv.slice(2).join(' ');
 console.log(benchmark);
 const performanceResultsFile = path.join(

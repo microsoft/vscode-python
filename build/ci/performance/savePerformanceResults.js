@@ -15,9 +15,6 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
         throw xmlReadError;
     }
 
-    // console.log('=============================');
-    // console.log(xmlData);
-    // console.log('=============================');
     if (fastXmlParser.validate(xmlData)) {
         const defaultOptions = {
             attributeNamePrefix: '',
@@ -28,7 +25,6 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
         fs.readFile(jsonFile, 'utf8', (jsonReadError, data) => {
             if (jsonReadError) {
                 // File doesn't exist, so we create it
-
                 jsonObj.testsuite.testcase.forEach(testcase => {
                     const test = {
                         name: testcase.classname + ' ' + testcase.name,
@@ -66,7 +62,6 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                     if (writeResultsError) {
                         throw writeResultsError;
                     }
-                    // tslint:disable-next-line: no-console
                     console.log('performance-results.json was saved!');
                 }
             );
