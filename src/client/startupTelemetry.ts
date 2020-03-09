@@ -21,7 +21,17 @@ interface IStopWatch {
     elapsedTime: number;
 }
 
-export async function sendStartupTelemetry(
+export function sendStartupTelemetryInBackground(
+    // tslint:disable-next-line:no-any
+    activatedPromise: Promise<any>,
+    durations: Record<string, number>,
+    stopWatch: IStopWatch,
+    serviceContainer: IServiceContainer
+) {
+    sendStartupTelemetry(activatedPromise, durations, stopWatch, serviceContainer).ignoreErrors();
+}
+
+async function sendStartupTelemetry(
     // tslint:disable-next-line:no-any
     activatedPromise: Promise<any>,
     durations: Record<string, number>,

@@ -98,7 +98,7 @@ import { registerTypes as providersRegisterTypes } from './providers/serviceRegi
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { TerminalProvider } from './providers/terminalProvider';
 import { ISortImportsEditingProvider } from './providers/types';
-import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
+import { sendErrorTelemetry, sendStartupTelemetryInBackground } from './startupTelemetry';
 import { registerTypes as commonRegisterTerminalTypes } from './terminals/serviceRegistry';
 import { ICodeExecutionManager, ITerminalAutoActivation } from './terminals/types';
 import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
@@ -118,7 +118,9 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
     try {
         return await activateUnsafe(context);
     } catch (ex) {
-        handleError(ex);
+        // We want to completely handle the error
+        // before notifying VS Code.
+        await handleError(ex);
         throw ex; // re-raise
     }
 }
@@ -156,9 +158,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    sendStartupTelemetry(activationPromise, durations, stopWatch, serviceContainer)
-        // It will run in the background.
-        .ignoreErrors();
+    sendStartupTelemetryInBackground(activationPromise, durations, stopWatch, serviceContainer);
 
     return buildApi(activationPromise, serviceManager, serviceContainer);
 }
@@ -360,12 +360,12 @@ async function initializeServices(
 /////////////////////////////
 // error handling
 
-function handleError(ex: Error) {
+async function handleError(ex: Error) {
     notifyUser(
         "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
     );
     traceError('extension activation failed', ex);
-    sendErrorTelemetry(ex, durations, activatedServiceContainer).ignoreErrors();
+    await sendErrorTelemetry(ex, durations, activatedServiceContainer);
 }
 
 interface IAppShell {
