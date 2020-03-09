@@ -161,8 +161,6 @@ async function activateLegacy(
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
-    // At this point we have enough information to send valid telemetry.
-
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     interpreterManager
         .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
