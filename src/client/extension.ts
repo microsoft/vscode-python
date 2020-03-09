@@ -133,6 +133,6 @@ function notifyUser(msg: string) {
         }
         appShell.showErrorMessage(msg).ignoreErrors();
     } catch (ex) {
-        // ignore
+        traceError('failed to notify user', ex);
     }
 }

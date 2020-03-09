@@ -64,7 +64,7 @@ export async function sendErrorTelemetry(
             try {
                 props = await getActivationTelemetryProps(serviceContainer);
             } catch (ex) {
-                // ignore
+                traceError('getActivationTelemetryProps() failed.', ex);
             }
         }
         sendTelemetryEvent(EventName.EDITOR_LOAD, durations, props, ex);
