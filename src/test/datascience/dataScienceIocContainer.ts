@@ -367,6 +367,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public get mockJupyter(): MockJupyterManager | undefined {
         return this.jupyterMock ? this.jupyterMock.getManager() : undefined;
     }
+    private static jupyterInterpreters: PythonInterpreter[] = [];
     public webPanelListener: IWebPanelMessageListener | undefined;
     public readonly useCommandFinderForJupyterServer = false;
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
@@ -1125,11 +1126,21 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
     }
 
+    public async getJupyterCapableInterpreter(): Promise<PythonInterpreter | undefined> {
+        const list = await this.getJupyterInterpreters();
+        return list ? list[0] : undefined;
+    }
+
     public async getJupyterInterpreters(): Promise<PythonInterpreter[]> {
+        // This should be cacheable as we don't install new interpreters during tests
+        if (DataScienceIocContainer.jupyterInterpreters.length > 0) {
+            return DataScienceIocContainer.jupyterInterpreters;
+        }
         const list = await this.get<IInterpreterService>(IInterpreterService).getInterpreters(undefined);
         const promises = list.map(f => this.hasJupyter(f).then(b => (b ? f : undefined)));
         const resolved = await Promise.all(promises);
-        return resolved.filter(r => r) as PythonInterpreter[];
+        DataScienceIocContainer.jupyterInterpreters = resolved.filter(r => r) as PythonInterpreter[];
+        return DataScienceIocContainer.jupyterInterpreters;
     }
 
     public addWorkspaceFolder(folderPath: string) {
