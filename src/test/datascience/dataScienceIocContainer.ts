@@ -1013,11 +1013,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         };
 
-        appShell
-            .setup(a => a.showErrorMessage(TypeMoq.It.isAnyString()))
-            .returns(e => {
-                throw e;
-            });
+        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(''));
         appShell
             .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(''));
@@ -1284,7 +1280,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: []
+            jupyterCommandLineArguments: [],
+            disableJupyterAutoStart: true
         };
         pythonSettings.jediEnabled = false;
         pythonSettings.downloadLanguageServer = false;

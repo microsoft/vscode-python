@@ -68,9 +68,13 @@ export class JupyterServerBase implements INotebookServer {
         // Listen to the process going down
         if (this.launchInfo && this.launchInfo.connectionInfo) {
             this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected(c => {
-                traceError(localize.DataScience.jupyterServerCrashed().format(c.toString()));
-                this.serverExitCode = c;
-                this.shutdown().ignoreErrors();
+                try {
+                    this.serverExitCode = c;
+                    traceError(localize.DataScience.jupyterServerCrashed().format(c.toString()));
+                    this.shutdown().ignoreErrors();
+                } catch {
+                    noop();
+                }
             });
         }
 
