@@ -520,7 +520,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             oldAsk = settings.datascience.askForKernelRestart;
             settings.datascience.askForKernelRestart = false;
         }
-        await this.restartKernel();
+        await this.restartKernel(true);
         if (oldAsk && settings && settings.datascience) {
             settings.datascience.askForKernelRestart = true;
         }

@@ -352,7 +352,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     @captureTelemetry(Telemetry.RestartKernel)
-    public async restartKernel(): Promise<void> {
+    public async restartKernel(internal: boolean = false): Promise<void> {
+        // Only log this if it's user requested restart
+        if (!internal) {
+            this.logTelemetry(Telemetry.RestartKernelCommand);
+        }
+
         if (this._notebook && !this.restartingKernel) {
             if (await this.shouldAskForRestart()) {
                 // Ask the user if they want us to restart or not.

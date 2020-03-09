@@ -1568,6 +1568,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RemoteReexecuteCode]: never | undefined;
     [Telemetry.RestartJupyterTime]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
+    [Telemetry.RestartKernelCommand]: never | undefined;
     [Telemetry.RunAllCells]: never | undefined;
     [Telemetry.RunSelectionOrLine]: never | undefined;
     [Telemetry.RunCell]: never | undefined;
