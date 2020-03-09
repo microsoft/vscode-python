@@ -399,34 +399,6 @@ export function setUpDomEnvironment() {
     (global as any)['Headers'] = fetchMod.Headers;
     // tslint:disable-next-line:no-string-literal no-eval no-any
     (global as any)['WebSocket'] = eval('require')('ws');
-
-    // For the loc test to work, we have to have a global getter for loc strings
-    // tslint:disable-next-line:no-string-literal no-eval no-any
-    (global as any)['getLocStrings'] = () => {
-        return { 'DataScience.unknownMimeType': 'Unknown mime type from helper' };
-    };
-
-    // tslint:disable-next-line:no-string-literal no-eval no-any
-    (global as any)['getInitialSettings'] = () => {
-        return {
-            allowImportFromNotebook: true,
-            jupyterLaunchTimeout: 10,
-            jupyterLaunchRetries: 3,
-            enabled: true,
-            jupyterServerURI: 'local',
-            // tslint:disable-next-line: no-invalid-template-strings
-            notebookFileRoot: '${fileDirname}',
-            changeDirOnImportExport: false,
-            useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000,
-            searchForJupyter: true,
-            showCellInputCode: true,
-            collapseCellInputCodeByDefault: true,
-            allowInput: true,
-            variableExplorerExclude: 'module;function;builtin_function_or_method'
-        };
-    };
-
     (global as any)['DOMParser'] = dom.window.DOMParser;
     (global as any)['Blob'] = dom.window.Blob;
 

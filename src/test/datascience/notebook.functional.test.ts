@@ -52,7 +52,6 @@ import {
 } from '../../client/interpreter/contracts';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
-import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getConnectionInfo, getIPConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
@@ -105,10 +104,6 @@ suite('DataScience notebook tests', () => {
         if (process.env.PYTHONWARNINGS) {
             delete process.env.PYTHONWARNINGS;
         }
-    });
-
-    suiteTeardown(() => {
-        asyncDump();
     });
 
     function escapePath(p: string) {

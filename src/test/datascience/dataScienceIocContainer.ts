@@ -7,7 +7,7 @@ import { interfaces } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, reset, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import {
     CancellationTokenSource,
@@ -77,9 +77,10 @@ import {
     IWebPanelMessageListener,
     IWebPanelOptions,
     IWebPanelProvider,
-    IWorkspaceService,
-    WebPanelMessage
+    IWorkspaceService
 } from '../../client/common/application/types';
+import { WebPanel } from '../../client/common/application/webPanels/webPanel';
+import { WebPanelProvider } from '../../client/common/application/webPanels/webPanelProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -247,7 +248,10 @@ import {
 } from '../../client/datascience/types';
 import { ProtocolParser } from '../../client/debugger/debugAdapter/Common/protocolParser';
 import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
-import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
+import {
+    EnvironmentActivationService,
+    EnvironmentActivationServiceCache
+} from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
@@ -404,7 +408,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     };
     private extraListeners: ((m: string, p: any) => void)[] = [];
 
-    private webPanelProvider: TypeMoq.IMock<IWebPanelProvider> | undefined;
+    private webPanelProvider = mock(WebPanelProvider);
     private settingsMap = new Map<string, any>();
     private configMap = new Map<string, MockWorkspaceConfiguration>();
     private emptyConfig = new MockWorkspaceConfiguration();
@@ -432,7 +436,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         // Bounce this so that our editor has time to shutdown
-        await sleep(10);
+        await sleep(150);
 
         // Clear out the monaco global services. Some of these services are preventing shutdown.
         // tslint:disable: no-require-imports
@@ -454,6 +458,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (config.getCSSBasedConfiguration) {
             config.getCSSBasedConfiguration().dispose();
         }
+
+        // Because there are outstanding promises holding onto this object, clear out everything we can
+        this.workspaceFolders = [];
+        this.settingsMap.clear();
+        this.configMap.clear();
+        this.setContexts = {};
+        this.extraListeners = [];
+        this.webPanelListener = undefined;
+        reset(this.webPanelProvider);
     }
 
     //tslint:disable:max-func-body-length
@@ -463,6 +476,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Create the workspace service first as it's used to set config values.
         this.createWorkspaceService();
+
+        // Setup our webpanel provider to create our dummy web panel
+        when(this.webPanelProvider.create(anything())).thenCall(this.onCreateWebPanel.bind(this));
+        this.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, instance(this.webPanelProvider));
 
         this.registerFileSystemTypes();
         this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
@@ -767,6 +784,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Inform the cacheable locator service to use a static map so that it stays in memory in between tests
         CacheableLocatorPromiseCache.forceUseStatic();
 
+        // Do the same thing for the environment variable activation service.
+        EnvironmentActivationServiceCache.forceUseStatic();
+
         const currentProcess = new CurrentProcess();
         this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
@@ -1052,26 +1072,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
     }
 
-    public createWebPanel(): IWebPanel {
-        const webPanel = TypeMoq.Mock.ofType<IWebPanel>();
-        webPanel
-            .setup(p => p.postMessage(TypeMoq.It.isAny()))
-            .callback((m: WebPanelMessage) => {
-                const message = createMessageEvent(m);
-                if (this.postMessage) {
-                    this.postMessage(message);
-                } else {
-                    throw new Error('postMessage callback not defined');
-                }
-            });
-        webPanel.setup(p => p.show(TypeMoq.It.isAny())).returns(() => Promise.resolve());
-
-        // See https://github.com/florinn/typemoq/issues/67 for why this is necessary
-        webPanel.setup((p: any) => p.then).returns(() => undefined);
-
-        return webPanel.object;
-    }
-
     // tslint:disable:any
     public createWebView(
         mount: () => ReactWrapper<any, Readonly<{}>, React.Component>,
@@ -1083,44 +1083,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             liveShareTest.forceRole(role);
         }
 
-        if (!this.webPanelProvider) {
-            this.webPanelProvider = TypeMoq.Mock.ofType<IWebPanelProvider>();
-            this.serviceManager.addSingletonInstance<IWebPanelProvider>(
-                IWebPanelProvider,
-                this.webPanelProvider.object
-            );
-        } else {
-            this.webPanelProvider.reset();
-        }
-        const webPanel = this.createWebPanel();
-
-        // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        this.webPanelProvider
-            .setup(p => p.create(TypeMoq.It.isAny()))
-            .returns((options: IWebPanelOptions) => {
-                // Keep track of the current listener. It listens to messages through the vscode api
-                this.webPanelListener = options.listener;
-
-                // Send messages that were already posted but were missed.
-                // During normal operation, the react control will not be created before
-                // the webPanelListener
-                if (this.missedMessages.length && this.webPanelListener) {
-                    // This needs to be async because we are being called in the ctor of the webpanel. It can't
-                    // handle some messages during the ctor.
-                    setTimeout(() => {
-                        this.missedMessages.forEach(m =>
-                            this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()
-                        );
-                    }, 0);
-
-                    // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
-                    // create multiple webpanels with the same mount. We need to resend these messages to
-                    // other webpanels that get created with the same mount.
-                }
-
-                // Return our dummy web panel
-                return Promise.resolve(webPanel);
-            });
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.mountReactControl(mount);
     }
@@ -1230,6 +1192,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (this.wrapperCreatedPromise && !this.wrapperCreatedPromise.resolved) {
             this.wrapperCreatedPromise.resolve();
         }
+
+        // Clear out msg payload
+        delete msg.payload;
     }
 
     public getWorkspaceConfig(section: string | undefined, resource?: Resource): MockWorkspaceConfiguration {
@@ -1245,13 +1210,53 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return result;
     }
 
+    private createWebPanel(): IWebPanel {
+        const webPanel = mock(WebPanel);
+        when(webPanel.postMessage(anything())).thenCall(m => {
+            const message = createMessageEvent(m);
+            if (this.postMessage) {
+                this.postMessage(message);
+            }
+            if (m.payload) {
+                delete m.payload;
+            }
+        });
+        when((webPanel as any).then).thenReturn(undefined);
+        return instance(webPanel);
+    }
+
+    private async onCreateWebPanel(options: IWebPanelOptions) {
+        // Keep track of the current listener. It listens to messages through the vscode api
+        this.webPanelListener = options.listener;
+
+        // Send messages that were already posted but were missed.
+        // During normal operation, the react control will not be created before
+        // the webPanelListener
+        if (this.missedMessages.length && this.webPanelListener) {
+            // This needs to be async because we are being called in the ctor of the webpanel. It can't
+            // handle some messages during the ctor.
+            setTimeout(() => {
+                this.missedMessages.forEach(m =>
+                    this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()
+                );
+            }, 0);
+
+            // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
+            // create multiple webpanels with the same mount. We need to resend these messages to
+            // other webpanels that get created with the same mount.
+        }
+
+        // Return our dummy web panel
+        return this.createWebPanel();
+    }
+
     private generatePythonWorkspaceConfig(): MockWorkspaceConfiguration {
         // Create a dummy settings just to setup the workspace config
         const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
         pythonSettings.pythonPath = this.defaultPythonPath!;
         pythonSettings.datascience = {
             allowImportFromNotebook: true,
-            jupyterLaunchTimeout: 60000,
+            jupyterLaunchTimeout: 20000,
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',

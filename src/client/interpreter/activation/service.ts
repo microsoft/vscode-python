@@ -40,10 +40,49 @@ const condaRetryMessages = [
     'The directory is not empty'
 ];
 
+export class EnvironmentActivationServiceCache {
+    private static useStatic = false;
+    private static staticMap = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
+    private normalMap = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
+
+    public static forceUseStatic() {
+        EnvironmentActivationServiceCache.useStatic = true;
+    }
+    public get(key: string): InMemoryCache<NodeJS.ProcessEnv | undefined> | undefined {
+        if (EnvironmentActivationServiceCache.useStatic) {
+            return EnvironmentActivationServiceCache.staticMap.get(key);
+        }
+        return this.normalMap.get(key);
+    }
+
+    public set(key: string, value: InMemoryCache<NodeJS.ProcessEnv | undefined>) {
+        if (EnvironmentActivationServiceCache.useStatic) {
+            EnvironmentActivationServiceCache.staticMap.set(key, value);
+        } else {
+            this.normalMap.set(key, value);
+        }
+    }
+
+    public delete(key: string) {
+        if (EnvironmentActivationServiceCache.useStatic) {
+            EnvironmentActivationServiceCache.staticMap.delete(key);
+        } else {
+            this.normalMap.delete(key);
+        }
+    }
+
+    public clear() {
+        // Don't clear during a test as the environment isn't going to change
+        if (!EnvironmentActivationServiceCache.useStatic) {
+            this.normalMap.clear();
+        }
+    }
+}
+
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
-    private readonly activatedEnvVariablesCache = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
+    private readonly activatedEnvVariablesCache = new EnvironmentActivationServiceCache();
     constructor(
         @inject(ITerminalHelper) private readonly helper: ITerminalHelper,
         @inject(IPlatformService) private readonly platform: IPlatformService,

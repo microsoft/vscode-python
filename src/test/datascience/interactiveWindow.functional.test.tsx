@@ -23,7 +23,6 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
-import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { defaultDataScienceSettings } from './helpers';
@@ -83,10 +82,6 @@ suite('DataScience Interactive Window output tests', () => {
             }
         }
         await ioc.dispose();
-    });
-
-    suiteTeardown(() => {
-        asyncDump();
     });
 
     async function forceSettingsChange(newSettings: IDataScienceSettings) {

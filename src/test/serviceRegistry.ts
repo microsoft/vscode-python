@@ -245,6 +245,7 @@ export class IocContainer {
             }
         }
         this.disposables = [];
+        this.serviceManager.dispose();
     }
 
     public registerCommonTypes(registerFileSystem: boolean = true) {
