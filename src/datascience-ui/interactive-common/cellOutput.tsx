@@ -23,6 +23,7 @@ const ansiToHtml = require('ansi-to-html');
 const cloneDeep = require('lodash/cloneDeep');
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineStringInput, concatMultilineStringOutput } from '../common';
+import { TrimmedOutputMessage } from './trimmedOutputLink';
 
 interface ICellOutputProps {
     cellVM: ICellViewModel;
@@ -31,7 +32,6 @@ interface ICellOutputProps {
     hideOutput?: boolean;
     themeMatplotlibPlots?: boolean;
     expandImage(imageHtml: string): void;
-    openSettings(setting?: string): void;
 }
 
 interface ICellOutputData {
@@ -173,22 +173,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     public getUnknownMimeTypeFormatString() {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
-
-    private getTrimMessage() {
-        const newLine = '\n...\n';
-        return (
-            <a onClick={this.changeTextOutputLimit} role="button" className="image-button-image">
-                {getLocString(
-                    'DataScience.trimmedOutput',
-                    'Output was trimmed for performance reasons.\nTo see the full output set the setting "python.dataScience.textOutputLimit" to 0.'
-                ) + newLine}
-            </a>
-        );
-    }
-
-    private changeTextOutputLimit = () => {
-        this.props.openSettings('python.dataScience.textOutputLimit');
-    };
 
     private getCell = () => {
         return this.props.cellVM.cell;
@@ -457,7 +441,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         buffer.push(
                             <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
                                 {transformed.extraButton}
-                                {this.getTrimMessage()}
+                                <TrimmedOutputMessage></TrimmedOutputMessage>
                                 <Transform data={transformed.output.data} />
                             </div>
                         );

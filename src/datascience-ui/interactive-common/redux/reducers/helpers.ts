@@ -85,6 +85,7 @@ export namespace Helpers {
             // and the user has updated the cell text since then.
             const newVM = {
                 ...newVMs[index],
+                hasBeenRun: true,
                 cell: {
                     ...newVMs[index].cell,
                     state: arg.payload.data.state,

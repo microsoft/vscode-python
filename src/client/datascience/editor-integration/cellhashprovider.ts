@@ -21,8 +21,7 @@ import {
     ICellHashListener,
     ICellHashProvider,
     IFileHashes,
-    IInteractiveWindowListener,
-    INotebookExecutionLogger
+    IInteractiveWindowListener
 } from '../types';
 
 interface IRangedCellHash extends ICellHash {
@@ -36,7 +35,7 @@ interface IRangedCellHash extends ICellHash {
 // This class provides hashes for debugging jupyter cells. Call getHashes just before starting debugging to compute all of the
 // hashes for cells.
 @injectable()
-export class CellHashProvider implements ICellHashProvider, IInteractiveWindowListener, INotebookExecutionLogger {
+export class CellHashProvider implements ICellHashProvider, IInteractiveWindowListener {
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
@@ -44,8 +43,8 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         payload: any;
     }>();
     // Map of file to Map of start line to actual hash
-    private hashes: Map<string, IRangedCellHash[]> = new Map<string, IRangedCellHash[]>();
     private executionCount: number = 0;
+    private hashes: Map<string, IRangedCellHash[]> = new Map<string, IRangedCellHash[]>();
     private updateEventEmitter: EventEmitter<void> = new EventEmitter<void>();
 
     constructor(
@@ -127,19 +126,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         noop();
     }
 
-    private onChangedDocument(e: TextDocumentChangeEvent) {
-        // See if the document is in our list of docs to watch
-        const perFile = this.hashes.get(e.document.fileName);
-        if (perFile) {
-            // Apply the content changes to the file's cells.
-            const docText = e.document.getText();
-            e.contentChanges.forEach(c => {
-                this.handleContentChange(docText, c, perFile);
-            });
-        }
-    }
-
-    private extractExecutableLines(cell: ICell): string[] {
+    public extractExecutableLines(cell: ICell): string[] {
         const cellMatcher = new CellMatcher(this.configService.getSettings(getCellResource(cell)).datascience);
         const lines = splitMultilineString(cell.data.source);
         // Only strip this off the first line. Otherwise we want the markers in the code.
@@ -149,44 +136,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         return lines;
     }
 
-    private handleContentChange(docText: string, c: TextDocumentContentChangeEvent, hashes: IRangedCellHash[]) {
-        // First compute the number of lines that changed
-        const lineDiff = c.range.start.line - c.range.end.line + c.text.split('\n').length - 1;
-        const offsetDiff = c.text.length - c.rangeLength;
-
-        // Compute the inclusive offset that is changed by the cell.
-        const endChangedOffset = c.rangeLength <= 0 ? c.rangeOffset : c.rangeOffset + c.rangeLength - 1;
-
-        hashes.forEach(h => {
-            // See how this existing cell compares to the change
-            if (h.endOffset < c.rangeOffset) {
-                // No change. This cell is entirely before the change
-            } else if (h.startOffset > endChangedOffset) {
-                // This cell is after the text that got replaced. Adjust its start/end lines
-                h.line += lineDiff;
-                h.endLine += lineDiff;
-                h.startOffset += offsetDiff;
-                h.endOffset += offsetDiff;
-            } else if (h.startOffset === endChangedOffset) {
-                // Cell intersects but exactly, might be a replacement or an insertion
-                if (h.deleted || c.rangeLength > 0 || lineDiff === 0) {
-                    // Replacement
-                    h.deleted = docText.substr(h.startOffset, h.endOffset - h.startOffset) !== h.realCode;
-                } else {
-                    // Insertion
-                    h.line += lineDiff;
-                    h.endLine += lineDiff;
-                    h.startOffset += offsetDiff;
-                    h.endOffset += offsetDiff;
-                }
-            } else {
-                // Intersection, delete if necessary
-                h.deleted = docText.substr(h.startOffset, h.endOffset - h.startOffset) !== h.realCode;
-            }
-        });
-    }
-
-    private async addCellHash(cell: ICell, expectedCount: number): Promise<void> {
+    public async addCellHash(cell: ICell, expectedCount: number): Promise<void> {
         // Find the text document that matches. We need more information than
         // the add code gives us
         const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, cell.file));
@@ -282,6 +232,63 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 this.updateEventEmitter.fire();
             }
         }
+    }
+
+    public getExecutionCount(): number {
+        return this.executionCount;
+    }
+
+    public incExecutionCount(): void {
+        this.executionCount += 1;
+    }
+
+    private onChangedDocument(e: TextDocumentChangeEvent) {
+        // See if the document is in our list of docs to watch
+        const perFile = this.hashes.get(e.document.fileName);
+        if (perFile) {
+            // Apply the content changes to the file's cells.
+            const docText = e.document.getText();
+            e.contentChanges.forEach(c => {
+                this.handleContentChange(docText, c, perFile);
+            });
+        }
+    }
+
+    private handleContentChange(docText: string, c: TextDocumentContentChangeEvent, hashes: IRangedCellHash[]) {
+        // First compute the number of lines that changed
+        const lineDiff = c.range.start.line - c.range.end.line + c.text.split('\n').length - 1;
+        const offsetDiff = c.text.length - c.rangeLength;
+
+        // Compute the inclusive offset that is changed by the cell.
+        const endChangedOffset = c.rangeLength <= 0 ? c.rangeOffset : c.rangeOffset + c.rangeLength - 1;
+
+        hashes.forEach(h => {
+            // See how this existing cell compares to the change
+            if (h.endOffset < c.rangeOffset) {
+                // No change. This cell is entirely before the change
+            } else if (h.startOffset > endChangedOffset) {
+                // This cell is after the text that got replaced. Adjust its start/end lines
+                h.line += lineDiff;
+                h.endLine += lineDiff;
+                h.startOffset += offsetDiff;
+                h.endOffset += offsetDiff;
+            } else if (h.startOffset === endChangedOffset) {
+                // Cell intersects but exactly, might be a replacement or an insertion
+                if (h.deleted || c.rangeLength > 0 || lineDiff === 0) {
+                    // Replacement
+                    h.deleted = docText.substr(h.startOffset, h.endOffset - h.startOffset) !== h.realCode;
+                } else {
+                    // Insertion
+                    h.line += lineDiff;
+                    h.endLine += lineDiff;
+                    h.startOffset += offsetDiff;
+                    h.endOffset += offsetDiff;
+                }
+            } else {
+                // Intersection, delete if necessary
+                h.deleted = docText.substr(h.startOffset, h.endOffset - h.startOffset) !== h.realCode;
+            }
+        });
     }
 
     private adjustRuntimeForDebugging(

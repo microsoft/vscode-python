@@ -13,7 +13,8 @@ export class ServiceManager implements IServiceManager {
         serviceIdentifier: identifier<T>,
         // tslint:disable-next-line:no-any
         constructor: new (...args: any[]) => T,
-        name?: string | number | symbol | undefined
+        name?: string | number | symbol | undefined,
+        bindings?: symbol[]
     ): void {
         if (name) {
             this.container
@@ -22,6 +23,12 @@ export class ServiceManager implements IServiceManager {
                 .whenTargetNamed(name);
         } else {
             this.container.bind<T>(serviceIdentifier).to(constructor);
+        }
+
+        if (bindings) {
+            bindings.forEach(binding => {
+                this.addBinding(serviceIdentifier, binding);
+            });
         }
     }
     public addFactory<T>(
@@ -39,7 +46,8 @@ export class ServiceManager implements IServiceManager {
         serviceIdentifier: identifier<T>,
         // tslint:disable-next-line:no-any
         constructor: new (...args: any[]) => T,
-        name?: string | number | symbol | undefined
+        name?: string | number | symbol | undefined,
+        bindings?: symbol[]
     ): void {
         if (name) {
             this.container
@@ -53,7 +61,14 @@ export class ServiceManager implements IServiceManager {
                 .to(constructor)
                 .inSingletonScope();
         }
+
+        if (bindings) {
+            bindings.forEach(binding => {
+                this.addBinding(serviceIdentifier, binding);
+            });
+        }
     }
+
     public addSingletonInstance<T>(
         serviceIdentifier: identifier<T>,
         instance: T,

@@ -209,7 +209,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 changed = this.swapCells(change.firstCellId, change.secondCellId);
                 break;
             case 'version':
-                this.updateVersionInfo(change.interpreter, change.kernelSpec);
+                changed = this.updateVersionInfo(change.interpreter, change.kernelSpec);
                 break;
             case 'file':
                 changed = !this.fileSystem.arePathsSame(this._state.file.fsPath, change.newFile.fsPath);
@@ -221,8 +221,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         }
 
         // Dirty state comes from undo. At least VS code will track it that way. However
-        // skip version and file changes as we don't forward those to VS code
-        if (change.kind !== 'file' && change.kind !== 'version') {
+        // skip file changes as we don't forward those to VS code
+        if (change.kind !== 'file') {
             this._state.changeCount += 1;
         }
 
@@ -362,18 +362,22 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         return true;
     }
 
+    // tslint:disable-next-line: cyclomatic-complexity
     private updateVersionInfo(
         interpreter: PythonInterpreter | undefined,
         kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined
-    ) {
+    ): boolean {
+        let changed = false;
         // Get our kernel_info and language_info from the current notebook
         if (
             interpreter &&
             interpreter.version &&
             this._state.notebookJson.metadata &&
-            this._state.notebookJson.metadata.language_info
+            this._state.notebookJson.metadata.language_info &&
+            this._state.notebookJson.metadata.language_info.version !== interpreter.version.raw
         ) {
             this._state.notebookJson.metadata.language_info.version = interpreter.version.raw;
+            changed = true;
         }
 
         if (kernelSpec && this._state.notebookJson.metadata && !this._state.notebookJson.metadata.kernelspec) {
@@ -382,12 +386,21 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 name: kernelSpec.name || kernelSpec.display_name || '',
                 display_name: kernelSpec.display_name || kernelSpec.name || ''
             };
+            changed = true;
         } else if (kernelSpec && this._state.notebookJson.metadata && this._state.notebookJson.metadata.kernelspec) {
             // Spec exists, just update name and display_name
-            this._state.notebookJson.metadata.kernelspec.name = kernelSpec.name || kernelSpec.display_name || '';
-            this._state.notebookJson.metadata.kernelspec.display_name =
-                kernelSpec.display_name || kernelSpec.name || '';
+            const name = kernelSpec.name || kernelSpec.display_name || '';
+            const displayName = kernelSpec.display_name || kernelSpec.name || '';
+            if (
+                this._state.notebookJson.metadata.kernelspec.name !== name ||
+                this._state.notebookJson.metadata.kernelspec.display_name !== displayName
+            ) {
+                changed = true;
+                this._state.notebookJson.metadata.kernelspec.name = name;
+                this._state.notebookJson.metadata.kernelspec.display_name = displayName;
+            }
         }
+        return changed;
     }
 
     // tslint:disable-next-line: no-any

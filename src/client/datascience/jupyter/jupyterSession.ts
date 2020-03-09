@@ -28,6 +28,7 @@ import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
+import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
 import { KernelSelector } from './kernels/kernelSelector';
@@ -256,6 +257,12 @@ export class JupyterSession implements IJupyterSession {
 
     public async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void> {
         let newSession: ISession | undefined;
+
+        // If we are already using this kernel in an active session just return back
+        if (this.kernelSpec?.name === kernel.name && this.session) {
+            return;
+        }
+
         try {
             // Don't immediately assume this kernel is valid. Try creating a session with it first.
             if (kernel.id && this.session && 'session' in kernel) {
@@ -270,7 +277,7 @@ export class JupyterSession implements IJupyterSession {
             await this.waitForIdleOnSession(newSession, timeoutMS);
         } catch (exc) {
             // Throw a new exception indicating we cannot change.
-            throw new JupyterSessionStartError(exc);
+            throw new JupyterInvalidKernelError(kernel);
         }
 
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
@@ -339,7 +346,12 @@ export class JupyterSession implements IJupyterSession {
                     // If we throw an exception, make sure to shutdown the session as it's not usable anymore
                     this.shutdownSession(session, this.statusHandler).ignoreErrors();
                     reject(
-                        new JupyterWaitForIdleError(localize.DataScience.kernelIsDead().format(session.kernel.name))
+                        new JupyterInvalidKernelError({
+                            ...session.kernel,
+                            lastActivityTime: new Date(),
+                            numberOfConnections: 0,
+                            session: session.model
+                        })
                     );
                 }
             };

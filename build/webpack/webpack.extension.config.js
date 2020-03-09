@@ -13,6 +13,9 @@ const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension
 const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 // tslint:disable-next-line:no-var-requires no-require-imports
 const FileManagerPlugin = require('filemanager-webpack-plugin');
+// If ENABLE_GATHER variable is defined, don't exclude the python-program-analysis pacakge.
+// See externals, below.
+const ppaPackageList = process.env.ENABLE_GATHER ? [] : ['@msrvida/python-program-analysis'];
 const config = {
     mode: 'production',
     target: 'node',
@@ -56,7 +59,10 @@ const config = {
             { enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: 'transform-loader?brfs' }
         ]
     },
-    externals: ['vscode', 'commonjs', ...existingModulesInOutDir],
+    // Packages listed in externals keeps webpack from trying to package them.
+    // The ppaPackageList variable is set to non-empty if the build pipeline has been
+    //authenticated to install @msrvida/python-program-analysis.
+    externals: ['vscode', 'commonjs', ...ppaPackageList, ...existingModulesInOutDir],
     plugins: [
         ...common.getDefaultPlugins('extension'),
         // Copy pdfkit bits after extension builds. webpack can't handle pdfkit.

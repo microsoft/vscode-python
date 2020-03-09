@@ -58,3 +58,15 @@ export enum ValidateABTesting {
     control = 'AA_testing - control',
     experiment = 'AA_testing - experiment'
 }
+
+// Collect language server request timings.
+export enum CollectLSRequestTiming {
+    control = 'CollectLSRequestTiming - control',
+    experiment = 'CollectLSRequestTiming - experiment'
+}
+
+// Collect Node language server request timings.
+export enum CollectNodeLSRequestTiming {
+    control = 'CollectNodeLSRequestTiming - control',
+    experiment = 'CollectNodeLSRequestTiming - experiment'
+}

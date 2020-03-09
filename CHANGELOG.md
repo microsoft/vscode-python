@@ -1,5 +1,203 @@
 # Changelog
 
+## 2020.3.0-rc (9 March 2020)
+
+### Enhancements
+
+1. Make interactive window wrap like the notebook editor does.
+   ([#4466](https://github.com/Microsoft/vscode-python/issues/4466))
+1. Support scrolling beyond the last line in the notebook editor and the interactive window. Uses the `editor.scrollBeyondLastLine` setting.
+   ([#7892](https://github.com/Microsoft/vscode-python/issues/7892))
+1. Allow user to override the arguments passed to Jupyter on startup. To change the arguments, run the 'Python: Specify Jupyter command line arguments" command.
+   ([#8698](https://github.com/Microsoft/vscode-python/issues/8698))
+1. When entering remote Jupyter Server, default the input value to uri in clipboard.
+   ([#9163](https://github.com/Microsoft/vscode-python/issues/9163))
+1. Added a command to allow users to select a kernel for a `Notebook`.
+   ([#9228](https://github.com/Microsoft/vscode-python/issues/9228))
+1. When saving new `notebooks`, default to the current workspace folder.
+   ([#9331](https://github.com/Microsoft/vscode-python/issues/9331))
+1. When the output of a cell gets trimmed for the first time, the user will be informed of it and which setting changes it.
+   ([#9401](https://github.com/Microsoft/vscode-python/issues/9401))
+1. Change the parameters for when a Data Science survey prompt comes up. After opening 5 notebooks (ever) or running 100 cells (ever).
+   ([#10186](https://github.com/Microsoft/vscode-python/issues/10186))
+1. Show quickfixes for launch.json.
+   ([#10245](https://github.com/Microsoft/vscode-python/issues/10245))
+
+### Fixes
+
+1. Remove extra lines at the end of the file when formatting with Black.
+   ([#1877](https://github.com/Microsoft/vscode-python/issues/1877))
+1. Capitalize `Activate.ps1` in code for PowerShell Core on Linux.
+   ([#2607](https://github.com/Microsoft/vscode-python/issues/2607))
+1. Change interactive window to use the python interpreter associated with the file being run.
+   ([#3123](https://github.com/Microsoft/vscode-python/issues/3123))
+1. Make line numbers in errors for the Interactive window match the original file and make them clickable for jumping back to an error location.
+   ([#6370](https://github.com/Microsoft/vscode-python/issues/6370))
+1. Fix magic commands that return 'paged' output.
+   ([#6900](https://github.com/Microsoft/vscode-python/issues/6900))
+1. Ensure model is updated with user changes after user types into the editor.
+   ([#8589](https://github.com/Microsoft/vscode-python/issues/8589))
+1. Fix latex output from a code cell to render correctly.
+   ([#8742](https://github.com/Microsoft/vscode-python/issues/8742))
+1. Toggling cell type from `code` to `markdown` will not set focus to the editor in cells of a `Notebook`.
+   ([#9102](https://github.com/Microsoft/vscode-python/issues/9102))
+1. Remove whitespace from code before pushing to the interactive window.
+   ([#9116](https://github.com/Microsoft/vscode-python/issues/9116))
+1. Have sys info show that we have connected to an existing server.
+   ([#9132](https://github.com/Microsoft/vscode-python/issues/9132))
+1. Fix IPython.clear_output to behave like Jupyter.
+   ([#9174](https://github.com/Microsoft/vscode-python/issues/9174))
+1. Jupyter output tab was not showing anything when connecting to a remote server.
+   ([#9177](https://github.com/Microsoft/vscode-python/issues/9177))
+1. Fixed our css generation from custom color themes which caused the Data Viewer to not load.
+   ([#9242](https://github.com/Microsoft/vscode-python/issues/9242))
+1. Allow a user to skip switching to a kernel if the kernel dies during startup.
+   ([#9250](https://github.com/Microsoft/vscode-python/issues/9250))
+1. Clean up interative window styling and set focus to input box if clicking in the interactive window.
+   ([#9282](https://github.com/Microsoft/vscode-python/issues/9282))
+1. Change icon spacing to match vscode icon spacing in native editor toolbars and interactive window toolbar.
+   ([#9283](https://github.com/Microsoft/vscode-python/issues/9283))
+1. Display diff viewer for `ipynb` files without opening `Notebooks`.
+   ([#9395](https://github.com/Microsoft/vscode-python/issues/9395))
+1. Python environments will not be activated in terminals hidden from the user.
+   ([#9503](https://github.com/Microsoft/vscode-python/issues/9503))
+1. Disable `Restart Kernel` and `Interrupt Kernel` buttons when a `kernel` has not yet started.
+   ([#9731](https://github.com/Microsoft/vscode-python/issues/9731))
+1. Fixed an issue with multiple latex formulas in the same '\$\$' block.
+   ([#9766](https://github.com/Microsoft/vscode-python/issues/9766))
+1. Make notebook editor and interactive window honor undocumented editor.scrollbar.verticalScrollbarSize option + increase default to match vscode.
+   ([#9803](https://github.com/Microsoft/vscode-python/issues/9803))
+1. Ensure that invalid kernels don't hang notebook startup or running.
+   ([#9845](https://github.com/Microsoft/vscode-python/issues/9845))
+1. Switching kernels should disable the run/interrupt/restart buttons.
+   ([#9935](https://github.com/Microsoft/vscode-python/issues/9935))
+1. Prompt to install `pandas` if not found when opening the `Data Viewer`.
+   ([#9944](https://github.com/Microsoft/vscode-python/issues/9944))
+1. Prompt to reload VS Code when changing the Jupyter Server connection.
+   ([#9945](https://github.com/Microsoft/vscode-python/issues/9945))
+1. Support opening spark dataframes in the data viewer.
+   ([#9959](https://github.com/Microsoft/vscode-python/issues/9959))
+1. Make sure metadata in a cell survives execution.
+   ([#9997](https://github.com/Microsoft/vscode-python/issues/9997))
+1. Fix run all cells to force each cell to finish before running the next one.
+   ([#10016](https://github.com/Microsoft/vscode-python/issues/10016))
+1. Fix interrupts from always thinking a restart occurred.
+   ([#10050](https://github.com/Microsoft/vscode-python/issues/10050))
+1. Do not delay activation of extension by waiting for terminal to get activated.
+   ([#10094](https://github.com/Microsoft/vscode-python/issues/10094))
+1. LiveShare can prevent the jupyter server from starting if it crashes.
+   ([#10097](https://github.com/Microsoft/vscode-python/issues/10097))
+1. Mark `poetry.lock` file as toml syntax.
+   (thanks to [remcohaszing](https://github.com/remcohaszing/))
+   ([#10111](https://github.com/Microsoft/vscode-python/issues/10111))
+1. Hide input in `Interactive Window` based on the setting `allowInput`.
+   ([#10124](https://github.com/Microsoft/vscode-python/issues/10124))
+1. Fix scrolling for output to consistently scroll even during execution.
+   ([#10137](https://github.com/Microsoft/vscode-python/issues/10137))
+1. Correct image backgrounds for notebook editor.
+   ([#10154](https://github.com/Microsoft/vscode-python/issues/10154))
+1. Fix empty variables to show an empty string in the Notebook/Interactive Window variable explorer.
+   ([#10204](https://github.com/Microsoft/vscode-python/issues/10204))
+1. In addition to updating current working directory also add on our notebook file path to sys.path to match Jupyter.
+   ([#10227](https://github.com/Microsoft/vscode-python/issues/10227))
+1. Ensure message (about trimmed output) displayed in an output cell looks like a link.
+   ([#10231](https://github.com/Microsoft/vscode-python/issues/10231))
+1. Users can opt into or opt out of experiments in remote scenarios.
+   ([#10232](https://github.com/Microsoft/vscode-python/issues/10232))
+1. Ensure to correctly return env variables of the activated interpreter, when dealing with non-workspace interpreters.
+   ([#10250](https://github.com/Microsoft/vscode-python/issues/10250))
+1. Update kernel environments before each run to use the latest environment. Only do this for kernel specs created by the python extension.
+   ([#10255](https://github.com/Microsoft/vscode-python/issues/10255))
+1. Don't start up and shutdown an extra Jupyter notebook on server startup.
+   ([#10311](https://github.com/Microsoft/vscode-python/issues/10311))
+1. When you install missing dependencies for Jupyter successfully in an active interpreter also set that interpreter as the Jupyter selected interpreter.
+   ([#10359](https://github.com/Microsoft/vscode-python/issues/10359))
+
+### Code Health
+
+1. Use the new VS Code filesystem API as much as possible.
+   ([#6911](https://github.com/Microsoft/vscode-python/issues/6911))
+1. Functional tests using real jupyter can take 30-90 seconds each. Most of this time is searching for interpreters. Cache the interpreter search.
+   ([#7997](https://github.com/Microsoft/vscode-python/issues/7997))
+1. Use Python 3.8 in tests run on Azure DevOps.
+   ([#8298](https://github.com/Microsoft/vscode-python/issues/8298))
+1. Display `Commands` related to `Interactive Window` and `Notebooks` only when necessary.
+   ([#8869](https://github.com/Microsoft/vscode-python/issues/8869))
+1. Change cursor styles of buttons `pointer` in `Interactive Window` and `Native Editor`.
+   ([#9341](https://github.com/Microsoft/vscode-python/issues/9341))
+1. Update Jedi to 0.16.0.
+   ([#9765](https://github.com/Microsoft/vscode-python/issues/9765))
+1. Update version of `VSCode` in `package.json` to `1.42`.
+   ([#10046](https://github.com/Microsoft/vscode-python/issues/10046))
+1. Capture `mimetypes` of cell outputs.
+   ([#10182](https://github.com/Microsoft/vscode-python/issues/10182))
+1. Use debugpy in the core extension instead of ptvsd.
+   ([#10184](https://github.com/Microsoft/vscode-python/issues/10184))
+1. Remove UI Tests.
+   ([#10192](https://github.com/Microsoft/vscode-python/issues/10192))
+1. Add telemetry for imports in notebooks.
+   ([#10209](https://github.com/Microsoft/vscode-python/issues/10209))
+1. Update data science component to use `debugpy`.
+   ([#10211](https://github.com/Microsoft/vscode-python/issues/10211))
+1. Use new MacOS VM in Pipelines.
+   ([#10288](https://github.com/Microsoft/vscode-python/issues/10288))
+1. Split the windows PR tests into two sections so they do not time out.
+   ([#10293](https://github.com/Microsoft/vscode-python/issues/10293))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+
+-   [debugpy](https://pypi.org/project/debugpy/)
+-   [isort](https://pypi.org/project/isort/)
+-   [jedi](https://pypi.org/project/jedi/)
+    and [parso](https://pypi.org/project/parso/)
+-   [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+-   [ptvsd](https://pypi.org/project/ptvsd/)
+-   [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+-   [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+
+-   Debugging support:
+    [Django](https://pypi.org/project/Django/),
+    [Flask](https://pypi.org/project/Flask/),
+    [gevent](https://pypi.org/project/gevent/),
+    [Jinja](https://pypi.org/project/Jinja/),
+    [Pyramid](https://pypi.org/project/pyramid/),
+    [PySpark](https://pypi.org/project/pyspark/),
+    [Scrapy](https://pypi.org/project/Scrapy/),
+    [Watson](https://pypi.org/project/Watson/)
+-   Formatting:
+    [autopep8](https://pypi.org/project/autopep8/),
+    [black](https://pypi.org/project/black/),
+    [yapf](https://pypi.org/project/yapf/)
+-   Interpreter support:
+    [conda](https://conda.io/),
+    [direnv](https://direnv.net/),
+    [pipenv](https://pypi.org/project/pipenv/),
+    [pyenv](https://github.com/pyenv/pyenv),
+    [venv](https://docs.python.org/3/library/venv.html#module-venv),
+    [virtualenv](https://pypi.org/project/virtualenv/)
+-   Linting:
+    [bandit](https://pypi.org/project/bandit/),
+    [flake8](https://pypi.org/project/flake8/),
+    [mypy](https://pypi.org/project/mypy/),
+    [prospector](https://pypi.org/project/prospector/),
+    [pylint](https://pypi.org/project/pylint/),
+    [pydocstyle](https://pypi.org/project/pydocstyle/),
+    [pylama](https://pypi.org/project/pylama/)
+-   Testing:
+    [nose](https://pypi.org/project/nose/),
+    [pytest](https://pypi.org/project/pytest/),
+    [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
 ## 2020.2.3 (21 February 2020)
 
 ### Fixes

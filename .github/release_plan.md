@@ -21,15 +21,7 @@
       - [ ] Touch up news entries (e.g. add missing periods)
       - [ ] Check the Markdown rendering to make sure everything looks good
       - [ ] Add any relevant news entries for ptvsd and the language server if they were updated
-   - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by running [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`)
-      * for each failure:
-         1. go to the repo (from link on NPM page) and look for the license there
-         1. copy the text from the failure into `tpn/distribution.toml`
-         1. fill in the license found in the package's repo
-      * if there is no license in a package's repo then do one of the following:
-         + check the NPM metadata and fill in the corresponding license from the OSI site
-         + ask the package maintainer (e.g. via github)
-         + ask CELA
+   - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (see team notes)
    - [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) as appropriate
    - [ ] Create a pull request against `master` (🤖)
    - [ ] Merge pull request into `master`
@@ -48,7 +40,7 @@
 - [ ] Update [Component Governance](https://dev.azure.com/ms/vscode-python/_componentGovernance) (Click on "microsoft/vscode-python" on that page)
   - [ ] Provide details for any automatically detected npm dependencies
   - [ ] Manually add any repository dependencies
-- [ ] GDPR bookkeeping (@brettcannon) (🤖)
+- [ ] GDPR bookkeeping (@brettcannon) (🤖; see team notes)
 - [ ] Open appropriate [documentation issues](https://github.com/microsoft/vscode-docs/issues?q=is%3Aissue+is%3Aopen+label%3Apython)
    + new features
    + settings changes
@@ -69,7 +61,7 @@
    - [ ] Update [`CHANGELOG.md`](https://github.com/Microsoft/vscode-python/blob/master/CHANGELOG.md) (🤖)
       - [ ] Update version and date for the release section
       - [ ] Run [`news`](https://github.com/Microsoft/vscode-python/tree/master/news) and copy-and-paste new entries (typically `python news --final | code-insiders -`; quite possibly nothing new to add)
-   - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by running [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`; quite possible there will be no change) (🤖)
+   - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by using https://tools.opensource.microsoft.com/notice (🤖; see team notes)
    - [ ] Update [`ThirdPartyNotices-Repository.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Repository.txt) manually if necessary
    - [ ] Create pull request against `release` (🤖)
    - [ ] Merge pull request into `release`

@@ -30,12 +30,14 @@ export interface IServiceManager extends IDisposable {
     add<T>(
         serviceIdentifier: interfaces.ServiceIdentifier<T>,
         constructor: ClassType<T>,
-        name?: string | number | symbol
+        name?: string | number | symbol | undefined,
+        bindings?: symbol[]
     ): void;
     addSingleton<T>(
         serviceIdentifier: interfaces.ServiceIdentifier<T>,
         constructor: ClassType<T>,
-        name?: string | number | symbol
+        name?: string | number | symbol,
+        bindings?: symbol[]
     ): void;
     addSingletonInstance<T>(
         serviceIdentifier: interfaces.ServiceIdentifier<T>,

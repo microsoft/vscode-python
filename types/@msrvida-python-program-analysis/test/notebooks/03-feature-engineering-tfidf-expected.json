@@ -1,0 +1,155 @@
+{
+    "cells": [
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import pandas as pd\n",
+                "in_vscode=0\n",
+                "\n",
+                "df = pd.read_parquet(\"data/training.parquet\")"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import numpy as np\n",
+                "\n",
+                "np.random.seed(0xc0ffeeee)\n",
+                "df_samp = df.sample(3)\n",
+                ""
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "from sklearn.feature_extraction.text import CountVectorizer\n",
+                "\n",
+                "vectorizer = CountVectorizer(token_pattern='(?u)\\\\b[A-Za-z]\\\\w+\\\\b', max_features = 20)\n",
+                "counts = vectorizer.fit_transform(df_samp[\"text\"])"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "from sklearn.feature_extraction.text import TfidfTransformer\n",
+                "\n",
+                "tfidf_transformer = TfidfTransformer()\n",
+                "df_tfidf = tfidf_transformer.fit_transform(counts)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "from sklearn.feature_extraction.text import HashingVectorizer\n",
+                "BUCKETS=1024\n",
+                "\n",
+                "hv = HashingVectorizer(norm=None, token_pattern='(?u)\\\\b[A-Za-z]\\\\w+\\\\b', n_features=BUCKETS, alternate_sign = False)\n",
+                "hv\n",
+                ""
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "hvcounts = hv.fit_transform(df[\"text\"])\n",
+                "hvcounts"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "tfidf_transformer = TfidfTransformer()\n",
+                "hvdf_tfidf = tfidf_transformer.fit_transform(hvcounts)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "#PCA projection so that output can be visualised\n",
+                "\n",
+                "import sklearn.decomposition\n",
+                "\n",
+                "DIMENSIONS = 2\n",
+                "\n",
+                "pca2 = sklearn.decomposition.TruncatedSVD(DIMENSIONS)\n",
+                "\n",
+                "pca_a = pca2.fit_transform(hvdf_tfidf)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "pca_df = pd.DataFrame(pca_a, columns=[\"x\", \"y\"])\n",
+                "pca_df.sample(10)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "plot_data = pd.concat([df.reset_index(), pca_df], axis=1)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import altair as alt\n",
+                "alt.renderers.enable('nteract')\n",
+                "\n",
+                "alt.Chart(plot_data.sample(1000)).encode(x=\"x\", y=\"y\", color=\"label\").mark_point().interactive()\n",
+                "\n",
+                ""
+            ]
+        }
+    ],
+    "nbformat": 4,
+    "nbformat_minor": 2,
+    "metadata": {
+        "language_info": {
+            "name": "python",
+            "codemirror_mode": {
+                "name": "ipython",
+                "version": 3
+            }
+        },
+        "orig_nbformat": 2,
+        "file_extension": ".py",
+        "mimetype": "text/x-python",
+        "name": "python",
+        "npconvert_exporter": "python",
+        "pygments_lexer": "ipython3",
+        "version": 3
+    }
+}

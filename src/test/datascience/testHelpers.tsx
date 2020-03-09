@@ -769,3 +769,12 @@ export function mountConnectedMainPanel(type: 'native' | 'interactive') {
         </Provider>
     );
 }
+
+export function mountComponent<P>(type: 'native' | 'interactive', Component: React.ReactElement<P>) {
+    // Create the redux store in test mode.
+    const createStore = type === 'native' ? NativeStore.createStore : InteractiveStore.createStore;
+    const store = createStore(true, 'vs-light', true);
+
+    // Mount this with a react redux provider
+    return mount(<Provider store={store}>{Component}</Provider>);
+}

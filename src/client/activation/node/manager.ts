@@ -5,14 +5,26 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 
 import { traceDecorators } from '../../common/logger';
-import { BANNER_NAME_LS_SURVEY, IDisposable, IPythonExtensionBanner, Resource } from '../../common/types';
+import {
+    BANNER_NAME_LS_SURVEY,
+    IDisposable,
+    IExperimentsManager,
+    IPythonExtensionBanner,
+    Resource
+} from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
-import { ILanguageServerAnalysisOptions, ILanguageServerManager, ILanguageServerProxy } from '../types';
+import {
+    ILanguageServerAnalysisOptions,
+    ILanguageServerFolderService,
+    ILanguageServerManager,
+    ILanguageServerProxy,
+    LanguageServerType
+} from '../types';
 
 @injectable()
 export class NodeLanguageServerManager implements ILanguageServerManager {
@@ -27,7 +39,9 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(IPythonExtensionBanner)
         @named(BANNER_NAME_LS_SURVEY)
-        private readonly surveyBanner: IPythonExtensionBanner
+        private readonly surveyBanner: IPythonExtensionBanner,
+        @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {}
 
     public dispose() {
@@ -82,8 +96,16 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
     @traceDecorators.verbose('Starting Language Server')
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
+
+        const versionPair = await this.folderService.getCurrentLanguageServerDirectory();
+
         const options = await this.analysisOptions!.getAnalysisOptions();
-        options.middleware = this.middleware = new LanguageClientMiddleware(this.surveyBanner);
+        options.middleware = this.middleware = new LanguageClientMiddleware(
+            this.surveyBanner,
+            this.experimentsManager,
+            LanguageServerType.Node,
+            versionPair?.version.format()
+        );
 
         // Make sure the middleware is connected if we restart and we we're already connected.
         if (this.connected) {

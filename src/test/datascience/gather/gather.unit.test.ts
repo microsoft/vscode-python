@@ -11,8 +11,7 @@ import {
     IDisposableRegistry,
     IPythonSettings
 } from '../../../client/common/types';
-import { GatherExecution } from '../../../client/datascience/gather/gather';
-import { GatherLogger } from '../../../client/datascience/gather/gatherLogger';
+import { GatherProvider } from '../../../client/datascience/gather/gather';
 import { ICell as IVscCell } from '../../../client/datascience/types';
 
 // tslint:disable-next-line: max-func-body-length
@@ -141,28 +140,30 @@ suite('DataScience code gathering unit tests', () => {
     appShell
         .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
         .returns(() => Promise.resolve(''));
-    const gatherExecution = new GatherExecution(
+    const gatherProvider = new GatherProvider(
         configurationService.object,
         appShell.object,
         disposableRegistry.object,
         commandManager.object
     );
-    const gatherLogger = new GatherLogger(gatherExecution, configurationService.object);
 
-    test('Logs a cell execution', async () => {
-        let count = 0;
-        for (const c of codeCells) {
-            await gatherLogger.postExecute(c, false);
-            count += 1;
-            assert.equal(gatherExecution.executionSlicer.executionLog.length, count);
-        }
-    });
+    if (gatherProvider) {
+        // Disabling this test as by default gather cannot operate successfully without python-program-analysis.
+        // test('Logs a cell execution', async () => {
+        //     let count = 0;
+        //     for (const c of codeCells) {
+        //         await gatherLogger.postExecute(c, false);
+        //         count += 1;
+        //         const logLength = gatherProvider.executionSlicer?.executionLog.length;
+        //         assert.equal(logLength, count);
+        //     }
+        // });
 
-    test('Gathers program slices for a cell', async () => {
-        const defaultCellMarker = '# %%';
-        const cell: IVscCell = codeCells[codeCells.length - 1];
-        const program = gatherExecution.gatherCode(cell);
-        const expectedProgram = `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\nfrom bokeh.plotting import show, figure, output_notebook\n\n${defaultCellMarker}\nx = [1,2,3,4,5]\ny = [21,9,15,17,4]\n\n${defaultCellMarker}\np=figure(title='demo',x_axis_label='x',y_axis_label='y')\n\n${defaultCellMarker}\np.line(x,y,line_width=2)\n\n${defaultCellMarker}\nshow(p)\n`;
-        assert.equal(program.trim(), expectedProgram.trim());
-    });
+        test('Gathers program slices for a cell', async () => {
+            const cell: IVscCell = codeCells[codeCells.length - 1];
+            const program = gatherProvider.gatherCode(cell);
+            const expectedProgram = '# %% [markdown]\n## Gather not available';
+            assert.equal(program.trim(), expectedProgram.trim());
+        });
+    }
 });

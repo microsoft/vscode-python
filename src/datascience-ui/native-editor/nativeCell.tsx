@@ -575,7 +575,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                             'Gather the code required to generate this cell into a new notebook'
                         )}
                         hidden={gatherDisabled}
-                        className="hover-cell-button"
                     >
                         <Image
                             baseTheme={this.props.baseTheme}
@@ -678,7 +677,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         expandImage={this.props.showPlot}
                         maxTextSize={this.props.maxTextSize}
                         themeMatplotlibPlots={themeMatplotlibPlots}
-                        openSettings={this.props.openSettings}
                     />
                 </div>
             );

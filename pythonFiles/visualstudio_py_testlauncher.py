@@ -268,9 +268,6 @@ def main():
     )
     (opts, _) = parser.parse_args()
 
-    if opts.debug:
-        from ptvsd.visualstudio_py_debugger import DEBUG_ENTRYPOINTS, get_code
-
     sys.path[0] = os.getcwd()
     if opts.result_port:
         try:
@@ -286,12 +283,7 @@ def main():
         sys.stdout = _TestOutput(sys.stdout, is_stdout=True)
         sys.stderr = _TestOutput(sys.stderr, is_stdout=False)
 
-    if opts.debug:
-        # TODO: Stop using this internal API? (See #3201.)
-        DEBUG_ENTRYPOINTS.add(get_code(main))
-
-        pass
-    elif opts.mixed_mode:
+    if opts.mixed_mode:
         # For mixed-mode attach, there's no ptvsd and hence no wait_for_attach(),
         # so we have to use Win32 API in a loop to do the same thing.
         from time import sleep

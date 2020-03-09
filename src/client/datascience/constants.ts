@@ -154,7 +154,8 @@ export enum Telemetry {
     DeleteCell = 'DATASCIENCE.DELETE_CELL',
     GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE',
     CopySourceCode = 'DATASCIENCE.COPY_SOURCE',
-    RestartKernel = 'DATASCIENCE.RESTART_KERNEL',
+    RestartKernel = 'DS_INTERNAL.RESTART_KERNEL',
+    RestartKernelCommand = 'DATASCIENCE.RESTART_KERNEL_COMMAND',
     ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
     Undo = 'DATASCIENCE.UNDO',
     Redo = 'DATASCIENCE.REDO',
@@ -218,7 +219,7 @@ export enum Telemetry {
     /**
      * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
      */
-    SelectJupyterInterpreter = 'DATASCIENCE.SELECT_JUPYTER_INTERPRETER',
+    SelectJupyterInterpreter = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER',
     /**
      * User used command to select an intrepreter for the jupyter server.
      */
@@ -238,14 +239,17 @@ export enum Telemetry {
     WebviewStyleUpdate = 'DS_INTERNAL.WEBVIEW_STYLE_UPDATE',
     WebviewMonacoStyleUpdate = 'DS_INTERNAL.WEBVIEW_MONACO_STYLE_UPDATE',
     FindJupyterKernelSpec = 'DS_INTERNAL.FIND_JUPYTER_KERNEL_SPEC',
+    HashedCellOutputMimeType = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE',
+    HashedCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE_PERF',
+    HashedNotebookCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_NOTEBOOK_OUTPUT_MIME_TYPE_PERF',
     JupyterInstalledButNotKernelSpecModule = 'DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE',
     PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
     PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
     PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',
     PtvsdInstallCancelled = 'DATASCIENCE.PTVSD_INSTALL_CANCELLED',
     ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
-    ExecuteNativeCell = 'DATASCIENCE.EXECUTE_NATIVE_CELL',
-    CreateNewNotebook = 'DATASCIENCE.CREATE_NEW_NOTEBOOK',
+    ExecuteNativeCell = 'DATASCIENCE.NATIVE.EXECUTE_NATIVE_CELL',
+    CreateNewNotebook = 'DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK',
     DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
     DebugStop = 'DATASCIENCE.DEBUG_STOP',
@@ -277,7 +281,9 @@ export enum Telemetry {
     JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
     UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
-    NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE'
+    NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
+    KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
+    GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED'
 }
 
 export enum NativeKeyboardCommandTelemetry {

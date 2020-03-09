@@ -7,14 +7,17 @@ import { Uri } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
+import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { DotNetLanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
 import { DotNetLanguageServerManager } from '../../../client/activation/languageServer/manager';
 import {
     ILanguageServerAnalysisOptions,
     ILanguageServerExtension,
+    ILanguageServerFolderService,
     ILanguageServerProxy
 } from '../../../client/activation/types';
-import { IPythonExtensionBanner } from '../../../client/common/types';
+import { ExperimentsManager } from '../../../client/common/experiments';
+import { IExperimentsManager, IPythonExtensionBanner } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ProposeLanguageServerBanner } from '../../../client/languageServices/proposeLanguageServerBanner';
@@ -32,6 +35,8 @@ suite('Language Server - Manager', () => {
     let lsExtension: ILanguageServerExtension;
     let onChangeAnalysisHandler: Function;
     let surveyBanner: IPythonExtensionBanner;
+    let folderService: ILanguageServerFolderService;
+    let experimentsManager: IExperimentsManager;
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     setup(() => {
         serviceContainer = mock(ServiceContainer);
@@ -39,11 +44,15 @@ suite('Language Server - Manager', () => {
         languageServer = mock(DotNetLanguageServerProxy);
         lsExtension = mock(LanguageServerExtension);
         surveyBanner = mock(ProposeLanguageServerBanner);
+        folderService = mock(DotNetLanguageServerFolderService);
+        experimentsManager = mock(ExperimentsManager);
         manager = new DotNetLanguageServerManager(
             instance(serviceContainer),
             instance(analysisOptions),
             instance(lsExtension),
-            instance(surveyBanner)
+            instance(surveyBanner),
+            instance(folderService),
+            instance(experimentsManager)
         );
     });
 

@@ -136,11 +136,11 @@ export interface INotebook extends IAsyncDisposable {
     setLaunchingFile(file: string): Promise<void>;
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
-    addLogger(logger: INotebookExecutionLogger): void;
     getMatchingInterpreter(): PythonInterpreter | undefined;
     getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined;
     setKernelSpec(spec: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
     setInterpreter(interpeter: PythonInterpreter): void;
+    getLoggers(): INotebookExecutionLogger[];
 }
 
 export interface INotebookServerOptions {
@@ -160,12 +160,17 @@ export interface INotebookExecutionLogger {
     postExecute(cell: ICell, silent: boolean): Promise<void>;
 }
 
-export const IGatherExecution = Symbol('IGatherExecution');
-export interface IGatherExecution {
+export const IGatherProvider = Symbol('IGatherProvider');
+export interface IGatherProvider {
     enabled: boolean;
     logExecution(vscCell: ICell): void;
     gatherCode(vscCell: ICell): string;
     resetLog(): void;
+}
+
+export const IGatherLogger = Symbol('IGatherLogger');
+export interface IGatherLogger extends INotebookExecutionLogger {
+    getGatherProvider(): IGatherProvider;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -387,6 +392,7 @@ export interface INotebookEditor extends IInteractiveBase {
     readonly file: Uri;
     readonly visible: boolean;
     readonly active: boolean;
+    readonly model: INotebookModel | undefined;
     load(storage: INotebookModel, webViewPanel?: WebviewPanel): Promise<void>;
     runAllCells(): void;
     runSelectedCell(): void;
@@ -690,6 +696,13 @@ export const ICellHashProvider = Symbol('ICellHashProvider');
 export interface ICellHashProvider {
     updated: Event<void>;
     getHashes(): IFileHashes[];
+    getExecutionCount(): number;
+    incExecutionCount(): void;
+}
+
+export const ICellHashLogger = Symbol('ICellHashLogger');
+export interface ICellHashLogger extends INotebookExecutionLogger {
+    getCellHashProvider(): ICellHashProvider;
 }
 
 export interface IDebugLocation {

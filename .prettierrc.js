@@ -8,6 +8,12 @@ module.exports = {
             options: {
                 tabWidth: 2
             }
+        },
+        {
+            files: ['**/datascience/serviceRegistry.ts'],
+            options: {
+                printWidth: 240
+            }
         }
     ]
 };

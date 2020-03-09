@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-const fastXmlParser = require('fast-xml-parser');
 const fs = require('fs');
 const path = require('path');
 const constants = require('../../constants');
 
-const xmlFile = path.join(constants.ExtensionRootDir, 'test-results.xml');
+const benchmark = process.argv.slice(2).join(' ');
 const performanceResultsFile = path.join(
     constants.ExtensionRootDir,
     'build',
@@ -17,60 +16,46 @@ const performanceResultsFile = path.join(
 const errorMargin = 0.01;
 let failedTests = '';
 
-fs.readFile(xmlFile, 'utf8', (xmlFileError, xmlData) => {
-    if (xmlFileError) {
-        throw xmlFileError;
+fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, performanceData) => {
+    if (performanceResultsFileError) {
+        throw performanceResultsFileError;
     }
 
-    if (fastXmlParser.validate(xmlData)) {
-        const defaultOptions = {
-            attributeNamePrefix: '',
-            ignoreAttributes: false
-        };
+    const benchmarkJson = JSON.parse(benchmark);
+    const performanceJson = JSON.parse(performanceData);
 
-        fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, performanceData) => {
-            if (performanceResultsFileError) {
-                throw performanceResultsFileError;
-            }
+    performanceJson.forEach(result => {
+        const cleanTimes = result.times.filter(x => x !== -1);
+        const avg =
+            cleanTimes.length === 0
+                ? 999
+                : cleanTimes.reduce((a, b) => parseFloat(a) + parseFloat(b)) / cleanTimes.length;
+        const testcase = benchmarkJson.find(x => x.name === result.name);
 
-            const resultsJson = fastXmlParser.parse(xmlData, defaultOptions);
-            const performanceJson = JSON.parse(performanceData);
+        // compare the average result to the base JSON
+        if (testcase && testcase.time !== -1 && avg > parseFloat(testcase.time) + errorMargin) {
+            failedTests +=
+                'Performance is slow in: ' +
+                testcase.name +
+                '.\n\tBenchmark time: ' +
+                testcase.time +
+                '\n\tAverage test time: ' +
+                avg +
+                '\n';
+        }
+    });
 
-            performanceJson.forEach(result => {
-                const avg = result.times.reduce((a, b) => parseFloat(a) + parseFloat(b)) / result.times.length;
-
-                resultsJson.testsuites.testsuite.forEach(suite => {
-                    if (parseInt(suite.tests, 10) > 0 && Array.isArray(suite.testcase)) {
-                        const testcase = suite.testcase.find(x => x.name === result.name);
-
-                        // compare the average result to the base JSON
-                        if (testcase && avg > parseFloat(testcase.time) + errorMargin) {
-                            failedTests +=
-                                'Performance is slow in: ' +
-                                testcase.name +
-                                ', Benchmark time: ' +
-                                testcase.time +
-                                ', Average test time: ' +
-                                avg +
-                                '\n';
-                        }
-                    }
-                });
-            });
-
-            // Delete performance-results.json
-            fs.unlink(performanceResultsFile, deleteError => {
-                if (deleteError) {
-                    if (failedTests.length > 0) {
-                        console.log(failedTests);
-                    }
-                    throw deleteError;
-                }
-            });
-
+    // Delete performance-results.json
+    fs.unlink(performanceResultsFile, deleteError => {
+        if (deleteError) {
             if (failedTests.length > 0) {
-                throw new Error(failedTests);
+                console.log(failedTests);
             }
-        });
+            throw deleteError;
+        }
+    });
+
+    if (failedTests.length > 0) {
+        throw new Error(failedTests);
     }
 });

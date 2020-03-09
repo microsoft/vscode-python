@@ -5,13 +5,12 @@ import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
-import { ICell as IVscCell, IGatherExecution, INotebookExecutionLogger } from '../types';
-import { GatherExecution } from './gather';
+import { ICell as IVscCell, IGatherLogger, IGatherProvider } from '../types';
 
 @injectable()
-export class GatherLogger implements INotebookExecutionLogger {
+export class GatherLogger implements IGatherLogger {
     constructor(
-        @inject(GatherExecution) private gather: IGatherExecution,
+        @inject(IGatherProvider) private gather: IGatherProvider,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {}
 
@@ -35,5 +34,9 @@ export class GatherLogger implements INotebookExecutionLogger {
                 this.gather.logExecution(cloneCell);
             }
         }
+    }
+
+    public getGatherProvider() {
+        return this.gather;
     }
 }

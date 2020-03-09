@@ -3,12 +3,15 @@
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IFileDownloader, IHttpClient } from '../common/types';
 import { LiveShareApi } from '../datascience/liveshare/liveshare';
+import { INotebookExecutionLogger } from '../datascience/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
 import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
+import { ClipboardService } from './application/clipboard';
 import { CommandManager } from './application/commandManager';
+import { ReloadVSCodeCommandHandler } from './application/commands/reloadCommand';
 import { CustomEditorService } from './application/customEditorService';
 import { DebugService } from './application/debugService';
 import { DebugSessionTelemetry } from './application/debugSessionTelemetry';
@@ -19,6 +22,7 @@ import { TerminalManager } from './application/terminalManager';
 import {
     IApplicationEnvironment,
     IApplicationShell,
+    IClipboard,
     ICommandManager,
     ICustomEditorService,
     IDebugService,
@@ -111,6 +115,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITerminalServiceFactory>(ITerminalServiceFactory, TerminalServiceFactory);
     serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
     serviceManager.addSingleton<IApplicationShell>(IApplicationShell, ApplicationShell);
+    serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
     serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
     serviceManager.addSingleton<ICommandManager>(ICommandManager, CommandManager);
@@ -167,6 +172,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);
     serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
     serviceManager.addSingleton<IImportTracker>(IImportTracker, ImportTracker);
+    serviceManager.addBinding(IImportTracker, IExtensionSingleActivationService);
+    serviceManager.addBinding(IImportTracker, INotebookExecutionLogger);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, SettingsShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);
@@ -175,6 +182,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(
         IExtensionSingleActivationService,
         InsidersExtensionService
+    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        ReloadVSCodeCommandHandler
     );
     serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
     serviceManager.addSingleton<IExtensionChannelRule>(

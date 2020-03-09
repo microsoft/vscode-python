@@ -154,7 +154,6 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                         expandImage={this.props.showPlot}
                                         maxTextSize={this.props.maxTextSize}
                                         themeMatplotlibPlots={themeMatplotlibPlots}
-                                        openSettings={this.props.openSettings}
                                     />
                                 </div>
                             </div>
@@ -412,6 +411,4 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 }
 
 // Main export, return a redux connected editor
-export function getConnectedInteractiveCell() {
-    return connect(null, actionCreators)(InteractiveCell);
-}
+export const InteractiveCellComponent = connect(null, actionCreators)(InteractiveCell);

@@ -157,7 +157,7 @@ export function appendLineFeed(arr: string[], modifier?: (s: string) => string) 
 
 export function generateMarkdownFromCodeLines(lines: string[]) {
     // Generate markdown by stripping out the comments and markdown header
-    return appendLineFeed(extractComments(lines.slice(1)));
+    return appendLineFeed(extractComments(lines.slice(lines.length > 1 ? 1 : 0)));
 }
 
 // tslint:disable-next-line: cyclomatic-complexity

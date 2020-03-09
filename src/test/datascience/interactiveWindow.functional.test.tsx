@@ -936,7 +936,7 @@ Type:      builtin_function_or_method`,
                 // Ignore white space.
                 assert.equal(
                     docManager.activeTextEditor.document.getText().trim(),
-                    `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\na=1\na`
+                    `${defaultCellMarker} [markdown]\n## Gather not available`
                 );
             }
         },
@@ -969,7 +969,7 @@ Type:      builtin_function_or_method`,
                 // Ignore whitespace
                 assert.equal(
                     docManager.activeTextEditor.document.getText().trim(),
-                    `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\na=1\na`
+                    `${defaultCellMarker} [markdown]\n## Gather not available`
                 );
             }
         },

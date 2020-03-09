@@ -31,6 +31,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ICodeCssGenerator,
@@ -93,7 +94,8 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
-        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
+        @inject(KernelSwitcher) switcher: KernelSwitcher
     ) {
         super(
             listeners,
@@ -121,7 +123,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             globalStorage,
             progressReporter,
             experimentsManager,
-            asyncRegistry
+            asyncRegistry,
+            switcher
         );
         asyncRegistry.push(this);
     }

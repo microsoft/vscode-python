@@ -4,9 +4,11 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import { ConfigurationTarget, Memento, QuickPickItem } from 'vscode';
+import { ConfigurationTarget, Memento, QuickPickItem, Uri } from 'vscode';
+import { IClipboard, ICommandManager } from '../../common/application/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IMemento } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import {
     IMultiStepInput,
     IMultiStepInputFactory,
@@ -16,6 +18,8 @@ import {
 import { captureTelemetry } from '../../telemetry';
 import { getSavedUriList } from '../common';
 import { Settings, Telemetry } from '../constants';
+
+const defaultUri = 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe';
 
 interface ISelectUriQuickPickItem extends QuickPickItem {
     newChoice: boolean;
@@ -27,8 +31,10 @@ export class JupyterServerSelector {
     private readonly newLabel = `$(server) ${DataScience.jupyterSelectURINewLabel()}`;
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
+        @inject(IClipboard) private readonly clipboard: IClipboard,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(IConfigurationService) private configuration: IConfigurationService
+        @inject(IConfigurationService) private configuration: IConfigurationService,
+        @inject(ICommandManager) private cmdManager: ICommandManager
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
@@ -54,10 +60,19 @@ export class JupyterServerSelector {
         }
     }
     private async selectRemoteURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
+        let initialValue = defaultUri;
+        try {
+            const text = await this.clipboard.readText().catch(() => '');
+            const parsedUri = Uri.parse(text.trim(), true);
+            // Only display http/https uris.
+            initialValue = text && parsedUri && parsedUri.scheme.toLowerCase().startsWith('http') ? text : defaultUri;
+        } catch {
+            // We can ignore errors.
+        }
         // Ask the user to enter a URI to connect to.
         const uri = await input.showInputBox({
             title: DataScience.jupyterSelectURIPrompt(),
-            value: 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe',
+            value: initialValue || defaultUri,
             validate: this.validateSelectJupyterURI,
             prompt: ''
         });
@@ -69,22 +84,38 @@ export class JupyterServerSelector {
 
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
+        const previousValue = this.configuration.getSettings(undefined).datascience.jupyterServerURI;
         await this.configuration.updateSetting(
             'dataScience.jupyterServerURI',
             Settings.JupyterServerLocalLaunch,
             undefined,
             ConfigurationTarget.Workspace
         );
+
+        // Reload if there's a change
+        if (previousValue !== Settings.JupyterServerLocalLaunch) {
+            this.cmdManager
+                .executeCommand('python.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
+                .then(noop, noop);
+        }
     }
 
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
     private async setJupyterURIToRemote(userURI: string): Promise<void> {
+        const previousValue = this.configuration.getSettings(undefined).datascience.jupyterServerURI;
         await this.configuration.updateSetting(
             'dataScience.jupyterServerURI',
             userURI,
             undefined,
             ConfigurationTarget.Workspace
         );
+
+        // Reload if there's a change
+        if (previousValue !== userURI) {
+            this.cmdManager
+                .executeCommand('python.reloadVSCode', DataScience.reloadAfterChangingJupyterServerConnection())
+                .then(noop, noop);
+        }
     }
     private validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
         try {

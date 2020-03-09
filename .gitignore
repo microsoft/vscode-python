@@ -34,6 +34,9 @@ tmp/**
 .python-version
 .vs/
 test-results.xml
+xunit-test-results.xml
+build/ci/performance/performance-results.json
+build/ci/performance/DS_test_benchmark.json
 !build/
 debug*.log
 ptvsd*.log

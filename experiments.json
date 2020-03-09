@@ -112,5 +112,29 @@
         "salt": "WebHostNotebook",
         "min": 0,
         "max": 100
+    },
+    {
+        "name": "CollectLSRequestTiming - experiment",
+        "salt": "CollectLSRequestTiming",
+        "min": 0,
+        "max": 10
+    },
+    {
+        "name": "CollectLSRequestTiming - control",
+        "salt": "CollectLSRequestTiming",
+        "min": 10,
+        "max": 100
+    },
+    {
+        "name": "CollectNodeLSRequestTiming - experiment",
+        "salt": "CollectNodeLSRequestTiming",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "name": "CollectNodeLSRequestTiming - control",
+        "salt": "CollectNodeLSRequestTiming",
+        "min": 0,
+        "max": 0
     }
 ]

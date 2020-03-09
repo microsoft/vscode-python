@@ -16,26 +16,6 @@ def parse_argv():
     return (sys.argv[1], sys.argv[2], sys.argv[3:])
 
 
-def exclude_current_file_from_debugger():
-    # Load the debugger package
-    try:
-        import ptvsd
-    except:
-        traceback.print_exc()
-        print(
-            """
-Internal error detected. Please copy the above traceback and report at
-https://github.com/Microsoft/vscode-python/issues/new
-
-Press Enter to close. . ."""
-        )
-        try:
-            raw_input()
-        except NameError:
-            input()
-        sys.exit(1)
-
-
 def run(cwd, testRunner, args):
     """Runs the test
     cwd -- the current directory to be set
@@ -61,6 +41,5 @@ def run(cwd, testRunner, args):
 
 
 if __name__ == "__main__":
-    exclude_current_file_from_debugger()
     cwd, testRunner, args = parse_argv()
     run(cwd, testRunner, args)

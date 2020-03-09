@@ -42,7 +42,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import {
     EditorContexts,
@@ -71,6 +71,7 @@ import {
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterExecution,
+    IJupyterKernelSpec,
     IJupyterVariables,
     INotebookEditor,
     INotebookEditorProvider,
@@ -87,6 +88,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
+import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 @injectable()
@@ -132,7 +134,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public get isDirty(): boolean {
         return this.model ? this.model.isDirty : false;
     }
-    // Public for testing purposes.
     public model: Readonly<INotebookModel> | undefined;
     protected savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     protected closedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
@@ -172,7 +173,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
-        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
+        @inject(KernelSwitcher) switcher: KernelSwitcher
     ) {
         super(
             progressReporter,
@@ -205,7 +207,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             ],
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active,
-            experimentsManager
+            experimentsManager,
+            switcher
         );
         asyncRegistry.push(this);
     }
@@ -293,6 +296,23 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             };
         } else {
             return options;
+        }
+    }
+
+    public async updateNotebookOptions(
+        kernelSpec: IJupyterKernelSpec,
+        interpreter: PythonInterpreter | undefined
+    ): Promise<void> {
+        if (this.model) {
+            const change: NotebookModelChange = {
+                kind: 'version',
+                kernelSpec,
+                interpreter,
+                oldDirty: this.model.isDirty,
+                newDirty: true,
+                source: 'user'
+            };
+            this.updateModel(change);
         }
     }
 

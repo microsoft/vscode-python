@@ -15,17 +15,15 @@ import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
-import { getConnectedInteractiveCell } from './interactiveCell';
+import { InteractiveCellComponent } from './interactiveCell';
 import './interactivePanel.less';
 import { actionCreators } from './redux/actions';
 
-type IInteractivePanelProps = IMainWithVariables & typeof actionCreators;
+export type IInteractivePanelProps = IMainWithVariables & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainWithVariables {
     return { ...state.main, variableState: state.variables };
 }
-
-const ConnectedInteractiveCell = getConnectedInteractiveCell();
 
 export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
@@ -240,7 +238,13 @@ ${buildSettingsCss(this.props.settings)}`}</style>
     private renderFooterPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
-        if (!this.props.monacoReady || !this.props.editCellVM || !this.props.settings || !this.props.editorOptions) {
+        if (
+            !this.props.monacoReady ||
+            !this.props.editCellVM ||
+            !this.props.settings ||
+            !this.props.editorOptions ||
+            !this.props.settings.allowInput
+        ) {
             return null;
         }
 
@@ -252,7 +256,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
         return (
             <div className={editPanelClass}>
                 <ErrorBoundary>
-                    <ConnectedInteractiveCell
+                    <InteractiveCellComponent
                         role="form"
                         editorOptions={this.props.editorOptions}
                         maxTextSize={maxTextSize}
@@ -323,7 +327,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             return (
                 <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>
                     <ErrorBoundary>
-                        <ConnectedInteractiveCell
+                        <InteractiveCellComponent
                             role="listitem"
                             editorOptions={this.props.editorOptions}
                             maxTextSize={this.props.settings.maxOutputSize}

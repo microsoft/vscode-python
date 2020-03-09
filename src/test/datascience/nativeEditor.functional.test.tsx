@@ -10,6 +10,7 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as sinon from 'sinon';
+import { anything, objectContaining, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
 import {
@@ -198,6 +199,79 @@ suite('DataScience Native Editor', () => {
                         await addCell(wrapper, ioc, 'a=1\na');
 
                         verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
+                    },
+                    () => {
+                        return ioc;
+                    }
+                );
+
+                runMountedTest(
+                    'Invalid session still runs',
+                    async (wrapper, context) => {
+                        if (ioc.mockJupyter) {
+                            // Can only do this with the mock. Have to force the first call to waitForIdle on the
+                            // the jupyter session to fail
+                            ioc.mockJupyter.forcePendingIdleFailure();
+
+                            // Create an editor so something is listening to messages
+                            await createNewEditor(ioc);
+
+                            // Run the first cell. Should fail but then ask for another
+                            await addCell(wrapper, ioc, 'a=1\na');
+
+                            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
+                        } else {
+                            context.skip();
+                        }
+                    },
+                    () => {
+                        return ioc;
+                    }
+                );
+
+                runMountedTest(
+                    'Invalid kernel still runs',
+                    async (wrapper, context) => {
+                        if (ioc.mockJupyter) {
+                            const kernelDesc = {
+                                name: 'foobar',
+                                display_name: 'foobar'
+                            };
+                            const invalidKernel = {
+                                name: 'foobar',
+                                display_name: 'foobar',
+                                language: 'python',
+                                path: '/foo/bar/python',
+                                argv: []
+                            };
+
+                            // Allow the invalid kernel to be used
+                            const kernelServiceMock = ioc.kernelService;
+                            when(
+                                kernelServiceMock.findMatchingKernelSpec(
+                                    objectContaining(kernelDesc),
+                                    anything(),
+                                    anything()
+                                )
+                            ).thenResolve(invalidKernel);
+
+                            // Can only do this with the mock. Have to force the first call to changeKernel on the
+                            // the jupyter session to fail
+                            ioc.mockJupyter.forcePendingKernelChangeFailure();
+
+                            // Create an editor so something is listening to messages
+                            const editor = (await createNewEditor(ioc)) as NativeEditorWebView;
+
+                            // Force an update to the editor so that it has a new kernel
+                            await editor.updateNotebookOptions(invalidKernel, undefined);
+
+                            // Run the first cell. Should fail but then ask for another
+                            await addCell(wrapper, ioc, 'a=1\na');
+
+                            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
+                        } else {
+                            context.skip();
+                        }
                     },
                     () => {
                         return ioc;
@@ -413,15 +487,13 @@ df.head()`;
                             const editor = await createNewEditor(ioc);
 
                             // Wait a bit to let async activation to work
-                            await sleep(500);
+                            await sleep(2000);
 
                             // Make sure it has a server
                             assert.ok(editor.notebook, 'Notebook did not start with a server');
                         } else {
                             context.skip();
                         }
-                        // Do the same thing again, but disable auto start
-                        ioc.getSettings().datascience.disableJupyterAutoStart = true;
                     },
                     () => {
                         return ioc;
@@ -1165,12 +1237,12 @@ df.head()`;
                         let imageButtons = cell.find(ImageButton);
                         assert.equal(imageButtons.length, 6, 'Cell buttons not found');
                         const deleteButton = imageButtons.at(5);
-                        await getNativeCellResults(ioc, wrapper, async () => {
+                        const afterDelete = await getNativeCellResults(ioc, wrapper, async () => {
                             deleteButton.simulate('click');
                             return Promise.resolve();
                         });
                         // Should have 3 cells
-                        assert.equal(wrapper.find('NativeCell').length, 3, 'Cell not deleted');
+                        assert.equal(afterDelete.length, 3, 'Cell not deleted');
 
                         // Undo the delete
                         await undo();
@@ -1189,12 +1261,12 @@ df.head()`;
                         imageButtons = cell.find(ImageButton);
                         assert.equal(imageButtons.length, 6, 'Cell buttons not found');
                         const moveUpButton = imageButtons.at(0);
-                        await getNativeCellResults(ioc, wrapper, async () => {
+                        const afterMove = await getNativeCellResults(ioc, wrapper, async () => {
                             moveUpButton.simulate('click');
                             return Promise.resolve();
                         });
 
-                        let foundCell = getOutputCell(wrapper, 'NativeCell', 2)?.instance() as NativeCell;
+                        let foundCell = getOutputCell(afterMove, 'NativeCell', 2)?.instance() as NativeCell;
                         assert.equal(foundCell.props.cellVM.cell.id, 'NotebookImport#1', 'Cell did not move');
                         await undo();
                         foundCell = getOutputCell(wrapper, 'NativeCell', 2)?.instance() as NativeCell;

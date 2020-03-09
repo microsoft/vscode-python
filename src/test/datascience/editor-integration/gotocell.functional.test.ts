@@ -83,19 +83,34 @@ suite('DataScience gotocell tests', () => {
     ): Promise<INotebook | undefined> {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
-            const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+            //const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+            // tslint:disable-next-line: no-invalid-template-strings
+            const testDir = '${fileDirname}';
             const server = await jupyterExecution.connectToNotebookServer({
                 usingDarkTheme,
                 useDefaultConfig,
                 workingDir: testDir,
-                purpose: purpose ? purpose : '1'
+                purpose: purpose ? purpose : Identifiers.HistoryPurpose,
+                enableDebugging: true
             });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
-            return server
-                ? await server.createNotebook(undefined, Uri.parse(Identifiers.InteractiveWindowIdentity))
-                : undefined;
+
+            if (!server) {
+                return undefined;
+            } else {
+                const nb: INotebook = await server.createNotebook(
+                    undefined,
+                    Uri.parse(Identifiers.InteractiveWindowIdentity)
+                );
+                const listener = (codeLensFactory as any) as IInteractiveWindowListener;
+                listener.onMessage(
+                    InteractiveWindowMessages.NotebookExecutionActivated,
+                    Identifiers.InteractiveWindowIdentity
+                );
+                return nb;
+            }
         } catch (exc) {
             if (!expectFailure) {
                 assert.ok(false, `Expected server to be created, but got ${exc}`);

@@ -459,6 +459,10 @@ export namespace DataScience {
         'DataScience.jupyterNotebookConnectFailed',
         'Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}'
     );
+    export const reloadAfterChangingJupyterServerConnection = localize(
+        'DataScience.reloadAfterChangingJupyterServerConnection',
+        'Please reload VS Code when changing the Jupyter Server connection.'
+    );
     export const jupyterNotebookRemoteConnectFailed = localize(
         'DataScience.jupyterNotebookRemoteConnectFailed',
         'Failed to connect to remote Jupyter notebook.\r\nCheck that the Jupyter Server URI setting has a valid running server specified.\r\n{0}\r\n{1}'
@@ -722,7 +726,7 @@ export namespace DataScience {
     );
     export const gatheredNotebookDescriptionInMarkdown = localize(
         'DataScience.gatheredNotebookDescriptionInMarkdown',
-        '# Gathered Notebook\nGenerated from ```{0}```\n\nThis notebook contains only the code and cells required to produce the same results as the gathered cell.\n\nPlease note that the python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.'
+        '## Gathered Notebook\nGenerated from ```{0}```\n\nThis notebook contains only the code and cells required to produce the same results as the gathered cell.\n\nPlease note that the python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.\n\nAs this is an experimental feature, please let us know how well Gather works for you at [https://aka.ms/gathersurvey](https://aka.ms/gathersurvey)'
     );
     export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
     export const fallbackToUseActiveInterpeterAsKernel = localize(
@@ -800,9 +804,9 @@ export namespace DataScience {
     export const createdNewNotebook = localize('DataScience.createdNewNotebook', '{0}: Creating new notebook ');
 
     export const createdNewKernel = localize('DataScience.createdNewKernel', '{0}: Kernel started: {1}');
-    export const kernelIsDead = localize(
-        'DataScience.kernelIsDead',
-        'Kernel {0} died while starting. Check the Jupyter output tab for more information.'
+    export const kernelInvalid = localize(
+        'DataScience.kernelInvalid',
+        'Kernel {0} is not usable. Check the Jupyter output tab for more information.'
     );
 }
 

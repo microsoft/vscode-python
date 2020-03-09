@@ -8,6 +8,7 @@ import { Position, Range, Uri } from 'vscode';
 import { IDebugService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
+import { CellHashLogger } from '../../../client/datascience/editor-integration/cellhashLogger';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
 import {
     InteractiveWindowMessages,
@@ -27,6 +28,7 @@ class HashListener implements ICellHashListener {
 // tslint:disable-next-line: max-func-body-length
 suite('CellHashProvider Unit Tests', () => {
     let hashProvider: CellHashProvider;
+    let hashLogger: CellHashLogger;
     let documentManager: MockDocumentManager;
     let configurationService: TypeMoq.IMock<IConfigurationService>;
     let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
@@ -53,6 +55,7 @@ suite('CellHashProvider Unit Tests', () => {
             fileSystem.object,
             [hashListener]
         );
+        hashLogger = new CellHashLogger(hashProvider);
     });
 
     function addSingleChange(file: string, range: Range, newText: string) {
@@ -73,7 +76,7 @@ suite('CellHashProvider Unit Tests', () => {
             id: '1',
             state: CellState.init
         };
-        return hashProvider.preExecute(cell, false);
+        return hashLogger.preExecute(cell, false);
     }
 
     test('Add a cell and edit it', async () => {

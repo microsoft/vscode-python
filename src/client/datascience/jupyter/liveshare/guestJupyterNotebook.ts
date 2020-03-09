@@ -140,10 +140,6 @@ export class GuestJupyterNotebook
         return Promise.resolve();
     }
 
-    public addLogger(_logger: INotebookExecutionLogger): void {
-        noop();
-    }
-
     public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
         // Guest can't change the style. Maybe output a warning here?
     }
@@ -240,6 +236,9 @@ export class GuestJupyterNotebook
 
     public setKernelSpec(_spec: IJupyterKernelSpec | LiveKernelModel, _timeout: number): Promise<void> {
         return Promise.resolve();
+    }
+    public getLoggers(): INotebookExecutionLogger[] {
+        return [];
     }
 
     private onServerResponse = (args: Object) => {

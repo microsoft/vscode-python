@@ -63,9 +63,11 @@ import {
     IDiagnosticHandlerService,
     IDiagnosticsService
 } from '../../client/application/diagnostics/types';
+import { ClipboardService } from '../../client/common/application/clipboard';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
+    IClipboard,
     ICommandManager,
     ICustomEditorService,
     IDebugService,
@@ -165,13 +167,15 @@ import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerDependencyService } from '../../client/datascience/data-viewing/dataViewerDependencyService';
 import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
 import { DebugLocationTrackerFactory } from '../../client/datascience/debugLocationTrackerFactory';
+import { CellHashLogger } from '../../client/datascience/editor-integration/cellhashLogger';
 import { CellHashProvider } from '../../client/datascience/editor-integration/cellhashprovider';
 import { CodeLensFactory } from '../../client/datascience/editor-integration/codeLensFactory';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
 import { CodeWatcher } from '../../client/datascience/editor-integration/codewatcher';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
-import { GatherExecution } from '../../client/datascience/gather/gather';
+import { GatherProvider } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
+import { GatherLogger } from '../../client/datascience/gather/gatherLogger';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
@@ -202,6 +206,7 @@ import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariab
 import { KernelSelectionProvider } from '../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../client/datascience/jupyter/kernels/kernelService';
+import { KernelSwitcher } from '../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
@@ -211,6 +216,7 @@ import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
     ICellHashListener,
+    ICellHashLogger,
     ICellHashProvider,
     ICodeCssGenerator,
     ICodeLensFactory,
@@ -222,7 +228,8 @@ import {
     IDataViewer,
     IDataViewerProvider,
     IDebugLocationTracker,
-    IGatherExecution,
+    IGatherLogger,
+    IGatherProvider,
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
@@ -415,6 +422,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private emptyConfig = new MockWorkspaceConfiguration();
     private workspaceFolders: MockWorkspaceFolder[] = [];
     private defaultPythonPath: string | undefined;
+    private kernelServiceMock = mock(KernelService);
 
     constructor() {
         super();
@@ -525,7 +533,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
-        this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger);
+        this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [
+            ICellHashListener
+        ]);
         this.serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
         this.serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, TestNativeEditorProvider);
         this.serviceManager.addSingleton<DataViewerDependencyService>(
@@ -626,15 +636,18 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
+        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
-        this.serviceManager.addSingleton<ICellHashProvider>(ICellHashProvider, CellHashProvider);
-        this.serviceManager.addBinding(ICellHashProvider, IInteractiveWindowListener);
-        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
-        this.serviceManager.addBinding(ICellHashProvider, INotebookExecutionLogger);
-        this.serviceManager.addBinding(IJupyterDebugger, ICellHashListener);
-        this.serviceManager.add<IGatherExecution>(IGatherExecution, GatherExecution);
-        this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
+        this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
+        this.serviceManager.add<ICellHashLogger>(ICellHashLogger, CellHashLogger, undefined, [
+            INotebookExecutionLogger
+        ]);
+        this.serviceManager.add<IGatherProvider>(IGatherProvider, GatherProvider);
+        this.serviceManager.add<IGatherLogger>(IGatherLogger, GatherLogger, undefined, [INotebookExecutionLogger]);
+        this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [
+            IInteractiveWindowListener
+        ]);
         this.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
         this.serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
         this.serviceManager.addSingleton<IDiagnosticsService>(
@@ -655,6 +668,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
         this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
         this.serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
+        this.serviceManager.addSingleton<KernelSwitcher>(KernelSwitcher, KernelSwitcher);
         this.serviceManager.addSingleton<IProductService>(IProductService, ProductService);
         this.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
@@ -759,6 +773,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
 
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
+        this.serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
         this.serviceManager.addSingletonInstance<IConfigurationService>(
             IConfigurationService,
@@ -848,9 +863,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (this.shouldMockJupyter) {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
-            const kernelService = mock(KernelService);
-            when(kernelService.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
-            this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(kernelService));
+            when(this.kernelServiceMock.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
+            this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
+
             this.serviceManager.addSingleton<InterpeterHashProviderFactory>(
                 InterpeterHashProviderFactory,
                 InterpeterHashProviderFactory
@@ -1067,6 +1082,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                     .setAsSelectedInterpreter(list[0]);
             }
         }
+    }
+
+    public get kernelService() {
+        return this.kernelServiceMock;
     }
 
     // tslint:disable:any

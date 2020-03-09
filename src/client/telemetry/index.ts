@@ -727,6 +727,29 @@ export interface IEventNamePropertyMapping {
          */
         hashedName: string;
     };
+    [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
+    [Telemetry.HashedNotebookCellOutputMimeTypePerf]: never | undefined;
+    [Telemetry.HashedCellOutputMimeType]: {
+        /**
+         * Hash of the cell output mimetype
+         *
+         * @type {string}
+         */
+        hashedName: string;
+        hasText: boolean;
+        hasLatex: boolean;
+        hasHtml: boolean;
+        hasSvg: boolean;
+        hasXml: boolean;
+        hasJson: boolean;
+        hasImage: boolean;
+        hasGeo: boolean;
+        hasPlotly: boolean;
+        hasVega: boolean;
+        hasWidget: boolean;
+        hasJupyter: boolean;
+        hasVnd: boolean;
+    };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
      * Telemetry event sent with details of selection in prompt
@@ -1128,6 +1151,10 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
     /**
+     * Telemetry sent when the client makes a request to the Language Server
+     */
+    [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: any;
+    /**
      * Telemetry event sent with details when inExperiment() API is called
      */
     [EventName.PYTHON_EXPERIMENTS]: {
@@ -1185,6 +1212,10 @@ export interface IEventNamePropertyMapping {
      * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
      */
     [EventName.PYTHON_NODE_SERVER_TELEMETRY]: any;
+    /**
+     * Telemetry sent when the client makes a request to the Node.js server
+     */
+    [EventName.PYTHON_NODE_SERVER_REQUEST]: any;
     /**
      * Telemetry captured for enabling reload.
      */
@@ -1537,6 +1568,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RemoteReexecuteCode]: never | undefined;
     [Telemetry.RestartJupyterTime]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
+    [Telemetry.RestartKernelCommand]: never | undefined;
     [Telemetry.RunAllCells]: never | undefined;
     [Telemetry.RunSelectionOrLine]: never | undefined;
     [Telemetry.RunCell]: never | undefined;
@@ -1852,4 +1884,16 @@ export interface IEventNamePropertyMapping {
      * @memberof IEventNamePropertyMapping
      */
     [Telemetry.NewFileForInteractiveWindow]: undefined | never;
+    /**
+     * Telemetry event sent when a kernel picked crashes on startup
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.KernelInvalid]: undefined | never;
+    [Telemetry.GatherCompleted]: {
+        /**
+         * result indicates whether the gather was completed to a script, notebook or suffered an internal error.
+         */
+        result: 'err' | 'script' | 'notebook';
+    };
 }

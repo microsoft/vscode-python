@@ -156,6 +156,7 @@
     "ExtensionChannels.downloadCompletedOutputMessage": "Insiders build download complete.",
     "ExtensionChannels.startingDownloadOutputMessage": "Starting download for Insiders build.",
     "Interpreters.environmentPromptMessage": "We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?",
+    "DataScience.reloadAfterChangingJupyterServerConnection": "Please reload VS Code when changing the Jupyter Server connection.",
     "DataScience.restartKernelMessage": "Do you want to restart the IPython kernel? All variables will be lost.",
     "DataScience.restartKernelMessageYes": "Yes",
     "DataScience.restartKernelMessageNo": "No",
@@ -417,7 +418,7 @@
     "DataScience.findJupyterCommandProgressCheckInterpreter": "Checking {0}.",
     "DataScience.findJupyterCommandProgressSearchCurrentPath": "Searching current path.",
     "DataScience.gatheredScriptDescription": "# This file contains only the code required to produce the results of the gathered cell.\n",
-    "DataScience.gatheredNotebookDescriptionInMarkdown": "# Gathered Notebook\nGenerated from ```{0}```\n\nThis notebook contains only the code and cells required to produce the same results as the gathered cell.\n\nPlease note that the python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.",
+    "DataScience.gatheredNotebookDescriptionInMarkdown": "## Gathered Notebook\nGenerated from ```{0}```\n\nThis notebook contains only the code and cells required to produce the same results as the gathered cell.\n\nPlease note that the python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.\n\nAs this is an experimental feature, please let us know how well Gather works for you at [https://aka.ms/gathersurvey](https://aka.ms/gathersurvey)",
     "DataScience.savePngTitle": "Save Image",
     "DataScience.jupyterSelectURIQuickPickTitle": "Pick how to connect to Jupyter",
     "DataScience.jupyterSelectURIQuickPickPlaceholder": "Choose an option",
@@ -448,6 +449,6 @@
     "DataScience.connectingToJupyterUri": "Connecting to Jupyter server at {0}",
     "DataScience.createdNewNotebook": "{0}: Creating new notebook ",
     "DataScience.createdNewKernel": "{0}: Kernel started: {1}",
-    "DataScience.kernelIsDead": "Kernel {0} died while starting. Check the Jupyter output tab for more information.",
+    "DataScience.kernelInvalid": "Kernel {0} is not usable. Check the Jupyter output tab for more information.",
     "OutdatedDebugger.updateDebuggerMessage": "We noticed you are attaching to ptvsd (Python debugger), which will be deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy)."
 }

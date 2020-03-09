@@ -6,12 +6,14 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { TextDocument } from 'vscode';
 import { captureTelemetry, sendTelemetryEvent } from '.';
+import { splitMultilineString } from '../../datascience-ui/common';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { IDocumentManager } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { noop } from '../common/utils/misc';
+import { ICell, INotebookEditor, INotebookEditorProvider, INotebookExecutionLogger } from '../datascience/types';
 import { EventName } from './constants';
-import { IImportTracker } from './types';
 
 /*
 Python has a fairly rich import statement. Originally the matching regexp was kept simple for
@@ -42,20 +44,35 @@ const MAX_DOCUMENT_LINES = 1000;
 const testExecution = isTestExecution();
 
 @injectable()
-export class ImportTracker implements IImportTracker {
-    private pendingDocs = new Map<string, NodeJS.Timer | number>();
+export class ImportTracker implements IExtensionSingleActivationService, INotebookExecutionLogger {
+    private pendingChecks = new Map<string, NodeJS.Timer | number>();
     private sentMatches: Set<string> = new Set<string>();
     // tslint:disable-next-line:no-require-imports
     private hashFn = require('hash.js').sha256;
 
-    constructor(@inject(IDocumentManager) private documentManager: IDocumentManager) {
+    constructor(
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider
+    ) {
         this.documentManager.onDidOpenTextDocument(t => this.onOpenedOrSavedDocument(t));
         this.documentManager.onDidSaveTextDocument(t => this.onOpenedOrSavedDocument(t));
+        this.notebookProvider.onDidOpenNotebookEditor(t => this.onOpenedOrClosedNotebook(t));
+        this.notebookProvider.onDidCloseNotebookEditor(t => this.onOpenedOrClosedNotebook(t));
+    }
+    public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
+        // Do nothing on pre execute
+    }
+    public async postExecute(cell: ICell, silent: boolean): Promise<void> {
+        // Check for imports in the cell itself.
+        if (!silent && cell.data.cell_type === 'code') {
+            this.scheduleCheck(this.createCellKey(cell), this.checkCell.bind(this, cell));
+        }
     }
 
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
         this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
+        this.notebookProvider.editors.forEach(e => this.onOpenedOrClosedNotebook(e));
     }
 
     private getDocumentLines(document: TextDocument): (string | undefined)[] {
@@ -71,6 +88,26 @@ export class ImportTracker implements IImportTracker {
             .filter((f: string | undefined) => f);
     }
 
+    private getNotebookLines(e: INotebookEditor): (string | undefined)[] {
+        let result: (string | undefined)[] = [];
+        if (e.model) {
+            e.model.cells
+                .filter(c => c.data.cell_type === 'code')
+                .forEach(c => {
+                    const cellArray = this.getCellLines(c);
+                    if (result.length < MAX_DOCUMENT_LINES) {
+                        result = [...result, ...cellArray];
+                    }
+                });
+        }
+        return result;
+    }
+
+    private getCellLines(cell: ICell): (string | undefined)[] {
+        // Split into multiple lines removing line feeds on the end.
+        return splitMultilineString(cell.data.source).map(s => s.replace(/\n/g, ''));
+    }
+
     private onOpenedOrSavedDocument(document: TextDocument) {
         // Make sure this is a Python file.
         if (path.extname(document.fileName) === '.py') {
@@ -78,31 +115,56 @@ export class ImportTracker implements IImportTracker {
         }
     }
 
+    private onOpenedOrClosedNotebook(e: INotebookEditor) {
+        if (e.file) {
+            this.scheduleCheck(e.file.fsPath, this.checkNotebook.bind(this, e));
+        }
+    }
+
     private scheduleDocument(document: TextDocument) {
+        this.scheduleCheck(document.fileName, this.checkDocument.bind(this, document));
+    }
+
+    private scheduleCheck(file: string, check: () => void) {
         // If already scheduled, cancel.
-        const currentTimeout = this.pendingDocs.get(document.fileName);
+        const currentTimeout = this.pendingChecks.get(file);
         if (currentTimeout) {
             // tslint:disable-next-line: no-any
             clearTimeout(currentTimeout as any);
-            this.pendingDocs.delete(document.fileName);
+            this.pendingChecks.delete(file);
         }
 
         // Now schedule a new one.
         if (testExecution) {
             // During a test, check right away. It needs to be synchronous.
-            this.checkDocument(document);
+            check();
         } else {
             // Wait five seconds to make sure we don't already have this document pending.
-            this.pendingDocs.set(
-                document.fileName,
-                setTimeout(() => this.checkDocument(document), 5000)
-            );
+            this.pendingChecks.set(file, setTimeout(check, 5000));
         }
+    }
+
+    private createCellKey(cell: ICell): string {
+        return `${cell.file}${cell.id}`;
+    }
+
+    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
+    private checkCell(cell: ICell) {
+        this.pendingChecks.delete(this.createCellKey(cell));
+        const lines = this.getCellLines(cell);
+        this.lookForImports(lines);
+    }
+
+    @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
+    private checkNotebook(e: INotebookEditor) {
+        this.pendingChecks.delete(e.file.fsPath);
+        const lines = this.getNotebookLines(e);
+        this.lookForImports(lines);
     }
 
     @captureTelemetry(EventName.HASHED_PACKAGE_PERF)
     private checkDocument(document: TextDocument) {
-        this.pendingDocs.delete(document.fileName);
+        this.pendingChecks.delete(document.fileName);
         const lines = this.getDocumentLines(document);
         this.lookForImports(lines);
     }

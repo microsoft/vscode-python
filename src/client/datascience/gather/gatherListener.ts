@@ -8,20 +8,23 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
+import { sendTelemetryEvent } from '../../telemetry';
 import { generateCellsFromString } from '../cellFactory';
-import { Identifiers } from '../constants';
+import { Identifiers, Telemetry } from '../constants';
 import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import {
     ICell,
-    IGatherExecution,
+    IGatherLogger,
+    IGatherProvider,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
     IJupyterExecution,
     INotebook,
     INotebookEditorProvider,
+    INotebookExecutionLogger,
     INotebookExporter
 } from '../types';
-import { GatherLogger } from './gatherLogger';
 
 @injectable()
 export class GatherListener implements IInteractiveWindowListener {
@@ -31,11 +34,11 @@ export class GatherListener implements IInteractiveWindowListener {
         // tslint:disable-next-line: no-any
         payload: any;
     }>();
-    private gatherLogger: GatherLogger;
     private notebookUri: Uri | undefined;
+    private gatherProvider: IGatherProvider | undefined;
+    private gatherTimer: StopWatch | undefined;
 
     constructor(
-        @inject(IGatherExecution) private gather: IGatherExecution,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(INotebookEditorProvider) private ipynbProvider: INotebookEditorProvider,
@@ -44,9 +47,7 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IFileSystem) private fileSystem: IFileSystem
-    ) {
-        this.gatherLogger = new GatherLogger(this.gather, this.configService);
-    }
+    ) {}
 
     public dispose() {
         noop();
@@ -61,7 +62,7 @@ export class GatherListener implements IInteractiveWindowListener {
     public onMessage(message: string, payload?: any): void {
         switch (message) {
             case InteractiveWindowMessages.NotebookExecutionActivated:
-                this.handleMessage(message, payload, this.doSetLogger);
+                this.handleMessage(message, payload, this.doInitGather);
                 break;
 
             case InteractiveWindowMessages.GatherCodeRequest:
@@ -69,7 +70,9 @@ export class GatherListener implements IInteractiveWindowListener {
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
-                this.gather.resetLog();
+                if (this.gatherProvider) {
+                    this.gatherProvider.resetLog();
+                }
                 break;
 
             default:
@@ -87,11 +90,11 @@ export class GatherListener implements IInteractiveWindowListener {
         handler.bind(this)(args);
     }
 
-    private doSetLogger(payload: string): void {
-        this.setLogger(payload).ignoreErrors();
+    private doInitGather(payload: string): void {
+        this.initGather(payload).ignoreErrors();
     }
 
-    private async setLogger(notebookUri: string) {
+    private async initGather(notebookUri: string) {
         this.notebookUri = Uri.parse(notebookUri);
 
         // First get the active server
@@ -104,10 +107,20 @@ export class GatherListener implements IInteractiveWindowListener {
         if (activeServer) {
             nb = await activeServer.getNotebook(this.notebookUri);
 
-            // If we have an executing notebook, add the gather logger.
+            // If we have an executing notebook, get its gather execution service.
             if (nb) {
-                nb.addLogger(this.gatherLogger);
+                this.gatherProvider = this.getGatherProvider(nb);
             }
+        }
+    }
+
+    private getGatherProvider(nb: INotebook): IGatherProvider | undefined {
+        const gatherLogger = <IGatherLogger>(
+            nb.getLoggers().find((logger: INotebookExecutionLogger) => (<IGatherLogger>logger).getGatherProvider)
+        );
+
+        if (gatherLogger) {
+            return gatherLogger.getGatherProvider();
         }
     }
 
@@ -118,12 +131,22 @@ export class GatherListener implements IInteractiveWindowListener {
     }
 
     private gatherCodeInternal = async (cell: ICell) => {
-        const slicedProgram = this.gather.gatherCode(cell);
+        this.gatherTimer = new StopWatch();
 
-        if (this.configService.getSettings().datascience.gatherToScript) {
-            await this.showFile(slicedProgram, cell.file);
+        const slicedProgram = this.gatherProvider ? this.gatherProvider.gatherCode(cell) : 'Gather internal error';
+
+        if (!slicedProgram) {
+            sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'err' });
         } else {
-            await this.showNotebook(slicedProgram, cell);
+            const gatherToScript: boolean | undefined = this.configService.getSettings().datascience.gatherToScript;
+
+            if (gatherToScript) {
+                await this.showFile(slicedProgram, cell.file);
+                sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'script' });
+            } else {
+                await this.showNotebook(slicedProgram, cell);
+                sendTelemetryEvent(Telemetry.GatherCompleted, this.gatherTimer?.elapsedTime, { result: 'notebook' });
+            }
         }
     };
 
@@ -149,8 +172,11 @@ export class GatherListener implements IInteractiveWindowListener {
             cells = cells.concat(generateCellsFromString(slicedProgram));
 
             const notebook = await this.jupyterExporter.translateToNotebook(cells);
-            const contents = JSON.stringify(notebook);
-            await this.ipynbProvider.createNew(contents);
+            if (notebook) {
+                notebook.metadata.gatheredNotebook = true;
+                const contents = JSON.stringify(notebook);
+                await this.ipynbProvider.createNew(contents);
+            }
         }
     }
 

@@ -1,7 +1,6 @@
-import { CellSlice, DataflowAnalyzer, ExecutionLogSlicer } from '@msrvida/python-program-analysis';
-import { Cell as IGatherCell } from '@msrvida/python-program-analysis/dist/es5/cell';
-
+import * as ppatypes from '@msrvida-python-program-analysis';
 import { inject, injectable } from 'inversify';
+import * as uuid from 'uuid/v4';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -9,15 +8,15 @@ import * as localize from '../../common/utils/localize';
 // tslint:disable-next-line: no-duplicate-imports
 import { Common } from '../../common/utils/localize';
 import { Identifiers } from '../constants';
-import { CellState, ICell as IVscCell, IGatherExecution } from '../types';
+import { CellState, ICell as IVscCell, IGatherProvider } from '../types';
 
 /**
  * An adapter class to wrap the code gathering functionality from [microsoft/python-program-analysis](https://www.npmjs.com/package/@msrvida/python-program-analysis).
  */
 @injectable()
-export class GatherExecution implements IGatherExecution {
-    private _executionSlicer: ExecutionLogSlicer<IGatherCell>;
-    private dataflowAnalyzer: DataflowAnalyzer;
+export class GatherProvider implements IGatherProvider {
+    private _executionSlicer: ppatypes.ExecutionLogSlicer<ppatypes.Cell> | undefined;
+    private dataflowAnalyzer: ppatypes.DataflowAnalyzer | undefined;
     private _enabled: boolean;
 
     constructor(
@@ -26,35 +25,55 @@ export class GatherExecution implements IGatherExecution {
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(ICommandManager) private commandManager: ICommandManager
     ) {
-        this._enabled = this.configService.getSettings().datascience.enableGather ? true : false;
-
-        this.dataflowAnalyzer = new DataflowAnalyzer();
-        this._executionSlicer = new ExecutionLogSlicer(this.dataflowAnalyzer);
+        this._enabled =
+            this.configService.getSettings().datascience.enableGather &&
+            this.configService.getSettings().insidersChannel !== 'off'
+                ? true
+                : false;
 
         if (this._enabled) {
-            this.disposables.push(
-                this.configService.getSettings(undefined).onDidChange(e => this.updateEnableGather(e))
-            );
-        }
+            try {
+                // tslint:disable-next-line: no-require-imports
+                const ppa = require('@msrvida/python-program-analysis') as typeof import('@msrvida-python-program-analysis');
 
-        traceInfo('Gathering tools have been activated');
+                if (ppa) {
+                    this.dataflowAnalyzer = new ppa.DataflowAnalyzer();
+                    this._executionSlicer = new ppa.ExecutionLogSlicer(this.dataflowAnalyzer);
+
+                    this.disposables.push(
+                        this.configService.getSettings(undefined).onDidChange(e => this.updateEnableGather(e))
+                    );
+                }
+            } catch (ex) {
+                traceInfo('Gathering tools could not be activated. Indicates build of VSIX was not');
+            }
+        }
     }
+
     public logExecution(vscCell: IVscCell): void {
         const gatherCell = convertVscToGatherCell(vscCell);
 
         if (gatherCell) {
-            this._executionSlicer.logExecution(gatherCell);
+            if (this._executionSlicer) {
+                this._executionSlicer.logExecution(gatherCell);
+            }
         }
     }
 
     public async resetLog(): Promise<void> {
-        this._executionSlicer.reset();
+        if (this._executionSlicer) {
+            this._executionSlicer.reset();
+        }
     }
 
     /**
      * For a given code cell, returns a string representing a program containing all the code it depends on.
      */
     public gatherCode(vscCell: IVscCell): string {
+        if (!this._executionSlicer) {
+            return '# %% [markdown]\n## Gather not available';
+        }
+
         const gatherCell = convertVscToGatherCell(vscCell);
         if (!gatherCell) {
             return '';
@@ -65,9 +84,8 @@ export class GatherExecution implements IGatherExecution {
             this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
 
         // Call internal slice method
-        const slices = this._executionSlicer.sliceAllExecutions(gatherCell.persistentId);
-        const program =
-            slices.length > 0 ? slices[0].cellSlices.reduce(concat, '').replace(/#%%/g, defaultCellMarker) : '';
+        const slice = this._executionSlicer.sliceLatestExecution(gatherCell.persistentId);
+        const program = slice.cellSlices.reduce(concat, '').replace(/#%%/g, defaultCellMarker);
 
         // Add a comment at the top of the file explaining what gather does
         const descriptor = localize.DataScience.gatheredScriptDescription();
@@ -106,27 +124,25 @@ export class GatherExecution implements IGatherExecution {
 /**
  * Accumulator to concatenate cell slices for a sliced program, preserving cell structures.
  */
-function concat(existingText: string, newText: CellSlice): string {
+function concat(existingText: string, newText: ppatypes.CellSlice): string {
     // Include our cell marker so that cell slices are preserved
-    return `${existingText}#%%\n${newText.textSliceLines}\n\n`;
+    return `${existingText}#%%\n${newText.textSliceLines}\n`;
 }
 
 /**
  * This is called to convert VS Code ICells to Gather ICells for logging.
  * @param cell A cell object conforming to the VS Code cell interface
  */
-function convertVscToGatherCell(cell: IVscCell): IGatherCell | undefined {
+function convertVscToGatherCell(cell: IVscCell): ppatypes.Cell | undefined {
     // This should always be true since we only want to log code cells. Putting this here so types match for outputs property
     if (cell.data.cell_type === 'code') {
-        const result: IGatherCell = {
+        const result: ppatypes.Cell = {
             // tslint:disable-next-line no-unnecessary-local-variable
             text: cell.data.source,
 
-            // This may need to change for native notebook support since in the original Gather code this refers to the number of times that this same cell was executed
             executionCount: cell.data.execution_count,
-            executionEventId: cell.id, // This is unique for now, so feed it in
+            executionEventId: uuid(),
 
-            // This may need to change for native notebook support, since this is intended to persist in the metadata for a notebook that is saved and then re-loaded
             persistentId: cell.id,
             hasError: cell.state === CellState.error
             // tslint:disable-next-line: no-any

@@ -359,10 +359,6 @@ export class JupyterNotebookBase implements INotebook {
         return this.updateWorkingDirectoryAndPath(file);
     }
 
-    public addLogger(logger: INotebookExecutionLogger) {
-        this._loggers.push(logger);
-    }
-
     public executeObservable(
         code: string,
         file: string,
@@ -618,6 +614,10 @@ export class JupyterNotebookBase implements INotebook {
         }
 
         this.kernelChanged.fire(spec);
+    }
+
+    public getLoggers(): INotebookExecutionLogger[] {
+        return this._loggers;
     }
 
     private async initializeMatplotlib(cancelToken?: CancellationToken): Promise<void> {

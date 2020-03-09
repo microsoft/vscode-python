@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { CodeLens, Command, Event, EventEmitter, Range, TextDocument } from 'vscode';
+import { CodeLens, Command, Event, EventEmitter, Range, TextDocument, Uri } from 'vscode';
 
 import { traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -12,7 +12,18 @@ import { noop } from '../../common/utils/misc';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CodeLensCommands, Commands } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { ICell, ICellHashProvider, ICodeLensFactory, IFileHashes, IInteractiveWindowListener } from '../types';
+import {
+    ICell,
+    ICellHashLogger,
+    ICellHashProvider,
+    ICodeLensFactory,
+    IFileHashes,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
+    IJupyterExecution,
+    INotebook,
+    INotebookExecutionLogger
+} from '../types';
 
 @injectable()
 export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowListener {
@@ -24,14 +35,14 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         payload: any;
     }>();
     private cellExecutionCounts: Map<string, string> = new Map<string, string>();
+    private hashProvider: ICellHashProvider | undefined;
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(ICellHashProvider) private hashProvider: ICellHashProvider,
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) private fileSystem: IFileSystem
-    ) {
-        hashProvider.updated(this.hashesUpdated.bind(this));
-    }
+    ) {}
 
     public dispose(): void {
         noop();
@@ -45,6 +56,10 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload?: any) {
         switch (message) {
+            case InteractiveWindowMessages.NotebookExecutionActivated:
+                this.initCellHashProvider(<string>payload).ignoreErrors();
+                break;
+
             case InteractiveWindowMessages.FinishCell:
                 const cell = payload as ICell;
                 if (cell && cell.data && cell.data.execution_count) {
@@ -73,7 +88,9 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         );
         const commands = this.enumerateCommands(document.uri);
         const hashes = this.configService.getSettings(document.uri).datascience.addGotoCodeLenses
-            ? this.hashProvider.getHashes()
+            ? this.hashProvider
+                ? this.hashProvider.getHashes()
+                : []
             : [];
         const codeLenses: CodeLens[] = [];
         let firstCell = true;
@@ -90,6 +107,41 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         });
 
         return codeLenses;
+    }
+
+    private async initCellHashProvider(notebookUri: string) {
+        const nbUri: Uri = Uri.parse(notebookUri);
+        if (!nbUri) {
+            return;
+        }
+
+        // First get the active server
+        const activeServer = await this.jupyterExecution.getServer(
+            await this.interactiveWindowProvider.getNotebookOptions(nbUri)
+        );
+
+        let nb: INotebook | undefined;
+        // If that works, see if there's a matching notebook running
+        if (activeServer) {
+            nb = await activeServer.getNotebook(nbUri);
+
+            // If we have an executing notebook, get its cell hash provider service.
+            if (nb) {
+                this.hashProvider = this.getCellHashProvider(nb);
+                if (this.hashProvider) {
+                    this.hashProvider.updated(this.hashesUpdated.bind(this));
+                }
+            }
+        }
+    }
+    private getCellHashProvider(nb: INotebook): ICellHashProvider | undefined {
+        const cellHashLogger = <ICellHashLogger>(
+            nb.getLoggers().find((logger: INotebookExecutionLogger) => (<ICellHashLogger>logger).getCellHashProvider)
+        );
+
+        if (cellHashLogger) {
+            return cellHashLogger.getCellHashProvider();
+        }
     }
 
     private enumerateCommands(resource: Resource): string[] {

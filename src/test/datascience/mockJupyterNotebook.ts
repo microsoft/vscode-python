@@ -9,6 +9,8 @@ import { Identifiers } from '../../client/datascience/constants';
 import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
 import {
     ICell,
+    ICellHashProvider,
+    IGatherProvider,
     IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
@@ -35,6 +37,23 @@ export class MockJupyterNotebook implements INotebook {
 
     public get identity(): Uri {
         return Uri.parse(Identifiers.InteractiveWindowIdentity);
+    }
+
+    public get onSessionStatusChanged(): Event<ServerStatus> {
+        if (!this.onStatusChangedEvent) {
+            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
+        }
+        return this.onStatusChangedEvent.event;
+    }
+
+    public get status(): ServerStatus {
+        return ServerStatus.Idle;
+    }
+    public getGatherProvider(): IGatherProvider | undefined {
+        throw new Error('Method not implemented.');
+    }
+    public getCellHashProvider(): ICellHashProvider | undefined {
+        throw new Error('Method not implemented.');
     }
 
     public get resource(): Resource {
@@ -114,14 +133,7 @@ export class MockJupyterNotebook implements INotebook {
         return Promise.resolve();
     }
 
-    public get onSessionStatusChanged(): Event<ServerStatus> {
-        if (!this.onStatusChangedEvent) {
-            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
-        }
-        return this.onStatusChangedEvent.event;
-    }
-
-    public get status(): ServerStatus {
-        return ServerStatus.Idle;
+    public getLoggers(): INotebookExecutionLogger[] {
+        return [];
     }
 }

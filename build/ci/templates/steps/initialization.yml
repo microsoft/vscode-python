@@ -18,6 +18,7 @@ parameters:
   compile: 'true'
   sqlite: 'false'
   installVSCEorNPX: 'true'
+  enableGather: 'false'
 
 steps:
     - bash: |
@@ -92,6 +93,15 @@ steps:
           verbose: true
           customCommand: ci
 
+    - task: Npm@1
+      displayName: "Install optional python-program-analysis"
+      condition: and(succeeded(), eq('${{ parameters.enableGather }}', 'true'))
+      inputs:
+          workingDir: ${{ parameters.workingDirectory }}
+          command: custom
+          verbose: true
+          customCommand: "install @msrvida/python-program-analysis"
+
     # On Mac, the command `node` doesn't always point to the current node version.
     # Debugger tests use the variable process.env.NODE_PATH
     - script: |
@@ -101,7 +111,7 @@ steps:
       displayName: "Setup NODE_PATH for extension (Debugger Tests)"
       condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
-    # Install vsce 
+    # Install vsce
     - bash: |
           npm install -g vsce
       displayName: "Install vsce"
