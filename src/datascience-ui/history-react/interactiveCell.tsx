@@ -408,6 +408,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         if (focusedElement !== null && e.editorInfo && !e.editorInfo.isSuggesting) {
             const nextTabStop = this.findTabStop(1, focusedElement);
             if (nextTabStop) {
+                e.stopPropagation();
+                e.preventDefault();
                 nextTabStop.focus();
             }
         }
