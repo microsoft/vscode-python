@@ -12,7 +12,7 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getOrCreateInteractiveWindow, runMountedTest } from './interactiveWindowTestHelpers';
-import { getInteractiveEditor, pressCtrlSpace, typeCode } from './testHelpers';
+import { enterEditorKey, getInteractiveEditor, typeCode } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Intellisense tests', () => {
@@ -252,7 +252,7 @@ suite('DataScience Intellisense tests', () => {
                 // Then enter some code. Don't submit, we're just testing that autocomplete appears
                 const suggestion = waitForSuggestion(wrapper);
                 typeCode(getInteractiveEditor(wrapper), 'print');
-                pressCtrlSpace(wrapper);
+                enterEditorKey(wrapper, { code: ' ', ctrlKey: true });
                 await suggestion.promise;
                 suggestion.disposable.dispose();
                 verifyIntellisenseNotVisible(wrapper, '%%bash');
@@ -280,7 +280,7 @@ suite('DataScience Intellisense tests', () => {
                 // Then enter some code. Don't submit, we're just testing that autocomplete appears
                 const suggestion = waitForSuggestion(wrapper);
                 typeCode(getInteractiveEditor(wrapper), ' ');
-                pressCtrlSpace(wrapper);
+                enterEditorKey(wrapper, { code: ' ', ctrlKey: true });
                 await suggestion.promise;
                 suggestion.disposable.dispose();
                 verifyIntellisenseVisible(wrapper, '%%bash');
