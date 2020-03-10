@@ -130,6 +130,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             switcher
         );
         asyncRegistry.push(this);
+        // No ui syncing in old notebooks.
         synchronizer.disable();
     }
     public async load(model: INotebookModel, webViewPanel: WebviewPanel): Promise<void> {
