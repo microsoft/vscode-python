@@ -50,6 +50,7 @@ import {
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorStorage } from './nativeEditorStorage';
+import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 
 enum AskForSaveResult {
     Yes,
@@ -85,6 +86,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(INotebookExporter) jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(NativeEditorSynchronizer) synchronizer: NativeEditorSynchronizer,
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
@@ -114,6 +116,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             commandManager,
             jupyterExporter,
             workspaceService,
+            synchronizer,
             editorProvider,
             dataExplorerProvider,
             jupyterVariables,
@@ -127,6 +130,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             switcher
         );
         asyncRegistry.push(this);
+        synchronizer.disable();
     }
     public async load(model: INotebookModel, webViewPanel: WebviewPanel): Promise<void> {
         await super.load(model, webViewPanel);
@@ -263,7 +267,7 @@ export class NativeEditorOldWebView extends NativeEditor {
 
             const defaultUri =
                 Array.isArray(this.workspaceService.workspaceFolders) &&
-                this.workspaceService.workspaceFolders.length > 0
+                    this.workspaceService.workspaceFolders.length > 0
                     ? this.workspaceService.workspaceFolders[0].uri
                     : undefined;
             fileToSaveTo = await this.applicationShell.showSaveDialog({

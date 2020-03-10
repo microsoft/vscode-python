@@ -255,7 +255,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.synchronizer.notifyUserAction(payload, this);
                 break;
 
-            case InteractiveWindowMessages.ReExecuteCell:
+            case InteractiveWindowMessages.ReExecuteCells:
                 this.executedEvent.fire(this);
                 break;
 
