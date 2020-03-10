@@ -147,9 +147,10 @@ steps:
     displayName: 'Create CONDA Environments'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
 
-  # Run the pip installs in the two environments (darwin linux)
+  # Run the pip installs in the 3 environments (darwin linux)
   - bash: |
       source activate base
+      conda install --quiet -y --file build/ci/conda_base.yml
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
       source activate conda_env_1
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
@@ -159,9 +160,10 @@ steps:
     displayName: 'Install Pip requirements for CONDA envs'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), ne(variables['Agent.Os'], 'Windows_NT'))
 
-  # Run the pip installs in the two environments (windows)
+  # Run the pip installs in the 3 environments (windows)
   - script: |
       call activate base
+      conda install --quiet -y --file build/ci/conda_base.yml      
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
       call activate conda_env_1
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
