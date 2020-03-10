@@ -149,15 +149,20 @@ steps:
 
   # Run the pip installs in the two environments (darwin linux)
   - bash: |
+      source activate base
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
       source activate conda_env_1
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
       source activate conda_env_2
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      conda deactivate
     displayName: 'Install Pip requirements for CONDA envs'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), ne(variables['Agent.Os'], 'Windows_NT'))
 
   # Run the pip installs in the two environments (windows)
   - script: |
+      call activate base
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
       call activate conda_env_1
       python -m pip install --upgrade -r build/conda-functional-requirements.txt
       call activate conda_env_2
