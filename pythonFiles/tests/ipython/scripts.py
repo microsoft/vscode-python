@@ -45,9 +45,7 @@ def execute_script(file, replace_dict=dict([])):
 
 def get_variables(capsys):
     path = os.path.dirname(os.path.abspath(__file__))
-    file = os.path.abspath(
-        os.path.join(path, "../../datascience/getJupyterVariableList.py")
-    )
+    file = os.path.abspath(os.path.join(path, "./getJupyterVariableList.py"))
     if execute_script(file):
         read_out = capsys.readouterr()
         return json.loads(read_out.out)
@@ -64,9 +62,7 @@ def find_variable_json(varList, varName):
 def get_variable_value(variables, name, capsys):
     varJson = find_variable_json(variables, name)
     path = os.path.dirname(os.path.abspath(__file__))
-    file = os.path.abspath(
-        os.path.join(path, "../../datascience/getJupyterVariableValue.py")
-    )
+    file = os.path.abspath(os.path.join(path, "./getJupyterVariableValue.py"))
     keys = dict([("_VSCode_JupyterTestValue", json.dumps(varJson))])
     if execute_script(file, keys):
         read_out = capsys.readouterr()
