@@ -20,7 +20,7 @@ type UserActionNotificationCallback = <M extends IInteractiveWindowMapping, T ex
 export class NativeEditorSynchronizer {
     private registeredNotebooks = new Map<INotebookEditor, UserActionNotificationCallback>();
     private enabled = true;
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) { }
+    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
     public notifyUserAction(message: SyncPayload, editor: INotebookEditor) {
         if (!this.enabled) {
             return;
