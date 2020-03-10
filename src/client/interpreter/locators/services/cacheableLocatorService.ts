@@ -25,6 +25,9 @@ export class CacheableLocatorPromiseCache {
     public static forceUseStatic() {
         CacheableLocatorPromiseCache.useStatic = true;
     }
+    public static forceUseNormal() {
+        CacheableLocatorPromiseCache.useStatic = false;
+    }
     public get(key: string): Deferred<PythonInterpreter[]> | undefined {
         if (CacheableLocatorPromiseCache.useStatic) {
             return CacheableLocatorPromiseCache.staticMap.get(key);

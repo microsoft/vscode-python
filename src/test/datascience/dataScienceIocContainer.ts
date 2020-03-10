@@ -476,10 +476,21 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.extraListeners = [];
         this.webPanelListener = undefined;
         reset(this.webPanelProvider);
+
+        // Turn off the static maps for the environment and conda services. Otherwise this
+        // can mess up tests that don't depend upon them
+        CacheableLocatorPromiseCache.forceUseNormal();
+        EnvironmentActivationServiceCache.forceUseNormal();
     }
 
     //tslint:disable:max-func-body-length
     public registerDataScienceTypes(useCustomEditor: boolean = false) {
+        // Inform the cacheable locator service to use a static map so that it stays in memory in between tests
+        CacheableLocatorPromiseCache.forceUseStatic();
+
+        // Do the same thing for the environment variable activation service.
+        EnvironmentActivationServiceCache.forceUseStatic();
+
         // Make sure the default python path is set.
         this.defaultPythonPath = this.findPythonPath();
 
@@ -796,12 +807,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IPersistentStateFactory,
             new TestPersistentStateFactory(globalStorage, localStorage)
         );
-
-        // Inform the cacheable locator service to use a static map so that it stays in memory in between tests
-        CacheableLocatorPromiseCache.forceUseStatic();
-
-        // Do the same thing for the environment variable activation service.
-        EnvironmentActivationServiceCache.forceUseStatic();
 
         const currentProcess = new CurrentProcess();
         this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);

@@ -50,22 +50,6 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py36'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Functional':
-          PythonVersion: '3.6'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-          VSCODE_PYTHON_ROLLING: true
-    pool:
-      vmImage: 'ubuntu-16.04'
-    steps:
-      - template: templates/test_phases.yml
-
 - stage: Mac
   dependsOn:
   - Build
@@ -85,22 +69,6 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
-  - job: 'Py36'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Functional':
-          PythonVersion: '3.6'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-          VSCODE_PYTHON_ROLLING: true
-    pool:
-      vmImage: '$(vmImageMacOS)'
-    steps:
-      - template: templates/test_phases.yml
-
 - stage: Windows
   dependsOn:
   - Build
@@ -111,22 +79,6 @@ stages:
     strategy:
       matrix:
         'Functional':
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-          VSCODE_PYTHON_ROLLING: true
-    pool:
-      vmImage: 'vs2017-win2016'
-    steps:
-      - template: templates/test_phases.yml
-
-  - job: 'Py36'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Functional':
-          PythonVersion: '3.6'
           TestsToRun: 'testfunctional'
           NeedsPythonTestReqs: true
           NeedsPythonFunctionalReqs: true

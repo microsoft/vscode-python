@@ -48,6 +48,9 @@ export class EnvironmentActivationServiceCache {
     public static forceUseStatic() {
         EnvironmentActivationServiceCache.useStatic = true;
     }
+    public static forceUseNormal() {
+        EnvironmentActivationServiceCache.useStatic = false;
+    }
     public get(key: string): InMemoryCache<NodeJS.ProcessEnv | undefined> | undefined {
         if (EnvironmentActivationServiceCache.useStatic) {
             return EnvironmentActivationServiceCache.staticMap.get(key);
