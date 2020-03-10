@@ -349,12 +349,20 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     };
 
     private onEditCellKeyDown = (_cellId: string, e: IKeyboardEvent) => {
-        if (e.code === 'Escape') {
-            this.editCellEscape(e);
+        if (e.code === 'Tab' && e.shiftKey) {
+            this.editCellShiftTab(e);
         } else if (e.code === 'Enter' && e.shiftKey) {
             this.editCellSubmit(e);
         } else if (e.code === 'NumpadEnter' && e.shiftKey) {
             this.editCellSubmit(e);
+        } else if (e.code === 'KeyU' && e.ctrlKey && e.editorInfo && !e.editorInfo.isSuggesting) {
+            e.editorInfo.clear();
+            e.stopPropagation();
+            e.preventDefault();
+        } else if (e.code === 'Escape' && e.editorInfo && !e.editorInfo.isSuggesting) {
+            e.editorInfo.clear();
+            e.stopPropagation();
+            e.preventDefault();
         }
     };
 
@@ -395,7 +403,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         }
     }
 
-    private editCellEscape = (e: IKeyboardEvent) => {
+    private editCellShiftTab = (e: IKeyboardEvent) => {
         const focusedElement = document.activeElement;
         if (focusedElement !== null && e.editorInfo && !e.editorInfo.isSuggesting) {
             const nextTabStop = this.findTabStop(1, focusedElement);
