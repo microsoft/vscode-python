@@ -109,6 +109,7 @@ steps:
   - bash: |
       python -m pip install numpy
       python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+      python -c "import sys;print(sys.executable)"
     displayName: 'pip install functional requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))    
 

@@ -8,3 +8,4 @@
 --timeout=180000
 --reporter mocha-multi-reporters
 --reporter-options configFile=build/.mocha-multi-reporters.config
+--grep="Linting Functional"
