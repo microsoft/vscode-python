@@ -12,7 +12,9 @@ _VSCODE_evalResult = _VSCODE_builtins.eval(_VSCODE_targetVariable["name"])
 # _VSCode_JupyterStartRow and _VSCode_JupyterEndRow should be replaced dynamically with the literals
 # for our start and end rows
 _VSCODE_startRow = _VSCODE_builtins.max(_VSCode_JupyterStartRow, 0)
-_VSCODE_endRow = _VSCODE_builtins.min(_VSCode_JupyterEndRow, _VSCODE_targetVariable["rowCount"])
+_VSCODE_endRow = _VSCODE_builtins.min(
+    _VSCode_JupyterEndRow, _VSCODE_targetVariable["rowCount"]
+)
 
 # Assume we have a dataframe. If not, turn our eval result into a dataframe
 _VSCODE_df = _VSCODE_evalResult

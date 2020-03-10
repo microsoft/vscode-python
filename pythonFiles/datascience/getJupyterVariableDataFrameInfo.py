@@ -87,7 +87,9 @@ else:
 
     # Then loop and generate our output json
     _VSCODE_columns = []
-    for _VSCODE_n in _VSCODE_builtins.range(0, _VSCODE_builtins.len(_VSCODE_columnNames)):
+    for _VSCODE_n in _VSCODE_builtins.range(
+        0, _VSCODE_builtins.len(_VSCODE_columnNames)
+    ):
         _VSCODE_column_type = _VSCODE_columnTypes[_VSCODE_n]
         _VSCODE_column_name = str(_VSCODE_columnNames[_VSCODE_n])
         _VSCODE_colobj = {}
