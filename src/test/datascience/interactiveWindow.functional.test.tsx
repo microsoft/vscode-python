@@ -9,6 +9,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 
+import { ReactWrapper } from 'enzyme';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
@@ -19,7 +20,9 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
+import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
+import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { defaultDataScienceSettings } from './helpers';
@@ -38,6 +41,7 @@ import {
     addMockData,
     CellInputState,
     CellPosition,
+    enterEditorKey,
     enterInput,
     escapePath,
     findButton,
@@ -85,6 +89,13 @@ suite('DataScience Interactive Window output tests', () => {
         const update = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
         ioc.forceSettingsChanged(ioc.getSettings().pythonPath, newSettings);
         return update;
+    }
+
+    function simulateKeyPressOnEditor(
+        editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined,
+        keyboardEvent: Partial<IKeyboardEvent> & { code: string }
+    ) {
+        enterEditorKey(editorControl, keyboardEvent);
     }
 
     // Uncomment this to debug hangs on exit
@@ -211,6 +222,36 @@ for i in range(10):
             }
 
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
+        'Escape/Ctrl+U',
+        async wrapper => {
+            // Create an interactive window so that it listens to the results.
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+            await interactiveWindow.show();
+
+            // Type in the input box
+            const editor = getInteractiveEditor(wrapper);
+            typeCode(editor, 'a=1\na');
+
+            // Check code is what we think it is
+            const reactEditor = editor.instance() as MonacoEditor;
+            assert.equal(reactEditor.state.model?.getValue().replace(/\r/g, ''), 'a=1\na');
+
+            // Send escape
+            simulateKeyPressOnEditor(editor, { code: 'Escape' });
+            assert.equal(reactEditor.state.model?.getValue().replace(/\r/g, ''), '');
+
+            typeCode(editor, 'a=1\na');
+            assert.equal(reactEditor.state.model?.getValue().replace(/\r/g, ''), 'a=1\na');
+
+            simulateKeyPressOnEditor(editor, { code: 'KeyU', ctrlKey: true });
+            assert.equal(reactEditor.state.model?.getValue().replace(/\r/g, ''), '');
         },
         () => {
             return ioc;
