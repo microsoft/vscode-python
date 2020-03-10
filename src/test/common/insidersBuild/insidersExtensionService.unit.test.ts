@@ -106,7 +106,10 @@ suite('Insiders Extension Service - Activation', () => {
     let handleEdgeCases: sinon.SinonStub<any>;
     let insidersInstaller: IExtensionBuildInstaller;
     let insidersExtensionService: InsidersExtensionService;
+    let envUITEST_DISABLE_INSIDERSExists = false;
     setup(() => {
+        envUITEST_DISABLE_INSIDERSExists = process.env.UITEST_DISABLE_INSIDERS !== undefined;
+        delete process.env.UITEST_DISABLE_INSIDERS;
         extensionChannelService = mock(ExtensionChannelService);
         insidersInstaller = mock(InsidersBuildInstaller);
         appEnvironment = mock(ApplicationEnvironment);
@@ -119,6 +122,9 @@ suite('Insiders Extension Service - Activation', () => {
     });
 
     teardown(() => {
+        if (envUITEST_DISABLE_INSIDERSExists) {
+            process.env.UITEST_DISABLE_INSIDERS = '1';
+        }
         sinon.restore();
     });
 
