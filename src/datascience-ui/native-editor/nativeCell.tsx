@@ -336,7 +336,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 break;
             case 'z':
             case 'Z':
-                if (!this.isFocused() && !UseCustomEditor) {
+                if (!this.isFocused() && !UseCustomEditor.enabled) {
                     if (e.shiftKey && !e.ctrlKey && !e.altKey) {
                         e.stopPropagation();
                         this.props.redo();
@@ -637,7 +637,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         keyDown={this.keyDownInput}
                         showLineNumbers={this.props.cellVM.showLineNumbers}
                         font={this.props.font}
-                        disableUndoStack={UseCustomEditor}
+                        disableUndoStack={UseCustomEditor.enabled}
                         codeVersion={this.props.cellVM.codeVersion ? this.props.cellVM.codeVersion : 1}
                         focusPending={this.props.focusPending}
                     />

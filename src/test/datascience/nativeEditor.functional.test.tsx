@@ -36,6 +36,7 @@ import { ExecutionCount } from '../../datascience-ui/interactive-common/executio
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
+import { UseCustomEditor } from '../../datascience-ui/react-common/constants';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
@@ -127,6 +128,7 @@ suite('DataScience Native Editor', () => {
                 };
 
                 setup(async () => {
+                    UseCustomEditor.enabled = useCustomEditorApi;
                     ioc = new DataScienceIocContainer();
                     ioc.registerDataScienceTypes(useCustomEditorApi);
 
@@ -899,6 +901,7 @@ df.head()`;
                     cleanupCallback: Function;
                 };
                 function initIoc() {
+                    UseCustomEditor.enabled = useCustomEditorApi;
                     ioc = new DataScienceIocContainer();
                     ioc.registerDataScienceTypes(useCustomEditorApi);
                 }
