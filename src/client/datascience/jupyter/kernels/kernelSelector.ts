@@ -383,9 +383,20 @@ export class KernelSelector {
             kernelSpec = await this.kernelService.findMatchingKernelSpec(interpreter, session, cancelToken);
 
             if (kernelSpec) {
-                traceVerbose(`ipykernel installed in ${interpreter.path}, and matching found.`);
+                traceVerbose(`ipykernel installed in ${interpreter.path}, and matching kernelspec found.`);
                 // Make sure the environment matches.
                 await this.kernelService.updateKernelEnvironment(interpreter, kernelSpec, cancelToken);
+
+                // Notify the UI that we didn't find the initially requested kernel and are just using the active interpreter
+                if (displayNameOfKernelNotFound && !disableUI) {
+                    this.applicationShell
+                        .showInformationMessage(
+                            localize.DataScience.fallbackToUseActiveInterpeterAsKernel().format(
+                                displayNameOfKernelNotFound
+                            )
+                        )
+                        .then(noop, noop);
+                }
 
                 sendTelemetryEvent(Telemetry.UseInterpreterAsKernel);
                 return { kernelSpec, interpreter };
