@@ -502,6 +502,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         };
     }
 
+    // The suggestions that the kernel is giving always include magic commands. That is confusing to the user.
+    // This function is called by provideJupyterCompletionItems to filter those magic commands when not in an empty line of code.
     private filterJupyterMatches(
         document: IntellisenseDocument,
         jupyterResults: INotebookCompletion,
