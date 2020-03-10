@@ -32,11 +32,11 @@ type BaseDataWithPayload<T> = {
 // This forms the base content of every payload in all dispatchers.
 export type BaseReduxActionPayload<T = never | undefined> = T extends never
     ? T extends undefined
-    ? BaseData
-    : BaseDataWithPayload<T>
+        ? BaseData
+        : BaseDataWithPayload<T>
     : BaseDataWithPayload<T>;
-// tslint:disable-next-line: no-any
 export type SyncPayload = {
     type: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages;
+    // tslint:disable-next-line: no-any
     payload: BaseReduxActionPayload<any>;
 };
