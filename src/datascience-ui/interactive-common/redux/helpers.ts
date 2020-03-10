@@ -102,6 +102,19 @@ export function unwrapPostableAction(
     return { type, payload };
 }
 
+/**
+ * Whether this is a message type that indicates it is part of a scynchronization message.
+ */
+export function isSyncingMessage(messageType?: MessageType) {
+    if (!messageType) {
+        return false;
+    }
+
+    return (
+        (messageType && MessageType.syncAcrossSameNotebooks) === MessageType.syncAcrossSameNotebooks ||
+        (messageType && MessageType.syncWithLiveShare) === MessageType.syncWithLiveShare
+    );
+}
 export function reBroadcastMessageIfRequired(
     dispatcher: Function,
     message: InteractiveWindowMessages | SharedMessages | CommonActionType | CssMessages,

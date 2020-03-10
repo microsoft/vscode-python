@@ -10,7 +10,7 @@ import {
 import { CssMessages } from '../../../../client/datascience/messages';
 import { ICell } from '../../../../client/datascience/types';
 import { extractInputText, getSelectedAndFocusedInfo, IMainState } from '../../mainState';
-import { postActionToExtension } from '../helpers';
+import { isSyncingMessage, postActionToExtension } from '../helpers';
 import { Helpers } from './helpers';
 import {
     CommonActionType,
@@ -231,7 +231,11 @@ export namespace Transfer {
             // when focus is lost
             const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
             const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
-            if (index >= 0 && selectionInfo.focusedCellId === arg.payload.data.cellId) {
+            // If this is the focused cell, then user is editing it, hence it needs to be updated.
+            const isThisTheFocusedCell = selectionInfo.focusedCellId === arg.payload.data.cellId;
+            // If this edit is part of a sycning comging from another notebook, then we need to update it again.
+            const isSyncFromAnotherNotebook = isSyncingMessage(arg.payload.messageType);
+            if (index >= 0 && (isThisTheFocusedCell || isSyncFromAnotherNotebook)) {
                 const newVMs = [...arg.prevState.cellVMs];
                 const current = arg.prevState.cellVMs[index];
                 const newCell = {
