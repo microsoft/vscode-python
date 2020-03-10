@@ -662,7 +662,9 @@ class TestFixture extends BaseTestFixture {
             undefined,
             TypeMoq.MockBehavior.Strict
         );
-        envVarsService.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
+        envVarsService
+            .setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(process.env));
         serviceContainer
             .setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny()))
             .returns(() => envVarsService.object);
