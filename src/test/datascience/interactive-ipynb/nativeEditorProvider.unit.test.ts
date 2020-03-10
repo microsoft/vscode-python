@@ -9,7 +9,7 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { EventEmitter, Uri, WebviewPanel } from 'vscode';
-import { ICustomEditorService, IWorkspaceService } from '../../../client/common/application/types';
+import { CustomDocument, ICustomEditorService, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../../client/common/configuration/service';
@@ -65,10 +65,13 @@ suite('Data Science - Native Editor Provider', () => {
             .returns((_a1, _a2, _a3) => {
                 return { dispose: noop };
             });
+
         customEditorService
             .setup(c => c.openEditor(typemoq.It.isAny()))
             .returns(async f => {
-                return registeredProvider.resolveCustomEditor(f, panel.object);
+                const doc = typemoq.Mock.ofType<CustomDocument>();
+                doc.setup(d => d.uri).returns(() => f);
+                return registeredProvider.resolveCustomEditor(doc.object, panel.object);
             });
 
         editor
