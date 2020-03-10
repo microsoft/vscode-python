@@ -153,7 +153,7 @@ export class MockJupyterSession implements IJupyterSession {
 
         return {
             content: {
-                matches: ['printly'], // This keeps this in the intellisense when the editor pairs down results
+                matches: ['printly', '%%bash'], // This keeps this in the intellisense when the editor pairs down results
                 cursor_start: 0,
                 cursor_end: 7,
                 status: 'ok',

@@ -677,6 +677,17 @@ export function typeCode(
     return textArea;
 }
 
+export function pressCtrlSpace(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined) {
+    const textArea = getTextArea(editorControl);
+    assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
+    textArea!.focus();
+
+    const keyCode = ' ';
+    enterKey(textArea!, keyCode, false, true);
+
+    return textArea;
+}
+
 function getTextArea(
     editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined
 ): HTMLTextAreaElement | null {

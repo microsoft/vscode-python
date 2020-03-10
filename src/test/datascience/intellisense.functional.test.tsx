@@ -12,7 +12,7 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getOrCreateInteractiveWindow, runMountedTest } from './interactiveWindowTestHelpers';
-import { getInteractiveEditor, typeCode } from './testHelpers';
+import { getInteractiveEditor, pressCtrlSpace, typeCode } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Intellisense tests', () => {
@@ -67,6 +67,14 @@ suite('DataScience Intellisense tests', () => {
     ) {
         const innerTexts = getIntellisenseTextLines(wrapper);
         assert.ok(innerTexts.includes(expectedSpan), 'Intellisense row not matching');
+    }
+
+    function verifyIntellisenseNotVisible(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+        expectedSpan: string
+    ) {
+        const innerTexts = getIntellisenseTextLines(wrapper);
+        assert.ok(!innerTexts.includes(expectedSpan), 'Intellisense row is showing');
     }
 
     function waitForSuggestion(
@@ -220,6 +228,62 @@ suite('DataScience Intellisense tests', () => {
                 await suggestion.promise;
                 suggestion.disposable.dispose();
                 verifyIntellisenseVisible(wrapper, 'printly');
+
+                // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
+                // while we're destroying the editor.
+                clearEditor(wrapper);
+            }
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
+        'Filtered Jupyter autocomplete, verify magic commands appear',
+        async wrapper => {
+            if (ioc.mockJupyter) {
+                // This test only works when mocking.
+
+                // Create an interactive window so that it listens to the results.
+                const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+                await interactiveWindow.show();
+
+                // Then enter some code. Don't submit, we're just testing that autocomplete appears
+                const suggestion = waitForSuggestion(wrapper);
+                typeCode(getInteractiveEditor(wrapper), 'print');
+                pressCtrlSpace(wrapper);
+                await suggestion.promise;
+                suggestion.disposable.dispose();
+                verifyIntellisenseNotVisible(wrapper, '%%bash');
+
+                // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
+                // while we're destroying the editor.
+                clearEditor(wrapper);
+            }
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
+        'Filtered Jupyter autocomplete, verify magic commands are filtered',
+        async wrapper => {
+            if (ioc.mockJupyter) {
+                // This test only works when mocking.
+
+                // Create an interactive window so that it listens to the results.
+                const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+                await interactiveWindow.show();
+
+                // Then enter some code. Don't submit, we're just testing that autocomplete appears
+                const suggestion = waitForSuggestion(wrapper);
+                typeCode(getInteractiveEditor(wrapper), ' ');
+                pressCtrlSpace(wrapper);
+                await suggestion.promise;
+                suggestion.disposable.dispose();
+                verifyIntellisenseVisible(wrapper, '%%bash');
 
                 // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
                 // while we're destroying the editor.
