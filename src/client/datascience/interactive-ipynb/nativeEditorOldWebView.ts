@@ -268,7 +268,7 @@ export class NativeEditorOldWebView extends NativeEditor {
 
             const defaultUri =
                 Array.isArray(this.workspaceService.workspaceFolders) &&
-                    this.workspaceService.workspaceFolders.length > 0
+                this.workspaceService.workspaceFolders.length > 0
                     ? this.workspaceService.workspaceFolders[0].uri
                     : undefined;
             fileToSaveTo = await this.applicationShell.showSaveDialog({
