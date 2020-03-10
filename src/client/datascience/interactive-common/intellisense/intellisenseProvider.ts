@@ -36,7 +36,8 @@ import {
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
     IJupyterExecution,
-    INotebook
+    INotebook,
+    INotebookCompletion
 } from '../../types';
 import {
     ICancelIntellisenseRequest,
@@ -470,13 +471,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
                     const jupyterResults = await activeNotebook.getCompletion(data.text, offsetInCode, cancelToken);
                     if (jupyterResults && jupyterResults.matches) {
-                        // If the line we're analyzing is empty or a whitespace, we filter out the magic commands
-                        // as its confusing to see them appear after a . or inside ().
-                        const pos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
-                        const line = document.lineAt(pos);
-                        const filteredMatches = line.isEmptyOrWhitespace
-                            ? jupyterResults.matches
-                            : jupyterResults.matches.filter(match => !match.startsWith('%'));
+                        const filteredMatches = this.filterJupyterMatches(document, jupyterResults, cellId, position);
 
                         const baseOffset = data.offset;
                         const basePosition = document.positionAt(baseOffset);
@@ -505,6 +500,21 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             suggestions: [],
             incomplete: false
         };
+    }
+
+    private filterJupyterMatches(
+        document: IntellisenseDocument,
+        jupyterResults: INotebookCompletion,
+        cellId: string,
+        position: monacoEditor.Position
+    ) {
+        // If the line we're analyzing is empty or a whitespace, we filter out the magic commands
+        // as its confusing to see them appear after a . or inside ().
+        const pos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+        const line = document.lineAt(pos);
+        return line.isEmptyOrWhitespace
+            ? jupyterResults.matches
+            : jupyterResults.matches.filter(match => !match.startsWith('%'));
     }
 
     private postTimedResponse<R, M extends IInteractiveWindowMapping, T extends keyof M>(
