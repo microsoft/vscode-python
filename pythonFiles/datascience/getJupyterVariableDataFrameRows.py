@@ -2,16 +2,17 @@
 import json as _VSCODE_json
 import pandas as _VSCODE_pd
 import pandas.io.json as _VSCODE_pd_json
+import builtins as _VSCODE_builtins
 
 # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable
 # Indexes off of _VSCODE_targetVariable need to index types that are part of IJupyterVariable
 _VSCODE_targetVariable = _VSCODE_json.loads("""_VSCode_JupyterTestValue""")
-_VSCODE_evalResult = eval(_VSCODE_targetVariable["name"])
+_VSCODE_evalResult = _VSCODE_builtins.eval(_VSCODE_targetVariable["name"])
 
 # _VSCode_JupyterStartRow and _VSCode_JupyterEndRow should be replaced dynamically with the literals
 # for our start and end rows
-_VSCODE_startRow = max(_VSCode_JupyterStartRow, 0)
-_VSCODE_endRow = min(_VSCode_JupyterEndRow, _VSCODE_targetVariable["rowCount"])
+_VSCODE_startRow = _VSCODE_builtins.max(_VSCode_JupyterStartRow, 0)
+_VSCODE_endRow = _VSCODE_builtins.min(_VSCode_JupyterEndRow, _VSCODE_targetVariable["rowCount"])
 
 # Assume we have a dataframe. If not, turn our eval result into a dataframe
 _VSCODE_df = _VSCODE_evalResult
@@ -46,3 +47,4 @@ del _VSCODE_result
 del _VSCODE_json
 del _VSCODE_pd
 del _VSCODE_pd_json
+del _VSCODE_builtins

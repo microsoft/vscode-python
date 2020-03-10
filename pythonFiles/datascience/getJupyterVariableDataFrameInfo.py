@@ -2,6 +2,7 @@
 import json as _VSCODE_json
 import pandas as _VSCODE_pd
 import pandas.io.json as _VSCODE_pd_json
+import builtins as _VSCODE_builtins
 
 # _VSCode_sub_supportsDataExplorer will contain our list of data explorer supported types
 _VSCode_supportsDataExplorer = "['list', 'Series', 'dict', 'ndarray', 'DataFrame']"
@@ -21,7 +22,7 @@ def _VSCODE_getRowCount(var):
             return 0
     elif hasattr(var, "__len__"):
         try:
-            return len(var)
+            return _VSCODE_builtins.len(var)
         except TypeError:
             return 0
 
@@ -34,7 +35,7 @@ if _VSCODE_targetVariable["type"] not in _VSCode_supportsDataExplorer:
     del _VSCODE_targetVariable
 else:
     del _VSCode_supportsDataExplorer
-    _VSCODE_evalResult = eval(_VSCODE_targetVariable["name"])
+    _VSCODE_evalResult = _VSCODE_builtins.eval(_VSCODE_targetVariable["name"])
 
     # Figure out shape if not already there. Use the shape to compute the row count
     _VSCODE_targetVariable["rowCount"] = _VSCODE_getRowCount(_VSCODE_evalResult)
@@ -76,7 +77,7 @@ else:
 
     # Compute the index column. It may have been renamed
     _VSCODE_indexColumn = _VSCODE_df.index.name if _VSCODE_df.index.name else "index"
-    _VSCODE_columnTypes = list(_VSCODE_df.dtypes)
+    _VSCODE_columnTypes = _VSCODE_builtins.list(_VSCODE_df.dtypes)
     del _VSCODE_df
 
     # Make sure the index column exists
@@ -86,7 +87,7 @@ else:
 
     # Then loop and generate our output json
     _VSCODE_columns = []
-    for _VSCODE_n in range(0, len(_VSCODE_columnNames)):
+    for _VSCODE_n in _VSCODE_builtins.range(0, _VSCODE_builtins.len(_VSCODE_columnNames)):
         _VSCODE_column_type = _VSCODE_columnTypes[_VSCODE_n]
         _VSCODE_column_name = str(_VSCODE_columnNames[_VSCODE_n])
         _VSCODE_colobj = {}
@@ -114,3 +115,4 @@ else:
     del _VSCODE_json
     del _VSCODE_pd
     del _VSCODE_pd_json
+    del _VSCODE_builtins
