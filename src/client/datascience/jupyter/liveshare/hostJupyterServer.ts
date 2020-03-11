@@ -231,9 +231,6 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             traceInfo(`Finished connecting ${this.id}`);
 
             notebookPromise.resolve(notebook);
-
-            // Return the result.
-            return notebook;
         } else {
             notebookPromise.reject(this.getDisposedError());
         }
