@@ -38,7 +38,7 @@ import { Common } from './common/utils/localize';
 import { activateComponents } from './extensionActivation';
 import { initializeComponents, initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
-import { sendErrorTelemetry, sendStartupTelemetryInBackground } from './startupTelemetry';
+import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -53,14 +53,23 @@ let activatedServiceContainer: IServiceContainer | undefined;
 // public functions
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
+    let api: IExtensionApi;
+    let ready: Promise<void>;
+    let serviceContainer: IServiceContainer;
     try {
-        return await activateUnsafe(context);
+        [api, ready, serviceContainer] = await activateUnsafe(context);
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
         await handleError(ex);
         throw ex; // re-raise
     }
+    // Send the "success" telemetry only if activation did not fail.
+    // Otherwise Telemetry is send via the error handler.
+    sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
+        // Run in the background.
+        .ignoreErrors();
+    return api;
 }
 
 export function deactivate(): Thenable<void> {
@@ -79,7 +88,7 @@ export function deactivate(): Thenable<void> {
 // activation helpers
 
 // tslint:disable-next-line:max-func-body-length
-async function activateUnsafe(context: IExtensionContext): Promise<IExtensionApi> {
+async function activateUnsafe(context: IExtensionContext): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
     displayProgress(activationDeferred.promise);
     durations.startActivateTime = stopWatch.elapsedTime;
 
@@ -97,9 +106,8 @@ async function activateUnsafe(context: IExtensionContext): Promise<IExtensionApi
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    sendStartupTelemetryInBackground(activationPromise, durations, stopWatch, serviceContainer);
-
-    return buildApi(activationPromise, serviceManager, serviceContainer);
+    const api = buildApi(activationPromise, serviceManager, serviceContainer);
+    return [api, activationPromise, serviceContainer];
 }
 
 // tslint:disable-next-line:no-any
