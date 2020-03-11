@@ -57,11 +57,11 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
     let ready: Promise<void>;
     let serviceContainer: IServiceContainer;
     try {
-        [api, ready, serviceContainer] = await activateUnsafe(context);
+        [api, ready, serviceContainer] = await activateUnsafe(context, stopWatch, durations);
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
-        await handleError(ex);
+        await handleError(ex, durations);
         throw ex; // re-raise
     }
     // Send the "success" telemetry only if activation did not fail.
@@ -88,9 +88,13 @@ export function deactivate(): Thenable<void> {
 // activation helpers
 
 // tslint:disable-next-line:max-func-body-length
-async function activateUnsafe(context: IExtensionContext): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
+async function activateUnsafe(
+    context: IExtensionContext,
+    startupStopWatch: StopWatch,
+    startupDurations: Record<string, number>
+): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
     displayProgress(activationDeferred.promise);
-    durations.startActivateTime = stopWatch.elapsedTime;
+    startupDurations.startActivateTime = startupStopWatch.elapsedTime;
 
     //===============================================
     // activation starts here
@@ -103,7 +107,7 @@ async function activateUnsafe(context: IExtensionContext): Promise<[IExtensionAp
     //===============================================
     // activation ends here
 
-    durations.endActivateTime = stopWatch.elapsedTime;
+    startupDurations.endActivateTime = startupStopWatch.elapsedTime;
     activationDeferred.resolve();
 
     const api = buildApi(activationPromise, serviceManager, serviceContainer);
@@ -119,12 +123,12 @@ function displayProgress(promise: Promise<any>) {
 /////////////////////////////
 // error handling
 
-async function handleError(ex: Error) {
+async function handleError(ex: Error, startupDurations: Record<string, number>) {
     notifyUser(
         "Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information."
     );
     traceError('extension activation failed', ex);
-    await sendErrorTelemetry(ex, durations, activatedServiceContainer);
+    await sendErrorTelemetry(ex, startupDurations, activatedServiceContainer);
 }
 
 interface IAppShell {
