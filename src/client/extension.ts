@@ -46,7 +46,6 @@ durations.codeLoadingTime = stopWatch.elapsedTime;
 // loading ends here
 
 // These persist between activations:
-const activationDeferred = createDeferred<void>();
 let activatedServiceContainer: IServiceContainer | undefined;
 
 /////////////////////////////
@@ -93,6 +92,7 @@ async function activateUnsafe(
     startupStopWatch: StopWatch,
     startupDurations: Record<string, number>
 ): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
+    const activationDeferred = createDeferred<void>();
     displayProgress(activationDeferred.promise);
     startupDurations.startActivateTime = startupStopWatch.elapsedTime;
 
