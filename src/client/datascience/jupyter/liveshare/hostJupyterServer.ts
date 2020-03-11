@@ -19,6 +19,7 @@ import {
     IOutputChannel,
     Resource
 } from '../../../common/types';
+import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
@@ -37,7 +38,6 @@ import { KernelSelector } from '../kernels/kernelSelector';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
-import { createDeferred } from '../../../common/utils/async';
 
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any

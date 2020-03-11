@@ -213,7 +213,6 @@ export class JupyterServerBase implements INotebookServer {
             })
             .catch(() => this.notebooks.delete(identity.toString()));
 
-
         // Save the notebook
         this.notebooks.set(identity.toString(), notebook);
     }
