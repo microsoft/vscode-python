@@ -38,7 +38,7 @@ export class JupyterServerBase implements INotebookServer {
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
     private connectionInfoDisconnectHandler: Disposable | undefined;
     private serverExitCode: number | undefined;
-    private notebooks: Map<string, INotebook> = new Map<string, INotebook>();
+    private notebooks = new Map<string, Promise<INotebook>>();
     private sessionManager: IJupyterSessionManager | undefined;
     private savedSession: IJupyterSession | undefined;
 
@@ -143,7 +143,8 @@ export class JupyterServerBase implements INotebookServer {
         }
 
         traceInfo(`Shutting down notebooks for ${this.id}`);
-        await Promise.all([...this.notebooks.values()].map(n => n.dispose()));
+        const notebooks = await Promise.all([...this.notebooks.values()]);
+        await Promise.all(notebooks.map(n => n.dispose()));
         traceInfo(`Shut down session manager`);
         if (this.sessionManager) {
             await this.sessionManager.dispose();
@@ -197,16 +198,21 @@ export class JupyterServerBase implements INotebookServer {
         return this.notebooks.get(identity.toString());
     }
 
-    protected getNotebooks(): INotebook[] {
+    protected getNotebooks(): Promise<INotebook>[] {
         return [...this.notebooks.values()];
     }
 
-    protected setNotebook(identity: Uri, notebook: INotebook) {
-        const oldDispose = notebook.dispose;
-        notebook.dispose = () => {
-            this.notebooks.delete(identity.toString());
-            return oldDispose();
-        };
+    protected setNotebook(identity: Uri, notebook: Promise<INotebook>) {
+        notebook
+            .then(nb => {
+                const oldDispose = nb.dispose;
+                nb.dispose = () => {
+                    this.notebooks.delete(identity.toString());
+                    return oldDispose();
+                };
+            })
+            .catch(() => this.notebooks.delete(identity.toString()));
+
 
         // Save the notebook
         this.notebooks.set(identity.toString(), notebook);

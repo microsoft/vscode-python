@@ -37,6 +37,7 @@ import { KernelSelector } from '../kernels/kernelSelector';
 import { HostJupyterNotebook } from './hostJupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
+import { createDeferred } from '../../../common/utils/async';
 
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any
@@ -125,7 +126,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         await super.onSessionChange(api);
 
         this.getNotebooks().forEach(async notebook => {
-            const hostNotebook = notebook as HostJupyterNotebook;
+            const hostNotebook = (await notebook) as HostJupyterNotebook;
             if (hostNotebook) {
                 await hostNotebook.onSessionChange(api);
             }
@@ -179,6 +180,9 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         }
 
         // Compute launch information from the resource and the notebook metadata
+        const notebookPromise = createDeferred<INotebook>();
+        // Save the notebook
+        this.setNotebook(identity, notebookPromise.promise);
         const { info, changedKernel } = await this.computeLaunchInfo(
             resource,
             sessionManager,
@@ -226,14 +230,15 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
 
             traceInfo(`Finished connecting ${this.id}`);
 
-            // Save the notebook
-            this.setNotebook(identity, notebook);
+            notebookPromise.resolve(notebook);
 
             // Return the result.
             return notebook;
+        } else {
+            notebookPromise.reject(this.getDisposedError());
         }
 
-        throw this.getDisposedError();
+        return notebookPromise.promise;
     }
 
     private async computeLaunchInfo(

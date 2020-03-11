@@ -29,7 +29,7 @@ export class GuestJupyterServer
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
     private _id = uuid();
-    private notebooks: Map<string, INotebook> = new Map<string, INotebook>();
+    private notebooks = new Map<string, Promise<INotebook>>();
 
     constructor(
         private liveShare: ILiveShareApi,
@@ -55,6 +55,13 @@ export class GuestJupyterServer
     }
 
     public async createNotebook(resource: Resource, identity: Uri): Promise<INotebook> {
+        // Remember we can have multiple native editors opened against the same ipynb file.
+        if (this.notebooks.get(identity.toString())) {
+            return this.notebooks.get(identity.toString())!;
+        }
+
+        const deferred = createDeferred<INotebook>();
+        this.notebooks.set(identity.toString(), deferred.promise);
         // Tell the host side to generate a notebook for this uri
         const service = await this.waitForService();
         if (service) {
@@ -73,7 +80,7 @@ export class GuestJupyterServer
             this,
             this.dataScience.activationStartTime
         );
-        this.notebooks.set(identity.toString(), result);
+        deferred.resolve(result);
         const oldDispose = result.dispose;
         result.dispose = () => {
             this.notebooks.delete(identity.toString());
@@ -87,7 +94,7 @@ export class GuestJupyterServer
         await super.onSessionChange(api);
 
         this.notebooks.forEach(async notebook => {
-            const guestNotebook = notebook as GuestJupyterNotebook;
+            const guestNotebook = (await notebook) as GuestJupyterNotebook;
             if (guestNotebook) {
                 await guestNotebook.onSessionChange(api);
             }
