@@ -144,7 +144,11 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
             loggingArgs
         );
         const env = this.envVariables;
-        const daemonProc = this.pythonExecutionService!.execModuleObservable('datascience.daemon', args, { env });
+        const daemonProc = this.pythonExecutionService!.execModuleObservable(
+            'vscode_datascience_helpers.daemon',
+            args,
+            { env }
+        );
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }

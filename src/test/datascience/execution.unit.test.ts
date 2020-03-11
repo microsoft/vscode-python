@@ -466,7 +466,7 @@ suite('Jupyter Execution', async () => {
         const getServerInfoPath = path.join(
             EXTENSION_ROOT_DIR,
             'pythonFiles',
-            'datascience_modules',
+            'vscode_datascience_helpers',
             'getServerInfo.py'
         );
         setupPythonService(
@@ -510,7 +510,7 @@ suite('Jupyter Execution', async () => {
         const getServerInfoPath = path.join(
             EXTENSION_ROOT_DIR,
             'pythonFiles',
-            'datascience_modules',
+            'vscode_datascience_helpers',
             'getServerInfo.py'
         );
         setupPythonService(
@@ -612,7 +612,7 @@ suite('Jupyter Execution', async () => {
         const getServerInfoPath = path.join(
             EXTENSION_ROOT_DIR,
             'pythonFiles',
-            'datascience_modules',
+            'vscode_datascience_helpers',
             'getServerInfo.py'
         );
         setupProcessServiceExec(
@@ -656,7 +656,7 @@ suite('Jupyter Execution', async () => {
         const getServerInfoPath = path.join(
             EXTENSION_ROOT_DIR,
             'pythonFiles',
-            'datascience_modules',
+            'vscode_datascience_helpers',
             'getServerInfo.py'
         );
         setupProcessServiceExec(

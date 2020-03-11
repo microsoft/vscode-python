@@ -97,7 +97,7 @@ export class JupyterVariables implements IJupyterVariables {
         let file = path.join(
             EXTENSION_ROOT_DIR,
             'pythonFiles',
-            'datascience_modules',
+            'vscode_datascience_helpers',
             'getJupyterVariableDataFrameInfo.py'
         );
         this.fetchDataFrameInfoScript = await this.fileSystem.readFile(file);
@@ -105,7 +105,7 @@ export class JupyterVariables implements IJupyterVariables {
         file = path.join(
             EXTENSION_ROOT_DIR,
             'pythonFiles',
-            'datascience_modules',
+            'vscode_datascience_helpers',
             'getJupyterVariableDataFrameRows.py'
         );
         this.fetchDataFrameRowsScript = await this.fileSystem.readFile(file);

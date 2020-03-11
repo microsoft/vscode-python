@@ -765,7 +765,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             const getServerInfoPath = path.join(
                 EXTENSION_ROOT_DIR,
                 'pythonFiles',
-                'datascience_modules',
+                'vscode_datascience_helpers',
                 'getServerInfo.py'
             );
             this.setupProcessServiceExec(this.processService, workingPython.path, [getServerInfoPath], () =>
@@ -820,7 +820,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             const getServerInfoPath = path.join(
                 EXTENSION_ROOT_DIR,
                 'pythonFiles',
-                'datascience_modules',
+                'vscode_datascience_helpers',
                 'getServerInfo.py'
             );
             this.setupProcessServiceExec(this.processService, workingPython.path, [getServerInfoPath], () =>

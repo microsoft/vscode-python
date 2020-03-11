@@ -75,8 +75,10 @@ suite('Daemon - Python Daemon Pool', () => {
         logger = mock(ProcessLogger);
         createDaemonServicesSpy = sinon.spy(DaemonPool.prototype, 'createDaemonServices');
         pythonExecutionService = mock(PythonExecutionService);
-        when(pythonExecutionService.execModuleObservable('datascience.daemon', anything(), anything())).thenCall(() => {
-            const pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'datascience.daemon'], { env });
+        when(
+            pythonExecutionService.execModuleObservable('vscode_datascience_helpers.daemon', anything(), anything())
+        ).thenCall(() => {
+            const pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'vscode_datascience_helpers.daemon'], { env });
             const connection = createMessageConnection(
                 new StreamMessageReader(pythonProc.stdout),
                 new StreamMessageWriter(pythonProc.stdin)

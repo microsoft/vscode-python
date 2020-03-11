@@ -20,7 +20,7 @@ def add_arguments(parser):
 
     parser.add_argument(
         "--daemon-module",
-        default="datascience.daemon.daemon_python",
+        default="vscode_datascience_helpers.daemon.daemon_python",
         help="Daemon Module",
     )
 

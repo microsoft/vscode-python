@@ -76,7 +76,7 @@ def get_data_frame_info(variables, name, capsys):
     path = os.path.dirname(os.path.abspath(__file__))
     file = os.path.abspath(
         os.path.join(
-            path, "../../datascience_modules/getJupyterVariableDataFrameInfo.py"
+            path, "../../vscode_datascience_helpers/getJupyterVariableDataFrameInfo.py"
         )
     )
     keys = dict([("_VSCode_JupyterTestValue", json.dumps(varJson))])
@@ -91,7 +91,7 @@ def get_data_frame_rows(varJson, start, end, capsys):
     path = os.path.dirname(os.path.abspath(__file__))
     file = os.path.abspath(
         os.path.join(
-            path, "../../datascience_modules/getJupyterVariableDataFrameRows.py"
+            path, "../../vscode_datascience_helpers/getJupyterVariableDataFrameRows.py"
         )
     )
     keys = dict(
