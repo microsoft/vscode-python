@@ -40,6 +40,12 @@ const condaRetryMessages = [
     'The directory is not empty'
 ];
 
+/**
+ * This class exists so that the environment variable fetching can be cached in between tests. Normally
+ * this cache resides in memory for the duration of the EnvironmentActivationService's lifetime, but in the case
+ * of our functional tests, we want the cached data to exist outside of each test (where each test will destroy the EnvironmentActivationService)
+ * This gives each test a 3 or 4 second speedup.
+ */
 export class EnvironmentActivationServiceCache {
     private static useStatic = false;
     private static staticMap = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
@@ -180,11 +186,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const command = `${activationCommand} && echo '${getEnvironmentPrefix}' && python ${printEnvPyFile.fileToCommandArgument()}`;
             traceVerbose(`Activating Environment to capture Environment variables, ${command}`);
 
-            // Conda activate can hang on certain systems. Fail after 30 seconds.
+            // Do some wrapping of the call. For two reasons:
+            // 1) Conda activate can hang on certain systems. Fail after 30 seconds.
             // See the discussion from hidesoon in this issue: https://github.com/Microsoft/vscode-python/issues/4424
             // His issue is conda never finishing during activate. This is a conda issue, but we
             // should at least tell the user.
+            // 2) Retry because of this issue here: https://github.com/microsoft/vscode-python/issues/9244
+            // This happens on AzDo machines a bunch when using Conda (and we can't dictate the conda version in order to get the fix)
             let result: ExecutionResult<string> | undefined;
+            let tryCount = 1;
             while (!result) {
                 try {
                     result = await processService.shellExec(command, {
@@ -201,9 +211,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     // Special case. Conda for some versions will state a file is in use. If
                     // that's the case, wait and try again. This happens especially on AzDo
                     const excString = exc.toString();
-                    if (condaRetryMessages.find(m => excString.includes(m))) {
+                    if (condaRetryMessages.find(m => excString.includes(m)) && tryCount < 10) {
                         traceInfo(`Conda is busy, attempting to retry ...`);
                         result = undefined;
+                        tryCount += 1;
                         await sleep(500);
                     } else {
                         throw exc;

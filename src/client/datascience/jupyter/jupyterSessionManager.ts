@@ -51,8 +51,12 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
             // tslint:disable-next-line: no-any
             const sessionManager = this.sessionManager as any;
-            this.sessionManager.dispose();
-            this.sessionManager = undefined;
+            try {
+                await this.sessionManager.shutdownAll();
+            } finally {
+                this.sessionManager.dispose();
+                this.sessionManager = undefined;
+            }
 
             // The session manager can actually be stuck in the context of a timer. Clear out the specs inside of
             // it so the memory for the session is minimized. Otherwise functional tests can run out of memory
