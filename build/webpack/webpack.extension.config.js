@@ -15,7 +15,9 @@ const existingModulesInOutDir = common.getListOfExistingModulesInOutDir();
 const FileManagerPlugin = require('filemanager-webpack-plugin');
 // If ENABLE_GATHER variable is defined, don't exclude the python-program-analysis pacakge.
 // See externals, below.
-const ppaPackageList = process.env.ENABLE_GATHER ? [] : ['@msrvida/python-program-analysis'];
+const ppaPackageList = process.env.ENABLE_GATHER
+    ? []
+    : ['@msrvida/python-program-analysis', 'vscode-python-vsix', '.gather_npmrc'];
 const config = {
     mode: 'production',
     target: 'node',
@@ -61,7 +63,7 @@ const config = {
     },
     // Packages listed in externals keeps webpack from trying to package them.
     // The ppaPackageList variable is set to non-empty if the build pipeline has been
-    //authenticated to install @msrvida/python-program-analysis.
+    // authenticated to install @msrvida/python-program-analysis.
     externals: ['vscode', 'commonjs', ...ppaPackageList, ...existingModulesInOutDir],
     plugins: [
         ...common.getDefaultPlugins('extension'),
