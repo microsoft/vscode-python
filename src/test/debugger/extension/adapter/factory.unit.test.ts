@@ -206,37 +206,58 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(descriptor, nodeExecutable);
     });
 
-    test('Return Debug Adapter server if in DA experiment, configuration is attach and port is specified', async () => {
+    test('Return Debug Adapter server if in DA experiment, request is "attach", and port is specified directly', async () => {
         const session = createSession({ request: 'attach', port: 5678, host: 'localhost' });
         const debugServer = new DebugAdapterServer(session.configuration.port, session.configuration.host);
 
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        // Interpreter not needed for attach
+        // Interpreter not needed for host/port
         verify(interpreterService.getInterpreters(anything())).never();
         assert.deepEqual(descriptor, debugServer);
     });
 
-    test('Throw error if in DA experiment, configuration is attach, port is 0 and process ID is not specified', async () => {
-        const session = createSession({ request: 'attach', port: 0, host: 'localhost' });
+    test('Return Debug Adapter server if in DA experiment, request is "attach", and connect is specified', async () => {
+        const session = createSession({ request: 'attach', connect: { port: 5678, host: 'localhost' } });
+        const debugServer = new DebugAdapterServer(
+            session.configuration.connect.port,
+            session.configuration.connect.host
+        );
 
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
-        const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);
+        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        await expect(promise).to.eventually.be.rejectedWith(
-            'Port or processId must be specified for request type attach'
-        );
+        // Interpreter not needed for connect
+        verify(interpreterService.getInterpreters(anything())).never();
+        assert.deepEqual(descriptor, debugServer);
     });
 
-    test('Throw error if in DA experiment, configuration is attach and port and process ID are not specified', async () => {
-        const session = createSession({ request: 'attach', port: undefined, processId: undefined });
+    test('Return Debug Adapter executable if in DA experiment, request is "attach", and listen is specified', async () => {
+        const session = createSession({ request: 'attach', listen: { port: 5678, host: 'localhost' } });
+        const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPathWithWheels]);
+
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        when(interpreterService.getActiveInterpreter(anything())).thenResolve(interpreter);
+
+        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+        assert.deepEqual(descriptor, debugExecutable);
+    });
+
+    test('Throw error if in DA experiment, request is "attach", and neither port, processId, listen, nor connect is specified', async () => {
+        const session = createSession({
+            request: 'attach',
+            port: undefined,
+            processId: undefined,
+            listen: undefined,
+            connect: undefined
+        });
 
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
         const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
         await expect(promise).to.eventually.be.rejectedWith(
-            'Port or processId must be specified for request type attach'
+            '"request":"attach" requires either "connect", "listen", or "processId"'
         );
     });
 
