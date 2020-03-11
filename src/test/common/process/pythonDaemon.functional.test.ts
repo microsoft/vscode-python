@@ -59,8 +59,8 @@ suite('Daemon', () => {
             return this.skip();
         }
         // Enable the following to log everything going on at pyton end.
-        // pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'datascience.daemon', '-v', `--log-file=${path.join(EXTENSION_ROOT_DIR, 'test.log')}`], { env });
-        pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'datascience.daemon'], { env });
+        // pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'vscode_datascience_helpers.daemon', '-v', `--log-file=${path.join(EXTENSION_ROOT_DIR, 'test.log')}`], { env });
+        pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'vscode_datascience_helpers.daemon'], { env });
         connection = createMessageConnection(
             new StreamMessageReader(pythonProc.stdout),
             new StreamMessageWriter(pythonProc.stdin)

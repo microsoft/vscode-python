@@ -8,7 +8,7 @@ import sys
 import traceback
 import runpy
 import importlib
-from datascience.daemon.daemon_output import (
+from vscode_datascience_helpers.daemon.daemon_output import (
     CustomWriter,
     IORedirector,
     get_io_buffers,
@@ -63,7 +63,7 @@ def error_decorator(func):
 
 class PythonDaemon(MethodDispatcher):
     """ Base Python Daemon with simple methods to check if a module exists, get version info and the like.
-    To add additional methods, please create a separate class based off this and pass in the arg `--daemon-module` to `datascience.daemon`.
+    To add additional methods, please create a separate class based off this and pass in the arg `--daemon-module` to `vscode_datascience_helpers.daemon`.
     """
 
     def __init__(self, rx, tx):
