@@ -35,8 +35,8 @@ import { traceError } from './common/logger';
 import { IAsyncDisposableRegistry, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
-import { activateComponents } from './extension-activation';
-import { initializeComponents, initializeGlobals } from './extension-init';
+import { activateComponents } from './extensionActivation';
+import { initializeComponents, initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetryInBackground } from './startupTelemetry';
 
