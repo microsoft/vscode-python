@@ -5,10 +5,10 @@ import { ContentsManager, Kernel, ServerConnection, Session, SessionManager } fr
 import { Agent as HttpsAgent } from 'https';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { noop } from 'jquery';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import {
     IConnection,
     IJupyterKernel,

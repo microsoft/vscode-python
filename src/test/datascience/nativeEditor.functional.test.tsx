@@ -482,6 +482,10 @@ df.head()`;
                     async (_wrapper, context) => {
                         if (ioc.mockJupyter) {
                             await ioc.activate();
+                            ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
+                                ...ioc.getSettings().datascience,
+                                disableJupyterAutoStart: false
+                            });
 
                             // Create an editor so something is listening to messages
                             const editor = await createNewEditor(ioc);

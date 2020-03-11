@@ -442,7 +442,7 @@ export class JupyterSession implements IJupyterSession {
                 this.sessionManager!.startNew(options)
                     .then(s => {
                         this.logRemoteOutput(
-                            localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, s.kernel.id)
+                            localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, s?.kernel?.id)
                         );
                         return s;
                     })
