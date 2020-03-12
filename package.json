@@ -3079,6 +3079,7 @@
         "redux": "^4.0.4",
         "redux-logger": "^3.0.6",
         "relative": "^3.0.2",
+        "remove-files-webpack-plugin": "^1.4.0",
         "rewiremock": "^3.13.0",
         "sass-loader": "^7.1.0",
         "serialize-javascript": "^2.1.2",

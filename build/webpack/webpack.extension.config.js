@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
+const copyWebpackPlugin = require('copy-webpack-plugin');
+const removeFilesWebpackPlugin = require('remove-files-webpack-plugin');
 const path = require('path');
 const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
 const constants = require('../constants');
@@ -76,7 +78,15 @@ const config = {
                     ]
                 }
             ]
-        })
+        }),
+        // ZMQ requires prebuilds to be in our node_modules directory. So recreate the ZMQ structure.
+        // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
+        // so at runtime we pick up the original structure.
+        new removeFilesWebpackPlugin({ after: { include: ['./out/client/node_modules/zeromq.js'] } }),
+        new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.js' }]),
+        new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.node' }]),
+        new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.json' }]),
+        new copyWebpackPlugin([{ from: './node_modules/node-gyp-build/**/*' }])
     ],
     resolve: {
         alias: {

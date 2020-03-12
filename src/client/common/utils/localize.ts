@@ -808,6 +808,11 @@ export namespace DataScience {
         'DataScience.kernelInvalid',
         'Kernel {0} is not usable. Check the Jupyter output tab for more information.'
     );
+
+    export const nativeDependencyFail = localize(
+        'DataScience.nativeDependencyFail',
+        '{0}. Your operating system does not support the data science features of the Python Extension because a native dependency cannot load. Data science features will be disabled.'
+    );
 }
 
 export namespace DebugConfigStrings {

@@ -1896,4 +1896,8 @@ export interface IEventNamePropertyMapping {
          */
         result: 'err' | 'script' | 'notebook';
     };
+    /**
+     * Telemetry event sent when the ZMQ native binaries do not work.
+     */
+    [Telemetry.ZMQNotSupported]: undefined | never;
 }
