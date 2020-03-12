@@ -24,13 +24,14 @@ import * as path from 'path';
 import * as execa from 'execa';
 import * as jsonfile from 'jsonfile';
 import * as jp from 'jupyter-paths';
-import * as kernelspecs from 'kernelspecs';
+import { KernelSpec } from 'kernelspecs';
+// import * as kernelspecs from 'kernelspecs';
 import * as mkdirp from 'mkdirp';
 
-import * as getPorts from 'portfinder';
+import { getPorts, PortFinderOptions } from 'portfinder';
 import * as uuid from 'uuid';
 
-function cleanup(connectionFile) {
+function cleanup(connectionFile: fs.PathLike) {
     try {
         fs.unlinkSync(connectionFile);
     } catch (e) {
@@ -45,7 +46,7 @@ function cleanup(connectionFile) {
  *                          control_port, shell_port, stdin_port, iopub_port]
  * @return {object}         connectionInfo object
  */
-function createConnectionInfo(ports) {
+function createConnectionInfo(ports: number[]) {
     return {
         version: 5,
         key: uuid.v4(),
@@ -71,20 +72,20 @@ function createConnectionInfo(ports) {
  * @return {object} configResults.config          connection info
  * @return {string} configResults.connectionFile  path to the connection file
  */
-function writeConnectionFile(portFinderOptions) {
+function writeConnectionFile(portFinderOptions: PortFinderOptions) {
     const options = { ...portFinderOptions };
     options.port = options.port || 9000;
     options.host = options.host || '127.0.0.1';
 
     return new Promise((resolve, reject) => {
-        getPorts(5, options, (err, ports) => {
+        getPorts(5, options, async (err: Error, ports: number[]) => {
             if (err) {
                 reject(err);
             } else {
                 // Make sure the kernel runtime dir exists before trying to write the
                 // kernel file.
                 const runtimeDir = jp.runtimeDir();
-                mkdirp(runtimeDir);
+                await mkdirp(runtimeDir);
 
                 // Write the kernel connection file.
                 const config = createConnectionInfo(ports);
@@ -118,7 +119,7 @@ function writeConnectionFile(portFinderOptions) {
  * @return {object}       spawnResults.config          connection info
  *
  */
-function launchSpec(kernelSpec, spawnOptions) {
+function launchSpec(kernelSpec: KernelSpec, spawnOptions) {
     return writeConnectionFile().then(c => {
         return launchSpecFromConnectionInfo(kernelSpec, c.config, c.connectionFile, spawnOptions);
     });
@@ -140,7 +141,7 @@ function launchSpec(kernelSpec, spawnOptions) {
  * @return {object}       spawnResults.config          connection info
  *
  */
-function launchSpecFromConnectionInfo(kernelSpec, config, connectionFile, spawnOptions) {
+function launchSpecFromConnectionInfo(kernelSpec: KernelSpec, config, connectionFile: string, spawnOptions) {
     const argv = kernelSpec.argv.map(x => x.replace('{connection_file}', connectionFile));
 
     const defaultSpawnOptions = {
@@ -150,7 +151,7 @@ function launchSpecFromConnectionInfo(kernelSpec, config, connectionFile, spawnO
     const env = { ...process.env, ...kernelSpec.env };
     const fullSpawnOptions = {
         ...defaultSpawnOptions,
-        // TODO: see if this interferes with what execa assigns to the env option
+        // see if this interferes with what execa assigns to the env option
         env: env,
         ...spawnOptions
     };
@@ -158,8 +159,8 @@ function launchSpecFromConnectionInfo(kernelSpec, config, connectionFile, spawnO
     const runningKernel = execa(argv[0], argv.slice(1), fullSpawnOptions);
 
     if (fullSpawnOptions.cleanupConnectionFile !== false) {
-        runningKernel.on('exit', (code, signal) => cleanup(connectionFile));
-        runningKernel.on('error', (code, signal) => cleanup(connectionFile));
+        runningKernel.on('exit', () => cleanup(connectionFile));
+        runningKernel.on('error', () => cleanup(connectionFile));
     }
     return {
         spawn: runningKernel,
@@ -184,7 +185,7 @@ function launchSpecFromConnectionInfo(kernelSpec, config, connectionFile, spawnO
  * @return {string}       spawnResults.connectionFile  connection file path
  * @return {object}       spawnResults.config          connection info
  */
-function launch(kernelName, spawnOptions, specs) {
+function launch(kernelName: string, spawnOptions, specs: KernelSpec[]) {
     // Let them pass in a cached specs file
     if (!specs) {
         return kernelspecs.findAll().then(sp => launch(kernelName, spawnOptions, sp));
