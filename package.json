@@ -1363,15 +1363,46 @@
                     },
                     "attach": {
                         "properties": {
+                            "connect": {
+                                "type": "object",
+                                "label": "Attach by connecting to debugpy over a socket.",
+                                "properties": {
+                                    "port": {
+                                        "type": "number",
+                                        "description": "Port to connect to."
+                                    },
+                                    "host": {
+                                        "type": "string",
+                                        "description": "Hostname or IP address to connect to.",
+                                        "default": "127.0.0.1"
+                                    }
+                                },
+                                "required": ["port"]
+                            },
+                            "listen": {
+                                "type": "object",
+                                "label": "Attach by listening for incoming socket connection from debugpy",
+                                "properties": {
+                                    "port": {
+                                        "type": "number",
+                                        "description": "Port to listen on."
+                                    },
+                                    "host": {
+                                        "type": "string",
+                                        "description": "Hostname or IP address of the interface to listen on.",
+                                        "default": "127.0.0.1"
+                                    }
+                                },
+                                "required": ["port"]
+                            },
                             "port": {
                                 "type": "number",
-                                "description": "Debug port to attach",
-                                "default": 0
+                                "description": "Port to connect to."
                             },
                             "host": {
                                 "type": "string",
-                                "description": "IP Address of the of remote server (default is localhost or use 127.0.0.1).",
-                                "default": "localhost"
+                                "description": "Hostname or IP address to connect to.",
+                                "default": "127.0.0.1"
                             },
                             "pathMappings": {
                                 "type": "array",
