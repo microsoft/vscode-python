@@ -1,30 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IProcessServiceFactory } from '../../client/common/process/types';
-import { IInterpreterService, PythonInterpreter } from '../../client/interpreter/contracts';
-import { DataScienceIocContainer } from './dataScienceIocContainer';
-
-export async function getNotebookCapableInterpreter(
-    ioc: DataScienceIocContainer,
-    processFactory: IProcessServiceFactory
-): Promise<PythonInterpreter | undefined> {
-    const is = ioc.serviceContainer.get<IInterpreterService>(IInterpreterService);
-    const list = await is.getInterpreters();
-    const procService = await processFactory.create();
-    if (procService) {
-        // tslint:disable-next-line:prefer-for-of
-        for (let i = 0; i < list.length; i += 1) {
-            const result = await procService.exec(list[i].path, ['-m', 'jupyter', 'notebook', '--version'], {
-                env: process.env
-            });
-            if (!result.stderr) {
-                return list[i];
-            }
-        }
-    }
-    return undefined;
-}
 
 // IP = * format is a bit different from localhost format
 export function getIPConnectionInfo(output: string): string | undefined {

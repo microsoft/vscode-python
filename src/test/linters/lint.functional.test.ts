@@ -3,6 +3,7 @@
 'use strict';
 
 import * as assert from 'assert';
+import * as child_process from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
@@ -662,7 +663,9 @@ class TestFixture extends BaseTestFixture {
             undefined,
             TypeMoq.MockBehavior.Strict
         );
-        envVarsService.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
+        envVarsService
+            .setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(process.env));
         serviceContainer
             .setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny()))
             .returns(() => envVarsService.object);
@@ -751,6 +754,10 @@ suite('Linting Functional Tests', () => {
             fixture.outputChannel.object,
             fixture.serviceContainer.object
         );
+
+        const pythonPath = child_process.execSync(`python -c "import sys;print(sys.executable)"`);
+        // tslint:disable-next-line: no-console
+        console.log(`Testing linter with python ${pythonPath}`);
 
         const messages = await linter.lint(doc, new CancellationTokenSource().token);
 

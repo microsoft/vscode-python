@@ -34,13 +34,14 @@ suite('DataScience gotocell tests', () => {
     let documentManager: MockDocumentManager;
     let visibleCells: ICell[] = [];
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         codeLensProvider = ioc.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         documentManager = ioc.serviceManager.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         codeLensFactory = ioc.serviceManager.get<ICodeLensFactory>(ICodeLensFactory);
+        await ioc.activate();
     });
 
     teardown(async () => {

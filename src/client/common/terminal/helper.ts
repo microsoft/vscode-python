@@ -28,7 +28,7 @@ export class TerminalHelper implements ITerminalHelper {
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
         @inject(ICondaService) private readonly condaService: ICondaService,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IInterpreterService) readonly interpreterService: IInterpreterService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(ITerminalActivationCommandProvider)
         @named(TerminalActivationProviders.conda)
@@ -71,9 +71,9 @@ export class TerminalHelper implements ITerminalHelper {
         const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
         const promise = this.getActivationCommands(resource || undefined, interpreter, terminalShellType, providers);
         this.sendTelemetry(
-            resource,
             terminalShellType,
             EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL,
+            interpreter,
             promise
         ).ignoreErrors();
         return promise;
@@ -89,22 +89,21 @@ export class TerminalHelper implements ITerminalHelper {
         const providers = [this.bashCShellFish, this.commandPromptAndPowerShell];
         const promise = this.getActivationCommands(resource, interpreter, shell, providers);
         this.sendTelemetry(
-            resource,
             shell,
             EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_RUNNING_CODE,
+            interpreter,
             promise
         ).ignoreErrors();
         return promise;
     }
     @traceDecorators.error('Failed to capture telemetry')
     protected async sendTelemetry(
-        resource: Resource,
         terminalShellType: TerminalShellType,
         eventName: EventName,
+        interpreter: PythonInterpreter | undefined,
         promise: Promise<string[] | undefined>
     ): Promise<void> {
         let hasCommands = false;
-        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         let failed = false;
         try {
             const cmds = await promise;

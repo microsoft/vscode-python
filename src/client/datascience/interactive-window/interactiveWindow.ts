@@ -153,10 +153,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public dispose() {
-        super.dispose();
+        const promise = super.dispose();
         if (this.closedEvent) {
             this.closedEvent.fire(this);
         }
+        return promise;
     }
 
     public addMessage(message: string): Promise<void> {
@@ -272,7 +273,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }).ignoreErrors();
     }
 
-    protected async getOwningResource(): Promise<Resource> {
+    public async getOwningResource(): Promise<Resource> {
         if (this.lastFile) {
             return Uri.file(this.lastFile);
         }

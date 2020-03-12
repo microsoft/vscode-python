@@ -12,6 +12,7 @@ export class AsyncDisposableRegistry implements IAsyncDisposableRegistry {
     public async dispose(): Promise<void> {
         const promises = this._list.map(l => l.dispose());
         await Promise.all(promises);
+        this._list = [];
     }
 
     public push(disposable?: IDisposable | IAsyncDisposable) {

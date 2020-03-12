@@ -8,6 +8,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import {
     IConnection,
     IJupyterKernel,
@@ -45,8 +46,32 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
         if (this.sessionManager && !this.sessionManager.isDisposed) {
             traceInfo('ShutdownSessionAndConnection - dispose session manager');
-            this.sessionManager.dispose();
-            this.sessionManager = undefined;
+            // Make sure it finishes startup.
+            await this.sessionManager.ready;
+
+            // tslint:disable-next-line: no-any
+            const sessionManager = this.sessionManager as any;
+            try {
+                await this.sessionManager.shutdownAll();
+            } finally {
+                this.sessionManager.dispose();
+                this.sessionManager = undefined;
+            }
+
+            // The session manager can actually be stuck in the context of a timer. Clear out the specs inside of
+            // it so the memory for the session is minimized. Otherwise functional tests can run out of memory
+            if (sessionManager._specs) {
+                sessionManager._specs = {};
+            }
+            if (sessionManager._sessions && sessionManager._sessions.clear) {
+                sessionManager._sessions.clear();
+            }
+            if (sessionManager._pollModels) {
+                this.clearPoll(sessionManager._pollModels);
+            }
+            if (sessionManager._pollSpecs) {
+                this.clearPoll(sessionManager._pollSpecs);
+            }
         }
     }
 
@@ -150,6 +175,15 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         } catch {
             // For some reason this is failing. Just return nothing
             return [];
+        }
+    }
+
+    // tslint:disable-next-line: no-any
+    private clearPoll(poll: { _timeout: any }) {
+        try {
+            clearTimeout(poll._timeout);
+        } catch {
+            noop();
         }
     }
 

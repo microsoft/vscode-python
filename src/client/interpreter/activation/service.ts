@@ -8,11 +8,12 @@ import * as path from 'path';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { PYTHON_WARNINGS } from '../../common/constants';
-import { LogOptions, traceDecorators, traceError, traceVerbose } from '../../common/logger';
+import { LogOptions, traceDecorators, traceError, traceInfo, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
-import { IProcessServiceFactory } from '../../common/process/types';
+import { ExecutionResult, IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
+import { sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -34,10 +35,63 @@ const defaultShells = {
     [OSType.Unknown]: undefined
 };
 
+const condaRetryMessages = [
+    'The process cannot access the file because it is being used by another process',
+    'The directory is not empty'
+];
+
+/**
+ * This class exists so that the environment variable fetching can be cached in between tests. Normally
+ * this cache resides in memory for the duration of the EnvironmentActivationService's lifetime, but in the case
+ * of our functional tests, we want the cached data to exist outside of each test (where each test will destroy the EnvironmentActivationService)
+ * This gives each test a 3 or 4 second speedup.
+ */
+export class EnvironmentActivationServiceCache {
+    private static useStatic = false;
+    private static staticMap = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
+    private normalMap = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
+
+    public static forceUseStatic() {
+        EnvironmentActivationServiceCache.useStatic = true;
+    }
+    public static forceUseNormal() {
+        EnvironmentActivationServiceCache.useStatic = false;
+    }
+    public get(key: string): InMemoryCache<NodeJS.ProcessEnv | undefined> | undefined {
+        if (EnvironmentActivationServiceCache.useStatic) {
+            return EnvironmentActivationServiceCache.staticMap.get(key);
+        }
+        return this.normalMap.get(key);
+    }
+
+    public set(key: string, value: InMemoryCache<NodeJS.ProcessEnv | undefined>) {
+        if (EnvironmentActivationServiceCache.useStatic) {
+            EnvironmentActivationServiceCache.staticMap.set(key, value);
+        } else {
+            this.normalMap.set(key, value);
+        }
+    }
+
+    public delete(key: string) {
+        if (EnvironmentActivationServiceCache.useStatic) {
+            EnvironmentActivationServiceCache.staticMap.delete(key);
+        } else {
+            this.normalMap.delete(key);
+        }
+    }
+
+    public clear() {
+        // Don't clear during a test as the environment isn't going to change
+        if (!EnvironmentActivationServiceCache.useStatic) {
+            this.normalMap.clear();
+        }
+    }
+}
+
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
-    private readonly activatedEnvVariablesCache = new Map<string, InMemoryCache<NodeJS.ProcessEnv | undefined>>();
+    private readonly activatedEnvVariablesCache = new EnvironmentActivationServiceCache();
     constructor(
         @inject(ITerminalHelper) private readonly helper: ITerminalHelper,
         @inject(IPlatformService) private readonly platform: IPlatformService,
@@ -132,18 +186,40 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const command = `${activationCommand} && echo '${getEnvironmentPrefix}' && python ${printEnvPyFile.fileToCommandArgument()}`;
             traceVerbose(`Activating Environment to capture Environment variables, ${command}`);
 
-            // Conda activate can hang on certain systems. Fail after 30 seconds.
+            // Do some wrapping of the call. For two reasons:
+            // 1) Conda activate can hang on certain systems. Fail after 30 seconds.
             // See the discussion from hidesoon in this issue: https://github.com/Microsoft/vscode-python/issues/4424
             // His issue is conda never finishing during activate. This is a conda issue, but we
             // should at least tell the user.
-            const result = await processService.shellExec(command, {
-                env,
-                shell: shellInfo.shell,
-                timeout: getEnvironmentTimeout,
-                maxBuffer: 1000 * 1000
-            });
-            if (result.stderr && result.stderr.length > 0) {
-                throw new Error(`StdErr from ShellExec, ${result.stderr}`);
+            // 2) Retry because of this issue here: https://github.com/microsoft/vscode-python/issues/9244
+            // This happens on AzDo machines a bunch when using Conda (and we can't dictate the conda version in order to get the fix)
+            let result: ExecutionResult<string> | undefined;
+            let tryCount = 1;
+            while (!result) {
+                try {
+                    result = await processService.shellExec(command, {
+                        env,
+                        shell: shellInfo.shell,
+                        timeout: getEnvironmentTimeout,
+                        maxBuffer: 1000 * 1000,
+                        throwOnStdErr: false
+                    });
+                    if (result.stderr && result.stderr.length > 0) {
+                        throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
+                    }
+                } catch (exc) {
+                    // Special case. Conda for some versions will state a file is in use. If
+                    // that's the case, wait and try again. This happens especially on AzDo
+                    const excString = exc.toString();
+                    if (condaRetryMessages.find(m => excString.includes(m)) && tryCount < 10) {
+                        traceInfo(`Conda is busy, attempting to retry ...`);
+                        result = undefined;
+                        tryCount += 1;
+                        await sleep(500);
+                    } else {
+                        throw exc;
+                    }
+                }
             }
             const returnedEnv = this.parseEnvironmentOutput(result.stdout);
 

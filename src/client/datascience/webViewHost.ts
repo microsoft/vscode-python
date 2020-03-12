@@ -7,6 +7,7 @@ import { injectable, unmanaged } from 'inversify';
 import { ConfigurationChangeEvent, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
+import { isTestExecution } from '../common/constants';
 import { traceInfo, traceWarning } from '../common/logger';
 import { IConfigurationService, IDisposable, Resource } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
@@ -66,8 +67,9 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         // Send the first settings message
         this.onDataScienceSettingsChanged().ignoreErrors();
 
-        // Send the loc strings
-        this.postMessageInternal(SharedMessages.LocInit, localize.getCollectionJSON()).ignoreErrors();
+        // Send the loc strings (skip during testing as it takes up a lot of memory)
+        const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
+        this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
     }
 
     public async show(preserveFocus: boolean): Promise<void> {

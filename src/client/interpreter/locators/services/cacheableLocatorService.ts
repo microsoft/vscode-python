@@ -17,6 +17,12 @@ import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IInterpreterLocatorService, IInterpreterWatcher, PythonInterpreter } from '../../contracts';
 
+/**
+ * This class exists so that the interpreter fetching can be cached in between tests. Normally
+ * this cache resides in memory for the duration of the CacheableLocatorService's lifetime, but in the case
+ * of our functional tests, we want the cached data to exist outside of each test (where each test will destroy the CacheableLocatorService)
+ * This gives each test a 20 second speedup.
+ */
 export class CacheableLocatorPromiseCache {
     private static useStatic = false;
     private static staticMap = new Map<string, Deferred<PythonInterpreter[]>>();
@@ -24,6 +30,9 @@ export class CacheableLocatorPromiseCache {
 
     public static forceUseStatic() {
         CacheableLocatorPromiseCache.useStatic = true;
+    }
+    public static forceUseNormal() {
+        CacheableLocatorPromiseCache.useStatic = false;
     }
     public get(key: string): Deferred<PythonInterpreter[]> | undefined {
         if (CacheableLocatorPromiseCache.useStatic) {

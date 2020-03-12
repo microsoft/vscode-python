@@ -62,7 +62,8 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
         const disposable: IDisposable = {
-            dispose: () => {
+            // tslint:disable-next-line: no-function-expression
+            dispose: function() {
                 if (proc && !proc.killed && !procExited) {
                     ProcessService.kill(proc.pid);
                 }
