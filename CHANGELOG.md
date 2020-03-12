@@ -25,6 +25,8 @@
 
 ### Fixes
 
+1. Jupyter autocompletion will only show magic commands on empty lines, preventing them of appearing in functions.
+   ([#10023](https://github.com/Microsoft/vscode-python/issues/10023))
 1. Remove extra lines at the end of the file when formatting with Black.
    ([#1877](https://github.com/Microsoft/vscode-python/issues/1877))
 1. Capitalize `Activate.ps1` in code for PowerShell Core on Linux.
