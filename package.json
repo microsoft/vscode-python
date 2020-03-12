@@ -1832,14 +1832,14 @@
                 },
                 "python.dataScience.enableGather": {
                     "type": "boolean",
-                    "default": false,
-                    "description": "Enable experimental code gathering for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
+                    "default": true,
+                    "description": "Enable experimental gather feature for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
                     "scope": "resource"
                 },
                 "python.dataScience.gatherToScript": {
                     "type": "boolean",
-                    "default": true,
-                    "description": "If experimental code gather is enabled, gather code to a python script rather than a notebook.",
+                    "default": false,
+                    "description": "If experimental gather feature is enabled, gather code to a python script rather than a notebook.",
                     "scope": "resource"
                 },
                 "python.dataScience.codeLenses": {
