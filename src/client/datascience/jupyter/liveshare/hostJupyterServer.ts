@@ -183,56 +183,68 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         const notebookPromise = createDeferred<INotebook>();
         // Save the notebook
         this.setNotebook(identity, notebookPromise.promise);
-        const { info, changedKernel } = await this.computeLaunchInfo(
-            resource,
-            sessionManager,
-            notebookMetadata,
-            cancelToken
-        );
 
-        // If we switched kernels, try switching the possible session
-        if (changedKernel && possibleSession && info.kernelSpec) {
-            await possibleSession.changeKernel(
-                info.kernelSpec,
-                this.configService.getSettings(resource).datascience.jupyterLaunchTimeout
-            );
-        }
-
-        // Start a session (or use the existing one)
-        const session = possibleSession || (await sessionManager.startNew(info.kernelSpec, cancelToken));
-        traceInfo(`Started session ${this.id}`);
-
-        if (session) {
-            // Create our notebook
-            const notebook = new HostJupyterNotebook(
-                this.liveShare,
-                session,
-                configService,
-                disposableRegistry,
-                this,
-                info,
-                loggers,
+        const getExistingSession = async () => {
+            const { info, changedKernel } = await this.computeLaunchInfo(
                 resource,
-                identity,
-                this.getDisposedError.bind(this),
-                this.workspaceService,
-                this.appService,
-                this.fs
+                sessionManager,
+                notebookMetadata,
+                cancelToken
             );
 
-            // Wait for it to be ready
-            traceInfo(`Waiting for idle (session) ${this.id}`);
-            const idleTimeout = configService.getSettings().datascience.jupyterLaunchTimeout;
-            await notebook.waitForIdle(idleTimeout);
+            // If we switched kernels, try switching the possible session
+            if (changedKernel && possibleSession && info.kernelSpec) {
+                await possibleSession.changeKernel(
+                    info.kernelSpec,
+                    this.configService.getSettings(resource).datascience.jupyterLaunchTimeout
+                );
+            }
 
-            // Run initial setup
-            await notebook.initialize(cancelToken);
+            // Start a session (or use the existing one)
+            const session = possibleSession || (await sessionManager.startNew(info.kernelSpec, cancelToken));
+            traceInfo(`Started session ${this.id}`);
+            return { info, session };
+        };
 
-            traceInfo(`Finished connecting ${this.id}`);
+        try {
+            const { info, session } = await getExistingSession();
 
-            notebookPromise.resolve(notebook);
-        } else {
-            notebookPromise.reject(this.getDisposedError());
+            if (session) {
+                // Create our notebook
+                const notebook = new HostJupyterNotebook(
+                    this.liveShare,
+                    session,
+                    configService,
+                    disposableRegistry,
+                    this,
+                    info,
+                    loggers,
+                    resource,
+                    identity,
+                    this.getDisposedError.bind(this),
+                    this.workspaceService,
+                    this.appService,
+                    this.fs
+                );
+
+                // Wait for it to be ready
+                traceInfo(`Waiting for idle (session) ${this.id}`);
+                const idleTimeout = configService.getSettings().datascience.jupyterLaunchTimeout;
+                await notebook.waitForIdle(idleTimeout);
+
+                // Run initial setup
+                await notebook.initialize(cancelToken);
+
+                traceInfo(`Finished connecting ${this.id}`);
+
+                notebookPromise.resolve(notebook);
+            } else {
+                notebookPromise.reject(this.getDisposedError());
+            }
+        } catch (ex) {
+            // If there's an error, then reject the promise that is returned.
+            // This original promise must be rejected as it is cached (check `setNotebook`).
+            notebookPromise.reject(ex);
         }
 
         return notebookPromise.promise;

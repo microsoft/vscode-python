@@ -144,7 +144,7 @@ export class JupyterServerBase implements INotebookServer {
 
         traceInfo(`Shutting down notebooks for ${this.id}`);
         const notebooks = await Promise.all([...this.notebooks.values()]);
-        await Promise.all(notebooks.map(n => n.dispose()));
+        await Promise.all(notebooks.map(n => n?.dispose()));
         traceInfo(`Shut down session manager`);
         if (this.sessionManager) {
             await this.sessionManager.dispose();
@@ -203,6 +203,12 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     protected setNotebook(identity: Uri, notebook: Promise<INotebook>) {
+        const removeNotebook = () => {
+            if (this.notebooks.get(identity.toString()) === notebook) {
+                this.notebooks.delete(identity.toString());
+            }
+        };
+
         notebook
             .then(nb => {
                 const oldDispose = nb.dispose;
@@ -211,7 +217,7 @@ export class JupyterServerBase implements INotebookServer {
                     return oldDispose();
                 };
             })
-            .catch(() => this.notebooks.delete(identity.toString()));
+            .catch(removeNotebook);
 
         // Save the notebook
         this.notebooks.set(identity.toString(), notebook);
