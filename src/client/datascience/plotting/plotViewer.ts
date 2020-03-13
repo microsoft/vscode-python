@@ -152,8 +152,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
                         ws.on('finish', () => deferred.resolve);
                         // See docs or demo from source https://cdn.statically.io/gh/alafr/SVG-to-PDFKit/master/examples/demo.htm
                         // How to resize to fit (fit within the height & width of page).
-                        const options = { preserveAspectRatio: 'xMinYMin meet' };
-                        SVGtoPDF(doc, payload.svg, 0, 0, options);
+                        SVGtoPDF(doc, payload.svg, 0, 0, { preserveAspectRatio: 'xMinYMin meet' });
                         doc.pipe(ws);
                         doc.end();
                         traceInfo(`Finishing pdf to ${file.fsPath}`);
