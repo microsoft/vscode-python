@@ -136,6 +136,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         return lines;
     }
 
+    // tslint:disable-next-line: cyclomatic-complexity
     public async addCellHash(cell: ICell, expectedCount: number): Promise<void> {
         // Find the text document that matches. We need more information than
         // the add code gives us
@@ -163,14 +164,25 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             const endOffset = doc.offsetAt(endLine.rangeIncludingLineBreak.end);
 
             // Jupyter also removes blank lines at the end. Make sure only one
-            let lastLine = stripped[stripped.length - 1];
-            while (lastLine !== undefined && (lastLine.length === 0 || lastLine === '\n')) {
-                stripped.splice(stripped.length - 1, 1);
-                lastLine = stripped[stripped.length - 1];
+            let lastLinePos = stripped.length - 1;
+            let nextToLastLinePos = stripped.length - 2;
+            while (nextToLastLinePos > 0) {
+                const lastLine = stripped[lastLinePos];
+                const nextToLastLine = stripped[nextToLastLinePos];
+                if (
+                    (lastLine.length === 0 || lastLine === '\n') &&
+                    (nextToLastLine.length === 0 || nextToLastLine === '\n')
+                ) {
+                    stripped.splice(lastLinePos, 1);
+                    lastLinePos -= 1;
+                    nextToLastLinePos -= 1;
+                } else {
+                    break;
+                }
             }
             // Make sure the last line with actual content ends with a linefeed
-            if (!lastLine.endsWith('\n') && lastLine.length > 0) {
-                stripped[stripped.length - 1] = `${lastLine}\n`;
+            if (!stripped[lastLinePos].endsWith('\n') && stripped[lastLinePos].length > 0) {
+                stripped[lastLinePos] = `${stripped[lastLinePos]}\n`;
             }
 
             // Compute the runtime line and adjust our cell/stripped source for debugging

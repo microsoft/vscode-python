@@ -1159,11 +1159,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Create a new notebook if we need to.
         if (!this._notebook) {
             // While waiting make the notebook look busy
-            await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+            this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.Busy,
                 localizedUri: this.getServerUri(server),
                 displayName: ''
-            });
+            }).ignoreErrors();
 
             this._notebook = await this.createNotebook(server);
 
