@@ -12,6 +12,10 @@ import {
 } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
+
+// IANHU: Just for testing
+import { JupyterConnectionInfo } from 'enchannel-zmq-backend';
+
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -26,6 +30,10 @@ import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
+
+// IANHU: Just for testing
+import { RawKernel } from '../raw-kernel/rawKernel';
+
 import { ReportableAction } from '../progress/types';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
@@ -65,6 +73,10 @@ export class JupyterSession implements IJupyterSession {
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     private statusHandler: Slot<ISession, Kernel.Status>;
     private connected: boolean = false;
+
+    // IANHU: Just for testing
+    private rawKernel: RawKernel | undefined;
+
     constructor(
         private connInfo: IConnection,
         private serverSettings: ServerConnection.ISettings,
@@ -190,6 +202,11 @@ export class JupyterSession implements IJupyterSession {
         disposeOnDone?: boolean,
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
+        // IANHU: Just for testing
+        if (this.rawKernel) {
+            const future = this.rawKernel.requestExecute(content, disposeOnDone, metadata);
+        }
+
         const result =
             this.session && this.session.kernel
                 ? this.session.kernel.requestExecute(content, disposeOnDone, metadata)
@@ -228,6 +245,15 @@ export class JupyterSession implements IJupyterSession {
     public async connect(cancelToken?: CancellationToken): Promise<void> {
         if (!this.connInfo) {
             throw new Error(localize.DataScience.sessionDisposed());
+        }
+
+        // IANHU: Just for testing
+
+        // This is mostly the output from python get_connection_info, but there is also a version, which I'm not sure what it's supposed to be
+        if (!this.rawKernel) {
+            const kci: JupyterConnectionInfo = { version: 0, transport: 'tcp', ip: '127.0.0.1', shell_port: 55196, iopub_port: 55197, stdin_port: 55198, hb_port: 55200, control_port: 55199, signature_scheme: 'hmac-sha256', key: 'adaf9032-487d222a85026db284c3d5e7' };
+            this.rawKernel = new RawKernel();
+            await this.rawKernel.connect(kci);
         }
 
         // Start a new session
