@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
-import { Channels, executeRequest, JupyterMessage, message, MessageType } from '@nteract/messaging';
+import { Channels, executeRequest, ExecuteRequest, JupyterMessage, message, MessageType } from '@nteract/messaging';
 import { JSONObject } from '@phosphor/coreutils';
 import { ISignal } from '@phosphor/signaling';
 import { createMainChannel, JupyterConnectionInfo, createSockets } from 'enchannel-zmq-backend';
@@ -17,6 +17,9 @@ input request, translating them, sending them to an IPython kernel over ZMQ, the
 export class RawKernel implements Kernel.IKernel {
     private mainChannel: Channels | undefined;
     private sessionId: string | undefined;
+
+    // Keep track of all of our active futures
+    private futures = new Map<string, RawFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>>();
 
     constructor() {
     }
@@ -38,69 +41,30 @@ export class RawKernel implements Kernel.IKernel {
     }
 
     // IANHU: Implemented
-    public requestExecute(_content: KernelMessage.IExecuteRequestMsg['content'], _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
-        // First off we have to translate this message into the desired form
-        // IShellFuture is basically just a request and reply IShellMessage
-
-        // Here is what is in _content
-        //Object {code: "%config InlineBackend.figure_formats = {'svg', 'pn…", stop_on_error: false, allow_stdin: true, store_history: false}
-        //allow_stdin:true
-        //code:"%config InlineBackend.figure_formats = {'svg', 'png'}"
-        //stop_on_error:false
-        //store_history:false
-
-        // Let's see what the shape that we pass into enchannel is
-        //var message = {
-        //header: {
-        //msg_id: `execute_9ed11a0f-707e-4f71-829c-a19b8ff8eed8`,
-        //username: 'rgbkrk',
-        //session: '00000000-0000-0000-0000-000000000000',
-        //msg_type: 'execute_request',
-        //version: '5.0',
-        //},
-        //content: {
-        //code: 'print("woo")',
-        //silent: false,
-        //store_history: true,
-        //user_expressions: {},
-        //allow_stdin: false,
-        //},
-        //};
-
+    public requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
         if (this.mainChannel) {
-            //const body = {
-            //header: {
-            //msg_id: `execute_9ed11a0f-707e-4f71-829c-a19b8ff8eed8`,
-            //username: "rgbkrk",
-            //session: "00000000-0000-0000-0000-000000000000",
-            //msg_type: "execute_request",
-            //version: "5.0"
-            //},
-            //content: {
-            //code: 'print("hello")',
-            //silent: false,
-            //store_history: true,
-            //user_expressions: {},
-            //allow_stdin: false
-            //}
-            //};
-            //const message = { type: "shell", body };
+            const options = {
+                store_history: content.store_history, user_expressions: content.user_expressions, allow_stdin: content.allow_stdin,
+                silent: content.silent, stop_on_error: content.stop_on_error
+            };
 
-            const fakeExecute = this.buildJupyterMessage();
+            // IANHU: This is very specific right now, need to generalize later
+            const fakeExecute = this.buildJupyterMessage(content.code, options);
 
             this.mainChannel.next(fakeExecute);
 
-            ///IANHU: Now how does this translate to an IShellFuture?
-            // IFuture is a pretty simple interface, am I creating my own? Should check first if enchannel is 
-            // doing something like this already? Doesn't look like they are, which makes sense as they have
-            // cut out the Jupyter top layer more directly
+            // IANHU: There seems to be mild type mismatches here, if I'm more or less specific
+            // IANHU: Just cast to any for now and see if it breaks?
+            const newFuture = new RawFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>(fakeExecute as any);
+            // IANHU: Cast here is ugly as well
+            this.futures.set(newFuture.msg.header.msg_id, newFuture as RawFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>);
 
-            // I think at this point we need to keep tabs on our our IFutures then we need to route messages to them 
-            // as needed as new messages come in
+            return newFuture;
         }
 
-        return new RawFuture();
-        //throw new Error('Not yet implemented');
+        // IANHU: What should we do here? Throw?
+        // Probably should not get here if session is not available
+        throw new Error('No session available?');
     }
 
     // IANHU: Don't Implement
@@ -227,7 +191,8 @@ export class RawKernel implements Kernel.IKernel {
 
 
     //IANHU: Privates
-    private buildJupyterMessage(): JupyterMessage {
+    //private buildJupyterMessage(): JupyterMessage {
+    private buildJupyterMessage(_code: string, _options: any): ExecuteRequest {
         //header: { msg_type: MT; username?: string; session?: string },
         //content: object = {}k
 
@@ -240,7 +205,25 @@ export class RawKernel implements Kernel.IKernel {
     }
 
     // Just our quick message watcher for now
-    private msgIn(jm: JupyterMessage): void {
-        console.log(jm);
+    private msgIn(message: JupyterMessage): void {
+        console.log(message);
+
+        // IANHU: display_data messages can route based on their id here first
+
+        // Look up in our future list and see if a future needs to be updated on this message
+        if (message.parent_header.msg_id) {
+            const parentFuture = this.futures.get(message.parent_header.msg_id);
+
+            if (parentFuture) {
+                parentFuture.handleMessage(message);
+            } else {
+                if (message.header.session == this.sessionId &&
+                    message.channel !== 'iopub') {
+                    // IANHU: emit unhandled
+                }
+            }
+        }
+
+        // IANHU: Handle general IOpub messages
     }
 }
