@@ -89,6 +89,7 @@ import {
     IMessageCell,
     INotebook,
     INotebookExporter,
+    INotebookProvider,
     INotebookServer,
     INotebookServerOptions,
     InterruptResult,
@@ -98,7 +99,6 @@ import {
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
-import { INotebookProvider } from './notebookProvider';
 
 @injectable()
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {

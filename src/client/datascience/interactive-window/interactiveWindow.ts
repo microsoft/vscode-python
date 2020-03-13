@@ -37,7 +37,6 @@ import {
     NotebookModelChange,
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
-import { INotebookProvider, InteractiveWindowNotebookovider } from '../interactive-common/notebookProvider';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
@@ -54,11 +53,13 @@ import {
     IJupyterKernelSpec,
     IJupyterVariables,
     INotebookExporter,
+    INotebookProvider,
     INotebookServerOptions,
     IStatusProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
+import { InteractiveWindowNotebookovider } from './notebookProvider';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 

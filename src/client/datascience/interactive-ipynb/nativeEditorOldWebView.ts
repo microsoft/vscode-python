@@ -31,7 +31,6 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
-import { INotebookProvider, NativeNotebookovider } from '../interactive-common/notebookProvider';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
@@ -46,12 +45,14 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookModel,
+    INotebookProvider,
     IStatusProvider,
     IThemeFinder
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorStorage } from './nativeEditorStorage';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
+import { NativeNotebookovider } from './notebookProvider';
 
 enum AskForSaveResult {
     Yes,

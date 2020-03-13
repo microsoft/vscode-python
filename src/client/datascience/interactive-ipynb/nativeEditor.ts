@@ -78,6 +78,7 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookModel,
+    INotebookProvider,
     INotebookServerOptions,
     IStatusProvider,
     IThemeFinder,
@@ -89,8 +90,8 @@ import { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
-import { INotebookProvider, NativeNotebookovider } from '../interactive-common/notebookProvider';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
+import { NativeNotebookovider } from './notebookProvider';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 @injectable()

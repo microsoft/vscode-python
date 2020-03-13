@@ -4,25 +4,10 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { Uri } from 'vscode';
-import { IFileSystem } from '../../common/platform/types';
-import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
-import {
-    IInteractiveWindowProvider,
-    INotebook,
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookServer
-} from '../types';
-
-export interface INotebookProvider {
-    /**
-     * Gets or creates a notebook, and manages the lifetime of notebooks.
-     */
-    getNotebook(server: INotebookServer, resource: Uri, options?: nbformat.INotebookMetadata): Promise<INotebook>;
-}
+import { INotebook, INotebookProvider, INotebookServer } from '../types';
 
 @injectable()
 export class BaseNotebookProvider implements INotebookProvider {
@@ -74,58 +59,5 @@ export class BaseNotebookProvider implements INotebookProvider {
         }
 
         await notebook.dispose().catch(noop);
-    }
-}
-
-@injectable()
-export class InteractiveWindowNotebookovider extends BaseNotebookProvider {
-    constructor(
-        @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
-    ) {
-        super();
-        disposables.push(
-            interactiveWindowProvider.onDidChangeActiveInteractiveWindow(this.checkAndDisposeNotebook, this)
-        );
-    }
-
-    /**
-     * Interactive windows have just one window.
-     * When that it closed, just close all of the notebooks associated with interactive windows.
-     */
-    protected checkAndDisposeNotebook() {
-        if (this.interactiveWindowProvider.getActive()) {
-            return;
-        }
-
-        Array.from(this.notebooks.values()).forEach(promise => {
-            promise.then(notebook => notebook.dispose()).catch(noop);
-        });
-
-        this.notebooks.clear();
-    }
-}
-
-@injectable()
-export class NativeNotebookovider extends BaseNotebookProvider {
-    constructor(
-        @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,
-        @inject(IDisposableRegistry) disposables: IDisposableRegistry
-    ) {
-        super();
-        disposables.push(editorProvider.onDidCloseNotebookEditor(this.onDidCloseNotebookEditor, this));
-    }
-
-    protected async onDidCloseNotebookEditor(editor: INotebookEditor) {
-        // First find all notebooks associated with this editor (ipynb file).
-        const editors = this.editorProvider.editors.filter(
-            e => this.fs.arePathsSame(e.file.fsPath, editor.file.fsPath) && e !== editor
-        );
-
-        // If we have no editors for this file, then dispose the notebook.
-        if (editors.length === 0) {
-            await super.disposeNotebook(editor.file);
-        }
     }
 }
