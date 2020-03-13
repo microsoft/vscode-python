@@ -113,6 +113,7 @@ export interface INotebook extends IAsyncDisposable {
     readonly server: INotebookServer;
     readonly status: ServerStatus;
     onSessionStatusChanged: Event<ServerStatus>;
+    onDisposed: Event<void>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;

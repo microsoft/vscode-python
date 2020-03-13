@@ -37,6 +37,7 @@ import {
     NotebookModelChange,
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
+import { INotebookProvider, InteractiveWindowNotebookovider } from '../interactive-common/notebookProvider';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
@@ -108,7 +109,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
-        @inject(KernelSwitcher) switcher: KernelSwitcher
+        @inject(KernelSwitcher) switcher: KernelSwitcher,
+        @inject(InteractiveWindowNotebookovider) notebookProvider: INotebookProvider
     ) {
         super(
             progressReporter,
@@ -142,7 +144,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             localize.DataScience.historyTitle(),
             ViewColumn.Two,
             experimentsManager,
-            switcher
+            switcher,
+            notebookProvider
         );
 
         // Send a telemetry event to indicate window is opening

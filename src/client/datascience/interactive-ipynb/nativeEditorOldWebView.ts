@@ -31,6 +31,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
+import { INotebookProvider, NativeNotebookovider } from '../interactive-common/notebookProvider';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
@@ -97,7 +98,8 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(KernelSwitcher) switcher: KernelSwitcher
+        @inject(KernelSwitcher) switcher: KernelSwitcher,
+        @inject(NativeNotebookovider) notebookProvider: INotebookProvider
     ) {
         super(
             listeners,
@@ -127,7 +129,8 @@ export class NativeEditorOldWebView extends NativeEditor {
             progressReporter,
             experimentsManager,
             asyncRegistry,
-            switcher
+            switcher,
+            notebookProvider
         );
         asyncRegistry.push(this);
         // No ui syncing in old notebooks.

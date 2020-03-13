@@ -40,7 +40,7 @@ export class HostJupyterNotebook
     private localResponses: ResponseQueue = new ResponseQueue();
     private requestLog: Map<string, number> = new Map<string, number>();
     private catchupPendingCount: number = 0;
-    private disposed = false;
+    private isDisposed = false;
     constructor(
         liveShare: ILiveShareApi,
         session: IJupyterSession,
@@ -74,8 +74,8 @@ export class HostJupyterNotebook
     }
 
     public dispose = async (): Promise<void> => {
-        if (!this.disposed) {
-            this.disposed = true;
+        if (!this.isDisposed) {
+            this.isDisposed = true;
             await super.dispose();
             const api = await this.api;
             return this.onDetach(api);
@@ -85,7 +85,7 @@ export class HostJupyterNotebook
     public async onAttach(api: vsls.LiveShare | null): Promise<void> {
         await super.onAttach(api);
 
-        if (api && !this.disposed) {
+        if (api && !this.isDisposed) {
             const service = await this.waitForService();
 
             // Attach event handlers to different requests

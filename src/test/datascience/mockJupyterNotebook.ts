@@ -26,6 +26,7 @@ export class MockJupyterNotebook implements INotebook {
     public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
         IJupyterKernelSpec | LiveKernelModel
     >().event;
+    public onDisposed = new EventEmitter<void>().event;
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
     constructor(private owner: INotebookServer) {
         noop();

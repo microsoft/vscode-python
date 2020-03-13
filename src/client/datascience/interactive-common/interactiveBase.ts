@@ -98,6 +98,7 @@ import {
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
+import { INotebookProvider } from './notebookProvider';
 
 @injectable()
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
@@ -152,7 +153,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() title: string,
         @unmanaged() viewColumn: ViewColumn,
         @unmanaged() experimentsManager: IExperimentsManager,
-        @unmanaged() private switcher: KernelSwitcher
+        @unmanaged() private switcher: KernelSwitcher,
+        @unmanaged() private readonly notebookProvider: INotebookProvider
     ) {
         super(
             configuration,
@@ -1093,11 +1095,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.getNotebookOptions()
             ]);
             try {
-                // We could have multiple native editors opened for the same file/model.
-                notebook = uri ? await server.getNotebook(uri) : undefined;
-                if (!notebook) {
-                    notebook = uri ? await server.createNotebook(resource, uri, options?.metadata) : undefined;
-                }
+                notebook = uri ? await this.notebookProvider.getNotebook(server, uri, options?.metadata) : undefined;
             } catch (e) {
                 // If we get an invalid kernel error, make sure to ask the user to switch
                 if (e instanceof JupyterInvalidKernelError && server && server.getConnectionInfo()?.localLaunch) {
