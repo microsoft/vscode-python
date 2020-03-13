@@ -1252,9 +1252,6 @@ export interface CustomDocument<UserDataType = unknown> {
      * Custom data that an extension can store on the document.
      */
     userData?: UserDataType;
-
-    // TODO: Should we expose edits here?
-    // This could be helpful for tracking the life cycle of edits
 }
 
 /**
