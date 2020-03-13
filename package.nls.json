@@ -450,5 +450,6 @@
     "DataScience.createdNewNotebook": "{0}: Creating new notebook ",
     "DataScience.createdNewKernel": "{0}: Kernel started: {1}",
     "DataScience.kernelInvalid": "Kernel {0} is not usable. Check the Jupyter output tab for more information.",
-    "OutdatedDebugger.updateDebuggerMessage": "We noticed you are attaching to ptvsd (Python debugger), which will be deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy)."
+    "OutdatedDebugger.updateDebuggerMessage": "We noticed you are attaching to ptvsd (Python debugger), which will be deprecated on May 1st, 2020. Please switch to [debugpy](https://aka.ms/migrateToDebugpy).",
+    "DataScience.nativeDependencyFail" : "{0}. Your operating system does not support the data science features of the Python Extension because a native dependency cannot load. Data science features will be disabled."
 }
