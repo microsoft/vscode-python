@@ -5,7 +5,6 @@
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
 import { DocumentManager } from '../../client/common/application/documentManager';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
@@ -38,7 +37,6 @@ suite('Data Science Tests', () => {
         cmdRegistry = mock(CommandRegistry);
         docManager = mock(DocumentManager);
         settings = mock(PythonSettings);
-        const appShell = mock(ApplicationShell);
 
         dataScience = new DataScience(
             instance(cmdManager),
@@ -50,8 +48,7 @@ suite('Data Science Tests', () => {
             instance(configService),
             instance(docManager),
             instance(workspaceService),
-            instance(cmdRegistry),
-            instance(appShell)
+            instance(cmdRegistry)
         );
 
         onDidChangeSettings = sinon.stub();

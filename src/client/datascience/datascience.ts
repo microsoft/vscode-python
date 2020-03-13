@@ -3,17 +3,13 @@
 'use strict';
 import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable } from 'inversify';
-import * as portfinder from 'portfinder';
 import * as vscode from 'vscode';
-import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import '../common/extensions';
-import { traceError, traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext } from '../common/types';
-import { sleep } from '../common/utils/async';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
-import * as localize from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { CommandRegistry } from './commands/commandRegistry';
@@ -25,7 +21,6 @@ export class DataScience implements IDataScience {
     public isDisposed: boolean = false;
     private changeHandler: IDisposable | undefined;
     private startTime: number = Date.now();
-    private testedZMQ = false;
     constructor(
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
@@ -34,8 +29,7 @@ export class DataScience implements IDataScience {
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
-        @inject(CommandRegistry) private commandRegistry: CommandRegistry,
-        @inject(IApplicationShell) private appShell: IApplicationShell
+        @inject(CommandRegistry) private commandRegistry: CommandRegistry
     ) {
         this.disposableRegistry.push(this.commandRegistry);
     }
@@ -64,9 +58,6 @@ export class DataScience implements IDataScience {
 
         // Send telemetry for all of our settings
         this.sendSettingsTelemetry().ignoreErrors();
-
-        // Make sure ZMQ binaries are installed and run
-        this.verifyZMQ().ignoreErrors();
     }
 
     public async dispose() {
@@ -126,31 +117,6 @@ export class DataScience implements IDataScience {
                 }
             }
             sendTelemetryEvent(Telemetry.DataScienceSettings, 0, resultSettings);
-        }
-    }
-
-    private async verifyZMQ() {
-        if (!this.testedZMQ) {
-            this.testedZMQ = true;
-            try {
-                const zmq = await import('zeromq');
-                const sock = new zmq.Push();
-                const port = await portfinder.getPortPromise();
-
-                await sock.bind(`tcp://127.0.0.1:${port}`);
-                sock.send('some work').ignoreErrors(); // This will never return unless there's a listener. Just used for testing the API is available
-                await sleep(500);
-                sock.close();
-                traceInfo(`ZMQ connection to port ${port} verified.`);
-            } catch (e) {
-                traceError(`Exception while attempting zmq :`, e);
-                // If this happens, disable datascience altogether. We can't talk to
-                // kernels
-                this.appShell.showErrorMessage(localize.DataScience.nativeDependencyFail().format(e));
-                sendTelemetryEvent(Telemetry.ZMQNotSupported);
-                const config = this.workspace.getConfiguration('python');
-                config.update('dataScience.enabled', false);
-            }
         }
     }
 }

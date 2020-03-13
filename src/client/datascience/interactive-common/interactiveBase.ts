@@ -3,6 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -22,8 +23,6 @@ import {
     ViewColumn
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
-
-import { nbformat } from '@jupyterlab/coreutils';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import {
     IApplicationShell,
@@ -65,6 +64,7 @@ import {
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
+import { JupyterZMQBinariesNotFoundError } from '../jupyter/jupyterZMQBinariesNotFoundError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../jupyter/kernels/types';
@@ -839,7 +839,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 );
             }
             // Then load the jupyter server
-            return this.connectToServer(progressReporter.token);
+            return await this.connectToServer(progressReporter.token);
         } catch (e) {
             progressReporter.dispose();
             // If user cancelled, then do nothing.
@@ -1398,6 +1398,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 return true;
             }
         } catch (e) {
+            if (e instanceof JupyterZMQBinariesNotFoundError) {
+                throw e;
+            }
             // Can't find a usable interpreter, show the error.
             if (activeInterpreter) {
                 const displayName = activeInterpreter.displayName

@@ -35,6 +35,6 @@ suite('Data Science - Server Selector Command', () => {
 
         handler();
 
-        verify(serverSelector.selectJupyterURI()).once();
+        verify(serverSelector.selectJupyterURI(true)).once();
     });
 });
