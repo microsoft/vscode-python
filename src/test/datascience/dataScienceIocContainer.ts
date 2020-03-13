@@ -357,6 +357,7 @@ import { blurWindow, createMessageEvent } from './reactHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
+import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -580,6 +581,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
         mockExtensionContext.setup(m => m.globalStoragePath).returns(() => os.tmpdir());
         this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
+
+        const mockServerSelector = mock(JupyterServerSelector);
+        this.serviceManager.addSingletonInstance<JupyterServerSelector>(
+            JupyterServerSelector,
+            instance(mockServerSelector)
+        );
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
