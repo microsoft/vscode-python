@@ -53,6 +53,7 @@ export class BaseNotebookProvider implements INotebookProvider {
             // Possible it was closed before a notebook could be created.
             return;
         }
+        this.notebooks.delete(resource.fsPath);
         const notebook = await notebookPromise.catch(noop);
         if (!notebook) {
             return;
