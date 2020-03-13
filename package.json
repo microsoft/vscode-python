@@ -3030,7 +3030,7 @@
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",
         "@types/xml2js": "^0.4.2",
-        "acorn": "^6.0.0",
+        "acorn": "^6.4.1",
         "ansi-to-html": "^0.6.7",
         "awesome-typescript-loader": "^5.2.1",
         "babel-loader": "^8.0.3",
