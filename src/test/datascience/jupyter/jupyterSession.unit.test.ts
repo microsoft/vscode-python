@@ -10,6 +10,7 @@ import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 
+import { traceInfo } from '../../../client/common/logger';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
@@ -259,22 +260,22 @@ suite('Data Science - JupyterSession', () => {
             });
         });
         suite('Local Sessions', async () => {
-            let restartSession: Session.ISession;
-            let restartKernel: Kernel.IKernelConnection;
-            let restartStatusChangedSignal: ISignal<Session.ISession, Kernel.Status>;
-            let restartKernelChangedSignal: ISignal<Session.ISession, IKernelChangedArgs>;
+            let newSession: Session.ISession;
+            let newKernelConnection: Kernel.IKernelConnection;
+            let newStatusChangedSignal: ISignal<Session.ISession, Kernel.Status>;
+            let newKernelChangedSignal: ISignal<Session.ISession, IKernelChangedArgs>;
             let kernelAddedToIgnoreList: Deferred<void>;
             let kernelRemovedFromIgnoreList: Deferred<void>;
             let newSessionCreated: Deferred<void>;
             setup(async () => {
-                restartSession = mock(DefaultSession);
-                restartKernel = mock(DefaultKernel);
-                restartStatusChangedSignal = mock(Signal);
-                restartKernelChangedSignal = mock(Signal);
+                newSession = mock(DefaultSession);
+                newKernelConnection = mock(DefaultKernel);
+                newStatusChangedSignal = mock(Signal);
+                newKernelChangedSignal = mock(Signal);
                 kernelAddedToIgnoreList = createDeferred<void>();
                 kernelRemovedFromIgnoreList = createDeferred<void>();
-                when(restartSession.statusChanged).thenReturn(instance(restartStatusChangedSignal));
-                when(restartSession.kernelChanged).thenReturn(instance(restartKernelChangedSignal));
+                when(newSession.statusChanged).thenReturn(instance(newStatusChangedSignal));
+                when(newSession.kernelChanged).thenReturn(instance(newKernelChangedSignal));
                 when(kernelSelector.addKernelToIgnoreList(anything())).thenCall(() =>
                     kernelAddedToIgnoreList.resolve()
                 );
@@ -282,17 +283,17 @@ suite('Data Science - JupyterSession', () => {
                     kernelRemovedFromIgnoreList.resolve()
                 );
                 // tslint:disable-next-line: no-any
-                (instance(restartSession) as any).then = undefined;
+                (instance(newSession) as any).then = undefined;
                 newSessionCreated = createDeferred();
                 when(session.isRemoteSession).thenReturn(false);
                 when(session.isDisposed).thenReturn(false);
-                when(restartKernel.id).thenReturn('restartId');
-                when(restartKernel.clientId).thenReturn('restartClientId');
-                when(restartKernel.status).thenReturn('idle');
-                when(restartSession.kernel).thenReturn(instance(restartKernel));
+                when(newKernelConnection.id).thenReturn('restartId');
+                when(newKernelConnection.clientId).thenReturn('restartClientId');
+                when(newKernelConnection.status).thenReturn('idle');
+                when(newSession.kernel).thenReturn(instance(newKernelConnection));
                 when(sessionManager.startNew(anything())).thenCall(() => {
                     newSessionCreated.resolve();
-                    return Promise.resolve(instance(restartSession));
+                    return Promise.resolve(instance(newSession));
                 });
             });
             teardown(() => {
@@ -313,7 +314,7 @@ suite('Data Science - JupyterSession', () => {
 
                 // Wait untill a new session has been started.
                 await newSessionCreated.promise;
-                // One original, one new session and one restart session.
+                // One original, one new session.
                 verify(sessionManager.startNew(anything())).thrice();
             });
             suite('Executing user code', async () => {
@@ -330,30 +331,8 @@ suite('Data Science - JupyterSession', () => {
 
                     assert.isOk(result);
                     await result!.done;
-
-                    // Wait untill a new session has been started.
-                    await newSessionCreated.promise;
                 }
 
-                test('Must start a restart session', async () => {
-                    verify(sessionManager.startNew(anything())).twice();
-                });
-                test('Restart session must be excluded from kernel picker', async () => {
-                    await kernelAddedToIgnoreList.promise;
-                    verify(kernelSelector.addKernelToIgnoreList(anything())).once();
-                });
-                test('Shutdown kills restart Session', async () => {
-                    connection.setup(c => c.localLaunch).returns(() => true);
-                    when(session.isRemoteSession).thenReturn(false);
-                    when(session.isDisposed).thenReturn(false);
-                    when(session.shutdown()).thenResolve();
-                    when(session.dispose()).thenReturn();
-
-                    await jupyterSession.shutdown();
-
-                    verify(restartSession.shutdown()).once();
-                    verify(restartSession.dispose()).once();
-                });
                 test('Restart should create a new session & kill old session', async () => {
                     const oldSessionShutDown = createDeferred();
                     connection.setup(c => c.localLaunch).returns(() => true);
@@ -363,7 +342,10 @@ suite('Data Science - JupyterSession', () => {
                         oldSessionShutDown.resolve();
                         return Promise.resolve();
                     });
-                    when(session.dispose()).thenReturn();
+                    when(session.dispose()).thenCall(() => {
+                        traceInfo('Shutting down');
+                        return Promise.resolve();
+                    });
 
                     await jupyterSession.restart(0);
 

@@ -139,6 +139,15 @@ export class JupyterInterpreterService {
         }
     }
 
+    // Set the specified interpreter as our current selected interpreter. Public so can
+    // be set by the test code.
+    public async setAsSelectedInterpreter(interpreter: PythonInterpreter): Promise<void> {
+        // Make sure that our initial set has happened before we allow a set so that
+        // calculation of the initial interpreter doesn't clobber the existing one
+        await this.setInitialInterpreter();
+        this.changeSelectedInterpreterProperty(interpreter);
+    }
+
     // Check the location that we stored jupyter launch path in the old version
     // if it's there, return it and clear the location
     private getInterpreterFromChangeOfOlderVersionOfExtension(): string | undefined {
@@ -150,14 +159,6 @@ export class JupyterInterpreterService {
         // Clear the cache to not check again
         this.oldVersionCacheStateStore.clearCache().ignoreErrors();
         return pythonPath;
-    }
-
-    // Set the specified interpreter as our current selected interpreter
-    private async setAsSelectedInterpreter(interpreter: PythonInterpreter): Promise<void> {
-        // Make sure that our initial set has happened before we allow a set so that
-        // calculation of the initial interpreter doesn't clobber the existing one
-        await this.setInitialInterpreter();
-        this.changeSelectedInterpreterProperty(interpreter);
     }
 
     private changeSelectedInterpreterProperty(interpreter: PythonInterpreter) {

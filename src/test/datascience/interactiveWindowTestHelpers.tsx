@@ -39,19 +39,20 @@ export function closeInteractiveWindow(
 export function runMountedTest(
     name: string,
     // tslint:disable-next-line:no-any
-    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>,
+    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, context: Mocha.Context) => Promise<void>,
     getIOC: () => DataScienceIocContainer
 ) {
-    test(name, async () => {
+    test(name, async function() {
         const ioc = getIOC();
         const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
         if (await jupyterExecution.isNotebookSupported()) {
             addMockData(ioc, 'a=1\na', 1);
             const wrapper = mountWebView(ioc, 'interactive');
-            await testFunc(wrapper);
+            // tslint:disable-next-line: no-invalid-this
+            await testFunc(wrapper, this);
         } else {
-            // tslint:disable-next-line:no-console
-            console.log(`${name} skipped, no Jupyter installed.`);
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
         }
     });
 }

@@ -69,7 +69,9 @@ suite('Daemon - Python Daemon Pool', () => {
         daemonProc.stdout = new EventEmitter() as any;
         daemonProc.stderr = new EventEmitter() as any;
 
-        when(pythonExecService.execModuleObservable('datascience.daemon', anything(), anything())).thenReturn({
+        when(
+            pythonExecService.execModuleObservable('vscode_datascience_helpers.daemon', anything(), anything())
+        ).thenReturn({
             proc: daemonProc,
             dispose: noop,
             out: undefined as any

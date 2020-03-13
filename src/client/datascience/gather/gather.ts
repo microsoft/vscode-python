@@ -25,6 +25,7 @@ export class GatherProvider implements IGatherProvider {
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(ICommandManager) private commandManager: ICommandManager
     ) {
+        // Disable gather if we're not running on insiders.
         this._enabled =
             this.configService.getSettings().datascience.enableGather &&
             this.configService.getSettings().insidersChannel !== 'off'

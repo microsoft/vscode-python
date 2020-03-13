@@ -21,9 +21,10 @@ suite('DataScience PlotViewer tests', () => {
     let plotViewerProvider: IPlotViewerProvider;
     let ioc: DataScienceIocContainer;
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        await ioc.activate();
     });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {

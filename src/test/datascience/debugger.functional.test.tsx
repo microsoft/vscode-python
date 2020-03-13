@@ -22,7 +22,7 @@ import {
 } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
-import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
+import { getConnectionInfo } from './jupyterHelpers';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
@@ -54,6 +54,7 @@ suite('DataScience Debugger tests', () => {
         ioc = createContainer();
         mockDebuggerService = ioc.serviceManager.get<IDebugService>(IDebugService) as MockDebuggerService;
         processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
+        return ioc.activate();
     });
 
     teardown(async () => {
@@ -223,7 +224,7 @@ suite('DataScience Debugger tests', () => {
     });
 
     test('Debug remote', async () => {
-        const python = await getNotebookCapableInterpreter(ioc, processFactory);
+        const python = await ioc.getJupyterCapableInterpreter();
         const procService = await processFactory.create();
 
         if (procService && python) {

@@ -126,7 +126,7 @@ export class JupyterInterpreterSubCommandExecutionService
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: token };
-        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getServerInfo.py');
         const serverInfoString = await daemon.exec([file], newOptions);
 
         let serverInfos: JupyterServerInfo[];
@@ -199,7 +199,14 @@ export class JupyterInterpreterSubCommandExecutionService
             // Possible we cannot import ipykernel for some reason. (use as backup option).
             const stdoutFromFileExecPromise = daemon
                 .exec(
-                    [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterKernels.py')],
+                    [
+                        path.join(
+                            EXTENSION_ROOT_DIR,
+                            'pythonFiles',
+                            'vscode_datascience_helpers',
+                            'getJupyterKernels.py'
+                        )
+                    ],
                     spawnOptions
                 )
                 .then(output => output.stdout)

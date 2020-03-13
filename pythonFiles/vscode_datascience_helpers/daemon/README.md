@@ -7,7 +7,7 @@ const env = {
     PYTHONUNBUFFERED: '1',
     PYTHONPATH: '<extension dir>/pythonFiles:<extension dir>/pythonFiles/lib/python'
 }
-const childProcess = cp.spawn('<fully qualifieid python path>', ['-m', 'datascience.daemon', '-v', '--log-file=log.log'], {env});
+const childProcess = cp.spawn('<fully qualifieid python path>', ['-m', 'vscode_datascience_helpers.daemon', '-v', '--log-file=log.log'], {env});
 const connection = rpc.createMessageConnection(new rpc.StreamMessageReader(childProcess.stdout),new rpc.StreamMessageWriter(childProcess.stdin));
 
 connection.onClose(() => console.error('Closed'));

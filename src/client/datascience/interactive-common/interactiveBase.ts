@@ -326,6 +326,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         super.dispose();
         this.listeners.forEach(l => l.dispose());
         this.updateContexts(undefined);
+
+        // When closing an editor, dispose of the notebook associated with it.
+        // This won't work when we have multiple views of the notebook though. Notebook ownership
+        // should probably move to whatever owns the backing model.
+        return this.notebook?.dispose().then(() => {
+            this._notebook = undefined;
+        });
     }
 
     public startProgress() {
@@ -1412,7 +1419,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Request our new list of variables
         const response: IJupyterVariablesResponse = this._notebook
             ? await this.jupyterVariables.getVariables(this._notebook, args)
-            : { totalCount: 0, pageResponse: [], pageStartIndex: args.startIndex, executionCount: args.executionCount };
+            : {
+                  totalCount: 0,
+                  pageResponse: [],
+                  pageStartIndex: args?.startIndex,
+                  executionCount: args?.executionCount
+              };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 import { interfaces } from 'inversify';
+import { IDisposable } from '../common/types';
 
 //tslint:disable:callable-types
 // tslint:disable-next-line:interface-name
@@ -25,7 +26,7 @@ export type ClassType<T> = {
 
 export const IServiceManager = Symbol('IServiceManager');
 
-export interface IServiceManager {
+export interface IServiceManager extends IDisposable {
     add<T>(
         serviceIdentifier: interfaces.ServiceIdentifier<T>,
         constructor: ClassType<T>,

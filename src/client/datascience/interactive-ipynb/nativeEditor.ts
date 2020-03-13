@@ -512,18 +512,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     protected async close(): Promise<void> {
         // Fire our event
         this.closedEvent.fire(this);
-
-        // Restart our kernel so that execution counts are reset
-        let oldAsk: boolean | undefined = false;
-        const settings = this.configuration.getSettings(await this.getOwningResource());
-        if (settings && settings.datascience) {
-            oldAsk = settings.datascience.askForKernelRestart;
-            settings.datascience.askForKernelRestart = false;
-        }
-        await this.restartKernel(true);
-        if (oldAsk && settings && settings.datascience) {
-            settings.datascience.askForKernelRestart = true;
-        }
     }
 
     protected saveAll() {

@@ -21,7 +21,7 @@ import { Cancellation, CancellationError } from '../../client/common/cancellatio
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory, Output } from '../../client/common/process/types';
+import { IPythonExecutionFactory, IPythonExecutionService, Output } from '../../client/common/process/types';
 import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -52,10 +52,9 @@ import {
 } from '../../client/interpreter/contracts';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
-import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getConnectionInfo, getIPConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
+import { getConnectionInfo, getIPConnectionInfo } from './jupyterHelpers';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
 
@@ -63,26 +62,24 @@ import { MockPythonService } from './mockPythonService';
 suite('DataScience notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
-    let processFactory: IProcessServiceFactory;
+    let pythonFactory: IPythonExecutionFactory;
     let ioc: DataScienceIocContainer;
     let modifiedConfig = false;
     const baseUri = Uri.file('foo.py');
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        await ioc.activate();
     });
 
     teardown(async () => {
         try {
             if (modifiedConfig) {
                 traceInfo('Attempting to put jupyter default config back');
-                const python = await getNotebookCapableInterpreter(ioc, processFactory);
-                const procService = await processFactory.create();
-                if (procService && python) {
-                    await procService.exec(python.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], {
-                        env: process.env
-                    });
+                const procService = await createPythonService();
+                if (procService) {
+                    await procService.exec(['-m', 'jupyter', 'notebook', '--generate-config', '-y'], {});
                 }
             }
             traceInfo('Shutting down after test.');
@@ -104,10 +101,6 @@ suite('DataScience notebook tests', () => {
         if (process.env.PYTHONWARNINGS) {
             delete process.env.PYTHONWARNINGS;
         }
-    });
-
-    suiteTeardown(() => {
-        asyncDump();
     });
 
     function escapePath(p: string) {
@@ -274,7 +267,7 @@ suite('DataScience notebook tests', () => {
                 rebindFunc();
             }
             jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-            processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
+            pythonFactory = ioc.serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
             console.log(`Starting test ${name} ...`);
             if (await jupyterExecution.isNotebookSupported()) {
                 // tslint:disable-next-line: no-invalid-this
@@ -345,12 +338,29 @@ suite('DataScience notebook tests', () => {
         }
     }
 
+    async function createPythonService(versionRequirement?: number): Promise<IPythonExecutionService | undefined> {
+        if (!ioc.mockJupyter) {
+            const python = await ioc.getJupyterCapableInterpreter();
+
+            if (
+                python &&
+                python.version?.major &&
+                (!versionRequirement || python.version?.major > versionRequirement)
+            ) {
+                return pythonFactory.createActivatedEnvironment({
+                    resource: undefined,
+                    interpreter: python,
+                    allowEnvironmentFetchExceptions: true,
+                    bypassCondaExecution: true
+                });
+            }
+        }
+    }
+
     runTest('Remote Self Certs', async (_this: Mocha.Context) => {
-        const python = await getNotebookCapableInterpreter(ioc, processFactory);
+        const pythonService = await createPythonService(2);
 
-        if (python && python.version?.major && python.version?.major > 2) {
-            const procService = await processFactory.create();
-
+        if (pythonService) {
             // We will only connect if we allow for self signed cert connections
             ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
 
@@ -380,8 +390,7 @@ suite('DataScience notebook tests', () => {
                 'jkey.key'
             );
 
-            const exeResult = procService.execObservable(
-                python.path,
+            const exeResult = pythonService.execObservable(
                 [
                     '-m',
                     'jupyter',
@@ -391,7 +400,6 @@ suite('DataScience notebook tests', () => {
                     `--keyfile=${keyFile}`
                 ],
                 {
-                    env: process.env,
                     throwOnStdErr: false
                 }
             );
@@ -429,10 +437,9 @@ suite('DataScience notebook tests', () => {
     runTest(
         'Remote No Auth',
         async () => {
-            const python = await getNotebookCapableInterpreter(ioc, processFactory);
-            const procService = await processFactory.create();
+            const pythonService = await createPythonService();
 
-            if (procService && python) {
+            if (pythonService) {
                 const connectionFound = createDeferred();
                 const configFile = path.join(
                     EXTENSION_ROOT_DIR,
@@ -442,10 +449,9 @@ suite('DataScience notebook tests', () => {
                     'serverConfigFiles',
                     'remoteNoAuth.py'
                 );
-                const exeResult = procService.execObservable(
-                    python.path,
+                const exeResult = pythonService.execObservable(
                     ['-m', 'jupyter', 'notebook', `--config=${configFile}`],
-                    { env: process.env, throwOnStdErr: false }
+                    { throwOnStdErr: false }
                 );
                 disposables.push(exeResult);
 
@@ -514,10 +520,9 @@ suite('DataScience notebook tests', () => {
     );
 
     runTest('Remote Password', async () => {
-        const python = await getNotebookCapableInterpreter(ioc, processFactory);
-        const procService = await processFactory.create();
+        const pythonService = await createPythonService();
 
-        if (procService && python) {
+        if (pythonService) {
             const connectionFound = createDeferred();
             const configFile = path.join(
                 EXTENSION_ROOT_DIR,
@@ -527,11 +532,9 @@ suite('DataScience notebook tests', () => {
                 'serverConfigFiles',
                 'remotePassword.py'
             );
-            const exeResult = procService.execObservable(
-                python.path,
-                ['-m', 'jupyter', 'notebook', `--config=${configFile}`],
-                { env: process.env, throwOnStdErr: false }
-            );
+            const exeResult = pythonService.execObservable(['-m', 'jupyter', 'notebook', `--config=${configFile}`], {
+                throwOnStdErr: false
+            });
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
@@ -561,10 +564,9 @@ suite('DataScience notebook tests', () => {
     });
 
     runTest('Remote', async () => {
-        const python = await getNotebookCapableInterpreter(ioc, processFactory);
-        const procService = await processFactory.create();
+        const pythonService = await createPythonService();
 
-        if (procService && python) {
+        if (pythonService) {
             const connectionFound = createDeferred();
             const configFile = path.join(
                 EXTENSION_ROOT_DIR,
@@ -574,11 +576,9 @@ suite('DataScience notebook tests', () => {
                 'serverConfigFiles',
                 'remoteToken.py'
             );
-            const exeResult = procService.execObservable(
-                python.path,
-                ['-m', 'jupyter', 'notebook', `--config=${configFile}`],
-                { env: process.env, throwOnStdErr: false }
-            );
+            const exeResult = pythonService.execObservable(['-m', 'jupyter', 'notebook', `--config=${configFile}`], {
+                throwOnStdErr: false
+            });
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
@@ -626,7 +626,6 @@ suite('DataScience notebook tests', () => {
 
     test('Not installed', async () => {
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-        processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
         // Rewire our data we use to search for processes
         @injectable()
         class EmptyInterpreterService implements IInterpreterService {
@@ -697,7 +696,7 @@ suite('DataScience notebook tests', () => {
         // Make sure we have a change dir happening
         const settings = { ...ioc.getSettings().datascience };
         settings.changeDirOnImportExport = true;
-        ioc.forceSettingsChanged(ioc.getSettings().pythonPath, settings);
+        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, settings);
 
         const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
         const newFolderPath = path.join(
@@ -923,7 +922,7 @@ suite('DataScience notebook tests', () => {
         }
 
         // Force a settings changed so that all of the cached data is cleared
-        ioc.forceSettingsChanged('/usr/bin/test3/python');
+        ioc.forceSettingsChanged(undefined, '/usr/bin/test3/python');
 
         assert.ok(
             await testCancelableMethod(
@@ -1173,17 +1172,13 @@ plt.show()`,
     ]);
 
     async function generateNonDefaultConfig() {
-        const usable = await getNotebookCapableInterpreter(ioc, processFactory);
+        const usable = await ioc.getJupyterCapableInterpreter();
         assert.ok(usable, 'Cant find jupyter enabled python');
 
         // Manually generate an invalid jupyter config
-        const procService = await processFactory.create();
+        const procService = await createPythonService();
         assert.ok(procService, 'Can not get a process service');
-        const results = await procService!.exec(
-            usable!.path,
-            ['-m', 'jupyter', 'notebook', '--generate-config', '-y'],
-            { env: process.env }
-        );
+        const results = await procService!.exec(['-m', 'jupyter', 'notebook', '--generate-config', '-y'], {});
 
         // Results should have our path to the config.
         const match = /^.*\s+(.*jupyter_notebook_config.py)\s+.*$/m.exec(results.stdout);
@@ -1224,7 +1219,7 @@ plt.show()`,
             const tempDir = os.tmpdir();
             const settings = ioc.getSettings();
             settings.datascience.jupyterCommandLineArguments = ['--NotebookApp.port=9975', `--notebook-dir=${tempDir}`];
-            ioc.forceSettingsChanged(settings.pythonPath, settings.datascience);
+            ioc.forceSettingsChanged(undefined, settings.pythonPath, settings.datascience);
             const notebook = await createNotebook(true);
             assert.ok(notebook, 'Server should have started on port 9975');
             const hs = notebook as HostJupyterNotebook;
@@ -1441,7 +1436,6 @@ plt.show()`,
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, instance(application));
 
             jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-            processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
 
             // Change notebook command to fail with some goofy output
             await disableJupyter(ioc.workingInterpreter.path);

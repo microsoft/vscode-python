@@ -171,11 +171,13 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             const options = capture(processService.shellExec).first()[1];
 
                             const expectedShell = defaultShells[osType.value];
+                            // tslint:disable-next-line: chai-vague-errors
                             expect(options).to.deep.equal({
                                 shell: expectedShell,
                                 env: envVars,
                                 timeout: 30000,
-                                maxBuffer: 1000 * 1000
+                                maxBuffer: 1000 * 1000,
+                                throwOnStdErr: false
                             });
                         });
                         test('Use current process variables if there are no custom variables', async () => {
@@ -204,11 +206,13 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             const options = capture(processService.shellExec).first()[1];
 
                             const expectedShell = defaultShells[osType.value];
+                            // tslint:disable-next-line: chai-vague-errors
                             expect(options).to.deep.equal({
                                 env: envVars,
                                 shell: expectedShell,
                                 timeout: 30000,
-                                maxBuffer: 1000 * 1000
+                                maxBuffer: 1000 * 1000,
+                                throwOnStdErr: false
                             });
                         });
                         test('Error must be swallowed when activation fails', async () => {

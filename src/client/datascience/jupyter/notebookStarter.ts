@@ -147,7 +147,7 @@ export class NotebookStarter implements Disposable {
 
             // Something else went wrong. See if the local proc died or not.
             if (exitCode !== 0) {
-                throw new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString()));
+                throw new Error(localize.DataScience.jupyterServerCrashed().format(exitCode?.toString()));
             } else {
                 throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
             }

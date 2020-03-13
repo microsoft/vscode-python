@@ -7,7 +7,7 @@ import { interfaces } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
-import { anything, instance, mock, when } from 'ts-mockito';
+import { anything, instance, mock, reset, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import {
     CancellationTokenSource,
@@ -18,7 +18,6 @@ import {
     FileSystemWatcher,
     Memento,
     Uri,
-    WorkspaceConfiguration,
     WorkspaceFolder,
     WorkspaceFoldersChangeEvent
 } from 'vscode';
@@ -80,9 +79,10 @@ import {
     IWebPanelMessageListener,
     IWebPanelOptions,
     IWebPanelProvider,
-    IWorkspaceService,
-    WebPanelMessage
+    IWorkspaceService
 } from '../../client/common/application/types';
+import { WebPanel } from '../../client/common/application/webPanels/webPanel';
+import { WebPanelProvider } from '../../client/common/application/webPanels/webPanelProvider';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
@@ -150,6 +150,7 @@ import {
     IPythonExtensionBanner,
     IsWindows,
     ProductType,
+    Resource,
     WORKSPACE_MEMENTO
 } from '../../client/common/types';
 import { Deferred, sleep } from '../../client/common/utils/async';
@@ -254,7 +255,10 @@ import {
 } from '../../client/datascience/types';
 import { ProtocolParser } from '../../client/debugger/debugAdapter/Common/protocolParser';
 import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
-import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
+import {
+    EnvironmentActivationService,
+    EnvironmentActivationServiceCache
+} from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
@@ -294,7 +298,6 @@ import {
 } from '../../client/interpreter/contracts';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
-import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
 import { PythonInterpreterLocatorService } from '../../client/interpreter/locators';
 import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
@@ -327,6 +330,7 @@ import {
 } from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
+import { registerInterpreterTypes } from '../../client/interpreter/serviceRegistry';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
@@ -348,27 +352,38 @@ import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisO
 import { MockLanguageServerProxy } from './mockLanguageServerProxy';
 import { MockLiveShareApi } from './mockLiveShare';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
+import { MockWorkspaceFolder } from './mockWorkspaceFolder';
 import { blurWindow, createMessageEvent } from './reactHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
+    public get workingInterpreter() {
+        return this.workingPython;
+    }
+
+    public get workingInterpreter2() {
+        return this.workingPython2;
+    }
+
+    public get onContextSet(): Event<{ name: string; value: boolean }> {
+        return this.contextSetEvent.event;
+    }
+
+    public get mockJupyter(): MockJupyterManager | undefined {
+        return this.jupyterMock ? this.jupyterMock.getManager() : undefined;
+    }
+    private static jupyterInterpreters: PythonInterpreter[] = [];
     public webPanelListener: IWebPanelMessageListener | undefined;
     public readonly useCommandFinderForJupyterServer = false;
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
     public wrapperCreatedPromise: Deferred<boolean> | undefined;
     public postMessage: ((ev: MessageEvent) => void) | undefined;
-    public mockedWorkspaceConfig!: WorkspaceConfiguration;
     public applicationShell!: TypeMoq.IMock<IApplicationShell>;
     // tslint:disable-next-line:no-any
     public datascience!: TypeMoq.IMock<IDataScience>;
     private missedMessages: any[] = [];
-    private pythonSettings = new (class extends PythonSettings {
-        public fireChangeEvent() {
-            this.changed.fire();
-        }
-    })(undefined, new MockAutoSelectionService());
     private commandManager: MockCommandManager = new MockCommandManager();
     private setContexts: Record<string, boolean> = {};
     private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{
@@ -401,8 +416,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     };
     private extraListeners: ((m: string, p: any) => void)[] = [];
 
-    private webPanelProvider: TypeMoq.IMock<IWebPanelProvider> | undefined;
+    private webPanelProvider = mock(WebPanelProvider);
     private settingsMap = new Map<string, any>();
+    private configMap = new Map<string, MockWorkspaceConfiguration>();
+    private emptyConfig = new MockWorkspaceConfiguration();
+    private workspaceFolders: MockWorkspaceFolder[] = [];
+    private defaultPythonPath: string | undefined;
     private kernelServiceMock = mock(KernelService);
 
     constructor() {
@@ -411,18 +430,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
         this.shouldMockJupyter = !isRollingBuild;
         this.asyncRegistry = new AsyncDisposableRegistry();
-    }
-
-    public get workingInterpreter() {
-        return this.workingPython;
-    }
-
-    public get workingInterpreter2() {
-        return this.workingPython2;
-    }
-
-    public get onContextSet(): Event<{ name: string; value: boolean }> {
-        return this.contextSetEvent.event;
     }
 
     public async dispose(): Promise<void> {
@@ -438,7 +445,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         // Bounce this so that our editor has time to shutdown
-        await sleep(10);
+        await sleep(150);
 
         // Clear out the monaco global services. Some of these services are preventing shutdown.
         // tslint:disable: no-require-imports
@@ -460,11 +467,39 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (config.getCSSBasedConfiguration) {
             config.getCSSBasedConfiguration().dispose();
         }
+
+        // Because there are outstanding promises holding onto this object, clear out everything we can
+        this.workspaceFolders = [];
+        this.settingsMap.clear();
+        this.configMap.clear();
+        this.setContexts = {};
+        this.extraListeners = [];
+        this.webPanelListener = undefined;
+        reset(this.webPanelProvider);
+
+        // Turn off the static maps for the environment and conda services. Otherwise this
+        // can mess up tests that don't depend upon them
+        CacheableLocatorPromiseCache.forceUseNormal();
+        EnvironmentActivationServiceCache.forceUseNormal();
     }
 
     //tslint:disable:max-func-body-length
     public registerDataScienceTypes(useCustomEditor: boolean = false) {
-        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+        // Inform the cacheable locator service to use a static map so that it stays in memory in between tests
+        CacheableLocatorPromiseCache.forceUseStatic();
+
+        // Do the same thing for the environment variable activation service.
+        EnvironmentActivationServiceCache.forceUseStatic();
+
+        // Make sure the default python path is set.
+        this.defaultPythonPath = this.findPythonPath();
+
+        // Create the workspace service first as it's used to set config values.
+        this.createWorkspaceService();
+
+        // Setup our webpanel provider to create our dummy web panel
+        when(this.webPanelProvider.create(anything())).thenCall(this.onCreateWebPanel.bind(this));
+        this.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, instance(this.webPanelProvider));
 
         this.registerFileSystemTypes();
         this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
@@ -488,17 +523,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IThemeFinder>(IThemeFinder, ThemeFinder);
         this.serviceManager.addSingleton<ICodeCssGenerator>(ICodeCssGenerator, CodeCssGenerator);
         this.serviceManager.addSingleton<IStatusProvider>(IStatusProvider, StatusProvider);
-        this.serviceManager.add<IKnownSearchPathsForInterpreters>(
-            IKnownSearchPathsForInterpreters,
-            KnownSearchPathsForInterpreters
-        );
         this.serviceManager.addSingletonInstance<IAsyncDisposableRegistry>(
             IAsyncDisposableRegistry,
             this.asyncRegistry
-        );
-        this.serviceManager.addSingleton<IPythonInPathCommandProvider>(
-            IPythonInPathCommandProvider,
-            PythonInPathCommandProvider
         );
         this.serviceManager.addSingleton<IEnvironmentActivationService>(
             IEnvironmentActivationService,
@@ -581,7 +608,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             TerminalActivationProviders.pipenv
         );
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
-        this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
 
         //const configuration = this.serviceManager.get<IConfigurationService>(IConfigurationService);
         //const pythonSettings = configuration.getSettings();
@@ -634,13 +660,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IInteractiveWindowListener
         ]);
         this.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
-        this.serviceManager.addSingleton<InterpeterHashProviderFactory>(
-            InterpeterHashProviderFactory,
-            InterpeterHashProviderFactory
-        );
-        this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
-        this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
         this.serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
         this.serviceManager.addSingleton<IDiagnosticsService>(
             IDiagnosticsService,
@@ -661,8 +680,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
         this.serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
         this.serviceManager.addSingleton<KernelSwitcher>(KernelSwitcher, KernelSwitcher);
-        this.serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
-        this.serviceManager.addSingleton<IShebangCodeLensProvider>(IShebangCodeLensProvider, ShebangCodeLensProvider);
         this.serviceManager.addSingleton<IProductService>(IProductService, ProductService);
         this.serviceManager.addSingleton<IProductPathService>(
             IProductPathService,
@@ -751,130 +768,24 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
         this.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, this.commandManager);
 
-        // Also setup a mock execution service and interpreter service
+        // Mock the app shell
         const appShell = (this.applicationShell = TypeMoq.Mock.ofType<IApplicationShell>());
-        // const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        const workspaceService = mock(WorkspaceService);
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
-        const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
         this.datascience = TypeMoq.Mock.ofType<IDataScience>();
 
-        // Setup default settings
-        this.pythonSettings.datascience = {
-            allowImportFromNotebook: true,
-            jupyterLaunchTimeout: 60000,
-            jupyterLaunchRetries: 3,
-            enabled: true,
-            jupyterServerURI: 'local',
-            // tslint:disable-next-line: no-invalid-template-strings
-            notebookFileRoot: '${fileDirname}',
-            changeDirOnImportExport: false,
-            useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000,
-            searchForJupyter: true,
-            showCellInputCode: true,
-            collapseCellInputCodeByDefault: true,
-            allowInput: true,
-            maxOutputSize: 400,
-            errorBackgroundColor: '#FFFFFF',
-            sendSelectionToInteractiveWindow: false,
-            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            variableExplorerExclude: 'module;function;builtin_function_or_method',
-            liveShareConnectionTimeout: 100,
-            enablePlotViewer: true,
-            stopOnFirstLineWhileDebugging: true,
-            stopOnError: true,
-            addGotoCodeLenses: true,
-            enableCellCodeLens: true,
-            runStartupCommands: '',
-            debugJustMyCode: true,
-            variableQueries: [],
-            jupyterCommandLineArguments: []
-        };
-        this.pythonSettings.jediEnabled = false;
-        this.pythonSettings.downloadLanguageServer = false;
-
-        const workspaceConfig = (this.mockedWorkspaceConfig = mock(MockWorkspaceConfiguration));
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(this.getSettings.bind(this));
-        when(workspaceConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
-        when(workspaceConfig.has(anything())).thenReturn(false);
-        when((workspaceConfig as any).then).thenReturn(undefined);
-        when(workspaceService.getConfiguration(anything())).thenReturn(instance(workspaceConfig));
-        when(workspaceService.getConfiguration(anything(), anything())).thenReturn(instance(workspaceConfig));
-        when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
-        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
 
-        interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         const startTime = Date.now();
         this.datascience.setup(d => d.activationStartTime).returns(() => startTime);
-
-        class MockFileSystemWatcher implements FileSystemWatcher {
-            public ignoreCreateEvents: boolean = false;
-            public ignoreChangeEvents: boolean = false;
-            public ignoreDeleteEvents: boolean = false;
-            //tslint:disable-next-line:no-any
-            public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
-                return { dispose: noop };
-            }
-            //tslint:disable-next-line:no-any
-            public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
-                return { dispose: noop };
-            }
-            //tslint:disable-next-line:no-any
-            public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
-                return { dispose: noop };
-            }
-            public dispose() {
-                noop();
-            }
-        }
-        when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(
-            new MockFileSystemWatcher()
-        );
-        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(new MockFileSystemWatcher());
-        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
-        const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
-        when(workspaceService.workspaceFolders).thenReturn([workspaceFolder]);
-        when(workspaceService.rootPath).thenReturn('~');
-
-        // Look on the path for python
-        const pythonPath = this.findPythonPath();
-
-        this.pythonSettings.pythonPath = pythonPath;
-        const folders = ['Envs', '.virtualenvs'];
-        this.pythonSettings.venvFolders = folders;
-        this.pythonSettings.venvPath = path.join('~', 'foo');
-        this.pythonSettings.terminal = {
-            executeInFileDir: false,
-            launchArgs: [],
-            activateEnvironment: true,
-            activateEnvInCurrentTerminal: false
-        };
 
         this.serviceManager.addSingleton<IEnvironmentVariablesProvider>(
             IEnvironmentVariablesProvider,
             EnvironmentVariablesProvider
         );
-        this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-            IVirtualEnvironmentsSearchPathProvider,
-            GlobalVirtualEnvironmentsSearchPathProvider,
-            'global'
-        );
-        this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
-            IVirtualEnvironmentsSearchPathProvider,
-            WorkspaceVirtualEnvironmentsSearchPathProvider,
-            'workspace'
-        );
-        this.serviceManager.addSingleton<IVirtualEnvironmentManager>(
-            IVirtualEnvironmentManager,
-            VirtualEnvironmentManager
-        );
 
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         this.serviceManager.addSingleton<IClipboard>(IClipboard, ClipboardService);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
-        this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
         this.serviceManager.addSingletonInstance<IConfigurationService>(
             IConfigurationService,
             configurationService.object
@@ -888,75 +799,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         this.serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
 
-        this.serviceManager.add<IInterpreterWatcher>(
-            IInterpreterWatcher,
-            WorkspaceVirtualEnvWatcherService,
-            WORKSPACE_VIRTUAL_ENV_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterWatcherBuilder>(
-            IInterpreterWatcherBuilder,
-            InterpreterWatcherBuilder
-        );
-
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            PythonInterpreterLocatorService,
-            INTERPRETER_LOCATOR_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            CondaEnvFileService,
-            CONDA_ENV_FILE_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            CondaEnvService,
-            CONDA_ENV_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            CurrentPathService,
-            CURRENT_PATH_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            GlobalVirtualEnvService,
-            GLOBAL_VIRTUAL_ENV_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            WorkspaceVirtualEnvService,
-            WORKSPACE_VIRTUAL_ENV_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            PipEnvService,
-            PIPENV_SERVICE
-        );
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(IPipEnvService, PipEnvService);
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            WindowsRegistryService,
-            WINDOWS_REGISTRY_SERVICE
-        );
-
-        this.serviceManager.addSingleton<IInterpreterLocatorService>(
-            IInterpreterLocatorService,
-            KnownPathsService,
-            KNOWN_PATH_SERVICE
-        );
-
-        this.serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
-        this.serviceManager.addSingleton<IInterpreterLocatorHelper>(
-            IInterpreterLocatorHelper,
-            InterpreterLocatorHelper
-        );
-        this.serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, InterpreterComparer);
-        this.serviceManager.addSingleton<IInterpreterVersionService>(
-            IInterpreterVersionService,
-            InterpreterVersionService
-        );
-
         const globalStorage = this.serviceManager.get<Memento>(IMemento, GLOBAL_MEMENTO);
         const localStorage = this.serviceManager.get<Memento>(IMemento, WORKSPACE_MEMENTO);
 
@@ -964,20 +806,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IPersistentStateFactory>(
             IPersistentStateFactory,
             new TestPersistentStateFactory(globalStorage, localStorage)
-        );
-
-        // Inform the cacheable locator service to use a static map so that it stays in memory in between tests
-        CacheableLocatorPromiseCache.forceUseStatic();
-
-        this.serviceManager.addSingletonInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
-
-        this.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(
-            IPythonPathUpdaterServiceFactory,
-            PythonPathUpdaterServiceFactory
-        );
-        this.serviceManager.addSingleton<IPythonPathUpdaterServiceManager>(
-            IPythonPathUpdaterServiceManager,
-            PythonPathUpdaterService
         );
 
         const currentProcess = new CurrentProcess();
@@ -1033,14 +861,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             );
         }
 
-        // Don't use conda at all during functional tests.
-        const condaService = TypeMoq.Mock.ofType<ICondaService>();
-        this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
-        condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
-        condaService
-            .setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
-            .returns(() => Promise.resolve(false));
-        condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);
+        const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
+        interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
 
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {
@@ -1048,12 +870,156 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             // When using mocked Jupyter, default to using default kernel.
             when(this.kernelServiceMock.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(this.kernelServiceMock));
+
+            this.serviceManager.addSingleton<InterpeterHashProviderFactory>(
+                InterpeterHashProviderFactory,
+                InterpeterHashProviderFactory
+            );
+            this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+            this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+            this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+            this.serviceManager.add<IInterpreterWatcher>(
+                IInterpreterWatcher,
+                WorkspaceVirtualEnvWatcherService,
+                WORKSPACE_VIRTUAL_ENV_SERVICE
+            );
+            this.serviceManager.addSingleton<IInterpreterWatcherBuilder>(
+                IInterpreterWatcherBuilder,
+                InterpreterWatcherBuilder
+            );
+            this.serviceManager.add<IInterpreterWatcher>(
+                IInterpreterWatcher,
+                WorkspaceVirtualEnvWatcherService,
+                WORKSPACE_VIRTUAL_ENV_SERVICE
+            );
+            this.serviceManager.addSingleton<IInterpreterWatcherBuilder>(
+                IInterpreterWatcherBuilder,
+                InterpreterWatcherBuilder
+            );
+
+            this.serviceManager.addSingleton<IInterpreterLocatorService>(
+                IInterpreterLocatorService,
+                PythonInterpreterLocatorService,
+                INTERPRETER_LOCATOR_SERVICE
+            );
+            this.serviceManager.addSingleton<IInterpreterLocatorService>(
+                IInterpreterLocatorService,
+                CondaEnvFileService,
+                CONDA_ENV_FILE_SERVICE
+            );
+            this.serviceManager.addSingleton<IInterpreterLocatorService>(
+                IInterpreterLocatorService,
+                CondaEnvService,
+                CONDA_ENV_SERVICE
+            );
+            this.serviceManager.addSingleton<IInterpreterLocatorService>(
+                IInterpreterLocatorService,
+                CurrentPathService,
+                CURRENT_PATH_SERVICE
+            );
+            this.serviceManager.addSingleton<IInterpreterLocatorService>(
+                IInterpreterLocatorService,
+                GlobalVirtualEnvService,
+                GLOBAL_VIRTUAL_ENV_SERVICE
+            );
+            this.serviceManager.addSingleton<IInterpreterLocatorService>(
+                IInterpreterLocatorService,
+                WorkspaceVirtualEnvService,
+                WORKSPACE_VIRTUAL_ENV_SERVICE
+            );
+            this.serviceManager.addSingleton<IInterpreterLocatorService>(
+                IInterpreterLocatorService,
+                PipEnvService,
+                PIPENV_SERVICE
+            );
+            this.serviceManager.addSingleton<IInterpreterLocatorService>(IPipEnvService, PipEnvService);
+            this.serviceManager.addSingleton<IInterpreterLocatorService>(
+                IInterpreterLocatorService,
+                WindowsRegistryService,
+                WINDOWS_REGISTRY_SERVICE
+            );
+
+            this.serviceManager.addSingleton<IInterpreterLocatorService>(
+                IInterpreterLocatorService,
+                KnownPathsService,
+                KNOWN_PATH_SERVICE
+            );
+
+            this.serviceManager.addSingleton<IInterpreterHelper>(IInterpreterHelper, InterpreterHelper);
+            this.serviceManager.addSingleton<IInterpreterLocatorHelper>(
+                IInterpreterLocatorHelper,
+                InterpreterLocatorHelper
+            );
+            this.serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, InterpreterComparer);
+            this.serviceManager.addSingleton<IInterpreterVersionService>(
+                IInterpreterVersionService,
+                InterpreterVersionService
+            );
+            this.serviceManager.addSingleton<IPythonInPathCommandProvider>(
+                IPythonInPathCommandProvider,
+                PythonInPathCommandProvider
+            );
+
+            this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
+            this.serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
+            this.serviceManager.addSingleton<IShebangCodeLensProvider>(
+                IShebangCodeLensProvider,
+                ShebangCodeLensProvider
+            );
+            this.serviceManager.addSingleton<IPythonPathUpdaterServiceFactory>(
+                IPythonPathUpdaterServiceFactory,
+                PythonPathUpdaterServiceFactory
+            );
+            this.serviceManager.addSingleton<IPythonPathUpdaterServiceManager>(
+                IPythonPathUpdaterServiceManager,
+                PythonPathUpdaterService
+            );
+
+            // Don't use conda at all when mocking
+            const condaService = TypeMoq.Mock.ofType<ICondaService>();
+            this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
+            condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
+            condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
+            condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);
+
+            this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
+                IVirtualEnvironmentsSearchPathProvider,
+                GlobalVirtualEnvironmentsSearchPathProvider,
+                'global'
+            );
+            this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
+                IVirtualEnvironmentsSearchPathProvider,
+                WorkspaceVirtualEnvironmentsSearchPathProvider,
+                'workspace'
+            );
+            this.serviceManager.addSingleton<IVirtualEnvironmentManager>(
+                IVirtualEnvironmentManager,
+                VirtualEnvironmentManager
+            );
+            this.serviceManager.add<IKnownSearchPathsForInterpreters>(
+                IKnownSearchPathsForInterpreters,
+                KnownSearchPathsForInterpreters
+            );
+            this.serviceManager.addSingleton<IPythonInPathCommandProvider>(
+                IPythonInPathCommandProvider,
+                PythonInPathCommandProvider
+            );
+            this.serviceManager.addSingletonInstance<IInterpreterDisplay>(
+                IInterpreterDisplay,
+                interpreterDisplay.object
+            );
         } else {
             this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
             this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
-            this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
+
+            // Make sure full interpreter services are available.
+            registerInterpreterTypes(this.serviceManager);
+
+            // Rebind the interpreter display as we don't want to use the real one
+            this.serviceManager.rebindInstance<IInterpreterDisplay>(IInterpreterDisplay, interpreterDisplay.object);
+
             this.serviceManager.addSingleton<IJupyterSessionManagerFactory>(
                 IJupyterSessionManagerFactory,
                 JupyterSessionManagerFactory
@@ -1068,11 +1034,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         };
 
-        appShell
-            .setup(a => a.showErrorMessage(TypeMoq.It.isAnyString()))
-            .returns(e => {
-                throw e;
-            });
+        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(''));
         appShell
             .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(''));
@@ -1093,8 +1055,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
 
-        this.addInterpreter(this.workingPython2, SupportedCommands.all);
-        this.addInterpreter(this.workingPython, SupportedCommands.all);
+        if (this.mockJupyter) {
+            this.addInterpreter(this.workingPython2, SupportedCommands.all);
+            this.addInterpreter(this.workingPython, SupportedCommands.all);
+        }
     }
     public setFileContents(uri: Uri, contents: string) {
         const fileSystem = this.serviceManager.get<IFileSystem>(IFileSystem) as MockFileSystem;
@@ -1106,31 +1070,27 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const activationServices = this.serviceManager.getAll<IExtensionSingleActivationService>(
             IExtensionSingleActivationService
         );
+
         await Promise.all(activationServices.map(a => a.activate()));
+
+        // Then force our interpreter to be one that supports jupyter (unless in a mock state when we don't have to)
+        if (!this.mockJupyter) {
+            const interpreterService = this.serviceManager.get<IInterpreterService>(IInterpreterService);
+            const activeInterpreter = await interpreterService.getActiveInterpreter();
+            if (!activeInterpreter || !(await this.hasJupyter(activeInterpreter))) {
+                const list = await this.getJupyterInterpreters();
+                this.forceSettingsChanged(undefined, list[0].path);
+
+                // Also set this as the interpreter to use for jupyter
+                await this.serviceManager
+                    .get<JupyterInterpreterService>(JupyterInterpreterService)
+                    .setAsSelectedInterpreter(list[0]);
+            }
+        }
     }
 
     public get kernelService() {
         return this.kernelServiceMock;
-    }
-
-    public createWebPanel(): IWebPanel {
-        const webPanel = TypeMoq.Mock.ofType<IWebPanel>();
-        webPanel
-            .setup(p => p.postMessage(TypeMoq.It.isAny()))
-            .callback((m: WebPanelMessage) => {
-                const message = createMessageEvent(m);
-                if (this.postMessage) {
-                    this.postMessage(message);
-                } else {
-                    throw new Error('postMessage callback not defined');
-                }
-            });
-        webPanel.setup(p => p.show(TypeMoq.It.isAny())).returns(() => Promise.resolve());
-
-        // See https://github.com/florinn/typemoq/issues/67 for why this is necessary
-        webPanel.setup((p: any) => p.then).returns(() => undefined);
-
-        return webPanel.object;
     }
 
     // tslint:disable:any
@@ -1144,52 +1104,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             liveShareTest.forceRole(role);
         }
 
-        if (!this.webPanelProvider) {
-            this.webPanelProvider = TypeMoq.Mock.ofType<IWebPanelProvider>();
-            this.serviceManager.addSingletonInstance<IWebPanelProvider>(
-                IWebPanelProvider,
-                this.webPanelProvider.object
-            );
-        } else {
-            this.webPanelProvider.reset();
-        }
-        const webPanel = this.createWebPanel();
-
-        // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        this.webPanelProvider
-            .setup(p => p.create(TypeMoq.It.isAny()))
-            .returns((options: IWebPanelOptions) => {
-                // Keep track of the current listener. It listens to messages through the vscode api
-                this.webPanelListener = options.listener;
-
-                // Send messages that were already posted but were missed.
-                // During normal operation, the react control will not be created before
-                // the webPanelListener
-                if (this.missedMessages.length && this.webPanelListener) {
-                    // This needs to be async because we are being called in the ctor of the webpanel. It can't
-                    // handle some messages during the ctor.
-                    setTimeout(() => {
-                        this.missedMessages.forEach(m =>
-                            this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()
-                        );
-                    }, 0);
-
-                    // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
-                    // create multiple webpanels with the same mount. We need to resend these messages to
-                    // other webpanels that get created with the same mount.
-                }
-
-                // Return our dummy web panel
-                return Promise.resolve(webPanel);
-            });
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.mountReactControl(mount);
-    }
-
-    public createMoqWorkspaceFolder(folderPath: string) {
-        const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
-        folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
-        return folder.object;
     }
 
     public getContext(name: string): boolean {
@@ -1201,14 +1117,32 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     }
 
     public getSettings(resource?: Uri) {
-        const setting = resource ? this.settingsMap.get(resource.toString()) : this.pythonSettings;
-        return setting ? setting : this.pythonSettings;
+        const key = this.getResourceKey(resource);
+        let setting = this.settingsMap.get(key);
+        if (!setting) {
+            // Make sure we have the default config for this resource first.
+            this.getWorkspaceConfig('python', resource);
+            setting = new (class extends PythonSettings {
+                public fireChangeEvent() {
+                    this.changed.fire();
+                }
+            })(resource, new MockAutoSelectionService(), this.serviceManager.get<IWorkspaceService>(IWorkspaceService));
+            this.settingsMap.set(key, setting);
+        }
+        return setting;
     }
 
-    public forceSettingsChanged(newPath: string, datascienceSettings?: IDataScienceSettings) {
-        this.pythonSettings.pythonPath = newPath;
-        this.pythonSettings.datascience = datascienceSettings ? datascienceSettings : this.pythonSettings.datascience;
-        this.pythonSettings.fireChangeEvent();
+    public forceSettingsChanged(resource: Resource, newPath: string, datascienceSettings?: IDataScienceSettings) {
+        const settings = this.getSettings(resource);
+        settings.pythonPath = newPath;
+        settings.datascience = datascienceSettings ? datascienceSettings : settings.datascience;
+
+        // The workspace config must be updated too as a config change event will cause the data to be reread from
+        // the config.
+        const config = this.getWorkspaceConfig('python', resource);
+        config.update('pythonPath', newPath).ignoreErrors();
+        config.update('dataScience', settings.datascience).ignoreErrors();
+        settings.fireChangeEvent();
         this.configChangeEvent.fire({
             affectsConfiguration(_s: string, _r?: Uri): boolean {
                 return true;
@@ -1216,24 +1150,35 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         });
     }
 
-    public async addNewSetting(resource: Uri, pythonPath: string | undefined) {
-        // Force a new config setting to appear.
-        if (!pythonPath) {
-            const active = await this.get<IInterpreterService>(IInterpreterService).getActiveInterpreter(undefined);
-            const list = await this.get<IInterpreterService>(IInterpreterService).getInterpreters(undefined);
-
-            // Should support jupyter? How to enforce this
-            const supportsJupyter = list.filter(l => l.path !== active?.path).filter(f => this.hasJupyter(f.path));
-            pythonPath = supportsJupyter ? supportsJupyter[0].path : undefined;
-        }
-        if (pythonPath) {
-            const newSettings = { ...this.pythonSettings, pythonPath };
-            this.settingsMap.set(resource.toString(), newSettings);
-        }
+    public async getJupyterCapableInterpreter(): Promise<PythonInterpreter | undefined> {
+        const list = await this.getJupyterInterpreters();
+        return list ? list[0] : undefined;
     }
 
-    public get mockJupyter(): MockJupyterManager | undefined {
-        return this.jupyterMock ? this.jupyterMock.getManager() : undefined;
+    public async getJupyterInterpreters(): Promise<PythonInterpreter[]> {
+        // This should be cacheable as we don't install new interpreters during tests
+        if (DataScienceIocContainer.jupyterInterpreters.length > 0) {
+            return DataScienceIocContainer.jupyterInterpreters;
+        }
+        const list = await this.get<IInterpreterService>(IInterpreterService).getInterpreters(undefined);
+        const promises = list.map(f => this.hasJupyter(f).then(b => (b ? f : undefined)));
+        const resolved = await Promise.all(promises);
+        DataScienceIocContainer.jupyterInterpreters = resolved.filter(r => r) as PythonInterpreter[];
+        return DataScienceIocContainer.jupyterInterpreters;
+    }
+
+    public addWorkspaceFolder(folderPath: string) {
+        const workspaceFolder = new MockWorkspaceFolder(folderPath, this.workspaceFolders.length);
+        this.workspaceFolders.push(workspaceFolder);
+        return workspaceFolder;
+    }
+
+    public addResourceToFolder(resource: Uri, folderPath: string) {
+        let folder = this.workspaceFolders.find(f => f.uri.fsPath === folderPath);
+        if (!folder) {
+            folder = this.addWorkspaceFolder(folderPath);
+        }
+        folder.ownedResources.add(resource.toString());
     }
 
     public get<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, name?: string | number | symbol): T {
@@ -1278,13 +1223,180 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (this.wrapperCreatedPromise && !this.wrapperCreatedPromise.resolved) {
             this.wrapperCreatedPromise.resolve();
         }
+
+        // Clear out msg payload
+        delete msg.payload;
     }
 
-    private hasJupyter(pythonPath: string) {
+    public getWorkspaceConfig(section: string | undefined, resource?: Resource): MockWorkspaceConfiguration {
+        if (!section || section !== 'python') {
+            return this.emptyConfig;
+        }
+        const key = this.getResourceKey(resource);
+        let result = this.configMap.get(key);
+        if (!result) {
+            result = this.generatePythonWorkspaceConfig();
+            this.configMap.set(key, result);
+        }
+        return result;
+    }
+
+    private createWebPanel(): IWebPanel {
+        const webPanel = mock(WebPanel);
+        when(webPanel.postMessage(anything())).thenCall(m => {
+            const message = createMessageEvent(m);
+            if (this.postMessage) {
+                this.postMessage(message);
+            }
+            if (m.payload) {
+                delete m.payload;
+            }
+        });
+        when((webPanel as any).then).thenReturn(undefined);
+        return instance(webPanel);
+    }
+
+    private async onCreateWebPanel(options: IWebPanelOptions) {
+        // Keep track of the current listener. It listens to messages through the vscode api
+        this.webPanelListener = options.listener;
+
+        // Send messages that were already posted but were missed.
+        // During normal operation, the react control will not be created before
+        // the webPanelListener
+        if (this.missedMessages.length && this.webPanelListener) {
+            // This needs to be async because we are being called in the ctor of the webpanel. It can't
+            // handle some messages during the ctor.
+            setTimeout(() => {
+                this.missedMessages.forEach(m =>
+                    this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()
+                );
+            }, 0);
+
+            // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
+            // create multiple webpanels with the same mount. We need to resend these messages to
+            // other webpanels that get created with the same mount.
+        }
+
+        // Return our dummy web panel
+        return this.createWebPanel();
+    }
+
+    private generatePythonWorkspaceConfig(): MockWorkspaceConfiguration {
+        // Create a dummy settings just to setup the workspace config
+        const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
+        pythonSettings.pythonPath = this.defaultPythonPath!;
+        pythonSettings.datascience = {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 20000,
+            jupyterLaunchRetries: 3,
+            enabled: true,
+            jupyterServerURI: 'local',
+            // tslint:disable-next-line: no-invalid-template-strings
+            notebookFileRoot: '${fileDirname}',
+            changeDirOnImportExport: false,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true,
+            allowInput: true,
+            maxOutputSize: 400,
+            errorBackgroundColor: '#FFFFFF',
+            sendSelectionToInteractiveWindow: false,
+            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
+            liveShareConnectionTimeout: 100,
+            enablePlotViewer: true,
+            stopOnFirstLineWhileDebugging: true,
+            stopOnError: true,
+            addGotoCodeLenses: true,
+            enableCellCodeLens: true,
+            runStartupCommands: '',
+            debugJustMyCode: true,
+            variableQueries: [],
+            jupyterCommandLineArguments: [],
+            disableJupyterAutoStart: true
+        };
+        pythonSettings.jediEnabled = false;
+        pythonSettings.downloadLanguageServer = false;
+        const folders = ['Envs', '.virtualenvs'];
+        pythonSettings.venvFolders = folders;
+        pythonSettings.venvPath = path.join('~', 'foo');
+        pythonSettings.terminal = {
+            executeInFileDir: false,
+            launchArgs: [],
+            activateEnvironment: true,
+            activateEnvInCurrentTerminal: false
+        };
+
+        // Use these settings to default all of the settings in a python configuration
+        return new MockWorkspaceConfiguration(pythonSettings);
+    }
+
+    private createWorkspaceService() {
+        class MockFileSystemWatcher implements FileSystemWatcher {
+            public ignoreCreateEvents: boolean = false;
+            public ignoreChangeEvents: boolean = false;
+            public ignoreDeleteEvents: boolean = false;
+            //tslint:disable-next-line:no-any
+            public onDidChange(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            //tslint:disable-next-line:no-any
+            public onDidDelete(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            //tslint:disable-next-line:no-any
+            public onDidCreate(_listener: (e: Uri) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+                return { dispose: noop };
+            }
+            public dispose() {
+                noop();
+            }
+        }
+
+        const workspaceService = mock(WorkspaceService);
+        this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
+        when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
+
+        // Create another config for other parts of the workspace config.
+        when(workspaceService.getConfiguration(anything())).thenCall(this.getWorkspaceConfig.bind(this));
+        when(workspaceService.getConfiguration(anything(), anything())).thenCall(this.getWorkspaceConfig.bind(this));
+        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+
+        when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(
+            new MockFileSystemWatcher()
+        );
+        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(new MockFileSystemWatcher());
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+        when(workspaceService.workspaceFolders).thenReturn(this.workspaceFolders);
+        when(workspaceService.rootPath).thenReturn(testWorkspaceFolder);
+        when(workspaceService.getWorkspaceFolder(anything())).thenCall(this.getWorkspaceFolder.bind(this));
+        this.addWorkspaceFolder(testWorkspaceFolder);
+        return workspaceService;
+    }
+
+    private getWorkspaceFolder(uri: Resource): WorkspaceFolder | undefined {
+        if (uri) {
+            return this.workspaceFolders.find(w => w.ownedResources.has(uri.toString()));
+        }
+        return undefined;
+    }
+
+    private getResourceKey(resource: Resource): string {
+        const workspace = this.serviceManager.get<IWorkspaceService>(IWorkspaceService);
+        const workspaceFolderUri = PythonSettings.getSettingsUriAndTarget(resource, workspace).uri;
+        return workspaceFolderUri ? workspaceFolderUri.fsPath : '';
+    }
+
+    private async hasJupyter(interpreter: PythonInterpreter): Promise<boolean | undefined> {
         try {
-            // Try importing jupyter
-            const output = child_process.execFileSync(pythonPath, ['-c', 'import jupyter;'], { encoding: 'utf8' });
-            return !output.includes('ModuleNotFoundError');
+            const dependencyChecker = this.serviceManager.get<JupyterInterpreterDependencyService>(
+                JupyterInterpreterDependencyService
+            );
+            return dependencyChecker.areDependenciesInstalled(interpreter);
         } catch (ex) {
             return false;
         }

@@ -63,7 +63,7 @@ const config = {
     },
     // Packages listed in externals keeps webpack from trying to package them.
     // The ppaPackageList variable is set to non-empty if the build pipeline has been
-    //authenticated to install @msrvida/python-program-analysis.
+    // authenticated to install @msrvida/python-program-analysis.
     externals: ['vscode', 'commonjs', ...ppaPackageList, ...existingModulesInOutDir],
     plugins: [
         ...common.getDefaultPlugins('extension'),

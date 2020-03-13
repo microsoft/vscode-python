@@ -181,6 +181,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             options?.metadata,
                             cancelToken
                         );
+                        await sessionManager.dispose();
                     }
 
                     // If no kernel and not going to pick one, exit early

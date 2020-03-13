@@ -102,7 +102,7 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: token };
-        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getServerInfo.py');
         const serverInfoString = await daemon.exec([file], newOptions);
 
         let serverInfos: JupyterServerInfo[];
