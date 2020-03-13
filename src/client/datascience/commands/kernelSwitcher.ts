@@ -34,7 +34,8 @@ export class KernelSwitcherCommand implements IDisposable {
         // We need to identify the current notebook (active native editor or interactive window).
         if (!notebook) {
             notebook =
-                this.notebookEditorProvider.activeEditor?.notebook ?? this.interactiveWindowProvider.getActive()?.notebook;
+                this.notebookEditorProvider.activeEditor?.notebook ??
+                this.interactiveWindowProvider.getActive()?.notebook;
         }
         if (!notebook) {
             traceError('No active notebook');
