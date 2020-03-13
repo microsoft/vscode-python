@@ -42,6 +42,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
+    private zmqError: Error | undefined;
 
     constructor(
         _liveShare: ILiveShareApi,
@@ -334,6 +335,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     private async verifyZMQ() {
+        if (this.zmqError) {
+            throw this.zmqError;
+        }
         try {
             const zmq = await import('zeromq');
             const sock = new zmq.Push();
@@ -347,7 +351,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         } catch (e) {
             traceError(`Exception while attempting zmq :`, e);
             sendTelemetryEvent(Telemetry.ZMQNotSupported);
-            throw new JupyterZMQBinariesNotFoundError(e.toString());
+            this.zmqError = new JupyterZMQBinariesNotFoundError(e.toString());
+            throw this.zmqError;
         }
     }
     private async startOrConnect(
