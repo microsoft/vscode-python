@@ -19,7 +19,6 @@ import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
-import { CustomEditorEditingCapability } from '../../common/application/types';
 import { sendTelemetryEvent } from '../../telemetry';
 // tslint:disable-next-line:no-require-imports no-var-requires
 const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -36,8 +35,7 @@ interface INativeEditorStorageState {
 }
 
 @injectable()
-export class NativeEditorStorage
-    implements INotebookModel, INotebookStorage, CustomEditorEditingCapability<NotebookModelChange> {
+export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     public get isDirty(): boolean {
         return this._state.changeCount !== this._state.saveChangeCount;
     }

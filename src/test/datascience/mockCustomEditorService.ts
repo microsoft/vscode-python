@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { Disposable, EventEmitter, Uri, WebviewPanel, WebviewPanelOptions } from 'vscode';
+import { CancellationTokenSource, Disposable, EventEmitter, Uri, WebviewPanel, WebviewPanelOptions } from 'vscode';
 import {
     CustomDocument,
-    CustomEditorEditingCapability,
     CustomEditorProvider,
     ICommandManager,
     ICustomEditorService
@@ -12,7 +11,7 @@ import { IDisposableRegistry } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { NotebookModelChange } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
+import { INotebookEditor, INotebookEditorProvider, INotebookStorage } from '../../client/datascience/types';
 import { createTemporaryFile } from '../utils/fs';
 
 export class MockCustomEditorService implements ICustomEditorService {
@@ -116,13 +115,10 @@ export class MockCustomEditorService implements ICustomEditorService {
         };
     }
 
-    private async getModel(file: Uri): Promise<CustomEditorEditingCapability | undefined> {
-        const nativeProvider = this.provider as CustomEditorProvider;
+    private async getModel(file: Uri): Promise<INotebookStorage | undefined> {
+        const nativeProvider = this.provider as NativeEditorProvider;
         if (nativeProvider) {
-            const model = await nativeProvider.resolveCustomDocument(this.createDocument(file));
-            if (model.editing) {
-                return model.editing;
-            }
+            return nativeProvider.resolveNativeEditorStorage(this.createDocument(file));
         }
         return undefined;
     }
@@ -130,7 +126,7 @@ export class MockCustomEditorService implements ICustomEditorService {
     private async onFileSave(file: Uri) {
         const model = await this.getModel(file);
         if (model) {
-            model.save();
+            model.save(new CancellationTokenSource().token);
         }
     }
 

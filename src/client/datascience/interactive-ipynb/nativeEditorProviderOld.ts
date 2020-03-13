@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { TextDocument, TextEditor, Uri } from 'vscode';
+import { CancellationTokenSource, TextDocument, TextEditor, Uri } from 'vscode';
 
 import {
     ICommandManager,
@@ -53,14 +53,20 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         );
         this.disposables.push(
             this.cmdManager.registerCommand(Commands.SaveNotebookNonCustomEditor, async (resource: Uri) => {
-                await this.save(resource);
+                const customDocument = this.customDocuments.get(resource.fsPath);
+                if (customDocument) {
+                    await this.save(customDocument, new CancellationTokenSource().token);
+                }
             })
         );
         this.disposables.push(
             this.cmdManager.registerCommand(
                 Commands.SaveAsNotebookNonCustomEditor,
                 async (resource: Uri, targetResource: Uri) => {
-                    await this.saveAs(resource, targetResource);
+                    const customDocument = this.customDocuments.get(resource.fsPath);
+                    if (customDocument) {
+                        await this.saveAs(customDocument, targetResource);
+                    }
                 }
             )
         );
