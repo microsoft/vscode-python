@@ -10,7 +10,7 @@ import { BaseNotebookProvider } from '../interactive-common/notebookProvider';
 import { INotebookEditor, INotebookEditorProvider } from '../types';
 
 @injectable()
-export class NativeNotebookovider extends BaseNotebookProvider {
+export class NativeNotebookProvider extends BaseNotebookProvider {
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(INotebookEditorProvider) private readonly editorProvider: INotebookEditorProvider,

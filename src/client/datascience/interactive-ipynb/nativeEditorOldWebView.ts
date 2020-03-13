@@ -52,7 +52,7 @@ import {
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorStorage } from './nativeEditorStorage';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import { NativeNotebookovider } from './notebookProvider';
+import { NativeNotebookProvider } from './notebookProvider';
 
 enum AskForSaveResult {
     Yes,
@@ -100,7 +100,7 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(NativeNotebookovider) notebookProvider: INotebookProvider
+        @inject(NativeNotebookProvider) notebookProvider: INotebookProvider
     ) {
         super(
             listeners,

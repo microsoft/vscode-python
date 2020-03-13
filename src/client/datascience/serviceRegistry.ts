@@ -39,11 +39,11 @@ import { NativeEditorProvider } from './interactive-ipynb/nativeEditorProvider';
 import { NativeEditorProviderOld } from './interactive-ipynb/nativeEditorProviderOld';
 import { NativeEditorStorage } from './interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
-import { NativeNotebookovider } from './interactive-ipynb/notebookProvider';
+import { NativeNotebookProvider } from './interactive-ipynb/notebookProvider';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
-import { InteractiveWindowNotebookovider } from './interactive-window/notebookProvider';
+import { InteractiveWindowNotebookProvider } from './interactive-window/notebookProvider';
 import { JupyterCommandLineSelector } from './jupyter/commandLineSelector';
 import { JupyterCommandFactory } from './jupyter/interpreter/jupyterCommand';
 import { JupyterCommandFinder } from './jupyter/interpreter/jupyterCommandFinder';
@@ -191,8 +191,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
-    serviceManager.addSingleton<INotebookProvider>(InteractiveWindowNotebookovider, InteractiveWindowNotebookovider);
-    serviceManager.addSingleton<INotebookProvider>(NativeNotebookovider, NativeNotebookovider);
+    serviceManager.addSingleton<INotebookProvider>(InteractiveWindowNotebookProvider, InteractiveWindowNotebookProvider);
+    serviceManager.addSingleton<INotebookProvider>(NativeNotebookProvider, NativeNotebookProvider);
 
     // Temporary code, to allow users to revert to the old behavior.
     const cfg = serviceManager.get<IWorkspaceService>(IWorkspaceService).getConfiguration('python.dataScience', undefined);

@@ -59,7 +59,7 @@ import {
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
-import { InteractiveWindowNotebookovider } from './notebookProvider';
+import { InteractiveWindowNotebookProvider } from './notebookProvider';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
@@ -111,7 +111,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(InteractiveWindowNotebookovider) notebookProvider: INotebookProvider
+        @inject(InteractiveWindowNotebookProvider) notebookProvider: INotebookProvider
     ) {
         super(
             progressReporter,

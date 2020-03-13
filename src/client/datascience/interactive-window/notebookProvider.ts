@@ -10,7 +10,7 @@ import { BaseNotebookProvider } from '../interactive-common/notebookProvider';
 import { IInteractiveWindowProvider } from '../types';
 
 @injectable()
-export class InteractiveWindowNotebookovider extends BaseNotebookProvider {
+export class InteractiveWindowNotebookProvider extends BaseNotebookProvider {
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
