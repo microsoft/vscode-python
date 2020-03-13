@@ -16,19 +16,19 @@ suite('Data Science - KernelSwitcher Command', () => {
     let kernelSwitcherCommand: KernelSwitcherCommand;
     let commandManager: ICommandManager;
     let interactiveWindowProvider: IInteractiveWindowProvider;
-    let notebookProvider: INotebookEditorProvider;
+    let notebookEditorProvider: INotebookEditorProvider;
     let kernelSwitcher: KernelSwitcher;
 
     setup(() => {
         interactiveWindowProvider = mock(InteractiveWindowProvider);
-        notebookProvider = mock(NativeEditorProvider);
+        notebookEditorProvider = mock(NativeEditorProvider);
         commandManager = mock(CommandManager);
         kernelSwitcher = mock(KernelSwitcher);
 
         kernelSwitcherCommand = new KernelSwitcherCommand(
             instance(commandManager),
             instance(kernelSwitcher),
-            instance(notebookProvider),
+            instance(notebookEditorProvider),
             instance(interactiveWindowProvider)
         );
     });
@@ -62,7 +62,7 @@ suite('Data Science - KernelSwitcher Command', () => {
         test('Should switch kernel using the active Native Editor', async () => {
             const nativeEditor = mock(JupyterNotebookBase);
             // tslint:disable-next-line: no-any
-            when(notebookProvider.activeEditor).thenReturn({ notebook: instance(nativeEditor) } as any);
+            when(notebookEditorProvider.activeEditor).thenReturn({ notebook: instance(nativeEditor) } as any);
 
             await commandHandler.bind(kernelSwitcherCommand)();
 
@@ -81,7 +81,7 @@ suite('Data Science - KernelSwitcher Command', () => {
             const interactiveWindow = mock(JupyterNotebookBase);
             const nativeEditor = mock(JupyterNotebookBase);
             // tslint:disable-next-line: no-any
-            when(notebookProvider.activeEditor).thenReturn({ notebook: instance(nativeEditor) } as any);
+            when(notebookEditorProvider.activeEditor).thenReturn({ notebook: instance(nativeEditor) } as any);
             // tslint:disable-next-line: no-any
             when(interactiveWindowProvider.getActive()).thenReturn({ notebook: instance(interactiveWindow) } as any);
 

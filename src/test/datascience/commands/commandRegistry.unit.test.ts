@@ -27,7 +27,7 @@ suite('Data Science - Commands', () => {
         commandLineCommand = mock(JupyterCommandLineSelectorCommand);
 
         const codeLensProvider = mock(DataScienceCodeLensProvider);
-        const notebookProvider = mock(NativeEditorProvider);
+        const notebookEditorProvider = mock(NativeEditorProvider);
         const debugService = mock(DebugService);
         const documentManager = mock(DocumentManager);
         commandManager = mock(CommandManager);
@@ -40,7 +40,7 @@ suite('Data Science - Commands', () => {
             instance(serverSelectorCommand),
             instance(kernelSwitcherCommand),
             instance(commandLineCommand),
-            instance(notebookProvider),
+            instance(notebookEditorProvider),
             instance(debugService),
             new MockOutputChannel('Jupyter')
         );

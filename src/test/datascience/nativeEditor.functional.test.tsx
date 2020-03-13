@@ -1283,8 +1283,8 @@ df.head()`;
                         assert.ok(isCellFocused(wrapper, 'NativeCell', cellIndex));
                         assert.equal(wrapper.find('NativeCell').length, 4, 'Cell not added');
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const model = (notebookProvider.editors[0] as NativeEditorWebView).model;
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const model = (notebookEditorProvider.editors[0] as NativeEditorWebView).model;
 
                         // This is the string the user will type in a character at a time into the editor.
                         const stringToType = 'Hi! Bob!';
@@ -1338,8 +1338,8 @@ df.head()`;
                         assert.ok(isCellFocused(wrapper, 'NativeCell', cellIndex));
                         assert.equal(wrapper.find('NativeCell').length, 4, 'Cell not added');
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const model = (notebookProvider.editors[0] as NativeEditorWebView).model;
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const model = (notebookEditorProvider.editors[0] as NativeEditorWebView).model;
 
                         // This is the string the user will type in a character at a time into the editor.
                         const stringToType = 'Hi Bob!';
@@ -1708,8 +1708,8 @@ df.head()`;
                         await addCell(wrapper, ioc, '7', false);
 
                         // Access the code in the cells.
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const model = (notebookProvider.editors[0] as NativeEditorWebView).model;
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const model = (notebookEditorProvider.editors[0] as NativeEditorWebView).model;
 
                         // Set focus to the first cell.
                         let update = waitForUpdate(wrapper, NativeEditor, 1);
@@ -2014,8 +2014,8 @@ df.head()`;
                         await addCell(wrapper, ioc, 'a=1\na', true);
                         await dirtyPromise;
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
                         const savedPromise = createDeferred();
                         editor.saved(() => savedPromise.resolve());
@@ -2043,8 +2043,8 @@ df.head()`;
                         await addCell(wrapper, ioc, 'a=1\na', true);
                         await dirtyPromise;
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
                         const savedPromise = createDeferred();
                         editor.saved(() => savedPromise.resolve());
@@ -2075,8 +2075,8 @@ df.head()`;
                         await addCell(wrapper, ioc, 'a=1\na', true);
                         await dirtyPromise;
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
                         const savedPromise = createDeferred();
                         editor.saved(() => savedPromise.resolve());
@@ -2104,8 +2104,8 @@ df.head()`;
 
                         await addCell(wrapper, ioc, 'a=1\na', true);
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
                         const savedPromise = createDeferred();
                         editor.saved(() => savedPromise.resolve());
@@ -2440,8 +2440,8 @@ df.head()`;
                     });
 
                     test('Update notebook metadata on execution', async () => {
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
 
                         // add cells, run them and save
@@ -2519,8 +2519,8 @@ df.head()`;
                     });
 
                     test('Clear execution_count and outputs in notebook', async () => {
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
                         // add cells, run them and save
                         // await addCell(wrapper, ioc, 'a=1\na');

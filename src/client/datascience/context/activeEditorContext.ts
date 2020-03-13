@@ -25,7 +25,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
     private isPythonFileActive: boolean = false;
     constructor(
         @inject(IInteractiveWindowProvider) private readonly interactiveProvider: IInteractiveWindowProvider,
-        @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IDocumentManager) private readonly docManager: IDocumentManager,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
@@ -57,7 +57,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
             this,
             this.disposables
         );
-        this.notebookProvider.onDidChangeActiveNotebookEditor(
+        this.notebookEditorProvider.onDidChangeActiveNotebookEditor(
             this.onDidChangeActiveNotebookEditor,
             this,
             this.disposables

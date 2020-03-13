@@ -25,13 +25,13 @@ import {
 // tslint:disable: no-any
 
 async function getOrCreateNativeEditor(ioc: DataScienceIocContainer, uri?: Uri): Promise<INotebookEditor> {
-    const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+    const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
     let editor: INotebookEditor | undefined;
     const messageWaiter = waitForMessage(ioc, InteractiveWindowMessages.LoadAllCellsComplete);
     if (uri) {
-        editor = await notebookProvider.open(uri);
+        editor = await notebookEditorProvider.open(uri);
     } else {
-        editor = await notebookProvider.createNew();
+        editor = await notebookEditorProvider.createNew();
     }
     if (editor) {
         await messageWaiter;

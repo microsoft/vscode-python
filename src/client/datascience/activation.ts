@@ -19,14 +19,14 @@ import { INotebookEditor, INotebookEditorProvider } from './types';
 export class Activation implements IExtensionSingleActivationService {
     private notebookOpened = false;
     constructor(
-        @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(JupyterInterpreterService) private readonly jupyterInterpreterService: JupyterInterpreterService,
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(ActiveEditorContextService) private readonly contextService: ActiveEditorContextService
     ) {}
     public async activate(): Promise<void> {
-        this.disposables.push(this.notebookProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
+        this.disposables.push(this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.jupyterInterpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
         // Warm up our selected interpreter for the extension
         this.jupyterInterpreterService.setInitialInterpreter().ignoreErrors();
