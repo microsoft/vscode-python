@@ -209,6 +209,7 @@ import { KernelService } from '../../client/datascience/jupyter/kernels/kernelSe
 import { KernelSwitcher } from '../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
+import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { ProgressReporter } from '../../client/datascience/progress/progressReporter';
@@ -357,7 +358,6 @@ import { blurWindow, createMessageEvent } from './reactHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
-import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
