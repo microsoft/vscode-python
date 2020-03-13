@@ -76,9 +76,9 @@ export class NativeEditorProvider
     protected customDocuments = new Map<string, CustomDocument>();
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
     private openedEditors: Set<INotebookEditor> = new Set<INotebookEditor>();
-    private models = new Map<string, Promise<{ model: INotebookModel; storage: INotebookStorage }>>();
-    private modelChangedHandlers = new Set<string>();
+    private storageAndModels = new Map<string, Promise<{ model: INotebookModel; storage: INotebookStorage }>>();
     private executedEditors: Set<string> = new Set<string>();
+    private models = new WeakSet<INotebookModel>();
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
     private _id = uuid();
@@ -269,8 +269,7 @@ export class NativeEditorProvider
         // If last editor, dispose of the storage
         const key = editor.file.toString();
         if (![...this.openedEditors].find(e => e.file.toString() === key)) {
-            this.modelChangedHandlers.delete(key);
-            this.models.delete(key);
+            this.storageAndModels.delete(key);
         }
         this._onDidCloseNotebookEditor.fire(editor);
     }
@@ -288,9 +287,9 @@ export class NativeEditorProvider
     private async modelChanged(change: NotebookModelChange) {
         if (change.source === 'user' && change.kind === 'file') {
             // Update our storage
-            const promise = this.models.get(change.oldFile.toString());
-            this.models.delete(change.oldFile.toString());
-            this.models.set(change.newFile.toString(), promise!);
+            const promise = this.storageAndModels.get(change.oldFile.toString());
+            this.storageAndModels.delete(change.oldFile.toString());
+            this.storageAndModels.set(change.newFile.toString(), promise!);
         }
     }
 
@@ -314,26 +313,25 @@ export class NativeEditorProvider
 
     private loadModelAndStorage(file: Uri, contents?: string) {
         const key = file.toString();
-        let modelPromise = this.models.get(key);
+        let modelPromise = this.storageAndModels.get(key);
         if (!modelPromise) {
             const storage = this.serviceContainer.get<INotebookStorage>(INotebookStorage);
             modelPromise = storage.load(file, contents).then(m => {
-                if (!this.modelChangedHandlers.has(key)) {
-                    this.modelChangedHandlers.add(key);
+                if (!this.models.has(m)) {
+                    this.models.add(m);
                     this.disposables.push(m.changed(this.modelChanged.bind(this)));
                     this.disposables.push(storage.onDidEdit(this.modelEdited.bind(this, m)));
                 }
                 return { model: m, storage };
             });
-
-            this.models.set(key, modelPromise);
+            this.storageAndModels.set(key, modelPromise);
         }
         return modelPromise;
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {
         // See if we have any untitled storage already
-        const untitledStorage = [...this.models.keys()].filter(k => Uri.parse(k).scheme === 'untitled');
+        const untitledStorage = [...this.storageAndModels.keys()].filter(k => Uri.parse(k).scheme === 'untitled');
 
         // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
         // our map, so we'll keep creating new untitled notebooks.
