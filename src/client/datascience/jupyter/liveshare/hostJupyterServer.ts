@@ -22,6 +22,7 @@ import {
 } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService } from '../../../interpreter/contracts';
+import { IServiceContainer } from '../../../ioc/types';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
     IDataScience,
@@ -55,14 +56,22 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         configService: IConfigurationService,
         sessionManager: IJupyterSessionManagerFactory,
         private workspaceService: IWorkspaceService,
-        loggers: INotebookExecutionLogger[],
+        serviceContainer: IServiceContainer,
         private appService: IApplicationShell,
         private fs: IFileSystem,
         private readonly kernelSelector: KernelSelector,
         private readonly interpreterService: IInterpreterService,
         outputChannel: IOutputChannel
     ) {
-        super(liveShare, asyncRegistry, disposableRegistry, configService, sessionManager, loggers, outputChannel);
+        super(
+            liveShare,
+            asyncRegistry,
+            disposableRegistry,
+            configService,
+            sessionManager,
+            serviceContainer,
+            outputChannel
+        );
     }
 
     public async dispose(): Promise<void> {
@@ -163,7 +172,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         possibleSession: IJupyterSession | undefined,
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
-        loggers: INotebookExecutionLogger[],
+        serviceContainer: IServiceContainer,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<INotebook> {
@@ -208,7 +217,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                 disposableRegistry,
                 this,
                 info,
-                loggers,
+                serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger),
                 resource,
                 identity,
                 this.getDisposedError.bind(this),

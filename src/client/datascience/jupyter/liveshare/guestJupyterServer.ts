@@ -9,13 +9,13 @@ import { ILiveShareApi, IWorkspaceService } from '../../../common/application/ty
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
+import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     IConnection,
     IDataScience,
     IJupyterSessionManagerFactory,
     INotebook,
-    INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../../types';
@@ -39,7 +39,7 @@ export class GuestJupyterServer
         private configService: IConfigurationService,
         _sessionManager: IJupyterSessionManagerFactory,
         _workspaceService: IWorkspaceService,
-        _loggers: INotebookExecutionLogger[]
+        _serviceContainer: IServiceContainer
     ) {
         super(liveShare);
     }
