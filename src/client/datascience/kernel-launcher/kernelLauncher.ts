@@ -1,35 +1,20 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
+
 import { ChildProcess } from 'child_process';
+import { inject, injectable } from 'inversify';
 import { InterpreterUri } from '../../common/installer/types';
-import { IDisposable } from '../../common/types';
-// import { Resource } from '../../common/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
-
-interface IKernelLauncher {
-    launch(interpreterUri: InterpreterUri): Promise<IKernelProcess>;
-}
-
-interface IKernelConnection {
-    version: number;
-    iopub_port: number;
-    shell_port: number;
-    stdin_port: number;
-    control_port: number;
-    signature_scheme: 'hmac-sha256';
-    hb_port: number;
-    ip: string;
-    key: string;
-    transport: 'tcp' | 'ipc';
-}
-
-interface IKernelProcess extends IDisposable {
-    process: ChildProcess;
-    connection: IKernelConnection;
-}
+import { IPythonExecutionFactory } from '../../common/process/types';
+import { isResource } from '../../common/utils/misc';
+import { IServiceContainer } from '../../ioc/types';
+import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
 
 class KernelProcess implements IKernelProcess {
     private _process?: ChildProcess;
     private _connection?: IKernelConnection;
     private interpreter: InterpreterUri;
+    private serviceContainer: IServiceContainer;
     public get process(): ChildProcess {
         return this._process!;
     }
@@ -37,36 +22,47 @@ class KernelProcess implements IKernelProcess {
         return this._connection!;
     }
 
-    constructor(interpreter: InterpreterUri) {
+    constructor(interpreter: InterpreterUri, @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.interpreter = interpreter;
+        this.serviceContainer = serviceContainer;
     }
 
     public async launch(): Promise<void> {
-        if (this.isPythonInterpreter(this.interpreter)) {
-            // spawn process with a python interpreter
-            // this._process = ;
-        } else {
-            // spawn process with a resource (uri)
-            // this._process = ;
-        }
+        const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const resource = isResource(this.interpreter) ? this.interpreter : undefined;
+        const pythonPath = isResource(this.interpreter) ? undefined : this.interpreter.path;
+
+        const executionService = await pythonExecutionFactory.create({ resource, pythonPath });
+        await executionService.exec([], {});
+
+        this._connection = this.getKernelConnection();
+        this._process = this.getChildProcess();
+
         return Promise.resolve();
     }
-
     public dispose() {
         this._process?.kill();
     }
 
-    private isPythonInterpreter(toBeDetermined: InterpreterUri): toBeDetermined is PythonInterpreter {
-        if ((toBeDetermined as PythonInterpreter).type) {
-            return true;
-        }
-        return false;
+    private getKernelConnection(): IKernelConnection {
+        throw new Error('Method not implemented.');
+    }
+
+    private getChildProcess(): ChildProcess {
+        throw new Error('Method not implemented.');
     }
 }
 
-class KernelLauncher implements IKernelLauncher {
+@injectable()
+export class KernelLauncher implements IKernelLauncher {
+    private serviceContainer: IServiceContainer;
+
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        this.serviceContainer = serviceContainer;
+    }
+
     public async launch(interpreterUri: InterpreterUri): Promise<IKernelProcess> {
-        const kernel = new KernelProcess(interpreterUri);
+        const kernel = new KernelProcess(interpreterUri, this.serviceContainer);
         await kernel.launch();
         return kernel;
     }
