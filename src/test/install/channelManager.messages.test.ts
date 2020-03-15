@@ -11,7 +11,10 @@ import { IModuleInstaller } from '../../client/common/installer/types';
 import { IPlatformService } from '../../client/common/platform/types';
 import { Product } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
-import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
+import {
+    IInterpreterAutoSelectionService,
+    IInterpreterAutoSeletionProxyService
+} from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -53,8 +56,14 @@ suite('Installation - channel messages', () => {
 
         const moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
         serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, moduleInstaller.object);
-        serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingleton<IInterpreterAutoSelectionService>(
+            IInterpreterAutoSelectionService,
+            MockAutoSelectionService
+        );
+        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
+            IInterpreterAutoSeletionProxyService,
+            MockAutoSelectionService
+        );
     });
 
     test('No installers message: Unknown/Windows', async () => {

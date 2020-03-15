@@ -1,0 +1,174 @@
+{
+    "cells": [
+        {
+            "cell_type": "code",
+            "execution_count": 1,
+            "metadata": {},
+            "source": [
+                "import pandas as pd\n",
+                "data = pd.read_parquet(\"data/training.parquet\")\n",
+                ""
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 2,
+            "metadata": {},
+            "source": [
+                "def model_accuracy(osm, df):\n",
+                "    correct = 0\n",
+                "    incorrect = 0\n",
+                "    for row in df.itertuples(): \n",
+                "        if row.label == osm.predict(row.text):\n",
+                "            correct += 1\n",
+                "        else:\n",
+                "            incorrect += 1\n",
+                "    \n",
+                "    if correct + incorrect == 0:\n",
+                "        return 100\n",
+                "    \n",
+                "    return (float(correct) / float(correct + incorrect) * 100)\n",
+                ""
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 3,
+            "metadata": {},
+            "source": [
+                "legit_sample = data[data.label == 'legitimate'].sample(2000)\n",
+                "spam_sample = data[data.label == 'spam'].sample(18000)\n",
+                "unbalanced = pd.DataFrame.append(legit_sample, spam_sample)\n",
+                ""
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                " To avoid overfitting, we'll split the unbalanced data set into training and test sets, using functionality from scikit-learn."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 4,
+            "metadata": {},
+            "source": [
+                "from sklearn.model_selection import train_test_split\n",
+                "unbalanced_train, unbalanced_test = train_test_split(unbalanced, test_size=0.3)\n",
+                ""
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                " We'll now create a simple model that should work pretty well for spam messages but not necessarily as well for legitimate ones."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 5,
+            "metadata": {},
+            "source": [
+                "from collections import defaultdict\n",
+                "import re\n",
+                "    \n",
+                "class SensitiveSpamModel(object):\n",
+                "    \n",
+                "    def __init__(self):\n",
+                "        self.legit = set()\n",
+                "        self.spam = set()\n",
+                "    \n",
+                "    def fit(self, df):\n",
+                "        \"\"\" Train a model based on the most frequent unique \n",
+                "            words in each class of documents \"\"\"\n",
+                "        legit_words = defaultdict(lambda: 0)\n",
+                "        spam_words = defaultdict(lambda: 0)\n",
+                "        \n",
+                "        for tup in df.itertuples():\n",
+                "            target = spam_words\n",
+                "            if tup.label == \"legitimate\":\n",
+                "                target = legit_words\n",
+                "            for word in re.split(r\"\\W+\", tup.text):\n",
+                "                if len(word) > 0:\n",
+                "                    target[word.lower()] += 1\n",
+                "        \n",
+                "        # remove words common to both classes\n",
+                "        for word in set(legit_words.keys()).intersection(set(spam_words.keys())):\n",
+                "            del legit_words[word]\n",
+                "            del spam_words[word]\n",
+                "        \n",
+                "        top_legit_words = sorted(legit_words.items(), key=lambda kv: kv[1], reverse=True)\n",
+                "        top_spam_words = sorted(spam_words.items(), key=lambda kv: kv[1], reverse=True)\n",
+                "        \n",
+                "        # store ten times as many words from the spam set\n",
+                "        self.legit = set([t[0] for t in top_legit_words[:100]])\n",
+                "        self.spam = set([t[0] for t in top_spam_words[:1000]])\n",
+                "            \n",
+                "    def predict(self, text):\n",
+                "        legit_score = 0\n",
+                "        spam_score = 0\n",
+                "        \n",
+                "        for word in re.split(r\"\\W+\", text):\n",
+                "            w = word.lower()\n",
+                "            if word in self.legit:\n",
+                "                legit_score = legit_score + 1\n",
+                "            elif word in self.spam:\n",
+                "                spam_score = spam_score + 1\n",
+                "        \n",
+                "        # bias results towards spam in the event of ties\n",
+                "        return (legit_score > spam_score) and \"legitimate\" or \"spam\"\n",
+                "\n",
+                "ssm = SensitiveSpamModel()\n",
+                "ssm.fit(unbalanced_train)\n",
+                ""
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 6,
+            "metadata": {},
+            "source": [
+                "model_accuracy(ssm, unbalanced_train)\n",
+                ""
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 7,
+            "metadata": {},
+            "source": [
+                "model_accuracy(ssm, unbalanced_test)\n",
+                ""
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 8,
+            "metadata": {},
+            "source": [
+                "model_accuracy(ssm, data)\n",
+                ""
+            ]
+        }
+    ],
+    "nbformat": 4,
+    "nbformat_minor": 2,
+    "metadata": {
+        "language_info": {
+            "name": "python",
+            "codemirror_mode": {
+                "name": "ipython",
+                "version": 3
+            }
+        },
+        "orig_nbformat": 2,
+        "file_extension": ".py",
+        "mimetype": "text/x-python",
+        "name": "python",
+        "npconvert_exporter": "python",
+        "pygments_lexer": "ipython3",
+        "version": 3
+    }
+}

@@ -17,7 +17,16 @@ export function getCommandPromptLocation(currentProcess: ICurrentProcess) {
     const system32Path = path.join(currentProcess.env.windir!, is32ProcessOn64Windows ? 'Sysnative' : 'System32');
     return path.join(system32Path, 'cmd.exe');
 }
-export async function useCommandPromptAsDefaultShell(currentProcess: ICurrentProcess, configService: IConfigurationService) {
+export async function useCommandPromptAsDefaultShell(
+    currentProcess: ICurrentProcess,
+    configService: IConfigurationService
+) {
     const cmdPromptLocation = getCommandPromptLocation(currentProcess);
-    await configService.updateSectionSetting('terminal', 'integrated.shell.windows', cmdPromptLocation, undefined, ConfigurationTarget.Global);
+    await configService.updateSectionSetting(
+        'terminal',
+        'integrated.shell.windows',
+        cmdPromptLocation,
+        undefined,
+        ConfigurationTarget.Global
+    );
 }

@@ -9,13 +9,15 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
-import { IInstaller, Product } from '../../../common/types';
+import { IInstaller, Product, Resource } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
+import { KnownNotebookLanguages, Telemetry } from '../../constants';
+import { reportAction } from '../../progress/decorator';
+import { ReportableAction } from '../../progress/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
@@ -88,13 +90,27 @@ export class KernelSelector {
      * @memberof KernelSelector
      */
     public async selectRemoteKernel(
+        resource: Resource,
+        stopWatch: StopWatch,
         session: IJupyterSessionManager,
         cancelToken?: CancellationToken,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
-        let suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
+        let suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(
+            resource,
+            session,
+            cancelToken
+        );
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
-        return this.selectKernel(suggestions, session, cancelToken, currentKernel);
+        return this.selectKernel(
+            resource,
+            stopWatch,
+            Telemetry.SelectRemoteJupyterKernel,
+            suggestions,
+            session,
+            cancelToken,
+            currentKernel
+        );
     }
     /**
      * Select a kernel from a local session.
@@ -105,13 +121,27 @@ export class KernelSelector {
      * @memberof KernelSelector
      */
     public async selectLocalKernel(
+        resource: Resource,
+        stopWatch: StopWatch,
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
-        let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
+        let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(
+            resource,
+            session,
+            cancelToken
+        );
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
-        return this.selectKernel(suggestions, session, cancelToken, currentKernel);
+        return this.selectKernel(
+            resource,
+            stopWatch,
+            Telemetry.SelectLocalJupyterKernel,
+            suggestions,
+            session,
+            cancelToken,
+            currentKernel
+        );
     }
     /**
      * Gets a kernel that needs to be used with a local session.
@@ -123,39 +153,71 @@ export class KernelSelector {
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
+    @reportAction(ReportableAction.KernelsGetKernelForLocalConnection)
     public async getKernelForLocalConnection(
+        resource: Resource,
         sessionManager?: IJupyterSessionManager,
         notebookMetadata?: nbformat.INotebookMetadata,
+        disableUI?: boolean,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
         const stopWatch = new StopWatch();
-        const telemetryProps: IEventNamePropertyMapping[Telemetry.FindKernelForLocalConnection] = { kernelSpecFound: false, interpreterFound: false, promptedToSelect: false };
+        const telemetryProps: IEventNamePropertyMapping[Telemetry.FindKernelForLocalConnection] = {
+            kernelSpecFound: false,
+            interpreterFound: false,
+            promptedToSelect: false
+        };
         // When this method is called, we know we've started a local jupyter server.
         // Lets pre-warm the list of local kernels.
-        this.selectionProvider.getKernelSelectionsForLocalSession(sessionManager, cancelToken).ignoreErrors();
+        this.selectionProvider.getKernelSelectionsForLocalSession(resource, sessionManager, cancelToken).ignoreErrors();
 
         let selection: KernelSpecInterpreter = {};
         if (notebookMetadata?.kernelspec) {
-            selection.kernelSpec = await this.kernelService.findMatchingKernelSpec(notebookMetadata?.kernelspec, sessionManager, cancelToken);
+            selection.kernelSpec = await this.kernelService.findMatchingKernelSpec(
+                notebookMetadata?.kernelspec,
+                sessionManager,
+                cancelToken
+            );
             if (selection.kernelSpec) {
-                selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken);
+                selection.interpreter = await this.kernelService.findMatchingInterpreter(
+                    selection.kernelSpec,
+                    cancelToken
+                );
                 sendTelemetryEvent(Telemetry.UseExistingKernel);
+
+                // Make sure we update the environment in the kernel before using it
+                await this.kernelService.updateKernelEnvironment(
+                    selection.interpreter,
+                    selection.kernelSpec,
+                    cancelToken
+                );
             } else {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
-                const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
+                const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
                 if (activeInterpreter) {
-                    selection = await this.useInterpreterAsKernel(activeInterpreter, notebookMetadata.kernelspec.display_name, sessionManager, cancelToken);
+                    selection = await this.useInterpreterAsKernel(
+                        resource,
+                        activeInterpreter,
+                        notebookMetadata.kernelspec.display_name,
+                        sessionManager,
+                        disableUI,
+                        cancelToken
+                    );
                 } else {
                     telemetryProps.promptedToSelect = true;
-                    selection = await this.selectLocalKernel(sessionManager, cancelToken);
+                    selection = await this.selectLocalKernel(resource, stopWatch, sessionManager, cancelToken);
                 }
             }
         } else {
             // No kernel info, hence use current interpreter as a kernel.
-            const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
+            const activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
             if (activeInterpreter) {
                 selection.interpreter = activeInterpreter;
-                selection.kernelSpec = await this.kernelService.searchAndRegisterKernel(activeInterpreter, cancelToken);
+                selection.kernelSpec = await this.kernelService.searchAndRegisterKernel(
+                    activeInterpreter,
+                    disableUI,
+                    cancelToken
+                );
             }
         }
         // If still not found, log an error (this seems possible for some people, so use the default)
@@ -180,12 +242,17 @@ export class KernelSelector {
      * @memberof KernelSelector
      */
     // tslint:disable-next-line: cyclomatic-complexity
+    @reportAction(ReportableAction.KernelsGetKernelForRemoteConnection)
     public async getKernelForRemoteConnection(
+        resource: Resource,
         sessionManager?: IJupyterSessionManager,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
-        const [interpreter, specs] = await Promise.all([this.interpreterService.getActiveInterpreter(undefined), this.kernelService.getKernelSpecs(sessionManager, cancelToken)]);
+        const [interpreter, specs] = await Promise.all([
+            this.interpreterService.getActiveInterpreter(resource),
+            this.kernelService.getKernelSpecs(sessionManager, cancelToken)
+        ]);
         let bestMatch: IJupyterKernelSpec | undefined;
         let bestScore = 0;
         for (let i = 0; specs && i < specs?.length; i = i + 1) {
@@ -234,12 +301,18 @@ export class KernelSelector {
         };
     }
     private async selectKernel(
+        resource: Resource,
+        stopWatch: StopWatch,
+        telemetryEvent: Telemetry,
         suggestions: IKernelSpecQuickPickItem[],
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ) {
-        const placeHolder = localize.DataScience.selectKernel() + (currentKernel ? ` (current: ${currentKernel.display_name || currentKernel.name})` : '');
+        const placeHolder =
+            localize.DataScience.selectKernel() +
+            (currentKernel ? ` (current: ${currentKernel.display_name || currentKernel.name})` : '');
+        sendTelemetryEvent(telemetryEvent, stopWatch.elapsedTime);
         const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder }, cancelToken);
         if (!selection?.selection) {
             return {};
@@ -247,15 +320,35 @@ export class KernelSelector {
         // Check if ipykernel is installed in this kernel.
         if (selection.selection.interpreter) {
             sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
-            return this.useInterpreterAsKernel(selection.selection.interpreter, undefined, session, cancelToken);
+            return this.useInterpreterAsKernel(
+                resource,
+                selection.selection.interpreter,
+                undefined,
+                session,
+                false,
+                cancelToken
+            );
         } else if (selection.selection.kernelModel) {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
+            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
+                language: this.computeLanguage(selection.selection.kernelModel.language)
+            });
             // tslint:disable-next-line: no-any
-            const interpreter = selection.selection.kernelModel ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelModel, cancelToken) : undefined;
-            return { kernelSpec: selection.selection.kernelSpec, interpreter, kernelModel: selection.selection.kernelModel };
+            const interpreter = selection.selection.kernelModel
+                ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelModel, cancelToken)
+                : undefined;
+            return {
+                kernelSpec: selection.selection.kernelSpec,
+                interpreter,
+                kernelModel: selection.selection.kernelModel
+            };
         } else if (selection.selection.kernelSpec) {
-            sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
-            const interpreter = selection.selection.kernelSpec ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken) : undefined;
+            sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
+                language: this.computeLanguage(selection.selection.kernelSpec.language)
+            });
+            const interpreter = selection.selection.kernelSpec
+                ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken)
+                : undefined;
+            await this.kernelService.updateKernelEnvironment(interpreter, selection.selection.kernelSpec, cancelToken);
             return { kernelSpec: selection.selection.kernelSpec, interpreter };
         } else {
             return {};
@@ -276,9 +369,11 @@ export class KernelSelector {
      * @memberof KernelSelector
      */
     private async useInterpreterAsKernel(
+        resource: Resource,
         interpreter: PythonInterpreter,
         displayNameOfKernelNotFound?: string,
         session?: IJupyterSessionManager,
+        disableUI?: boolean,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
         let kernelSpec: IJupyterKernelSpec | undefined;
@@ -288,11 +383,19 @@ export class KernelSelector {
             kernelSpec = await this.kernelService.findMatchingKernelSpec(interpreter, session, cancelToken);
 
             if (kernelSpec) {
-                traceVerbose(`ipykernel installed in ${interpreter.path}, and matching found.`);
-                // If we have a display name of a kernel that could not be found,
-                // then notify user that we're using current interpreter instead.
-                if (displayNameOfKernelNotFound) {
-                    this.applicationShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel().format(displayNameOfKernelNotFound)).then(noop, noop);
+                traceVerbose(`ipykernel installed in ${interpreter.path}, and matching kernelspec found.`);
+                // Make sure the environment matches.
+                await this.kernelService.updateKernelEnvironment(interpreter, kernelSpec, cancelToken);
+
+                // Notify the UI that we didn't find the initially requested kernel and are just using the active interpreter
+                if (displayNameOfKernelNotFound && !disableUI) {
+                    this.applicationShell
+                        .showInformationMessage(
+                            localize.DataScience.fallbackToUseActiveInterpeterAsKernel().format(
+                                displayNameOfKernelNotFound
+                            )
+                        )
+                        .then(noop, noop);
                 }
 
                 sendTelemetryEvent(Telemetry.UseInterpreterAsKernel);
@@ -302,20 +405,36 @@ export class KernelSelector {
         }
 
         // Try an install this interpreter as a kernel.
-        kernelSpec = await this.kernelService.registerKernel(interpreter, cancelToken);
+        try {
+            kernelSpec = await this.kernelService.registerKernel(interpreter, disableUI, cancelToken);
+        } catch (e) {
+            sendTelemetryEvent(Telemetry.KernelRegisterFailed);
+            throw e;
+        }
 
         // If we have a display name of a kernel that could not be found,
         // then notify user that we're using current interpreter instead.
-        if (displayNameOfKernelNotFound) {
+        if (displayNameOfKernelNotFound && !disableUI) {
             this.applicationShell
-                .showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel().format(displayNameOfKernelNotFound))
+                .showInformationMessage(
+                    localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel().format(
+                        displayNameOfKernelNotFound
+                    )
+                )
                 .then(noop, noop);
         }
 
         // When this method is called, we know a new kernel may have been registered.
         // Lets pre-warm the list of local kernels (with the new list).
-        this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken).ignoreErrors();
+        this.selectionProvider.getKernelSelectionsForLocalSession(resource, session, cancelToken).ignoreErrors();
 
         return { kernelSpec, interpreter };
+    }
+
+    private computeLanguage(language: string | undefined): string {
+        if (language && KnownNotebookLanguages.includes(language.toLowerCase())) {
+            return language;
+        }
+        return 'unknown';
     }
 }

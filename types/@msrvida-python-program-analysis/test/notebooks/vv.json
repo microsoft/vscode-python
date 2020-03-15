@@ -1,0 +1,306 @@
+{
+    "cells": [
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Let's take a look at a simple way to trying to identify some structure in our data. Getting some understanding of the data is an important first step before we even start to look at using machine learning techniques to train a model; in this notebook, we'll approach that problem from a couple of different angles.\n",
+                "\n",
+                "We'll start by loading our training data."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 1,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stderr",
+                    "output_type": "stream",
+                    "text": [
+                        "C:\\Users\\jimgries\\AppData\\Local\\Continuum\\anaconda3\\lib\\site-packages\\pyarrow\\pandas_compat.py:708: FutureWarning: .labels was deprecated in version 0.24.0. Use .codes instead.\n",
+                        "  labels = getattr(columns, 'labels', None) or [\n",
+                        "C:\\Users\\jimgries\\AppData\\Local\\Continuum\\anaconda3\\lib\\site-packages\\pyarrow\\pandas_compat.py:735: FutureWarning: the 'labels' keyword is deprecated, use 'codes' instead\n",
+                        "  return pd.MultiIndex(levels=new_levels, labels=labels, names=columns.names)\n",
+                        "C:\\Users\\jimgries\\AppData\\Local\\Continuum\\anaconda3\\lib\\site-packages\\pyarrow\\pandas_compat.py:752: FutureWarning: .labels was deprecated in version 0.24.0. Use .codes instead.\n",
+                        "  labels, = index.labels\n"
+                    ]
+                }
+            ],
+            "source": [
+                "import pandas as pd\n",
+                "data = pd.read_parquet(\"data/training.parquet\")"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Our training data (which we generated in [the previous notebook](00-generator.ipynb)) consists of labels (either `legitimate` or `spam`) and short documents of plausible English text.  We can inspect these data:"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 2,
+            "metadata": {
+                "scrolled": true
+            },
+            "source": [
+                "data.sample(50)"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Ultimately, machine learning algorithms operate on data that is structured differently than the data we might deal with in database tables or application programs.  In order to identify and exploit structure in these data, we are going to convert our natural-language documents to points in space by converting them to vectors of floating-point numbers.\n",
+                "\n",
+                "This process is often tricky, since you want a way to map from arbitrary data to some points in (some) space that preserves the structure of the data.  That is, documents that are similar should map to points that are similar (for some definition of similarity), and documents that are dissimilar should not map to similar points.  The name for this process of turning real-world data into a form that a machine learning algorithm can take advantage of is *feature engineering*.  \n",
+                "\n",
+                "You'll learn more about feature engineering in the next notebook; for now, we'll just take a very basic approach that will let us visualize our data.  We'll first convert our documents to *k-shingles*, or sequences of *k* characters (for some small value of *k*).  This means that a document like\n",
+                "\n",
+                "`the quick brown fox jumps over the lazy dog`\n",
+                "\n",
+                "would become this sequence of 4-shingles: \n",
+                "\n",
+                "`['the ', 'he q', 'e qu', ' qui', 'quic', 'uick', 'ick ', 'ck b', 'k br', ' bro', 'brow', 'rown', 'own ', 'wn f', 'n fo', ' fox', 'fox ', 'ox j', 'x ju', ' jum', 'jump', 'umps', 'mps ', 'ps o', 's ov', ' ove', 'over', 'ver ', 'er t', 'r th', ' the', 'the ', 'he l', 'e la', ' laz', 'lazy', 'azy ', 'zy d', 'y do', ' dog']`\n",
+                "\n",
+                "Shingling gets us a step closer to having vector representations of documents -- ultimately, our assumption is that spam documents will have some k-shingles that legitimate documents don't, and vice versa.  Here's how we'd add a field of shingles to our data:"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 3,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "def doc2shingles(k):\n",
+                "    def kshingles(doc):\n",
+                "        return [doc[i:i + k] for i in range(len(doc) - k + 1)]\n",
+                "    return kshingles\n",
+                "\n",
+                "data[\"shingles\"] = data[\"text\"].apply(doc2shingles(4))"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Remember, our goal is to be able to learn a function that can separate between documents that are likely to represent legitimate messages (i.e., prose in the style of Jane Austen) or spam messages (i.e., prose in the style of food-product reviews), so we'll still want to transform our lists of shingles into vectors.\n",
+                "\n",
+                "1.  We'll collect shingle counts for each example, showing us how frequent each shingle is in a given document;\n",
+                "2.  We'll then turn those raw counts into frequencies (i.e., for a given shingle what percentage of shingle in given document are that word?), giving us a mapping from shingles to frequencies for each document;\n",
+                "3.  Finally, we'll encode these mappings as fixed-size vectors in a space-efficient way, by using a hash function to determine which vector element should get a given frequency.  Hashing has a few advantages, but for our purposes the most important advantage is that we don't need to know all of the shingles we might see in advance. \n",
+                "\n",
+                "(That's what we'll _logically_ do -- we'll _actually_ do these steps a bit out of order because it will make our code simpler and more efficient without changing the results.)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 4,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import numpy as np\n",
+                "\n",
+                "def hashing_frequency(vecsize, h):\n",
+                "    \"\"\" \n",
+                "    returns a function that will collect shingle frequencies \n",
+                "    into a vector with _vecsize_ elements and will use \n",
+                "    the hash function _h_ to choose which vector element \n",
+                "    to update for a given term\n",
+                "    \"\"\"\n",
+                "    \n",
+                "    def hf(words):\n",
+                "        if type(words) is type(\"\"):\n",
+                "            # handle both lists of words and space-delimited strings\n",
+                "            words = words.split(\" \")\n",
+                "            \n",
+                "        result = np.zeros(vecsize)\n",
+                "        for term in words:\n",
+                "            result[h(term) % vecsize] += 1.0\n",
+                "        \n",
+                "        total = sum(result)\n",
+                "        for i in range(len(result)):\n",
+                "            result[i] /= total\n",
+                "\n",
+                "        return result\n",
+                "        \n",
+                "    return hf"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 5,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "a = np.array([hashing_frequency(1024, hash)(v) for v in data[\"shingles\"].values])"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "So now instead of having documents (which we had from the raw data) or lists of shingles, we have vectors representing shingle frequencies.  Because we've hashed shingles into these vectors, we can't in general reconstruct a document or the shingles from a vector, but we *do* know that if the same shingle appears in two documents, their vectors will reflect it in corresponding buckets.\n",
+                "\n",
+                "However, we've generated a 1024-element vector.  Recall that our ultimate goal is to place documents in space so that we can identify a way to separate legitimate documents from spam documents.  Our 1024-element vector is a point in a space, but it's a point in a space that most of our geometric intuitions don't apply to (some of us have enough trouble navigating the three dimensions of the physical world).  \n",
+                "\n",
+                "Let's use a very basic technique to project these vectors to a much smaller space that we can visualize.  [Principal component analysis](https://en.wikipedia.org/wiki/Principal_component_analysis), or PCA, is a statistical technique that is over a century old; it takes observations in a high-dimensional space (like our 1024-element vectors) and maps them to a (potentially much) smaller number of dimensions.  It's an elegant technique, and the most important things to know about it are that it tries to ensure that the dimensions that have the most variance contribute the most to the mapping, while the dimensions with the least variance are (more-or-less) disregarded.  The other important thing to know about PCA is that there are very efficient ways to compute it, even on large datasets that don't fit in memory on a single machine.  We'll see it in action now, using the [implementation from scikit-learn](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html#sklearn.decomposition.PCA)."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 6,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import sklearn.decomposition\n",
+                "\n",
+                "DIMENSIONS = 2\n",
+                "\n",
+                "pca2 = sklearn.decomposition.PCA(DIMENSIONS)\n",
+                "\n",
+                "pca_a = pca2.fit_transform(a)"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "The `.fit_transform()` method takes an array of high-dimensional observations and will both perform the principal component analysis (the \"fit\" part) and use that to map the high-dimensional values to low-dimensional ones (the \"transform\" part).  We can see what the transformed vectors look like:"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 7,
+            "metadata": {},
+            "source": [
+                "pca_df = pd.DataFrame(pca_a, columns=[\"x\", \"y\"])\n",
+                "pca_df.sample(50)"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Let's plot these points to see if it looks like there is some structure in our data.  We'll use the [Altair](https://altair-viz.github.io) library, which is a declarative visualization library, meaning that the presentation of our data will depend on the data itself -- for example, we'll say to use the two elements of the vectors for *x* and *y* coordinates but to use whether a document is legitimate or spam to determine how to color the point.\n",
+                "\n",
+                "We'll start by using the [`concat` function in the Pandas library](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.concat.html) to make a data frame consisting of the original data frame with the PCA vector for each row."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 8,
+            "metadata": {
+                "scrolled": false
+            },
+            "outputs": [],
+            "source": [
+                "plot_data = pd.concat([data.reset_index(), pca_df], axis=1)"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "Our next step will be to set up Altair, tell it how to encode our data frame in a plot, by using the `.encode(...)` method to tell it which values to use for x and y coordinates, as well as which value to use to decide how to color points.  Altair will restrict us to plotting 5,000 points (so that the generated chart will not overwhelm our browser), so we'll also make sure to sample a subset of the data (in this case, 1,000 points)."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 9,
+            "metadata": {},
+            "source": [
+                "import altair as alt\n",
+                "alt.renderers.enable('nteract')\n",
+                "\n",
+                "alt.Chart(plot_data.sample(1000)).encode(x=\"x\", y=\"y\", color=\"label\").mark_point().interactive()"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "That plot in particular is interactive (note the call to `.interactive()` at the end of the command), which means that you can pan around by dragging with the mouse or zoom with the mouse wheel.  Try it out!\n",
+                "\n",
+                "Notice that, for the most part, even our simple shingling approach has identified some structure in the data: there is a clear dividing line between legitimate and spam documents.  (It's important to remember that we're only using the labels to color points after we've placed them -- the PCA transformation isn't taking labels into account when mapping the vectors to two dimensions.)\n",
+                "\n",
+                "The next approach we'll try is called t-distributed stochastic neighbor embedding, or t-SNE for short.  t-SNE learns a mapping from high-dimensional points to low-dimensional points so that points that are similar in high-dimensional space are likely to be similar in low-dimensional space as well.  t-SNE can sometimes identify structure that simpler techniques like PCA can't, but this power comes at a cost:  it is much more expensive to compute than PCA and doesn't parallelize well.  (t-SNE also works best for visualizing two-dimensional data when it is reducing from tens of dimensions rather than hundreds or thousands.  So, in some cases, you'll want to use a fast technique like PCA to reduce your data to a few dozen dimensions before using t-SNE.  We haven't done that in this notebook, though.)\n",
+                "\n",
+                "So we can finish this notebook quickly and get on to the rest of our material, we'll only use t-SNE to visualize a subset of our data.  We've [declared a helper function called `sample_corresponding`](mlworkflows/util.py), which takes a sequence of arrays or data frames, generates a set of random indices, and returns collections with the elements corresponding to the selected indices from each array or data frame.  So if we had the collections `[1, 2, 3, 4, 5]` and `[2, 4, 6, 8, 10]`, a call to `sample_corresponding` asking for two elements might return `[[1, 4], [2, 8]]`."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import sklearn.manifold\n",
+                "from mlworkflows import util as mlwutil\n",
+                "\n",
+                "np.random.seed(0xc0ffee)\n",
+                "sdf, sa = mlwutil.sample_corresponding(800, data, a)\n",
+                "\n",
+                "tsne = sklearn.manifold.TSNE()\n",
+                "tsne_a = tsne.fit_transform(sa)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "tsne_plot_data = pd.concat([sdf.reset_index(), pd.DataFrame(tsne_a, columns=[\"x\", \"y\"])], axis=1)"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "The Altair library, which we introduced while looking at our PCA results, is easy to use.  However, to avoid cluttering our notebooks in a common case, we've [introduced a helper function called `plot_points`](mlworkflows/plot.py) that will just take a data frame and a data encoding before generating an interactive Altair scatterplot.  (For more complicated cases, we'll still want to use Altair directly.)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "from mlworkflows import plot\n",
+                "\n",
+                "plot.plot_points(tsne_plot_data, x=\"x\", y=\"y\", color=\"label\")"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "metadata": {},
+            "source": [
+                "In this notebook, you've learned about two ways to visualize multidimensional data in two dimensions, which helps you to evaluate whether or not a given feature engineering approach is revealing structure in your data.  In [our next notebook](02-evaluating-models.ipynb), you'll learn how to evaluate models based on the predictions that they make."
+            ]
+        }
+    ],
+    "metadata": {
+        "kernelspec": {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3"
+        },
+        "language_info": {
+            "codemirror_mode": {
+                "name": "ipython",
+                "version": 3
+            },
+            "file_extension": ".py",
+            "mimetype": "text/x-python",
+            "name": "python",
+            "nbconvert_exporter": "python",
+            "pygments_lexer": "ipython3",
+            "version": "3.7.3"
+        }
+    },
+    "nbformat": 4,
+    "nbformat_minor": 2
+}

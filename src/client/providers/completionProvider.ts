@@ -19,7 +19,11 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
     }
 
     @captureTelemetry(EventName.COMPLETION)
-    public async provideCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.CompletionItem[]> {
+    public async provideCompletionItems(
+        document: vscode.TextDocument,
+        position: vscode.Position,
+        token: vscode.CancellationToken
+    ): Promise<vscode.CompletionItem[]> {
         const items = await this.completionSource.getVsCodeCompletionItems(document, position, token);
         if (this.configService.isTestExecution()) {
             for (let i = 0; i < Math.min(3, items.length); i += 1) {
@@ -29,7 +33,10 @@ export class PythonCompletionItemProvider implements vscode.CompletionItemProvid
         return items;
     }
 
-    public async resolveCompletionItem(item: vscode.CompletionItem, token: vscode.CancellationToken): Promise<vscode.CompletionItem> {
+    public async resolveCompletionItem(
+        item: vscode.CompletionItem,
+        token: vscode.CancellationToken
+    ): Promise<vscode.CompletionItem> {
         if (!item.documentation) {
             const itemInfos = await this.completionSource.getDocumentation(item, token);
             if (itemInfos && itemInfos.length > 0) {

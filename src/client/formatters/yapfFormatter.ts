@@ -11,9 +11,16 @@ export class YapfFormatter extends BaseFormatter {
         super('yapf', Product.yapf, serviceContainer);
     }
 
-    public formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Thenable<vscode.TextEdit[]> {
+    public formatDocument(
+        document: vscode.TextDocument,
+        options: vscode.FormattingOptions,
+        token: vscode.CancellationToken,
+        range?: vscode.Range
+    ): Thenable<vscode.TextEdit[]> {
         const stopWatch = new StopWatch();
-        const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(document.uri);
+        const settings = this.serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(document.uri);
         const hasCustomArgs = Array.isArray(settings.formatting.yapfArgs) && settings.formatting.yapfArgs.length > 0;
         const formatSelection = range ? !range.isEmpty : false;
 

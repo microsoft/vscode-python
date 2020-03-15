@@ -26,7 +26,9 @@ const messages = {
 
 export class InvalidMacPythonInterpreterDiagnostic extends BaseDiagnostic {
     constructor(
-        code: DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic | DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
+        code:
+            | DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic
+            | DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
         resource: Resource
     ) {
         super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource);
@@ -47,7 +49,10 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper
     ) {
         super(
-            [DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic, DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic],
+            [
+                DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
+                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic
+            ],
             serviceContainer,
             disposableRegistry,
             true
@@ -90,16 +95,29 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
 
         const interpreters = await this.interpreterService.getInterpreters(resource);
         if (interpreters.filter(i => !this.helper.isMacDefaultPythonPath(i.path)).length === 0) {
-            return [new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic, resource)];
+            return [
+                new InvalidMacPythonInterpreterDiagnostic(
+                    DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
+                    resource
+                )
+            ];
         }
 
-        return [new InvalidMacPythonInterpreterDiagnostic(DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic, resource)];
+        return [
+            new InvalidMacPythonInterpreterDiagnostic(
+                DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
+                resource
+            )
+        ];
     }
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
         if (diagnostics.length === 0) {
             return;
         }
-        const messageService = this.serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
+        const messageService = this.serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
+            IDiagnosticHandlerService,
+            DiagnosticCommandPromptHandlerServiceId
+        );
         await Promise.all(
             diagnostics.map(async diagnostic => {
                 const canHandle = await this.canHandle(diagnostic);
@@ -119,7 +137,9 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     }
     protected async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.map(workspace => workspace.uri) : [undefined];
+        const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
+            ? workspaceService.workspaceFolders!.map(workspace => workspace.uri)
+            : [undefined];
         const workspaceUriIndex = workspacesUris.findIndex(uri => event.affectsConfiguration('python.pythonPath', uri));
         if (workspaceUriIndex === -1) {
             return;

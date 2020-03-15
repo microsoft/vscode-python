@@ -30,11 +30,7 @@ suite('Debugging - Configuration Provider Factory', () => {
         );
     });
     getNamesAndValues<DebugConfigurationType>(DebugConfigurationType).forEach(item => {
-        test(`Configuration Provider for ${item.name}`, function() {
-            if (item.value === DebugConfigurationType.default) {
-                // tslint:disable-next-line:no-invalid-this
-                return this.skip();
-            }
+        test(`Configuration Provider for ${item.name}`, () => {
             const provider = factory.create(item.value);
             expect(provider).to.equal(mappedProviders.get(item.value));
         });

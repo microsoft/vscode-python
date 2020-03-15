@@ -14,7 +14,10 @@ import { ILanguageServerOutputChannel } from '../types';
 export class LanguageServerOutputChannel implements ILanguageServerOutputChannel {
     public output: IOutputChannel | undefined;
     private registered = false;
-    constructor(@inject(IApplicationShell) private readonly appShell: IApplicationShell, @inject(ICommandManager) private readonly commandManager: ICommandManager) {}
+    constructor(
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
+    ) {}
 
     public get channel() {
         if (!this.output) {

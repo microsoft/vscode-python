@@ -16,8 +16,14 @@ export class CellMatcher {
     private defaultCellMarkerExec: RegExp;
 
     constructor(settings?: IDataScienceSettings) {
-        this.codeMatchRegEx = this.createRegExp(settings ? settings.codeRegularExpression : undefined, RegExpValues.PythonCellMarker);
-        this.markdownMatchRegEx = this.createRegExp(settings ? settings.markdownRegularExpression : undefined, RegExpValues.PythonMarkdownCellMarker);
+        this.codeMatchRegEx = this.createRegExp(
+            settings ? settings.codeRegularExpression : undefined,
+            RegExpValues.PythonCellMarker
+        );
+        this.markdownMatchRegEx = this.createRegExp(
+            settings ? settings.markdownRegularExpression : undefined,
+            RegExpValues.PythonMarkdownCellMarker
+        );
         this.codeExecRegEx = new RegExp(`${this.codeMatchRegEx.source}(.*)`);
         this.markdownExecRegEx = new RegExp(`${this.markdownMatchRegEx.source}(.*)`);
         this.defaultCellMarker = settings?.defaultCellMarker ? settings.defaultCellMarker : '# %%';

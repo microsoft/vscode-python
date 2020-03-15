@@ -3,8 +3,8 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+import { traceError } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { ILogger } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { CondaInfo, ICondaService, IInterpreterHelper, InterpreterType, PythonInterpreter } from '../../contracts';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -18,7 +18,6 @@ export class CondaEnvService extends CacheableLocatorService {
     constructor(
         @inject(ICondaService) private condaService: ICondaService,
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
-        @inject(ILogger) private logger: ILogger,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IFileSystem) private fileSystem: IFileSystem
     ) {
@@ -56,7 +55,9 @@ export class CondaEnvService extends CacheableLocatorService {
             const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
                 interpreters.forEach(interpreter => {
-                    const environment = environments.find(item => this.fileSystem.arePathsSame(item.path, interpreter!.envPath!));
+                    const environment = environments.find(item =>
+                        this.fileSystem.arePathsSame(item.path, interpreter!.envPath!)
+                    );
                     if (environment) {
                         interpreter.envName = environment!.name;
                     }
@@ -70,7 +71,7 @@ export class CondaEnvService extends CacheableLocatorService {
             //   2. `conda info --json` has changed signature.
             //   3. output of `conda info --json` has changed in structure.
             // In all cases, we can't offer conda pythonPath suggestions.
-            this.logger.logError('Failed to get Suggestions from conda', ex);
+            traceError('Failed to get Suggestions from conda', ex);
             return [];
         }
     }
@@ -79,7 +80,12 @@ export class CondaEnvService extends CacheableLocatorService {
 /**
  * Return the list of conda env interpreters.
  */
-export async function parseCondaInfo(info: CondaInfo, condaService: ICondaService, fileSystem: IFileSystem, helper: IInterpreterHelper) {
+export async function parseCondaInfo(
+    info: CondaInfo,
+    condaService: ICondaService,
+    fileSystem: IFileSystem,
+    helper: IInterpreterHelper
+) {
     // The root of the conda environment is itself a Python interpreter
     // envs reported as e.g.: /Users/bob/miniconda3/envs/someEnv.
     const envs = Array.isArray(info.envs) ? info.envs : [];

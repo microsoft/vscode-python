@@ -6,7 +6,13 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../common/types';
+import {
+    IAsyncDisposable,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel
+} from '../../common/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
@@ -24,7 +30,6 @@ type JupyterExecutionClassType = {
     new (
         liveShare: ILiveShareApi,
         interpreterService: IInterpreterService,
-        logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
@@ -43,11 +48,13 @@ type JupyterExecutionClassType = {
 export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposable {
     private executionFactory: RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>;
     private sessionChangedEventEmitter: EventEmitter<void> = new EventEmitter<void>();
+    private serverStartedEventEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<
+        INotebookServerOptions
+    >();
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
-        @inject(ILogger) logger: ILogger,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IFileSystem) fileSystem: IFileSystem,
@@ -66,7 +73,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             GuestJupyterExecution,
             liveShare,
             interpreterService,
-            logger,
             disposableRegistry,
             asyncRegistry,
             fileSystem,
@@ -83,6 +89,10 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
 
     public get sessionChanged(): Event<void> {
         return this.sessionChangedEventEmitter.event;
+    }
+
+    public get serverStarted(): Event<INotebookServerOptions> {
+        return this.serverStartedEventEmitter.event;
     }
 
     public async dispose(): Promise<void> {
@@ -114,9 +124,16 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         const execution = await this.executionFactory.get();
         return execution.isSpawnSupported(cancelToken);
     }
-    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
+    public async connectToNotebookServer(
+        options?: INotebookServerOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookServer | undefined> {
         const execution = await this.executionFactory.get();
-        return execution.connectToNotebookServer(options, cancelToken);
+        const server = await execution.connectToNotebookServer(options, cancelToken);
+        if (server) {
+            this.serverStartedEventEmitter.fire(options);
+        }
+        return server;
     }
     public async spawnNotebook(file: string): Promise<void> {
         const execution = await this.executionFactory.get();

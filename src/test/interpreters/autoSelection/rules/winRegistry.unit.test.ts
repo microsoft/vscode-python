@@ -21,7 +21,11 @@ import { InterpreterAutoSelectionService } from '../../../../client/interpreter/
 import { NextAction } from '../../../../client/interpreter/autoSelection/rules/baseRule';
 import { WindowsRegistryInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/winRegistry';
 import { IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
-import { IInterpreterHelper, IInterpreterLocatorService, PythonInterpreter } from '../../../../client/interpreter/contracts';
+import {
+    IInterpreterHelper,
+    IInterpreterLocatorService,
+    PythonInterpreter
+} from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { WindowsRegistryService } from '../../../../client/interpreter/locators/services/windowsRegistryService';
 
@@ -34,10 +38,16 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
     let platform: IPlatformService;
     let helper: IInterpreterHelper;
     class WindowsRegistryInterpretersAutoSelectionRuleTest extends WindowsRegistryInterpretersAutoSelectionRule {
-        public async setGlobalInterpreter(interpreter?: PythonInterpreter, manager?: IInterpreterAutoSelectionService): Promise<boolean> {
+        public async setGlobalInterpreter(
+            interpreter?: PythonInterpreter,
+            manager?: IInterpreterAutoSelectionService
+        ): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
-        public async onAutoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<NextAction> {
+        public async onAutoSelectInterpreter(
+            resource: Resource,
+            manager?: IInterpreterAutoSelectionService
+        ): Promise<NextAction> {
             return super.onAutoSelectInterpreter(resource, manager);
         }
     }
@@ -49,8 +59,16 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
         locator = mock(WindowsRegistryService);
         platform = mock(PlatformService);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(instance(state));
-        rule = new WindowsRegistryInterpretersAutoSelectionRuleTest(instance(fs), instance(helper), instance(stateFactory), instance(platform), instance(locator));
+        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
+            instance(state)
+        );
+        rule = new WindowsRegistryInterpretersAutoSelectionRuleTest(
+            instance(fs),
+            instance(helper),
+            instance(stateFactory),
+            instance(platform),
+            instance(locator)
+        );
     });
 
     getNamesAndValues<OSType>(OSType).forEach(osType => {

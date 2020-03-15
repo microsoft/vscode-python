@@ -7,7 +7,12 @@ import { CancellationToken } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../../common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel
+} from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
@@ -22,13 +27,15 @@ import { ServerCache } from './serverCache';
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
 @injectable()
-export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExecutionBase, LiveShare.JupyterExecutionService) {
+export class GuestJupyterExecution extends LiveShareParticipantGuest(
+    JupyterExecutionBase,
+    LiveShare.JupyterExecutionService
+) {
     private serverCache: ServerCache;
 
     constructor(
         liveShare: ILiveShareApi,
         interpreterService: IInterpreterService,
-        logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
@@ -43,7 +50,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         super(
             liveShare,
             interpreterService,
-            logger,
             disposableRegistry,
             workspace,
             configuration,
@@ -74,11 +80,18 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         return Promise.resolve(false);
     }
 
-    public async guestConnectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
+    public async guestConnectToNotebookServer(
+        options?: INotebookServerOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookServer | undefined> {
         const service = await this.waitForService();
         if (service) {
             const purpose = options ? options.purpose : uuid();
-            const connection: IConnection = await service.request(LiveShareCommands.connectToNotebookServer, [options], cancelToken);
+            const connection: IConnection = await service.request(
+                LiveShareCommands.connectToNotebookServer,
+                [options],
+                cancelToken
+            );
 
             // If that works, then treat this as a remote server and connect to it
             if (connection && connection.baseUrl) {
@@ -96,8 +109,15 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         }
     }
 
-    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer> {
-        const result = await this.serverCache.getOrCreate(this.guestConnectToNotebookServer.bind(this), options, cancelToken);
+    public async connectToNotebookServer(
+        options?: INotebookServerOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookServer> {
+        const result = await this.serverCache.getOrCreate(
+            this.guestConnectToNotebookServer.bind(this),
+            options,
+            cancelToken
+        );
 
         if (!result) {
             throw new JupyterConnectError(localize.DataScience.liveShareConnectFailure());

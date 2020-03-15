@@ -9,11 +9,20 @@ import { ILocalDebugLauncherScriptProvider } from '../types';
 import { LocalDebugClient } from './LocalDebugClient';
 
 export class LocalDebugClientV2 extends LocalDebugClient {
-    constructor(args: LaunchRequestArguments, debugSession: DebugSession, canLaunchTerminal: boolean, launcherScriptProvider: ILocalDebugLauncherScriptProvider) {
+    constructor(
+        args: LaunchRequestArguments,
+        debugSession: DebugSession,
+        canLaunchTerminal: boolean,
+        launcherScriptProvider: ILocalDebugLauncherScriptProvider
+    ) {
         super(args, debugSession, canLaunchTerminal, launcherScriptProvider);
     }
     protected buildDebugArguments(_cwd: string, debugPort: number): string[] {
-        return this.launcherScriptProvider.getLauncherArgs({ host: 'localhost', port: debugPort, customDebugger: this.args.customDebugger });
+        return this.launcherScriptProvider.getLauncherArgs({
+            host: 'localhost',
+            port: debugPort,
+            customDebugger: this.args.customDebugger
+        });
     }
     protected buildStandardArguments() {
         const programArgs = Array.isArray(this.args.args) && this.args.args.length > 0 ? this.args.args : [];

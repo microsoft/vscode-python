@@ -16,7 +16,10 @@ export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable
     private currentViewer: IPlotViewer | undefined;
     private currentViewerClosed: IDisposable | undefined;
     private imageList: string[] = [];
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer, @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry) {
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry
+    ) {
         asyncRegistry.push(this);
     }
 

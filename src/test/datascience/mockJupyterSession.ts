@@ -5,6 +5,8 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
+import { JupyterInvalidKernelError } from '../../client/datascience/jupyter/jupyterInvalidKernelError';
+import { JupyterWaitForIdleError } from '../../client/datascience/jupyter/jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
 import { ICell, IJupyterKernelSpec, IJupyterSession } from '../../client/datascience/types';
@@ -26,8 +28,12 @@ export class MockJupyterSession implements IJupyterSession {
     private forceRestartTimeout: boolean = false;
     private completionTimeout: number = 1;
     private lastRequest: MockJupyterRequest | undefined;
-
-    constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
+    constructor(
+        cellDictionary: Record<string, ICell>,
+        timedelay: number,
+        private pendingIdleFailure: boolean = false,
+        private pendingKernelChangeFailure: boolean = false
+    ) {
         this.dict = cellDictionary;
         this.timedelay = timedelay;
     }
@@ -41,6 +47,10 @@ export class MockJupyterSession implements IJupyterSession {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
         }
         return this.onStatusChangedEvent.event;
+    }
+
+    public get status(): ServerStatus {
+        return ServerStatus.Idle;
     }
 
     public async restart(_timeout: number): Promise<void> {
@@ -60,13 +70,21 @@ export class MockJupyterSession implements IJupyterSession {
         return sleep(this.timedelay);
     }
     public waitForIdle(_timeout: number): Promise<void> {
+        if (this.pendingIdleFailure) {
+            this.pendingIdleFailure = false;
+            return Promise.reject(new JupyterWaitForIdleError('Kernel is dead'));
+        }
         return sleep(this.timedelay);
     }
 
     public prolongRestarts() {
         this.forceRestartTimeout = true;
     }
-    public requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture<any, any> {
+    public requestExecute(
+        content: KernelMessage.IExecuteRequestMsg['content'],
+        _disposeOnDone?: boolean,
+        _metadata?: JSONObject
+    ): Kernel.IFuture<any, any> {
         // Content should have the code
         const cell = this.findCell(content.code);
         if (cell) {
@@ -91,18 +109,51 @@ export class MockJupyterSession implements IJupyterSession {
         return request;
     }
 
+    public requestInspect(
+        _content: KernelMessage.IInspectRequestMsg['content']
+    ): Promise<KernelMessage.IInspectReplyMsg> {
+        return Promise.resolve({
+            content: {
+                status: 'ok',
+                metadata: {},
+                found: true,
+                data: {} // Could add variable values here?
+            },
+            channel: 'shell',
+            header: {
+                date: 'foo',
+                version: '1',
+                session: '1',
+                msg_id: '1',
+                msg_type: 'inspect_reply',
+                username: 'foo'
+            },
+            parent_header: {
+                date: 'foo',
+                version: '1',
+                session: '1',
+                msg_id: '1',
+                msg_type: 'inspect_request',
+                username: 'foo'
+            },
+            metadata: {}
+        });
+    }
+
     public sendInputReply(content: string) {
         if (this.lastRequest) {
             this.lastRequest.sendInputReply({ value: content, status: 'ok' });
         }
     }
 
-    public async requestComplete(_content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+    public async requestComplete(
+        _content: KernelMessage.ICompleteRequestMsg['content']
+    ): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
         await sleep(this.completionTimeout);
 
         return {
             content: {
-                matches: ['printly'], // This keeps this in the intellisense when the editor pairs down results
+                matches: ['printly', '%%bash'], // This keeps this in the intellisense when the editor pairs down results
                 cursor_start: 0,
                 cursor_end: 7,
                 status: 'ok',
@@ -133,7 +184,11 @@ export class MockJupyterSession implements IJupyterSession {
         this.completionTimeout = timeout;
     }
 
-    public changeKernel(_kernel: IJupyterKernelSpec | LiveKernelModel, _timeoutMS: number): Promise<void> {
+    public changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, _timeoutMS: number): Promise<void> {
+        if (this.pendingKernelChangeFailure) {
+            this.pendingKernelChangeFailure = false;
+            return Promise.reject(new JupyterInvalidKernelError(kernel));
+        }
         return Promise.resolve();
     }
 

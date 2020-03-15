@@ -3,8 +3,9 @@
 
 'use strict';
 
-export enum PTVSDEvents {
+export enum DebuggerEvents {
     // Event sent by PTVSD when a child process is launched and ready to be attached to for multi-proc debugging.
     ChildProcessLaunched = 'ptvsd_subprocess',
-    AttachToSubprocess = 'ptvsd_attach'
+    PtvsdAttachToSubprocess = 'ptvsd_attach',
+    DebugpyAttachToSubprocess = 'debugpyAttach'
 }

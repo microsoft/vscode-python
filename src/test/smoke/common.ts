@@ -15,7 +15,9 @@ import { noop, sleep } from '../core';
 
 export async function updateSetting(setting: string, value: any) {
     const resource = vscode.workspace.workspaceFolders![0].uri;
-    await vscode.workspace.getConfiguration('python', resource).update(setting, value, vscode.ConfigurationTarget.WorkspaceFolder);
+    await vscode.workspace
+        .getConfiguration('python', resource)
+        .update(setting, value, vscode.ConfigurationTarget.WorkspaceFolder);
 }
 export async function removeLanguageServerFiles() {
     const folders = await getLanaguageServerFolders();
@@ -46,7 +48,11 @@ export async function openFileAndWaitForLS(file: string): Promise<vscode.TextDoc
     // Make sure LS completes file loading and analysis.
     // In test mode it awaits for the completion before trying
     // to fetch data for completion, hover.etc.
-    await vscode.commands.executeCommand('vscode.executeCompletionItemProvider', textDocument.uri, new vscode.Position(0, 0));
+    await vscode.commands.executeCommand(
+        'vscode.executeCompletionItemProvider',
+        textDocument.uri,
+        new vscode.Position(0, 0)
+    );
     // For for LS to get extracted.
     await sleep(10_000);
     return textDocument;

@@ -27,9 +27,11 @@ export class TerminalProvider implements Disposable {
         if (pythonSettings.terminal.activateEnvInCurrentTerminal) {
             if (currentTerminal) {
                 const terminalActivator = this.serviceContainer.get<ITerminalActivator>(ITerminalActivator);
-                await terminalActivator.activateEnvironmentInTerminal(currentTerminal, undefined, true);
+                await terminalActivator.activateEnvironmentInTerminal(currentTerminal, { preserveFocus: true });
             }
-            sendTelemetryEvent(EventName.ACTIVATE_ENV_IN_CURRENT_TERMINAL, undefined, { isTerminalVisible: currentTerminal ? true : false });
+            sendTelemetryEvent(EventName.ACTIVATE_ENV_IN_CURRENT_TERMINAL, undefined, {
+                isTerminalVisible: currentTerminal ? true : false
+            });
         }
     }
     public dispose() {

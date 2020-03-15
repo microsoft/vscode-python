@@ -1,0 +1,404 @@
+{
+    "cells": [
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "In this notebook we will process the synthetic Austen/food reviews data and convert it into feature vectors. In later notebooks these feature vectors will be the inputs to models which we will train and eventually use to identify spam. \n",
+                "\n",
+                "This notebook uses [term frequency-inverse document frequency](https://en.wikipedia.org/wiki/Tf–idf), or tf-idf, to generate feature vectors. Tf-idf is commonly used to summarise text data, and it aims to capture how important different words are within a set of documents. Tf-idf combines a normalized word count (or term frequency) with the inverse document frequency (or a measure of how common a word is across all documents) in order to identify words, or terms, which are 'interesting' or important within the document. \n",
+                "\n",
+                "\n",
+                "We begin by loading in the data:"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import pandas as pd\n",
+                "in_vscode=0\n",
+                "\n",
+                "df = pd.read_parquet(\"data/training.parquet\")"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "To illustrate the computation of tf-idf vectors we will first implement the method on a sample of three of the documents we just loaded.   "
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import numpy as np\n",
+                "\n",
+                "np.random.seed(0xc0ffeeee)\n",
+                "df_samp = df.sample(3)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "pd.set_option('display.max_colwidth', -1) #ensures that all the text is visible\n",
+                "df_samp"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "We begin by computing the term frequency ('tf') of the words in the three texts above. We use the `token_pattern` parameter to specify that we only want to consider words (no numeric values). We limit the number of words (`max_features`) to 20, so that we can easily inspect the output. This means that only the 20 words which appear most frequently across the three texts will be represented. "
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "from sklearn.feature_extraction.text import CountVectorizer\n",
+                "\n",
+                "vectorizer = CountVectorizer(token_pattern='(?u)\\\\b[A-Za-z]\\\\w+\\\\b', max_features = 20)\n",
+                "counts = vectorizer.fit_transform(df_samp[\"text\"])"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "vectorizer.get_feature_names() #shows all the words used as features for this vectorizer"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "counts"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "print(counts.toarray()) "
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "Each row of the array corresponds to one of the texts, whilst the columns relate to the words considered in this vectorizer. (You can confirm that 'all' appears once in the first two texts, and twice in the third text, and so on.)\n",
+                "\n",
+                "The next stage of the process is to use the results of the term frequency matrix to compute the tf-idf. \n",
+                "\n",
+                "The inverse document frequency (idf) for a particular word, or feature, is computed as (the log of) a ratio of the number of documents in a corpus to the number of documents which contain that feature (up to some constant factors). "
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "from sklearn.feature_extraction.text import TfidfTransformer\n",
+                "\n",
+                "tfidf_transformer = TfidfTransformer()\n",
+                "df_tfidf = tfidf_transformer.fit_transform(counts)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "print(df_tfidf.toarray())"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "Each row of the object above is the desired tf-idf vector for the relevant document. "
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "A major disadvantage of using a vectorizer is that it will be dependent upon the dictionary of words it sees when it is 'fit' to the data. As such, if we are presented with a new passage of text and wish to compute a feature vector for for that text we are required to know which word maps to which space of the vector. Keeping track of a dictionary is impractical and will lead to inefficiency. \n",
+                "\n",
+                "Furthermore, there are only \"spaces\" in the vectorizer for words that have been seen in the fitting stage. If a new text sample contains a word which was not present when the vectorizer was first fit, there will be no place in the feature vectors to count that word. \n",
+                "\n",
+                "With that in mind, we consider using a [hashing vectorizer](https://en.wikipedia.org/wiki/Feature_hashing). Words can be hashed to buckets, and the bucket count incremented. This will give us a counts matrix, like we saw above, which we can then compute the tf-idf matrix for, without the need to keep track of which column in the matrix any given word maps to. \n",
+                "\n",
+                "One disadvantage of this approach is that collisions will occur - with a finite set of buckets multiple words will hash to the same bucket. As such we are no longer computing an exact tf-idf matrix.\n",
+                "\n",
+                "Furthermore we will not be able to recover the word (or words) associated with a bucket at a later time if we need them. (For our application this won't be needed.)\n",
+                "\n",
+                "We fix the number of buckets at 2<sup>10</sup> = 1024, but you can try using a different number of buckets and see how the spam detection models are effected.  "
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "from sklearn.feature_extraction.text import HashingVectorizer\n",
+                "BUCKETS=1024\n",
+                "\n",
+                "hv = HashingVectorizer(norm=None, token_pattern='(?u)\\\\b[A-Za-z]\\\\w+\\\\b', n_features=BUCKETS, alternate_sign = False)\n",
+                "hv\n"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "hvcounts = hv.fit_transform(df[\"text\"])\n",
+                "hvcounts"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "We can then go on to compute the \"approximate\" tf-idf matrix for this, by applying the tf-idf transformer to the hashed counts matrix."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "tfidf_transformer = TfidfTransformer()\n",
+                "hvdf_tfidf = tfidf_transformer.fit_transform(hvcounts)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "hvdf_tfidf"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "We apply PCA so that we can visualize the output"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "#PCA projection so that output can be visualised\n",
+                "\n",
+                "import sklearn.decomposition\n",
+                "\n",
+                "DIMENSIONS = 2\n",
+                "\n",
+                "pca2 = sklearn.decomposition.TruncatedSVD(DIMENSIONS)\n",
+                "\n",
+                "pca_a = pca2.fit_transform(hvdf_tfidf)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "pca_df = pd.DataFrame(pca_a, columns=[\"x\", \"y\"])\n",
+                "pca_df.sample(10)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "plot_data = pd.concat([df.reset_index(), pca_df], axis=1)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import altair as alt\n",
+                "alt.renderers.enable('nteract')\n",
+                "\n",
+                "alt.Chart(plot_data.sample(1000)).encode(x=\"x\", y=\"y\", color=\"label\").mark_point().interactive()"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "We want to be able to easily compute feature vectors using the hashing tf-idf workflow laid out above. The `Pipeline` facility in scikit-learn streamlines this workflow by making it easy to pass data through multiple transforms. In the next cell we set up our pipeline."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "from sklearn.feature_extraction.text import HashingVectorizer,TfidfTransformer\n",
+                "from sklearn.pipeline import Pipeline\n",
+                "import pickle, os\n",
+                "\n",
+                "vect = HashingVectorizer(norm=None, token_pattern='(?u)\\\\b[A-Za-z]\\\\w+\\\\b', n_features=BUCKETS, alternate_sign = False)\n",
+                "tfidf = TfidfTransformer()\n",
+                "\n",
+                "feat_pipeline = Pipeline([\n",
+                "    ('vect',vect),\n",
+                "    ('tfidf',tfidf)\n",
+                "])"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "We can then use the `fit_transform` method to apply the pipeline to our data frame. This produces a sparse matrix (only non zero entries are recorded). We convert this to a dense array using the `toarray()` function, then append the index and labels to aid readability. "
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "feature_vecs = feat_pipeline.fit_transform(df[\"text\"]).toarray()\n",
+                "labeled_vecs = pd.concat([df.reset_index()[[\"index\", \"label\"]],\n",
+                "                                pd.DataFrame(feature_vecs)], axis=1)\n",
+                "labeled_vecs.columns = labeled_vecs.columns.astype(str)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "labeled_vecs.sample(10)"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "We save the feature vectors to a parquet file."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "labeled_vecs.to_parquet(\"data/features.parquet\")"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "We will then serialize our pipeline to a file on disk so that we can reuse the document frequencies we've observed on training data to weight term vectors."
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "from mlworkflows import util\n",
+                "util.serialize_to(feat_pipeline, \"feature_pipeline.sav\")"
+            ]
+        },
+        {
+            "cell_type": "markdown",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "Now that we have a feature engineering approach, next step is to train a model.  Again, you have two choices for your next step:  [click here](04-model-logistic-regression.ipynb) for a model based on *logistic regression*, or [click here](04-model-random-forest.ipynb) for a model based on *ensembles of decision trees.*"
+            ]
+        }
+    ],
+    "metadata": {
+        "kernelspec": {
+            "display_name": "Python 3.7.0 64-bit ('ml-workflows': conda)",
+            "language": "python",
+            "name": "python37064bitmlworkflowscondad95461eefba54754b428b1d0fa47e7eb"
+        },
+        "language_info": {
+            "codemirror_mode": {
+                "name": "ipython",
+                "version": 3
+            },
+            "file_extension": ".py",
+            "mimetype": "text/x-python",
+            "name": "python",
+            "nbconvert_exporter": "python",
+            "pygments_lexer": "ipython3",
+            "version": "3.7.0-final"
+        }
+    },
+    "nbformat": 4,
+    "nbformat_minor": 2
+}

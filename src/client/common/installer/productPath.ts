@@ -25,8 +25,8 @@ export abstract class BaseProductPathsService implements IProductPathService {
     }
     public abstract getExecutableNameFromSettings(product: Product, resource?: Uri): string;
     public isExecutableAModule(product: Product, resource?: Uri): Boolean {
-        if (product === Product.ipykernel) {
-            return true;
+        if (product === Product.kernelspec) {
+            return false;
         }
         let moduleName: string | undefined;
         try {
@@ -37,7 +37,9 @@ export abstract class BaseProductPathsService implements IProductPathService {
         // User may have customized the module name or provided the fully qualifieid path.
         const executableName = this.getExecutableNameFromSettings(product, resource);
 
-        return typeof moduleName === 'string' && moduleName.length > 0 && path.basename(executableName) === executableName;
+        return (
+            typeof moduleName === 'string' && moduleName.length > 0 && path.basename(executableName) === executableName
+        );
     }
 }
 

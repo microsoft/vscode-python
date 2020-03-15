@@ -5,22 +5,40 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as assert from 'assert';
 import * as typemoq from 'typemoq';
 
+import { PythonSettings } from '../../client/common/configSettings';
 import { IFileSystem } from '../../client/common/platform/types';
+import { IConfigurationService } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
 import { CellState, ICell, IJupyterVariable, INotebook } from '../../client/datascience/types';
+import { MockAutoSelectionService } from '../mocks/autoSelector';
 
 // tslint:disable:no-any max-func-body-length
 suite('JupyterVariables', () => {
     let fakeNotebook: typemoq.IMock<INotebook>;
     let jupyterVariables: JupyterVariables;
     let fileSystem: typemoq.IMock<IFileSystem>;
+    const pythonSettings = new (class extends PythonSettings {
+        public fireChangeEvent() {
+            this.changed.fire();
+        }
+    })(undefined, new MockAutoSelectionService());
 
     function generateVariableOutput(outputData: string, outputType: string): nbformat.IOutput {
-        return {
-            output_type: outputType,
-            text: outputData
-        };
+        switch (outputType) {
+            case 'execute_result':
+                return {
+                    output_type: outputType,
+                    data: {
+                        'text/plain': outputData
+                    }
+                };
+            default:
+                return {
+                    output_type: outputType,
+                    text: outputData
+                };
+        }
     }
 
     function generateCell(outputData: string, outputType: string, hasOutput: boolean): ICell {
@@ -53,13 +71,44 @@ suite('JupyterVariables', () => {
     }
 
     setup(() => {
+        // Setup default settings
+        pythonSettings.datascience = {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 20000,
+            jupyterLaunchRetries: 3,
+            enabled: true,
+            jupyterServerURI: 'local',
+            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: true,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true,
+            allowInput: true,
+            maxOutputSize: 400,
+            errorBackgroundColor: '#FFFFFF',
+            sendSelectionToInteractiveWindow: false,
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
+            codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
+            markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
+            enableCellCodeLens: true,
+            enablePlotViewer: true,
+            runStartupCommands: '',
+            debugJustMyCode: true,
+            variableQueries: [],
+            jupyterCommandLineArguments: []
+        };
+
         // Create our fake notebook
         fakeNotebook = createTypeMoq<INotebook>('Fake Notebook');
+        const config = createTypeMoq<IConfigurationService>('Config ');
 
         fileSystem = typemoq.Mock.ofType<IFileSystem>();
         fileSystem.setup(fs => fs.readFile(typemoq.It.isAnyString())).returns(() => Promise.resolve('test'));
+        config.setup(s => s.getSettings(typemoq.It.isAny())).returns(() => pythonSettings);
 
-        jupyterVariables = new JupyterVariables(fileSystem.object);
+        jupyterVariables = new JupyterVariables(fileSystem.object, config.object);
     });
 
     // No cells, no output, no text/plain
@@ -67,7 +116,7 @@ suite('JupyterVariables', () => {
         fakeNotebook
             .setup(fs =>
                 fs.execute(
-                    typemoq.It.isValue('test'),
+                    typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
                     typemoq.It.isValue(0),
                     typemoq.It.isAnyString(),
@@ -80,7 +129,13 @@ suite('JupyterVariables', () => {
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object);
+            await jupyterVariables.getVariables(fakeNotebook.object, {
+                startIndex: 0,
+                pageSize: 100,
+                sortColumn: '',
+                sortAscending: true,
+                executionCount: 1
+            });
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -93,7 +148,7 @@ suite('JupyterVariables', () => {
         fakeNotebook
             .setup(fs =>
                 fs.execute(
-                    typemoq.It.isValue('test'),
+                    typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
                     typemoq.It.isValue(0),
                     typemoq.It.isAnyString(),
@@ -106,7 +161,13 @@ suite('JupyterVariables', () => {
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object);
+            await jupyterVariables.getVariables(fakeNotebook.object, {
+                startIndex: 0,
+                pageSize: 100,
+                sortColumn: '',
+                sortAscending: true,
+                executionCount: 1
+            });
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -119,7 +180,7 @@ suite('JupyterVariables', () => {
         fakeNotebook
             .setup(fs =>
                 fs.execute(
-                    typemoq.It.isValue('test'),
+                    typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
                     typemoq.It.isValue(0),
                     typemoq.It.isAnyString(),
@@ -132,7 +193,13 @@ suite('JupyterVariables', () => {
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object);
+            await jupyterVariables.getVariables(fakeNotebook.object, {
+                startIndex: 0,
+                pageSize: 100,
+                sortColumn: '',
+                sortAscending: true,
+                executionCount: 1
+            });
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -145,7 +212,7 @@ suite('JupyterVariables', () => {
         fakeNotebook
             .setup(fs =>
                 fs.execute(
-                    typemoq.It.isValue('test'),
+                    typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
                     typemoq.It.isValue(0),
                     typemoq.It.isAnyString(),
@@ -156,25 +223,44 @@ suite('JupyterVariables', () => {
             .returns(() =>
                 Promise.resolve(
                     generateCells(
-                        '[{"name": "big_dataframe", "type": "DataFrame", "size": 62}, {"name": "big_dict", "type": "dict", "size": 57}, {"name": "big_int", "type": "int", "size": 56}, {"name": "big_list", "type": "list", "size": 57}, {"name": "big_nparray", "type": "ndarray", "size": 60}, {"name": "big_string", "type": "str", "size": 59}]',
-                        'stream'
+                        `['big_dataframe', 'big_dict', 'big_int', 'big_list', 'big_nparray', 'big_string']`,
+                        'execute_result'
                     )
                 )
             )
             .verifiable(typemoq.Times.once());
+        fakeNotebook
+            .setup(fs => fs.inspect(typemoq.It.isAny()))
+            .returns(() =>
+                Promise.resolve({
+                    'text/plain': `\u001b[1;31mType:\u001b[0m        complex
+\u001b[1;31mString form:\u001b[0m (1+1j)
+\u001b[1;31mDocstring:\u001b[0m  
+Create a complex number from a real part and an optional imaginary part.
+                        
+This is equivalent to (real + imag*1j) where imag defaults to 0.
+                        "`
+                })
+            );
 
-        const results = await jupyterVariables.getVariables(fakeNotebook.object);
+        const results = await jupyterVariables.getVariables(fakeNotebook.object, {
+            startIndex: 0,
+            pageSize: 100,
+            sortColumn: '',
+            sortAscending: true,
+            executionCount: 1
+        });
 
         // Check the results that we get back
-        assert.equal(results.length, 6);
+        assert.equal(results.pageResponse.length, 6);
 
         // Check our items (just the first few real items, no need to check all 19)
-        assert.deepEqual(results[0], { name: 'big_dataframe', size: 62, type: 'DataFrame' });
-        assert.deepEqual(results[1], { name: 'big_dict', size: 57, type: 'dict' });
-        assert.deepEqual(results[2], { name: 'big_int', size: 56, type: 'int' });
-        assert.deepEqual(results[3], { name: 'big_list', size: 57, type: 'list' });
-        assert.deepEqual(results[4], { name: 'big_nparray', size: 60, type: 'ndarray' });
-        assert.deepEqual(results[5], { name: 'big_string', size: 59, type: 'str' });
+        assert.equal(results.pageResponse[0].name, 'big_dataframe');
+        assert.equal(results.pageResponse[1].name, 'big_dict');
+        assert.equal(results.pageResponse[2].name, 'big_int');
+        assert.equal(results.pageResponse[3].name, 'big_list');
+        assert.equal(results.pageResponse[4].name, 'big_nparray');
+        assert.equal(results.pageResponse[5].name, 'big_string');
 
         fakeNotebook.verifyAll();
     });
@@ -184,7 +270,7 @@ suite('JupyterVariables', () => {
         fakeNotebook
             .setup(fs =>
                 fs.execute(
-                    typemoq.It.isValue('test'),
+                    typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
                     typemoq.It.isValue(0),
                     typemoq.It.isAnyString(),
@@ -192,15 +278,45 @@ suite('JupyterVariables', () => {
                     typemoq.It.isValue(true)
                 )
             )
-            .returns(() => Promise.resolve(generateCells('{"name": "big_complex", "type": "complex", "size": 60, "value": "(1+1j)"}', 'stream')))
+            .returns(() => Promise.resolve(generateCells(`['big_complex']`, 'execute_result')))
+            .verifiable(typemoq.Times.once());
+        fakeNotebook
+            .setup(fs => fs.inspect(typemoq.It.isValue('big_complex')))
+            .returns(() =>
+                Promise.resolve({
+                    'text/plain': `\u001b[1;31mType:\u001b[0m        complex
+\u001b[1;31mString form:\u001b[0m (1+1j)
+\u001b[1;31mDocstring:\u001b[0m  
+Create a complex number from a real part and an optional imaginary part.
+                        
+This is equivalent to (real + imag*1j) where imag defaults to 0.
+                        "`
+                })
+            )
             .verifiable(typemoq.Times.once());
 
-        const testVariable: IJupyterVariable = { name: 'big_complex', type: 'complex', size: 60, truncated: false, count: 0, shape: '', value: '', supportsDataExplorer: false };
+        const testVariable: IJupyterVariable = {
+            name: 'big_complex',
+            type: 'complex',
+            size: 0,
+            truncated: true,
+            count: 0,
+            shape: '',
+            value: ' (1+1j)',
+            supportsDataExplorer: false
+        };
 
-        const resultVariable = await jupyterVariables.getValue(testVariable, fakeNotebook.object);
+        const results = await jupyterVariables.getVariables(fakeNotebook.object, {
+            startIndex: 0,
+            pageSize: 100,
+            sortColumn: '',
+            sortAscending: true,
+            executionCount: 1
+        });
+        const resultVariable = results.pageResponse[0];
 
         // Verify the result value should be filled out from fake server result
-        assert.deepEqual(resultVariable, { name: 'big_complex', size: 60, type: 'complex', value: '(1+1j)' });
+        assert.deepEqual(resultVariable, testVariable);
         fakeNotebook.verifyAll();
     });
 });

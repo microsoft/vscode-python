@@ -38,7 +38,10 @@ export class EnablementTracker implements IExtensionSingleActivationService {
                 const testingSetting = this.testConfig.getTestEnablingSetting(product);
                 const settingToCheck = `python.${testingSetting}`;
                 // If the setting was modified and if its value is true, then track this.
-                if (args.affectsConfiguration(settingToCheck) && this.workspaceService.getConfiguration('python', resource).get<boolean>(testingSetting, false)) {
+                if (
+                    args.affectsConfiguration(settingToCheck) &&
+                    this.workspaceService.getConfiguration('python', resource).get<boolean>(testingSetting, false)
+                ) {
                     telemetry[item] = true;
                 }
             });

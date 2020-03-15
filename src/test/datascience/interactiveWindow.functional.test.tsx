@@ -9,52 +9,69 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 
+import { ReactWrapper } from 'enzyme';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
-import { concatMultilineStringInput } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
+import { IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
+import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
+import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
+import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { defaultDataScienceSettings } from './helpers';
-import { addCode, getInteractiveCellResults, getOrCreateInteractiveWindow, runMountedTest } from './interactiveWindowTestHelpers';
+import {
+    addCode,
+    closeInteractiveWindow,
+    getInteractiveCellResults,
+    getOrCreateInteractiveWindow,
+    runMountedTest
+} from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
-import { waitForUpdate } from './reactHelpers';
+import { createMessageEvent, waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
     addInputMockData,
     addMockData,
     CellInputState,
     CellPosition,
+    enterEditorKey,
     enterInput,
     escapePath,
     findButton,
+    getInteractiveEditor,
     getLastOutputCell,
+    mountWebView,
     srcDirectory,
+    submitInput,
     toggleCellExpansion,
+    typeCode,
     verifyHtmlOnCell,
     verifyLastCellInputState,
     waitForMessage,
     waitForMessageResponse
 } from './testHelpers';
 
-//import { asyncDump } from '../common/asyncDump';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
     const defaultCellMarker = '# %%';
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        return ioc.activate();
     });
 
     teardown(async () => {
@@ -72,9 +89,18 @@ suite('DataScience Interactive Window output tests', () => {
     });
 
     async function forceSettingsChange(newSettings: IDataScienceSettings) {
-        await getOrCreateInteractiveWindow(ioc);
-        ioc.forceSettingsChanged(ioc.getSettings().pythonPath, newSettings);
-        return waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
+        const window = await getOrCreateInteractiveWindow(ioc);
+        await window.show();
+        const update = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
+        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, newSettings);
+        return update;
+    }
+
+    function simulateKeyPressOnEditor(
+        editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined,
+        keyboardEvent: Partial<IKeyboardEvent> & { code: string }
+    ) {
+        enterEditorKey(editorControl, keyboardEvent);
     }
 
     // Uncomment this to debug hangs on exit
@@ -95,6 +121,29 @@ suite('DataScience Interactive Window output tests', () => {
     );
 
     runMountedTest(
+        'Clear output',
+        async wrapper => {
+            const text = `from IPython.display import clear_output
+for i in range(10):
+    clear_output()
+    print("Hello World {0}!".format(i))
+`;
+            addContinuousMockData(ioc, text, async _c => {
+                return {
+                    result: 'Hello World 9!',
+                    haveMore: false
+                };
+            });
+            await addCode(ioc, wrapper, text);
+
+            verifyHtmlOnCell(wrapper, 'InteractiveCell', '<div>Hello World 9!', CellPosition.Last);
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
         'Hide inputs',
         async wrapper => {
             await forceSettingsChange({ ...defaultDataScienceSettings(), showCellInputCode: false });
@@ -105,7 +154,7 @@ suite('DataScience Interactive Window output tests', () => {
 
             // Add a cell without output, this cell should not show up at all
             addMockData(ioc, 'a=1', undefined, 'text/plain');
-            await addCode(ioc, wrapper, 'a=1', 4);
+            await addCode(ioc, wrapper, 'a=1');
 
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.First);
             verifyHtmlOnCell(wrapper, 'InteractiveCell', undefined, CellPosition.Last);
@@ -137,6 +186,119 @@ suite('DataScience Interactive Window output tests', () => {
             await addCode(ioc, wrapper, 'a=1\na');
 
             verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Expanded);
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
+        'Ctrl + 1/Ctrl + 2',
+        async wrapper => {
+            // Create an interactive window so that it listens to the results.
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+            await interactiveWindow.show();
+
+            // Type in the input box
+            const editor = getInteractiveEditor(wrapper);
+            typeCode(editor, 'a=1\na');
+
+            // Give focus to a random div
+            const reactDiv = wrapper
+                .find('div')
+                .first()
+                .getDOMNode();
+
+            const domDiv = reactDiv.querySelector('div');
+
+            if (domDiv && ioc.postMessage) {
+                domDiv.tabIndex = -1;
+                domDiv.focus();
+
+                // send the ctrl + 1/2 message, this should put focus back on the input box
+                const message = createMessageEvent({ type: InteractiveWindowMessages.Activate, payload: undefined });
+                ioc.postMessage(message);
+
+                // Then enter press shift + enter on the active element
+                const activeElement = document.activeElement;
+                if (activeElement) {
+                    await submitInput(ioc, activeElement as HTMLTextAreaElement);
+                }
+            }
+
+            verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
+        'Escape/Ctrl+U',
+        async wrapper => {
+            // Create an interactive window so that it listens to the results.
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+            await interactiveWindow.show();
+
+            // Type in the input box
+            const editor = getInteractiveEditor(wrapper);
+            typeCode(editor, 'a=1\na');
+
+            // Check code is what we think it is
+            const reactEditor = editor.instance() as MonacoEditor;
+            assert.equal(reactEditor.state.model?.getValue().replace(/\r/g, ''), 'a=1\na');
+
+            // Send escape
+            simulateKeyPressOnEditor(editor, { code: 'Escape' });
+            assert.equal(reactEditor.state.model?.getValue().replace(/\r/g, ''), '');
+
+            typeCode(editor, 'a=1\na');
+            assert.equal(reactEditor.state.model?.getValue().replace(/\r/g, ''), 'a=1\na');
+
+            simulateKeyPressOnEditor(editor, { code: 'KeyU', ctrlKey: true });
+            assert.equal(reactEditor.state.model?.getValue().replace(/\r/g, ''), '');
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
+        'Click outside cells sets focus to input box',
+        async wrapper => {
+            // Create an interactive window so that it listens to the results.
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+            await interactiveWindow.show();
+
+            // Type in the input box
+            const editor = getInteractiveEditor(wrapper);
+            typeCode(editor, 'a=1\na');
+
+            // Give focus to a random div
+            const reactDiv = wrapper
+                .find('div')
+                .first()
+                .getDOMNode();
+
+            const domDiv = reactDiv.querySelector('div');
+
+            if (domDiv && ioc.postMessage) {
+                domDiv.tabIndex = -1;
+                domDiv.focus();
+
+                wrapper
+                    .find('section#main-panel-footer')
+                    .first()
+                    .simulate('click');
+
+                // Then enter press shift + enter on the active element
+                const activeElement = document.activeElement;
+                if (activeElement) {
+                    await submitInput(ioc, activeElement as HTMLTextAreaElement);
+                }
+            }
+
+            verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
         },
         () => {
             return ioc;
@@ -201,7 +363,8 @@ df.head()`;
             const goodPanda = `import pandas as pd
 df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`;
-            const matPlotLib = 'import matplotlib.pyplot as plt\r\nimport numpy as np\r\nx = np.linspace(0,20,100)\r\nplt.plot(x, np.sin(x))\r\nplt.show()';
+            const matPlotLib =
+                'import matplotlib.pyplot as plt\r\nimport numpy as np\r\nx = np.linspace(0,20,100)\r\nplt.plot(x, np.sin(x))\r\nplt.show()';
             const matPlotLibResults = 'img';
             const spinningCursor = `import sys
 import time
@@ -234,7 +397,7 @@ for _ in range(50):
                 return Promise.resolve({ result: result, haveMore: loops > 0 });
             });
 
-            await addCode(ioc, wrapper, badPanda, 4, true);
+            await addCode(ioc, wrapper, badPanda, true);
             verifyHtmlOnCell(wrapper, 'InteractiveCell', `has no attribute 'read'`, CellPosition.Last);
 
             await addCode(ioc, wrapper, goodPanda);
@@ -243,8 +406,19 @@ for _ in range(50):
             await addCode(ioc, wrapper, matPlotLib);
             verifyHtmlOnCell(wrapper, 'InteractiveCell', /img|Figure/, CellPosition.Last);
 
-            await addCode(ioc, wrapper, spinningCursor, 4 + (ioc.mockJupyter ? cursors.length * 3 : 0));
+            await addCode(ioc, wrapper, spinningCursor);
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<div>', CellPosition.Last);
+
+            addContinuousMockData(ioc, 'len?', async _c => {
+                return Promise.resolve({
+                    result: `Signature: len(obj, /)
+Docstring: Return the number of items in a container.
+Type:      builtin_function_or_method`,
+                    haveMore: false
+                });
+            });
+            await addCode(ioc, wrapper, 'len?');
+            verifyHtmlOnCell(wrapper, 'InteractiveCell', 'len', CellPosition.Last);
         },
         () => {
             return ioc;
@@ -260,7 +434,7 @@ for _ in range(50):
             await addCode(ioc, wrapper, 'a=1\na');
 
             // Now verify if we undo, we have no cells
-            let afterUndo = await getInteractiveCellResults(wrapper, 1, () => {
+            let afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
                 interactiveWindow.undoCells();
                 return Promise.resolve();
             });
@@ -268,7 +442,7 @@ for _ in range(50):
             assert.equal(afterUndo.length, 1, `Undo should remove cells + ${afterUndo.debug()}`);
 
             // Redo should put the cells back
-            const afterRedo = await getInteractiveCellResults(wrapper, 1, () => {
+            const afterRedo = await getInteractiveCellResults(ioc, wrapper, () => {
                 interactiveWindow.redoCells();
                 return Promise.resolve();
             });
@@ -279,14 +453,14 @@ for _ in range(50):
             assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
             // Clear everything
-            const afterClear = await getInteractiveCellResults(wrapper, 1, () => {
+            const afterClear = await getInteractiveCellResults(ioc, wrapper, () => {
                 interactiveWindow.removeAllCells();
                 return Promise.resolve();
             });
             assert.equal(afterClear.length, 1, "Clear didn't work");
 
             // Undo should put them back
-            afterUndo = await getInteractiveCellResults(wrapper, 1, () => {
+            afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
                 interactiveWindow.undoCells();
                 return Promise.resolve();
             });
@@ -324,7 +498,7 @@ for _ in range(50):
             const clear = findButton(wrapper, InteractivePanel, 0);
 
             // Now verify if we undo, we have no cells
-            let afterUndo = await getInteractiveCellResults(wrapper, 1, () => {
+            let afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
                 undo!.simulate('click');
                 return Promise.resolve();
             });
@@ -332,7 +506,7 @@ for _ in range(50):
             assert.equal(afterUndo.length, 1, `Undo should remove cells`);
 
             // Redo should put the cells back
-            const afterRedo = await getInteractiveCellResults(wrapper, 1, async () => {
+            const afterRedo = await getInteractiveCellResults(ioc, wrapper, async () => {
                 redo!.simulate('click');
                 return Promise.resolve();
             });
@@ -343,14 +517,14 @@ for _ in range(50):
             assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
             // Clear everything
-            const afterClear = await getInteractiveCellResults(wrapper, 1, async () => {
+            const afterClear = await getInteractiveCellResults(ioc, wrapper, async () => {
                 clear!.simulate('click');
                 return Promise.resolve();
             });
             assert.equal(afterClear.length, 1, "Clear didn't work");
 
             // Undo should put them back
-            afterUndo = await getInteractiveCellResults(wrapper, 1, async () => {
+            afterUndo = await getInteractiveCellResults(ioc, wrapper, async () => {
                 undo!.simulate('click');
                 return Promise.resolve();
             });
@@ -370,7 +544,7 @@ for _ in range(50):
             assert.ok(showedEditor.resolved, 'Goto source is not jumping to editor');
 
             // Make sure delete works
-            const afterDelete = await getInteractiveCellResults(wrapper, 1, async () => {
+            const afterDelete = await getInteractiveCellResults(ioc, wrapper, async () => {
                 deleteButton.simulate('click');
                 return Promise.resolve();
             });
@@ -397,7 +571,9 @@ for _ in range(50):
                 .returns(e => {
                     throw e;
                 });
-            appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+            appShell
+                .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(''));
             appShell
                 .setup(a => a.showSaveDialog(TypeMoq.It.isAny()))
                 .returns(() => {
@@ -420,7 +596,7 @@ for _ in range(50):
             const undo = findButton(wrapper, InteractivePanel, 2);
 
             // Now verify if we undo, we have no cells
-            const afterUndo = await getInteractiveCellResults(wrapper, 1, () => {
+            const afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
                 undo!.simulate('click');
                 return Promise.resolve();
             });
@@ -432,6 +608,62 @@ for _ in range(50):
             const response = waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
             await waitForPromise(response, 100);
             assert.equal(exportCalled, false, 'Export should not be called when no cells visible');
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
+        'Multiple Interpreters',
+        async (wrapper, context) => {
+            if (!ioc.mockJupyter) {
+                const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
+                const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
+                const interpreters = await ioc.getJupyterInterpreters();
+                if (interpreters.length < 2) {
+                    // tslint:disable-next-line: no-console
+                    console.log(
+                        'Multiple interpreters skipped because local machine does not have more than one jupyter environment'
+                    );
+                    context.skip();
+                    return;
+                }
+                const window = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
+                await addCode(ioc, wrapper, 'a=1\na');
+                const activeInterpreter = await interpreterService.getActiveInterpreter(
+                    await window.getOwningResource()
+                );
+                verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+                assert.equal(
+                    window.notebook!.getMatchingInterpreter()?.path,
+                    activeInterpreter?.path,
+                    'Active intrepreter not used to launch notebook'
+                );
+                await closeInteractiveWindow(window, wrapper);
+
+                // Add another python path
+                const secondUri = Uri.file('bar.py');
+                ioc.addResourceToFolder(secondUri, path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience2'));
+                ioc.forceSettingsChanged(
+                    secondUri,
+                    interpreters.filter(i => i.path !== activeInterpreter?.path)[0].path
+                );
+
+                // Then open a second time and make sure it uses this new path
+                const newWrapper = mountWebView(ioc, 'interactive');
+                assert.ok(newWrapper, 'Could not mount a second time');
+                const newWindow = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
+                await addCode(ioc, newWrapper, 'a=1\na', false, secondUri);
+                assert.notEqual(
+                    newWindow.notebook!.getMatchingInterpreter()?.path,
+                    activeInterpreter?.path,
+                    'Active intrepreter used to launch second notebook when it should not have'
+                );
+                verifyHtmlOnCell(newWrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+            } else {
+                context.skip();
+            }
         },
         () => {
             return ioc;
@@ -461,9 +693,21 @@ for _ in range(50):
         'Editor Context',
         async wrapper => {
             // Before we have any cells, verify our contexts are not set
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractive), false, 'Should not have interactive before starting');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells before starting');
-            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable before starting');
+            assert.equal(
+                ioc.getContext(EditorContexts.HaveInteractive),
+                false,
+                'Should not have interactive before starting'
+            );
+            assert.equal(
+                ioc.getContext(EditorContexts.HaveInteractiveCells),
+                false,
+                'Should not have interactive cells before starting'
+            );
+            assert.equal(
+                ioc.getContext(EditorContexts.HaveRedoableCells),
+                false,
+                'Should not have redoable before starting'
+            );
 
             // Verify we can send different commands to the UI and it will respond
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
@@ -478,9 +722,21 @@ for _ in range(50):
             await updatePromise;
 
             // Now we should have the 3 editor contexts
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractive), true, 'Should have interactive after starting');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after starting');
-            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after starting');
+            assert.equal(
+                ioc.getContext(EditorContexts.HaveInteractive),
+                true,
+                'Should have interactive after starting'
+            );
+            assert.equal(
+                ioc.getContext(EditorContexts.HaveInteractiveCells),
+                true,
+                'Should have interactive cells after starting'
+            );
+            assert.equal(
+                ioc.getContext(EditorContexts.HaveRedoableCells),
+                false,
+                'Should not have redoable after starting'
+            );
 
             // Setup a listener for context change events. We have 3 separate contexts, so we have to wait for all 3.
             let count = 0;
@@ -504,21 +760,37 @@ for _ in range(50):
             interactiveWindow.undoCells();
             await waitForPromise(deferred.promise, 2000);
             assert.ok(deferred.resolved, 'Never got update to state');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after undo as sysinfo is ignored');
+            assert.equal(
+                ioc.getContext(EditorContexts.HaveInteractiveCells),
+                false,
+                'Should not have interactive cells after undo as sysinfo is ignored'
+            );
             assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), true, 'Should have redoable after undo');
 
             resetWaiting();
             interactiveWindow.redoCells();
             await waitForPromise(deferred.promise, 2000);
             assert.ok(deferred.resolved, 'Never got update to state');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), true, 'Should have interactive cells after redo');
-            assert.equal(ioc.getContext(EditorContexts.HaveRedoableCells), false, 'Should not have redoable after redo');
+            assert.equal(
+                ioc.getContext(EditorContexts.HaveInteractiveCells),
+                true,
+                'Should have interactive cells after redo'
+            );
+            assert.equal(
+                ioc.getContext(EditorContexts.HaveRedoableCells),
+                false,
+                'Should not have redoable after redo'
+            );
 
             resetWaiting();
             interactiveWindow.removeAllCells();
             await waitForPromise(deferred.promise, 2000);
             assert.ok(deferred.resolved, 'Never got update to state');
-            assert.equal(ioc.getContext(EditorContexts.HaveInteractiveCells), false, 'Should not have interactive cells after delete');
+            assert.equal(
+                ioc.getContext(EditorContexts.HaveInteractiveCells),
+                false,
+                'Should not have interactive cells after delete'
+            );
         },
         () => {
             return ioc;
@@ -589,7 +861,7 @@ for _ in range(50):
             const deleteButton = ImageButtons.at(3);
 
             // Make sure delete works
-            const afterDelete = await getInteractiveCellResults(wrapper, 1, async () => {
+            const afterDelete = await getInteractiveCellResults(ioc, wrapper, async () => {
                 deleteButton.simulate('click');
                 return Promise.resolve();
             });
@@ -663,10 +935,10 @@ for _ in range(50):
                 assert.equal(cells.length, 2, 'Not enough cells generated');
 
                 // Run the first cell
-                await addCode(ioc, wrapper, concatMultilineStringInput(cells[0].data.source), 4);
+                await addCode(ioc, wrapper, concatMultilineStringInput(cells[0].data.source));
 
                 // Last cell should generate a series of updates. Verify we end up with a single image
-                await addCode(ioc, wrapper, concatMultilineStringInput(cells[1].data.source), 10);
+                await addCode(ioc, wrapper, concatMultilineStringInput(cells[1].data.source));
                 const cell = getLastOutputCell(wrapper, 'InteractiveCell');
 
                 const output = cell!.find('div.cell-output');
@@ -705,7 +977,7 @@ for _ in range(50):
                 // Ignore white space.
                 assert.equal(
                     docManager.activeTextEditor.document.getText().trim(),
-                    `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\na=1\na`
+                    `${defaultCellMarker} [markdown]\n## Gather not available`
                 );
             }
         },
@@ -738,7 +1010,7 @@ for _ in range(50):
                 // Ignore whitespace
                 assert.equal(
                     docManager.activeTextEditor.document.getText().trim(),
-                    `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\na=1\na`
+                    `${defaultCellMarker} [markdown]\n## Gather not available`
                 );
             }
         },
@@ -754,11 +1026,16 @@ for _ in range(50):
             const docManager = ioc.get<IDocumentManager>(IDocumentManager);
             docManager.showTextDocument(docManager.textDocuments[0]);
             const window = (await getOrCreateInteractiveWindow(ioc)) as InteractiveWindow;
-            window.copyCode({ source: 'print("baz")' });
-            assert.equal(docManager.textDocuments[0].getText(), `${defaultCellMarker}${os.EOL}print("baz")${os.EOL}${defaultCellMarker}${os.EOL}print("bar")`, 'Text not inserted');
+            await window.show();
+            await window.copyCode({ source: 'print("baz")' });
+            assert.equal(
+                docManager.textDocuments[0].getText(),
+                `${defaultCellMarker}${os.EOL}print("baz")${os.EOL}${defaultCellMarker}${os.EOL}print("bar")`,
+                'Text not inserted'
+            );
             const activeEditor = docManager.activeTextEditor as MockEditor;
             activeEditor.selection = new Selection(1, 2, 1, 2);
-            window.copyCode({ source: 'print("baz")' });
+            await window.copyCode({ source: 'print("baz")' });
             assert.equal(
                 docManager.textDocuments[0].getText(),
                 `${defaultCellMarker}${os.EOL}${defaultCellMarker}${os.EOL}print("baz")${os.EOL}${defaultCellMarker}${os.EOL}print("baz")${os.EOL}${defaultCellMarker}${os.EOL}print("bar")`,
@@ -778,7 +1055,7 @@ for _ in range(50):
             // Output should be trimmed to just two lines of output
             const code = `print("hello\\nworld\\nhow\\nare\\nyou")`;
             addMockData(ioc, code, 'are\nyou\n');
-            await addCode(ioc, wrapper, code, 4);
+            await addCode(ioc, wrapper, code);
 
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '>are\nyou', CellPosition.Last);
         },

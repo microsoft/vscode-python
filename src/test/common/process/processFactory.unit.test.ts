@@ -34,7 +34,12 @@ suite('Process - ProcessServiceFactory', () => {
             })
         ).thenReturn(processService);
         disposableRegistry = [];
-        factory = new ProcessServiceFactory(instance(envVariablesProvider), instance(processLogger), instance(bufferDecoder), disposableRegistry);
+        factory = new ProcessServiceFactory(
+            instance(envVariablesProvider),
+            instance(processLogger),
+            instance(bufferDecoder),
+            disposableRegistry
+        );
     });
 
     teardown(() => {

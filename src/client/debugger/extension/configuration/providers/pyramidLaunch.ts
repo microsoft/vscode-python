@@ -63,7 +63,11 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
         });
         Object.assign(state.config, config);
     }
-    public async validateIniPath(folder: WorkspaceFolder | undefined, defaultValue: string, selected?: string): Promise<string | undefined> {
+    public async validateIniPath(
+        folder: WorkspaceFolder | undefined,
+        defaultValue: string,
+        selected?: string
+    ): Promise<string | undefined> {
         if (!folder) {
             return;
         }

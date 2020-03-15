@@ -20,7 +20,17 @@ suite('Common variables Service Registry', () => {
 
     test('Ensure services are registered', async () => {
         registerTypes(instance(serviceManager));
-        verify(serviceManager.addSingleton<IEnvironmentVariablesService>(IEnvironmentVariablesService, EnvironmentVariablesService)).once();
-        verify(serviceManager.addSingleton<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider, EnvironmentVariablesProvider)).once();
+        verify(
+            serviceManager.addSingleton<IEnvironmentVariablesService>(
+                IEnvironmentVariablesService,
+                EnvironmentVariablesService
+            )
+        ).once();
+        verify(
+            serviceManager.addSingleton<IEnvironmentVariablesProvider>(
+                IEnvironmentVariablesProvider,
+                EnvironmentVariablesProvider
+            )
+        ).once();
     });
 });

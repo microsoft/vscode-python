@@ -8,39 +8,51 @@ import { Uri } from 'vscode';
 
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
-import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addMockData, getCellResults, mountWebView } from './testHelpers';
 
 export function getInteractiveCellResults(
+    ioc: DataScienceIocContainer,
     // tslint:disable-next-line: no-any
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    expectedRenders: number,
     updater: () => Promise<void>
     // tslint:disable-next-line: no-any
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    return getCellResults(wrapper, InteractivePanel, 'InteractiveCell', expectedRenders, updater);
+    return getCellResults(ioc, wrapper, 'InteractiveCell', updater);
 }
 
 export async function getOrCreateInteractiveWindow(ioc: DataScienceIocContainer): Promise<IInteractiveWindow> {
     const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-    const window = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
-    await window.show();
-    return window;
+    return (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
 }
 
-// tslint:disable-next-line:no-any
-export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
-    test(name, async () => {
+export function closeInteractiveWindow(
+    window: IInteractiveWindow,
+    // tslint:disable-next-line: no-any
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
+) {
+    const promise = window.dispose();
+    wrapper.unmount();
+    return promise;
+}
+
+export function runMountedTest(
+    name: string,
+    // tslint:disable-next-line:no-any
+    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, context: Mocha.Context) => Promise<void>,
+    getIOC: () => DataScienceIocContainer
+) {
+    test(name, async function() {
         const ioc = getIOC();
         const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
         if (await jupyterExecution.isNotebookSupported()) {
             addMockData(ioc, 'a=1\na', 1);
             const wrapper = mountWebView(ioc, 'interactive');
-            await testFunc(wrapper);
+            // tslint:disable-next-line: no-invalid-this
+            await testFunc(wrapper, this);
         } else {
-            // tslint:disable-next-line:no-console
-            console.log(`${name} skipped, no Jupyter installed.`);
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
         }
     });
 }
@@ -50,8 +62,8 @@ export async function addCode(
     // tslint:disable-next-line: no-any
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     code: string,
-    expectedRenderCount: number = 4,
-    expectError: boolean = false
+    expectError: boolean = false,
+    uri: Uri = Uri.file('foo.py')
     // tslint:disable-next-line: no-any
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     // Adding code should cause 5 renders to happen.
@@ -60,9 +72,9 @@ export async function addCode(
     // 3) Execute_Input message
     // 4) Output message (if there's only one)
     // 5) Status finished
-    return getInteractiveCellResults(wrapper, expectedRenderCount, async () => {
+    return getInteractiveCellResults(ioc, wrapper, async () => {
         const history = await getOrCreateInteractiveWindow(ioc);
-        const success = await history.addCode(code, Uri.file('foo.py').fsPath, 2);
+        const success = await history.addCode(code, uri.fsPath, 2);
         if (expectError) {
             assert.equal(success, false, `${code} did not produce an error`);
         }

@@ -29,7 +29,12 @@ suite('Interpretersx - Interpreter Hash Provider Factory', () => {
         standardHashProvider = mock(InterpreterHashProvider);
         const windowsStoreInstance = instance(windowsStoreInterpreter);
         (windowsStoreInstance as any).then = undefined;
-        factory = new InterpeterHashProviderFactory(instance(configService), windowsStoreInstance, windowsStoreInstance, instance(standardHashProvider));
+        factory = new InterpeterHashProviderFactory(
+            instance(configService),
+            windowsStoreInstance,
+            windowsStoreInstance,
+            instance(standardHashProvider)
+        );
     });
     test('When provided python path is not a window store interpreter return standard hash provider', async () => {
         const pythonPath = 'NonWindowsInterpreterPath';

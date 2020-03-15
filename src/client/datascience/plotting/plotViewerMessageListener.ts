@@ -13,7 +13,11 @@ export class PlotViewerMessageListener implements IWebPanelMessageListener {
     private callback: (message: string, payload: any) => void;
     private viewChanged: (panel: IWebPanel) => void;
 
-    constructor(callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) {
+    constructor(
+        callback: (message: string, payload: any) => void,
+        viewChanged: (panel: IWebPanel) => void,
+        disposed: () => void
+    ) {
         // Save our dispose callback so we remove our history window
         this.disposedCallback = disposed;
 

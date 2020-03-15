@@ -24,7 +24,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
     ) {
         this.computeDecorations();
         disposables.push(this);
-        disposables.push(this.configuration.getSettings().onDidChange(this.settingsChanged, this));
+        disposables.push(this.configuration.getSettings(undefined).onDidChange(this.settingsChanged, this));
         disposables.push(this.documentManager.onDidChangeActiveTextEditor(this.changedEditor, this));
         disposables.push(this.documentManager.onDidChangeTextEditorSelection(this.changedSelection, this));
         disposables.push(this.documentManager.onDidChangeTextDocument(this.changedDocument, this));
@@ -96,16 +96,25 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
     }
 
     private update(editor: vscode.TextEditor | undefined) {
-        if (editor && editor.document && editor.document.languageId === PYTHON_LANGUAGE && this.activeCellTop && this.cellSeparatorType && this.activeCellBottom) {
-            const settings = this.configuration.getSettings().datascience;
+        if (
+            editor &&
+            editor.document &&
+            editor.document.languageId === PYTHON_LANGUAGE &&
+            this.activeCellTop &&
+            this.cellSeparatorType &&
+            this.activeCellBottom
+        ) {
+            const settings = this.configuration.getSettings(editor.document.uri).datascience;
             if (settings.decorateCells && settings.enabled) {
                 // Find all of the cells
-                const cells = generateCellRangesFromDocument(editor.document, this.configuration.getSettings().datascience);
+                const cells = generateCellRangesFromDocument(editor.document, settings);
 
                 // Find the range for our active cell.
                 const currentRange = cells.map(c => c.range).filter(r => r.contains(editor.selection.anchor));
-                const rangeTop = currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
-                const rangeBottom = currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
+                const rangeTop =
+                    currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
+                const rangeBottom =
+                    currentRange.length > 0 ? [new vscode.Range(currentRange[0].end, currentRange[0].end)] : [];
                 editor.setDecorations(this.activeCellTop, rangeTop);
                 editor.setDecorations(this.activeCellBottom, rangeBottom);
 

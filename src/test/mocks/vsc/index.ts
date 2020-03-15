@@ -76,6 +76,19 @@ export namespace vscMock {
         }
     }
 
+    export class CodeAction {
+        public title: string;
+        public edit?: vscode.WorkspaceEdit;
+        public diagnostics?: vscode.Diagnostic[];
+        public command?: vscode.Command;
+        public kind?: CodeActionKind;
+        public isPreferred?: boolean;
+        constructor(_title: string, _kind?: CodeActionKind) {
+            this.title = _title;
+            this.kind = _kind;
+        }
+    }
+
     export enum CompletionItemKind {
         Text = 0,
         Method = 1,
@@ -181,7 +194,11 @@ export namespace vscMock {
         constructor(public readonly port: number, public readonly host?: string) {}
     }
     export class DebugAdapterExecutable {
-        constructor(public readonly command: string, public readonly args: string[] = [], public readonly options?: DebugAdapterExecutableOptions) {}
+        constructor(
+            public readonly command: string,
+            public readonly args: string[] = [],
+            public readonly options?: DebugAdapterExecutableOptions
+        ) {}
     }
 
     export enum FileType {

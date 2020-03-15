@@ -8,6 +8,8 @@ import * as vscode from 'vscode';
 import { BlockFormatProviders } from '../../client/typeFormatters/blockFormatProvider';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
+// tslint:disable: max-func-body-length
+
 const srcPythoFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'typeFormatFiles');
 const outPythoFilesPath = path.join(__dirname, 'pythonFiles', 'typeFormatFiles');
 
@@ -25,7 +27,12 @@ const elseBlockFirstLineTabOutFilePath = path.join(outPythoFilesPath, 'elseBlock
 
 const provider = new BlockFormatProviders();
 
-function testFormatting(fileToFormat: string, position: vscode.Position, expectedEdits: vscode.TextEdit[], formatOptions: vscode.FormattingOptions): PromiseLike<void> {
+function testFormatting(
+    fileToFormat: string,
+    position: vscode.Position,
+    expectedEdits: vscode.TextEdit[],
+    formatOptions: vscode.FormattingOptions
+): PromiseLike<void> {
     let textDocument: vscode.TextDocument;
     return vscode.workspace
         .openTextDocument(fileToFormat)
@@ -34,17 +41,30 @@ function testFormatting(fileToFormat: string, position: vscode.Position, expecte
             return vscode.window.showTextDocument(textDocument);
         })
         .then(_editor => {
-            return provider.provideOnTypeFormattingEdits(textDocument, position, ':', formatOptions, new vscode.CancellationTokenSource().token);
+            return provider.provideOnTypeFormattingEdits(
+                textDocument,
+                position,
+                ':',
+                formatOptions,
+                new vscode.CancellationTokenSource().token
+            );
         })
         .then(
             edits => {
                 assert.equal(edits.length, expectedEdits.length, 'Number of edits not the same');
                 edits.forEach((edit, index) => {
                     const expectedEdit = expectedEdits[index];
-                    assert.equal(edit.newText, expectedEdit.newText, `newText for edit is not the same for index = ${index}`);
+                    assert.equal(
+                        edit.newText,
+                        expectedEdit.newText,
+                        `newText for edit is not the same for index = ${index}`
+                    );
                     const providedRange = `${edit.range.start.line},${edit.range.start.character},${edit.range.end.line},${edit.range.end.character}`;
                     const expectedRange = `${expectedEdit.range.start.line},${expectedEdit.range.start.character},${expectedEdit.range.end.line},${expectedEdit.range.end.character}`;
-                    assert.ok(edit.range.isEqual(expectedEdit.range), `range for edit is not the same for index = ${index}, provided ${providedRange}, expected ${expectedRange}`);
+                    assert.ok(
+                        edit.range.isEqual(expectedEdit.range),
+                        `range for edit is not the same for index = ${index}, provided ${providedRange}, expected ${expectedRange}`
+                    );
                 });
             },
             reason => {
@@ -98,7 +118,10 @@ suite('Else block with if in first line of file', () => {
             title: 'else block with Tab',
             line: 3,
             column: 6,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(3, 0, 3, 1)), vscode.TextEdit.insert(new vscode.Position(3, 0), '')],
+            expectedEdits: [
+                vscode.TextEdit.delete(new vscode.Range(3, 0, 3, 1)),
+                vscode.TextEdit.insert(new vscode.Position(3, 0), '')
+            ],
             formatOptions: { insertSpaces: false, tabSize: 4 },
             filePath: elseBlockFirstLineTabOutFilePath
         }
@@ -336,43 +359,64 @@ suite('Try blocks with indentation of Tab', () => {
             title: 'except off by tab',
             line: 6,
             column: 22,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(6, 0, 6, 2)), vscode.TextEdit.insert(new vscode.Position(6, 0), TAB)]
+            expectedEdits: [
+                vscode.TextEdit.delete(new vscode.Range(6, 0, 6, 2)),
+                vscode.TextEdit.insert(new vscode.Position(6, 0), TAB)
+            ]
         },
         {
             title: 'except off by tab inside a for loop',
             line: 35,
             column: 13,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(35, 0, 35, 2)), vscode.TextEdit.insert(new vscode.Position(35, 0), TAB)]
+            expectedEdits: [
+                vscode.TextEdit.delete(new vscode.Range(35, 0, 35, 2)),
+                vscode.TextEdit.insert(new vscode.Position(35, 0), TAB)
+            ]
         },
         {
             title: 'except IOError: off by tab inside a for loop',
             line: 54,
             column: 19,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(54, 0, 54, 2)), vscode.TextEdit.insert(new vscode.Position(54, 0), TAB)]
+            expectedEdits: [
+                vscode.TextEdit.delete(new vscode.Range(54, 0, 54, 2)),
+                vscode.TextEdit.insert(new vscode.Position(54, 0), TAB)
+            ]
         },
         {
             title: 'else: off by tab inside a for loop',
             line: 76,
             column: 9,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(76, 0, 76, 2)), vscode.TextEdit.insert(new vscode.Position(76, 0), TAB)]
+            expectedEdits: [
+                vscode.TextEdit.delete(new vscode.Range(76, 0, 76, 2)),
+                vscode.TextEdit.insert(new vscode.Position(76, 0), TAB)
+            ]
         },
         {
             title: 'except ValueError:: off by tab inside a function',
             line: 143,
             column: 22,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(143, 0, 143, 2)), vscode.TextEdit.insert(new vscode.Position(143, 0), TAB)]
+            expectedEdits: [
+                vscode.TextEdit.delete(new vscode.Range(143, 0, 143, 2)),
+                vscode.TextEdit.insert(new vscode.Position(143, 0), TAB)
+            ]
         },
         {
             title: 'else: off by tab inside function',
             line: 172,
             column: 11,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(172, 0, 172, 3)), vscode.TextEdit.insert(new vscode.Position(172, 0), TAB + TAB)]
+            expectedEdits: [
+                vscode.TextEdit.delete(new vscode.Range(172, 0, 172, 3)),
+                vscode.TextEdit.insert(new vscode.Position(172, 0), TAB + TAB)
+            ]
         },
         {
             title: 'finally: off by tab inside function',
             line: 195,
             column: 12,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(195, 0, 195, 2)), vscode.TextEdit.insert(new vscode.Position(195, 0), TAB)]
+            expectedEdits: [
+                vscode.TextEdit.delete(new vscode.Range(195, 0, 195, 2)),
+                vscode.TextEdit.insert(new vscode.Position(195, 0), TAB)
+            ]
         }
     ];
 
@@ -389,7 +433,6 @@ suite('Try blocks with indentation of Tab', () => {
     });
 });
 
-// tslint:disable-next-line:max-func-body-length
 suite('Else blocks with indentation of 2 spaces', () => {
     suiteSetup(async () => {
         await initialize();
@@ -513,7 +556,6 @@ suite('Else blocks with indentation of 2 spaces', () => {
     });
 });
 
-// tslint:disable-next-line:max-func-body-length
 suite('Else blocks with indentation of 4 spaces', () => {
     suiteSetup(async () => {
         await initialize();
@@ -630,7 +672,6 @@ suite('Else blocks with indentation of 4 spaces', () => {
     });
 });
 
-// tslint:disable-next-line:max-func-body-length
 suite('Else blocks with indentation of Tab', () => {
     suiteSetup(async () => {
         await initialize();

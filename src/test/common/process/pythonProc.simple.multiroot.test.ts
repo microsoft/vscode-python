@@ -16,7 +16,6 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
-import { Logger } from '../../../client/common/logger';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
@@ -32,7 +31,6 @@ import {
     IConfigurationService,
     ICurrentProcess,
     IDisposableRegistry,
-    ILogger,
     IMemento,
     IOutputChannel,
     IPathUtils,
@@ -45,7 +43,10 @@ import { OSType } from '../../../client/common/utils/platform';
 import { registerTypes as variablesRegisterTypes } from '../../../client/common/variables/serviceRegistry';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/types';
+import {
+    IInterpreterAutoSelectionService,
+    IInterpreterAutoSeletionProxyService
+} from '../../../client/interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
@@ -92,7 +93,11 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingletonInstance<Disposable[]>(IDisposableRegistry, []);
         serviceManager.addSingletonInstance<boolean>(IsWindows, IS_WINDOWS);
         const standardOutputChannel = new MockOutputChannel('Python');
-        serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        serviceManager.addSingletonInstance<OutputChannel>(
+            IOutputChannel,
+            standardOutputChannel,
+            STANDARD_OUTPUT_CHANNEL
+        );
         serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
         serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
         serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
@@ -100,18 +105,26 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
         serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
         serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
-        serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
-        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingleton<IInterpreterAutoSelectionService>(
+            IInterpreterAutoSelectionService,
+            MockAutoSelectionService
+        );
+        serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(
+            IInterpreterAutoSeletionProxyService,
+            MockAutoSelectionService
+        );
         serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
-        serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        serviceManager.addSingleton<InterpeterHashProviderFactory>(
+            InterpeterHashProviderFactory,
+            InterpeterHashProviderFactory
+        );
         serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
         serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         serviceManager.addSingleton<Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
         serviceManager.addSingleton<Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
 
         serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-        serviceManager.addSingleton<ILogger>(ILogger, Logger);
 
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);
@@ -122,7 +135,14 @@ suite('PythonExecutableService', () => {
 
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
-        serviceManager.addSingletonInstance<IEnvironmentActivationService>(IEnvironmentActivationService, instance(mockEnvironmentActivationService));
+        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
+        when(
+            mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())
+        ).thenResolve();
+        serviceManager.addSingletonInstance<IEnvironmentActivationService>(
+            IEnvironmentActivationService,
+            instance(mockEnvironmentActivationService)
+        );
 
         configService = serviceManager.get<IConfigurationService>(IConfigurationService);
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
@@ -143,10 +163,18 @@ suite('PythonExecutableService', () => {
     });
 
     test('Importing without a valid PYTHONPATH should fail', async () => {
-        await configService.updateSetting('envFile', 'someInvalidFile.env', workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
+        await configService.updateSetting(
+            'envFile',
+            'someInvalidFile.env',
+            workspace4PyFile,
+            ConfigurationTarget.WorkspaceFolder
+        );
         pythonExecFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
-        const promise = pythonExecService.exec([workspace4PyFile.fsPath], { cwd: path.dirname(workspace4PyFile.fsPath), throwOnStdErr: true });
+        const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
+            cwd: path.dirname(workspace4PyFile.fsPath),
+            throwOnStdErr: true
+        });
 
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
     });
@@ -161,7 +189,10 @@ suite('PythonExecutableService', () => {
 
         await configService.updateSetting('envFile', undefined, workspace4PyFile, ConfigurationTarget.WorkspaceFolder);
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
-        const promise = pythonExecService.exec([workspace4PyFile.fsPath], { cwd: path.dirname(workspace4PyFile.fsPath), throwOnStdErr: true });
+        const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
+            cwd: path.dirname(workspace4PyFile.fsPath),
+            throwOnStdErr: true
+        });
 
         await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);
     });
@@ -178,7 +209,10 @@ suite('PythonExecutableService', () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const randomModuleName = `xyz123${new Date().getSeconds()}`;
         const randomModuleIsInstalled = pythonExecService.isModuleInstalled(randomModuleName);
-        await expect(randomModuleIsInstalled).to.eventually.equal(false, `Random module '${randomModuleName}' is installed`);
+        await expect(randomModuleIsInstalled).to.eventually.equal(
+            false,
+            `Random module '${randomModuleName}' is installed`
+        );
     });
 
     test('Ensure correct path to executable is returned', async () => {

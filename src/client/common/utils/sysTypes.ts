@@ -54,7 +54,13 @@ export function isStringArray(value: any): value is string[] {
  *	`null`, an `array`, a `regexp`, nor a `date`.
  */
 export function isObject(obj: any): obj is any {
-    return typeof obj === _typeof.object && obj !== null && !Array.isArray(obj) && !(obj instanceof RegExp) && !(obj instanceof Date);
+    return (
+        typeof obj === _typeof.object &&
+        obj !== null &&
+        !Array.isArray(obj) &&
+        !(obj instanceof RegExp) &&
+        !(obj instanceof Date)
+    );
 }
 
 /**

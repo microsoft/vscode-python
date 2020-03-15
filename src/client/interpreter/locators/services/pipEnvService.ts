@@ -5,10 +5,10 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
-import { traceError } from '../../../common/logger';
+import { traceError, traceWarning } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
-import { IConfigurationService, ICurrentProcess, ILogger } from '../../../common/types';
+import { IConfigurationService, ICurrentProcess } from '../../../common/types';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, InterpreterType, IPipEnvService, PythonInterpreter } from '../../contracts';
 import { IPipEnvServiceHelper } from '../types';
@@ -22,7 +22,6 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
     private readonly processServiceFactory: IProcessServiceFactory;
     private readonly workspace: IWorkspaceService;
     private readonly fs: IFileSystem;
-    private readonly logger: ILogger;
     private readonly configService: IConfigurationService;
     private readonly pipEnvServiceHelper: IPipEnvServiceHelper;
 
@@ -32,7 +31,6 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         this.processServiceFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.workspace = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        this.logger = this.serviceContainer.get<ILogger>(ILogger);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.pipEnvServiceHelper = this.serviceContainer.get<IPipEnvServiceHelper>(IPipEnvServiceHelper);
     }
@@ -102,7 +100,9 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             const version = await this.invokePipenv('--version', cwd);
             if (version === undefined) {
                 const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-                appShell.showWarningMessage(`Workspace contains Pipfile but '${this.executable}' was not found. Make sure '${this.executable}' is on the PATH.`);
+                appShell.showWarningMessage(
+                    `Workspace contains Pipfile but '${this.executable}' was not found. Make sure '${this.executable}' is on the PATH.`
+                );
                 return;
             }
             // The --py command will fail if the virtual environment has not been setup yet.
@@ -158,10 +158,11 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
                 LC_ALL: currentProc.env.LC_ALL,
                 LANG: currentProc.env.LANG
             };
-            enviromentVariableValues[platformService.pathVariableName] = currentProc.env[platformService.pathVariableName];
+            enviromentVariableValues[platformService.pathVariableName] =
+                currentProc.env[platformService.pathVariableName];
 
-            this.logger.logWarning('Error in invoking PipEnv', error);
-            this.logger.logWarning(`Relevant Environment Variables ${JSON.stringify(enviromentVariableValues, undefined, 4)}`);
+            traceWarning('Error in invoking PipEnv', error);
+            traceWarning(`Relevant Environment Variables ${JSON.stringify(enviromentVariableValues, undefined, 4)}`);
         }
     }
 }

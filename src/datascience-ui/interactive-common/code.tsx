@@ -7,11 +7,13 @@ import * as React from 'react';
 import { InputHistory } from '../interactive-common/inputHistory';
 import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
+import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { Editor } from './editor';
 import { CursorPos, IFont } from './mainState';
 
 export interface ICodeProps {
     code: string;
+    version: number;
     codeTheme: string;
     testMode: boolean;
     readOnly: boolean;
@@ -25,9 +27,11 @@ export interface ICodeProps {
     useQuickEdit?: boolean;
     font: IFont;
     hasFocus: boolean;
-    cursorPos: CursorPos;
+    cursorPos: CursorPos | monacoEditor.IPosition;
+    disableUndoStack: boolean;
+    focusPending: number;
     onCreated(code: string, modelId: string): void;
-    onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
+    onChange(e: IMonacoModelContentChangeEvent): void;
     openLink(uri: monacoEditor.Uri): void;
     keyDown?(e: IKeyboardEvent): void;
     focused?(): void;
@@ -46,9 +50,16 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         this.state = { allowWatermark: true };
     }
 
+    public componentDidUpdate(prevProps: ICodeProps) {
+        if (prevProps.focusPending !== this.props.focusPending) {
+            this.giveFocus(CursorPos.Current);
+        }
+    }
+
     public render() {
         const readOnly = this.props.readOnly;
-        const waterMarkClass = this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';
+        const waterMarkClass =
+            this.props.showWatermark && this.state.allowWatermark && !readOnly ? 'code-watermark' : 'hide';
         const classes = readOnly ? 'code-area' : 'code-area code-area-editable';
 
         return (
@@ -76,6 +87,8 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     showLineNumbers={this.props.showLineNumbers}
                     useQuickEdit={this.props.useQuickEdit}
                     font={this.props.font}
+                    disableUndoStack={this.props.disableUndoStack}
+                    version={this.props.version}
                 />
                 <div className={waterMarkClass} role="textbox" onClick={this.clickWatermark}>
                     {this.getWatermarkString()}
@@ -106,10 +119,10 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         return getLocString('DataScience.inputWatermark', 'Type code here and press shift-enter to run');
     };
 
-    private onModelChanged = (changes: monacoEditor.editor.IModelContentChange[], model: monacoEditor.editor.ITextModel) => {
-        if (!this.props.readOnly && model) {
-            this.setState({ allowWatermark: model.getValueLength() === 0 });
+    private onModelChanged = (e: IMonacoModelContentChangeEvent) => {
+        if (!this.props.readOnly && e.model) {
+            this.setState({ allowWatermark: e.model.getValueLength() === 0 });
         }
-        this.props.onChange(changes, model.id);
+        this.props.onChange(e);
     };
 }

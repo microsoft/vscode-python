@@ -21,13 +21,19 @@ import { BaseShellDetector } from './baseShellDetector';
  */
 @injectable()
 export class UserEnvironmentShellDetector extends BaseShellDetector {
-    constructor(@inject(ICurrentProcess) private readonly currentProcess: ICurrentProcess, @inject(IPlatformService) private readonly platform: IPlatformService) {
+    constructor(
+        @inject(ICurrentProcess) private readonly currentProcess: ICurrentProcess,
+        @inject(IPlatformService) private readonly platform: IPlatformService
+    ) {
         super(1);
     }
     public getDefaultPlatformShell(): string {
         return getDefaultShell(this.platform, this.currentProcess);
     }
-    public identify(telemetryProperties: ShellIdentificationTelemetry, _terminal?: Terminal): TerminalShellType | undefined {
+    public identify(
+        telemetryProperties: ShellIdentificationTelemetry,
+        _terminal?: Terminal
+    ): TerminalShellType | undefined {
         const shellPath = this.getDefaultPlatformShell();
         telemetryProperties.hasShellInEnv = !!shellPath;
         const shell = this.identifyShellFromShellPath(shellPath);
@@ -51,12 +57,16 @@ function getDefaultShell(platform: IPlatformService, currentProcess: ICurrentPro
         return getTerminalDefaultShellWindows(platform, currentProcess);
     }
 
-    return currentProcess.env.SHELL && currentProcess.env.SHELL !== '/bin/false' ? currentProcess.env.SHELL : '/bin/bash';
+    return currentProcess.env.SHELL && currentProcess.env.SHELL !== '/bin/false'
+        ? currentProcess.env.SHELL
+        : '/bin/bash';
 }
 function getTerminalDefaultShellWindows(platform: IPlatformService, currentProcess: ICurrentProcess): string {
     const isAtLeastWindows10 = parseFloat(platform.osRelease) >= 10;
     const is32ProcessOn64Windows = currentProcess.env.hasOwnProperty('PROCESSOR_ARCHITEW6432');
-    const powerShellPath = `${currentProcess.env.windir}\\${is32ProcessOn64Windows ? 'Sysnative' : 'System32'}\\WindowsPowerShell\\v1.0\\powershell.exe`;
+    const powerShellPath = `${currentProcess.env.windir}\\${
+        is32ProcessOn64Windows ? 'Sysnative' : 'System32'
+    }\\WindowsPowerShell\\v1.0\\powershell.exe`;
     return isAtLeastWindows10 ? powerShellPath : getWindowsShell(currentProcess);
 }
 

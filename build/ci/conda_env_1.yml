@@ -1,0 +1,7 @@
+name: conda_env_1
+dependencies:
+  - python=3.7
+  - pandas
+  - jupyter
+  - numpy
+  - matplotlib

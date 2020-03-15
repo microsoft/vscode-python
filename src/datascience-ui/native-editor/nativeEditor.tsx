@@ -4,29 +4,27 @@
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { OSType } from '../../client/common/utils/platform';
-import { concatMultilineStringInput } from '../../client/datascience/common';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
-import { KernelSelection } from '../interactive-common/kernelSelection';
-import { ICellViewModel, IMainState } from '../interactive-common/mainState';
-import { IStore } from '../interactive-common/redux/store';
+import { getSelectedAndFocusedInfo, ICellViewModel, IMainState } from '../interactive-common/mainState';
+import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
-import { getOSType } from '../react-common/constants';
+import { getOSType, UseCustomEditor } from '../react-common/constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
-import { Image, ImageName } from '../react-common/image';
-import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
 import { AddCellLine } from './addCellLine';
 import { getConnectedNativeCell } from './nativeCell';
 import './nativeEditor.less';
 import { actionCreators } from './redux/actions';
+import { ToolbarComponent } from './toolbar';
 
-type INativeEditorProps = IMainState & typeof actionCreators;
+type INativeEditorProps = IMainWithVariables & typeof actionCreators;
 
-function mapStateToProps(state: IStore): IMainState {
-    return state.main;
+function mapStateToProps(state: IStore): IMainWithVariables {
+    return { ...state.main, variableState: state.variables };
 }
 
 const ConnectedNativeCell = getConnectedNativeCell();
@@ -37,6 +35,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
 
     constructor(props: INativeEditorProps) {
         super(props);
+        this.insertAboveFirst = this.insertAboveFirst.bind(this);
     }
 
     public componentDidMount() {
@@ -83,19 +82,28 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
         const addCellLine =
             this.props.cellVMs.length === 0 ? null : (
-                <AddCellLine includePlus={true} className="add-cell-line-top" click={this.props.insertAboveFirst} baseTheme={this.props.baseTheme} />
+                <AddCellLine
+                    includePlus={true}
+                    className="add-cell-line-top"
+                    click={this.insertAboveFirst}
+                    baseTheme={this.props.baseTheme}
+                />
             );
 
         return (
             <div id="main-panel" role="Main" style={dynamicFont}>
                 <div className="styleSetter">
-                    <style>{this.props.rootCss}</style>
+                    <style>{`${this.props.rootCss ? this.props.rootCss : ''}
+${buildSettingsCss(this.props.settings)}`}</style>
                 </div>
                 <header id="main-panel-toolbar">
                     {this.renderToolbarPanel()}
                     {progressBar}
                 </header>
-                <section id="main-panel-variable" aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
+                <section
+                    id="main-panel-variable"
+                    aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                >
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
                 <main id="main-panel-content">
@@ -106,138 +114,15 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         );
     }
 
-    // tslint:disable: react-this-binding-issue
-    // tslint:disable-next-line: max-func-body-length
+    private insertAboveFirst() {
+        setTimeout(() => this.props.insertAboveFirst(), 1);
+    }
     private renderToolbarPanel() {
-        const selectedIndex = this.props.cellVMs.findIndex(c => c.cell.id === this.props.selectedCellId);
-
-        const addCell = () => {
-            this.props.addCell();
-            this.props.sendCommand(NativeCommandType.AddToEnd, 'mouse');
-        };
-        const runAll = () => {
-            // Run all cells currently available.
-            this.props.executeAllCells();
-            this.props.sendCommand(NativeCommandType.RunAll, 'mouse');
-        };
-        const save = () => {
-            this.props.save();
-            this.props.sendCommand(NativeCommandType.Save, 'mouse');
-        };
-        const toggleVariableExplorer = () => {
-            this.props.toggleVariableExplorer();
-            this.props.sendCommand(NativeCommandType.ToggleVariableExplorer, 'mouse');
-        };
-        const variableExplorerTooltip = this.props.variablesVisible
-            ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')
-            : getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
-        const runAbove = () => {
-            if (this.props.selectedCellId) {
-                this.props.executeAbove(this.props.selectedCellId);
-                this.props.sendCommand(NativeCommandType.RunAbove, 'mouse');
-            }
-        };
-        const runBelow = () => {
-            if (this.props.selectedCellId) {
-                // tslint:disable-next-line: no-suspicious-comment
-                // TODO: Is the source going to be up to date during run below?
-                this.props.executeCellAndBelow(this.props.selectedCellId, concatMultilineStringInput(this.props.cellVMs[selectedIndex].cell.data.source));
-                this.props.sendCommand(NativeCommandType.RunBelow, 'mouse');
-            }
-        };
-        const selectKernel = () => {
-            this.props.selectKernel();
-            this.props.sendCommand(NativeCommandType.SelectKernel, 'mouse');
-        };
-        const selectServer = () => {
-            this.props.selectServer();
-            this.props.sendCommand(NativeCommandType.SelectServer, 'mouse');
-        };
-        const canRunAbove = selectedIndex > 0;
-        const canRunBelow = selectedIndex < this.props.cellVMs.length - 1 && this.props.selectedCellId;
-
-        return (
-            <div id="toolbar-panel">
-                <div className="toolbar-menu-bar">
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runAll} className="native-button" tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunAll} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={runAbove}
-                        disabled={!canRunAbove}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.runAbove', 'Run cells above')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunAbove} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={runBelow}
-                        disabled={!canRunBelow}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunBelow} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={this.props.restartKernel}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Restart} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={this.props.interruptKernel}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Interrupt} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={addCell} className="native-button" tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.InsertBelow} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={this.props.clearAllOutputs}
-                        disabled={!this.props.cellVMs.length}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.clearAllOutput', 'Clear All Output')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ClearAllOutput} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={toggleVariableExplorer} className="native-button" tooltip={variableExplorerTooltip}>
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.VariableExplorer} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={save}
-                        disabled={!this.props.dirty}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.save', 'Save File')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.SaveAs} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={this.props.export}
-                        disabled={!this.props.cellVMs.length}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ExportToPython} />
-                    </ImageButton>
-                    <KernelSelection baseTheme={this.props.baseTheme} font={this.props.font} kernel={this.props.kernel} selectServer={selectServer} selectKernel={selectKernel} />
-                </div>
-                <div className="toolbar-divider" />
-            </div>
-        );
+        return <ToolbarComponent></ToolbarComponent>;
     }
 
     private renderVariablePanel(baseTheme: string) {
-        if (this.props.variablesVisible) {
+        if (this.props.variableState.visible) {
             const variableProps = this.getVariableProps(baseTheme);
             return <VariablePanel {...variableProps} />;
         }
@@ -267,21 +152,30 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             skipNextScroll: this.props.skipNextScroll ? true : false,
             editable: true,
             renderCell: this.renderCell,
-            scrollToBottom: this.scrollDiv
+            scrollToBottom: this.scrollDiv,
+            scrollBeyondLastLine: this.props.settings
+                ? this.props.settings.extraSettings.editor.scrollBeyondLastLine
+                : false
         };
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
         return {
-            variables: this.props.variables,
-            pendingVariableCount: this.props.pendingVariableCount,
+            variables: this.props.variableState.variables,
             debugging: this.props.debugging,
             busy: this.props.busy,
             showDataExplorer: this.props.showDataViewer,
             skipDefault: this.props.skipDefault,
             testMode: this.props.testMode,
             closeVariableExplorer: this.props.toggleVariableExplorer,
-            baseTheme: baseTheme
+            baseTheme: baseTheme,
+            pageIn: this.pageInVariableData,
+            fontSize: this.props.font.size,
+            executionCount: this.props.currentExecutionCount
         };
+    };
+
+    private pageInVariableData = (startIndex: number, pageSize: number) => {
+        this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
     };
 
     private mainKeyDown = (event: KeyboardEvent) => {
@@ -299,7 +193,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             }
             case 'z':
             case 'Z':
-                if (this.props.focusedCellId === undefined) {
+                if (!getSelectedAndFocusedInfo(this.props).focusedCellId && !UseCustomEditor) {
                     if (event.shiftKey && !event.ctrlKey && !event.altKey) {
                         event.stopPropagation();
                         this.props.redo();
@@ -355,12 +249,19 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         }
 
         const addNewCell = () => {
-            this.props.insertBelow(cellVM.cell.id);
+            setTimeout(() => this.props.insertBelow(cellVM.cell.id), 1);
             this.props.sendCommand(NativeCommandType.AddToEnd, 'mouse');
         };
         const firstLine = index === 0;
         const lastLine =
-            index === this.props.cellVMs.length - 1 ? <AddCellLine includePlus={true} baseTheme={this.props.baseTheme} className="add-cell-line-cell" click={addNewCell} /> : null;
+            index === this.props.cellVMs.length - 1 ? (
+                <AddCellLine
+                    includePlus={true}
+                    baseTheme={this.props.baseTheme}
+                    className="add-cell-line-cell"
+                    click={addNewCell}
+                />
+            ) : null;
 
         return (
             <div key={cellVM.cell.id} id={cellVM.cell.id}>
@@ -380,6 +281,9 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                         editorOptions={this.props.editorOptions}
                         enableGather={this.props.settings.enableGather}
                         themeMatplotlibPlots={this.props.settings.themeMatplotlibPlots}
+                        // Focus pending does not apply to native editor.
+                        focusPending={0}
+                        busy={this.props.busy}
                     />
                 </ErrorBoundary>
                 {lastLine}

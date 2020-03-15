@@ -52,7 +52,9 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asCompletionResult(result: proto.CompletionList): code.CompletionList;
     public asCompletionResult(result: proto.CompletionItem[]): code.CompletionItem[];
     public asCompletionResult(result: null | undefined): undefined;
-    public asCompletionResult(result: proto.CompletionList | proto.CompletionItem[] | null | undefined): code.CompletionList | code.CompletionItem[] | undefined;
+    public asCompletionResult(
+        result: proto.CompletionList | proto.CompletionItem[] | null | undefined
+    ): code.CompletionList | code.CompletionItem[] | undefined;
     public asCompletionResult(result: any): any {
         if (!result) {
             return undefined;
@@ -160,7 +162,9 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asDefinitionResult(item: proto.Definition): code.Definition;
     public asDefinitionResult(item: proto.LocationLink[]): code.LocationLink[];
     public asDefinitionResult(item: null | undefined): undefined;
-    public asDefinitionResult(item: proto.Location | proto.LocationLink[] | proto.Location[] | null | undefined): code.Location | code.LocationLink[] | code.Location[] | undefined;
+    public asDefinitionResult(
+        item: proto.Location | proto.LocationLink[] | proto.Location[] | null | undefined
+    ): code.Location | code.LocationLink[] | code.Location[] | undefined;
     public asDefinitionResult(_item: any): any {
         throw new Error('Method not implemented.');
     }
@@ -178,16 +182,24 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     }
     public asDocumentHighlights(values: proto.DocumentHighlight[]): code.DocumentHighlight[];
     public asDocumentHighlights(values: null | undefined): undefined;
-    public asDocumentHighlights(values: proto.DocumentHighlight[] | null | undefined): code.DocumentHighlight[] | undefined;
+    public asDocumentHighlights(
+        values: proto.DocumentHighlight[] | null | undefined
+    ): code.DocumentHighlight[] | undefined;
     public asDocumentHighlights(_values: any): any {
         throw new Error('Method not implemented.');
     }
     public asSymbolInformation(_item: proto.SymbolInformation, _uri?: code.Uri | undefined): code.SymbolInformation {
         throw new Error('Method not implemented.');
     }
-    public asSymbolInformations(values: proto.SymbolInformation[], uri?: code.Uri | undefined): code.SymbolInformation[];
+    public asSymbolInformations(
+        values: proto.SymbolInformation[],
+        uri?: code.Uri | undefined
+    ): code.SymbolInformation[];
     public asSymbolInformations(values: null | undefined, uri?: code.Uri | undefined): undefined;
-    public asSymbolInformations(values: proto.SymbolInformation[] | null | undefined, uri?: code.Uri | undefined): code.SymbolInformation[] | undefined;
+    public asSymbolInformations(
+        values: proto.SymbolInformation[] | null | undefined,
+        uri?: code.Uri | undefined
+    ): code.SymbolInformation[] | undefined;
     public asSymbolInformations(_values: any, _uri?: any): any {
         throw new Error('Method not implemented.');
     }
@@ -289,7 +301,9 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
         throw new Error('Method not implemented.');
     }
 
-    private asCompletionItemKind(value: proto.CompletionItemKind): [code.CompletionItemKind, proto.CompletionItemKind | undefined] {
+    private asCompletionItemKind(
+        value: proto.CompletionItemKind
+    ): [code.CompletionItemKind, proto.CompletionItemKind | undefined] {
         // Protocol item kind is 1 based, codes item kind is zero based.
         if (proto.CompletionItemKind.Text <= value && value <= proto.CompletionItemKind.TypeParameter) {
             return [value - 1, undefined];
@@ -301,10 +315,16 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
         return Array.isArray(value) && (<any[]>value).every(elem => typeof elem === 'string');
     }
 
-    private asCompletionInsertText(item: proto.CompletionItem): { text: string | code.SnippetString; range?: code.Range; fromEdit: boolean } | undefined {
+    private asCompletionInsertText(
+        item: proto.CompletionItem
+    ): { text: string | code.SnippetString; range?: code.Range; fromEdit: boolean } | undefined {
         if (item.textEdit) {
             if (item.insertTextFormat === proto.InsertTextFormat.Snippet) {
-                return { text: new code.SnippetString(item.textEdit.newText), range: this.asRange(item.textEdit.range), fromEdit: true };
+                return {
+                    text: new code.SnippetString(item.textEdit.newText),
+                    range: this.asRange(item.textEdit.range),
+                    fromEdit: true
+                };
             } else {
                 return { text: item.textEdit.newText, range: this.asRange(item.textEdit.range), fromEdit: true };
             }

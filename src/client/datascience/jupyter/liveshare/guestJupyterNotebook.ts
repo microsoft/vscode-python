@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -9,21 +10,32 @@ import { ServerStatus } from '../../../../datascience-ui/interactive-common/main
 import { ILiveShareApi } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceInfo } from '../../../common/logger';
-import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { ICell, IJupyterKernelSpec, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../types';
+import {
+    ICell,
+    IJupyterKernelSpec,
+    INotebook,
+    INotebookCompletion,
+    INotebookExecutionLogger,
+    INotebookServer,
+    InterruptResult
+} from '../../types';
 import { LiveKernelModel } from '../kernels/types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
 
-export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
+export class GuestJupyterNotebook
+    extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
     implements INotebook, ILiveShareParticipant {
-    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>().event;
+    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
+        IJupyterKernelSpec | LiveKernelModel
+    >().event;
     private responseQueue: ResponseQueue = new ResponseQueue();
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
 
@@ -31,14 +43,19 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
         liveShare: ILiveShareApi,
         private disposableRegistry: IDisposableRegistry,
         private configService: IConfigurationService,
-        private _resource: Uri,
+        private _resource: Resource,
+        private _identity: Uri,
         private _owner: INotebookServer,
         private startTime: number
     ) {
         super(liveShare);
     }
 
-    public get resource(): Uri {
+    public get identity(): Uri {
+        return this._identity;
+    }
+
+    public get resource(): Resource {
         return this._resource;
     }
 
@@ -73,7 +90,17 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
         return this.onStatusChangedEvent.event;
     }
 
-    public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]> {
+    public get status(): ServerStatus {
+        return ServerStatus.Idle;
+    }
+
+    public async execute(
+        code: string,
+        file: string,
+        line: number,
+        id: string,
+        cancelToken?: CancellationToken
+    ): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();
 
@@ -94,20 +121,23 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
         );
 
         if (cancelToken) {
-            this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
+            this.disposableRegistry.push(
+                cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError()))
+            );
         }
 
         // Wait for the execution to finish
         return deferred.promise;
     }
 
+    public async inspect(code: string): Promise<JSONObject> {
+        // Send to the other side
+        return this.sendRequest(LiveShareCommands.inspect, [code]);
+    }
+
     public setLaunchingFile(_directory: string): Promise<void> {
         // Ignore this command on this side
         return Promise.resolve();
-    }
-
-    public addLogger(_logger: INotebookExecutionLogger): void {
-        noop();
     }
 
     public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
@@ -132,7 +162,7 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
     }
 
     public async interruptKernel(_timeoutMs: number): Promise<InterruptResult> {
-        const settings = this.configService.getSettings();
+        const settings = this.configService.getSettings(this.resource);
         const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
 
         const response = await this.sendRequest(LiveShareCommands.interrupt, [interruptTimeout]);
@@ -142,7 +172,7 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
     public async waitForServiceName(): Promise<string> {
         // Use our base name plus our id. This means one unique server per notebook
         // Live share will not accept a '.' in the name so remove any
-        const uriString = this.resource.toString();
+        const uriString = this.identity.toString();
         return Promise.resolve(`${LiveShare.JupyterNotebookSharedService}${uriString}`);
     }
 
@@ -155,7 +185,11 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
         }
     }
 
-    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken): Promise<INotebookCompletion> {
+    public async getCompletion(
+        _cellCode: string,
+        _offsetInCode: number,
+        _cancelToken?: CancellationToken
+    ): Promise<INotebookCompletion> {
         return Promise.resolve({
             matches: [],
             cursor: {
@@ -202,6 +236,9 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
 
     public setKernelSpec(_spec: IJupyterKernelSpec | LiveKernelModel, _timeout: number): Promise<void> {
         return Promise.resolve();
+    }
+    public getLoggers(): INotebookExecutionLogger[] {
+        return [];
     }
 
     private onServerResponse = (args: Object) => {

@@ -5,9 +5,6 @@
 
 // tslint:disable:max-func-body-length no-any no-conditional-assignment no-increment-decrement no-invalid-this no-require-imports no-var-requires
 import { expect, use } from 'chai';
-import * as typeMoq from 'typemoq';
-import { ILogger } from '../../../client/common/types';
-import { IServiceContainer } from '../../../client/ioc/types';
 import { ArgumentsHelper } from '../../../client/testing/common/argumentsHelper';
 import { IArgumentsHelper } from '../../../client/testing/types';
 const assertArrays = require('chai-arrays');
@@ -16,12 +13,7 @@ use(assertArrays);
 suite('Unit Tests - Arguments Helper', () => {
     let argsHelper: IArgumentsHelper;
     setup(() => {
-        const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
-        const logger = typeMoq.Mock.ofType<ILogger>();
-
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ILogger), typeMoq.It.isAny())).returns(() => logger.object);
-
-        argsHelper = new ArgumentsHelper(serviceContainer.object);
+        argsHelper = new ArgumentsHelper();
     });
 
     test('Get Option Value', () => {

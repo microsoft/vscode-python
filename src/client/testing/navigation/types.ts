@@ -26,7 +26,11 @@ export interface ITestCodeNavigator {
 export const ITestNavigatorHelper = Symbol('ITestNavigatorHelper');
 export interface ITestNavigatorHelper {
     openFile(file?: Uri): Promise<[TextDocument, TextEditor]>;
-    findSymbol(doc: TextDocument, predicate: SymbolSearch, token: CancellationToken): Promise<SymbolInformation | undefined>;
+    findSymbol(
+        doc: TextDocument,
+        predicate: SymbolSearch,
+        token: CancellationToken
+    ): Promise<SymbolInformation | undefined>;
 }
 export type SymbolSearch = (item: SymbolInformation) => boolean;
 

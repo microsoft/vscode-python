@@ -7,7 +7,13 @@ import { Disposable, Event, EventEmitter } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../common/application/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
+import {
+    IAsyncDisposable,
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    Resource
+} from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
@@ -22,6 +28,10 @@ interface ISyncData {
 
 @injectable()
 export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
+    public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
+        return this._onDidChangeActiveInteractiveWindow.event;
+    }
+    private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private activeInteractiveWindow: IInteractiveWindow | undefined;
     private postOffice: PostOffice;
     private id: string;
@@ -45,8 +55,12 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.postOffice.peerCountChanged(n => this.onPeerCountChanged(n));
 
         // Listen for messages so we force a create on both sides.
-        this.postOffice.registerCallback(LiveShareCommands.interactiveWindowCreate, this.onRemoteCreate, this).ignoreErrors();
-        this.postOffice.registerCallback(LiveShareCommands.interactiveWindowCreateSync, this.onRemoteSync, this).ignoreErrors();
+        this.postOffice
+            .registerCallback(LiveShareCommands.interactiveWindowCreate, this.onRemoteCreate, this)
+            .ignoreErrors();
+        this.postOffice
+            .registerCallback(LiveShareCommands.interactiveWindowCreateSync, this.onRemoteSync, this)
+            .ignoreErrors();
 
         // Make a unique id so we can tell who sends a message
         this.id = uuid();
@@ -76,9 +90,9 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         throw new Error(localize.DataScience.pythonInteractiveCreateFailed());
     }
 
-    public async getNotebookOptions(): Promise<INotebookServerOptions> {
+    public async getNotebookOptions(resource: Resource): Promise<INotebookServerOptions> {
         // Find the settings that we are going to launch our server with
-        const settings = this.configService.getSettings();
+        const settings = this.configService.getSettings(resource);
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
         const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
@@ -106,11 +120,23 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         const handler = this.activeInteractiveWindow.closed(this.onInteractiveWindowClosed);
         this.disposables.push(this.activeInteractiveWindow);
         this.disposables.push(handler);
-        this.activeInteractiveWindowExecuteHandler = this.activeInteractiveWindow.onExecutedCode(this.onInteractiveWindowExecute);
+        this.activeInteractiveWindowExecuteHandler = this.activeInteractiveWindow.onExecutedCode(
+            this.onInteractiveWindowExecute
+        );
         this.disposables.push(this.activeInteractiveWindowExecuteHandler);
+        this.disposables.push(
+            this.activeInteractiveWindow.onDidChangeViewState(() => this.raiseOnDidChangeActiveInteractiveWindow())
+        );
+        this.raiseOnDidChangeActiveInteractiveWindow();
         return this.activeInteractiveWindow;
     }
 
+    private raiseOnDidChangeActiveInteractiveWindow() {
+        const currentWindow = this.getActive();
+        this._onDidChangeActiveInteractiveWindow.fire(
+            currentWindow?.active && currentWindow.visible ? currentWindow : undefined
+        );
+    }
     private onPeerCountChanged(newCount: number) {
         // If we're losing peers, resolve all syncs
         if (newCount < this.postOffice.peerCount) {
@@ -159,6 +185,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 this.activeInteractiveWindowExecuteHandler = undefined;
             }
         }
+        this.raiseOnDidChangeActiveInteractiveWindow();
     };
 
     private async synchronizeCreate(): Promise<void> {

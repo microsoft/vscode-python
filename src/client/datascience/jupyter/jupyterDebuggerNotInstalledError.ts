@@ -5,8 +5,10 @@ import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
 
 export class JupyterDebuggerNotInstalledError extends Error {
-    constructor(message?: string) {
-        const errorMessage = message ? message : localize.DataScience.jupyterDebuggerNotInstalledError();
+    constructor(debuggerPkg: string, message?: string) {
+        const errorMessage = message
+            ? message
+            : localize.DataScience.jupyterDebuggerNotInstalledError().format(debuggerPkg);
         super(errorMessage);
     }
 }

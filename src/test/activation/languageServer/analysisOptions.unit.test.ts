@@ -7,14 +7,20 @@ import { ConfigurationChangeEvent, Uri, WorkspaceFolder } from 'vscode';
 import { DocumentSelector } from 'vscode-languageclient';
 
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
-import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { ILanguageServerFolderService, ILanguageServerOutputChannel } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
-import { IConfigurationService, IDisposable, IExtensionContext, IOutputChannel, IPathUtils } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IExtensionContext,
+    IOutputChannel,
+    IPathUtils
+} from '../../../client/common/types';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { sleep } from '../../core';
@@ -63,7 +69,7 @@ suite('Language Server - Analysis Options', () => {
         lsOutputChannel = typemoq.Mock.ofType<ILanguageServerOutputChannel>();
         lsOutputChannel.setup(l => l.channel).returns(() => outputChannel);
         pathUtils = mock(PathUtils);
-        lsFolderService = mock(LanguageServerFolderService);
+        lsFolderService = mock(DotNetLanguageServerFolderService);
         analysisOptions = new TestClass(
             context.object,
             instance(envVarsProvider),

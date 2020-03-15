@@ -41,7 +41,9 @@ export function registerMonacoLanguage() {
         ],
         onEnterRules: [
             {
-                beforeText: new RegExp('^\\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async).*?:\\s*$'),
+                beforeText: new RegExp(
+                    '^\\s*(?:def|class|for|if|elif|else|while|try|with|finally|except|async).*?:\\s*$'
+                ),
                 action: { indentAction: monacoEditor.languages.IndentAction.Indent }
             }
         ],
@@ -56,31 +58,36 @@ export function registerMonacoLanguage() {
 }
 
 // tslint:disable: no-any
-export async function initializeTokenizer(onigasm: ArrayBuffer, tmlanguageJSON: string, loadingFinished: (e?: any) => void): Promise<void> {
+export async function initializeTokenizer(
+    onigasm: ArrayBuffer,
+    tmlanguageJSON: string,
+    loadingFinished: (e?: any) => void
+): Promise<void> {
     try {
         // Register the language first
         registerMonacoLanguage();
 
-        // Load the web assembly
-        await loadWASM(onigasm);
+        // Load the web assembly if necessary
+        if (onigasm && onigasm.byteLength > 0) {
+            await loadWASM(onigasm);
 
-        // Setup our registry of different
-        const registry = new Registry({
-            getGrammarDefinition: async _scopeName => {
-                return {
-                    format: 'json',
-                    content: tmlanguageJSON
-                };
-            }
-        });
+            // Setup our registry of different
+            const registry = new Registry({
+                getGrammarDefinition: async _scopeName => {
+                    return {
+                        format: 'json',
+                        content: tmlanguageJSON
+                    };
+                }
+            });
 
-        // map of monaco "language id's" to TextMate scopeNames
-        const grammars = new Map();
-        grammars.set('python', 'source.python');
+            // map of monaco "language id's" to TextMate scopeNames
+            const grammars = new Map();
+            grammars.set('python', 'source.python');
 
-        // Wire everything together.
-        await wireTmGrammars(monacoEditor, registry, grammars);
-
+            // Wire everything together.
+            await wireTmGrammars(monacoEditor, registry, grammars);
+        }
         // Indicate to the callback that we're done.
         loadingFinished();
     } catch (e) {

@@ -1,0 +1,1315 @@
+{
+    "cells": [
+        {
+            "cell_type": "code",
+            "execution_count": 1,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "import numpy as np\n",
+                "import pandas as pd\n",
+                "import matplotlib.pyplot as plt\n",
+                "df = pd.read_csv('train.csv')"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 2,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/html": [
+                            "<div>\n",
+                            "<style scoped>\n",
+                            "    .dataframe tbody tr th:only-of-type {\n",
+                            "        vertical-align: middle;\n",
+                            "    }\n",
+                            "\n",
+                            "    .dataframe tbody tr th {\n",
+                            "        vertical-align: top;\n",
+                            "    }\n",
+                            "\n",
+                            "    .dataframe thead th {\n",
+                            "        text-align: right;\n",
+                            "    }\n",
+                            "</style>\n",
+                            "<table border=\"1\" class=\"dataframe\">\n",
+                            "  <thead>\n",
+                            "    <tr style=\"text-align: right;\">\n",
+                            "      <th></th>\n",
+                            "      <th>PassengerId</th>\n",
+                            "      <th>Survived</th>\n",
+                            "      <th>Pclass</th>\n",
+                            "      <th>Name</th>\n",
+                            "      <th>Sex</th>\n",
+                            "      <th>Age</th>\n",
+                            "      <th>SibSp</th>\n",
+                            "      <th>Parch</th>\n",
+                            "      <th>Ticket</th>\n",
+                            "      <th>Fare</th>\n",
+                            "      <th>Cabin</th>\n",
+                            "      <th>Embarked</th>\n",
+                            "    </tr>\n",
+                            "  </thead>\n",
+                            "  <tbody>\n",
+                            "    <tr>\n",
+                            "      <th>0</th>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>Braund, Mr. Owen Harris</td>\n",
+                            "      <td>male</td>\n",
+                            "      <td>22.0</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>A/5 21171</td>\n",
+                            "      <td>7.2500</td>\n",
+                            "      <td>NaN</td>\n",
+                            "      <td>S</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>1</th>\n",
+                            "      <td>2</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>Cumings, Mrs. John Bradley (Florence Briggs Th...</td>\n",
+                            "      <td>female</td>\n",
+                            "      <td>38.0</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>PC 17599</td>\n",
+                            "      <td>71.2833</td>\n",
+                            "      <td>C85</td>\n",
+                            "      <td>C</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>2</th>\n",
+                            "      <td>3</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>Heikkinen, Miss. Laina</td>\n",
+                            "      <td>female</td>\n",
+                            "      <td>26.0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>STON/O2. 3101282</td>\n",
+                            "      <td>7.9250</td>\n",
+                            "      <td>NaN</td>\n",
+                            "      <td>S</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>3</th>\n",
+                            "      <td>4</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>Futrelle, Mrs. Jacques Heath (Lily May Peel)</td>\n",
+                            "      <td>female</td>\n",
+                            "      <td>35.0</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>113803</td>\n",
+                            "      <td>53.1000</td>\n",
+                            "      <td>C123</td>\n",
+                            "      <td>S</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>4</th>\n",
+                            "      <td>5</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>Allen, Mr. William Henry</td>\n",
+                            "      <td>male</td>\n",
+                            "      <td>35.0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>373450</td>\n",
+                            "      <td>8.0500</td>\n",
+                            "      <td>NaN</td>\n",
+                            "      <td>S</td>\n",
+                            "    </tr>\n",
+                            "  </tbody>\n",
+                            "</table>\n",
+                            "</div>"
+                        ],
+                        "text/plain": [
+                            "   PassengerId  Survived  Pclass  \\\n",
+                            "0            1         0       3   \n",
+                            "1            2         1       1   \n",
+                            "2            3         1       3   \n",
+                            "3            4         1       1   \n",
+                            "4            5         0       3   \n",
+                            "\n",
+                            "                                                Name     Sex   Age  SibSp  \\\n",
+                            "0                            Braund, Mr. Owen Harris    male  22.0      1   \n",
+                            "1  Cumings, Mrs. John Bradley (Florence Briggs Th...  female  38.0      1   \n",
+                            "2                             Heikkinen, Miss. Laina  female  26.0      0   \n",
+                            "3       Futrelle, Mrs. Jacques Heath (Lily May Peel)  female  35.0      1   \n",
+                            "4                           Allen, Mr. William Henry    male  35.0      0   \n",
+                            "\n",
+                            "   Parch            Ticket     Fare Cabin Embarked  \n",
+                            "0      0         A/5 21171   7.2500   NaN        S  \n",
+                            "1      0          PC 17599  71.2833   C85        C  \n",
+                            "2      0  STON/O2. 3101282   7.9250   NaN        S  \n",
+                            "3      0            113803  53.1000  C123        S  \n",
+                            "4      0            373450   8.0500   NaN        S  "
+                        ]
+                    },
+                    "execution_count": 2,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": [
+                "df.head()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 3,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": [
+                        "<class 'pandas.core.frame.DataFrame'>\n",
+                        "RangeIndex: 891 entries, 0 to 890\n",
+                        "Data columns (total 12 columns):\n",
+                        "PassengerId    891 non-null int64\n",
+                        "Survived       891 non-null int64\n",
+                        "Pclass         891 non-null int64\n",
+                        "Name           891 non-null object\n",
+                        "Sex            891 non-null object\n",
+                        "Age            714 non-null float64\n",
+                        "SibSp          891 non-null int64\n",
+                        "Parch          891 non-null int64\n",
+                        "Ticket         891 non-null object\n",
+                        "Fare           891 non-null float64\n",
+                        "Cabin          204 non-null object\n",
+                        "Embarked       889 non-null object\n",
+                        "dtypes: float64(2), int64(5), object(5)\n",
+                        "memory usage: 83.6+ KB\n"
+                    ]
+                }
+            ],
+            "source": [
+                "df.info()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 4,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/plain": [
+                            "PassengerId      0\n",
+                            "Survived         0\n",
+                            "Pclass           0\n",
+                            "Name             0\n",
+                            "Sex              0\n",
+                            "Age            177\n",
+                            "SibSp            0\n",
+                            "Parch            0\n",
+                            "Ticket           0\n",
+                            "Fare             0\n",
+                            "Cabin          687\n",
+                            "Embarked         2\n",
+                            "dtype: int64"
+                        ]
+                    },
+                    "execution_count": 4,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": [
+                "df.apply(lambda x:sum(x.isnull()))"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 5,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "df['Age'].fillna(0 , inplace=True)\n",
+                "df['Embarked'].fillna('S' , inplace = True)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 6,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "def unique(var):\n",
+                "    unique_var=[]\n",
+                "    for x in var:\n",
+                "        if x not in unique_var:\n",
+                "            unique_var.append(x)\n",
+                "    for x in unique_var:\n",
+                "        print(x)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 7,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": [
+                        "S\n",
+                        "C\n",
+                        "Q\n"
+                    ]
+                }
+            ],
+            "source": [
+                "unique(df['Embarked'])"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 8,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": [
+                        "male\n",
+                        "female\n"
+                    ]
+                }
+            ],
+            "source": [
+                "unique(df['Sex'])"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 9,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "df['Sex'] = df['Sex'].map({'female':0,'male':1}).astype(np.int)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 10,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "df['Embarked'] = df['Embarked'].map({'nan':0,'S':1,'C':2,'Q':3}).astype(np.int)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 11,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": [
+                        "<class 'pandas.core.frame.DataFrame'>\n",
+                        "RangeIndex: 891 entries, 0 to 890\n",
+                        "Data columns (total 12 columns):\n",
+                        "PassengerId    891 non-null int64\n",
+                        "Survived       891 non-null int64\n",
+                        "Pclass         891 non-null int64\n",
+                        "Name           891 non-null object\n",
+                        "Sex            891 non-null int32\n",
+                        "Age            891 non-null float64\n",
+                        "SibSp          891 non-null int64\n",
+                        "Parch          891 non-null int64\n",
+                        "Ticket         891 non-null object\n",
+                        "Fare           891 non-null float64\n",
+                        "Cabin          204 non-null object\n",
+                        "Embarked       891 non-null int32\n",
+                        "dtypes: float64(2), int32(2), int64(5), object(3)\n",
+                        "memory usage: 76.6+ KB\n"
+                    ]
+                }
+            ],
+            "source": [
+                "df.info()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 12,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "del df['Name']"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 13,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "del df['Ticket']\n",
+                "#del df['Cabin']"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 14,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/html": [
+                            "<div>\n",
+                            "<style scoped>\n",
+                            "    .dataframe tbody tr th:only-of-type {\n",
+                            "        vertical-align: middle;\n",
+                            "    }\n",
+                            "\n",
+                            "    .dataframe tbody tr th {\n",
+                            "        vertical-align: top;\n",
+                            "    }\n",
+                            "\n",
+                            "    .dataframe thead th {\n",
+                            "        text-align: right;\n",
+                            "    }\n",
+                            "</style>\n",
+                            "<table border=\"1\" class=\"dataframe\">\n",
+                            "  <thead>\n",
+                            "    <tr style=\"text-align: right;\">\n",
+                            "      <th></th>\n",
+                            "      <th>PassengerId</th>\n",
+                            "      <th>Survived</th>\n",
+                            "      <th>Pclass</th>\n",
+                            "      <th>Sex</th>\n",
+                            "      <th>Age</th>\n",
+                            "      <th>SibSp</th>\n",
+                            "      <th>Parch</th>\n",
+                            "      <th>Fare</th>\n",
+                            "      <th>Cabin</th>\n",
+                            "      <th>Embarked</th>\n",
+                            "    </tr>\n",
+                            "  </thead>\n",
+                            "  <tbody>\n",
+                            "    <tr>\n",
+                            "      <th>0</th>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>22.0</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>7.2500</td>\n",
+                            "      <td>NaN</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>1</th>\n",
+                            "      <td>2</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>38.0</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>71.2833</td>\n",
+                            "      <td>C85</td>\n",
+                            "      <td>2</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>2</th>\n",
+                            "      <td>3</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>26.0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>7.9250</td>\n",
+                            "      <td>NaN</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>3</th>\n",
+                            "      <td>4</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>35.0</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>53.1000</td>\n",
+                            "      <td>C123</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>4</th>\n",
+                            "      <td>5</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>35.0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>8.0500</td>\n",
+                            "      <td>NaN</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "  </tbody>\n",
+                            "</table>\n",
+                            "</div>"
+                        ],
+                        "text/plain": [
+                            "   PassengerId  Survived  Pclass  Sex   Age  SibSp  Parch     Fare Cabin  \\\n",
+                            "0            1         0       3    1  22.0      1      0   7.2500   NaN   \n",
+                            "1            2         1       1    0  38.0      1      0  71.2833   C85   \n",
+                            "2            3         1       3    0  26.0      0      0   7.9250   NaN   \n",
+                            "3            4         1       1    0  35.0      1      0  53.1000  C123   \n",
+                            "4            5         0       3    1  35.0      0      0   8.0500   NaN   \n",
+                            "\n",
+                            "   Embarked  \n",
+                            "0         1  \n",
+                            "1         2  \n",
+                            "2         1  \n",
+                            "3         1  \n",
+                            "4         1  "
+                        ]
+                    },
+                    "execution_count": 14,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": [
+                "df.head()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 15,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "feature=['PassengerId','Pclass','Sex','Age','SibSp','Parch','Fare','Embarked']\n",
+                "x=df[feature]"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 16,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/plain": [
+                            "0    0\n",
+                            "1    1\n",
+                            "2    1\n",
+                            "3    1\n",
+                            "4    0\n",
+                            "Name: Survived, dtype: int64"
+                        ]
+                    },
+                    "execution_count": 16,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": [
+                "y=df['Survived']\n",
+                "y.head()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 17,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/plain": [
+                            "0    549\n",
+                            "1    342\n",
+                            "Name: Survived, dtype: int64"
+                        ]
+                    },
+                    "execution_count": 17,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": [
+                "df['Survived'].value_counts()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 18,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stderr",
+                    "output_type": "stream",
+                    "text": [
+                        "C:\\Users\\AMR\\Anaconda3\\lib\\site-packages\\sklearn\\cross_validation.py:41: DeprecationWarning: This module was deprecated in version 0.18 in favor of the model_selection module into which all the refactored classes and functions are moved. Also note that the interface of the new CV iterators are different from that of this module. This module will be removed in 0.20.\n",
+                        "  \"This module will be removed in 0.20.\", DeprecationWarning)\n"
+                    ]
+                }
+            ],
+            "source": [
+                "from sklearn.cross_validation import train_test_split\n",
+                "x_train,x_test,y_train,y_test=train_test_split(x,y,test_size=0.25,random_state=6)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 19,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": [
+                        "(668, 8)\n",
+                        "(223, 8)\n",
+                        "(668,)\n",
+                        "(223,)\n"
+                    ]
+                }
+            ],
+            "source": [
+                "print(x_train.shape)   \n",
+                "print(x_test.shape)\n",
+                "print(y_train.shape)\n",
+                "print(y_test.shape)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 20,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/plain": [
+                            "LinearRegression(copy_X=True, fit_intercept=True, n_jobs=1, normalize=False)"
+                        ]
+                    },
+                    "execution_count": 20,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": [
+                "#Linear Regression\n",
+                "from sklearn.linear_model import LinearRegression\n",
+                "linreg=LinearRegression()\n",
+                "linreg.fit(x_train,y_train)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 21,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": [
+                        "0.5160966104067846\n"
+                    ]
+                }
+            ],
+            "source": [
+                "y_pred = linreg.predict(x_test)\n",
+                "from sklearn import metrics\n",
+                "pred_accuracy = np.sqrt(metrics.mean_absolute_error(y_test,y_pred))\n",
+                "print(pred_accuracy)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 22,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": [
+                        "0.8475336322869955\n"
+                    ]
+                }
+            ],
+            "source": [
+                "#Logistic Regression\n",
+                "from sklearn.linear_model import LogisticRegression\n",
+                "logreg=LogisticRegression()\n",
+                "logreg.fit(x_train,y_train)\n",
+                "y_pred=logreg.predict(x_test)\n",
+                "print(metrics.accuracy_score(y_test,y_pred))"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 23,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": [
+                        "0.8475336322869955\n"
+                    ]
+                }
+            ],
+            "source": [
+                "from sklearn.neighbors import KNeighborsClassifier\n",
+                "knn=KNeighborsClassifier(n_neighbors=2)\n",
+                "knn.fit(x_train,y_train)\n",
+                "pred=knn.predict(x_test)\n",
+                "print(metrics.accuracy_score(y_test,y_pred))"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 24,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "df_test=pd.read_csv('test.csv')"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 34,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/html": [
+                            "<div>\n",
+                            "<style scoped>\n",
+                            "    .dataframe tbody tr th:only-of-type {\n",
+                            "        vertical-align: middle;\n",
+                            "    }\n",
+                            "\n",
+                            "    .dataframe tbody tr th {\n",
+                            "        vertical-align: top;\n",
+                            "    }\n",
+                            "\n",
+                            "    .dataframe thead th {\n",
+                            "        text-align: right;\n",
+                            "    }\n",
+                            "</style>\n",
+                            "<table border=\"1\" class=\"dataframe\">\n",
+                            "  <thead>\n",
+                            "    <tr style=\"text-align: right;\">\n",
+                            "      <th></th>\n",
+                            "      <th>PassengerId</th>\n",
+                            "      <th>Pclass</th>\n",
+                            "      <th>Sex</th>\n",
+                            "      <th>Age</th>\n",
+                            "      <th>SibSp</th>\n",
+                            "      <th>Parch</th>\n",
+                            "      <th>Fare</th>\n",
+                            "      <th>Embarked</th>\n",
+                            "      <th>Survived</th>\n",
+                            "    </tr>\n",
+                            "  </thead>\n",
+                            "  <tbody>\n",
+                            "    <tr>\n",
+                            "      <th>0</th>\n",
+                            "      <td>892</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>34.5</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>7.8292</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>1</th>\n",
+                            "      <td>893</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>47.0</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>7.0000</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>2</th>\n",
+                            "      <td>894</td>\n",
+                            "      <td>2</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>62.0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>9.6875</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>3</th>\n",
+                            "      <td>895</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>27.0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>8.6625</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>4</th>\n",
+                            "      <td>896</td>\n",
+                            "      <td>3</td>\n",
+                            "      <td>0</td>\n",
+                            "      <td>22.0</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>12.2875</td>\n",
+                            "      <td>1</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "  </tbody>\n",
+                            "</table>\n",
+                            "</div>"
+                        ],
+                        "text/plain": [
+                            "   PassengerId  Pclass  Sex   Age  SibSp  Parch     Fare  Embarked  Survived\n",
+                            "0          892       3    1  34.5      0      0   7.8292         3         0\n",
+                            "1          893       3    0  47.0      1      0   7.0000         1         1\n",
+                            "2          894       2    1  62.0      0      0   9.6875         3         0\n",
+                            "3          895       3    1  27.0      0      0   8.6625         1         0\n",
+                            "4          896       3    0  22.0      1      1  12.2875         1         1"
+                        ]
+                    },
+                    "execution_count": 34,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": [
+                "df_test.head()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 25,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": [
+                        "<class 'pandas.core.frame.DataFrame'>\n",
+                        "RangeIndex: 418 entries, 0 to 417\n",
+                        "Data columns (total 11 columns):\n",
+                        "PassengerId    418 non-null int64\n",
+                        "Pclass         418 non-null int64\n",
+                        "Name           418 non-null object\n",
+                        "Sex            418 non-null object\n",
+                        "Age            332 non-null float64\n",
+                        "SibSp          418 non-null int64\n",
+                        "Parch          418 non-null int64\n",
+                        "Ticket         418 non-null object\n",
+                        "Fare           417 non-null float64\n",
+                        "Cabin          91 non-null object\n",
+                        "Embarked       418 non-null object\n",
+                        "dtypes: float64(2), int64(4), object(5)\n",
+                        "memory usage: 36.0+ KB\n"
+                    ]
+                }
+            ],
+            "source": [
+                "df_test.info()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 26,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "df_test['Age'].fillna(0 , inplace=True)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 27,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "del df_test['Ticket']\n",
+                "del df_test['Cabin']\n",
+                "del df_test['Name']"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 28,
+            "metadata": {},
+            "outputs": [
+                {
+                    "name": "stdout",
+                    "output_type": "stream",
+                    "text": [
+                        "<class 'pandas.core.frame.DataFrame'>\n",
+                        "RangeIndex: 418 entries, 0 to 417\n",
+                        "Data columns (total 8 columns):\n",
+                        "PassengerId    418 non-null int64\n",
+                        "Pclass         418 non-null int64\n",
+                        "Sex            418 non-null object\n",
+                        "Age            418 non-null float64\n",
+                        "SibSp          418 non-null int64\n",
+                        "Parch          418 non-null int64\n",
+                        "Fare           417 non-null float64\n",
+                        "Embarked       418 non-null object\n",
+                        "dtypes: float64(2), int64(4), object(2)\n",
+                        "memory usage: 26.2+ KB\n"
+                    ]
+                }
+            ],
+            "source": [
+                "df_test.info()"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 29,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "df_test['Sex'] = df_test['Sex'].map({'female':0,'male':1}).astype(np.int)\n",
+                "df_test['Embarked'] = df_test['Embarked'].map({'nan':0,'S':1,'C':2,'Q':3}).astype(np.int)\n",
+                "\n"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 30,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "df_test['Fare'].fillna(0 , inplace=True)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 31,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "test_feat = ['PassengerId','Pclass','Sex','Age','SibSp','Parch','Fare','Embarked']\n",
+                "X_test = df_test[test_feat]"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 32,
+            "metadata": {},
+            "outputs": [],
+            "source": [
+                "Y_test_pred=logreg.predict(X_test)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": 39,
+            "metadata": {},
+            "outputs": [
+                {
+                    "data": {
+                        "text/html": [
+                            "<div>\n",
+                            "<style scoped>\n",
+                            "    .dataframe tbody tr th:only-of-type {\n",
+                            "        vertical-align: middle;\n",
+                            "    }\n",
+                            "\n",
+                            "    .dataframe tbody tr th {\n",
+                            "        vertical-align: top;\n",
+                            "    }\n",
+                            "\n",
+                            "    .dataframe thead th {\n",
+                            "        text-align: right;\n",
+                            "    }\n",
+                            "</style>\n",
+                            "<table border=\"1\" class=\"dataframe\">\n",
+                            "  <thead>\n",
+                            "    <tr style=\"text-align: right;\">\n",
+                            "      <th></th>\n",
+                            "      <th>PassengerId</th>\n",
+                            "      <th>Survived</th>\n",
+                            "    </tr>\n",
+                            "  </thead>\n",
+                            "  <tbody>\n",
+                            "    <tr>\n",
+                            "      <th>0</th>\n",
+                            "      <td>892</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>1</th>\n",
+                            "      <td>893</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>2</th>\n",
+                            "      <td>894</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>3</th>\n",
+                            "      <td>895</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>4</th>\n",
+                            "      <td>896</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>5</th>\n",
+                            "      <td>897</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>6</th>\n",
+                            "      <td>898</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>7</th>\n",
+                            "      <td>899</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>8</th>\n",
+                            "      <td>900</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>9</th>\n",
+                            "      <td>901</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>10</th>\n",
+                            "      <td>902</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>11</th>\n",
+                            "      <td>903</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>12</th>\n",
+                            "      <td>904</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>13</th>\n",
+                            "      <td>905</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>14</th>\n",
+                            "      <td>906</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>15</th>\n",
+                            "      <td>907</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>16</th>\n",
+                            "      <td>908</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>17</th>\n",
+                            "      <td>909</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>18</th>\n",
+                            "      <td>910</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>19</th>\n",
+                            "      <td>911</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>20</th>\n",
+                            "      <td>912</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>21</th>\n",
+                            "      <td>913</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>22</th>\n",
+                            "      <td>914</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>23</th>\n",
+                            "      <td>915</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>24</th>\n",
+                            "      <td>916</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>25</th>\n",
+                            "      <td>917</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>26</th>\n",
+                            "      <td>918</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>27</th>\n",
+                            "      <td>919</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>28</th>\n",
+                            "      <td>920</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>29</th>\n",
+                            "      <td>921</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>30</th>\n",
+                            "      <td>922</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>31</th>\n",
+                            "      <td>923</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>32</th>\n",
+                            "      <td>924</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>33</th>\n",
+                            "      <td>925</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>34</th>\n",
+                            "      <td>926</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>35</th>\n",
+                            "      <td>927</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>36</th>\n",
+                            "      <td>928</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>37</th>\n",
+                            "      <td>929</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>38</th>\n",
+                            "      <td>930</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>39</th>\n",
+                            "      <td>931</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>40</th>\n",
+                            "      <td>932</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>41</th>\n",
+                            "      <td>933</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>42</th>\n",
+                            "      <td>934</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>43</th>\n",
+                            "      <td>935</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>44</th>\n",
+                            "      <td>936</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>45</th>\n",
+                            "      <td>937</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>46</th>\n",
+                            "      <td>938</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>47</th>\n",
+                            "      <td>939</td>\n",
+                            "      <td>0</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>48</th>\n",
+                            "      <td>940</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "    <tr>\n",
+                            "      <th>49</th>\n",
+                            "      <td>941</td>\n",
+                            "      <td>1</td>\n",
+                            "    </tr>\n",
+                            "  </tbody>\n",
+                            "</table>\n",
+                            "</div>"
+                        ],
+                        "text/plain": [
+                            "    PassengerId  Survived\n",
+                            "0           892         0\n",
+                            "1           893         1\n",
+                            "2           894         0\n",
+                            "3           895         0\n",
+                            "4           896         1\n",
+                            "5           897         0\n",
+                            "6           898         1\n",
+                            "7           899         0\n",
+                            "8           900         1\n",
+                            "9           901         0\n",
+                            "10          902         0\n",
+                            "11          903         0\n",
+                            "12          904         1\n",
+                            "13          905         0\n",
+                            "14          906         1\n",
+                            "15          907         1\n",
+                            "16          908         0\n",
+                            "17          909         0\n",
+                            "18          910         1\n",
+                            "19          911         1\n",
+                            "20          912         0\n",
+                            "21          913         0\n",
+                            "22          914         1\n",
+                            "23          915         1\n",
+                            "24          916         1\n",
+                            "25          917         0\n",
+                            "26          918         1\n",
+                            "27          919         0\n",
+                            "28          920         0\n",
+                            "29          921         0\n",
+                            "30          922         0\n",
+                            "31          923         0\n",
+                            "32          924         1\n",
+                            "33          925         1\n",
+                            "34          926         0\n",
+                            "35          927         0\n",
+                            "36          928         1\n",
+                            "37          929         1\n",
+                            "38          930         0\n",
+                            "39          931         0\n",
+                            "40          932         0\n",
+                            "41          933         0\n",
+                            "42          934         0\n",
+                            "43          935         1\n",
+                            "44          936         1\n",
+                            "45          937         0\n",
+                            "46          938         0\n",
+                            "47          939         0\n",
+                            "48          940         1\n",
+                            "49          941         1"
+                        ]
+                    },
+                    "execution_count": 39,
+                    "metadata": {},
+                    "output_type": "execute_result"
+                }
+            ],
+            "source": [
+                "df_test['Survived']=Y_test_pred\n",
+                "\n",
+                "df_result = df_test.drop(['Pclass','Sex','Age','SibSp','Parch','Fare','Embarked'], axis=1)\n",
+                "#df_result['Gender'] = df_test['Sex'].map({1:'Male',0:'Female'})\n",
+                "df_result['Survived'] = df_result['Survived']\n",
+                "df_result.to_csv('result.csv', index=False)\n",
+                "df_result.head(50)"
+            ]
+        },
+        {
+            "cell_type": "code",
+            "execution_count": null,
+            "metadata": {},
+            "outputs": [],
+            "source": []
+        }
+    ],
+    "metadata": {
+        "kernelspec": {
+            "display_name": "Python 3",
+            "language": "python",
+            "name": "python3"
+        },
+        "language_info": {
+            "codemirror_mode": {
+                "name": "ipython",
+                "version": 3
+            },
+            "file_extension": ".py",
+            "mimetype": "text/x-python",
+            "name": "python",
+            "nbconvert_exporter": "python",
+            "pygments_lexer": "ipython3",
+            "version": "3.6.4"
+        }
+    },
+    "nbformat": 4,
+    "nbformat_minor": 2
+}

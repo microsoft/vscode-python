@@ -5,7 +5,12 @@ import { inject, injectable } from 'inversify';
 import { Event } from 'vscode';
 
 import { ILiveShareApi } from '../../client/common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
+import {
+    IAsyncDisposableRegistry,
+    IConfigurationService,
+    IDisposableRegistry,
+    Resource
+} from '../../client/common/types';
 import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
@@ -15,6 +20,9 @@ import { IServiceContainer } from '../../client/ioc/types';
 
 @injectable()
 export class TestInteractiveWindowProvider implements IInteractiveWindowProvider {
+    public get onDidChangeActiveInteractiveWindow() {
+        return this.realProvider.onDidChangeActiveInteractiveWindow;
+    }
     private realProvider: InteractiveWindowProvider;
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -23,7 +31,13 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(IConfigurationService) configService: IConfigurationService
     ) {
-        this.realProvider = new InteractiveWindowProvider(liveShare, serviceContainer, asyncRegistry, disposables, configService);
+        this.realProvider = new InteractiveWindowProvider(
+            liveShare,
+            serviceContainer,
+            asyncRegistry,
+            disposables,
+            configService
+        );
 
         // During a test, the 'create' function will end up being called during a live share. We need to hook its result too
         // so just hook the 'create' function to fix all callers.
@@ -58,7 +72,7 @@ export class TestInteractiveWindowProvider implements IInteractiveWindowProvider
         return this.realProvider.getOrCreateActive();
     }
 
-    public getNotebookOptions(): Promise<INotebookServerOptions> {
-        return this.realProvider.getNotebookOptions();
+    public getNotebookOptions(resource: Resource): Promise<INotebookServerOptions> {
+        return this.realProvider.getNotebookOptions(resource);
     }
 }

@@ -13,7 +13,10 @@ import { IArgumentsService, TestFilter } from '../../types';
 export class TestDiscoveryService implements ITestDiscoveryService {
     private argsService: IArgumentsService;
     private runner: ITestRunner;
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer, @inject(ITestsParser) @named(NOSETEST_PROVIDER) private testParser: ITestsParser) {
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(ITestsParser) @named(NOSETEST_PROVIDER) private testParser: ITestsParser
+    ) {
         this.argsService = this.serviceContainer.get<IArgumentsService>(IArgumentsService, NOSETEST_PROVIDER);
         this.runner = this.serviceContainer.get<ITestRunner>(ITestRunner);
     }

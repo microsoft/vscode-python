@@ -3,6 +3,7 @@
 'use strict';
 import * as React from 'react';
 
+import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { InputHistory } from './inputHistory';
 import { ICellViewModel } from './mainState';
 
@@ -14,13 +15,14 @@ const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 export interface IContentPanelProps {
     baseTheme: string;
     cellVMs: ICellViewModel[];
-    newCellVM?: ICellViewModel;
     history?: InputHistory;
     testMode?: boolean;
+    settings?: IDataScienceExtraSettings;
     codeTheme: string;
     submittedText: boolean;
     skipNextScroll: boolean;
     editable: boolean;
+    scrollBeyondLastLine: boolean;
     renderCell(cellVM: ICellViewModel, index: number): JSX.Element | null;
     scrollToBottom(div: HTMLDivElement): void;
 }
@@ -32,25 +34,29 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     constructor(prop: IContentPanelProps) {
         super(prop);
     }
-
     public componentDidMount() {
         this.scrollToBottom();
     }
-
-    public componentDidUpdate() {
+    public componentWillReceiveProps() {
         this.scrollToBottom();
     }
 
+    public computeIsAtBottom(parent: HTMLDivElement): boolean {
+        if (this.bottomRef.current) {
+            // if the bottom div is on the screen, the content is at the bottom
+            return this.bottomRef.current.offsetTop - parent.offsetTop - 2 < parent.clientHeight + parent.scrollTop;
+        }
+        return false;
+    }
+
     public render() {
+        const className = `${this.props.scrollBeyondLastLine ? 'content-panel-scrollBeyondLastLine' : ''}`;
         return (
-            <div id="content-panel-div" ref={this.containerRef}>
-                <div id="cell-table">
-                    <div id="cell-table-body" role="list">
-                        {this.renderCells()}
-                        {this.renderEdit()}
-                    </div>
+            <div id="content-panel-div" ref={this.containerRef} className={className}>
+                <div id="cell-table" role="list">
+                    {this.renderCells()}
                 </div>
-                <div ref={this.bottomRef} />
+                <div id="bottomDiv" ref={this.bottomRef} />
             </div>
         );
     }
@@ -59,14 +65,6 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) => {
             return this.props.renderCell(cellVM, index);
         });
-    };
-
-    private renderEdit = () => {
-        if (this.props.editable && this.props.newCellVM) {
-            return this.props.renderCell(this.props.newCellVM, 0);
-        } else {
-            return null;
-        }
     };
 
     private scrollIntoView() {

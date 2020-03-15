@@ -6,8 +6,20 @@
 import { expect } from 'chai';
 import * as path from 'path';
 import * as typemoq from 'typemoq';
-import { CancellationToken, CancellationTokenSource, Range, SymbolInformation, SymbolKind, TextDocument, Uri } from 'vscode';
-import { ExecutionResult, IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    Range,
+    SymbolInformation,
+    SymbolKind,
+    TextDocument,
+    Uri
+} from 'vscode';
+import {
+    ExecutionResult,
+    IPythonExecutionFactory,
+    IPythonExecutionService
+} from '../../../client/common/process/types';
 import { IDocumentSymbolProvider } from '../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { TestFileSymbolProvider } from '../../../client/testing/navigation/symbolProvider';
@@ -31,7 +43,9 @@ suite('Unit Tests - Navigation Command Handler', () => {
         // so we need to mock the `then` on the service.
         pythonService.setup((x: any) => x.then).returns(() => undefined);
 
-        pythonExecFactory.setup(factory => factory.create(typemoq.It.isAny())).returns(async () => pythonService.object);
+        pythonExecFactory
+            .setup(factory => factory.create(typemoq.It.isAny()))
+            .returns(async () => pythonService.object);
 
         doc = typemoq.Mock.ofType<TextDocument>();
         token = new CancellationTokenSource().token;

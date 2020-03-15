@@ -4,7 +4,7 @@
 
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { CommandManager } from '../../client/common/application/commandManager';
 import { DocumentManager } from '../../client/common/application/documentManager';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
@@ -53,7 +53,7 @@ suite('Data Science Tests', () => {
 
         onDidChangeSettings = sinon.stub();
         onDidChangeActiveTextEditor = sinon.stub();
-        when(configService.getSettings()).thenReturn(instance(settings));
+        when(configService.getSettings(anything())).thenReturn(instance(settings));
         when(settings.onDidChange).thenReturn(onDidChangeSettings);
         // tslint:disable-next-line: no-any
         when(settings.datascience).thenReturn({} as any);

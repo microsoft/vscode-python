@@ -39,7 +39,10 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     public dispose() {
         // On shutdown send how long on average we spent parsing code lens
         if (this.totalGetCodeLensCalls > 0) {
-            sendTelemetryEvent(Telemetry.CodeLensAverageAcquisitionTime, this.totalExecutionTimeInMs / this.totalGetCodeLensCalls);
+            sendTelemetryEvent(
+                Telemetry.CodeLensAverageAcquisitionTime,
+                this.totalExecutionTimeInMs / this.totalGetCodeLensCalls
+            );
         }
     }
 
@@ -56,7 +59,11 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     // IDataScienceCodeLensProvider interface
     public getCodeWatcher(document: vscode.TextDocument): ICodeWatcher | undefined {
-        return this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
+        return this.matchWatcher(
+            document.fileName,
+            document.version,
+            this.configuration.getSettings(document.uri).datascience
+        );
     }
 
     private onDebugLocationUpdated() {
@@ -87,7 +94,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         editorContext.set(result && result.length > 0).catch();
 
         // Don't provide any code lenses if we have not enabled data science
-        const settings = this.configuration.getSettings();
+        const settings = this.configuration.getSettings(document.uri);
         if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens) {
             // Clear out any existing code watchers, providecodelenses is called on settings change
             // so we don't need to watch the settings change specifically here
@@ -137,7 +144,11 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
 
     private getCodeLens(document: vscode.TextDocument): vscode.CodeLens[] {
         // See if we already have a watcher for this file and version
-        const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
+        const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(
+            document.fileName,
+            document.version,
+            this.configuration.getSettings(document.uri).datascience
+        );
         if (codeWatcher) {
             return codeWatcher.getCodeLenses();
         }

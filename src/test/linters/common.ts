@@ -14,7 +14,6 @@ import {
     Flake8CategorySeverity,
     IConfigurationService,
     IInstaller,
-    ILogger,
     IMypyCategorySeverity,
     IOutputChannel,
     IPycodestyleCategorySeverity,
@@ -172,7 +171,6 @@ export class BaseTestFixture {
 
     // services
     public workspaceService: TypeMoq.IMock<IWorkspaceService>;
-    public logger: TypeMoq.IMock<ILogger>;
     public installer: TypeMoq.IMock<IInstaller>;
     public appShell: TypeMoq.IMock<IApplicationShell>;
 
@@ -199,32 +197,50 @@ export class BaseTestFixture {
         public readonly workspaceDir = '.',
         protected readonly printLogs = false
     ) {
-        this.serviceContainer = serviceContainer ? serviceContainer : TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
+        this.serviceContainer = serviceContainer
+            ? serviceContainer
+            : TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
 
         // services
 
         this.workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
-        this.logger = TypeMoq.Mock.ofType<ILogger>(undefined, TypeMoq.MockBehavior.Strict);
         this.installer = TypeMoq.Mock.ofType<IInstaller>(undefined, TypeMoq.MockBehavior.Strict);
         this.appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
 
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => filesystem);
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny())).returns(() => this.workspaceService.object);
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => this.logger.object);
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny())).returns(() => this.installer.object);
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny())).returns(() => platformService);
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonToolExecutionService), TypeMoq.It.isAny())).returns(() => pythonToolExecService);
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory), TypeMoq.It.isAny())).returns(() => pythonExecFactory);
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny())).returns(() => this.appShell.object);
+        this.serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
+            .returns(() => filesystem);
+        this.serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
+            .returns(() => this.workspaceService.object);
+        this.serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny()))
+            .returns(() => this.installer.object);
+        this.serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
+            .returns(() => platformService);
+        this.serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IPythonToolExecutionService), TypeMoq.It.isAny()))
+            .returns(() => pythonToolExecService);
+        this.serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory), TypeMoq.It.isAny()))
+            .returns(() => pythonExecFactory);
+        this.serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny()))
+            .returns(() => this.appShell.object);
         this.initServices();
 
         // config
 
-        this.configService = configService ? configService : TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
+        this.configService = configService
+            ? configService
+            : TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
         this.pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>(undefined, TypeMoq.MockBehavior.Strict);
         this.lintingSettings = new LintingSettings();
 
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => this.configService.object);
+        this.serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
+            .returns(() => this.configService.object);
         this.configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => this.pythonSettings.object);
         this.pythonSettings.setup(s => s.linting).returns(() => this.lintingSettings);
         this.initConfig(ignoreConfigUpdates);
@@ -233,7 +249,9 @@ export class BaseTestFixture {
 
         this.outputChannel = TypeMoq.Mock.ofType<IOutputChannel>(undefined, TypeMoq.MockBehavior.Strict);
 
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny())).returns(() => this.outputChannel.object);
+        this.serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
+            .returns(() => this.outputChannel.object);
         this.initData();
 
         // artifacts
@@ -244,7 +262,9 @@ export class BaseTestFixture {
         // linting
 
         this.linterManager = new LinterManager(this.serviceContainer.object, this.workspaceService.object!);
-        this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny())).returns(() => this.linterManager);
+        this.serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
+            .returns(() => this.linterManager);
     }
 
     public async getLinter(product: Product, enabled = true): Promise<ILinter> {
@@ -272,20 +292,13 @@ export class BaseTestFixture {
     private initServices(): void {
         const workspaceFolder = TypeMoq.Mock.ofType<WorkspaceFolder>(undefined, TypeMoq.MockBehavior.Strict);
         workspaceFolder.setup(f => f.uri).returns(() => Uri.file(this.workspaceDir));
-        this.workspaceService.setup(s => s.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
+        this.workspaceService
+            .setup(s => s.getWorkspaceFolder(TypeMoq.It.isAny()))
+            .returns(() => workspaceFolder.object);
 
-        this.logger
-            .setup(l => l.logError(TypeMoq.It.isAny()))
-            .callback(msg => {
-                this.logged.push(msg);
-                if (this.printLogs) {
-                    // tslint:disable-next-line:no-console
-                    console.log(msg);
-                }
-            })
-            .returns(() => undefined);
-
-        this.appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+        this.appShell
+            .setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined));
     }
 
     private initConfig(ignoreUpdates = false): void {

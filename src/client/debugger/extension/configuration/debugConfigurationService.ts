@@ -4,14 +4,14 @@
 'use strict';
 
 import { inject, injectable, named } from 'inversify';
-import * as path from 'path';
 import { CancellationToken, DebugConfiguration, QuickPickItem, WorkspaceFolder } from 'vscode';
-import { IFileSystem } from '../../../common/platform/types';
 import { DebugConfigStrings } from '../../../common/utils/localize';
-import { IMultiStepInput, IMultiStepInputFactory, InputStep, IQuickPickParameters } from '../../../common/utils/multiStepInput';
-import { EXTENSION_ROOT_DIR } from '../../../constants';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { EventName } from '../../../telemetry/constants';
+import {
+    IMultiStepInput,
+    IMultiStepInputFactory,
+    InputStep,
+    IQuickPickParameters
+} from '../../../common/utils/multiStepInput';
 import { AttachRequestArguments, DebugConfigurationArguments, LaunchRequestArguments } from '../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationService } from '../types';
 import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from './types';
@@ -19,13 +19,20 @@ import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from 
 @injectable()
 export class PythonDebugConfigurationService implements IDebugConfigurationService {
     constructor(
-        @inject(IDebugConfigurationResolver) @named('attach') private readonly attachResolver: IDebugConfigurationResolver<AttachRequestArguments>,
-        @inject(IDebugConfigurationResolver) @named('launch') private readonly launchResolver: IDebugConfigurationResolver<LaunchRequestArguments>,
-        @inject(IDebugConfigurationProviderFactory) private readonly providerFactory: IDebugConfigurationProviderFactory,
-        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IDebugConfigurationResolver)
+        @named('attach')
+        private readonly attachResolver: IDebugConfigurationResolver<AttachRequestArguments>,
+        @inject(IDebugConfigurationResolver)
+        @named('launch')
+        private readonly launchResolver: IDebugConfigurationResolver<LaunchRequestArguments>,
+        @inject(IDebugConfigurationProviderFactory)
+        private readonly providerFactory: IDebugConfigurationProviderFactory,
+        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory
     ) {}
-    public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[] | undefined> {
+    public async provideDebugConfigurations(
+        folder: WorkspaceFolder | undefined,
+        token?: CancellationToken
+    ): Promise<DebugConfiguration[] | undefined> {
         const config: Partial<DebugConfigurationArguments> = {};
         const state = { config, folder, token };
 
@@ -34,7 +41,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         await multiStep.run((input, s) => this.pickDebugConfiguration(input, s), state);
 
         if (Object.keys(state.config).length === 0) {
-            return this.getDefaultDebugConfig();
+            return;
         } else {
             return [state.config as DebugConfiguration];
         }
@@ -45,26 +52,34 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         token?: CancellationToken
     ): Promise<DebugConfiguration | undefined> {
         if (debugConfiguration.request === 'attach') {
-            return this.attachResolver.resolveDebugConfiguration(folder, debugConfiguration as AttachRequestArguments, token);
+            return this.attachResolver.resolveDebugConfiguration(
+                folder,
+                debugConfiguration as AttachRequestArguments,
+                token
+            );
         } else if (debugConfiguration.request === 'test') {
             throw Error("Please use the command 'Python: Debug Unit Tests'");
         } else {
             if (Object.keys(debugConfiguration).length === 0) {
                 const configs = await this.provideDebugConfigurations(folder, token);
+                if (configs === undefined) {
+                    return;
+                }
                 if (Array.isArray(configs) && configs.length === 1) {
                     debugConfiguration = configs[0];
                 }
             }
-            return this.launchResolver.resolveDebugConfiguration(folder, debugConfiguration as LaunchRequestArguments, token);
+            return this.launchResolver.resolveDebugConfiguration(
+                folder,
+                debugConfiguration as LaunchRequestArguments,
+                token
+            );
         }
     }
-    protected async getDefaultDebugConfig(): Promise<DebugConfiguration[]> {
-        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.default });
-        const jsFilePath = path.join(EXTENSION_ROOT_DIR, 'resources', 'default.launch.json');
-        const jsonStr = await this.fs.readFile(jsFilePath);
-        return JSON.parse(jsonStr) as DebugConfiguration[];
-    }
-    protected async pickDebugConfiguration(input: IMultiStepInput<DebugConfigurationState>, state: DebugConfigurationState): Promise<InputStep<DebugConfigurationState> | void> {
+    protected async pickDebugConfiguration(
+        input: IMultiStepInput<DebugConfigurationState>,
+        state: DebugConfigurationState
+    ): Promise<InputStep<DebugConfigurationState> | void> {
         type DebugConfigurationQuickPickItem = QuickPickItem & { type: DebugConfigurationType };
         const items: DebugConfigurationQuickPickItem[] = [
             {
@@ -104,7 +119,10 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             }
         ];
         state.config = {};
-        const pick = await input.showQuickPick<DebugConfigurationQuickPickItem, IQuickPickParameters<DebugConfigurationQuickPickItem>>({
+        const pick = await input.showQuickPick<
+            DebugConfigurationQuickPickItem,
+            IQuickPickParameters<DebugConfigurationQuickPickItem>
+        >({
             title: DebugConfigStrings.selectConfiguration.title(),
             placeholder: DebugConfigStrings.selectConfiguration.placeholder(),
             activeItem: items[0],

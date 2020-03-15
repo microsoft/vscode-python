@@ -4,42 +4,26 @@
 import '../common/extensions';
 
 import * as uuid from 'uuid/v4';
-import { Range, TextDocument } from 'vscode';
+import { Range, TextDocument, Uri } from 'vscode';
 
-import { IDataScienceSettings } from '../common/types';
+import { parseForComments } from '../../datascience-ui/common';
+import { createCodeCell, createMarkdownCell } from '../../datascience-ui/common/cellFactory';
+import { IDataScienceSettings, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { CellMatcher } from './cellMatcher';
-import { appendLineFeed, generateMarkdownFromCodeLines, parseForComments } from './common';
+import { Identifiers } from './constants';
 import { CellState, ICell } from './types';
 
-function uncommentMagicCommands(line: string): string {
-    // Uncomment lines that are shell assignments (starting with #!),
-    // line magic (starting with #!%) or cell magic (starting with #!%%).
-    if (/^#\s*!/.test(line)) {
-        // If the regex test passes, it's either line or cell magic.
-        // Hence, remove the leading # and ! including possible white space.
-        if (/^#\s*!\s*%%?/.test(line)) {
-            return line.replace(/^#\s*!\s*/, '');
-        }
-        // If the test didn't pass, it's a shell assignment. In this case, only
-        // remove leading # including possible white space.
-        return line.replace(/^#\s*/, '');
-    } else {
-        // If it's regular Python code, just return it.
-        return line;
-    }
-}
-
-function generateCodeCell(code: string[], file: string, line: number, id: string, magicCommandsAsComments: boolean): ICell {
+function generateCodeCell(
+    code: string[],
+    file: string,
+    line: number,
+    id: string,
+    magicCommandsAsComments: boolean
+): ICell {
     // Code cells start out with just source and no outputs.
     return {
-        data: {
-            source: appendLineFeed(code, magicCommandsAsComments ? uncommentMagicCommands : undefined),
-            cell_type: 'code',
-            outputs: [],
-            metadata: {},
-            execution_count: 0
-        },
+        data: createCodeCell(code, magicCommandsAsComments),
         id: id,
         file: file,
         line: line,
@@ -53,15 +37,25 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
         file: file,
         line: line,
         state: CellState.finished,
-        data: {
-            cell_type: 'markdown',
-            source: generateMarkdownFromCodeLines(code),
-            metadata: {}
-        }
+        data: createMarkdownCell(code)
     };
 }
 
-export function generateCells(settings: IDataScienceSettings | undefined, code: string, file: string, line: number, splitMarkdown: boolean, id: string): ICell[] {
+export function getCellResource(cell: ICell): Resource {
+    if (cell.file !== Identifiers.EmptyFileName) {
+        return Uri.file(cell.file);
+    }
+    return undefined;
+}
+
+export function generateCells(
+    settings: IDataScienceSettings | undefined,
+    code: string,
+    file: string,
+    line: number,
+    splitMarkdown: boolean,
+    id: string
+): ICell[] {
     // Determine if we have a markdown cell/ markdown and code cell combined/ or just a code cell
     const split = code.splitLines({ trim: false });
     const firstLine = split[0];
@@ -85,7 +79,13 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
             // Make sure if we split, the second cell has a new id. It's a new submission.
             return [
                 generateMarkdownCell(split.slice(0, firstNonMarkdown), file, line, id),
-                generateCodeCell(split.slice(firstNonMarkdown), file, line + firstNonMarkdown, uuid(), magicCommandsAsComments)
+                generateCodeCell(
+                    split.slice(firstNonMarkdown),
+                    file,
+                    line + firstNonMarkdown,
+                    uuid(),
+                    magicCommandsAsComments
+                )
             ];
         } else {
             // Just a single markdown cell

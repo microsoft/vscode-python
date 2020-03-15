@@ -6,7 +6,7 @@
 import { CancellationToken, Event, Terminal, Uri } from 'vscode';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { IEventNamePropertyMapping } from '../../telemetry/index';
-import { Resource } from '../types';
+import { IDisposable, Resource } from '../types';
 
 export enum TerminalActivationProviders {
     bashCShellFish = 'bashCShellFish',
@@ -31,14 +31,60 @@ export enum TerminalShellType {
     other = 'other'
 }
 
-export interface ITerminalService {
+export interface ITerminalService extends IDisposable {
     readonly onDidCloseTerminal: Event<void>;
-    sendCommand(command: string, args: string[], cancel?: CancellationToken): Promise<void>;
+    /**
+     * Sends a command to the terminal.
+     *
+     * @param {string} command
+     * @param {string[]} args
+     * @param {CancellationToken} [cancel] If provided, then wait till the command is executed in the terminal.
+     * @param {boolean} [swallowExceptions] Whether to swallow exceptions raised as a result of the execution of the command. Defaults to `true`.
+     * @returns {Promise<void>}
+     * @memberof ITerminalService
+     */
+    sendCommand(
+        command: string,
+        args: string[],
+        cancel?: CancellationToken,
+        swallowExceptions?: boolean
+    ): Promise<void>;
     sendText(text: string): Promise<void>;
     show(preserveFocus?: boolean): Promise<void>;
 }
 
 export const ITerminalServiceFactory = Symbol('ITerminalServiceFactory');
+
+export type TerminalCreationOptions = {
+    /**
+     * Object with environment variables that will be added to the Terminal.
+     */
+    env?: { [key: string]: string | null };
+    /**
+     * Resource identifier. E.g. used to determine python interpreter that needs to be used or environment variables or the like.
+     *
+     * @type {Uri}
+     */
+    resource?: Uri;
+    /**
+     * Title.
+     *
+     * @type {string}
+     */
+    title?: string;
+    /**
+     * Associated Python Interpreter.
+     *
+     * @type {PythonInterpreter}
+     */
+    interpreter?: PythonInterpreter;
+    /**
+     * Whether hidden.
+     *
+     * @type {boolean}
+     */
+    hideFromUser?: boolean;
+};
 
 export interface ITerminalServiceFactory {
     /**
@@ -50,6 +96,15 @@ export interface ITerminalServiceFactory {
      * @memberof ITerminalServiceFactory
      */
     getTerminalService(resource?: Uri, title?: string): ITerminalService;
+    /**
+     * Gets a terminal service.
+     * If one exists with the same information, that is returned else a new one is created.
+     *
+     * @param {TerminalCreationOptions} [options]
+     * @returns {ITerminalService}
+     * @memberof ITerminalServiceFactory
+     */
+    getTerminalService(options?: TerminalCreationOptions): ITerminalService;
     createTerminalService(resource?: Uri, title?: string): ITerminalService;
 }
 
@@ -59,13 +114,32 @@ export interface ITerminalHelper {
     createTerminal(title?: string): Terminal;
     identifyTerminalShell(terminal?: Terminal): TerminalShellType;
     buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]): string;
-    getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined>;
-    getEnvironmentActivationShellCommands(resource: Resource, shell: TerminalShellType, interpreter?: PythonInterpreter): Promise<string[] | undefined>;
+    getEnvironmentActivationCommands(
+        terminalShellType: TerminalShellType,
+        resource?: Uri,
+        interpreter?: PythonInterpreter
+    ): Promise<string[] | undefined>;
+    getEnvironmentActivationShellCommands(
+        resource: Resource,
+        shell: TerminalShellType,
+        interpreter?: PythonInterpreter
+    ): Promise<string[] | undefined>;
 }
 
 export const ITerminalActivator = Symbol('ITerminalActivator');
+export type TerminalActivationOptions = {
+    resource?: Resource;
+    preserveFocus?: boolean;
+    interpreter?: PythonInterpreter;
+    /**
+     * When sending commands to the terminal, do not display the terminal.
+     *
+     * @type {boolean}
+     */
+    hideFromUser?: boolean;
+};
 export interface ITerminalActivator {
-    activateEnvironmentInTerminal(terminal: Terminal, resource: Uri | undefined, preserveFocus?: boolean): Promise<boolean>;
+    activateEnvironmentInTerminal(terminal: Terminal, options?: TerminalActivationOptions): Promise<boolean>;
 }
 
 export const ITerminalActivationCommandProvider = Symbol('ITerminalActivationCommandProvider');
@@ -73,12 +147,20 @@ export const ITerminalActivationCommandProvider = Symbol('ITerminalActivationCom
 export interface ITerminalActivationCommandProvider {
     isShellSupported(targetShell: TerminalShellType): boolean;
     getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined>;
-    getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined>;
+    getActivationCommandsForInterpreter(
+        pythonPath: string,
+        targetShell: TerminalShellType
+    ): Promise<string[] | undefined>;
 }
 
 export const ITerminalActivationHandler = Symbol('ITerminalActivationHandler');
 export interface ITerminalActivationHandler {
-    handleActivation(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean, activated: boolean): Promise<void>;
+    handleActivation(
+        terminal: Terminal,
+        resource: Uri | undefined,
+        preserveFocus: boolean,
+        activated: boolean
+    ): Promise<void>;
 }
 
 export type ShellIdentificationTelemetry = IEventNamePropertyMapping['TERMINAL_SHELL_IDENTIFICATION'];

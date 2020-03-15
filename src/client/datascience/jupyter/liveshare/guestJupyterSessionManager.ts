@@ -15,7 +15,10 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
         noop();
     }
 
-    public startNew(kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
+    public startNew(
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterSession> {
         return this.realSessionManager.startNew(kernelSpec, cancelToken);
     }
 

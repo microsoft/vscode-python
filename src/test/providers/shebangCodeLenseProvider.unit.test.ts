@@ -37,9 +37,17 @@ suite('Shebang detection', () => {
         processService.setup(p => (p as any).then).returns(() => undefined);
         when(configurationService.getSettings(anything())).thenReturn(pythonSettings.object);
         when(factory.create(anything())).thenResolve(processService.object);
-        provider = new ShebangCodeLensProvider(instance(factory), instance(configurationService), platformService.object, instance(workspaceService));
+        provider = new ShebangCodeLensProvider(
+            instance(factory),
+            instance(configurationService),
+            platformService.object,
+            instance(workspaceService)
+        );
     });
-    function createDocument(firstLine: string, uri = Uri.parse('xyz.py')): [typemoq.IMock<TextDocument>, typemoq.IMock<TextLine>] {
+    function createDocument(
+        firstLine: string,
+        uri = Uri.parse('xyz.py')
+    ): [typemoq.IMock<TextDocument>, typemoq.IMock<TextLine>] {
         const doc = typemoq.Mock.ofType<TextDocument>();
         const line = typemoq.Mock.ofType<TextLine>();
 

@@ -72,7 +72,7 @@ Learn more about the rich features of the Python extension:
 
 The extension is available in multiple languages thanks to external
 contributors (if you would like to contribute a translation, see the
-[pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)): `de`, `en`, `es`, `fr`, `it`, `ja`, `ko-kr`, `pt-br`, `ru`, `zh-cn`, `zh-tw`
+[pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)): `de`, `en`, `es`, `fa`, `fr`, `it`, `ja`, `ko-kr`, `nl`, `pl`, `pt-br`, `ru`, `tr`, `zh-cn`, `zh-tw`
 
 ## Questions, issues, feature requests, and contributions
 

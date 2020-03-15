@@ -27,7 +27,7 @@ export interface IOutputChannel extends OutputChannel {}
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
 export interface IDocumentSymbolProvider extends DocumentSymbolProvider {}
 export const IsWindows = Symbol('IS_WINDOWS');
-export const IDisposableRegistry = Symbol('IDiposableRegistry');
+export const IDisposableRegistry = Symbol('IDisposableRegistry');
 export type IDisposableRegistry = { push(disposable: Disposable): void };
 export const IMemento = Symbol('IGlobalMemento');
 export const GLOBAL_MEMENTO = Symbol('IGlobalMemento');
@@ -71,17 +71,6 @@ export enum LogLevel {
     Warning = 'Warning'
 }
 
-export const ILogger = Symbol('ILogger');
-
-export interface ILogger {
-    // tslint:disable-next-line: no-any
-    logError(...args: any[]): void;
-    // tslint:disable-next-line: no-any
-    logWarning(...args: any[]): void;
-    // tslint:disable-next-line: no-any
-    logInformation(...args: any[]): void;
-}
-
 export enum InstallerResponse {
     Installed,
     Disabled,
@@ -116,7 +105,11 @@ export enum Product {
     black = 16,
     bandit = 17,
     jupyter = 18,
-    ipykernel = 19
+    ipykernel = 19,
+    notebook = 20,
+    kernelspec = 21,
+    nbconvert = 22,
+    pandas = 23
 }
 
 export enum ModuleNamePurpose {
@@ -127,14 +120,19 @@ export enum ModuleNamePurpose {
 export const IInstaller = Symbol('IInstaller');
 
 export interface IInstaller {
-    promptToInstall(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
-    install(product: Product, resource?: InterpreterUri): Promise<InstallerResponse>;
+    promptToInstall(
+        product: Product,
+        resource?: InterpreterUri,
+        cancel?: CancellationToken
+    ): Promise<InstallerResponse>;
+    install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
+// tslint:disable-next-line:no-suspicious-comment
+// TODO(GH-8542): Drop IPathUtils in favor of IFileSystemPathUtils.
 export const IPathUtils = Symbol('IPathUtils');
-
 export interface IPathUtils {
     readonly delimiter: string;
     readonly home: string;
@@ -302,11 +300,16 @@ export interface ITerminalSettings {
 export interface IExperiments {
     /**
      * Return `true` if experiments are enabled, else `false`.
-     *
-     * @type {boolean}
-     * @memberof IExperiments
      */
     readonly enabled: boolean;
+    /**
+     * Experiments user requested to opt into manually
+     */
+    readonly optInto: string[];
+    /**
+     * Experiments user requested to opt out from manually
+     */
+    readonly optOutFrom: string[];
 }
 
 export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';
@@ -327,6 +330,12 @@ interface IGatherRule {
     objectName?: string;
     functionName: string;
     doesNotModify: string[] | number[];
+}
+
+export interface IVariableQuery {
+    language: string;
+    query: string;
+    parseExpr: string;
 }
 
 export interface IDataScienceSettings {
@@ -380,6 +389,9 @@ export interface IDataScienceSettings {
     verboseLogging?: boolean;
     themeMatplotlibPlots?: boolean;
     useWebViewServer?: boolean;
+    variableQueries: IVariableQuery[];
+    disableJupyterAutoStart?: boolean;
+    jupyterCommandLineArguments: string[];
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -387,7 +399,13 @@ export interface IConfigurationService {
     getSettings(resource?: Uri): IPythonSettings;
     isTestExecution(): boolean;
     updateSetting(setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
-    updateSectionSetting(section: string, setting: string, value?: {}, resource?: Uri, configTarget?: ConfigurationTarget): Promise<void>;
+    updateSectionSetting(
+        section: string,
+        setting: string,
+        value?: {},
+        resource?: Uri,
+        configTarget?: ConfigurationTarget
+    ): Promise<void>;
 }
 
 export const ISocketServer = Symbol('ISocketServer');
@@ -549,7 +567,11 @@ export interface ICryptoUtils {
      * @param data The string to hash
      * @param hashFormat Return format of the hash, number or string
      */
-    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E, algorithm?: 'SHA512' | 'FNV'): IHashFormat[E];
+    createHash<E extends keyof IHashFormat>(
+        data: string,
+        hashFormat: E,
+        algorithm?: 'SHA512' | 'SHA256' | 'FNV'
+    ): IHashFormat[E];
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');

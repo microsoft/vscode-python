@@ -49,7 +49,13 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
 
             // Then get the session cookie by hitting that same page with the xsrftoken and the password
             if (xsrfCookie) {
-                const sessionResult = await this.getSessionCookie(url, allowUnauthorized, xsrfCookie, userPassword, fetchFunction);
+                const sessionResult = await this.getSessionCookie(
+                    url,
+                    allowUnauthorized,
+                    xsrfCookie,
+                    userPassword,
+                    fetchFunction
+                );
                 sessionCookieName = sessionResult.sessionCookieName;
                 sessionCookieValue = sessionResult.sessionCookieValue;
             }
@@ -71,7 +77,11 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     }
 
     // For HTTPS connections respect our allowUnauthorized setting by adding in an agent to enable that on the request
-    private addAllowUnauthorized(url: string, allowUnauthorized: boolean, options: nodeFetch.RequestInit): nodeFetch.RequestInit {
+    private addAllowUnauthorized(
+        url: string,
+        allowUnauthorized: boolean,
+        options: nodeFetch.RequestInit
+    ): nodeFetch.RequestInit {
         if (url.startsWith('https') && allowUnauthorized) {
             const requestAgent = new HttpsAgent({ rejectUnauthorized: false });
             return { ...options, agent: requestAgent };
@@ -137,7 +147,11 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             `${url}login?`,
             this.addAllowUnauthorized(url, allowUnauthorized, {
                 method: 'post',
-                headers: { Cookie: `_xsrf=${xsrfCookie}`, Connection: 'keep-alive', 'content-type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                headers: {
+                    Cookie: `_xsrf=${xsrfCookie}`,
+                    Connection: 'keep-alive',
+                    'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                },
                 body: postParams.toString(),
                 redirect: 'manual'
             })

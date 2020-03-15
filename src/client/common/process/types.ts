@@ -39,6 +39,7 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     token?: CancellationToken;
     mergeStdOutErr?: boolean;
     throwOnStdErr?: boolean;
+    extraVariables?: NodeJS.ProcessEnv;
 };
 
 // tslint:disable-next-line:interface-name
@@ -105,16 +106,22 @@ export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOpti
 };
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
-    pythonPath?: string;
     interpreter?: PythonInterpreter;
     allowEnvironmentFetchExceptions?: boolean;
+    /**
+     * Ignore running `conda run` when running code.
+     * It is known to fail in certain scenarios. Where necessary we might want to bypass this.
+     *
+     * @type {boolean}
+     */
+    bypassCondaExecution?: boolean;
 };
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
     /**
      * Creates a daemon Python Process.
-     * On windows its cheapter to create a daemon and use that than spin up Python Processes everytime.
-     * If something cannot be executed within the daemin, it will resort to using the stanard IPythonExecutionService.
+     * On windows it's cheaper to create a daemon and use that than spin up Python Processes everytime.
+     * If something cannot be executed within the daemon, it will resort to using the standard IPythonExecutionService.
      * Note: The returned execution service is always using an activated environment.
      *
      * @param {ExecutionFactoryCreationOptions} options
@@ -123,7 +130,11 @@ export interface IPythonExecutionFactory {
      */
     createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
-    createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined>;
+    createCondaExecutionService(
+        pythonPath: string,
+        processService?: IProcessService,
+        resource?: Uri
+    ): Promise<CondaExecutionService | undefined>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];
@@ -178,6 +189,10 @@ export interface IExecutionEnvironmentVariablesService {
 export const IPythonToolExecutionService = Symbol('IPythonToolRunnerService');
 
 export interface IPythonToolExecutionService {
-    execObservable(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ObservableExecutionResult<string>>;
+    execObservable(
+        executionInfo: ExecutionInfo,
+        options: SpawnOptions,
+        resource: Uri
+    ): Promise<ObservableExecutionResult<string>>;
     exec(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ExecutionResult<string>>;
 }

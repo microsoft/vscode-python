@@ -63,7 +63,12 @@ export function ensureValidWordDefinition(wordDefinition?: RegExp | null): RegEx
     return result;
 }
 
-function getWordAtPosFast(column: number, wordDefinition: RegExp, text: string, textOffset: number): IWordAtPosition | null {
+function getWordAtPosFast(
+    column: number,
+    wordDefinition: RegExp,
+    text: string,
+    textOffset: number
+): IWordAtPosition | null {
     // find whitespace enclosed text around column and match from there
 
     const pos = column - 1 - textOffset;
@@ -86,7 +91,12 @@ function getWordAtPosFast(column: number, wordDefinition: RegExp, text: string, 
     return null;
 }
 
-function getWordAtPosSlow(column: number, wordDefinition: RegExp, text: string, textOffset: number): IWordAtPosition | null {
+function getWordAtPosSlow(
+    column: number,
+    wordDefinition: RegExp,
+    text: string,
+    textOffset: number
+): IWordAtPosition | null {
     // matches all words starting at the beginning
     // of the input until it finds a match that encloses
     // the desired column. slow but correct
@@ -114,7 +124,12 @@ function getWordAtPosSlow(column: number, wordDefinition: RegExp, text: string, 
     return null;
 }
 
-export function getWordAtText(column: number, wordDefinition: RegExp, text: string, textOffset: number): IWordAtPosition | null {
+export function getWordAtText(
+    column: number,
+    wordDefinition: RegExp,
+    text: string,
+    textOffset: number
+): IWordAtPosition | null {
     // if `words` can contain whitespace character we have to use the slow variant
     // otherwise we use the fast variant of finding a word
     wordDefinition.lastIndex = 0;

@@ -7,8 +7,9 @@ import { EOL } from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
-import * as typemoq from 'typemoq';
-import { Uri, workspace as workspaceType, WorkspaceConfiguration } from 'vscode';
+import { EventEmitter, Uri } from 'vscode';
+import { IWorkspaceService } from '../../../client/common/application/types';
+import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPlatformService } from '../../../client/common/platform/types';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
@@ -18,16 +19,14 @@ import { IProcessService, IProcessServiceFactory } from '../../../client/common/
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ITerminalHelper } from '../../../client/common/terminal/types';
 import { ICurrentProcess } from '../../../client/common/types';
-import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
-import { InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
-import { noop } from '../../core';
-import { mockedVSCodeNamespaces } from '../../vscode-mock';
+import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { InterpreterService } from '../../../client/interpreter/interpreterService';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const defaultShells = {
@@ -46,8 +45,10 @@ suite('Interpreters Activation - Python Environment Variables', () => {
     let processService: IProcessService;
     let currentProcess: ICurrentProcess;
     let envVarsService: IEnvironmentVariablesProvider;
-    let workspace: typemoq.IMock<typeof workspaceType>;
-
+    let workspace: IWorkspaceService;
+    let interpreterService: IInterpreterService;
+    let onDidChangeEnvVariables: EventEmitter<Uri | undefined>;
+    let onDidChangeInterpreter: EventEmitter<void>;
     const pythonInterpreter: PythonInterpreter = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
@@ -64,23 +65,22 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         processService = mock(ProcessService);
         currentProcess = mock(CurrentProcess);
         envVarsService = mock(EnvironmentVariablesProvider);
-        workspace = mockedVSCodeNamespaces.workspace!;
-        when(envVarsService.onDidEnvironmentVariablesChange).thenReturn(noop as any);
-        service = new EnvironmentActivationService(instance(helper), instance(platform), instance(processServiceFactory), instance(currentProcess), instance(envVarsService));
-
-        const cfg = typemoq.Mock.ofType<WorkspaceConfiguration>();
-        workspace.setup(w => w.getConfiguration(typemoq.It.isValue('python'), typemoq.It.isAny())).returns(() => cfg.object);
-        workspace.setup(w => w.workspaceFolders).returns(() => []);
-        cfg.setup(c => c.inspect(typemoq.It.isValue('pythonPath'))).returns(() => {
-            return { globalValue: 'GlobalValuepython' } as any;
-        });
-        clearCache();
-
-        verify(envVarsService.onDidEnvironmentVariablesChange).once();
+        interpreterService = mock(InterpreterService);
+        workspace = mock(WorkspaceService);
+        onDidChangeEnvVariables = new EventEmitter<Uri | undefined>();
+        onDidChangeInterpreter = new EventEmitter<void>();
+        when(envVarsService.onDidEnvironmentVariablesChange).thenReturn(onDidChangeEnvVariables.event);
+        when(interpreterService.onDidChangeInterpreter).thenReturn(onDidChangeInterpreter.event);
+        service = new EnvironmentActivationService(
+            instance(helper),
+            instance(platform),
+            instance(processServiceFactory),
+            instance(currentProcess),
+            instance(workspace),
+            instance(interpreterService),
+            instance(envVarsService)
+        );
     }
-    teardown(() => {
-        mockedVSCodeNamespaces.workspace!.reset();
-    });
 
     function title(resource?: Uri, interpreter?: PythonInterpreter) {
         return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
@@ -105,19 +105,25 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                         setup(initSetup);
                         test('getEnvironmentActivationShellCommands will be invoked', async () => {
                             when(platform.osType).thenReturn(osType.value);
-                            when(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).thenResolve();
+                            when(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).thenResolve();
 
                             const env = await service.getActivatedEnvironmentVariables(resource, interpreter);
 
                             verify(platform.osType).once();
                             expect(env).to.equal(undefined, 'Should not have any variables');
-                            verify(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).once();
+                            verify(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).once();
                         });
                         test('Validate command used to activation and printing env vars', async () => {
                             const cmd = ['1', '2'];
                             const envVars = { one: '1', two: '2' };
                             when(platform.osType).thenReturn(osType.value);
-                            when(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).thenResolve(cmd);
+                            when(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).thenResolve(cmd);
                             when(processServiceFactory.create(resource)).thenResolve(instance(processService));
                             when(envVarsService.getEnvironmentVariables(resource)).thenResolve(envVars);
 
@@ -125,7 +131,9 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                             verify(platform.osType).once();
                             expect(env).to.equal(undefined, 'Should not have any variables');
-                            verify(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).once();
+                            verify(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).once();
                             verify(processServiceFactory.create(resource)).once();
                             verify(envVarsService.getEnvironmentVariables(resource)).once();
                             verify(processService.shellExec(anything(), anything())).once();
@@ -133,7 +141,9 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             const shellCmd = capture(processService.shellExec).first()[0];
 
                             const printEnvPyFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'printEnvVariables.py');
-                            const expectedCommand = `${cmd.join(' && ')} && echo '${getEnvironmentPrefix}' && python ${printEnvPyFile.fileToCommandArgument()}`;
+                            const expectedCommand = `${cmd.join(
+                                ' && '
+                            )} && echo '${getEnvironmentPrefix}' && python ${printEnvPyFile.fileToCommandArgument()}`;
 
                             expect(shellCmd).to.equal(expectedCommand);
                         });
@@ -141,7 +151,9 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             const cmd = ['1', '2'];
                             const envVars = { one: '1', two: '2' };
                             when(platform.osType).thenReturn(osType.value);
-                            when(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).thenResolve(cmd);
+                            when(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).thenResolve(cmd);
                             when(processServiceFactory.create(resource)).thenResolve(instance(processService));
                             when(envVarsService.getEnvironmentVariables(resource)).thenResolve(envVars);
 
@@ -149,7 +161,9 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                             verify(platform.osType).once();
                             expect(env).to.equal(undefined, 'Should not have any variables');
-                            verify(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).once();
+                            verify(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).once();
                             verify(processServiceFactory.create(resource)).once();
                             verify(envVarsService.getEnvironmentVariables(resource)).once();
                             verify(processService.shellExec(anything(), anything())).once();
@@ -157,13 +171,22 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             const options = capture(processService.shellExec).first()[1];
 
                             const expectedShell = defaultShells[osType.value];
-                            expect(options).to.deep.equal({ shell: expectedShell, env: envVars, timeout: 30000, maxBuffer: 1000 * 1000 });
+                            // tslint:disable-next-line: chai-vague-errors
+                            expect(options).to.deep.equal({
+                                shell: expectedShell,
+                                env: envVars,
+                                timeout: 30000,
+                                maxBuffer: 1000 * 1000,
+                                throwOnStdErr: false
+                            });
                         });
                         test('Use current process variables if there are no custom variables', async () => {
                             const cmd = ['1', '2'];
-                            const envVars = { one: '1', two: '2' };
+                            const envVars = { one: '1', two: '2', PYTHONWARNINGS: 'ignore' };
                             when(platform.osType).thenReturn(osType.value);
-                            when(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).thenResolve(cmd);
+                            when(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).thenResolve(cmd);
                             when(processServiceFactory.create(resource)).thenResolve(instance(processService));
                             when(envVarsService.getEnvironmentVariables(resource)).thenResolve({});
                             when(currentProcess.env).thenReturn(envVars);
@@ -172,7 +195,9 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                             verify(platform.osType).once();
                             expect(env).to.equal(undefined, 'Should not have any variables');
-                            verify(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).once();
+                            verify(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).once();
                             verify(processServiceFactory.create(resource)).once();
                             verify(envVarsService.getEnvironmentVariables(resource)).once();
                             verify(processService.shellExec(anything(), anything())).once();
@@ -181,13 +206,22 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             const options = capture(processService.shellExec).first()[1];
 
                             const expectedShell = defaultShells[osType.value];
-                            expect(options).to.deep.equal({ shell: expectedShell, env: envVars, timeout: 30000, maxBuffer: 1000 * 1000 });
+                            // tslint:disable-next-line: chai-vague-errors
+                            expect(options).to.deep.equal({
+                                env: envVars,
+                                shell: expectedShell,
+                                timeout: 30000,
+                                maxBuffer: 1000 * 1000,
+                                throwOnStdErr: false
+                            });
                         });
                         test('Error must be swallowed when activation fails', async () => {
                             const cmd = ['1', '2'];
                             const envVars = { one: '1', two: '2' };
                             when(platform.osType).thenReturn(osType.value);
-                            when(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).thenResolve(cmd);
+                            when(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).thenResolve(cmd);
                             when(processServiceFactory.create(resource)).thenResolve(instance(processService));
                             when(envVarsService.getEnvironmentVariables(resource)).thenResolve(envVars);
                             when(processService.shellExec(anything(), anything())).thenReject(new Error('kaboom'));
@@ -196,7 +230,9 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                             verify(platform.osType).once();
                             expect(env).to.equal(undefined, 'Should not have any variables');
-                            verify(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).once();
+                            verify(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).once();
                             verify(processServiceFactory.create(resource)).once();
                             verify(envVarsService.getEnvironmentVariables(resource)).once();
                             verify(processService.shellExec(anything(), anything())).once();
@@ -207,7 +243,9 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             const varsFromEnv = { one: '11', two: '22', HELLO: 'xxx' };
                             const stdout = `${getEnvironmentPrefix}${EOL}${JSON.stringify(varsFromEnv)}`;
                             when(platform.osType).thenReturn(osType.value);
-                            when(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).thenResolve(cmd);
+                            when(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).thenResolve(cmd);
                             when(processServiceFactory.create(resource)).thenResolve(instance(processService));
                             when(envVarsService.getEnvironmentVariables(resource)).thenResolve(envVars);
                             when(processService.shellExec(anything(), anything())).thenResolve({ stdout: stdout });
@@ -216,10 +254,78 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                             verify(platform.osType).once();
                             expect(env).to.deep.equal(varsFromEnv);
-                            verify(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).once();
+                            verify(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).once();
                             verify(processServiceFactory.create(resource)).once();
                             verify(envVarsService.getEnvironmentVariables(resource)).once();
                             verify(processService.shellExec(anything(), anything())).once();
+                        });
+                        test('Cache Variables', async () => {
+                            const cmd = ['1', '2'];
+                            const varsFromEnv = { one: '11', two: '22', HELLO: 'xxx' };
+                            const stdout = `${getEnvironmentPrefix}${EOL}${JSON.stringify(varsFromEnv)}`;
+                            when(platform.osType).thenReturn(osType.value);
+                            when(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).thenResolve(cmd);
+                            when(processServiceFactory.create(resource)).thenResolve(instance(processService));
+                            when(envVarsService.getEnvironmentVariables(resource)).thenResolve({});
+                            when(processService.shellExec(anything(), anything())).thenResolve({ stdout: stdout });
+
+                            const env = await service.getActivatedEnvironmentVariables(resource, interpreter);
+                            const env2 = await service.getActivatedEnvironmentVariables(resource, interpreter);
+                            const env3 = await service.getActivatedEnvironmentVariables(resource, interpreter);
+
+                            expect(env).to.deep.equal(varsFromEnv);
+                            // All same objects.
+                            expect(env)
+                                .to.equal(env2)
+                                .to.equal(env3);
+
+                            // All methods invoked only once.
+                            verify(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).once();
+                            verify(processServiceFactory.create(resource)).once();
+                            verify(envVarsService.getEnvironmentVariables(resource)).once();
+                            verify(processService.shellExec(anything(), anything())).once();
+                        });
+                        async function testClearingCache(bustCache: Function) {
+                            const cmd = ['1', '2'];
+                            const varsFromEnv = { one: '11', two: '22', HELLO: 'xxx' };
+                            const stdout = `${getEnvironmentPrefix}${EOL}${JSON.stringify(varsFromEnv)}`;
+                            when(platform.osType).thenReturn(osType.value);
+                            when(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).thenResolve(cmd);
+                            when(processServiceFactory.create(resource)).thenResolve(instance(processService));
+                            when(envVarsService.getEnvironmentVariables(resource)).thenResolve({});
+                            when(processService.shellExec(anything(), anything())).thenResolve({ stdout: stdout });
+
+                            const env = await service.getActivatedEnvironmentVariables(resource, interpreter);
+                            bustCache();
+                            const env2 = await service.getActivatedEnvironmentVariables(resource, interpreter);
+
+                            expect(env).to.deep.equal(varsFromEnv);
+                            // Objects are different (not same reference).
+                            expect(env).to.not.equal(env2);
+                            // However variables are the same.
+                            expect(env).to.deep.equal(env2);
+
+                            // All methods invoked twice as cache was blown.
+                            verify(
+                                helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)
+                            ).twice();
+                            verify(processServiceFactory.create(resource)).twice();
+                            verify(envVarsService.getEnvironmentVariables(resource)).twice();
+                            verify(processService.shellExec(anything(), anything())).twice();
+                        }
+                        test('Cache Variables get cleared when changing interpreter', async () => {
+                            await testClearingCache(onDidChangeInterpreter.fire.bind(onDidChangeInterpreter));
+                        });
+                        test('Cache Variables get cleared when changing env variables file', async () => {
+                            await testClearingCache(onDidChangeEnvVariables.fire.bind(onDidChangeEnvVariables));
                         });
                     });
                 });

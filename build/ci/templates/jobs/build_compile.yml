@@ -14,6 +14,12 @@ jobs:
   steps:
     - template: ../steps/build.yml
 
+- job: Dependencies
+  pool:
+    vmImage: "ubuntu-16.04"
+  steps:
+    - template: ../steps/dependencies.yml
+
 - job: Hygiene
   pool:
     vmImage: "ubuntu-16.04"
@@ -30,9 +36,15 @@ jobs:
       workingDirectory: $(Build.SourcesDirectory)
 
     - bash: npx prettier "src/**/*.ts*" --check
-      displayName: "Code Format"
+      displayName: "Code Format (TypeScript)"
       workingDirectory: $(Build.SourcesDirectory)
 
     - bash: npx prettier "build/**/*.js" --check
-      displayName: "Code Format"
+      displayName: "Code Format (JavaScript)"
       workingDirectory: $(Build.SourcesDirectory)
+
+    - bash: |
+            python -m pip install -U black
+            python -m black . --check
+      displayName: "Code Format (Python)"
+      workingDirectory: $(Build.SourcesDirectory)/pythonFiles

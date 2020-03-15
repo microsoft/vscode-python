@@ -9,21 +9,20 @@ import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Disposable } from 'vscode';
-import { CancellationError } from '../../common/cancellation';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { CancellationError, createPromiseFromCancellation } from '../../common/cancellation';
+import { traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
-import { IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
 import { IDisposable, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { JUPYTER_OUTPUT_CHANNEL, JupyterCommands, PythonDaemonModule, Telemetry } from '../constants';
-import { IConnection } from '../types';
-import { JupyterCommandFinder } from './jupyterCommandFinder';
-import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
+import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
+import { reportAction } from '../progress/decorator';
+import { ReportableAction } from '../progress/types';
+import { IConnection, IJupyterSubCommandExecutionService } from '../types';
+import { JupyterConnectionWaiter } from './jupyterConnection';
+import { JupyterInstallError } from './jupyterInstallError';
 
 /**
  * Responsible for starting a notebook.
@@ -37,11 +36,10 @@ import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 export class NotebookStarter implements Disposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
-        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
-        @inject(JupyterCommandFinder) private readonly commandFinder: JupyterCommandFinder,
+        @inject(IJupyterSubCommandExecutionService)
+        private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel
     ) {}
     public dispose() {
@@ -57,17 +55,22 @@ export class NotebookStarter implements Disposable {
         }
     }
     // tslint:disable-next-line: max-func-body-length
-    public async start(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<IConnection> {
+    @reportAction(ReportableAction.NotebookStart)
+    public async start(
+        useDefaultConfig: boolean,
+        customCommandLine: string[],
+        cancelToken?: CancellationToken
+    ): Promise<IConnection> {
         traceInfo('Starting Notebook');
-        const notebookCommandPromise = this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand);
         // Now actually launch it
         let exitCode: number | null = 0;
+        let starter: JupyterConnectionWaiter | undefined;
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDirPromise = this.generateTempDir();
             tempDirPromise.then(dir => this.disposables.push(dir)).ignoreErrors();
             // Before starting the notebook process, make sure we generate a kernel spec
-            const [args, notebookCommand] = await Promise.all([this.generateArguments(useDefaultConfig, tempDirPromise), notebookCommandPromise]);
+            const args = await this.generateArguments(useDefaultConfig, customCommandLine, tempDirPromise);
 
             // Make sure we haven't canceled already.
             if (cancelToken && cancelToken.isCancellationRequested) {
@@ -78,7 +81,11 @@ export class NotebookStarter implements Disposable {
             traceInfo('Starting Jupyter Notebook');
             const stopWatch = new StopWatch();
             const [launchResult, tempDir] = await Promise.all([
-                notebookCommand!.command!.execObservable(args || [], { throwOnStdErr: false, encoding: 'utf8', token: cancelToken }),
+                this.jupyterInterpreterService.startNotebook(args || [], {
+                    throwOnStdErr: false,
+                    encoding: 'utf8',
+                    token: cancelToken
+                }),
                 tempDirPromise
             ]);
 
@@ -97,7 +104,29 @@ export class NotebookStarter implements Disposable {
 
             // Wait for the connection information on this result
             traceInfo('Waiting for Jupyter Notebook');
-            const connection = await JupyterConnection.waitForConnection(tempDir.path, this.getJupyterServerInfo, launchResult, this.serviceContainer, cancelToken);
+            starter = new JupyterConnectionWaiter(
+                launchResult,
+                tempDir.path,
+                this.jupyterInterpreterService.getRunningJupyterServers.bind(this.jupyterInterpreterService),
+                this.serviceContainer,
+                cancelToken
+            );
+            // Make sure we haven't canceled already.
+            if (cancelToken && cancelToken.isCancellationRequested) {
+                throw new CancellationError();
+            }
+            const connection = await Promise.race([
+                starter.waitForConnection(),
+                createPromiseFromCancellation({
+                    cancelAction: 'reject',
+                    defaultValue: new CancellationError(),
+                    token: cancelToken
+                })
+            ]);
+
+            if (connection instanceof CancellationError) {
+                throw connection;
+            }
 
             // Fire off telemetry for the process being talkable
             sendTelemetryEvent(Telemetry.StartJupyterProcess, stopWatch.elapsedTime);
@@ -108,16 +137,29 @@ export class NotebookStarter implements Disposable {
                 throw err;
             }
 
+            // Its possible jupyter isn't installed. Check the errors.
+            if (!(await this.jupyterInterpreterService.isNotebookSupported())) {
+                throw new JupyterInstallError(
+                    await this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported(),
+                    localize.DataScience.pythonInteractiveHelpLink()
+                );
+            }
+
             // Something else went wrong. See if the local proc died or not.
             if (exitCode !== 0) {
-                throw new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString()));
+                throw new Error(localize.DataScience.jupyterServerCrashed().format(exitCode?.toString()));
             } else {
                 throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
             }
+        } finally {
+            starter?.dispose();
         }
     }
 
-    private async generateArguments(useDefaultConfig: boolean, tempDirPromise: Promise<TemporaryDirectory>): Promise<string[]> {
+    private async generateDefaultArguments(
+        useDefaultConfig: boolean,
+        tempDirPromise: Promise<TemporaryDirectory>
+    ): Promise<string[]> {
         // Parallelize as much as possible.
         const promisedArgs: Promise<string>[] = [];
         promisedArgs.push(Promise.resolve('--no-browser'));
@@ -137,6 +179,24 @@ export class NotebookStarter implements Disposable {
 
         // Use this temp file and config file to generate a list of args for our command
         return [...args, ...dockerArgs, ...debugArgs];
+    }
+
+    private async generateCustomArguments(customCommandLine: string[]): Promise<string[]> {
+        // We still have a bunch of args we have to pass
+        const requiredArgs = ['--no-browser', '--NotebookApp.iopub_data_rate_limit=10000000000.0'];
+
+        return [...requiredArgs, ...customCommandLine];
+    }
+
+    private async generateArguments(
+        useDefaultConfig: boolean,
+        customCommandLine: string[],
+        tempDirPromise: Promise<TemporaryDirectory>
+    ): Promise<string[]> {
+        if (!customCommandLine || customCommandLine.length === 0) {
+            return this.generateDefaultArguments(useDefaultConfig, tempDirPromise);
+        }
+        return this.generateCustomArguments(customCommandLine);
     }
 
     /**
@@ -185,7 +245,7 @@ export class NotebookStarter implements Disposable {
         // Check for a docker situation.
         try {
             const cgroup = await this.fileSystem.readFile('/proc/self/cgroup').catch(() => '');
-            if (!cgroup.includes('docker')) {
+            if (!cgroup.includes('docker') && !cgroup.includes('kubepods')) {
                 return args;
             }
             // We definitely need an ip address.
@@ -227,34 +287,4 @@ export class NotebookStarter implements Disposable {
             }
         };
     }
-    private getJupyterServerInfo = async (cancelToken?: CancellationToken): Promise<JupyterServerInfo[] | undefined> => {
-        const notebookCommand = await this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand);
-        if (!notebookCommand.command) {
-            return;
-        }
-        const [interpreter, activeInterpreter] = await Promise.all([notebookCommand.command.interpreter(), this.interpreterService.getActiveInterpreter()]);
-        if (!interpreter) {
-            return;
-        }
-        // Create a daemon only when using the current interpreter.
-        // We dont' want to create daemons for all interpreters.
-        const isActiveInterpreter = activeInterpreter ? activeInterpreter.path === interpreter.path : false;
-        const daemon = await (isActiveInterpreter
-            ? this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path })
-            : this.executionFactory.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, interpreter }));
-        // We have a small python file here that we will execute to get the server info from all running Jupyter instances
-        const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
-        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
-        const serverInfoString = await daemon.exec([file], newOptions);
-
-        let serverInfos: JupyterServerInfo[];
-        try {
-            // Parse out our results, return undefined if we can't suss it out
-            serverInfos = JSON.parse(serverInfoString.stdout.trim()) as JupyterServerInfo[];
-        } catch (err) {
-            traceWarning('Failed to parse JSON when getting server info out from getServerInfo.py', err);
-            return;
-        }
-        return serverInfos;
-    };
 }

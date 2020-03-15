@@ -11,7 +11,12 @@ import { DebugType } from './DebugClient';
 import { LocalDebugClientV2 } from './localDebugClientV2';
 
 export class NonDebugClientV2 extends LocalDebugClientV2 {
-    constructor(args: LaunchRequestArguments, debugSession: DebugSession, canLaunchTerminal: boolean, launcherScriptProvider: ILocalDebugLauncherScriptProvider) {
+    constructor(
+        args: LaunchRequestArguments,
+        debugSession: DebugSession,
+        canLaunchTerminal: boolean,
+        launcherScriptProvider: ILocalDebugLauncherScriptProvider
+    ) {
         super(args, debugSession, canLaunchTerminal, launcherScriptProvider);
     }
 

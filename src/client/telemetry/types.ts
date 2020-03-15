@@ -21,8 +21,5 @@ export type TestConfiguringTelemetry = IEventNamePropertyMapping[EventName.UNITT
 export type ImportNotebook = {
     scope: 'command';
 };
-
 export const IImportTracker = Symbol('IImportTracker');
-export interface IImportTracker {
-    activate(): Promise<void>;
-}
+export interface IImportTracker {}

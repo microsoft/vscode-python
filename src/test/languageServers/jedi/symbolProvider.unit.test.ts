@@ -7,7 +7,18 @@
 
 import { expect, use } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { CancellationToken, CancellationTokenSource, CompletionItemKind, DocumentSymbolProvider, Location, Range, SymbolInformation, SymbolKind, TextDocument, Uri } from 'vscode';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    CompletionItemKind,
+    DocumentSymbolProvider,
+    Location,
+    Range,
+    SymbolInformation,
+    SymbolKind,
+    TextDocument,
+    Uri
+} from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { parseRange } from '../../../client/common/utils/text';
@@ -39,7 +50,13 @@ suite('Jedi Symbol Provider', () => {
         serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fileSystem.object);
     });
 
-    async function testDocumentation(requestId: number, fileName: string, expectedSize: number, token?: CancellationToken, isUntitled = false) {
+    async function testDocumentation(
+        requestId: number,
+        fileName: string,
+        expectedSize: number,
+        token?: CancellationToken,
+        isUntitled = false
+    ) {
         fileSystem.setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
         token = token ? token : new CancellationTokenSource().token;
         const symbolResult = TypeMoq.Mock.ofType<ISymbolResult>();
@@ -64,7 +81,9 @@ suite('Jedi Symbol Provider', () => {
         symbolResult.setup(c => c.requestId).returns(() => requestId);
         symbolResult.setup(c => c.definitions).returns(() => definitions);
         symbolResult.setup((c: any) => c.then).returns(() => undefined);
-        jediHandler.setup(j => j.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(symbolResult.object));
+        jediHandler
+            .setup(j => j.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(symbolResult.object));
 
         const items = await provider.provideDocumentSymbols(doc.object, token);
         expect(items).to.be.array();
@@ -101,7 +120,11 @@ suite('Jedi Symbol Provider', () => {
     });
     test('Ensure symbols are returned only for the last request', async () => {
         provider = new JediSymbolProvider(serviceContainer.object, jediFactory.object, 100);
-        await Promise.all([testDocumentation(1, __filename, 0), testDocumentation(2, __filename, 0), testDocumentation(3, __filename, 1)]);
+        await Promise.all([
+            testDocumentation(1, __filename, 0),
+            testDocumentation(2, __filename, 0),
+            testDocumentation(3, __filename, 1)
+        ]);
     });
     test('Ensure symbols are returned for all the requests when the doc is untitled', async () => {
         provider = new JediSymbolProvider(serviceContainer.object, jediFactory.object, 100);
@@ -117,7 +140,10 @@ suite('Jedi Symbol Provider', () => {
     });
     test('Ensure symbols are returned for multiple untitled documents ', async () => {
         provider = new JediSymbolProvider(serviceContainer.object, jediFactory.object, 0);
-        await Promise.all([testDocumentation(1, 'file1', 1, undefined, true), testDocumentation(2, 'file2', 1, undefined, true)]);
+        await Promise.all([
+            testDocumentation(1, 'file1', 1, undefined, true),
+            testDocumentation(2, 'file2', 1, undefined, true)
+        ]);
     });
     test('Ensure symbols are returned for multiple documents with a debounce of 100ms', async () => {
         provider = new JediSymbolProvider(serviceContainer.object, jediFactory.object, 100);
@@ -125,7 +151,10 @@ suite('Jedi Symbol Provider', () => {
     });
     test('Ensure symbols are returned for multiple untitled documents with a debounce of 100ms', async () => {
         provider = new JediSymbolProvider(serviceContainer.object, jediFactory.object, 100);
-        await Promise.all([testDocumentation(1, 'file1', 1, undefined, true), testDocumentation(2, 'file2', 1, undefined, true)]);
+        await Promise.all([
+            testDocumentation(1, 'file1', 1, undefined, true),
+            testDocumentation(2, 'file2', 1, undefined, true)
+        ]);
     });
     test('Ensure IFileSystem.arePathsSame is used', async () => {
         doc.setup(d => d.getText())
@@ -174,7 +203,13 @@ suite('Language Server Symbol Provider', () => {
         const langClient = TypeMoq.Mock.ofType<LanguageClient>(undefined, TypeMoq.MockBehavior.Strict);
         for (const [doc, symbols] of results) {
             langClient
-                .setup(l => l.sendRequest(TypeMoq.It.isValue('textDocument/documentSymbol'), TypeMoq.It.isValue(doc), TypeMoq.It.isValue(token)))
+                .setup(l =>
+                    l.sendRequest(
+                        TypeMoq.It.isValue('textDocument/documentSymbol'),
+                        TypeMoq.It.isValue(doc),
+                        TypeMoq.It.isValue(token)
+                    )
+                )
                 .returns(() => Promise.resolve(symbols))
                 .verifiable(TypeMoq.Times.once());
         }
@@ -260,9 +295,19 @@ suite('Language Server Symbol Provider', () => {
         ];
         const expected = [
             new SymbolInformation('SpamTests', SymbolKind.Class, '', new Location(uri, new Range(2, 6, 2, 15))),
-            new SymbolInformation('test_all', SymbolKind.Function, 'SpamTests', new Location(uri, new Range(3, 8, 3, 16))),
+            new SymbolInformation(
+                'test_all',
+                SymbolKind.Function,
+                'SpamTests',
+                new Location(uri, new Range(3, 8, 3, 16))
+            ),
             new SymbolInformation('self', SymbolKind.Variable, 'test_all', new Location(uri, new Range(3, 17, 3, 21))),
-            new SymbolInformation('assertTrue', SymbolKind.Variable, 'SpamTests', new Location(uri, new Range(0, 0, 0, 0)))
+            new SymbolInformation(
+                'assertTrue',
+                SymbolKind.Variable,
+                'SpamTests',
+                new Location(uri, new Range(0, 0, 0, 0))
+            )
         ];
 
         const doc = createDoc(uri);
@@ -313,7 +358,14 @@ suite('Language Server Symbol Provider', () => {
         expectedRaw[2].location.range[1].character = 16;
         const expected = normalizeSymbols(uri, expectedRaw);
         expected.shift(); // For now, drop the "unittest" symbol.
-        expected.push(new SymbolInformation('assertTrue', SymbolKind.Variable, 'SpamTests', new Location(uri, new Range(0, 0, 0, 0))));
+        expected.push(
+            new SymbolInformation(
+                'assertTrue',
+                SymbolKind.Variable,
+                'SpamTests',
+                new Location(uri, new Range(0, 0, 0, 0))
+            )
+        );
 
         const doc = createDoc(uri);
         const token = new CancellationTokenSource().token;
@@ -371,7 +423,15 @@ function normalizeSymbols(uri: Uri, raw: any[]): SymbolInformation[] {
             // play it safe by explicitly converting.
             (SymbolKind as any)[(SymbolKind as any)[item.kind]],
             item.containerName,
-            new Location(uri, new Range(item.location.range[0].line, item.location.range[0].character, item.location.range[1].line, item.location.range[1].character))
+            new Location(
+                uri,
+                new Range(
+                    item.location.range[0].line,
+                    item.location.range[0].character,
+                    item.location.range[1].line,
+                    item.location.range[1].character
+                )
+            )
         );
         symbols.push(symbol);
     }

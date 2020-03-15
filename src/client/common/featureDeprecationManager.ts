@@ -4,8 +4,14 @@
 import { inject, injectable } from 'inversify';
 import { Disposable, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from './application/types';
+import { traceVerbose } from './logger';
 import { launch } from './net/browser';
-import { DeprecatedFeatureInfo, DeprecatedSettingAndValue, IFeatureDeprecationManager, IPersistentStateFactory } from './types';
+import {
+    DeprecatedFeatureInfo,
+    DeprecatedSettingAndValue,
+    IFeatureDeprecationManager,
+    IPersistentStateFactory
+} from './types';
 
 const deprecatedFeatures: DeprecatedFeatureInfo[] = [
     {
@@ -16,13 +22,15 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
     },
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE',
-        message: "The setting 'python.linting.lintOnTextChange' is deprecated, please enable 'python.linting.lintOnSave' and 'files.autoSave'.",
+        message:
+            "The setting 'python.linting.lintOnTextChange' is deprecated, please enable 'python.linting.lintOnSave' and 'files.autoSave'.",
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/313',
         setting: { setting: 'linting.lintOnTextChange', values: ['true', true] }
     },
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES',
-        message: "The setting 'python.autoComplete.preloadModules' is deprecated, please consider using the new Language Server ('python.jediEnabled = false').",
+        message:
+            "The setting 'python.autoComplete.preloadModules' is deprecated, please consider using the new Language Server ('python.jediEnabled = false').",
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/1704',
         setting: { setting: 'autoComplete.preloadModules' }
     }
@@ -49,7 +57,9 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     public registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void {
         if (Array.isArray(deprecatedInfo.commands)) {
             deprecatedInfo.commands.forEach(cmd => {
-                this.disposables.push(this.cmdMgr.registerCommand(cmd, () => this.notifyDeprecation(deprecatedInfo), this));
+                this.disposables.push(
+                    this.cmdMgr.registerCommand(cmd, () => this.notifyDeprecation(deprecatedInfo), this)
+                );
             });
         }
         if (deprecatedInfo.setting) {
@@ -58,7 +68,10 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     }
 
     public async notifyDeprecation(deprecatedInfo: DeprecatedFeatureInfo): Promise<void> {
-        const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(deprecatedInfo.doNotDisplayPromptStateKey, true);
+        const notificationPromptEnabled = this.persistentStateFactory.createGlobalPersistentState(
+            deprecatedInfo.doNotDisplayPromptStateKey,
+            true
+        );
         if (!notificationPromptEnabled.value) {
             return;
         }
@@ -91,20 +104,27 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
                 if (notify) {
                     return;
                 }
-                notify = this.isDeprecatedSettingAndValueUsed(this.workspace.getConfiguration('python', workspaceFolder.uri), deprecatedInfo.setting!);
+                notify = this.isDeprecatedSettingAndValueUsed(
+                    this.workspace.getConfiguration('python', workspaceFolder.uri),
+                    deprecatedInfo.setting!
+                );
             });
         } else {
-            notify = this.isDeprecatedSettingAndValueUsed(this.workspace.getConfiguration('python'), deprecatedInfo.setting!);
+            notify = this.isDeprecatedSettingAndValueUsed(
+                this.workspace.getConfiguration('python'),
+                deprecatedInfo.setting!
+            );
         }
 
         if (notify) {
-            this.notifyDeprecation(deprecatedInfo)
-                // tslint:disable-next-line: no-console
-                .catch(ex => console.error('Python Extension: notifyDeprecation', ex));
+            this.notifyDeprecation(deprecatedInfo).catch(ex => traceVerbose('Python Extension: notifyDeprecation', ex));
         }
     }
 
-    public isDeprecatedSettingAndValueUsed(pythonConfig: WorkspaceConfiguration, deprecatedSetting: DeprecatedSettingAndValue) {
+    public isDeprecatedSettingAndValueUsed(
+        pythonConfig: WorkspaceConfiguration,
+        deprecatedSetting: DeprecatedSettingAndValue
+    ) {
         if (!pythonConfig.has(deprecatedSetting.setting)) {
             return false;
         }

@@ -3,10 +3,16 @@
 
 'use strict';
 
+import { IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
+import { CodeActionProviderService } from './codeActionProvider/main';
 import { SortImportsEditingProvider } from './importSortProvider';
 import { ISortImportsEditingProvider } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ISortImportsEditingProvider>(ISortImportsEditingProvider, SortImportsEditingProvider);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
+        CodeActionProviderService
+    );
 }

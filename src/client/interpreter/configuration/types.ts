@@ -15,7 +15,12 @@ export interface IPythonPathUpdaterServiceFactory {
 
 export const IPythonPathUpdaterServiceManager = Symbol('IPythonPathUpdaterServiceManager');
 export interface IPythonPathUpdaterServiceManager {
-    updatePythonPath(pythonPath: string, configTarget: ConfigurationTarget, trigger: 'ui' | 'shebang' | 'load', wkspace?: Uri): Promise<void>;
+    updatePythonPath(
+        pythonPath: string,
+        configTarget: ConfigurationTarget,
+        trigger: 'ui' | 'shebang' | 'load',
+        wkspace?: Uri
+    ): Promise<void>;
 }
 
 export const IInterpreterSelector = Symbol('IInterpreterSelector');

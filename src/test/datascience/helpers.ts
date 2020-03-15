@@ -30,6 +30,8 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
         enablePlotViewer: true,
         runStartupCommands: '',
-        debugJustMyCode: true
+        debugJustMyCode: true,
+        variableQueries: [],
+        jupyterCommandLineArguments: []
     };
 }

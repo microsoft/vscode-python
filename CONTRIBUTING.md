@@ -19,7 +19,7 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 10.x
+1. [Node.js](https://nodejs.org/) 12.x
 1. [Python](https://www.python.org/) 2.7 or later
 1. Windows, macOS, or Linux
 1. [Visual Studio Code](https://code.visualstudio.com/)
@@ -36,8 +36,10 @@ git clone https://github.com/microsoft/vscode-python
 cd vscode-python
 npm ci
 python3 -m venv .venv
-# Activate the virtual environment as appropriate for your shell, For example ...
+# Activate the virtual environment as appropriate for your shell, For example, on bash it's ...
 source .venv/bin/activate
+# The Python code in the extension is formatted using Black.
+python3 -m pip install black
 # Install Python dependencies using `python3`.
 # If you want to use a different interpreter then specify it in the
 # CI_PYTHON_PATH environment variable.
@@ -67,12 +69,16 @@ This is especially true if you have added or removed files.
 
 TypeScript errors and warnings will be displayed in the `Problems` window of Visual Studio Code.
 
-### Validate your changes
+### Run dev build and validate your changes
 
-To test the changes you launch a development version of VS Code on the workspace vscode, which you are currently editing.
-Use the `Extension` launch option.
+To test changes, open the `vscode-python` folder in VSCode, and select the workspace titled `vscode`.
+Then, open the debug panel by clicking the `Run and Debug` icon on the sidebar, select the `Extension`
+option from the top menu, and click start. A new window will launch with the title
+`[Extension Development Host]`.
 
 ### Running Unit Tests
+
+Note: Unit tests are those in files with extension `.unit.test.ts`.
 
 1. Make sure you have compiled all code (done automatically when using incremental building)
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
@@ -97,7 +103,19 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 ```
 ...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).
 
+### Running Functional Tests
+
+Functional tests are those in files with extension `.functional.test.ts`.
+These tests are similar to system tests in scope, but are run like unit tests.
+
+You can run functional tests in a similar way to that for unit tests:
+
+* via the "Functional Tests" launch option, or
+* on the command line via `npm run test:functional`
+
 ### Running System Tests
+
+Note: System tests are those in files with extension `.test*.ts` but which are neither `.functional.test.ts` nor `.unit.test.ts`.
 
 1. Make sure you have compiled all code (done automatically when using incremental building)
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
@@ -170,7 +188,7 @@ From there use the ```Extension + Debugger``` launch option.
 Information on our coding standards can be found [here](https://github.com/Microsoft/vscode-python/blob/master/CODING_STANDARDS.md).
 We have CI tests to ensure the code committed will adhere to the above coding standards. *You can run this locally by executing the command `npx gulp precommit` or use the `precommit` Task.
 
-Messages displayed to the user must ve localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-python/blob/master/src/client/common/utils/localize.ts) file.
+Messages displayed to the user must be localized using/created constants from/in the [localize.ts](https://github.com/Microsoft/vscode-python/blob/master/src/client/common/utils/localize.ts) file.
 
 ## Development process
 
@@ -272,24 +290,12 @@ Overall steps for releasing are covered in the
 To create a release _build_, follow the steps outlined in the [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan) (which has a [template](https://github.com/Microsoft/vscode-python/blob/master/.github/release_plan.md)).
 
 ## Development Build
+If you would like to use the latest version of the extension as committed to `master` that has passed our test suite, then you may set the `"python.insidersChannel"` setting to `"daily"` or `"weekly"` based on how often you would like the extension to check for updates. 
 
-We publish the latest development
-build of the extension onto a cloud storage provider.
-If you are interested in helping us test our development builds or would like
-to stay ahead of the curve, then please feel free to download and install the
-extension from the following
+You may also download and install the extension manually from the following
 [location](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix).
 Once you have downloaded the
 [ms-python-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)
 file, please follow the instructions on
 [this page](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix)
-to install the extension.
-
-The development build of the extension:
-
-* Will be replaced with new releases published onto the
-  [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode).
-* Does not get updated with new development builds of the extension (if you want to
-  test a newer development build, uninstall the old version of the
-  extension and then install the new version)
-* Is built every time a PR is committed into the [`master` branch](https://github.com/Microsoft/vscode-python).
+to install the extension. Do note that the manual install will not automatically update to newer builds unless you set the `"python.insidersChannel"` setting (it will get replaced with released versions from the Marketplace once they are newer than the version install manually).

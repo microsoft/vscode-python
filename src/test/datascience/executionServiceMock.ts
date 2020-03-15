@@ -2,11 +2,18 @@
 // Licensed under the MIT License.
 'use strict';
 import { SemVer } from 'semver';
+
 import { ErrorUtils } from '../../client/common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../client/common/errors/moduleNotInstalledError';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
-import { ExecutionResult, InterpreterInfomation, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from '../../client/common/process/types';
+import {
+    ExecutionResult,
+    InterpreterInfomation,
+    IPythonExecutionService,
+    ObservableExecutionResult,
+    SpawnOptions
+} from '../../client/common/process/types';
 import { Architecture } from '../../client/common/utils/platform';
 
 export class MockPythonExecutionService implements IPythonExecutionService {
@@ -16,6 +23,7 @@ export class MockPythonExecutionService implements IPythonExecutionService {
     constructor() {
         this.procService = new ProcessService(new BufferDecoder());
     }
+
     public getInterpreterInformation(): Promise<InterpreterInfomation> {
         return Promise.resolve({
             path: '',
@@ -39,7 +47,11 @@ export class MockPythonExecutionService implements IPythonExecutionService {
         const opts: SpawnOptions = { ...options };
         return this.procService.execObservable(this.pythonPath, args, opts);
     }
-    public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
+    public execModuleObservable(
+        moduleName: string,
+        args: string[],
+        options: SpawnOptions
+    ): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
         return this.procService.execObservable(this.pythonPath, ['-m', moduleName, ...args], opts);
     }
@@ -47,7 +59,11 @@ export class MockPythonExecutionService implements IPythonExecutionService {
         const opts: SpawnOptions = { ...options };
         return this.procService.exec(this.pythonPath, args, opts);
     }
-    public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+    public async execModule(
+        moduleName: string,
+        args: string[],
+        options: SpawnOptions
+    ): Promise<ExecutionResult<string>> {
         const opts: SpawnOptions = { ...options };
         const result = await this.procService.exec(this.pythonPath, ['-m', moduleName, ...args], opts);
 

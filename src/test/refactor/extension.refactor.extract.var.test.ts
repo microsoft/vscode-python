@@ -3,7 +3,18 @@
 import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { commands, Position, Range, Selection, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, Uri, window, workspace } from 'vscode';
+import {
+    commands,
+    Position,
+    Range,
+    Selection,
+    TextEditorCursorStyle,
+    TextEditorLineNumbersStyle,
+    TextEditorOptions,
+    Uri,
+    window,
+    workspace
+} from 'vscode';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { ICondaService } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
@@ -15,8 +26,29 @@ import { closeActiveWindows, initialize, initializeTest, IS_CI_SERVER } from './
 import { MockOutputChannel } from './../mockClasses';
 
 const EXTENSION_DIR = path.join(__dirname, '..', '..', '..');
-const refactorSourceFile = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'refactoring', 'standAlone', 'refactor.py');
-const refactorTargetFileDir = path.join(__dirname, '..', '..', '..', 'out', 'test', 'pythonFiles', 'refactoring', 'standAlone');
+const refactorSourceFile = path.join(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    'src',
+    'test',
+    'pythonFiles',
+    'refactoring',
+    'standAlone',
+    'refactor.py'
+);
+const refactorTargetFileDir = path.join(
+    __dirname,
+    '..',
+    '..',
+    '..',
+    'out',
+    'test',
+    'pythonFiles',
+    'refactoring',
+    'standAlone'
+);
 
 interface RenameResponse {
     results: [{ diff: string }];
@@ -25,7 +57,12 @@ interface RenameResponse {
 suite('Variable Extraction', () => {
     // Hack hac hack
     const oldExecuteCommand = commands.executeCommand;
-    const options: TextEditorOptions = { cursorStyle: TextEditorCursorStyle.Line, insertSpaces: true, lineNumbers: TextEditorLineNumbersStyle.Off, tabSize: 4 };
+    const options: TextEditorOptions = {
+        cursorStyle: TextEditorCursorStyle.Line,
+        insertSpaces: true,
+        lineNumbers: TextEditorLineNumbersStyle.Off,
+        tabSize: 4
+    };
     let refactorTargetFile = '';
     let ioc: UnitTestIocContainer;
     suiteSetup(initialize);
@@ -58,17 +95,32 @@ suite('Variable Extraction', () => {
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     }
 
-    async function testingVariableExtraction(shouldError: boolean, startPos: Position, endPos: Position): Promise<void> {
+    async function testingVariableExtraction(
+        shouldError: boolean,
+        startPos: Position,
+        endPos: Position
+    ): Promise<void> {
         const pythonSettings = getExtensionSettings(Uri.file(refactorTargetFile));
         const rangeOfTextToExtract = new Range(startPos, endPos);
-        const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile), ioc.serviceContainer);
+        const proxy = new RefactorProxy(
+            EXTENSION_DIR,
+            pythonSettings,
+            path.dirname(refactorTargetFile),
+            ioc.serviceContainer
+        );
 
         const DIFF =
             '--- a/refactor.py\n+++ b/refactor.py\n@@ -232,7 +232,8 @@\n         sys.stdout.flush()\n \n     def watch(self):\n-        self._write_response("STARTED")\n+        myNewVariable = "STARTED"\n+        self._write_response(myNewVariable)\n         while True:\n             try:\n                 self._process_request(self._input.readline())\n';
         const mockTextDoc = await workspace.openTextDocument(refactorTargetFile);
         const expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
         try {
-            const response = await proxy.extractVariable<RenameResponse>(mockTextDoc, 'myNewVariable', refactorTargetFile, rangeOfTextToExtract, options);
+            const response = await proxy.extractVariable<RenameResponse>(
+                mockTextDoc,
+                'myNewVariable',
+                refactorTargetFile,
+                rangeOfTextToExtract,
+                options
+            );
             if (shouldError) {
                 assert.fail('No error', 'Error', 'Extraction should fail with an error', '');
             }
@@ -76,7 +128,9 @@ suite('Variable Extraction', () => {
             assert.equal(response.results.length, 1, 'Invalid number of items in response');
             assert.equal(textEdits.length, expectedTextEdits.length, 'Invalid number of Text Edits');
             textEdits.forEach(edit => {
-                const foundEdit = expectedTextEdits.filter(item => item.newText === edit.newText && item.range.isEqual(edit.range));
+                const foundEdit = expectedTextEdits.filter(
+                    item => item.newText === edit.newText && item.range.isEqual(edit.range)
+                );
                 assert.equal(foundEdit.length, 1, 'Edit not found');
             });
         } catch (error) {
@@ -104,7 +158,11 @@ suite('Variable Extraction', () => {
         await testingVariableExtraction(true, startPos, endPos);
     });
 
-    async function testingVariableExtractionEndToEnd(shouldError: boolean, startPos: Position, endPos: Position): Promise<void> {
+    async function testingVariableExtractionEndToEnd(
+        shouldError: boolean,
+        startPos: Position,
+        endPos: Position
+    ): Promise<void> {
         const ch = new MockOutputChannel('Python');
         const rangeOfTextToExtract = new Range(startPos, endPos);
 

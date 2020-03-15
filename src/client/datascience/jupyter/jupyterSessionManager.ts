@@ -6,9 +6,18 @@ import { Agent as HttpsAgent } from 'https';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { traceInfo } from '../../common/logger';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterPasswordConnectInfo, IJupyterSession, IJupyterSessionManager } from '../types';
+import { noop } from '../../common/utils/misc';
+import {
+    IConnection,
+    IJupyterKernel,
+    IJupyterKernelSpec,
+    IJupyterPasswordConnect,
+    IJupyterPasswordConnectInfo,
+    IJupyterSession,
+    IJupyterSessionManager
+} from '../types';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
@@ -25,7 +34,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private jupyterPasswordConnect: IJupyterPasswordConnect,
         private config: IConfigurationService,
         private failOnPassword: boolean | undefined,
-        private kernelSelector: KernelSelector
+        private kernelSelector: KernelSelector,
+        private outputChannel: IOutputChannel
     ) {}
 
     public async dispose() {
@@ -36,8 +46,32 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         }
         if (this.sessionManager && !this.sessionManager.isDisposed) {
             traceInfo('ShutdownSessionAndConnection - dispose session manager');
-            this.sessionManager.dispose();
-            this.sessionManager = undefined;
+            // Make sure it finishes startup.
+            await this.sessionManager.ready;
+
+            // tslint:disable-next-line: no-any
+            const sessionManager = this.sessionManager as any;
+            try {
+                await this.sessionManager.shutdownAll();
+            } finally {
+                this.sessionManager.dispose();
+                this.sessionManager = undefined;
+            }
+
+            // The session manager can actually be stuck in the context of a timer. Clear out the specs inside of
+            // it so the memory for the session is minimized. Otherwise functional tests can run out of memory
+            if (sessionManager._specs) {
+                sessionManager._specs = {};
+            }
+            if (sessionManager._sessions && sessionManager._sessions.clear) {
+                sessionManager._sessions.clear();
+            }
+            if (sessionManager._pollModels) {
+                this.clearPoll(sessionManager._pollModels);
+            }
+            if (sessionManager._pollSpecs) {
+                this.clearPoll(sessionManager._pollSpecs);
+            }
         }
     }
 
@@ -93,12 +127,23 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             });
     }
 
-    public async startNew(kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
+    public async startNew(
+        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterSession> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager || !this.serverSettings) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
         // Create a new session and attempt to connect to it
-        const session = new JupyterSession(this.connInfo, this.serverSettings, kernelSpec, this.sessionManager, this.contentsManager, this.kernelSelector);
+        const session = new JupyterSession(
+            this.connInfo,
+            this.serverSettings,
+            kernelSpec,
+            this.sessionManager,
+            this.contentsManager,
+            this.kernelSelector,
+            this.outputChannel
+        );
         try {
             await session.connect(cancelToken);
         } finally {
@@ -118,7 +163,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             await this.sessionManager.refreshSpecs();
 
             // Enumerate all of the kernel specs, turning each into a JupyterKernelSpec
-            const kernelspecs = this.sessionManager.specs && this.sessionManager.specs.kernelspecs ? this.sessionManager.specs.kernelspecs : {};
+            const kernelspecs =
+                this.sessionManager.specs && this.sessionManager.specs.kernelspecs
+                    ? this.sessionManager.specs.kernelspecs
+                    : {};
             const keys = Object.keys(kernelspecs);
             return keys.map(k => {
                 const spec = kernelspecs[k];
@@ -127,6 +175,15 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         } catch {
             // For some reason this is failing. Just return nothing
             return [];
+        }
+    }
+
+    // tslint:disable-next-line: no-any
+    private clearPoll(poll: { _timeout: any }) {
+        try {
+            clearTimeout(poll._timeout);
+        } catch {
+            noop();
         }
     }
 
@@ -154,7 +211,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 throw new Error('Password request not allowed.');
             }
             serverSettings = { ...serverSettings, token: '' };
-            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl, connInfo.allowUnauthorized ? true : false);
+            const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(
+                connInfo.baseUrl,
+                connInfo.allowUnauthorized ? true : false
+            );
             if (pwSettings && !pwSettings.emptyPassword) {
                 cookieString = this.getSessionCookieString(pwSettings);
                 const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
@@ -183,8 +243,12 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         serverSettings = {
             ...serverSettings,
             init: requestInit,
-            // tslint:disable-next-line:no-any
-            WebSocket: createJupyterWebSocket(this.config.getSettings().datascience.verboseLogging, cookieString, allowUnauthorized) as any
+            WebSocket: createJupyterWebSocket(
+                this.config.getSettings().datascience.verboseLogging,
+                cookieString,
+                allowUnauthorized
+                // tslint:disable-next-line:no-any
+            ) as any
         };
 
         return ServerConnection.makeSettings(serverSettings);

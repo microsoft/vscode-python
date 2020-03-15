@@ -40,7 +40,11 @@ import { DebugAdapterDescriptorFactory } from '../../client/debugger/extension/a
 // PYDEVD_DEBUG_FILE=<dir that exists, but new file allowed>
 class MockDebugSession implements DebugSession {
     private _name = 'MockDebugSession';
-    constructor(private _id: string, private _configuration: DebugConfiguration, private customRequestHandler: (command: string, args?: any) => Thenable<any>) {
+    constructor(
+        private _id: string,
+        private _configuration: DebugConfiguration,
+        private customRequestHandler: (command: string, args?: any) => Thenable<any>
+    ) {
         noop();
     }
     public get id(): string {
@@ -125,7 +129,10 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         throw new Error('Method not implemented.');
     }
 
-    public registerDebugAdapterDescriptorFactory(_debugType: string, _factory: DebugAdapterDescriptorFactory): Disposable {
+    public registerDebugAdapterDescriptorFactory(
+        _debugType: string,
+        _factory: DebugAdapterDescriptorFactory
+    ): Disposable {
         throw new Error('Not implemented');
     }
     public registerDebugAdapterTrackerFactory(_debugType: string, _provider: DebugAdapterTrackerFactory): Disposable {
@@ -137,7 +144,11 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         };
     }
 
-    public startDebugging(_folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, _parentSession?: DebugSession | undefined): Thenable<boolean> {
+    public startDebugging(
+        _folder: WorkspaceFolder | undefined,
+        nameOrConfiguration: string | DebugConfiguration,
+        _parentSession?: DebugSession | undefined
+    ): Thenable<boolean> {
         // Should have a port number. We'll assume during the test it's local
         const config = nameOrConfiguration as DebugConfiguration;
         if (config.port) {
@@ -145,7 +156,9 @@ export class MockDebuggerService implements IDebugService, IDisposable {
 
             // Create our debug adapter tracker at session start
             if (this.debugAdapterTrackerFactory) {
-                this.debugAdapterTracker = this.debugAdapterTrackerFactory.createDebugAdapterTracker(this.session) as DebugAdapterTracker;
+                this.debugAdapterTracker = this.debugAdapterTrackerFactory.createDebugAdapterTracker(
+                    this.session
+                ) as DebugAdapterTracker;
             }
 
             this.socket = net.createConnection(config.port);

@@ -38,10 +38,14 @@ export function getDefaultSettings() {
                 autoClosingQuotes: 'languageDefined',
                 autoSurround: 'languageDefined',
                 autoIndent: false,
-                fontLigatures: false
+                fontLigatures: false,
+                scrollBeyondLastLine: true,
+                // VS Code puts a value for this, but it's 10 (the explorer bar size) not 14 the editor size for vert
+                verticalScrollbarSize: 14,
+                horizontalScrollbarSize: 14,
+                fontSize: 14,
+                fontFamily: "Consolas, 'Courier New', monospace"
             },
-            fontSize: 14,
-            fontFamily: "Consolas, 'Courier New', monospace",
             theme: 'Default Dark+'
         },
         intellisenseOptions: {
@@ -60,7 +64,9 @@ export function getDefaultSettings() {
             parameterHintsEnabled: true
         },
         runStartupCommands: '',
-        debugJustMyCode: true
+        debugJustMyCode: true,
+        variableQueries: [],
+        jupyterCommandLineArguments: []
     };
 
     return result;

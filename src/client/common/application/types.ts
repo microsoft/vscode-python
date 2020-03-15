@@ -49,6 +49,8 @@ import {
     TreeViewOptions,
     Uri,
     ViewColumn,
+    WebviewPanel,
+    WebviewPanelOptions,
     WindowState,
     WorkspaceConfiguration,
     WorkspaceEdit,
@@ -105,7 +107,11 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showInformationMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Thenable<T | undefined>;
+    showInformationMessage<T extends MessageItem>(
+        message: string,
+        options: MessageOptions,
+        ...items: T[]
+    ): Thenable<T | undefined>;
 
     /**
      * Show a warning message.
@@ -151,7 +157,11 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showWarningMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Thenable<T | undefined>;
+    showWarningMessage<T extends MessageItem>(
+        message: string,
+        options: MessageOptions,
+        ...items: T[]
+    ): Thenable<T | undefined>;
 
     /**
      * Show an error message.
@@ -197,7 +207,11 @@ export interface IApplicationShell {
      * @param items A set of items that will be rendered as actions in the message.
      * @return A thenable that resolves to the selected item or `undefined` when being dismissed.
      */
-    showErrorMessage<T extends MessageItem>(message: string, options: MessageOptions, ...items: T[]): Thenable<T | undefined>;
+    showErrorMessage<T extends MessageItem>(
+        message: string,
+        options: MessageOptions,
+        ...items: T[]
+    ): Thenable<T | undefined>;
 
     /**
      * Shows a selection list.
@@ -207,7 +221,11 @@ export interface IApplicationShell {
      * @param token A token that can be used to signal cancellation.
      * @return A promise that resolves to the selection or `undefined`.
      */
-    showQuickPick(items: string[] | Thenable<string[]>, options?: QuickPickOptions, token?: CancellationToken): Thenable<string | undefined>;
+    showQuickPick(
+        items: string[] | Thenable<string[]>,
+        options?: QuickPickOptions,
+        token?: CancellationToken
+    ): Thenable<string | undefined>;
 
     /**
      * Shows a selection list.
@@ -217,7 +235,11 @@ export interface IApplicationShell {
      * @param token A token that can be used to signal cancellation.
      * @return A promise that resolves to the selected item or `undefined`.
      */
-    showQuickPick<T extends QuickPickItem>(items: T[] | Thenable<T[]>, options?: QuickPickOptions, token?: CancellationToken): Thenable<T | undefined>;
+    showQuickPick<T extends QuickPickItem>(
+        items: T[] | Thenable<T[]>,
+        options?: QuickPickOptions,
+        token?: CancellationToken
+    ): Thenable<T | undefined>;
 
     /**
      * Shows a file open dialog to the user which allows to select a file
@@ -347,7 +369,10 @@ export interface IApplicationShell {
      *
      * @return The thenable the task-callback returned.
      */
-    withProgress<R>(options: ProgressOptions, task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>): Thenable<R>;
+    withProgress<R>(
+        options: ProgressOptions,
+        task: (progress: Progress<{ message?: string; increment?: number }>, token: CancellationToken) => Thenable<R>
+    ): Thenable<R>;
 
     /**
      * Create a [TreeView](#TreeView) for the view contributed using the extension point `views`.
@@ -400,7 +425,11 @@ export interface ICommandManager {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
-    registerTextEditorCommand(command: string, callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void, thisArg?: any): Disposable;
+    registerTextEditorCommand(
+        command: string,
+        callback: (textEditor: TextEditor, edit: TextEditorEdit, ...args: any[]) => void,
+        thisArg?: any
+    ): Disposable;
 
     /**
      * Executes the command denoted by the given command identifier.
@@ -416,7 +445,10 @@ export interface ICommandManager {
      * @return A thenable that resolves to the returned value of the given command. `undefined` when
      * the command handler function doesn't return anything.
      */
-    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, ...rest: U): Thenable<T | undefined>;
+    executeCommand<T, E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
+        command: E,
+        ...rest: U
+    ): Thenable<T | undefined>;
 
     /**
      * Retrieve the list of all available commands. Commands starting an underscore are
@@ -670,7 +702,12 @@ export interface IWorkspaceService {
      * @param ignoreDeleteEvents Ignore when files have been deleted.
      * @return A new file system watcher instance.
      */
-    createFileSystemWatcher(globPattern: GlobPattern, ignoreCreateEvents?: boolean, ignoreChangeEvents?: boolean, ignoreDeleteEvents?: boolean): FileSystemWatcher;
+    createFileSystemWatcher(
+        globPattern: GlobPattern,
+        ignoreCreateEvents?: boolean,
+        ignoreChangeEvents?: boolean,
+        ignoreDeleteEvents?: boolean
+    ): FileSystemWatcher;
 
     /**
      * Find files across all [workspace folders](#workspace.workspaceFolders) in the workspace.
@@ -686,7 +723,12 @@ export interface IWorkspaceService {
      * @return A thenable that resolves to an array of resource identifiers. Will return no results if no
      * [workspace folders](#workspace.workspaceFolders) are opened.
      */
-    findFiles(include: GlobPattern, exclude?: GlobPattern, maxResults?: number, token?: CancellationToken): Thenable<Uri[]>;
+    findFiles(
+        include: GlobPattern,
+        exclude?: GlobPattern,
+        maxResults?: number,
+        token?: CancellationToken
+    ): Thenable<Uri[]>;
 
     /**
      * Get a workspace configuration object.
@@ -813,7 +855,11 @@ export interface IDebugService {
      * @param nameOrConfiguration Either the name of a debug or compound configuration or a [DebugConfiguration](#DebugConfiguration) object.
      * @return A thenable that resolves when debugging could be successfully started.
      */
-    startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, parentSession?: DebugSession): Thenable<boolean>;
+    startDebugging(
+        folder: WorkspaceFolder | undefined,
+        nameOrConfiguration: string | DebugConfiguration,
+        parentSession?: DebugSession
+    ): Thenable<boolean>;
 
     /**
      * Add breakpoints.
@@ -983,6 +1029,8 @@ export interface IWebPanelOptions {
     cwd: string;
     // tslint:disable-next-line: no-any
     settings?: any;
+    // Web panel to use if supplied by VS code instead
+    webViewPanel?: WebviewPanel;
 }
 
 // Wraps the VS Code api for creating a web panel
@@ -1030,7 +1078,11 @@ export interface ILanguageService {
      * @param triggerCharacters Trigger completion when the user types one of the characters, like `.` or `:`.
      * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
      */
-    registerCompletionItemProvider(selector: DocumentSelector, provider: CompletionItemProvider, ...triggerCharacters: string[]): Disposable;
+    registerCompletionItemProvider(
+        selector: DocumentSelector,
+        provider: CompletionItemProvider,
+        ...triggerCharacters: string[]
+    ): Disposable;
 }
 
 export type Channel = 'stable' | 'insiders';
@@ -1041,4 +1093,120 @@ export type Channel = 'stable' | 'insiders';
 export const IActiveResourceService = Symbol('IActiveResourceService');
 export interface IActiveResourceService {
     getActiveResource(): Resource;
+}
+
+// Temporary hack to get the nyc compiler to find these types. vscode.proposed.d.ts doesn't work for some reason.
+/**
+ * Defines the editing functionality of a webview editor. This allows the webview editor to hook into standard
+ * editor events such as `undo` or `save`.
+ *
+ * @param EditType Type of edits. Edit objects must be json serializable.
+ */
+// tslint:disable-next-line: interface-name
+export interface WebviewCustomEditorEditingDelegate<EditType> {
+    /**
+     * Event triggered by extensions to signal to VS Code that an edit has occurred.
+     */
+    readonly onEdit: Event<{ readonly resource: Uri; readonly edit: EditType }>;
+    /**
+     * Save a resource.
+     *
+     * @param resource Resource being saved.
+     *
+     * @return Thenable signaling that the save has completed.
+     */
+    save(resource: Uri): Thenable<void>;
+
+    /**
+     * Save an existing resource at a new path.
+     *
+     * @param resource Resource being saved.
+     * @param targetResource Location to save to.
+     *
+     * @return Thenable signaling that the save has completed.
+     */
+    saveAs(resource: Uri, targetResource: Uri): Thenable<void>;
+
+    /**
+     * Apply a set of edits.
+     *
+     * Note that is not invoked when `onEdit` is called as `onEdit` implies also updating the view to reflect the edit.
+     *
+     * @param resource Resource being edited.
+     * @param edit Array of edits. Sorted from oldest to most recent.
+     *
+     * @return Thenable signaling that the change has completed.
+     */
+    applyEdits(resource: Uri, edits: readonly EditType[]): Thenable<void>;
+
+    /**
+     * Undo a set of edits.
+     *
+     * This is triggered when a user undoes an edit or when revert is called on a file.
+     *
+     * @param resource Resource being edited.
+     * @param edit Array of edits. Sorted from most recent to oldest.
+     *
+     * @return Thenable signaling that the change has completed.
+     */
+    undoEdits(resource: Uri, edits: readonly EditType[]): Thenable<void>;
+}
+
+// tslint:disable-next-line: interface-name
+export interface WebviewCustomEditorProvider {
+    /**
+     * Controls the editing functionality of a webview editor. This allows the webview editor to hook into standard
+     * editor events such as `undo` or `save`.
+     *
+     * WebviewEditors that do not have `editingCapability` are considered to be readonly. Users can still interact
+     * with readonly editors, but these editors will not integrate with VS Code's standard editor functionality.
+     */
+    readonly editingDelegate?: WebviewCustomEditorEditingDelegate<unknown>;
+    /**
+     * Resolve a webview editor for a given resource.
+     *
+     * To resolve a webview editor, a provider must fill in its initial html content and hook up all
+     * the event listeners it is interested it. The provider should also take ownership of the passed in `WebviewPanel`.
+     *
+     * @param resource Resource being resolved.
+     * @param webview Webview being resolved. The provider should take ownership of this webview.
+     *
+     * @return Thenable indicating that the webview editor has been resolved.
+     */
+    resolveWebviewEditor(resource: Uri, webview: WebviewPanel): Thenable<void>;
+}
+
+export const ICustomEditorService = Symbol('ICustomEditorService');
+export interface ICustomEditorService {
+    /**
+     * Register a new provider for webview editors of a given type.
+     *
+     * @param viewType  Type of the webview editor provider.
+     * @param provider Resolves webview editors.
+     * @param options Content settings for a webview panels the provider is given.
+     *
+     * @return Disposable that unregisters the `WebviewCustomEditorProvider`.
+     */
+    registerWebviewCustomEditorProvider(
+        viewType: string,
+        provider: WebviewCustomEditorProvider,
+        options?: WebviewPanelOptions
+    ): Disposable;
+    /**
+     * Opens a file with a custom editor
+     */
+    openEditor(file: Uri): Promise<void>;
+}
+
+export const IClipboard = Symbol('IClipboard');
+export interface IClipboard {
+    /**
+     * Read the current clipboard contents as text.
+     */
+    readText(): Promise<string>;
+
+    /**
+     * Writes text into the clipboard.
+     */
+    writeText(value: string): Promise<void>;
 }

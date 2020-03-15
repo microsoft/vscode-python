@@ -5,17 +5,30 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 
 import { traceDecorators } from '../../common/logger';
-import { BANNER_NAME_LS_SURVEY, IDisposable, IPythonExtensionBanner, Resource } from '../../common/types';
+import {
+    BANNER_NAME_LS_SURVEY,
+    IDisposable,
+    IExperimentsManager,
+    IPythonExtensionBanner,
+    Resource
+} from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerManager, ILanguageServerProxy } from '../types';
-import { LanguageClientMiddleware } from './languageClientMiddleware';
+import { LanguageClientMiddleware } from '../languageClientMiddleware';
+import {
+    ILanguageServerAnalysisOptions,
+    ILanguageServerExtension,
+    ILanguageServerFolderService,
+    ILanguageServerManager,
+    ILanguageServerProxy,
+    LanguageServerType
+} from '../types';
 
 @injectable()
-export class LanguageServerManager implements ILanguageServerManager {
+export class DotNetLanguageServerManager implements ILanguageServerManager {
     private languageServerProxy?: ILanguageServerProxy;
     private resource!: Resource;
     private interpreter: PythonInterpreter | undefined;
@@ -26,7 +39,11 @@ export class LanguageServerManager implements ILanguageServerManager {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension,
-        @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner
+        @inject(IPythonExtensionBanner)
+        @named(BANNER_NAME_LS_SURVEY)
+        private readonly surveyBanner: IPythonExtensionBanner,
+        @inject(ILanguageServerFolderService) private readonly folderService: ILanguageServerFolderService,
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {}
     public dispose() {
         if (this.languageProxy) {
@@ -83,8 +100,16 @@ export class LanguageServerManager implements ILanguageServerManager {
     @traceDecorators.verbose('Starting Language Server')
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
+
+        const versionPair = await this.folderService.getCurrentLanguageServerDirectory();
+
         const options = await this.analysisOptions!.getAnalysisOptions();
-        options.middleware = this.middleware = new LanguageClientMiddleware(this.surveyBanner);
+        options.middleware = this.middleware = new LanguageClientMiddleware(
+            this.surveyBanner,
+            this.experimentsManager,
+            LanguageServerType.Microsoft,
+            versionPair?.version.format()
+        );
 
         // Make sure the middleware is connected if we restart and we we're already connected.
         if (this.connected) {

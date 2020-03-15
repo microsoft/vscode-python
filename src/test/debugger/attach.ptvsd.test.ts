@@ -13,16 +13,18 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { DebugAdapterDescriptorFactory, DebugAdapterNewPtvsd } from '../../client/common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../client/common/experimentGroups';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IExperimentsManager } from '../../client/common/types';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
 import { PythonDebugConfigurationService } from '../../client/debugger/extension/configuration/debugConfigurationService';
 import { AttachConfigurationResolver } from '../../client/debugger/extension/configuration/resolvers/attach';
-import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from '../../client/debugger/extension/configuration/types';
+import {
+    IDebugConfigurationProviderFactory,
+    IDebugConfigurationResolver
+} from '../../client/debugger/extension/configuration/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { PYTHON_PATH, sleep } from '../common';
@@ -30,7 +32,13 @@ import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 import { continueDebugging, createDebugAdapter } from './utils';
 
 // tslint:disable:no-invalid-this max-func-body-length no-empty no-increment-decrement no-unused-variable no-console
-const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd.py');
+const fileToDebug = path.join(
+    EXTENSION_ROOT_DIR,
+    'src',
+    'testMultiRootWkspc',
+    'workspace5',
+    'remoteDebugger-start-with-ptvsd.py'
+);
 
 suite('Debugging - Attach Debugger', () => {
     let debugClient: DebugClient;
@@ -63,7 +71,16 @@ suite('Debugging - Attach Debugger', () => {
         // Set the path for PTVSD to be picked up.
         // tslint:disable-next-line:no-string-literal
         env['PYTHONPATH'] = PTVSD_PATH;
-        const pythonArgs = ['-m', 'ptvsd', '--host', 'localhost', '--wait', '--port', `${port}`, fileToDebug.fileToCommandArgument()];
+        const pythonArgs = [
+            '-m',
+            'ptvsd',
+            '--host',
+            'localhost',
+            '--wait',
+            '--port',
+            `${port}`,
+            fileToDebug.fileToCommandArgument()
+        ];
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
         const exited = new Promise(resolve => proc.once('close', resolve));
         await sleep(3000);
@@ -99,7 +116,6 @@ suite('Debugging - Attach Debugger', () => {
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
         experiments.setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => true);
-        experiments.setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment)).returns(() => true);
 
         const launchResolver = TypeMoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
         const attachResolver = new AttachConfigurationResolver(
@@ -110,9 +126,13 @@ suite('Debugging - Attach Debugger', () => {
             experiments.object
         );
         const providerFactory = TypeMoq.Mock.ofType<IDebugConfigurationProviderFactory>().object;
-        const fs = mock(FileSystem);
         const multistepFactory = mock(MultiStepInputFactory);
-        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory, instance(multistepFactory), instance(fs));
+        const configProvider = new PythonDebugConfigurationService(
+            attachResolver,
+            launchResolver.object,
+            providerFactory,
+            instance(multistepFactory)
+        );
 
         await configProvider.resolveDebugConfiguration({ index: 0, name: 'root', uri: Uri.file(localRoot) }, options);
         const attachPromise = debugClient.attachRequest(options);

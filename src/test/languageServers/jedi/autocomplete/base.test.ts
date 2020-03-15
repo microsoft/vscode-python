@@ -8,7 +8,7 @@ import * as assert from 'assert';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../../client/common/constants';
-import { isPythonVersion } from '../../../common';
+import { isOs, isPythonVersion, OSType } from '../../../common';
 import { closeActiveWindows, initialize, initializeTest } from '../../../initialize';
 import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 
@@ -28,6 +28,7 @@ suite('Autocomplete Base Tests', function() {
     // tslint:disable-next-line:no-invalid-this
     this.timeout(60000);
     let ioc: UnitTestIocContainer;
+    let isPy38: boolean;
 
     suiteSetup(async function() {
         // Attempt to fix #1301
@@ -35,6 +36,7 @@ suite('Autocomplete Base Tests', function() {
         this.timeout(60000);
         await initialize();
         initializeDI();
+        isPy38 = await isPythonVersion('3.8');
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -60,10 +62,18 @@ suite('Autocomplete Base Tests', function() {
             .then(() => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(3, 10);
-                return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.CompletionList>(
+                    'vscode.executeCompletionItemProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(list => {
-                assert.equal(list!.items.filter(item => item.label === 'api_version').length, 1, 'api_version not found');
+                assert.equal(
+                    list!.items.filter(item => item.label === 'api_version').length,
+                    1,
+                    'api_version not found'
+                );
             })
             .then(done, done);
     });
@@ -75,11 +85,18 @@ suite('Autocomplete Base Tests', function() {
         const lineNum = 1;
         const colNum = 4;
         const position = new vscode.Position(lineNum, colNum);
-        const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+        const list = await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            textDocument.uri,
+            position
+        );
 
         const indexOfFstat = list!.items.findIndex((val: vscode.CompletionItem) => val.label === 'fstat');
 
-        assert(indexOfFstat !== -1, `fstat was not found as a completion in ${fileImport} at line ${lineNum}, col ${colNum}`);
+        assert(
+            indexOfFstat !== -1,
+            `fstat was not found as a completion in ${fileImport} at line ${lineNum}, col ${colNum}`
+        );
     });
 
     // https://github.com/DonJayamanne/pythonVSCode/issues/898
@@ -87,7 +104,11 @@ suite('Autocomplete Base Tests', function() {
         const textDocument = await vscode.workspace.openTextDocument(fileDoc);
         await vscode.window.showTextDocument(textDocument);
         const position = new vscode.Position(5, 27);
-        await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+        await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            textDocument.uri,
+            position
+        );
         // These are not known to work, jedi issue
         // assert.equal(list.items.filter(item => item.label === 'capitalize').length, 1, 'capitalize not found (known not to work, Jedi issue)');
         // assert.notEqual(list.items.filter(item => item.label === 'upper').length, 1, 'upper not found');
@@ -103,7 +124,11 @@ suite('Autocomplete Base Tests', function() {
         const textDocument = await vscode.workspace.openTextDocument(fileLambda);
         await vscode.window.showTextDocument(textDocument);
         const position = new vscode.Position(1, 19);
-        const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+        const list = await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            textDocument.uri,
+            position
+        );
         assert.notEqual(list!.items.filter(item => item.label === 'append').length, 0, 'append not found');
         assert.notEqual(list!.items.filter(item => item.label === 'clear').length, 0, 'clear not found');
         assert.notEqual(list!.items.filter(item => item.label === 'count').length, 0, 'cound not found');
@@ -114,19 +139,43 @@ suite('Autocomplete Base Tests', function() {
         const textDocument = await vscode.workspace.openTextDocument(fileDecorator);
         await vscode.window.showTextDocument(textDocument);
         let position = new vscode.Position(3, 9);
-        let list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+        let list = await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            textDocument.uri,
+            position
+        );
         assert.notEqual(list!.items.filter(item => item.label === 'ABCMeta').length, 0, 'ABCMeta not found');
-        assert.notEqual(list!.items.filter(item => item.label === 'abstractmethod').length, 0, 'abstractmethod not found');
+        assert.notEqual(
+            list!.items.filter(item => item.label === 'abstractmethod').length,
+            0,
+            'abstractmethod not found'
+        );
 
         position = new vscode.Position(4, 9);
-        list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+        list = await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            textDocument.uri,
+            position
+        );
         assert.notEqual(list!.items.filter(item => item.label === 'ABCMeta').length, 0, 'ABCMeta not found');
-        assert.notEqual(list!.items.filter(item => item.label === 'abstractmethod').length, 0, 'abstractmethod not found');
+        assert.notEqual(
+            list!.items.filter(item => item.label === 'abstractmethod').length,
+            0,
+            'abstractmethod not found'
+        );
 
         position = new vscode.Position(2, 30);
-        list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+        list = await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            textDocument.uri,
+            position
+        );
         assert.notEqual(list!.items.filter(item => item.label === 'ABCMeta').length, 0, 'ABCMeta not found');
-        assert.notEqual(list!.items.filter(item => item.label === 'abstractmethod').length, 0, 'abstractmethod not found');
+        assert.notEqual(
+            list!.items.filter(item => item.label === 'abstractmethod').length,
+            0,
+            'abstractmethod not found'
+        );
     });
 
     // https://github.com/DonJayamanne/pythonVSCode/issues/727
@@ -136,7 +185,11 @@ suite('Autocomplete Base Tests', function() {
         const textDocument = await vscode.workspace.openTextDocument(fileDoc);
         await vscode.window.showTextDocument(textDocument);
         const position = new vscode.Position(10, 9);
-        const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+        const list = await vscode.commands.executeCommand<vscode.CompletionList>(
+            'vscode.executeCompletionItemProvider',
+            textDocument.uri,
+            position
+        );
 
         const items = list!.items.filter(item => item.label === 'sleep');
         assert.notEqual(items.length, 0, 'sleep not found');
@@ -155,7 +208,11 @@ suite('Autocomplete Base Tests', function() {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(30, 4);
-                return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.CompletionList>(
+                    'vscode.executeCompletionItemProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(list => {
                 assert.notEqual(list!.items.filter(item => item.label === 'method1').length, 0, 'method1 not found');
@@ -175,7 +232,11 @@ suite('Autocomplete Base Tests', function() {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(25, 4);
-                return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.CompletionList>(
+                    'vscode.executeCompletionItemProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(list => {
                 const items = list!.items.filter(item => item.label === 'bar');
@@ -190,7 +251,13 @@ suite('Autocomplete Base Tests', function() {
             .then(done, done);
     });
 
-    test('Across files With Unicode Characters', done => {
+    test('Across files With Unicode Characters', function(done) {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO (GH-10399) Fix this test.
+        if (isOs(OSType.Windows) && isPy38) {
+            // tslint:disable-next-line:no-invalid-this
+            this.skip();
+        }
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileEncodingUsed)
@@ -201,7 +268,11 @@ suite('Autocomplete Base Tests', function() {
             .then(_editor => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(1, 5);
-                return vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, position);
+                return vscode.commands.executeCommand<vscode.CompletionList>(
+                    'vscode.executeCompletionItemProvider',
+                    textDocument.uri,
+                    position
+                );
             })
             .then(list => {
                 let items = list!.items.filter(item => item.label === 'Foo');
@@ -211,7 +282,8 @@ suite('Autocomplete Base Tests', function() {
                 items = list!.items.filter(item => item.label === 'showMessage');
                 assert.equal(items.length, 1, 'showMessage not found');
 
-                const expected1 = 'Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.';
+                const expected1 =
+                    'Кюм ут жэмпэр пошжим льаборэж, коммюны янтэрэсщэт нам ед, декта игнота ныморэ жят эи.';
                 checkDocumentation(items[0], expected1);
 
                 const expected2 = 'Шэа декам экшырки эи, эи зыд эррэм докэндё, векж факэтэ пэрчыквюэрёж ку.';
@@ -239,9 +311,17 @@ suite('Autocomplete Base Tests', function() {
         const textDocument = await vscode.workspace.openTextDocument(fileSuppress);
         await vscode.window.showTextDocument(textDocument);
         for (let i = 0; i < positions.length; i += 1) {
-            const list = await vscode.commands.executeCommand<vscode.CompletionList>('vscode.executeCompletionItemProvider', textDocument.uri, positions[i]);
+            const list = await vscode.commands.executeCommand<vscode.CompletionList>(
+                'vscode.executeCompletionItemProvider',
+                textDocument.uri,
+                positions[i]
+            );
             const result = list!.items.filter(item => item.label === 'abs').length;
-            assert.equal(result > 0, expected[i], `Expected ${expected[i]} at position ${positions[i].line}:${positions[i].character} but got ${result}`);
+            assert.equal(
+                result > 0,
+                expected[i],
+                `Expected ${expected[i]} at position ${positions[i].line}:${positions[i].character} but got ${result}`
+            );
         }
     });
 });

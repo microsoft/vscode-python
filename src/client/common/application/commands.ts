@@ -34,6 +34,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     ['workbench.action.closeActiveEditor']: [];
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
+    ['python.datascience.selectJupyterInterpreter']: [];
     [Commands.ViewOutput]: [];
     [Commands.Set_Linter]: [];
     [Commands.Start_REPL]: [];
@@ -82,10 +83,15 @@ interface ICommandNameWithoutArgumentTypeMapping {
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
     ['workbench.extensions.installExtension']: [Uri | 'ms-python.python'];
     ['setContext']: [string, boolean];
+    ['python.reloadVSCode']: [string];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
+    ['vscode.open']: [Uri];
     ['python.viewLanguageServerOutput']: [];
+    ['vscode.open']: [Uri];
+    ['workbench.action.files.saveAs']: [Uri];
+    ['workbench.action.files.save']: [Uri];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
@@ -96,9 +102,19 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Tests_Stop]: [undefined, Uri];
     [Commands.Test_Reveal_Test_Item]: [TestDataItem];
     // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Run]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri, undefined | TestsToRun];
+    [Commands.Tests_Run]: [
+        undefined | TestWorkspaceFolder,
+        undefined | CommandSource,
+        undefined | Uri,
+        undefined | TestsToRun
+    ];
     // When command is invoked from a tree node, first argument is the node data.
-    [Commands.Tests_Debug]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri, undefined | TestsToRun];
+    [Commands.Tests_Debug]: [
+        undefined | TestWorkspaceFolder,
+        undefined | CommandSource,
+        undefined | Uri,
+        undefined | TestsToRun
+    ];
     [Commands.Tests_Run_Parametrized]: [undefined, undefined | CommandSource, Uri, TestFunction[], boolean];
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.Tests_Discover]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri];
@@ -141,4 +157,8 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.ScrollToCell]: [string, string];
     [DSCommands.ViewJupyterOutput]: [];
     [DSCommands.SwitchJupyterKernel]: [INotebook | undefined];
+    [DSCommands.SelectJupyterCommandLine]: [undefined | Uri];
+    [DSCommands.SaveNotebookNonCustomEditor]: [Uri];
+    [DSCommands.SaveAsNotebookNonCustomEditor]: [Uri, Uri];
+    [DSCommands.OpenNotebookNonCustomEditor]: [Uri];
 }

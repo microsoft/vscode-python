@@ -5,16 +5,14 @@
 # ```
 #
 # Your job using this template *must* supply these values:
-# - VMImageName: '[name]' - the VM image to run the tests on.
 # - TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
 #
 # Your job using this template *may* supply these values:
 # - NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
 # - NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
-# - PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
-# - NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
-# - SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
-# - UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
+# - NeedsIPythonReqs: [true|false] - install the ipython-test-requirements prior to running tests. False if not set.
+# - PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion (from globals.yml) if not set.
+# - NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion (from globals.yml) if not set.
 
 ## Supported `TestsToRun` values, multiples are allowed separated by commas or spaces:
 #
@@ -69,22 +67,22 @@ steps:
 
   - task: CopyFiles@2
     inputs:
-        sourceFolder: "$(Build.SourcesDirectory)/.nyc_output"
-        targetFolder: "$(Build.ArtifactStagingDirectory)/nyc/.nyc_output"
-    displayName: "Copy nyc_output to publish as artificat"
+      sourceFolder: '$(Build.SourcesDirectory)/.nyc_output'
+      targetFolder: '$(Build.ArtifactStagingDirectory)/nyc/.nyc_output'
+    displayName: 'Copy nyc_output to publish as artificat'
     condition: contains(variables['TestsToRun'], 'testUnitTests')
 
   # Upload Code Coverage Results (to be merged later).
   - task: PublishBuildArtifacts@1
     inputs:
-      pathtoPublish: "$(Build.ArtifactStagingDirectory)/nyc"
+      pathtoPublish: '$(Build.ArtifactStagingDirectory)/nyc'
       artifactName: 'coverage-output-$(Agent.Os)'
     condition: contains(variables['TestsToRun'], 'testUnitTests')
 
   - template: steps/generate_upload_coverage.yml
 
   # Install the requirements for the Python or the system tests. This includes the supporting libs that
-  # we ship in our extension such as PTVSD and Jedi.
+  # we ship in our extension such as PTVSD, DEBUGPY and Jedi.
   #
   # This task will only run if variable `NeedsPythonTestReqs` is true.
   #
@@ -93,23 +91,13 @@ steps:
   # > python -m pip install --upgrade -r build/test-requirements.txt
   # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
   - bash: |
-      python -m pip install -U pip
       python -m pip install --upgrade -r build/test-requirements.txt
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==5.0.0a10'
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
-
-  # Install the additional sqlite requirements
-  #
-  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
-  - bash: |
-      sudo apt-get install libsqlite3-dev
-      python -m pip install pysqlite
-    displayName: 'Setup python to run with sqlite on 2.7'
-    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), eq(variables['PythonVersion'], '2.7'))
-
+    
   # Install the requirements for functional tests.
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
@@ -119,11 +107,70 @@ steps:
   # > python -m pip install --upgrade -r build/functional-test-requirements.txt
   # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
   - bash: |
-      python -m pip install -U pip
       python -m pip install numpy
       python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+      python -c "import sys;print(sys.executable)"
     displayName: 'pip install functional requirements'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))    
+
+  # Add CONDA to the path so anaconda works
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: 'Add conda to the path'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), ne(variables['Agent.Os'], 'Windows_NT'))
+
+  # Add CONDA to the path so anaconda works (windows)
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - powershell: |
+      Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+    displayName: 'Add conda to the path'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'))
+
+  # On MAC let CONDA update install paths
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      sudo chown -R $USER $CONDA
+    displayName: 'Give CONDA permission to its own files'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Darwin'))
+
+  # Create the two anaconda environments
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  #
+  - script: |
+      conda env create --quiet --force --file build/ci/conda_env_1.yml
+      conda env create --quiet --force --file build/ci/conda_env_2.yml
+    displayName: 'Create CONDA Environments'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
+
+  # Run the pip installs in the 3 environments (darwin linux)
+  - bash: |
+      source activate base
+      conda install --quiet -y --file build/ci/conda_base.yml
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      source activate conda_env_1
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      source activate conda_env_2
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      conda deactivate
+    displayName: 'Install Pip requirements for CONDA envs'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), ne(variables['Agent.Os'], 'Windows_NT'))
+
+  # Run the pip installs in the 3 environments (windows)
+  - script: |
+      call activate base
+      conda install --quiet -y --file build/ci/conda_base.yml      
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      call activate conda_env_1
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      call activate conda_env_2
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+    displayName: 'Install Pip requirements for CONDA envs'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'))
 
   # Downgrade pywin32 on Windows due to bug https://github.com/jupyter/notebook/issues/4909
   #
@@ -142,12 +189,10 @@ steps:
   # > python -m pip install --upgrade -r build/ipython-test-requirements.txt
   # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
   - bash: |
-      python -m pip install -U pip
       python -m pip install numpy
       python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
     displayName: 'pip install ipython requirements'
     condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'))
-
 
   # Install jupyter for smoke tests.
   - bash: |
@@ -155,12 +200,11 @@ steps:
     displayName: 'pip install jupyter'
     condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'), contains(variables['TestsToRun'], 'testSmoke'))
 
-  - task: PythonScript@0
-    displayName: "Install PTVSD wheels"
-    inputs:
-        scriptSource: "filePath"
-        scriptPath: "./pythonFiles/install_ptvsd.py"
-        failOnStderr: true
+  - bash: |
+      python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+      python ./pythonFiles/install_debugpy.py
+    failOnStderr: true
+    displayName: 'Install DEBUGPY wheels'
     condition: and(eq(variables['NeedsPythonTestReqs'], 'true'), eq(variables['PythonVersion'], '3.7'))
 
   # Run the Python unit tests in our codebase. Produces a JUnit-style log file that
@@ -294,14 +338,23 @@ steps:
       & ".virtualenv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) virtualEnvPath
 
       # conda
+
+      # 1. For `terminalActivation.testvirtualenvs.test.ts`
+
+      $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
       if( '$(Agent.Os)' -match '.*Windows.*' ){
           $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
       } else{
           $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath python
-          $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
           & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaExecPath $condaExecPath
       }
       & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
+
+      # 2. For `interpreterLocatorService.testvirtualenvs.ts`
+
+      & $condaExecPath create -n "test_env1" -y python
+      & $condaExecPath create -p "./test_env2" -y python
+      & $condaExecPath create -p "$Env:HOME/test_env3" -y python
 
       # Set the TEST_FILES_SUFFIX
       Write-Host '##vso[task.setvariable variable=TEST_FILES_SUFFIX;]testvirtualenvs'
@@ -351,7 +404,7 @@ steps:
   # Example command line (windows pwsd):
   # > $Env:CI_PYTHON_PATH=(& python -c 'import sys;print(sys.executable)')
   - script: |
-        python -c "from __future__ import print_function;import sys;print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))"
+      python -c "from __future__ import print_function;import sys;print('##vso[task.setvariable variable=CI_PYTHON_PATH;]{}'.format(sys.executable))"
     displayName: 'Set CI_PYTHON_PATH'
 
   # Run the functional tests.

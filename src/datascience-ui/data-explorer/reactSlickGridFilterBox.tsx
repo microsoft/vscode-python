@@ -17,7 +17,15 @@ export class ReactSlickGridFilterBox extends React.Component<IFilterProps> {
     }
 
     public render() {
-        return <input type="text" tabIndex={0} aria-label={this.props.column.name} className="filter-box" onChange={this.updateInputValue} />;
+        return (
+            <input
+                type="text"
+                tabIndex={0}
+                aria-label={this.props.column.name}
+                className="filter-box"
+                onChange={this.updateInputValue}
+            />
+        );
     }
 
     private updateInputValue = (evt: React.SyntheticEvent) => {

@@ -75,7 +75,12 @@ export function makeHttpRequest(uri: string): Promise<string> {
         });
     });
 }
-export async function hitHttpBreakpoint(debugClient: DebugClient, uri: string, file: string, line: number): Promise<[DebugProtocol.StackTraceResponse, Promise<string>]> {
+export async function hitHttpBreakpoint(
+    debugClient: DebugClient,
+    uri: string,
+    file: string,
+    line: number
+): Promise<[DebugProtocol.StackTraceResponse, Promise<string>]> {
     const breakpointLocation = { path: file, column: 1, line };
     await debugClient.setBreakpointsRequest({
         lines: [breakpointLocation.line],

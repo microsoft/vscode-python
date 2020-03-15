@@ -9,7 +9,14 @@ import { CommandManager } from '../../../client/common/application/commandManage
 import { ICommandManager } from '../../../client/common/application/types';
 import { Commands } from '../../../client/common/constants';
 import { TestCollectionStorageService } from '../../../client/testing/common/services/storageService';
-import { ITestCollectionStorageService, TestFile, TestFolder, TestFunction, TestStatus, TestSuite } from '../../../client/testing/common/types';
+import {
+    ITestCollectionStorageService,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    TestStatus,
+    TestSuite
+} from '../../../client/testing/common/types';
 import { FailedTestHandler } from '../../../client/testing/explorer/failedTestHandler';
 import { noop, sleep } from '../../core';
 
@@ -34,8 +41,20 @@ suite('Unit Tests Test Explorer View Items', () => {
     });
     test('Change handler will invoke the command to reveal the nodes (for failed and errored items)', async () => {
         const uri = Uri.file(__filename);
-        const failedFunc1: TestFunction = { name: 'fn1', time: 0, resource: uri, nameToRun: 'fn1', status: TestStatus.Error };
-        const failedFunc2: TestFunction = { name: 'fn2', time: 0, resource: uri, nameToRun: 'fn2', status: TestStatus.Fail };
+        const failedFunc1: TestFunction = {
+            name: 'fn1',
+            time: 0,
+            resource: uri,
+            nameToRun: 'fn1',
+            status: TestStatus.Error
+        };
+        const failedFunc2: TestFunction = {
+            name: 'fn2',
+            time: 0,
+            resource: uri,
+            nameToRun: 'fn2',
+            status: TestStatus.Fail
+        };
         when(commandManager.executeCommand(Commands.Test_Reveal_Test_Item, anything())).thenResolve();
 
         failedTestHandler.onDidChangeTestData({ uri, data: failedFunc1 });

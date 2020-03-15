@@ -1,8 +1,8 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-class Stub(object):
 
+class Stub(object):
     def __init__(self):
         self.calls = []
 
@@ -11,7 +11,6 @@ class Stub(object):
 
 
 class StubProxy(object):
-
     def __init__(self, stub=None, name=None):
         self.name = name
         self.stub = stub if stub is not None else Stub()
@@ -23,5 +22,5 @@ class StubProxy(object):
     def add_call(self, funcname, *args, **kwargs):
         callname = funcname
         if self.name:
-            callname = '{}.{}'.format(self.name, funcname)
+            callname = "{}.{}".format(self.name, funcname)
         return self.stub.add_call(callname, *args, **kwargs)

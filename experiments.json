@@ -21,48 +21,48 @@
         "name": "ShowExtensionSurveyPrompt - enabled",
         "salt": "ShowExtensionSurveyPrompt",
         "max": 100,
-        "min": 80
+        "min": 60
     },
     {
         "name": "ShowExtensionSurveyPrompt - control",
         "salt": "ShowExtensionSurveyPrompt",
         "min": 0,
-        "max": 20
+        "max": 40
     },
     {
         "name": "DebugAdapterFactory - control",
         "salt": "DebugAdapterFactory",
         "min": 0,
-        "max": 20
+        "max": 0
     },
     {
         "name": "DebugAdapterFactory - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 80,
+        "min": 0,
         "max": 100
     },
     {
         "name": "PtvsdWheels37 - control",
         "salt": "DebugAdapterFactory",
-        "min": 80,
-        "max": 87
+        "min": 0,
+        "max": 50
     },
     {
         "name": "PtvsdWheels37 - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 93,
+        "min": 50,
         "max": 100
     },
     {
         "name": "Reload - control",
         "salt": "DebugAdapterFactory",
-        "min": 93,
-        "max": 96
+        "min": 50,
+        "max": 60
     },
     {
         "name": "Reload - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 97,
+        "min": 90,
         "max": 100
     },
     {
@@ -78,6 +78,18 @@
         "max": 24
     },
     {
+        "name": "UseTerminalToGetActivatedEnvVars - experiment",
+        "salt": "UseTerminalToGetActivatedEnvVars",
+        "min": 0,
+        "max": 0
+    },
+    {
+        "name": "UseTerminalToGetActivatedEnvVars - control",
+        "salt": "UseTerminalToGetActivatedEnvVars",
+        "min": 0,
+        "max": 100
+    },
+    {
         "name": "AA_testing - control",
         "salt": "AA_testing",
         "min": 0,
@@ -88,5 +100,41 @@
         "salt": "AA_testing",
         "min": 90,
         "max": 100
+    },
+    {
+        "name": "WebHostNotebook - experiment",
+        "salt": "WebHostNotebook",
+        "max": 0,
+        "min": 0
+    },
+    {
+        "name": "WebHostNotebook - control",
+        "salt": "WebHostNotebook",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "name": "CollectLSRequestTiming - experiment",
+        "salt": "CollectLSRequestTiming",
+        "min": 0,
+        "max": 10
+    },
+    {
+        "name": "CollectLSRequestTiming - control",
+        "salt": "CollectLSRequestTiming",
+        "min": 10,
+        "max": 100
+    },
+    {
+        "name": "CollectNodeLSRequestTiming - experiment",
+        "salt": "CollectNodeLSRequestTiming",
+        "min": 0,
+        "max": 100
+    },
+    {
+        "name": "CollectNodeLSRequestTiming - control",
+        "salt": "CollectNodeLSRequestTiming",
+        "min": 0,
+        "max": 0
     }
 ]

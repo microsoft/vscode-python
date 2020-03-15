@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import '../../common/extensions';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 
 import { traceDecorators, traceError } from '../../common/logger';
@@ -15,11 +15,11 @@ import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
-import { ILanguageClientFactory, ILanguageServerProxy, LanguageClientFactory } from '../types';
-import { ProgressReporting } from './progress';
+import { ProgressReporting } from '../progress';
+import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 
 @injectable()
-export class LanguageServerProxy implements ILanguageServerProxy {
+export class DotNetLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
     private startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
@@ -27,9 +27,7 @@ export class LanguageServerProxy implements ILanguageServerProxy {
     private disposed: boolean = false;
 
     constructor(
-        @inject(ILanguageClientFactory)
-        @named(LanguageClientFactory.base)
-        private readonly factory: ILanguageClientFactory,
+        @inject(ILanguageClientFactory) private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {
@@ -55,7 +53,11 @@ export class LanguageServerProxy implements ILanguageServerProxy {
 
     @traceDecorators.error('Failed to start language server')
     @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_ENABLED, undefined, true)
-    public async start(resource: Resource, interpreter: PythonInterpreter | undefined, options: LanguageClientOptions): Promise<void> {
+    public async start(
+        resource: Resource,
+        interpreter: PythonInterpreter | undefined,
+        options: LanguageClientOptions
+    ): Promise<void> {
         if (!this.languageClient) {
             this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
             this.disposables.push(this.languageClient!.start());
@@ -86,7 +88,11 @@ export class LanguageServerProxy implements ILanguageServerProxy {
         }
         this.extensionLoadedArgs.add(args || '');
         this.startupCompleted.promise
-            .then(() => this.languageClient!.sendRequest('python/loadExtension', args).then(noop, ex => traceError('Request python/loadExtension failed', ex)))
+            .then(() =>
+                this.languageClient!.sendRequest('python/loadExtension', args).then(noop, ex =>
+                    traceError('Request python/loadExtension failed', ex)
+                )
+            )
             .ignoreErrors();
     }
     @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_READY, undefined, true)

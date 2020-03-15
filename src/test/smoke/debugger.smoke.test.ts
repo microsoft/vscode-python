@@ -25,8 +25,20 @@ suite('Smoke Test: Debug file', () => {
     teardown(closeActiveWindows);
 
     test('Debug', async () => {
-        const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.py');
-        const outputFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.log');
+        const file = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'testMultiRootWkspc',
+            'smokeTests',
+            'testExecInTerminal.py'
+        );
+        const outputFile = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'testMultiRootWkspc',
+            'smokeTests',
+            'testExecInTerminal.log'
+        );
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }

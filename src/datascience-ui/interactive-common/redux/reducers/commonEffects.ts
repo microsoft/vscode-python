@@ -2,57 +2,60 @@
 // Licensed under the MIT License.
 'use strict';
 import { Identifiers } from '../../../../client/datascience/constants';
+import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
 import { IMainState } from '../../../interactive-common/mainState';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { storeLocStrings } from '../../../react-common/locReactSide';
-import { CommonReducerArg } from './types';
+import { postActionToExtension } from '../helpers';
+import { CommonActionType, CommonReducerArg, IOpenSettingsAction } from './types';
 
 export namespace CommonEffects {
-    export function notebookDirty<T>(arg: CommonReducerArg<T>): IMainState {
+    export function notebookDirty(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
             dirty: true
         };
     }
 
-    export function notebookClean<T>(arg: CommonReducerArg<T>): IMainState {
+    export function notebookClean(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
             dirty: false
         };
     }
 
-    export function startProgress<T>(arg: CommonReducerArg<T>): IMainState {
+    export function startProgress(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
             busy: true
         };
     }
 
-    export function stopProgress<T>(arg: CommonReducerArg<T>): IMainState {
+    export function stopProgress(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
             busy: false
         };
     }
 
-    export function activate<T>(arg: CommonReducerArg<T>): IMainState {
-        return {
-            ...arg.prevState,
-            activateCount: arg.prevState.activateCount + 1
-        };
+    export function activate(arg: CommonReducerArg): IMainState {
+        return focusPending(arg.prevState);
     }
 
-    export function handleLocInit<T>(arg: CommonReducerArg<T, string>): IMainState {
+    export function focusInput(arg: CommonReducerArg): IMainState {
+        return focusPending(arg.prevState);
+    }
+
+    export function handleLocInit(arg: CommonReducerArg<CommonActionType, string>): IMainState {
         // Read in the loc strings
-        const locJSON = JSON.parse(arg.payload);
+        const locJSON = JSON.parse(arg.payload.data);
         storeLocStrings(locJSON);
         return arg.prevState;
     }
 
-    export function handleCss<T>(arg: CommonReducerArg<T, IGetCssResponse>): IMainState {
+    export function handleCss(arg: CommonReducerArg<CommonActionType, IGetCssResponse>): IMainState {
         // Recompute our known dark value from the class name in the body
         // VS code should update this dynamically when the theme changes
         const computedKnownDark = Helpers.computeKnownDark(arg.prevState.settings);
@@ -60,33 +63,40 @@ export namespace CommonEffects {
         // We also get this in our response, but computing is more reliable
         // than searching for it.
         const newBaseTheme =
-            arg.prevState.knownDark !== computedKnownDark && !arg.prevState.testMode ? (computedKnownDark ? 'vscode-dark' : 'vscode-light') : arg.prevState.baseTheme;
+            arg.prevState.knownDark !== computedKnownDark && !arg.prevState.testMode
+                ? computedKnownDark
+                    ? 'vscode-dark'
+                    : 'vscode-light'
+                : arg.prevState.baseTheme;
 
         let fontSize: number = 14;
         let fontFamily: string = "Consolas, 'Courier New', monospace";
         const sizeSetting = '--code-font-size: ';
         const familySetting = '--code-font-family: ';
-        const fontSizeIndex = arg.payload.css.indexOf(sizeSetting);
-        const fontFamilyIndex = arg.payload.css.indexOf(familySetting);
+        const fontSizeIndex = arg.payload.data.css.indexOf(sizeSetting);
+        const fontFamilyIndex = arg.payload.data.css.indexOf(familySetting);
 
         if (fontSizeIndex > -1) {
-            const fontSizeEndIndex = arg.payload.css.indexOf('px;', fontSizeIndex + sizeSetting.length);
-            fontSize = parseInt(arg.payload.css.substring(fontSizeIndex + sizeSetting.length, fontSizeEndIndex), 10);
+            const fontSizeEndIndex = arg.payload.data.css.indexOf('px;', fontSizeIndex + sizeSetting.length);
+            fontSize = parseInt(
+                arg.payload.data.css.substring(fontSizeIndex + sizeSetting.length, fontSizeEndIndex),
+                10
+            );
         }
 
         if (fontFamilyIndex > -1) {
-            const fontFamilyEndIndex = arg.payload.css.indexOf(';', fontFamilyIndex + familySetting.length);
-            fontFamily = arg.payload.css.substring(fontFamilyIndex + familySetting.length, fontFamilyEndIndex);
+            const fontFamilyEndIndex = arg.payload.data.css.indexOf(';', fontFamilyIndex + familySetting.length);
+            fontFamily = arg.payload.data.css.substring(fontFamilyIndex + familySetting.length, fontFamilyEndIndex);
         }
 
         return {
             ...arg.prevState,
-            rootCss: arg.payload.css,
+            rootCss: arg.payload.data.css,
             font: {
                 size: fontSize,
                 family: fontFamily
             },
-            vscodeThemeName: arg.payload.theme,
+            vscodeThemeName: arg.payload.data.theme,
             knownDark: computedKnownDark,
             baseTheme: newBaseTheme
         };
@@ -104,5 +114,18 @@ export namespace CommonEffects {
             ...arg.prevState,
             monacoTheme: Identifiers.GeneratedThemeName
         };
+    }
+
+    function focusPending(prevState: IMainState): IMainState {
+        return {
+            ...prevState,
+            // This is only applicable for interactive window & not native editor.
+            focusPending: prevState.focusPending + 1
+        };
+    }
+
+    export function openSettings(arg: CommonReducerArg<CommonActionType, IOpenSettingsAction>): IMainState {
+        postActionToExtension(arg, InteractiveWindowMessages.OpenSettings, arg.payload.data.setting);
+        return arg.prevState;
     }
 }

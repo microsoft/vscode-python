@@ -6,7 +6,15 @@ import * as os from 'os';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { convertFileToPackage, extractBetweenDelimiters } from '../../common/testUtils';
-import { ITestsHelper, ITestsParser, ParserOptions, TestFile, TestFunction, Tests, TestSuite } from '../../common/types';
+import {
+    ITestsHelper,
+    ITestsParser,
+    ParserOptions,
+    TestFile,
+    TestFunction,
+    Tests,
+    TestSuite
+} from '../../common/types';
 
 const NOSE_WANT_FILE_PREFIX = 'nose.selector: DEBUG: wantFile ';
 const NOSE_WANT_FILE_SUFFIX = '.py? True';
@@ -26,7 +34,10 @@ export class TestsParser implements ITestsParser {
         let logOutputLines: string[] = [''];
         const testFiles: TestFile[] = [];
         content.split(/\r?\n/g).forEach((line, index, lines) => {
-            if ((line.startsWith(NOSE_WANT_FILE_PREFIX) && line.endsWith(NOSE_WANT_FILE_SUFFIX)) || index === lines.length - 1) {
+            if (
+                (line.startsWith(NOSE_WANT_FILE_PREFIX) && line.endsWith(NOSE_WANT_FILE_SUFFIX)) ||
+                index === lines.length - 1
+            ) {
                 // process the previous lines.
                 this.parseNoseTestModuleCollectionResult(options.cwd, logOutputLines, testFiles);
                 logOutputLines = [''];
@@ -65,12 +76,12 @@ export class TestsParser implements ITestsParser {
         }
     }
 
-    // tslint:disable-next-line: max-func-body-length
     private parseNoseTestModuleCollectionResult(rootDirectory: string, lines: string[], testFiles: TestFile[]) {
         let currentPackage: string = '';
         let fileName = '';
         let testFile: TestFile;
         const resource = Uri.file(rootDirectory);
+        // tslint:disable-next-line: max-func-body-length
         lines.forEach(line => {
             if (line.startsWith(NOSE_WANT_FILE_PREFIX) && line.endsWith(NOSE_WANT_FILE_SUFFIX)) {
                 fileName = line.substring(NOSE_WANT_FILE_PREFIX.length);
@@ -138,7 +149,11 @@ export class TestsParser implements ITestsParser {
                 return;
             }
             if (line.startsWith('nose.selector: DEBUG: wantMethod <unbound method ')) {
-                const name = extractBetweenDelimiters(line, 'nose.selector: DEBUG: wantMethod <unbound method ', '>? True');
+                const name = extractBetweenDelimiters(
+                    line,
+                    'nose.selector: DEBUG: wantMethod <unbound method ',
+                    '>? True'
+                );
                 const fnName = path.extname(name).substring(1);
                 const clsName = path.basename(name, path.extname(name));
                 const fn: TestFunction = {

@@ -26,7 +26,9 @@ export class BlackFormatter extends BaseFormatter {
         range?: vscode.Range
     ): Promise<vscode.TextEdit[]> {
         const stopWatch = new StopWatch();
-        const settings = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(document.uri);
+        const settings = this.serviceContainer
+            .get<IConfigurationService>(IConfigurationService)
+            .getSettings(document.uri);
         const hasCustomArgs = Array.isArray(settings.formatting.blackArgs) && settings.formatting.blackArgs.length > 0;
         const formatSelection = range ? !range.isEmpty : false;
 

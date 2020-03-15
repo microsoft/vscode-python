@@ -10,21 +10,28 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { IJupyterExecution, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { CursorPos } from '../../datascience-ui/interactive-common/mainState';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
-import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { addMockData, getCellResults, getNativeFocusedEditor, injectCode, mountWebView, simulateKey, waitForMessage } from './testHelpers';
+import {
+    addMockData,
+    getCellResults,
+    getNativeFocusedEditor,
+    injectCode,
+    mountWebView,
+    simulateKey,
+    waitForMessage
+} from './testHelpers';
 
 // tslint:disable: no-any
 
-async function getOrCreateNativeEditor(ioc: DataScienceIocContainer, uri?: Uri, contents?: string): Promise<INotebookEditor> {
-    const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+async function getOrCreateNativeEditor(ioc: DataScienceIocContainer, uri?: Uri): Promise<INotebookEditor> {
+    const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
     let editor: INotebookEditor | undefined;
     const messageWaiter = waitForMessage(ioc, InteractiveWindowMessages.LoadAllCellsComplete);
-    if (uri && contents) {
-        editor = await notebookProvider.open(uri, contents);
+    if (uri) {
+        editor = await notebookEditorProvider.open(uri);
     } else {
-        editor = await notebookProvider.createNew();
+        editor = await notebookEditorProvider.createNew();
     }
     if (editor) {
         await messageWaiter;
@@ -37,27 +44,38 @@ export async function createNewEditor(ioc: DataScienceIocContainer): Promise<INo
     return getOrCreateNativeEditor(ioc);
 }
 
-export async function openEditor(ioc: DataScienceIocContainer, contents: string, filePath: string = '/usr/home/test.ipynb'): Promise<INotebookEditor> {
+export async function openEditor(
+    ioc: DataScienceIocContainer,
+    contents: string,
+    filePath: string = '/usr/home/test.ipynb'
+): Promise<INotebookEditor> {
     const uri = Uri.file(filePath);
-    return getOrCreateNativeEditor(ioc, uri, contents);
+    ioc.setFileContents(uri, contents);
+    return getOrCreateNativeEditor(ioc, uri);
 }
 
 // tslint:disable-next-line: no-any
 export function getNativeCellResults(
+    ioc: DataScienceIocContainer,
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    expectedRenders: number,
-    updater: () => Promise<void>
+    updater: () => Promise<void>,
+    renderPromiseGenerator?: () => Promise<void>
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    return getCellResults(wrapper, NativeEditor, 'NativeCell', expectedRenders, updater);
+    return getCellResults(ioc, wrapper, 'NativeCell', updater, renderPromiseGenerator);
 }
 
 // tslint:disable-next-line:no-any
-export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
-    test(name, async () => {
+export function runMountedTest(
+    name: string,
+    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, context: Mocha.Context) => Promise<void>,
+    getIOC: () => DataScienceIocContainer
+) {
+    test(name, async function() {
         const ioc = getIOC();
         const wrapper = await setupWebview(ioc);
         if (wrapper) {
-            await testFunc(wrapper);
+            // tslint:disable-next-line: no-invalid-this
+            await testFunc(wrapper, this);
         } else {
             // tslint:disable-next-line:no-console
             console.log(`${name} skipped, no Jupyter installed.`);
@@ -76,7 +94,11 @@ export async function setupWebview(ioc: DataScienceIocContainer) {
     }
 }
 
-export function focusCell(ioc: DataScienceIocContainer, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): Promise<void> {
+export function focusCell(
+    ioc: DataScienceIocContainer,
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    index: number
+): Promise<void> {
     const cell = wrapper.find(NativeCell).at(index);
     if (cell) {
         const vm = cell.props().cellVM;
@@ -90,7 +112,12 @@ export function focusCell(ioc: DataScienceIocContainer, wrapper: ReactWrapper<an
 }
 
 // tslint:disable-next-line: no-any
-export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, ioc: DataScienceIocContainer, code: string, submit: boolean = true): Promise<void> {
+export async function addCell(
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    ioc: DataScienceIocContainer,
+    code: string,
+    submit: boolean = true
+): Promise<void> {
     // First get the main toolbar. We'll use this to add a cell.
     const toolbar = wrapper.find('#main-panel-toolbar');
     assert.ok(toolbar, 'Cannot find the main panel toolbar during adding a cell');
@@ -100,24 +127,27 @@ export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
     let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
     addButton.simulate('click');
 
-    if (submit) {
-        await update;
+    await update;
 
+    let textArea: HTMLTextAreaElement | null;
+    if (code) {
         // Type in the code
         const editorEnzyme = getNativeFocusedEditor(wrapper);
-        const textArea = injectCode(editorEnzyme, code);
+        textArea = injectCode(editorEnzyme, code);
+    }
 
+    if (submit) {
         // Then run the cell (use ctrl+enter so we don't add another cell)
         update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
         simulateKey(textArea!, 'Enter', false, true);
-
-        return update;
-    } else {
         return update;
     }
 }
 
-export function closeNotebook(editor: INotebookEditor, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): Promise<void> {
+export function closeNotebook(
+    editor: INotebookEditor,
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>
+): Promise<void> {
     const promise = editor.dispose();
     wrapper.unmount();
     return promise;

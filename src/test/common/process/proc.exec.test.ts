@@ -56,7 +56,17 @@ suite('ProcessService Observable', () => {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(5000);
         const procService = new ProcessService(new BufferDecoder());
-        const pythonCode = ['import sys', 'import time', 'print("1")', 'sys.stdout.flush()', 'time.sleep(1)', 'print("2")', 'sys.stdout.flush()', 'time.sleep(1)', 'print("3")'];
+        const pythonCode = [
+            'import sys',
+            'import time',
+            'print("1")',
+            'sys.stdout.flush()',
+            'time.sleep(1)',
+            'print("2")',
+            'sys.stdout.flush()',
+            'time.sleep(1)',
+            'print("3")'
+        ];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
 
@@ -100,11 +110,21 @@ suite('ProcessService Observable', () => {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
-        const pythonCode = ['import sys', 'import time', 'print("1")', 'sys.stdout.flush()', 'time.sleep(10)', 'print("2")', 'sys.stdout.flush()'];
+        const pythonCode = [
+            'import sys',
+            'import time',
+            'print("1")',
+            'sys.stdout.flush()',
+            'time.sleep(10)',
+            'print("2")',
+            'sys.stdout.flush()'
+        ];
         const cancellationToken = new CancellationTokenSource();
         setTimeout(() => cancellationToken.cancel(), 3000);
 
-        const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
+        const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')], {
+            token: cancellationToken.token
+        });
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         const values = result.stdout
@@ -238,5 +258,20 @@ suite('ProcessService Observable', () => {
         const procService = new ProcessService(new BufferDecoder());
         const result = procService.shellExec('invalid command');
         await expect(result).to.eventually.be.rejectedWith(Error, 'a', 'Expected error to be thrown');
+    });
+    test('variables can be changed after the fact', async () => {
+        const procService = new ProcessService(new BufferDecoder(), process.env);
+        let result = await procService.exec(pythonPath, ['-c', `import os;print(os.environ.get("MY_TEST_VARIABLE"))`], {
+            extraVariables: { MY_TEST_VARIABLE: 'foo' }
+        });
+
+        expect(result).not.to.be.an('undefined', 'result is undefined');
+        expect(result.stdout.trim()).to.be.equal('foo', 'Invalid output');
+        expect(result.stderr).to.equal(undefined, 'stderr not undefined');
+
+        result = await procService.exec(pythonPath, ['-c', `import os;print(os.environ.get("MY_TEST_VARIABLE"))`]);
+        expect(result).not.to.be.an('undefined', 'result is undefined');
+        expect(result.stdout.trim()).to.be.equal('None', 'Invalid output');
+        expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 });

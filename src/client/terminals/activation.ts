@@ -62,8 +62,13 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         this.handler = this.terminalManager.onDidOpenTerminal(this.activateTerminal, this);
     }
     private async activateTerminal(terminal: Terminal): Promise<void> {
+        if ('hideFromUser' in terminal.creationOptions && terminal.creationOptions.hideFromUser) {
+            return;
+        }
         // If we have just one workspace, then pass that as the resource.
         // Until upstream VSC issue is resolved https://github.com/Microsoft/vscode/issues/63052.
-        await this.activator.activateEnvironmentInTerminal(terminal, this.activeResourceService.getActiveResource());
+        await this.activator.activateEnvironmentInTerminal(terminal, {
+            resource: this.activeResourceService.getActiveResource()
+        });
     }
 }

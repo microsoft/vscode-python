@@ -8,7 +8,6 @@ import { WorkspaceConfiguration } from 'vscode';
 import './common/extensions';
 import { traceError } from './common/logger';
 import { FileSystem } from './common/platform/fileSystem';
-import { PlatformService } from './common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from './constants';
 
 type VSCode = typeof import('vscode');
@@ -46,8 +45,18 @@ export class SourceMapSupport {
     }
     protected async enableSourceMaps(enable: boolean) {
         const extensionSourceFile = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'extension.js');
-        const debuggerSourceFile = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'debugger', 'debugAdapter', 'main.js');
-        await Promise.all([this.enableSourceMap(enable, extensionSourceFile), this.enableSourceMap(enable, debuggerSourceFile)]);
+        const debuggerSourceFile = path.join(
+            EXTENSION_ROOT_DIR,
+            'out',
+            'client',
+            'debugger',
+            'debugAdapter',
+            'main.js'
+        );
+        await Promise.all([
+            this.enableSourceMap(enable, extensionSourceFile),
+            this.enableSourceMap(enable, debuggerSourceFile)
+        ]);
     }
     protected async enableSourceMap(enable: boolean, sourceFile: string) {
         const sourceMapFile = `${sourceFile}.map`;
@@ -59,7 +68,7 @@ export class SourceMapSupport {
         }
     }
     protected async rename(sourceFile: string, targetFile: string) {
-        const fs = new FileSystem(new PlatformService());
+        const fs = new FileSystem();
         if (await fs.fileExists(targetFile)) {
             return;
         }

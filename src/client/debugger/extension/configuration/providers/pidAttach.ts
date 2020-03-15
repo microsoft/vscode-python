@@ -14,21 +14,18 @@ import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationPro
 
 @injectable()
 export class PidAttachDebugConfigurationProvider implements IDebugConfigurationProvider {
-    @captureTelemetry(EventName.DEBUGGER_CONFIGURATION_PROMPTS, { configurationType: DebugConfigurationType.pidAttach }, false)
+    @captureTelemetry(
+        EventName.DEBUGGER_CONFIGURATION_PROMPTS,
+        { configurationType: DebugConfigurationType.pidAttach },
+        false
+    )
     public async buildConfiguration(_input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const config: Partial<AttachRequestArguments> = {
             name: DebugConfigStrings.attachPid.snippet.name(),
             type: DebuggerTypeName,
             request: 'attach',
             // tslint:disable-next-line:no-invalid-template-strings
-            processId: '${command:pickProcess}',
-            pathMappings: [
-                {
-                    // tslint:disable-next-line:no-invalid-template-strings
-                    localRoot: '${workspaceFolder}',
-                    remoteRoot: '.'
-                }
-            ]
+            processId: '${command:pickProcess}'
         };
         Object.assign(state.config, config);
     }

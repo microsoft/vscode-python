@@ -57,7 +57,10 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
         if (!this.workspaceService.hasWorkspaceFolders) {
             pythonConfig = this.workspaceService.getConfiguration('python');
         } else if (this.workspaceService.workspaceFolders!.length === 1) {
-            pythonConfig = this.workspaceService.getConfiguration('python', this.workspaceService.workspaceFolders![0].uri);
+            pythonConfig = this.workspaceService.getConfiguration(
+                'python',
+                this.workspaceService.workspaceFolders![0].uri
+            );
         } else {
             const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
             if (!workspaceFolder) {

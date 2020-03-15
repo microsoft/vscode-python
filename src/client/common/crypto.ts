@@ -14,12 +14,20 @@ import { ICryptoUtils, IHashFormat } from './types';
  */
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
-    public createHash<E extends keyof IHashFormat>(data: string, hashFormat: E, algorithm: 'SHA512' | 'FNV' = 'FNV'): IHashFormat[E] {
+    public createHash<E extends keyof IHashFormat>(
+        data: string,
+        hashFormat: E,
+        algorithm: 'SHA512' | 'SHA256' | 'FNV' = 'FNV'
+    ): IHashFormat[E] {
         let hash: string;
         if (algorithm === 'FNV') {
             // tslint:disable-next-line:no-require-imports
             const fnv = require('@enonic/fnv-plus');
             hash = fnv.fast1a32hex(data) as string;
+        } else if (algorithm === 'SHA256') {
+            hash = createHash('sha256')
+                .update(data)
+                .digest('hex');
         } else {
             hash = createHash('sha512')
                 .update(data)

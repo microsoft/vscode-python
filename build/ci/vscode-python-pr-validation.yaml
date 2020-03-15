@@ -1,133 +1,120 @@
+# PR Validation build.
+
 name: '$(Year:yyyy).$(Month).0.$(BuildID)-pr'
 
-# PR Validation build.
 # Notes: Only trigger a PR build for master and release, and skip build/rebuild
 #        on changes in the news and .vscode folders.
 pr:
   autoCancel: true
   branches:
-    include: ["master", "release*"]
+    include: ['master', 'release*', 'ds*']
   paths:
-    exclude: ["/news/1 Enhancements", "/news/2 Fixes", "/news/3 Code Health", "/.vscode"]
+    exclude: ['/news/1 Enhancements', '/news/2 Fixes', '/news/3 Code Health', '/.vscode']
 
 # Not the CI build for merges to master and release.
 trigger: none
 
 # Variables that are available for the entire pipeline.
 variables:
-- template: templates/globals.yml
+  - template: templates/globals.yml
 
 stages:
-- stage: Build
-  jobs:
-  - template: templates/jobs/build_compile.yml
+  - stage: Build
+    jobs:
+      - template: templates/jobs/build_compile.yml
 
-- stage: Tests
-  dependsOn: []
-  jobs:
-  - job: 'Test'
+  # Each item in each matrix has a number of possible values it may
+  # define.  They are detailed in templates/test_phases.yml.  The only
+  # required value is "TestsToRun".
+
+  - stage: Linux
     dependsOn: []
-    strategy:
-      matrix:
-        # Each member of this list must contain these values:
-        # VMImageName: '[name]' - the VM image to run the tests on.
-        # TestsToRun: 'testA, testB, ..., testN' - the list of tests to execute, see the list above.
-        # Each member of this list may contain these values:
-        # NeedsPythonTestReqs: [true|false] - install the test-requirements prior to running tests. False if not set.
-        # NeedsPythonFunctionalReqs: [true|false] - install the functional-requirements prior to running tests. False if not set.
-        # PythonVersion: 'M.m' - the Python version to run. DefaultPythonVersion if not set.
-        # NodeVersion: 'x.y.z' - Node version to use. DefaultNodeVersion if not set.
-        # SkipXvfb: [true|false] - skip initialization of xvfb prior to running system tests on Linux. False if not set
-        # UploadBinary: [true|false] - upload test binaries to Azure if true. False if not set.
-        'Win-Py3.7 Unit':
-          PythonVersion: '3.7'
-          VMImageName: 'vs2017-win2016'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
-          NeedsPythonTestReqs: true
-        'Win-Py2.7 Unit':
-          PythonVersion: '2.7'
-          VMImageName: 'vs2017-win2016'
-          TestsToRun: 'pythonUnitTests'
-          NeedsPythonTestReqs: true
-        'Mac-Py3.7 Unit':
-          PythonVersion: '3.7'
-          VMImageName: 'macos-10.13'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
-          NeedsPythonTestReqs: true
-        'Mac-Py3.7 Single Workspace':
-          PythonVersion: '3.7'
-          VMImageName: 'macos-10.13'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Mac-Py2.7 Unit+Single':
-          PythonVersion: '2.7'
-          VMImageName: 'macos-10.13'
-          TestsToRun: 'pythonUnitTests, testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Linux-Py3.7 Unit':
-          PythonVersion: '3.7'
-          VMImageName: 'ubuntu-16.04'
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools'
-          NeedsPythonTestReqs: true
-        'Linux-Py3.7 Single Workspace':
-          PythonVersion: '3.7'
-          VMImageName: 'ubuntu-16.04'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Linux-Py2.7 Unit+Single':
-          PythonVersion: '2.7'
-          VMImageName: 'ubuntu-16.04'
-          TestsToRun: 'pythonUnitTests, testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Linux-Py3.7 Functional':
-          PythonVersion: '3.7'
-          VMImageName: 'ubuntu-16.04'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
+    jobs:
+      - job: 'Py3x'
+        dependsOn: []
+        strategy:
+          matrix:
+            'Unit':
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Smoke':
+              TestsToRun: 'testSmoke'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+        pool:
+          vmImage: 'ubuntu-16.04'
+        steps:
+          - template: templates/test_phases.yml
 
-    pool:
-      vmImage: $(VMImageName)
+      - job: 'Py27'
+        dependsOn: []
+        strategy:
+          matrix:
+            'Unit':
+              PythonVersion: '2.7'
+              # Note: "pythonInternalTools" tests are 3.7+.
+              TestsToRun: 'testUnitTests, pythonUnitTests'
+              NeedsPythonTestReqs: true
+            'Functional':
+              PythonVersion: '2.7'
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+        pool:
+          vmImage: 'ubuntu-16.04'
+        steps:
+          - template: templates/test_phases.yml
 
-    steps:
-      - template: templates/test_phases.yml
-
-- stage: Smoke
-  dependsOn: []
-  jobs:
-  - job: 'Smoke'
+  - stage: Mac
     dependsOn: []
-    strategy:
-      matrix:
-        'Mac-Py3.7':
-            PythonVersion: '3.7'
-            VMImageName: 'macos-10.13'
-            TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
-            NeedsIPythonReqs: true
-        'Linux-Py3.7':
-            PythonVersion: '3.7'
-            VMImageName: 'ubuntu-16.04'
-            TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
-            NeedsIPythonReqs: true
-        'Win-Py3.7':
-            PythonVersion: '3.7'
-            VMImageName: 'vs2017-win2016'
-            TestsToRun: 'testSmoke'
-            NeedsPythonTestReqs: true
-            NeedsIPythonReqs: true
+    jobs:
+      - job: 'Py3x'
+        dependsOn: []
+        strategy:
+          matrix:
+            # This gives us our best functional coverage for the OS.
+            'Functional+Single':
+              TestsToRun: 'testfunctional, testSingleWorkspace'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+        pool:
+          vmImage: '$(vmImageMacOS)'
+        steps:
+          - template: templates/test_phases.yml
 
-    pool:
-      vmImage: $(VMImageName)
+  - stage: Windows
+    dependsOn: []
+    jobs:
+      - job: 'Py3x'
+        dependsOn: []
+        strategy:
+          matrix:
+            # This gives us our best functional coverage for the OS.
+            'Functional':
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+        pool:
+          vmImage: 'vs2017-win2016'
+        steps:
+          - template: templates/test_phases.yml
 
-    steps:
-      - template: templates/test_phases.yml
-
-- stage: Reports
-  dependsOn:
-  - Smoke
-  - Tests
-  condition: always()
-  jobs:
-  - template: templates/jobs/coverage.yml
+  - stage: Reports
+    dependsOn:
+      - Linux
+      - Mac
+      - Windows
+    condition: always()
+    jobs:
+      - template: templates/jobs/coverage.yml

@@ -43,7 +43,9 @@ suite('Interpreters - Interpreter Selection Tip', () => {
     });
     test('Show tip and track it', async () => {
         when(storage.value).thenReturn(false);
-        when(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).thenResolve(Common.gotIt() as any);
+        when(appShell.showInformationMessage(Interpreters.selectInterpreterTip(), Common.gotIt())).thenResolve(
+            Common.gotIt() as any
+        );
 
         await selectionTip.activate();
 

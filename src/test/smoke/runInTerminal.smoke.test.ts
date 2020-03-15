@@ -24,8 +24,20 @@ suite('Smoke Test: Run Python File In Terminal', () => {
     teardown(closeActiveWindows);
 
     test('Exec', async () => {
-        const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.py');
-        const outputFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.log');
+        const file = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'testMultiRootWkspc',
+            'smokeTests',
+            'testExecInTerminal.py'
+        );
+        const outputFile = path.join(
+            EXTENSION_ROOT_DIR_FOR_TESTS,
+            'src',
+            'testMultiRootWkspc',
+            'smokeTests',
+            'testExecInTerminal.log'
+        );
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }

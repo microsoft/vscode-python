@@ -5,7 +5,10 @@
 
 import { inject, injectable, named } from 'inversify';
 import { Terminal } from 'vscode';
-import { PowerShellActivationHackDiagnosticsServiceId, PowershellActivationNotAvailableDiagnostic } from '../../../application/diagnostics/checks/powerShellActivation';
+import {
+    PowerShellActivationHackDiagnosticsServiceId,
+    PowershellActivationNotAvailableDiagnostic
+} from '../../../application/diagnostics/checks/powerShellActivation';
 import { IDiagnosticsService } from '../../../application/diagnostics/types';
 import { IPlatformService } from '../../platform/types';
 import { Resource } from '../../types';
@@ -16,7 +19,9 @@ export class PowershellTerminalActivationFailedHandler implements ITerminalActiv
     constructor(
         @inject(ITerminalHelper) private readonly helper: ITerminalHelper,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IDiagnosticsService) @named(PowerShellActivationHackDiagnosticsServiceId) private readonly diagnosticService: IDiagnosticsService
+        @inject(IDiagnosticsService)
+        @named(PowerShellActivationHackDiagnosticsServiceId)
+        private readonly diagnosticService: IDiagnosticsService
     ) {}
     public async handleActivation(terminal: Terminal, resource: Resource, _preserveFocus: boolean, activated: boolean) {
         if (activated || !this.platformService.isWindows) {
@@ -27,7 +32,10 @@ export class PowershellTerminalActivationFailedHandler implements ITerminalActiv
             return;
         }
         // Check if we can activate in Command Prompt.
-        const activationCommands = await this.helper.getEnvironmentActivationCommands(TerminalShellType.commandPrompt, resource);
+        const activationCommands = await this.helper.getEnvironmentActivationCommands(
+            TerminalShellType.commandPrompt,
+            resource
+        );
         if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
             return;
         }

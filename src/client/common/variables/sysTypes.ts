@@ -32,6 +32,8 @@ export function validateConstraint(arg: any, constraint: TypeConstraint): void {
         if (constraint.length === 1 && constraint.call(undefined, arg) === true) {
             return;
         }
-        throw new Error('argument does not match one of these constraints: arg instanceof constraint, arg.constructor === constraint, nor constraint(arg) === true');
+        throw new Error(
+            'argument does not match one of these constraints: arg instanceof constraint, arg.constructor === constraint, nor constraint(arg) === true'
+        );
     }
 }

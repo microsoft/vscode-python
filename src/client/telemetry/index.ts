@@ -13,7 +13,12 @@ import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID 
 import { traceError, traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
-import { JupyterCommands, NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry, Telemetry } from '../datascience/constants';
+import {
+    JupyterCommands,
+    NativeKeyboardCommandTelemetry,
+    NativeMouseCommandTelemetry,
+    Telemetry
+} from '../datascience/constants';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
@@ -107,7 +112,12 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                 // If there are any errors in serializing one property, ignore that and move on.
                 // Else nothign will be sent.
                 // tslint:disable-next-line:prefer-type-cast no-any  no-unsafe-any
-                (customProperties as any)[prop] = typeof data[prop] === 'string' ? data[prop] : data[prop].toString();
+                (customProperties as any)[prop] =
+                    typeof data[prop] === 'string'
+                        ? data[prop]
+                        : typeof data[prop] === 'object'
+                        ? 'object'
+                        : data[prop].toString();
             } catch (ex) {
                 traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
             }
@@ -115,12 +125,21 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     }
     reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
     if (process.env && process.env.VSC_PYTHON_LOG_TELEMETRY) {
-        traceInfo(`Telemetry Event : ${eventName} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(customProperties)} `);
+        traceInfo(
+            `Telemetry Event : ${eventName} Measures: ${JSON.stringify(measures)} Props: ${JSON.stringify(
+                customProperties
+            )} `
+        );
     }
 }
 
 // tslint:disable-next-line:no-any function-name
-export function captureTelemetry<P extends IEventNamePropertyMapping, E extends keyof P>(eventName: E, properties?: P[E], captureDuration: boolean = true, failureEventName?: E) {
+export function captureTelemetry<P extends IEventNamePropertyMapping, E extends keyof P>(
+    eventName: E,
+    properties?: P[E],
+    captureDuration: boolean = true,
+    failureEventName?: E
+) {
     // tslint:disable-next-line:no-function-expression no-any
     return function(_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
@@ -150,7 +169,12 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
                         // tslint:disable-next-line:no-any
                         properties = properties || ({} as any);
                         (properties as any).failed = true;
-                        sendTelemetryEvent(failureEventName ? failureEventName : eventName, stopWatch.elapsedTime, properties, ex);
+                        sendTelemetryEvent(
+                            failureEventName ? failureEventName : eventName,
+                            stopWatch.elapsedTime,
+                            properties,
+                            ex
+                        );
                     });
             } else {
                 sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
@@ -703,6 +727,29 @@ export interface IEventNamePropertyMapping {
          */
         hashedName: string;
     };
+    [Telemetry.HashedCellOutputMimeTypePerf]: never | undefined;
+    [Telemetry.HashedNotebookCellOutputMimeTypePerf]: never | undefined;
+    [Telemetry.HashedCellOutputMimeType]: {
+        /**
+         * Hash of the cell output mimetype
+         *
+         * @type {string}
+         */
+        hashedName: string;
+        hasText: boolean;
+        hasLatex: boolean;
+        hasHtml: boolean;
+        hasSvg: boolean;
+        hasXml: boolean;
+        hasJson: boolean;
+        hasImage: boolean;
+        hasGeo: boolean;
+        hasPlotly: boolean;
+        hasVega: boolean;
+        hasWidget: boolean;
+        hasJupyter: boolean;
+        hasVnd: boolean;
+    };
     [EventName.HASHED_PACKAGE_PERF]: never | undefined;
     /**
      * Telemetry event sent with details of selection in prompt
@@ -832,6 +879,19 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         failed?: boolean;
+        /**
+         * Whether the environment was activated within a terminal or not.
+         *
+         * @type {boolean}
+         */
+        activatedInTerminal?: boolean;
+        /**
+         * Whether the environment was activated by the wrapper class.
+         * If `true`, this telemetry is sent by the class that wraps the two activation providers   .
+         *
+         * @type {boolean}
+         */
+        activatedByWrapper?: boolean;
     };
     /**
      * Telemetry event sent when getting activation commands for active interpreter
@@ -981,18 +1041,6 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
     };
     /**
-     * Telemetry event sent with details when user clicks a button in the following prompt
-     * `Prompt message` :- 'It looks like you were previously in the Insiders Program of the Python extension. Would you like to opt into the program again?'
-     */
-    [EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT]: {
-        /**
-         * `Yes, weekly` When user selects to use "weekly" as extension channel
-         * `Yes, daily` When user selects to use "daily" as extension channel
-         * `No, thanks` When user decides to keep using the same extension channel as before
-         */
-        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
-    };
-    /**
      * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
      * `Prompt message` :- 'Please reload Visual Studio Code to use the insiders build of the extension'
      */
@@ -1103,6 +1151,10 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
     /**
+     * Telemetry sent when the client makes a request to the Language Server
+     */
+    [EventName.PYTHON_LANGUAGE_SERVER_REQUEST]: any;
+    /**
      * Telemetry event sent with details when inExperiment() API is called
      */
     [EventName.PYTHON_EXPERIMENTS]: {
@@ -1116,6 +1168,19 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when Experiments have been disabled.
      */
     [EventName.PYTHON_EXPERIMENTS_DISABLED]: never | undefined;
+    /**
+     * Telemetry event sent with details when a user has requested to opt it or out of an experiment group
+     */
+    [EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT]: {
+        /**
+         * Carries the name of the experiment user has been opted into manually
+         */
+        expNameOptedInto?: string;
+        /**
+         * Carries the name of the experiment user has been opted out of manually
+         */
+        expNameOptedOutOf?: string;
+    };
     /**
      * Telemetry event sent with details when doing best effort to download the experiments within timeout and using it in the current session only
      */
@@ -1131,6 +1196,26 @@ export interface IEventNamePropertyMapping {
          */
         error?: string;
     };
+    /**
+     * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
+     */
+    [EventName.PYTHON_NODE_SERVER_ENABLED]: never | undefined;
+    /**
+     * Telemetry event sent when Node.js server is ready to start
+     */
+    [EventName.PYTHON_NODE_SERVER_READY]: never | undefined;
+    /**
+     * Telemetry event sent when starting Node.js server
+     */
+    [EventName.PYTHON_NODE_SERVER_STARTUP]: never | undefined;
+    /**
+     * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
+     */
+    [EventName.PYTHON_NODE_SERVER_TELEMETRY]: any;
+    /**
+     * Telemetry sent when the client makes a request to the Node.js server
+     */
+    [EventName.PYTHON_NODE_SERVER_REQUEST]: any;
     /**
      * Telemetry captured for enabling reload.
      */
@@ -1404,21 +1489,23 @@ export interface IEventNamePropertyMapping {
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
     [Telemetry.ConnectFailedJupyter]: never | undefined;
-    [Telemetry.NotebookExecutionActivated]: never | undefined;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
+    /**
+     * Connecting to an existing Jupyter server, but connecting to localhost.
+     */
+    [Telemetry.ConnectRemoteJupyterViaLocalHost]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
     [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
     [Telemetry.UseInterpreterAsKernel]: never | undefined;
     [Telemetry.UseExistingKernel]: never | undefined;
-    [Telemetry.SwitchToExistingKernel]: never | undefined;
+    [Telemetry.SwitchToExistingKernel]: { language: string };
     [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
     [Telemetry.ConvertToPythonFile]: never | undefined;
     [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.CreateNewNotebook]: never | undefined;
     [Telemetry.DataScienceSettings]: JSONObject;
-    [Telemetry.DataViewerFetchTime]: never | undefined;
     [Telemetry.DebugContinue]: never | undefined;
     [Telemetry.DebugCurrentCell]: never | undefined;
     [Telemetry.DebugStepOver]: never | undefined;
@@ -1431,8 +1518,24 @@ export interface IEventNamePropertyMapping {
     [Telemetry.DisableInteractiveShiftEnter]: never | undefined;
     [Telemetry.EnableInteractiveShiftEnter]: never | undefined;
     [Telemetry.ExecuteCell]: never | undefined;
-    [Telemetry.ExecuteCellPerceivedCold]: never | undefined;
-    [Telemetry.ExecuteCellPerceivedWarm]: never | undefined;
+    /**
+     * Telemetry sent to capture first time execution of a cell.
+     * If `notebook = true`, this its telemetry for native editor/notebooks.
+     */
+    [Telemetry.ExecuteCellPerceivedCold]: undefined | { notebook: boolean };
+    /**
+     * Telemetry sent to capture subsequent execution of a cell.
+     * If `notebook = true`, this its telemetry for native editor/notebooks.
+     */
+    [Telemetry.ExecuteCellPerceivedWarm]: undefined | { notebook: boolean };
+    /**
+     * Time take for jupyter server to start and be ready to run first user cell.
+     */
+    [Telemetry.PerceivedJupyterStartupNotebook]: never | undefined;
+    /**
+     * Time take for jupyter server to be busy from the time user first hit `run` cell until jupyter reports it is busy running a cell.
+     */
+    [Telemetry.StartExecuteNotebookCellPerceivedCold]: never | undefined;
     [Telemetry.ExecuteNativeCell]: never | undefined;
     [Telemetry.ExpandAll]: never | undefined;
     [Telemetry.ExportNotebook]: never | undefined;
@@ -1452,6 +1555,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
+    [Telemetry.PtvsdInstallCancelled]: never | undefined;
     [Telemetry.PtvsdInstallFailed]: never | undefined;
     [Telemetry.PtvsdPromptToInstall]: never | undefined;
     [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
@@ -1464,6 +1568,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RemoteReexecuteCode]: never | undefined;
     [Telemetry.RestartJupyterTime]: never | undefined;
     [Telemetry.RestartKernel]: never | undefined;
+    [Telemetry.RestartKernelCommand]: never | undefined;
     [Telemetry.RunAllCells]: never | undefined;
     [Telemetry.RunSelectionOrLine]: never | undefined;
     [Telemetry.RunCell]: never | undefined;
@@ -1481,12 +1586,17 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
     [Telemetry.SelectLocalJupyterKernel]: never | undefined;
-    [Telemetry.SelectRemoteJupyuterKernel]: never | undefined;
+    [Telemetry.SelectRemoteJupyterKernel]: never | undefined;
     [Telemetry.SessionIdleTimeout]: never | undefined;
     [Telemetry.JupyterNotInstalledErrorShown]: never | undefined;
-    [Telemetry.JupyterCommandSearch]: { where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere'; command: JupyterCommands };
+    [Telemetry.JupyterCommandSearch]: {
+        where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere';
+        command: JupyterCommands;
+    };
     [Telemetry.UserInstalledJupyter]: never | undefined;
+    [Telemetry.UserInstalledPandas]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
+    [Telemetry.UserDidNotInstallPandas]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;
@@ -1494,6 +1604,13 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.StartJupyterProcess]: never | undefined;
+    /**
+     * Telemetry event sent when jupyter has been found in interpreter but we cannot find kernelspec.
+     *
+     * @type {(never | undefined)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.JupyterInstalledButNotKernelSpecModule]: never | undefined;
     [Telemetry.JupyterStartTimeout]: {
         /**
          * Total time spent in attempting to start and connect to jupyter before giving up.
@@ -1512,6 +1629,24 @@ export interface IEventNamePropertyMapping {
     [Telemetry.WebviewStartup]: { type: string };
     [Telemetry.WebviewStyleUpdate]: never | undefined;
     [Telemetry.RegisterInterpreterAsKernel]: never | undefined;
+    /**
+     * Telemetry sent when user selects an interpreter to start jupyter server.
+     *
+     * @type {(never | undefined)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.SelectJupyterInterpreterCommand]: never | undefined;
+    [Telemetry.SelectJupyterInterpreter]: {
+        /**
+         * The result of the selection.
+         * notSelected - No interpreter was selected.
+         * selected - An interpreter was selected (and configured to have jupyter and notebook).
+         * installationCancelled - Installation of jupyter and/or notebook was cancelled for an interpreter.
+         *
+         * @type {('notSelected' | 'selected' | 'installationCancelled')}
+         */
+        result?: 'notSelected' | 'selected' | 'installationCancelled';
+    };
     [NativeKeyboardCommandTelemetry.AddToEnd]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowDown]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowUp]: never | undefined;
@@ -1652,4 +1787,117 @@ export interface IEventNamePropertyMapping {
      * @memberof IEventNamePropertyMapping
      */
     [Telemetry.StartSessionFailedJupyter]: undefined | never;
+    /**
+     * Telemetry event fired if a failure occurs loading a notebook
+     */
+    [Telemetry.OpenNotebookFailure]: undefined | never;
+    /**
+     * Telemetry event sent to capture total time taken for completions list to be provided by LS.
+     * This is used to compare against time taken by Jupyter.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.CompletionTimeFromLS]: undefined | never;
+    /**
+     * Telemetry event sent to capture total time taken for completions list to be provided by Jupyter.
+     * This is used to compare against time taken by LS.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.CompletionTimeFromJupyter]: undefined | never;
+    /**
+     * Telemetry event sent to indicate the language used in a notebook
+     *
+     * @type { language: string }
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.NotebookLanguage]: {
+        /**
+         * Language found in the notebook if a known language. Otherwise 'unknown'
+         */
+        language: string;
+    };
+    /**
+     * Telemetry event sent to indicate 'jupyter kernelspec' is not possible.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.KernelSpecNotFound]: undefined | never;
+    /**
+     * Telemetry event sent to indicate registering a kernel with jupyter failed.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.KernelRegisterFailed]: undefined | never;
+    /**
+     * Telemetry event sent to every time a kernel enumeration is done
+     *
+     * @type {...}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.KernelEnumeration]: {
+        /**
+         * Count of the number of kernels found
+         */
+        count: number;
+        /**
+         * Boolean indicating if any are python or not
+         */
+        isPython: boolean;
+        /**
+         * Indicates how the enumeration was acquired.
+         */
+        source: 'cli' | 'connection';
+    };
+    /**
+     * Telemetry event sent if there's an error installing a jupyter required dependency
+     *
+     * @type { product: string }
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.JupyterInstallFailed]: {
+        /**
+         * Product being installed (jupyter or ipykernel or other)
+         */
+        product: string;
+    };
+    /**
+     * Telemetry event sent when installing a jupyter dependency
+     *
+     * @type {product: string}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.UserInstalledModule]: { product: string };
+    /**
+     * Telemetry event sent to when user customizes the jupyter command line
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.JupyterCommandLineNonDefault]: undefined | never;
+    /**
+     * Telemetry event sent when a user runs the interactive window with a new file
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.NewFileForInteractiveWindow]: undefined | never;
+    /**
+     * Telemetry event sent when a kernel picked crashes on startup
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.KernelInvalid]: undefined | never;
+    [Telemetry.GatherCompleted]: {
+        /**
+         * result indicates whether the gather was completed to a script, notebook or suffered an internal error.
+         */
+        result: 'err' | 'script' | 'notebook';
+    };
+    /**
+     * Telemetry event sent when the ZMQ native binaries do not work.
+     */
+    [Telemetry.ZMQNotSupported]: undefined | never;
 }

@@ -59,7 +59,16 @@ export interface IMultiStepInput<S> {
         buttons,
         shouldResume
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>>;
-    showInputBox<P extends InputBoxParameters>({ title, step, totalSteps, value, prompt, validate, buttons, shouldResume }: P): Promise<MultiStepInputInputBoxResponseType<P>>;
+    showInputBox<P extends InputBoxParameters>({
+        title,
+        step,
+        totalSteps,
+        value,
+        prompt,
+        validate,
+        buttons,
+        shouldResume
+    }: P): Promise<MultiStepInputInputBoxResponseType<P>>;
 }
 
 export class MultiStepInput<S> implements IMultiStepInput<S> {
@@ -105,7 +114,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     input.onDidChangeSelection(selectedItems => resolve(selectedItems[0])),
                     input.onDidHide(() => {
                         (async () => {
-                            reject(shouldResume && (await shouldResume()) ? InputFlowAction.resume : InputFlowAction.cancel);
+                            reject(
+                                shouldResume && (await shouldResume()) ? InputFlowAction.resume : InputFlowAction.cancel
+                            );
                         })().catch(reject);
                     })
                 );
@@ -170,7 +181,9 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                     }),
                     input.onDidHide(() => {
                         (async () => {
-                            reject(shouldResume && (await shouldResume()) ? InputFlowAction.resume : InputFlowAction.cancel);
+                            reject(
+                                shouldResume && (await shouldResume()) ? InputFlowAction.resume : InputFlowAction.cancel
+                            );
                         })().catch(reject);
                     })
                 );

@@ -21,7 +21,10 @@ import { BaseShellDetector } from './baseShellDetector';
  */
 @injectable()
 export class SettingsShellDetector extends BaseShellDetector {
-    constructor(@inject(IWorkspaceService) private readonly workspace: IWorkspaceService, @inject(IPlatformService) private readonly platform: IPlatformService) {
+    constructor(
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IPlatformService) private readonly platform: IPlatformService
+    ) {
         super(2);
     }
     public getTerminalShellPath(): string | undefined {
@@ -46,7 +49,10 @@ export class SettingsShellDetector extends BaseShellDetector {
         }
         return shellConfig.get<string>(osSection)!;
     }
-    public identify(telemetryProperties: ShellIdentificationTelemetry, _terminal?: Terminal): TerminalShellType | undefined {
+    public identify(
+        telemetryProperties: ShellIdentificationTelemetry,
+        _terminal?: Terminal
+    ): TerminalShellType | undefined {
         const shellPath = this.getTerminalShellPath();
         telemetryProperties.hasCustomShell = !!shellPath;
         const shell = shellPath ? this.identifyShellFromShellPath(shellPath) : TerminalShellType.other;

@@ -3,45 +3,52 @@
 
 'use strict';
 
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ConfigurationChangeEvent, Disposable, ExtensionContext, TextDocument, Uri, workspace } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, TextDocument, Uri, workspace } from 'vscode';
+import { IExtensionActivationService } from '../activation/types';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService } from '../common/types';
+import { IConfigurationService, IDisposable } from '../common/types';
 import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { ILinterManager, ILintingEngine } from '../linters/types';
 
-export class LinterProvider implements Disposable {
-    private context: ExtensionContext;
-    private disposables: Disposable[];
+@injectable()
+export class LinterProvider implements IExtensionActivationService, Disposable {
     private interpreterService: IInterpreterService;
     private documents: IDocumentManager;
     private configuration: IConfigurationService;
     private linterManager: ILinterManager;
     private engine: ILintingEngine;
     private fs: IFileSystem;
-    private readonly workspaceService: IWorkspaceService;
+    private readonly disposables: IDisposable[] = [];
+    private workspaceService: IWorkspaceService;
+    private activatedOnce: boolean = false;
 
-    public constructor(context: ExtensionContext, serviceContainer: IServiceContainer) {
-        this.context = context;
-        this.disposables = [];
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+        this.serviceContainer = serviceContainer;
+        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        this.engine = this.serviceContainer.get<ILintingEngine>(ILintingEngine);
+        this.linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
+        this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        this.documents = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
+        this.configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+    }
 
-        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
-        this.engine = serviceContainer.get<ILintingEngine>(ILintingEngine);
-        this.linterManager = serviceContainer.get<ILinterManager>(ILinterManager);
-        this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-        this.documents = serviceContainer.get<IDocumentManager>(IDocumentManager);
-        this.configuration = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-
+    public async activate(): Promise<void> {
+        if (this.activatedOnce) {
+            return;
+        }
+        this.activatedOnce = true;
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(() => this.engine.lintOpenPythonFiles()));
 
-        this.documents.onDidOpenTextDocument(e => this.onDocumentOpened(e), this.context.subscriptions);
-        this.documents.onDidCloseTextDocument(e => this.onDocumentClosed(e), this.context.subscriptions);
-        this.documents.onDidSaveTextDocument(e => this.onDocumentSaved(e), this.context.subscriptions);
+        this.documents.onDidOpenTextDocument(e => this.onDocumentOpened(e), this.disposables);
+        this.documents.onDidCloseTextDocument(e => this.onDocumentClosed(e), this.disposables);
+        this.documents.onDidSaveTextDocument(e => this.onDocumentSaved(e), this.disposables);
 
         const disposable = this.workspaceService.onDidChangeConfiguration(this.lintSettingsChangedHandler.bind(this));
         this.disposables.push(disposable);

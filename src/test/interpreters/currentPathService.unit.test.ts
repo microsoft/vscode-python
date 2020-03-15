@@ -10,11 +10,19 @@ import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
-import { IConfigurationService, IPersistentState, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
+import {
+    IConfigurationService,
+    IPersistentState,
+    IPersistentStateFactory,
+    IPythonSettings
+} from '../../client/common/types';
 import { OSType } from '../../client/common/utils/platform';
 import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
-import { CurrentPathService, PythonInPathCommandProvider } from '../../client/interpreter/locators/services/currentPathService';
+import {
+    CurrentPathService,
+    PythonInPathCommandProvider
+} from '../../client/interpreter/locators/services/currentPathService';
 import { IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -44,27 +52,50 @@ suite('Interpreters CurrentPath Service', () => {
         persistentState.setup(p => p.updateValue(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
-        persistentStateFactory.setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => persistentState.object);
+        persistentStateFactory
+            .setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => persistentState.object);
         const procServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
-        procServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
+        procServiceFactory
+            .setup(p => p.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(processService.object));
 
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IVirtualEnvironmentManager), TypeMoq.It.isAny())).returns(() => virtualEnvironmentManager.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterVersionService), TypeMoq.It.isAny())).returns(() => interpreterHelper.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny())).returns(() => fileSystem.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny())).returns(() => persistentStateFactory.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configurationService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IVirtualEnvironmentManager), TypeMoq.It.isAny()))
+            .returns(() => virtualEnvironmentManager.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterVersionService), TypeMoq.It.isAny()))
+            .returns(() => interpreterHelper.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
+            .returns(() => fileSystem.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny()))
+            .returns(() => persistentStateFactory.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
+            .returns(() => configurationService.object);
         pythonInPathCommandProvider = new PythonInPathCommandProvider(platformService.object);
-        currentPathService = new CurrentPathService(interpreterHelper.object, procServiceFactory.object, pythonInPathCommandProvider, serviceContainer.object);
+        currentPathService = new CurrentPathService(
+            interpreterHelper.object,
+            procServiceFactory.object,
+            pythonInPathCommandProvider,
+            serviceContainer.object
+        );
     });
 
     [true, false].forEach(isWindows => {
-        test(`Interpreters that do not exist on the file system are not excluded from the list (${isWindows ? 'windows' : 'not windows'})`, async () => {
+        test(`Interpreters that do not exist on the file system are not excluded from the list (${
+            isWindows ? 'windows' : 'not windows'
+        })`, async () => {
             // Specific test for 1305
             const version = new SemVer('1.0.0');
             platformService.setup(p => p.isWindows).returns(() => isWindows);
             platformService.setup(p => p.osType).returns(() => (isWindows ? OSType.Windows : OSType.Linux));
-            interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version }));
+            interpreterHelper
+                .setup(v => v.getInterpreterInformation(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve({ version }));
 
             const execArgs = ['-c', 'import sys;print(sys.executable)'];
             pythonSettings.setup(p => p.pythonPath).returns(() => 'root:Python');

@@ -21,11 +21,14 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
     constructor(
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IDiagnosticsService) @named(InvalidPythonPathInDebuggerServiceId) private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
+        @inject(IDiagnosticsService)
+        @named(InvalidPythonPathInDebuggerServiceId)
+        private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService,
-        @inject(ILaunchDebugConfigurationResolverExperiment) private readonly configExperiment: ILaunchDebugConfigurationResolverExperiment
+        @inject(ILaunchDebugConfigurationResolverExperiment)
+        private readonly configExperiment: ILaunchDebugConfigurationResolverExperiment
     ) {
         super(workspaceService, documentManager, platformService, configurationService);
     }
@@ -60,12 +63,17 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
 
         const dbgConfig = debugConfiguration;
         if (Array.isArray(dbgConfig.debugOptions)) {
-            dbgConfig.debugOptions = dbgConfig.debugOptions!.filter((item, pos) => dbgConfig.debugOptions!.indexOf(item) === pos);
+            dbgConfig.debugOptions = dbgConfig.debugOptions!.filter(
+                (item, pos) => dbgConfig.debugOptions!.indexOf(item) === pos
+            );
         }
         return debugConfiguration;
     }
     // tslint:disable-next-line:cyclomatic-complexity
-    protected async provideLaunchDefaults(workspaceFolder: Uri | undefined, debugConfiguration: LaunchRequestArguments): Promise<void> {
+    protected async provideLaunchDefaults(
+        workspaceFolder: Uri | undefined,
+        debugConfiguration: LaunchRequestArguments
+    ): Promise<void> {
         this.resolveAndUpdatePaths(workspaceFolder, debugConfiguration);
         if (typeof debugConfiguration.cwd !== 'string' && workspaceFolder) {
             debugConfiguration.cwd = workspaceFolder.fsPath;
@@ -130,7 +138,11 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
         const isFlask = this.isDebuggingFlask(debugConfiguration);
-        if ((debugConfiguration.pyramid || isFlask) && debugOptions.indexOf(DebugOptions.Jinja) === -1 && debugConfiguration.jinja !== false) {
+        if (
+            (debugConfiguration.pyramid || isFlask) &&
+            debugOptions.indexOf(DebugOptions.Jinja) === -1 &&
+            debugConfiguration.jinja !== false
+        ) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
         }
         // Unlike with attach, we do not set a default path mapping.
@@ -138,15 +150,25 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (debugConfiguration.pathMappings) {
             let pathMappings = debugConfiguration.pathMappings;
             if (pathMappings.length > 0) {
-                pathMappings = this.fixUpPathMappings(pathMappings || [], workspaceFolder ? workspaceFolder.fsPath : '');
+                pathMappings = this.fixUpPathMappings(
+                    pathMappings || [],
+                    workspaceFolder ? workspaceFolder.fsPath : ''
+                );
             }
             debugConfiguration.pathMappings = pathMappings.length > 0 ? pathMappings : undefined;
         }
         this.sendTelemetry(debugConfiguration.request as 'launch' | 'test', debugConfiguration);
     }
 
-    protected async validateLaunchConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments): Promise<boolean> {
+    protected async validateLaunchConfiguration(
+        folder: WorkspaceFolder | undefined,
+        debugConfiguration: LaunchRequestArguments
+    ): Promise<boolean> {
         const diagnosticService = this.invalidPythonPathInDebuggerService;
-        return diagnosticService.validatePythonPath(debugConfiguration.pythonPath, this.pythonPathSource, folder ? folder.uri : undefined);
+        return diagnosticService.validatePythonPath(
+            debugConfiguration.pythonPath,
+            this.pythonPathSource,
+            folder ? folder.uri : undefined
+        );
     }
 }

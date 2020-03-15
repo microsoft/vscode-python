@@ -3,13 +3,24 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
-import { IDisposableRegistry, ILogger } from '../../common/types';
+import { traceError } from '../../common/logger';
+import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { UNITTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
-import { ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner, IUnitTestSocketServer, LaunchOptions, TestRunOptions, Tests, TestStatus } from '../common/types';
+import {
+    ITestDebugLauncher,
+    ITestManager,
+    ITestResultsService,
+    ITestRunner,
+    IUnitTestSocketServer,
+    LaunchOptions,
+    TestRunOptions,
+    Tests,
+    TestStatus
+} from '../common/types';
 import { IArgumentsHelper, ITestManagerRunner, IUnitTestHelper } from '../types';
 
 type TestStatusMap = {
@@ -36,20 +47,22 @@ export class TestManagerRunner implements ITestManagerRunner {
     private readonly helper: IUnitTestHelper;
     private readonly testRunner: ITestRunner;
     private readonly server: IUnitTestSocketServer;
-    private readonly logger: ILogger;
     private busy!: Deferred<Tests>;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.argsHelper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
         this.testRunner = serviceContainer.get<ITestRunner>(ITestRunner);
         this.server = this.serviceContainer.get<IUnitTestSocketServer>(IUnitTestSocketServer);
-        this.logger = this.serviceContainer.get<ILogger>(ILogger);
         this.helper = this.serviceContainer.get<IUnitTestHelper>(IUnitTestHelper);
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(this.server);
     }
 
     // tslint:disable-next-line:max-func-body-length
-    public async runTest(testResultsService: ITestResultsService, options: TestRunOptions, testManager: ITestManager): Promise<Tests> {
+    public async runTest(
+        testResultsService: ITestResultsService,
+        options: TestRunOptions,
+        testManager: ITestManager
+    ): Promise<Tests> {
         if (this.busy && !this.busy.completed) {
             return this.busy.promise;
         }
@@ -61,7 +74,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         options.tests.summary.skipped = 0;
         let failFast = false;
         const testLauncherFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'visualstudio_py_testlauncher.py');
-        this.server.on('error', (message: string, ...data: string[]) => this.logger.logError(`${message} ${data.join(' ')}`));
+        this.server.on('error', (message: string, ...data: string[]) => traceError(`${message} ${data.join(' ')}`));
         this.server.on('log', noop);
         this.server.on('connect', noop);
         this.server.on('start', noop);
@@ -88,7 +101,10 @@ export class TestManagerRunner implements ITestManagerRunner {
                 test.testFunction.traceback = data.traceback;
                 options.tests.summary[statusDetails.summaryProperty] += 1;
 
-                if (failFast && (statusDetails.summaryProperty === 'failures' || statusDetails.summaryProperty === 'errors')) {
+                if (
+                    failFast &&
+                    (statusDetails.summaryProperty === 'failures' || statusDetails.summaryProperty === 'errors')
+                ) {
                     testManager.stop();
                 }
             } else {
@@ -119,7 +135,13 @@ export class TestManagerRunner implements ITestManagerRunner {
             if (options.debug === true) {
                 const debugLauncher = this.serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
                 testArgs.push('--debug');
-                const launchOptions: LaunchOptions = { cwd: options.cwd, args: testArgs, token: options.token, outChannel: options.outChannel, testProvider: UNITTEST_PROVIDER };
+                const launchOptions: LaunchOptions = {
+                    cwd: options.cwd,
+                    args: testArgs,
+                    token: options.token,
+                    outChannel: options.outChannel,
+                    testProvider: UNITTEST_PROVIDER
+                };
                 return debugLauncher.launchDebugger(launchOptions);
             } else {
                 const runOptions: Options = {

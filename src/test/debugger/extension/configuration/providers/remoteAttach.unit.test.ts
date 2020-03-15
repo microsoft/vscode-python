@@ -21,7 +21,10 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
     let input: MultiStepInput<DebugConfigurationState>;
     class TestRemoteAttachDebugConfigurationProvider extends RemoteAttachDebugConfigurationProvider {
         // tslint:disable-next-line:no-unnecessary-override
-        public async configurePort(i: MultiStepInput<DebugConfigurationState>, config: Partial<AttachRequestArguments>) {
+        public async configurePort(
+            i: MultiStepInput<DebugConfigurationState>,
+            config: Partial<AttachRequestArguments>
+        ) {
             return super.configurePort(i, config);
         }
     }

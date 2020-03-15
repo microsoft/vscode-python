@@ -40,17 +40,53 @@ suite('Unit Tests - Navigation Command Handler', () => {
     });
     test('Ensure Navigation handlers are registered', async () => {
         commandHandler.register();
-        verify(cmdManager.registerCommand(Commands.navigateToTestFile, instance(fileHandler).navigateTo, instance(fileHandler))).once();
-        verify(cmdManager.registerCommand(Commands.navigateToTestFunction, instance(functionHandler).navigateTo, instance(functionHandler))).once();
-        verify(cmdManager.registerCommand(Commands.navigateToTestSuite, instance(suiteHandler).navigateTo, instance(suiteHandler))).once();
+        verify(
+            cmdManager.registerCommand(
+                Commands.navigateToTestFile,
+                instance(fileHandler).navigateTo,
+                instance(fileHandler)
+            )
+        ).once();
+        verify(
+            cmdManager.registerCommand(
+                Commands.navigateToTestFunction,
+                instance(functionHandler).navigateTo,
+                instance(functionHandler)
+            )
+        ).once();
+        verify(
+            cmdManager.registerCommand(
+                Commands.navigateToTestSuite,
+                instance(suiteHandler).navigateTo,
+                instance(suiteHandler)
+            )
+        ).once();
     });
     test('Ensure handlers are disposed', async () => {
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
         const disposable2 = typemoq.Mock.ofType<IDisposable>();
         const disposable3 = typemoq.Mock.ofType<IDisposable>();
-        when(cmdManager.registerCommand(Commands.navigateToTestFile, instance(fileHandler).navigateTo, instance(fileHandler))).thenReturn(disposable1.object);
-        when(cmdManager.registerCommand(Commands.navigateToTestFunction, instance(functionHandler).navigateTo, instance(functionHandler))).thenReturn(disposable2.object);
-        when(cmdManager.registerCommand(Commands.navigateToTestSuite, instance(suiteHandler).navigateTo, instance(suiteHandler))).thenReturn(disposable3.object);
+        when(
+            cmdManager.registerCommand(
+                Commands.navigateToTestFile,
+                instance(fileHandler).navigateTo,
+                instance(fileHandler)
+            )
+        ).thenReturn(disposable1.object);
+        when(
+            cmdManager.registerCommand(
+                Commands.navigateToTestFunction,
+                instance(functionHandler).navigateTo,
+                instance(functionHandler)
+            )
+        ).thenReturn(disposable2.object);
+        when(
+            cmdManager.registerCommand(
+                Commands.navigateToTestSuite,
+                instance(suiteHandler).navigateTo,
+                instance(suiteHandler)
+            )
+        ).thenReturn(disposable3.object);
 
         commandHandler.register();
         commandHandler.dispose();

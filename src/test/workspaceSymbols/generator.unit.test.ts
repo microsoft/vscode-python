@@ -42,7 +42,14 @@ suite('Workspace Symbols Generator', () => {
         factory.setup(f => f.create(typemoq.It.isAny())).returns(() => Promise.resolve(instance(processService)));
         when(configurationService.getSettings(anything())).thenReturn(pythonSettings.object);
         const outputChannel = typemoq.Mock.ofType<IOutputChannel>();
-        generator = new Generator(folderUri, outputChannel.object, instance(shell), instance(fs), factory.object, instance(configurationService));
+        generator = new Generator(
+            folderUri,
+            outputChannel.object,
+            instance(shell),
+            instance(fs),
+            factory.object,
+            instance(configurationService)
+        );
     });
     test('should be disabled', () => {
         const workspaceSymbols = { enabled: false } as any;

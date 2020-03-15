@@ -26,24 +26,72 @@ export const SUPPORTS_SYMLINKS = (() => {
     fsextra.unlinkSync(symlink);
     return true;
 })();
-
-// tslint:disable-next-line:no-suspicious-comment
-// TODO(GH-8995) For the moment we simply say we cannot test with
-// sockets on Windows.
-export const SUPPORTS_SOCKETS = !WINDOWS;
+export const SUPPORTS_SOCKETS = (() => {
+    if (WINDOWS) {
+        // Windows requires named pipes to have a specific path under
+        // the local domain ("\\.\pipe\*").  This makes them relatively
+        // useless in our functional tests, where we want to use them
+        // to exercise FileType.Unknown.
+        return false;
+    }
+    const tmp = tmpMod.dirSync({
+        prefix: 'pyvsc-test-',
+        unsafeCleanup: true // for non-empty dir
+    });
+    const filename = path.join(tmp.name, 'test.sock');
+    try {
+        const srv = net.createServer();
+        try {
+            srv.listen(filename);
+        } finally {
+            srv.close();
+        }
+    } catch {
+        return false;
+    } finally {
+        tmp.removeCallback();
+    }
+    return true;
+})();
 
 export const DOES_NOT_EXIST = 'this file does not exist';
 
 export async function assertDoesNotExist(filename: string) {
-    await expect(fsextra.stat(filename)).to.eventually.be.rejected;
+    const promise = fsextra.stat(filename);
+    await expect(promise).to.eventually.be.rejected;
 }
 
 export async function assertExists(filename: string) {
-    await expect(fsextra.stat(filename)).to.not.eventually.be.rejected;
+    const promise = fsextra.stat(filename);
+    await expect(promise).to.not.eventually.be.rejected;
+}
+
+export async function assertFileText(filename: string, expected: string): Promise<string> {
+    const data = await fsextra.readFile(filename);
+    const text = data.toString();
+    expect(text).to.equal(expected);
+    return text;
 }
 
 export function fixPath(filename: string): string {
     return path.normalize(filename);
+}
+
+export class SystemError extends Error {
+    public code: string;
+    public errno: number;
+    public syscall: string;
+    public info?: string;
+    public path?: string;
+    public address?: string;
+    public dest?: string;
+    public port?: string;
+    constructor(code: string, syscall: string, message: string) {
+        super(`${code}: ${message} ${syscall} '...'`);
+        this.code = code;
+        this.errno = 0; // Don't bother until we actually need it.
+        this.syscall = syscall;
+    }
 }
 
 export class CleanupFixture {
@@ -89,7 +137,8 @@ export class FSFixture extends CleanupFixture {
         relname = path.normalize(relname);
         const filename = path.join(tempDir, relname);
         if (mkdirs) {
-            await fsextra.mkdirp(path.dirname(filename));
+            const dirname = path.dirname(filename);
+            await fsextra.mkdirp(dirname);
         }
         return filename;
     }

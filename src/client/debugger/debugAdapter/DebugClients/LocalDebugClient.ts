@@ -30,7 +30,12 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         }
         return DebugServerStatus.Unknown;
     }
-    constructor(args: LaunchRequestArguments, debugSession: DebugSession, private canLaunchTerminal: boolean, protected launcherScriptProvider: ILocalDebugLauncherScriptProvider) {
+    constructor(
+        args: LaunchRequestArguments,
+        debugSession: DebugSession,
+        private canLaunchTerminal: boolean,
+        protected launcherScriptProvider: ILocalDebugLauncherScriptProvider
+    ) {
         super(args, debugSession);
     }
 
@@ -55,7 +60,8 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     }
     // tslint:disable-next-line:no-any
     private displayError(error: any) {
-        const errorMsg = typeof error === 'string' ? error : error.message && error.message.length > 0 ? error.message : '';
+        const errorMsg =
+            typeof error === 'string' ? error : error.message && error.message.length > 0 ? error.message : '';
         if (errorMsg.length > 0) {
             this.debugSession.sendEvent(new OutputEvent(errorMsg, 'stderr'));
         }
@@ -78,7 +84,8 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
             switch (this.args.console) {
                 case 'externalTerminal':
                 case 'integratedTerminal': {
-                    const isSudo = Array.isArray(this.args.debugOptions) && this.args.debugOptions.some(opt => opt === 'Sudo');
+                    const isSudo =
+                        Array.isArray(this.args.debugOptions) && this.args.debugOptions.some(opt => opt === 'Sudo');
                     this.launchExternalTerminal(isSudo, processCwd, pythonPath, args, envVars)
                         .then(resolve)
                         .catch(reject);

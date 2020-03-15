@@ -71,7 +71,10 @@ suite('PlatformService', () => {
         const svc = new PlatformService();
         const result = svc.is64bit;
 
-        expect(result).to.be.equal(hostReports64Bit, `arch() reports '${arch()}', PlatformService.is64bit reports ${result}.`);
+        expect(result).to.be.equal(
+            hostReports64Bit,
+            `arch() reports '${arch()}', PlatformService.is64bit reports ${result}.`
+        );
     });
 
     test('getVersion on Mac/Windows', async function() {

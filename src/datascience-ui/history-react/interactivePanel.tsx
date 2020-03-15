@@ -1,31 +1,29 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
 import * as React from 'react';
 import { connect } from 'react-redux';
 import { Identifiers } from '../../client/datascience/constants';
+import { buildSettingsCss } from '../interactive-common/buildSettingsCss';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
 import { KernelSelection } from '../interactive-common/kernelSelection';
-import { ICellViewModel, IMainState } from '../interactive-common/mainState';
-import { IStore } from '../interactive-common/redux/store';
+import { ICellViewModel } from '../interactive-common/mainState';
+import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
-import { getConnectedInteractiveCell } from './interactiveCell';
+import { InteractiveCellComponent } from './interactiveCell';
 import './interactivePanel.less';
 import { actionCreators } from './redux/actions';
 
-type IInteractivePanelProps = IMainState & typeof actionCreators;
+export type IInteractivePanelProps = IMainWithVariables & typeof actionCreators;
 
-function mapStateToProps(state: IStore): IMainState {
-    return state.main;
+function mapStateToProps(state: IStore): IMainWithVariables {
+    return { ...state.main, variableState: state.variables };
 }
-
-const ConnectedInteractiveCell = getConnectedInteractiveCell();
 
 export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
@@ -63,27 +61,41 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         return (
             <div id="main-panel" ref={this.mainPanelRef} role="Main" style={dynamicFont}>
                 <div className="styleSetter">
-                    <style>{this.props.rootCss}</style>
+                    <style>{`${this.props.rootCss ? this.props.rootCss : ''}
+${buildSettingsCss(this.props.settings)}`}</style>
                 </div>
                 <header id="main-panel-toolbar">
                     {this.renderToolbarPanel()}
                     {progressBar}
                 </header>
-                <section id="main-panel-variable" aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
+                <section
+                    id="main-panel-variable"
+                    aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
+                >
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
                 <main id="main-panel-content" onScroll={this.handleScroll}>
                     {this.renderContentPanel(this.props.baseTheme)}
                 </main>
-                <section id="main-panel-footer" aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
+                <section
+                    id="main-panel-footer"
+                    onClick={this.footerPanelClick}
+                    aria-label={getLocString('DataScience.editSection', 'Input new cells here')}
+                >
                     {this.renderFooterPanel(this.props.baseTheme)}
                 </section>
             </div>
         );
     }
 
+    // Make the entire footer focus our input, instead of having to click directly on the monaco editor
+    private footerPanelClick = (_event: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
+        this.props.focusInput();
+    };
+
+    // tslint:disable-next-line: max-func-body-length
     private renderToolbarPanel() {
-        const variableExplorerTooltip = this.props.variablesVisible
+        const variableExplorerTooltip = this.props.variableState.visible
             ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')
             : getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
 
@@ -91,8 +103,16 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             <div id="toolbar-panel">
                 <div className="toolbar-menu-bar">
                     <div className="toolbar-menu-bar-child">
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.deleteAllCells} tooltip={getLocString('DataScience.clearAll', 'Remove all cells')}>
-                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Cancel} />
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={this.props.deleteAllCells}
+                            tooltip={getLocString('DataScience.clearAll', 'Remove all cells')}
+                        >
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.Cancel}
+                            />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
@@ -113,27 +133,49 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.interruptKernel}
+                            disabled={this.props.busy}
                             tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
                         >
-                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Interrupt} />
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.Interrupt}
+                            />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.restartKernel}
+                            disabled={this.props.busy}
                             tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
                         >
-                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Restart} />
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.Restart}
+                            />
                         </ImageButton>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.toggleVariableExplorer} tooltip={variableExplorerTooltip}>
-                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.VariableExplorer} />
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={this.props.toggleVariableExplorer}
+                            tooltip={variableExplorerTooltip}
+                        >
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.VariableExplorer}
+                            />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.export}
-                            disabled={this.props.cellVMs.length === 0}
+                            disabled={this.props.cellVMs.length === 0 || this.props.busy}
                             tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}
                         >
-                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.SaveAs} />
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.SaveAs}
+                            />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
@@ -141,7 +183,11 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                             disabled={this.props.cellVMs.length === 0}
                             tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}
                         >
-                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ExpandAll} />
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.ExpandAll}
+                            />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
@@ -149,7 +195,11 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                             disabled={this.props.cellVMs.length === 0}
                             tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}
                         >
-                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.CollapseAll} />
+                            <Image
+                                baseTheme={this.props.baseTheme}
+                                class="image-button-image"
+                                image={ImageName.CollapseAll}
+                            />
                         </ImageButton>
                     </div>
                     <KernelSelection
@@ -165,7 +215,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     }
 
     private renderVariablePanel(baseTheme: string) {
-        if (this.props.variablesVisible) {
+        if (this.props.variableState.visible) {
             const variableProps = this.getVariableProps(baseTheme);
             return <VariablePanel {...variableProps} />;
         }
@@ -188,7 +238,13 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     private renderFooterPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
-        if (!this.props.monacoReady || !this.props.editCellVM || !this.props.settings || !this.props.editorOptions) {
+        if (
+            !this.props.monacoReady ||
+            !this.props.editCellVM ||
+            !this.props.settings ||
+            !this.props.editorOptions ||
+            !this.props.settings.allowInput
+        ) {
             return null;
         }
 
@@ -200,7 +256,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         return (
             <div className={editPanelClass}>
                 <ErrorBoundary>
-                    <ConnectedInteractiveCell
+                    <InteractiveCellComponent
                         role="form"
                         editorOptions={this.props.editorOptions}
                         maxTextSize={maxTextSize}
@@ -214,6 +270,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                         monacoTheme={this.props.monacoTheme}
                         font={this.props.font}
                         settings={this.props.settings}
+                        focusPending={this.props.focusPending}
                     />
                 </ErrorBoundary>
             </div>
@@ -231,33 +288,46 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             testMode: this.props.testMode,
             codeTheme: this.props.codeTheme,
             submittedText: this.props.submittedText,
+            settings: this.props.settings,
             skipNextScroll: this.props.skipNextScroll ? true : false,
             editable: false,
-            newCellVM: undefined,
             renderCell: this.renderCell,
-            scrollToBottom: this.scrollDiv
+            scrollToBottom: this.scrollDiv,
+            scrollBeyondLastLine: this.props.settings
+                ? this.props.settings.extraSettings.editor.scrollBeyondLastLine
+                : false
         };
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
         return {
-            variables: this.props.variables,
-            pendingVariableCount: this.props.pendingVariableCount,
+            variables: this.props.variableState.variables,
             debugging: this.props.debugging,
             busy: this.props.busy,
             showDataExplorer: this.props.showDataViewer,
             skipDefault: this.props.skipDefault,
             testMode: this.props.testMode,
             closeVariableExplorer: this.props.toggleVariableExplorer,
-            baseTheme: baseTheme
+            baseTheme: baseTheme,
+            pageIn: this.pageInVariableData,
+            fontSize: this.props.font.size,
+            executionCount: this.props.currentExecutionCount
         };
     };
 
-    private renderCell = (cellVM: ICellViewModel, _index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
+    private pageInVariableData = (startIndex: number, pageSize: number) => {
+        this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
+    };
+
+    private renderCell = (
+        cellVM: ICellViewModel,
+        _index: number,
+        containerRef?: React.RefObject<HTMLDivElement>
+    ): JSX.Element | null => {
         if (this.props.settings && this.props.editorOptions) {
             return (
                 <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>
                     <ErrorBoundary>
-                        <ConnectedInteractiveCell
+                        <InteractiveCellComponent
                             role="listitem"
                             editorOptions={this.props.editorOptions}
                             maxTextSize={this.props.settings.maxOutputSize}
@@ -271,6 +341,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                             monacoTheme={this.props.monacoTheme}
                             font={this.props.font}
                             settings={this.props.settings}
+                            focusPending={this.props.focusPending}
                         />
                     </ErrorBoundary>
                 </div>
@@ -288,8 +359,8 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             this.internalScrollCount += 1;
             // Force auto here as smooth scrolling can be canceled by updates to the window
             // from elsewhere (and keeping track of these would make this hard to maintain)
-            if (div.scrollIntoView) {
-                div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+            if (div && div.scrollIntoView) {
+                div.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
             }
         }
     };
@@ -297,9 +368,8 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     private handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
         if (this.internalScrollCount > 0) {
             this.internalScrollCount -= 1;
-        } else {
-            const currentHeight = e.currentTarget.scrollHeight - e.currentTarget.scrollTop;
-            const isAtBottom = currentHeight < e.currentTarget.clientHeight + 2 && currentHeight > e.currentTarget.clientHeight - 2;
+        } else if (this.contentPanelRef.current) {
+            const isAtBottom = this.contentPanelRef.current.computeIsAtBottom(e.currentTarget);
             this.props.scroll(isAtBottom);
         }
     };

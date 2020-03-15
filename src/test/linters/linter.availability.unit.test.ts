@@ -15,7 +15,13 @@ import { ConfigurationService } from '../../client/common/configuration/service'
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IConfigurationService, IPersistentState, IPersistentStateFactory, IPythonSettings, Product } from '../../client/common/types';
+import {
+    IConfigurationService,
+    IPersistentState,
+    IPersistentStateFactory,
+    IPythonSettings,
+    Product
+} from '../../client/common/types';
 import { Common, Linters } from '../../client/common/utils/localize';
 import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
 import { LinterInfo } from '../../client/linters/linterInfo';
@@ -29,14 +35,29 @@ suite('Linter Availability Provider tests', () => {
         const expectedResult = false;
 
         // arrange
-        const [appShellMock, fsMock, workspaceServiceMock, configServiceMock, factoryMock] = getDependenciesForAvailabilityTests();
+        const [
+            appShellMock,
+            fsMock,
+            workspaceServiceMock,
+            configServiceMock,
+            factoryMock
+        ] = getDependenciesForAvailabilityTests();
         setupConfigurationServiceForJediSettingsTest(jediEnabledValue, configServiceMock);
 
         // call
-        const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
+        const availabilityProvider = new AvailableLinterActivator(
+            appShellMock.object,
+            fsMock.object,
+            workspaceServiceMock.object,
+            configServiceMock.object,
+            factoryMock.object
+        );
 
         // check expectaions
-        expect(availabilityProvider.isFeatureEnabled).is.equal(expectedResult, 'Avaialability feature should be disabled when python.jediEnabled is true');
+        expect(availabilityProvider.isFeatureEnabled).is.equal(
+            expectedResult,
+            'Avaialability feature should be disabled when python.jediEnabled is true'
+        );
         workspaceServiceMock.verifyAll();
     });
 
@@ -46,12 +67,27 @@ suite('Linter Availability Provider tests', () => {
         const expectedResult = true;
 
         // arrange
-        const [appShellMock, fsMock, workspaceServiceMock, configServiceMock, factoryMock] = getDependenciesForAvailabilityTests();
+        const [
+            appShellMock,
+            fsMock,
+            workspaceServiceMock,
+            configServiceMock,
+            factoryMock
+        ] = getDependenciesForAvailabilityTests();
         setupConfigurationServiceForJediSettingsTest(jediEnabledValue, configServiceMock);
 
-        const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
+        const availabilityProvider = new AvailableLinterActivator(
+            appShellMock.object,
+            fsMock.object,
+            workspaceServiceMock.object,
+            configServiceMock.object,
+            factoryMock.object
+        );
 
-        expect(availabilityProvider.isFeatureEnabled).is.equal(expectedResult, 'Avaialability feature should be enabled when python.jediEnabled defaults to false');
+        expect(availabilityProvider.isFeatureEnabled).is.equal(
+            expectedResult,
+            'Avaialability feature should be enabled when python.jediEnabled defaults to false'
+        );
         workspaceServiceMock.verifyAll();
     });
 
@@ -62,10 +98,28 @@ suite('Linter Availability Provider tests', () => {
         const pylintWorkspaceFolderValue = undefined;
         const expectedResult = true;
 
-        const [appShellMock, fsMock, workspaceServiceMock, configServiceMock, factoryMock, linterInfo] = getDependenciesForAvailabilityTests();
-        setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue, workspaceServiceMock);
+        const [
+            appShellMock,
+            fsMock,
+            workspaceServiceMock,
+            configServiceMock,
+            factoryMock,
+            linterInfo
+        ] = getDependenciesForAvailabilityTests();
+        setupWorkspaceMockForLinterConfiguredTests(
+            pylintUserValue,
+            pylintWorkspaceValue,
+            pylintWorkspaceFolderValue,
+            workspaceServiceMock
+        );
 
-        const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
+        const availabilityProvider = new AvailableLinterActivator(
+            appShellMock.object,
+            fsMock.object,
+            workspaceServiceMock.object,
+            configServiceMock.object,
+            factoryMock.object
+        );
 
         const result = availabilityProvider.isLinterUsingDefaultConfiguration(linterInfo);
 
@@ -80,13 +134,34 @@ suite('Linter Availability Provider tests', () => {
         const pylintWorkspaceFolderValue = undefined;
         const expectedResult = false;
 
-        const [appShellMock, fsMock, workspaceServiceMock, configServiceMock, factoryMock, linterInfo] = getDependenciesForAvailabilityTests();
-        setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue, workspaceServiceMock);
+        const [
+            appShellMock,
+            fsMock,
+            workspaceServiceMock,
+            configServiceMock,
+            factoryMock,
+            linterInfo
+        ] = getDependenciesForAvailabilityTests();
+        setupWorkspaceMockForLinterConfiguredTests(
+            pylintUserValue,
+            pylintWorkspaceValue,
+            pylintWorkspaceFolderValue,
+            workspaceServiceMock
+        );
 
-        const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
+        const availabilityProvider = new AvailableLinterActivator(
+            appShellMock.object,
+            fsMock.object,
+            workspaceServiceMock.object,
+            configServiceMock.object,
+            factoryMock.object
+        );
 
         const result = availabilityProvider.isLinterUsingDefaultConfiguration(linterInfo);
-        expect(result).to.equal(expectedResult, 'Available linter prompt should not be shown when linter is configured for workspace.');
+        expect(result).to.equal(
+            expectedResult,
+            'Available linter prompt should not be shown when linter is configured for workspace.'
+        );
         workspaceServiceMock.verifyAll();
     });
 
@@ -98,12 +173,33 @@ suite('Linter Availability Provider tests', () => {
         const expectedResult = false;
 
         // arrange
-        const [appShellMock, fsMock, workspaceServiceMock, configServiceMock, factoryMock, linterInfo] = getDependenciesForAvailabilityTests();
-        setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue, workspaceServiceMock);
-        const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
+        const [
+            appShellMock,
+            fsMock,
+            workspaceServiceMock,
+            configServiceMock,
+            factoryMock,
+            linterInfo
+        ] = getDependenciesForAvailabilityTests();
+        setupWorkspaceMockForLinterConfiguredTests(
+            pylintUserValue,
+            pylintWorkspaceValue,
+            pylintWorkspaceFolderValue,
+            workspaceServiceMock
+        );
+        const availabilityProvider = new AvailableLinterActivator(
+            appShellMock.object,
+            fsMock.object,
+            workspaceServiceMock.object,
+            configServiceMock.object,
+            factoryMock.object
+        );
 
         const result = availabilityProvider.isLinterUsingDefaultConfiguration(linterInfo);
-        expect(result).to.equal(expectedResult, 'Available linter prompt should not be shown when linter is configured for user.');
+        expect(result).to.equal(
+            expectedResult,
+            'Available linter prompt should not be shown when linter is configured for user.'
+        );
         workspaceServiceMock.verifyAll();
     });
 
@@ -115,16 +211,40 @@ suite('Linter Availability Provider tests', () => {
         const expectedResult = false;
 
         // arrange
-        const [appShellMock, fsMock, workspaceServiceMock, configServiceMock, factoryMock, linterInfo] = getDependenciesForAvailabilityTests();
-        setupWorkspaceMockForLinterConfiguredTests(pylintUserValue, pylintWorkspaceValue, pylintWorkspaceFolderValue, workspaceServiceMock);
-        const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
+        const [
+            appShellMock,
+            fsMock,
+            workspaceServiceMock,
+            configServiceMock,
+            factoryMock,
+            linterInfo
+        ] = getDependenciesForAvailabilityTests();
+        setupWorkspaceMockForLinterConfiguredTests(
+            pylintUserValue,
+            pylintWorkspaceValue,
+            pylintWorkspaceFolderValue,
+            workspaceServiceMock
+        );
+        const availabilityProvider = new AvailableLinterActivator(
+            appShellMock.object,
+            fsMock.object,
+            workspaceServiceMock.object,
+            configServiceMock.object,
+            factoryMock.object
+        );
 
         const result = availabilityProvider.isLinterUsingDefaultConfiguration(linterInfo);
-        expect(result).to.equal(expectedResult, 'Available linter prompt should not be shown when linter is configured for workspace-folder.');
+        expect(result).to.equal(
+            expectedResult,
+            'Available linter prompt should not be shown when linter is configured for workspace-folder.'
+        );
         workspaceServiceMock.verifyAll();
     });
 
-    async function testForLinterPromptResponse(promptAction: 'enable' | 'ignore' | 'disablePrompt' | undefined, promptEnabled = true): Promise<boolean> {
+    async function testForLinterPromptResponse(
+        promptAction: 'enable' | 'ignore' | 'disablePrompt' | undefined,
+        promptEnabled = true
+    ): Promise<boolean> {
         // arrange
         const [appShellMock, fsMock, workspaceServiceMock, , factoryMock] = getDependenciesForAvailabilityTests();
         const configServiceMock = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -139,7 +259,9 @@ suite('Linter Availability Provider tests', () => {
         })(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']);
 
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        factoryMock.setup(f => f.createWorkspacePersistentState(TypeMoq.It.isAny(), true)).returns(() => notificationPromptEnabled.object);
+        factoryMock
+            .setup(f => f.createWorkspacePersistentState(TypeMoq.It.isAny(), true))
+            .returns(() => notificationPromptEnabled.object);
         notificationPromptEnabled.setup(n => n.value).returns(() => promptEnabled);
         const selections: ['enable', 'ignore', 'disablePrompt'] = ['enable', 'ignore', 'disablePrompt'];
         const optButtons = [Linters.enableLinter().format(linterInfo.id), Common.notNow(), Common.doNotShowAgain()];
@@ -176,10 +298,19 @@ suite('Linter Availability Provider tests', () => {
         }
 
         // perform test
-        const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
+        const availabilityProvider = new AvailableLinterActivator(
+            appShellMock.object,
+            fsMock.object,
+            workspaceServiceMock.object,
+            configServiceMock.object,
+            factoryMock.object
+        );
         const result = await availabilityProvider.promptToConfigureAvailableLinter(linterInfo);
         if (promptEnabled && promptAction === 'enable') {
-            expect(linterInfo.testIsEnabled).to.equal(true, 'LinterInfo test class was not updated as a result of the test.');
+            expect(linterInfo.testIsEnabled).to.equal(
+                true,
+                'LinterInfo test class was not updated as a result of the test.'
+            );
         }
 
         appShellMock.verifyAll();
@@ -197,7 +328,10 @@ suite('Linter Availability Provider tests', () => {
         const result = await testForLinterPromptResponse(promptAction);
 
         // test results
-        expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.');
+        expect(result).to.equal(
+            expectedResult,
+            'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.'
+        );
     });
 
     test('Linter is left unconfigured and prompt is disabled when "Do not show again" is selected', async () => {
@@ -261,7 +395,14 @@ suite('Linter Availability Provider tests', () => {
 
     async function performTestOfOverallImplementation(options: AvailablityTestOverallOptions): Promise<boolean> {
         // arrange
-        const [appShellMock, fsMock, workspaceServiceMock, configServiceMock, factoryMock, linterInfo] = getDependenciesForAvailabilityTests();
+        const [
+            appShellMock,
+            fsMock,
+            workspaceServiceMock,
+            configServiceMock,
+            factoryMock,
+            linterInfo
+        ] = getDependenciesForAvailabilityTests();
         const selections: ['enable', 'ignore', 'disablePrompt'] = ['enable', 'ignore', 'disablePrompt'];
         const optButtons = [Linters.enableLinter().format(linterInfo.id), Common.notNow(), Common.doNotShowAgain()];
         appShellMock
@@ -273,7 +414,9 @@ suite('Linter Availability Provider tests', () => {
                     TypeMoq.It.isAny()
                 )
             )
-            .returns(() => Promise.resolve(options.promptAction ? optButtons[selections.indexOf(options.promptAction)] : undefined))
+            .returns(() =>
+                Promise.resolve(options.promptAction ? optButtons[selections.indexOf(options.promptAction)] : undefined)
+            )
             .verifiable(TypeMoq.Times.once());
 
         const workspaceFolder = { uri: Uri.parse('full/path/to/workspace'), name: '', index: 0 };
@@ -291,10 +434,17 @@ suite('Linter Availability Provider tests', () => {
             .verifiable(TypeMoq.Times.atLeastOnce());
 
         setupConfigurationServiceForJediSettingsTest(options.jediEnabledValue, configServiceMock);
-        setupWorkspaceMockForLinterConfiguredTests(options.pylintUserEnabled, options.pylintWorkspaceEnabled, options.pylintWorkspaceFolderEnabled, workspaceServiceMock);
+        setupWorkspaceMockForLinterConfiguredTests(
+            options.pylintUserEnabled,
+            options.pylintWorkspaceEnabled,
+            options.pylintWorkspaceFolderEnabled,
+            workspaceServiceMock
+        );
 
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-        factoryMock.setup(f => f.createWorkspacePersistentState(TypeMoq.It.isAny(), true)).returns(() => notificationPromptEnabled.object);
+        factoryMock
+            .setup(f => f.createWorkspacePersistentState(TypeMoq.It.isAny(), true))
+            .returns(() => notificationPromptEnabled.object);
         notificationPromptEnabled.setup(n => n.value).returns(() => true);
         // perform test
         const availabilityProvider: IAvailableLinterActivator = new AvailableLinterActivator(
@@ -317,7 +467,10 @@ suite('Linter Availability Provider tests', () => {
         const result = await performTestOfOverallImplementation(testOpts);
 
         // perform test
-        expect(expectedResult).to.equal(result, 'promptIfLinterAvailable should not change any configuration when python.jediEnabled is true.');
+        expect(expectedResult).to.equal(
+            result,
+            'promptIfLinterAvailable should not change any configuration when python.jediEnabled is true.'
+        );
     });
 
     test('Overall implementation does not change configuration when linter is configured (enabled)', async () => {
@@ -330,7 +483,10 @@ suite('Linter Availability Provider tests', () => {
         const result = await performTestOfOverallImplementation(testOpts);
 
         // perform test
-        expect(expectedResult).to.equal(result, 'Configuration should not change if the linter is configured in any way.');
+        expect(expectedResult).to.equal(
+            result,
+            'Configuration should not change if the linter is configured in any way.'
+        );
     });
 
     test('Overall implementation does not change configuration when linter is configured (disabled)', async () => {
@@ -342,7 +498,10 @@ suite('Linter Availability Provider tests', () => {
         // arrange
         const result = await performTestOfOverallImplementation(testOpts);
 
-        expect(expectedResult).to.equal(result, 'Configuration should not change if the linter is disabled in any way.');
+        expect(expectedResult).to.equal(
+            result,
+            'Configuration should not change if the linter is disabled in any way.'
+        );
     });
 
     test('Overall implementation does not change configuration when linter is unavailable in current workspace environment', async () => {
@@ -354,7 +513,10 @@ suite('Linter Availability Provider tests', () => {
         // arrange
         const result = await performTestOfOverallImplementation(testOpts);
 
-        expect(expectedResult).to.equal(result, 'Configuration should not change if the linter is unavailable in the current workspace environment.');
+        expect(expectedResult).to.equal(
+            result,
+            'Configuration should not change if the linter is unavailable in the current workspace environment.'
+        );
     });
 
     test('Overall implementation does not change configuration when user is prompted and prompt is dismissed', async () => {
@@ -366,7 +528,10 @@ suite('Linter Availability Provider tests', () => {
         // arrange
         const result = await performTestOfOverallImplementation(testOpts);
 
-        expect(expectedResult).to.equal(result, 'Configuration should not change if the user is prompted and they dismiss the prompt.');
+        expect(expectedResult).to.equal(
+            result,
+            'Configuration should not change if the user is prompted and they dismiss the prompt.'
+        );
     });
 
     test('Overall implementation does not change configuration when user is prompted and "Do not show again" is selected', async () => {
@@ -378,7 +543,10 @@ suite('Linter Availability Provider tests', () => {
         // arrange
         const result = await performTestOfOverallImplementation(testOpts);
 
-        expect(expectedResult).to.equal(result, 'Configuration should change if the user is prompted and they choose to update the linter config.');
+        expect(expectedResult).to.equal(
+            result,
+            'Configuration should change if the user is prompted and they choose to update the linter config.'
+        );
     });
 
     test('Overall implementation does not change configuration when user is prompted and "Not now" is selected', async () => {
@@ -390,7 +558,10 @@ suite('Linter Availability Provider tests', () => {
         // arrange
         const result = await performTestOfOverallImplementation(testOpts);
 
-        expect(expectedResult).to.equal(result, 'Configuration should change if the user is prompted and they choose to update the linter config.');
+        expect(expectedResult).to.equal(
+            result,
+            'Configuration should change if the user is prompted and they choose to update the linter config.'
+        );
     });
 
     test('Overall implementation changes configuration when user is prompted and "Enable <linter>" is selected', async () => {
@@ -402,7 +573,10 @@ suite('Linter Availability Provider tests', () => {
         // arrange
         const result = await performTestOfOverallImplementation(testOpts);
 
-        expect(expectedResult).to.equal(result, 'Configuration should change if the user is prompted and they choose to update the linter config.');
+        expect(expectedResult).to.equal(
+            result,
+            'Configuration should change if the user is prompted and they choose to update the linter config.'
+        );
     });
 
     test('Discovery of linter is available in the environment returns true when it succeeds and is present', async () => {
@@ -411,14 +585,30 @@ suite('Linter Availability Provider tests', () => {
         const expectedResult = true;
 
         // arrange
-        const [appShellMock, fsMock, workspaceServiceMock, configServiceMock, factoryMock, linterInfo] = getDependenciesForAvailabilityTests();
+        const [
+            appShellMock,
+            fsMock,
+            workspaceServiceMock,
+            configServiceMock,
+            factoryMock,
+            linterInfo
+        ] = getDependenciesForAvailabilityTests();
         setupInstallerForAvailabilityTest(linterInfo, linterIsInstalled, fsMock, workspaceServiceMock);
 
         // perform test
-        const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
+        const availabilityProvider = new AvailableLinterActivator(
+            appShellMock.object,
+            fsMock.object,
+            workspaceServiceMock.object,
+            configServiceMock.object,
+            factoryMock.object
+        );
         const result = await availabilityProvider.isLinterAvailable(linterInfo, undefined);
 
-        expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.');
+        expect(result).to.equal(
+            expectedResult,
+            'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.'
+        );
         fsMock.verifyAll();
         workspaceServiceMock.verifyAll();
     });
@@ -429,14 +619,30 @@ suite('Linter Availability Provider tests', () => {
         const expectedResult = false;
 
         // arrange
-        const [appShellMock, fsMock, workspaceServiceMock, configServiceMock, factoryMock, linterInfo] = getDependenciesForAvailabilityTests();
+        const [
+            appShellMock,
+            fsMock,
+            workspaceServiceMock,
+            configServiceMock,
+            factoryMock,
+            linterInfo
+        ] = getDependenciesForAvailabilityTests();
         setupInstallerForAvailabilityTest(linterInfo, linterIsInstalled, fsMock, workspaceServiceMock);
 
         // perform test
-        const availabilityProvider = new AvailableLinterActivator(appShellMock.object, fsMock.object, workspaceServiceMock.object, configServiceMock.object, factoryMock.object);
+        const availabilityProvider = new AvailableLinterActivator(
+            appShellMock.object,
+            fsMock.object,
+            workspaceServiceMock.object,
+            configServiceMock.object,
+            factoryMock.object
+        );
         const result = await availabilityProvider.isLinterAvailable(linterInfo, undefined);
 
-        expect(result).to.equal(expectedResult, 'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.');
+        expect(result).to.equal(
+            expectedResult,
+            'Expected promptToConfigureAvailableLinter to return true because the configuration was updated.'
+        );
         fsMock.verifyAll();
         workspaceServiceMock.verifyAll();
     });
@@ -445,7 +651,11 @@ suite('Linter Availability Provider tests', () => {
         let availabilityProvider: AvailableLinterActivator;
         let workspaceService: IWorkspaceService;
         let fs: IFileSystem;
-        const defaultWorkspace: WorkspaceFolder = { uri: Uri.file(path.join('a', 'b', 'default')), name: 'default', index: 0 };
+        const defaultWorkspace: WorkspaceFolder = {
+            uri: Uri.file(path.join('a', 'b', 'default')),
+            name: 'default',
+            index: 0
+        };
         const resource = Uri.file(__dirname);
         setup(() => {
             workspaceService = mock(WorkspaceService);
@@ -467,93 +677,97 @@ suite('Linter Availability Provider tests', () => {
             expect(available).to.equal(false, 'Should be false');
         });
 
-        [undefined, { uri: Uri.file(path.join('c', 'd', 'resource')), name: 'another', index: 10 }].forEach(workspaceFolderRelatedToResource => {
-            const testSuffix = workspaceFolderRelatedToResource ? '(has a corresponding workspace)' : '(use default workspace)';
-            // If there's a workspace, then access default workspace.
-            const workspaceFolder = workspaceFolderRelatedToResource || defaultWorkspace;
-            test(`No linters when there are no config files ${testSuffix}`, async () => {
-                when(workspaceService.hasWorkspaceFolders).thenReturn(true);
-                const linterInfo = ({ configFileNames: [] } as any) as ILinterInfo;
-                when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
-                when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
-                const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
-
-                expect(available).to.equal(false, 'Should be false');
-                verify(workspaceService.getWorkspaceFolder(resource)).once();
-                verify(fs.fileExists(anything())).never();
+        [undefined, { uri: Uri.file(path.join('c', 'd', 'resource')), name: 'another', index: 10 }].forEach(
+            workspaceFolderRelatedToResource => {
+                const testSuffix = workspaceFolderRelatedToResource
+                    ? '(has a corresponding workspace)'
+                    : '(use default workspace)';
                 // If there's a workspace, then access default workspace.
-                if (workspaceFolderRelatedToResource) {
-                    verify(workspaceService.workspaceFolders).never();
-                } else {
-                    verify(workspaceService.workspaceFolders).once();
-                }
-            });
-            test(`No linters when there none of the config files exist ${testSuffix}`, async () => {
-                when(workspaceService.hasWorkspaceFolders).thenReturn(true);
-                const linterInfo = ({ configFileNames: ['1', '2'] } as any) as ILinterInfo;
-                when(fs.fileExists(anything())).thenResolve(false);
-                when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
-                when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
+                const workspaceFolder = workspaceFolderRelatedToResource || defaultWorkspace;
+                test(`No linters when there are no config files ${testSuffix}`, async () => {
+                    when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+                    const linterInfo = ({ configFileNames: [] } as any) as ILinterInfo;
+                    when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
+                    when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
+                    const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
 
-                const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
+                    expect(available).to.equal(false, 'Should be false');
+                    verify(workspaceService.getWorkspaceFolder(resource)).once();
+                    verify(fs.fileExists(anything())).never();
+                    // If there's a workspace, then access default workspace.
+                    if (workspaceFolderRelatedToResource) {
+                        verify(workspaceService.workspaceFolders).never();
+                    } else {
+                        verify(workspaceService.workspaceFolders).once();
+                    }
+                });
+                test(`No linters when there none of the config files exist ${testSuffix}`, async () => {
+                    when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+                    const linterInfo = ({ configFileNames: ['1', '2'] } as any) as ILinterInfo;
+                    when(fs.fileExists(anything())).thenResolve(false);
+                    when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
+                    when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
 
-                expect(available).to.equal(false, 'Should be false');
-                verify(workspaceService.getWorkspaceFolder(resource)).once();
-                verify(fs.fileExists(anything())).twice();
-                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).once();
-                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).once();
-                if (workspaceFolderRelatedToResource) {
-                    verify(workspaceService.workspaceFolders).never();
-                } else {
-                    verify(workspaceService.workspaceFolders).once();
-                }
-            });
-            test(`Linters exist when all of the config files exist ${testSuffix}`, async () => {
-                when(workspaceService.hasWorkspaceFolders).thenReturn(true);
-                const linterInfo = ({ configFileNames: ['1', '2'] } as any) as ILinterInfo;
-                when(fs.fileExists(anything())).thenResolve(true);
-                when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
-                when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
+                    const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
 
-                const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
+                    expect(available).to.equal(false, 'Should be false');
+                    verify(workspaceService.getWorkspaceFolder(resource)).once();
+                    verify(fs.fileExists(anything())).twice();
+                    verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).once();
+                    verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).once();
+                    if (workspaceFolderRelatedToResource) {
+                        verify(workspaceService.workspaceFolders).never();
+                    } else {
+                        verify(workspaceService.workspaceFolders).once();
+                    }
+                });
+                test(`Linters exist when all of the config files exist ${testSuffix}`, async () => {
+                    when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+                    const linterInfo = ({ configFileNames: ['1', '2'] } as any) as ILinterInfo;
+                    when(fs.fileExists(anything())).thenResolve(true);
+                    when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
+                    when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
 
-                expect(available).to.equal(true, 'Should be true');
-                verify(workspaceService.getWorkspaceFolder(resource)).once();
-                verify(fs.fileExists(anything())).once();
-                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).once();
-                // Check only the first file, if that exists, no point checking the rest.
-                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).never();
-                if (workspaceFolderRelatedToResource) {
-                    verify(workspaceService.workspaceFolders).never();
-                } else {
-                    verify(workspaceService.workspaceFolders).once();
-                }
-            });
-            test(`Linters exist when one of the config files exist ${testSuffix}`, async () => {
-                when(workspaceService.hasWorkspaceFolders).thenReturn(true);
-                const linterInfo = ({ configFileNames: ['1', '2', '3'] } as any) as ILinterInfo;
-                when(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).thenResolve(false);
-                when(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).thenResolve(true);
-                when(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '3'))).thenResolve(false);
-                when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
-                when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
+                    const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
 
-                const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
+                    expect(available).to.equal(true, 'Should be true');
+                    verify(workspaceService.getWorkspaceFolder(resource)).once();
+                    verify(fs.fileExists(anything())).once();
+                    verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).once();
+                    // Check only the first file, if that exists, no point checking the rest.
+                    verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).never();
+                    if (workspaceFolderRelatedToResource) {
+                        verify(workspaceService.workspaceFolders).never();
+                    } else {
+                        verify(workspaceService.workspaceFolders).once();
+                    }
+                });
+                test(`Linters exist when one of the config files exist ${testSuffix}`, async () => {
+                    when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+                    const linterInfo = ({ configFileNames: ['1', '2', '3'] } as any) as ILinterInfo;
+                    when(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).thenResolve(false);
+                    when(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).thenResolve(true);
+                    when(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '3'))).thenResolve(false);
+                    when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolderRelatedToResource);
+                    when(workspaceService.workspaceFolders).thenReturn([defaultWorkspace]);
 
-                expect(available).to.equal(true, 'Should be true');
-                verify(workspaceService.getWorkspaceFolder(resource)).once();
-                verify(fs.fileExists(anything())).twice();
-                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).once();
-                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).once();
-                // Check only the second file, if that exists, no point checking the rest.
-                verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '3'))).never();
-                if (workspaceFolderRelatedToResource) {
-                    verify(workspaceService.workspaceFolders).never();
-                } else {
-                    verify(workspaceService.workspaceFolders).once();
-                }
-            });
-        });
+                    const available = await availabilityProvider.isLinterAvailable(linterInfo, resource);
+
+                    expect(available).to.equal(true, 'Should be true');
+                    verify(workspaceService.getWorkspaceFolder(resource)).once();
+                    verify(fs.fileExists(anything())).twice();
+                    verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '1'))).once();
+                    verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '2'))).once();
+                    // Check only the second file, if that exists, no point checking the rest.
+                    verify(fs.fileExists(path.join(workspaceFolder.uri.fsPath, '3'))).never();
+                    if (workspaceFolderRelatedToResource) {
+                        verify(workspaceService.workspaceFolders).never();
+                    } else {
+                        verify(workspaceService.workspaceFolders).once();
+                    }
+                });
+            }
+        );
     });
 });
 

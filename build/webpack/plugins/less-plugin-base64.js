@@ -32,7 +32,12 @@ class Base64Visitor {
     visitUrl(URLNode, visitArgs) {
         // Return two new nodes in the call. One that has the mime type and other with the node. The data-uri
         // evaluator will transform this into a base64 string
-        return new less.tree.Call('data-uri', [new Base64MimeTypeNode(), URLNode.value], URLNode.index || 0, URLNode.currentFileInfo);
+        return new less.tree.Call(
+            'data-uri',
+            [new Base64MimeTypeNode(), URLNode.value],
+            URLNode.index || 0,
+            URLNode.currentFileInfo
+        );
     }
 }
 /*

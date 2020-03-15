@@ -34,4 +34,9 @@ function isMultitrootTest() {
 export const EXTENSION_ROOT_DIR_FOR_TESTS = path.join(__dirname, '..', '..');
 export const PVSC_EXTENSION_ID_FOR_TESTS = 'ms-python.python';
 
-export const SMOKE_TEST_EXTENSIONS_DIR = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'tmp', 'ext', 'smokeTestExtensionsFolder');
+export const SMOKE_TEST_EXTENSIONS_DIR = path.join(
+    EXTENSION_ROOT_DIR_FOR_TESTS,
+    'tmp',
+    'ext',
+    'smokeTestExtensionsFolder'
+);

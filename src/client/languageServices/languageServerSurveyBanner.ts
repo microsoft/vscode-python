@@ -34,7 +34,10 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     private maxCompletionsBeforeShow: number;
     private isInitialized: boolean = false;
     private bannerMessage: string = localize.LanguageService.bannerMessage();
-    private bannerLabels: string[] = [localize.LanguageService.bannerLabelYes(), localize.LanguageService.bannerLabelNo()];
+    private bannerLabels: string[] = [
+        localize.LanguageService.bannerLabelYes(),
+        localize.LanguageService.bannerLabelNo()
+    ];
 
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
@@ -107,7 +110,9 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     }
 
     public async disable(): Promise<void> {
-        await this.persistentState.createGlobalPersistentState<boolean>(LSSurveyStateKeys.ShowBanner, false).updateValue(false);
+        await this.persistentState
+            .createGlobalPersistentState<boolean>(LSSurveyStateKeys.ShowBanner, false)
+            .updateValue(false);
     }
 
     public async launchSurvey(): Promise<void> {
@@ -124,7 +129,9 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     }
 
     private async getPythonLSVersion(fallback: string = 'unknown'): Promise<string> {
-        const langServiceLatestFolder: FolderVersionPair | undefined = await this.lsService.getCurrentLanguageServerDirectory();
+        const langServiceLatestFolder:
+            | FolderVersionPair
+            | undefined = await this.lsService.getCurrentLanguageServerDirectory();
         return langServiceLatestFolder ? langServiceLatestFolder.version.raw : fallback;
     }
 
@@ -134,7 +141,10 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     }
 
     private async getPythonLSLaunchThresholdCounter(): Promise<number> {
-        const state = this.persistentState.createGlobalPersistentState<number | undefined>(LSSurveyStateKeys.ShowAfterCompletionCount, undefined);
+        const state = this.persistentState.createGlobalPersistentState<number | undefined>(
+            LSSurveyStateKeys.ShowAfterCompletionCount,
+            undefined
+        );
         if (state.value === undefined) {
             await state.updateValue(getRandomBetween(this.minCompletionsBeforeShow, this.maxCompletionsBeforeShow));
         }

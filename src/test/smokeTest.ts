@@ -32,8 +32,20 @@ class TestRunner {
     }
     private async enableLanguageServer(enable: boolean) {
         const settings = `{ "python.jediEnabled": ${!enable} }`;
-        await fs.ensureDir(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode'));
-        await fs.writeFile(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode', 'settings.json'), settings);
+        await fs.ensureDir(
+            path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode')
+        );
+        await fs.writeFile(
+            path.join(
+                EXTENSION_ROOT_DIR_FOR_TESTS,
+                'src',
+                'testMultiRootWkspc',
+                'smokeTests',
+                '.vscode',
+                'settings.json'
+            ),
+            settings
+        );
     }
     private async launchTest(customEnvVars: Record<string, {}>) {
         console.log('Launch tests in test runner');
@@ -41,11 +53,19 @@ class TestRunner {
             const env: Record<string, string> = {
                 TEST_FILES_SUFFIX: 'smoke.test',
                 IS_SMOKE_TEST: 'true',
-                CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests'),
+                CODE_TESTS_WORKSPACE: path.join(
+                    EXTENSION_ROOT_DIR_FOR_TESTS,
+                    'src',
+                    'testMultiRootWkspc',
+                    'smokeTests'
+                ),
                 ...process.env,
                 ...customEnvVars
             };
-            const proc = spawn('node', [path.join(__dirname, 'standardTest.js')], { cwd: EXTENSION_ROOT_DIR_FOR_TESTS, env });
+            const proc = spawn('node', [path.join(__dirname, 'standardTest.js')], {
+                cwd: EXTENSION_ROOT_DIR_FOR_TESTS,
+                env
+            });
             proc.stdout.pipe(process.stdout);
             proc.stderr.pipe(process.stderr);
             proc.on('error', reject);
@@ -61,7 +81,9 @@ class TestRunner {
     }
 
     private async extractLatestExtension(targetDir: string): Promise<void> {
-        const extensionFile = await new Promise<string>((resolve, reject) => glob('*.vsix', (ex, files) => (ex ? reject(ex) : resolve(files[0]))));
+        const extensionFile = await new Promise<string>((resolve, reject) =>
+            glob('*.vsix', (ex, files) => (ex ? reject(ex) : resolve(files[0])))
+        );
         await unzip(extensionFile, targetDir);
     }
 }

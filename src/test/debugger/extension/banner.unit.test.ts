@@ -9,7 +9,13 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../../client/common/application/types';
-import { IBrowserService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory, IRandom } from '../../../client/common/types';
+import {
+    IBrowserService,
+    IDisposableRegistry,
+    IPersistentState,
+    IPersistentStateFactory,
+    IRandom
+} from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
 import { DebuggerBanner, PersistentStateKeys } from '../../../client/debugger/extension/banner';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -35,7 +41,6 @@ suite('Debugging - Banner', () => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         browser = typemoq.Mock.ofType<IBrowserService>();
         debugService = typemoq.Mock.ofType<IDebugService>();
-        const logger = typemoq.Mock.ofType<ILogger>();
 
         launchCounterState = typemoq.Mock.ofType<IPersistentState<number>>();
         showBannerState = typemoq.Mock.ofType<IPersistentState<boolean>>();
@@ -46,18 +51,35 @@ suite('Debugging - Banner', () => {
         userSelectedState = typemoq.Mock.ofType<IPersistentState<boolean | undefined>>();
         const factory = typemoq.Mock.ofType<IPersistentStateFactory>();
         factory
-            .setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.DebuggerLaunchCounter), typemoq.It.isAny()))
+            .setup(f =>
+                f.createGlobalPersistentState(
+                    typemoq.It.isValue(PersistentStateKeys.DebuggerLaunchCounter),
+                    typemoq.It.isAny()
+                )
+            )
             .returns(() => launchCounterState.object);
-        factory.setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.ShowBanner), typemoq.It.isAny())).returns(() => showBannerState.object);
         factory
-            .setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.DebuggerLaunchThresholdCounter), typemoq.It.isAny()))
+            .setup(f =>
+                f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.ShowBanner), typemoq.It.isAny())
+            )
+            .returns(() => showBannerState.object);
+        factory
+            .setup(f =>
+                f.createGlobalPersistentState(
+                    typemoq.It.isValue(PersistentStateKeys.DebuggerLaunchThresholdCounter),
+                    typemoq.It.isAny()
+                )
+            )
             .returns(() => launchThresholdCounterState.object);
-        factory.setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.UserSelected), typemoq.It.isAny())).returns(() => userSelectedState.object);
+        factory
+            .setup(f =>
+                f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.UserSelected), typemoq.It.isAny())
+            )
+            .returns(() => userSelectedState.object);
 
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IBrowserService))).returns(() => browser.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IPersistentStateFactory))).returns(() => factory.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDebugService))).returns(() => debugService.object);
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(ILogger))).returns(() => logger.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IRandom))).returns(() => runtime.object);
@@ -71,9 +93,18 @@ suite('Debugging - Banner', () => {
             .setup(l => l.value)
             .returns(() => debuggerLaunchCounter)
             .verifiable(typemoq.Times.once());
-        browser.setup(b => b.launch(typemoq.It.isValue(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`))).verifiable(typemoq.Times.once());
+        browser
+            .setup(b => b.launch(typemoq.It.isValue(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`)))
+            .verifiable(typemoq.Times.once());
         appShell
-            .setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
+            .setup(a =>
+                a.showInformationMessage(
+                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
             .returns(() => Promise.resolve(yes));
 
         await banner.show();
@@ -89,7 +120,9 @@ suite('Debugging - Banner', () => {
             launchCounterState.setup(l => l.value).returns(() => 10);
             launchThresholdCounterState.setup(t => t.value).returns(() => 10);
             userSelected = undefined;
-            runtime.setup(r => r.getRandomInt(typemoq.It.isValue(0), typemoq.It.isValue(100))).returns(() => randomSample);
+            runtime
+                .setup(r => r.getRandomInt(typemoq.It.isValue(0), typemoq.It.isValue(100)))
+                .returns(() => randomSample);
             userSelectedState
                 .setup(u => u.updateValue(typemoq.It.isValue(expected)))
                 .returns(() => Promise.resolve())
@@ -108,7 +141,9 @@ suite('Debugging - Banner', () => {
             launchCounterState.setup(l => l.value).returns(() => 10);
             launchThresholdCounterState.setup(t => t.value).returns(() => 10);
             userSelected = undefined;
-            runtime.setup(r => r.getRandomInt(typemoq.It.isValue(0), typemoq.It.isValue(100))).returns(() => randomSample);
+            runtime
+                .setup(r => r.getRandomInt(typemoq.It.isValue(0), typemoq.It.isValue(100)))
+                .returns(() => randomSample);
             userSelectedState
                 .setup(u => u.updateValue(typemoq.It.isValue(expected)))
                 .returns(() => Promise.resolve())
@@ -135,7 +170,9 @@ suite('Debugging - Banner', () => {
             .setup(l => l.value)
             .returns(() => debuggerLaunchCounter)
             .verifiable(typemoq.Times.atLeastOnce());
-        launchCounterState.setup(l => l.updateValue(typemoq.It.isValue(debuggerLaunchCounter + 1))).verifiable(typemoq.Times.once());
+        launchCounterState
+            .setup(l => l.updateValue(typemoq.It.isValue(debuggerLaunchCounter + 1)))
+            .verifiable(typemoq.Times.once());
         showBannerState
             .setup(s => s.value)
             .returns(() => true)
@@ -157,7 +194,9 @@ suite('Debugging - Banner', () => {
             .setup(l => l.value)
             .returns(() => debuggerLaunchCounter)
             .verifiable(typemoq.Times.never());
-        launchCounterState.setup(l => l.updateValue(typemoq.It.isValue(debuggerLaunchCounter + 1))).verifiable(typemoq.Times.never());
+        launchCounterState
+            .setup(l => l.updateValue(typemoq.It.isValue(debuggerLaunchCounter + 1)))
+            .verifiable(typemoq.Times.never());
         showBannerState
             .setup(s => s.value)
             .returns(() => false)
@@ -246,7 +285,14 @@ suite('Debugging - Banner', () => {
             .verifiable(typemoq.Times.atLeastOnce());
 
         appShell
-            .setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
+            .setup(a =>
+                a.showInformationMessage(
+                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
             .verifiable(typemoq.Times.once());
         banner.initialize();
         await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
@@ -276,10 +322,19 @@ suite('Debugging - Banner', () => {
             .setup(t => t.value)
             .returns(() => 10)
             .verifiable(typemoq.Times.atLeastOnce());
-        launchCounterState.setup(l => l.updateValue(typemoq.It.isAny())).callback(() => (currentLaunchCounter = currentLaunchCounter + 1));
+        launchCounterState
+            .setup(l => l.updateValue(typemoq.It.isAny()))
+            .callback(() => (currentLaunchCounter = currentLaunchCounter + 1));
 
         appShell
-            .setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
+            .setup(a =>
+                a.showInformationMessage(
+                    typemoq.It.isValue(message),
+                    typemoq.It.isValue(yes),
+                    typemoq.It.isValue(no),
+                    typemoq.It.isValue(later)
+                )
+            )
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
         banner.initialize();

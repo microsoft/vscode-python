@@ -7,25 +7,40 @@ import { inject, injectable } from 'inversify';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter, SignatureHelpContext, TextDocumentContentChangeEvent, Uri } from 'vscode';
-
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    CompletionItem,
+    Event,
+    EventEmitter,
+    SignatureHelpContext,
+    TextDocumentContentChangeEvent,
+    Uri
+} from 'vscode';
+import * as vscodeLanguageClient from 'vscode-languageclient';
+import { concatMultilineStringInput } from '../../../../datascience-ui/common';
 import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceError, traceWarning } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
 import { Resource } from '../../../common/types';
-import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';
+import { createDeferred, Deferred, sleep, waitForPromise } from '../../../common/utils/async';
+import { noop } from '../../../common/utils/misc';
 import { HiddenFileFormatString } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
-import { concatMultilineStringInput } from '../../common';
-import { Identifiers, Settings } from '../../constants';
-import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../types';
+import { sendTelemetryWhenDone } from '../../../telemetry';
+import { Settings, Telemetry } from '../../constants';
 import {
-    IAddCell,
+    ICell,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
+    IJupyterExecution,
+    INotebook,
+    INotebookCompletion
+} from '../../types';
+import {
     ICancelIntellisenseRequest,
-    IEditCell,
-    IInsertCell,
     IInteractiveWindowMapping,
     ILoadAllCells,
     INotebookIdentity,
@@ -33,18 +48,31 @@ import {
     IProvideCompletionItemsRequest,
     IProvideHoverRequest,
     IProvideSignatureHelpRequest,
-    IRemoveCell,
-    ISwapCells
+    IResolveCompletionItemRequest,
+    NotebookModelChange
 } from '../interactiveWindowTypes';
-import { convertStringsToSuggestions, convertToMonacoCompletionList, convertToMonacoHover, convertToMonacoSignatureHelp } from './conversion';
+import {
+    convertStringsToSuggestions,
+    convertToMonacoCompletionItem,
+    convertToMonacoCompletionList,
+    convertToMonacoHover,
+    convertToMonacoSignatureHelp,
+    convertToVSCodeCompletionItem
+} from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
 
 // tslint:disable:no-any
 @injectable()
 export class IntellisenseProvider implements IInteractiveWindowListener {
+    public get postMessage(): Event<{ message: string; payload: any }> {
+        return this.postEmitter.event;
+    }
     private documentPromise: Deferred<IntellisenseDocument> | undefined;
     private temporaryFile: TemporaryFile | undefined;
-    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
+    private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
+        message: string;
+        payload: any;
+    }>();
     private cancellationSources: Map<string, CancellationTokenSource> = new Map<string, CancellationTokenSource>();
     private notebookIdentity: Uri | undefined;
     private potentialResource: Uri | undefined;
@@ -72,10 +100,6 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         }
     }
 
-    public get postMessage(): Event<{ message: string; payload: any }> {
-        return this.postEmitter.event;
-    }
-
     public onMessage(message: string, payload?: any) {
         switch (message) {
             case InteractiveWindowMessages.CancelCompletionItemsRequest:
@@ -95,28 +119,12 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 this.dispatchMessage(message, payload, this.handleSignatureHelpRequest);
                 break;
 
-            case InteractiveWindowMessages.EditCell:
-                this.dispatchMessage(message, payload, this.editCell);
+            case InteractiveWindowMessages.ResolveCompletionItemRequest:
+                this.dispatchMessage(message, payload, this.handleResolveCompletionItemRequest);
                 break;
 
-            case InteractiveWindowMessages.AddCell:
-                this.dispatchMessage(message, payload, this.addCell);
-                break;
-
-            case InteractiveWindowMessages.InsertCell:
-                this.dispatchMessage(message, payload, this.insertCell);
-                break;
-
-            case InteractiveWindowMessages.RemoveCell:
-                this.dispatchMessage(message, payload, this.removeCell);
-                break;
-
-            case InteractiveWindowMessages.SwapCells:
-                this.dispatchMessage(message, payload, this.swapCells);
-                break;
-
-            case InteractiveWindowMessages.DeleteAllCells:
-                this.dispatchMessage(message, payload, this.removeAllCells);
+            case InteractiveWindowMessages.UpdateModel:
+                this.dispatchMessage(message, payload, this.update);
                 break;
 
             case InteractiveWindowMessages.RestartKernel:
@@ -136,16 +144,50 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         }
     }
 
+    public getDocument(resource?: Uri): Promise<IntellisenseDocument> {
+        if (!this.documentPromise) {
+            this.documentPromise = createDeferred<IntellisenseDocument>();
+
+            // Create our dummy document. Compute a file path for it.
+            if (this.workspaceService.rootPath || resource) {
+                const dir = resource ? path.dirname(resource.fsPath) : this.workspaceService.rootPath!;
+                const dummyFilePath = path.join(dir, HiddenFileFormatString.format(uuid().replace(/-/g, '')));
+                this.documentPromise.resolve(new IntellisenseDocument(dummyFilePath));
+            } else {
+                this.fileSystem
+                    .createTemporaryFile('.py')
+                    .then(t => {
+                        this.temporaryFile = t;
+                        const dummyFilePath = this.temporaryFile.filePath;
+                        this.documentPromise!.resolve(new IntellisenseDocument(dummyFilePath));
+                    })
+                    .catch(e => {
+                        this.documentPromise!.reject(e);
+                    });
+            }
+        }
+
+        return this.documentPromise.promise;
+    }
+
     protected async getLanguageServer(): Promise<ILanguageServer | undefined> {
         // Resource should be our potential resource if its set. Otherwise workspace root
-        const resource = this.potentialResource || (this.workspaceService.rootPath ? Uri.parse(this.workspaceService.rootPath) : undefined);
+        const resource =
+            this.potentialResource ||
+            (this.workspaceService.rootPath ? Uri.parse(this.workspaceService.rootPath) : undefined);
 
         // Interpreter should be the interpreter currently active in the notebook
         const activeNotebook = await this.getNotebook();
-        const interpreter = activeNotebook ? activeNotebook.getMatchingInterpreter() : await this.interpreterService.getActiveInterpreter(resource);
+        const interpreter = activeNotebook
+            ? activeNotebook.getMatchingInterpreter()
+            : await this.interpreterService.getActiveInterpreter(resource);
 
         // See if the resource or the interpreter are different
-        if (resource?.toString() !== this.resource?.toString() || interpreter?.path !== this.interpreter?.path || this.languageServer === undefined) {
+        if (
+            resource?.toString() !== this.resource?.toString() ||
+            interpreter?.path !== this.interpreter?.path ||
+            this.languageServer === undefined
+        ) {
             this.resource = resource;
             this.interpreter = interpreter;
 
@@ -179,40 +221,13 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         return this.languageServer;
     }
 
-    protected getDocument(resource?: Uri): Promise<IntellisenseDocument> {
-        if (!this.documentPromise) {
-            this.documentPromise = createDeferred<IntellisenseDocument>();
-
-            // Create our dummy document. Compute a file path for it.
-            if (this.workspaceService.rootPath || resource) {
-                const dir = resource ? path.dirname(resource.fsPath) : this.workspaceService.rootPath!;
-                const dummyFilePath = path.join(dir, HiddenFileFormatString.format(uuid().replace(/-/g, '')));
-                this.documentPromise.resolve(new IntellisenseDocument(dummyFilePath));
-            } else {
-                this.fileSystem
-                    .createTemporaryFile('.py')
-                    .then(t => {
-                        this.temporaryFile = t;
-                        const dummyFilePath = this.temporaryFile.filePath;
-                        this.documentPromise!.resolve(new IntellisenseDocument(dummyFilePath));
-                    })
-                    .catch(e => {
-                        this.documentPromise!.reject(e);
-                    });
-            }
-        }
-
-        return this.documentPromise.promise;
-    }
-
     protected async provideCompletionItems(
         position: monacoEditor.Position,
         context: monacoEditor.languages.CompletionContext,
         cellId: string,
         token: CancellationToken
     ): Promise<monacoEditor.languages.CompletionList> {
-        const languageServer = await this.getLanguageServer();
-        const document = await this.getDocument();
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageServer.provideCompletionItems(document, docPos, token, context);
@@ -226,9 +241,12 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             incomplete: false
         };
     }
-    protected async provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.Hover> {
-        const languageServer = await this.getLanguageServer();
-        const document = await this.getDocument();
+    protected async provideHover(
+        position: monacoEditor.Position,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.Hover> {
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageServer.provideHover(document, docPos, token);
@@ -247,11 +265,15 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         cellId: string,
         token: CancellationToken
     ): Promise<monacoEditor.languages.SignatureHelp> {
-        const languageServer = await this.getLanguageServer();
-        const document = await this.getDocument();
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
-            const result = await languageServer.provideSignatureHelp(document, docPos, token, context as SignatureHelpContext);
+            const result = await languageServer.provideSignatureHelp(
+                document,
+                docPos,
+                token,
+                context as SignatureHelpContext
+            );
             if (result) {
                 return convertToMonacoSignatureHelp(result);
             }
@@ -264,7 +286,35 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         };
     }
 
-    protected async handleChanges(document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]): Promise<void> {
+    protected async resolveCompletionItem(
+        position: monacoEditor.Position,
+        item: monacoEditor.languages.CompletionItem,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.CompletionItem> {
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
+        if (languageServer && languageServer.resolveCompletionItem && document) {
+            const vscodeCompItem: CompletionItem = convertToVSCodeCompletionItem(item);
+
+            // Needed by Jedi in completionSource.ts to resolve the item
+            const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+            (vscodeCompItem as any)._documentPosition = { document, position: docPos };
+
+            const result = await languageServer.resolveCompletionItem(vscodeCompItem, token);
+            if (result) {
+                // Convert expects vclc completion item, but takes both vclc and vscode items so just cast here
+                return convertToMonacoCompletionItem(result as vscodeLanguageClient.CompletionItem, true);
+            }
+        }
+
+        // If we can't fill in the extra info, just return the item
+        return item;
+    }
+
+    protected async handleChanges(
+        document: IntellisenseDocument,
+        changes: TextDocumentContentChangeEvent[]
+    ): Promise<void> {
         // For the dot net language server, we have to send extra data to the language server
         if (document) {
             // Broadcast an update to the language server
@@ -280,7 +330,11 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         }
     }
 
-    private dispatchMessage<M extends IInteractiveWindowMapping, T extends keyof M>(_message: T, payload: any, handler: (args: M[T]) => void) {
+    private dispatchMessage<M extends IInteractiveWindowMapping, T extends keyof M>(
+        _message: T,
+        payload: any,
+        handler: (args: M[T]) => void
+    ) {
         const args = payload as M[T];
         handler.bind(this)(args);
     }
@@ -311,16 +365,67 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
 
+        const getCompletions = async (): Promise<monacoEditor.languages.CompletionList> => {
+            const emptyList: monacoEditor.languages.CompletionList = {
+                dispose: noop,
+                incomplete: false,
+                suggestions: []
+            };
+
+            const lsCompletions = this.provideCompletionItems(
+                request.position,
+                request.context,
+                request.cellId,
+                cancelSource.token
+            );
+
+            const jupyterCompletions = this.provideJupyterCompletionItems(
+                request.position,
+                request.context,
+                request.cellId,
+                cancelSource.token
+            );
+
+            // Capture telemetry for each of the two providers.
+            // Telemetry will be used to improve how we handle intellisense to improve response times for code completion.
+            // NOTE: If this code is around after a few months, telemetry isn't used, or we don't need it anymore.
+            // I.e. delete this code.
+            sendTelemetryWhenDone(Telemetry.CompletionTimeFromLS, lsCompletions);
+            sendTelemetryWhenDone(Telemetry.CompletionTimeFromJupyter, jupyterCompletions);
+
+            return this.combineCompletions(
+                await Promise.all([
+                    // Ensure we wait for a result from Language Server (assumption is LS is faster).
+                    // Telemetry will prove/disprove this assumption and we'll change this code accordingly.
+                    lsCompletions,
+                    // Wait for a max of n ms before ignoring results from jupyter (jupyter completion is generally slower).
+                    Promise.race([jupyterCompletions, sleep(Settings.IntellisenseTimeout).then(() => emptyList)])
+                ])
+            );
+        };
+
+        // Combine all of the results together.
+        this.postTimedResponse([getCompletions()], InteractiveWindowMessages.ProvideCompletionItemsResponse, c => {
+            const list = this.combineCompletions(c);
+            return { list, requestId: request.requestId };
+        });
+    }
+
+    private handleResolveCompletionItemRequest(request: IResolveCompletionItemRequest) {
+        // Create a cancellation source. We'll use this for our sub class request and a jupyter one
+        const cancelSource = new CancellationTokenSource();
+        this.cancellationSources.set(request.requestId, cancelSource);
+
         // Combine all of the results together.
         this.postTimedResponse(
-            [
-                this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token),
-                this.provideJupyterCompletionItems(request.position, request.context, request.cellId, cancelSource.token)
-            ],
-            InteractiveWindowMessages.ProvideCompletionItemsResponse,
+            [this.resolveCompletionItem(request.position, request.item, request.cellId, cancelSource.token)],
+            InteractiveWindowMessages.ResolveCompletionItemResponse,
             c => {
-                const list = this.combineCompletions(c);
-                return { list, requestId: request.requestId };
+                if (c && c[0]) {
+                    return { item: c[0], requestId: request.requestId };
+                } else {
+                    return { item: request.item, requestId: request.requestId };
+                }
             }
         );
     }
@@ -328,13 +433,17 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private handleHoverRequest(request: IProvideHoverRequest) {
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
-        this.postTimedResponse([this.provideHover(request.position, request.cellId, cancelSource.token)], InteractiveWindowMessages.ProvideHoverResponse, h => {
-            if (h && h[0]) {
-                return { hover: h[0]!, requestId: request.requestId };
-            } else {
-                return { hover: { contents: [] }, requestId: request.requestId };
+        this.postTimedResponse(
+            [this.provideHover(request.position, request.cellId, cancelSource.token)],
+            InteractiveWindowMessages.ProvideHoverResponse,
+            h => {
+                if (h && h[0]) {
+                    return { hover: h[0]!, requestId: request.requestId };
+                } else {
+                    return { hover: { contents: [] }, requestId: request.requestId };
+                }
             }
-        });
+        );
     }
 
     private async provideJupyterCompletionItems(
@@ -344,8 +453,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         cancelToken: CancellationToken
     ): Promise<monacoEditor.languages.CompletionList> {
         try {
-            const activeNotebook = await this.getNotebook();
-            const document = await this.getDocument();
+            const [activeNotebook, document] = await Promise.all([this.getNotebook(), this.getDocument()]);
             if (activeNotebook && document) {
                 const data = document.getCellData(cellId);
 
@@ -363,6 +471,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
                     const jupyterResults = await activeNotebook.getCompletion(data.text, offsetInCode, cancelToken);
                     if (jupyterResults && jupyterResults.matches) {
+                        const filteredMatches = this.filterJupyterMatches(document, jupyterResults, cellId, position);
+
                         const baseOffset = data.offset;
                         const basePosition = document.positionAt(baseOffset);
                         const startPosition = document.positionAt(jupyterResults.cursor.start + baseOffset);
@@ -374,7 +484,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                             endColumn: endPosition.character + 1
                         };
                         return {
-                            suggestions: convertStringsToSuggestions(jupyterResults.matches, range, jupyterResults.metadata),
+                            suggestions: convertStringsToSuggestions(filteredMatches, range, jupyterResults.metadata),
                             incomplete: false
                         };
                     }
@@ -392,9 +502,31 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         };
     }
 
-    private postTimedResponse<R, M extends IInteractiveWindowMapping, T extends keyof M>(promises: Promise<R>[], message: T, formatResponse: (val: (R | null)[]) => M[T]) {
-        // Time all of the promises to make sure they don't take too long
-        const timed = promises.map(p => waitForPromise(p, Settings.IntellisenseTimeout));
+    // The suggestions that the kernel is giving always include magic commands. That is confusing to the user.
+    // This function is called by provideJupyterCompletionItems to filter those magic commands when not in an empty line of code.
+    private filterJupyterMatches(
+        document: IntellisenseDocument,
+        jupyterResults: INotebookCompletion,
+        cellId: string,
+        position: monacoEditor.Position
+    ) {
+        // If the line we're analyzing is empty or a whitespace, we filter out the magic commands
+        // as its confusing to see them appear after a . or inside ().
+        const pos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+        const line = document.lineAt(pos);
+        return line.isEmptyOrWhitespace
+            ? jupyterResults.matches
+            : jupyterResults.matches.filter(match => !match.startsWith('%'));
+    }
+
+    private postTimedResponse<R, M extends IInteractiveWindowMapping, T extends keyof M>(
+        promises: Promise<R>[],
+        message: T,
+        formatResponse: (val: (R | null)[]) => M[T]
+    ) {
+        // Time all of the promises to make sure they don't take too long.
+        // Even if LS or Jupyter doesn't complete within e.g. 30s, then we should return an empty response (no point waiting that long).
+        const timed = promises.map(p => waitForPromise(p, Settings.MaxIntellisenseTimeout));
 
         // Wait for all of of the timings.
         const all = Promise.all(timed);
@@ -405,11 +537,16 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         });
     }
 
-    private combineCompletions(list: (monacoEditor.languages.CompletionList | null)[]): monacoEditor.languages.CompletionList {
+    private combineCompletions(
+        list: (monacoEditor.languages.CompletionList | null)[]
+    ): monacoEditor.languages.CompletionList {
         // Note to self. We're eliminating duplicates ourselves. The alternative would be to
         // have more than one intellisense provider at the monaco editor level and return jupyter
         // results independently. Maybe we switch to this when jupyter resides on the react side.
-        const uniqueSuggestions: Map<string, monacoEditor.languages.CompletionItem> = new Map<string, monacoEditor.languages.CompletionItem>();
+        const uniqueSuggestions: Map<string, monacoEditor.languages.CompletionItem> = new Map<
+            string,
+            monacoEditor.languages.CompletionItem
+        >();
         list.forEach(c => {
             if (c) {
                 c.suggestions.forEach(s => {
@@ -436,69 +573,116 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 if (s && s[0]) {
                     return { signatureHelp: s[0]!, requestId: request.requestId };
                 } else {
-                    return { signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 }, requestId: request.requestId };
+                    return {
+                        signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 },
+                        requestId: request.requestId
+                    };
                 }
             }
         );
     }
 
-    private async addCell(request: IAddCell): Promise<void> {
-        // Save this request file as our potential resource
-        if (request.cell.file !== Identifiers.EmptyFileName) {
-            this.potentialResource = Uri.file(request.cell.file);
-        }
-
-        // Get the document and then pass onto the sub class
-        const document = await this.getDocument(request.cell.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.cell.file));
-        if (document) {
-            const changes = document.addCell(request.fullText, request.currentText, request.cell.id);
-            return this.handleChanges(document, changes);
-        }
-    }
-
-    private async insertCell(request: IInsertCell): Promise<void> {
-        // Get the document and then pass onto the sub class
-        const document = await this.getDocument();
-        if (document) {
-            const changes = document.insertCell(request.cell.id, request.code, request.codeCellAboveId);
-            return this.handleChanges(document, changes);
+    private async update(request: NotebookModelChange): Promise<void> {
+        // See where this request is coming from
+        switch (request.source) {
+            case 'redo':
+            case 'user':
+                return this.handleRedo(request);
+            case 'undo':
+                return this.handleUndo(request);
+            default:
+                break;
         }
     }
 
-    private async editCell(request: IEditCell): Promise<void> {
-        // First get the document
-        const document = await this.getDocument();
-        if (document) {
-            const changes = document.edit(request.changes, request.id);
-            return this.handleChanges(document, changes);
-        }
+    private convertToDocCells(cells: ICell[]): { code: string; id: string }[] {
+        return cells
+            .filter(c => c.data.cell_type === 'code')
+            .map(c => {
+                return { code: concatMultilineStringInput(c.data.source), id: c.id };
+            });
     }
 
-    private async removeCell(request: IRemoveCell): Promise<void> {
-        // First get the document
+    private async handleUndo(request: NotebookModelChange): Promise<void> {
         const document = await this.getDocument();
-        if (document) {
-            const changes = document.remove(request.id);
-            return this.handleChanges(document, changes);
+        let changes: TextDocumentContentChangeEvent[] = [];
+        switch (request.kind) {
+            case 'clear':
+                // This one can be ignored, it only clears outputs
+                break;
+            case 'edit':
+                changes = document.editCell(request.reverse, request.id);
+                break;
+            case 'add':
+            case 'insert':
+                changes = document.remove(request.cell.id);
+                break;
+            case 'modify':
+                // This one can be ignored. it's only used for updating cell finished state.
+                break;
+            case 'remove':
+                changes = document.insertCell(
+                    request.cell.id,
+                    concatMultilineStringInput(request.cell.data.source),
+                    request.index
+                );
+                break;
+            case 'remove_all':
+                changes = document.reloadCells(this.convertToDocCells(request.oldCells));
+                break;
+            case 'swap':
+                changes = document.swap(request.secondCellId, request.firstCellId);
+                break;
+            case 'version':
+                // Also ignored. updates version which we don't keep track of.
+                break;
+            default:
+                break;
         }
+
+        return this.handleChanges(document, changes);
     }
 
-    private async swapCells(request: ISwapCells): Promise<void> {
-        // First get the document
+    private async handleRedo(request: NotebookModelChange): Promise<void> {
         const document = await this.getDocument();
-        if (document) {
-            const changes = document.swap(request.firstCellId, request.secondCellId);
-            return this.handleChanges(document, changes);
+        let changes: TextDocumentContentChangeEvent[] = [];
+        switch (request.kind) {
+            case 'clear':
+                // This one can be ignored, it only clears outputs
+                break;
+            case 'edit':
+                changes = document.editCell(request.forward, request.id);
+                break;
+            case 'add':
+                changes = document.addCell(request.fullText, request.currentText, request.cell.id);
+                break;
+            case 'insert':
+                changes = document.insertCell(
+                    request.cell.id,
+                    concatMultilineStringInput(request.cell.data.source),
+                    request.codeCellAboveId || request.index
+                );
+                break;
+            case 'modify':
+                // This one can be ignored. it's only used for updating cell finished state.
+                break;
+            case 'remove':
+                changes = document.remove(request.cell.id);
+                break;
+            case 'remove_all':
+                changes = document.removeAll();
+                break;
+            case 'swap':
+                changes = document.swap(request.firstCellId, request.secondCellId);
+                break;
+            case 'version':
+                // Also ignored. updates version which we don't keep track of.
+                break;
+            default:
+                break;
         }
-    }
 
-    private async removeAllCells(): Promise<void> {
-        // First get the document
-        const document = await this.getDocument();
-        if (document) {
-            const changes = document.removeAll();
-            return this.handleChanges(document, changes);
-        }
+        return this.handleChanges(document, changes);
     }
 
     private async loadAllCells(payload: ILoadAllCells) {
@@ -536,7 +720,9 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
     private async getNotebook(): Promise<INotebook | undefined> {
         // First get the active server
-        const activeServer = await this.jupyterExecution.getServer(await this.interactiveWindowProvider.getNotebookOptions());
+        const activeServer = await this.jupyterExecution.getServer(
+            await this.interactiveWindowProvider.getNotebookOptions(this.potentialResource)
+        );
 
         // If that works, see if there's a matching notebook running
         if (activeServer && this.notebookIdentity) {

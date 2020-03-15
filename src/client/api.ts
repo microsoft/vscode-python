@@ -3,11 +3,13 @@
 
 'use strict';
 
-import { DebugAdapterDescriptorFactory as DebugAdapterExperiment, DebugAdapterNewPtvsd } from './common/experimentGroups';
+import { isTestExecution } from './common/constants';
+import { DebugAdapterNewPtvsd } from './common/experimentGroups';
 import { traceError } from './common/logger';
 import { IExperimentsManager } from './common/types';
 import { RemoteDebuggerExternalLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
 import { IDebugAdapterDescriptorFactory } from './debugger/extension/types';
+import { IServiceContainer, IServiceManager } from './ioc/types';
 
 /*
  * Do not introduce any breaking changes to this API.
@@ -35,26 +37,50 @@ export interface IExtensionApi {
     };
 }
 
-// tslint:disable-next-line:no-any
-export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsManager, debugFactory: IDebugAdapterDescriptorFactory) {
-    return {
+export function buildApi(
+    // tslint:disable-next-line:no-any
+    ready: Promise<any>,
+    serviceManager: IServiceManager,
+    serviceContainer: IServiceContainer
+) {
+    const experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+    const debugFactory = serviceContainer.get<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory);
+
+    const api = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch(ex => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),
         debug: {
-            async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
-                const useNewDAPtvsd = experimentsManager.inExperiment(DebugAdapterExperiment.experiment) && experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
+            async getRemoteLauncherCommand(
+                host: string,
+                port: number,
+                waitUntilDebuggerAttaches: boolean = true
+            ): Promise<string[]> {
+                const useNewDADebugger = experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
 
-                if (useNewDAPtvsd) {
+                if (useNewDADebugger) {
                     // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
-                    const args = debugFactory.getRemotePtvsdArgs({ host, port, waitUntilDebuggerAttaches });
-                    return [debugFactory.getPtvsdPath(), ...args];
+                    const args = debugFactory.getRemoteDebuggerArgs({ host, port, waitUntilDebuggerAttaches });
+                    return [debugFactory.getDebuggerPath(), ...args];
                 }
 
-                return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
+                return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({
+                    host,
+                    port,
+                    waitUntilDebuggerAttaches
+                });
             }
         }
     };
+
+    // In test environment return the DI Container.
+    if (isTestExecution()) {
+        // tslint:disable:no-any
+        (api as any).serviceContainer = serviceContainer;
+        (api as any).serviceManager = serviceManager;
+        // tslint:enable:no-any
+    }
+    return api;
 }

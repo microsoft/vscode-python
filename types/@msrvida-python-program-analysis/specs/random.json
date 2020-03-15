@@ -1,0 +1,28 @@
+{
+    "random": {
+        "functions": [
+            "betavariate",
+            "choice",
+            "choices",
+            "expovariate",
+            "gammavariate",
+            "gauss",
+            "getrandbits",
+            "getstate",
+            "lognormvariate",
+            "normalvariate",
+            "paretovariate",
+            "randint",
+            "random",
+            "randrange",
+            "sample",
+            { "name": "seed", "updates": ["$global"] },
+            { "name": "setstate", "updates": ["$global"] },
+            "shuffle",
+            "triangular",
+            "uniform",
+            "vonmisesvariate",
+            "weibullvariate"
+        ]
+    }
+}

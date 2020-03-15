@@ -102,7 +102,14 @@ class MockCanvas implements CanvasRenderingContext2D {
     public createPattern(_image: CanvasImageSource, _repetition: string): CanvasPattern | null {
         throw new Error('Method not implemented.');
     }
-    public createRadialGradient(_x0: number, _y0: number, _r0: number, _x1: number, _y1: number, _r1: number): CanvasGradient {
+    public createRadialGradient(
+        _x0: number,
+        _y0: number,
+        _r0: number,
+        _x1: number,
+        _y1: number,
+        _r1: number
+    ): CanvasGradient {
         throw new Error('Method not implemented.');
     }
     public shadowBlur!: number;
@@ -170,8 +177,28 @@ class MockCanvas implements CanvasRenderingContext2D {
     }
     public drawImage(image: CanvasImageSource, dx: number, dy: number): void;
     public drawImage(image: CanvasImageSource, dx: number, dy: number, dw: number, dh: number): void;
-    public drawImage(image: CanvasImageSource, sx: number, sy: number, sw: number, sh: number, dx: number, dy: number, dw: number, dh: number): void;
-    public drawImage(_image: any, _sx: any, _sy: any, _sw?: any, _sh?: any, _dx?: any, _dy?: any, _dw?: any, _dh?: any) {
+    public drawImage(
+        image: CanvasImageSource,
+        sx: number,
+        sy: number,
+        sw: number,
+        sh: number,
+        dx: number,
+        dy: number,
+        dw: number,
+        dh: number
+    ): void;
+    public drawImage(
+        _image: any,
+        _sx: any,
+        _sy: any,
+        _sw?: any,
+        _sh?: any,
+        _dx?: any,
+        _dy?: any,
+        _dw?: any,
+        _dh?: any
+    ) {
         throw new Error('Method not implemented.');
     }
     public createImageData(sw: number, sh: number): ImageData;
@@ -183,8 +210,24 @@ class MockCanvas implements CanvasRenderingContext2D {
         throw new Error('Method not implemented.');
     }
     public putImageData(imagedata: ImageData, dx: number, dy: number): void;
-    public putImageData(imagedata: ImageData, dx: number, dy: number, dirtyX: number, dirtyY: number, dirtyWidth: number, dirtyHeight: number): void;
-    public putImageData(_imagedata: any, _dx: any, _dy: any, _dirtyX?: any, _dirtyY?: any, _dirtyWidth?: any, _dirtyHeight?: any) {
+    public putImageData(
+        imagedata: ImageData,
+        dx: number,
+        dy: number,
+        dirtyX: number,
+        dirtyY: number,
+        dirtyWidth: number,
+        dirtyHeight: number
+    ): void;
+    public putImageData(
+        _imagedata: any,
+        _dx: any,
+        _dy: any,
+        _dirtyX?: any,
+        _dirtyY?: any,
+        _dirtyWidth?: any,
+        _dirtyHeight?: any
+    ) {
         throw new Error('Method not implemented.');
     }
     public lineCap!: CanvasLineCap;
@@ -202,7 +245,14 @@ class MockCanvas implements CanvasRenderingContext2D {
     public font!: string;
     public textAlign!: CanvasTextAlign;
     public textBaseline!: CanvasTextBaseline;
-    public arc(_x: number, _y: number, _radius: number, _startAngle: number, _endAngle: number, _anticlockwise?: boolean | undefined): void {
+    public arc(
+        _x: number,
+        _y: number,
+        _radius: number,
+        _startAngle: number,
+        _endAngle: number,
+        _anticlockwise?: boolean | undefined
+    ): void {
         throw new Error('Method not implemented.');
     }
     public arcTo(_x1: number, _y1: number, _x2: number, _y2: number, _radius: number): void {
@@ -244,7 +294,10 @@ const mockCanvas = new MockCanvas();
 
 export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-http-string
-    const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'http://localhost' });
+    const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', {
+        pretendToBeVisual: true,
+        url: 'http://localhost'
+    });
     const { window } = dom;
 
     // tslint:disable: no-function-expression no-empty
@@ -346,34 +399,6 @@ export function setUpDomEnvironment() {
     (global as any)['Headers'] = fetchMod.Headers;
     // tslint:disable-next-line:no-string-literal no-eval no-any
     (global as any)['WebSocket'] = eval('require')('ws');
-
-    // For the loc test to work, we have to have a global getter for loc strings
-    // tslint:disable-next-line:no-string-literal no-eval no-any
-    (global as any)['getLocStrings'] = () => {
-        return { 'DataScience.unknownMimeType': 'Unknown mime type from helper' };
-    };
-
-    // tslint:disable-next-line:no-string-literal no-eval no-any
-    (global as any)['getInitialSettings'] = () => {
-        return {
-            allowImportFromNotebook: true,
-            jupyterLaunchTimeout: 10,
-            jupyterLaunchRetries: 3,
-            enabled: true,
-            jupyterServerURI: 'local',
-            // tslint:disable-next-line: no-invalid-template-strings
-            notebookFileRoot: '${fileDirname}',
-            changeDirOnImportExport: false,
-            useDefaultConfigForJupyter: true,
-            jupyterInterruptTimeout: 10000,
-            searchForJupyter: true,
-            showCellInputCode: true,
-            collapseCellInputCodeByDefault: true,
-            allowInput: true,
-            variableExplorerExclude: 'module;function;builtin_function_or_method'
-        };
-    };
-
     (global as any)['DOMParser'] = dom.window.DOMParser;
     (global as any)['Blob'] = dom.window.Blob;
 
@@ -440,7 +465,10 @@ function waitForComponentDidUpdate<P, S, C>(component: React.Component<P, S, C>)
     });
 }
 
-export function waitForRender<P, S, C>(component: React.Component<P, S, C>, numberOfRenders: number = 1): Promise<void> {
+export function waitForRender<P, S, C>(
+    component: React.Component<P, S, C>,
+    numberOfRenders: number = 1
+): Promise<void> {
     // tslint:disable-next-line:promise-must-complete
     return new Promise((resolve, reject) => {
         if (component) {
@@ -472,7 +500,11 @@ export function waitForRender<P, S, C>(component: React.Component<P, S, C>, numb
     });
 }
 
-export async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mainClass: ComponentClass<P>, numberOfRenders: number = 1): Promise<void> {
+export async function waitForUpdate<P, S, C>(
+    wrapper: ReactWrapper<P, S, C>,
+    mainClass: ComponentClass<P>,
+    numberOfRenders: number = 1
+): Promise<void> {
     const mainObj = wrapper.find(mainClass).instance();
     if (mainObj) {
         // Hook the render first.
@@ -523,6 +555,7 @@ const keyMap: { [key: string]: { code: number; shift: boolean } } = {
     X: { code: 88, shift: false },
     Y: { code: 89, shift: false },
     Z: { code: 90, shift: false },
+    ESCAPE: { code: 27, shift: false },
     '0': { code: 48, shift: false },
     '1': { code: 49, shift: false },
     '2': { code: 50, shift: false },

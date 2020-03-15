@@ -40,9 +40,15 @@ suite('Unit Tests - Test Explorer Command Handler', () => {
         const disposable2 = typemoq.Mock.ofType<IDisposable>();
         const disposable3 = typemoq.Mock.ofType<IDisposable>();
 
-        when(cmdManager.registerCommand(Commands.runTestNode, anything(), commandHandler)).thenReturn(disposable1.object);
-        when(cmdManager.registerCommand(Commands.debugTestNode, anything(), commandHandler)).thenReturn(disposable2.object);
-        when(cmdManager.registerCommand(Commands.openTestNodeInEditor, anything(), commandHandler)).thenReturn(disposable3.object);
+        when(cmdManager.registerCommand(Commands.runTestNode, anything(), commandHandler)).thenReturn(
+            disposable1.object
+        );
+        when(cmdManager.registerCommand(Commands.debugTestNode, anything(), commandHandler)).thenReturn(
+            disposable2.object
+        );
+        when(cmdManager.registerCommand(Commands.openTestNodeInEditor, anything(), commandHandler)).thenReturn(
+            disposable3.object
+        );
 
         commandHandler.register();
         commandHandler.dispose();
@@ -51,7 +57,10 @@ suite('Unit Tests - Test Explorer Command Handler', () => {
         disposable2.verify(d => d.dispose(), typemoq.Times.once());
         disposable3.verify(d => d.dispose(), typemoq.Times.once());
     });
-    async function testOpeningTestNode(data: TestFile | TestSuite | TestFunction, expectedCommand: 'navigateToTestFunction' | 'navigateToTestSuite' | 'navigateToTestFile') {
+    async function testOpeningTestNode(
+        data: TestFile | TestSuite | TestFunction,
+        expectedCommand: 'navigateToTestFunction' | 'navigateToTestSuite' | 'navigateToTestFile'
+    ) {
         const resource = Uri.file(__filename);
         when(testResourceMapper.getResource(data)).thenReturn(resource);
 
@@ -75,18 +84,26 @@ suite('Unit Tests - Test Explorer Command Handler', () => {
         const data: TestFunction = { name: 'hello' } as any;
         await testOpeningTestNode(data, Commands.navigateToTestFunction);
     });
-    async function testRunOrDebugTestNode(data: TestFile | TestSuite | TestFunction, expectedTestRun: TestsToRun, runType: 'run' | 'debug') {
+    async function testRunOrDebugTestNode(
+        data: TestFile | TestSuite | TestFunction,
+        expectedTestRun: TestsToRun,
+        runType: 'run' | 'debug'
+    ) {
         const resource = Uri.file(__filename);
         when(testResourceMapper.getResource(data)).thenReturn(resource);
 
         commandHandler.register();
 
         const capturedCommand = capture(cmdManager.registerCommand as any);
-        const handler = ((runType === 'run' ? capturedCommand.first()[1] : capturedCommand.second()[1]) as any) as Function;
+        const handler = ((runType === 'run'
+            ? capturedCommand.first()[1]
+            : capturedCommand.second()[1]) as any) as Function;
         await handler.bind(commandHandler)(data);
 
         const cmd = runType === 'run' ? Commands.Tests_Run : Commands.Tests_Debug;
-        verify(cmdManager.executeCommand(cmd, undefined, CommandSource.testExplorer, resource, deepEqual(expectedTestRun))).once();
+        verify(
+            cmdManager.executeCommand(cmd, undefined, CommandSource.testExplorer, resource, deepEqual(expectedTestRun))
+        ).once();
     }
     test('Running a file will invoke correct command', async () => {
         const testFilePath = 'some file path';

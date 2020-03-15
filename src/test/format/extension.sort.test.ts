@@ -56,7 +56,10 @@ suite('Sorting', () => {
         ioc.registerVariableTypes();
         ioc.registerProcessTypes();
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
-        ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
+        ioc.serviceManager.addSingletonInstance<IInterpreterService>(
+            IInterpreterService,
+            instance(mock(InterpreterService))
+        );
     }
     test('Without Config', async () => {
         const textDocument = await workspace.openTextDocument(fileToFormatWithoutConfig);
@@ -64,8 +67,16 @@ suite('Sorting', () => {
         const edit = (await sorter.provideDocumentSortImportsEdits(textDocument.uri))!;
         expect(edit.entries()).to.be.lengthOf(1);
         const edits = edit.entries()[0][1];
-        assert.equal(edits.filter(value => value.newText === EOL && value.range.isEqual(new Range(2, 0, 2, 0))).length, 1, 'EOL not found');
-        assert.equal(edits.filter(value => value.newText === '' && value.range.isEqual(new Range(3, 0, 4, 0))).length, 1, '"" not found');
+        assert.equal(
+            edits.filter(value => value.newText === EOL && value.range.isEqual(new Range(2, 0, 2, 0))).length,
+            1,
+            'EOL not found'
+        );
+        assert.equal(
+            edits.filter(value => value.newText === '' && value.range.isEqual(new Range(3, 0, 4, 0))).length,
+            1,
+            '"" not found'
+        );
         assert.equal(
             edits.filter(
                 value =>
@@ -76,7 +87,11 @@ suite('Sorting', () => {
             1,
             'Text not found'
         );
-        assert.equal(edits.filter(value => value.newText === '' && value.range.isEqual(new Range(13, 0, 18, 0))).length, 1, '"" not found');
+        assert.equal(
+            edits.filter(value => value.newText === '' && value.range.isEqual(new Range(13, 0, 18, 0))).length,
+            1,
+            '"" not found'
+        );
     });
 
     test('Without Config (via Command)', async () => {
@@ -94,7 +109,11 @@ suite('Sorting', () => {
         expect(edit.entries()).to.be.lengthOf(1);
         const edits = edit.entries()[0][1];
         const newValue = `from third_party import lib2${EOL}from third_party import lib3${EOL}from third_party import lib4${EOL}from third_party import lib5${EOL}from third_party import lib6${EOL}from third_party import lib7${EOL}from third_party import lib8${EOL}from third_party import lib9${EOL}`;
-        assert.equal(edits.filter(value => value.newText === newValue && value.range.isEqual(new Range(0, 0, 3, 0))).length, 1, 'New Text not found');
+        assert.equal(
+            edits.filter(value => value.newText === newValue && value.range.isEqual(new Range(0, 0, 3, 0))).length,
+            1,
+            'New Text not found'
+        );
     });
 
     test('With Config (via Command)', async () => {
@@ -106,7 +125,12 @@ suite('Sorting', () => {
     });
 
     test('With Changes and Config in Args', async () => {
-        await updateSetting('sortImports.args', ['-sp', path.join(sortingPath, 'withconfig')], Uri.file(sortingPath), ConfigurationTarget.Workspace);
+        await updateSetting(
+            'sortImports.args',
+            ['-sp', path.join(sortingPath, 'withconfig')],
+            Uri.file(sortingPath),
+            ConfigurationTarget.Workspace
+        );
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
         const editor = await window.showTextDocument(textDocument);
         await editor.edit(builder => {
@@ -118,7 +142,12 @@ suite('Sorting', () => {
         assert.notEqual(edits.length, 0, 'No edits');
     });
     test('With Changes and Config in Args (via Command)', async () => {
-        await updateSetting('sortImports.args', ['-sp', path.join(sortingPath, 'withconfig')], Uri.file(sortingPath), configTarget);
+        await updateSetting(
+            'sortImports.args',
+            ['-sp', path.join(sortingPath, 'withconfig')],
+            Uri.file(sortingPath),
+            configTarget
+        );
         const textDocument = await workspace.openTextDocument(fileToFormatWithConfig);
         const editor = await window.showTextDocument(textDocument);
         await editor.edit(builder => {

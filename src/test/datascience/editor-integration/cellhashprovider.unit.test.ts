@@ -8,8 +8,12 @@ import { Position, Range, Uri } from 'vscode';
 import { IDebugService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
+import { CellHashLogger } from '../../../client/datascience/editor-integration/cellhashLogger';
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
-import { InteractiveWindowMessages, SysInfoReason } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    InteractiveWindowMessages,
+    SysInfoReason
+} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell, ICellHashListener, IFileHashes } from '../../../client/datascience/types';
 import { MockDocumentManager } from '../mockDocumentManager';
 
@@ -24,6 +28,7 @@ class HashListener implements ICellHashListener {
 // tslint:disable-next-line: max-func-body-length
 suite('CellHashProvider Unit Tests', () => {
     let hashProvider: CellHashProvider;
+    let hashLogger: CellHashLogger;
     let documentManager: MockDocumentManager;
     let configurationService: TypeMoq.IMock<IConfigurationService>;
     let dataScienceSettings: TypeMoq.IMock<IDataScienceSettings>;
@@ -43,7 +48,14 @@ suite('CellHashProvider Unit Tests', () => {
         debugService.setup(d => d.activeDebugSession).returns(() => undefined);
         fileSystem.setup(d => d.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
         documentManager = new MockDocumentManager();
-        hashProvider = new CellHashProvider(documentManager, configurationService.object, debugService.object, fileSystem.object, [hashListener]);
+        hashProvider = new CellHashProvider(
+            documentManager,
+            configurationService.object,
+            debugService.object,
+            fileSystem.object,
+            [hashListener]
+        );
+        hashLogger = new CellHashLogger(hashProvider);
     });
 
     function addSingleChange(file: string, range: Range, newText: string) {
@@ -64,7 +76,7 @@ suite('CellHashProvider Unit Tests', () => {
             id: '1',
             state: CellState.init
         };
-        return hashProvider.preExecute(cell, false);
+        return hashLogger.preExecute(cell, false);
     }
 
     test('Add a cell and edit it', async () => {

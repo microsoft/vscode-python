@@ -21,13 +21,17 @@ export class TerminalNameShellDetector extends BaseShellDetector {
     constructor() {
         super(4);
     }
-    public identify(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined {
+    public identify(
+        telemetryProperties: ShellIdentificationTelemetry,
+        terminal?: Terminal
+    ): TerminalShellType | undefined {
         if (!terminal) {
             return;
         }
         const shell = this.identifyShellFromShellPath(terminal.name);
         traceVerbose(`Terminal name '${terminal.name}' identified as shell '${shell}'`);
-        telemetryProperties.shellIdentificationSource = shell === TerminalShellType.other ? telemetryProperties.shellIdentificationSource : 'terminalName';
+        telemetryProperties.shellIdentificationSource =
+            shell === TerminalShellType.other ? telemetryProperties.shellIdentificationSource : 'terminalName';
         return shell;
     }
 }

@@ -4,9 +4,6 @@
             "path": "."
         },
         {
-            "path": "uitests"
-        },
-        {
             "path": "pythonFiles"
         },
         {

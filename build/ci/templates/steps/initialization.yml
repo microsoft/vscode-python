@@ -18,6 +18,7 @@ parameters:
   compile: 'true'
   sqlite: 'false'
   installVSCEorNPX: 'true'
+  enableGather: 'false'
 
 steps:
     - bash: |
@@ -92,6 +93,15 @@ steps:
           verbose: true
           customCommand: ci
 
+    - task: Npm@1
+      displayName: "Install optional python-program-analysis"
+      condition: and(succeeded(), eq('${{ parameters.enableGather }}', 'true'))
+      inputs:
+          workingDir: ${{ parameters.workingDirectory }}
+          command: custom
+          verbose: true
+          customCommand: "install @msrvida/python-program-analysis"
+
     # On Mac, the command `node` doesn't always point to the current node version.
     # Debugger tests use the variable process.env.NODE_PATH
     - script: |
@@ -101,11 +111,10 @@ steps:
       displayName: "Setup NODE_PATH for extension (Debugger Tests)"
       condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
-    # We need these almost always.
+    # Install vsce
     - bash: |
           npm install -g vsce
-          npm install -g npx
-      displayName: "Install vsce & npx"
+      displayName: "Install vsce"
       condition: and(succeeded(), eq('${{ parameters.installVSCEorNPX }}', 'true'))
 
     - bash: npx tsc -p ./
@@ -120,6 +129,9 @@ steps:
           disown -ar
       displayName: 'Start Display Server (xvfb) to launch VS Code)'
       condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'))
+
+    - bash: python -m pip install -U pip
+      displayName: 'Install pip'
 
     # # Show all versions installed/available on PATH if in verbose mode.
     # # Example command line (windows pwsh):

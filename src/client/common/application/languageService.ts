@@ -10,7 +10,11 @@ import { ILanguageService } from './types';
 
 @injectable()
 export class LanguageService implements ILanguageService {
-    public registerCompletionItemProvider(selector: DocumentSelector, provider: CompletionItemProvider, ...triggerCharacters: string[]): Disposable {
+    public registerCompletionItemProvider(
+        selector: DocumentSelector,
+        provider: CompletionItemProvider,
+        ...triggerCharacters: string[]
+    ): Disposable {
         return languages.registerCompletionItemProvider(selector, provider, ...triggerCharacters);
     }
 }

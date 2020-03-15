@@ -15,12 +15,16 @@ suite('Python Path Settings Updater', () => {
     function setupMocks() {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .returns(() => workspaceService.object);
         updaterServiceFactory = new PythonPathUpdaterServiceFactory(serviceContainer.object);
     }
     function setupConfigProvider(resource?: Uri): TypeMoq.IMock<WorkspaceConfiguration> {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceService.setup(w => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(resource))).returns(() => workspaceConfig.object);
+        workspaceService
+            .setup(w => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(resource)))
+            .returns(() => workspaceConfig.object);
         return workspaceConfig;
     }
     suite('Global', () => {
@@ -37,7 +41,10 @@ suite('Python Path Settings Updater', () => {
                 });
 
             await updater.updatePythonPath(pythonPath);
-            workspaceConfig.verify(w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+            workspaceConfig.verify(
+                w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                TypeMoq.Times.never()
+            );
         });
         test('Python Path should be updated when current pythonPath is different', async () => {
             const updater = updaterServiceFactory.getGlobalPythonPathConfigurationService();
@@ -46,7 +53,15 @@ suite('Python Path Settings Updater', () => {
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
             await updater.updatePythonPath(pythonPath);
-            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(true)), TypeMoq.Times.once());
+            workspaceConfig.verify(
+                w =>
+                    w.update(
+                        TypeMoq.It.isValue('pythonPath'),
+                        TypeMoq.It.isValue(pythonPath),
+                        TypeMoq.It.isValue(true)
+                    ),
+                TypeMoq.Times.once()
+            );
         });
     });
 
@@ -66,7 +81,10 @@ suite('Python Path Settings Updater', () => {
                 });
 
             await updater.updatePythonPath(pythonPath);
-            workspaceConfig.verify(w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+            workspaceConfig.verify(
+                w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                TypeMoq.Times.never()
+            );
         });
         test('Python Path should be updated when current pythonPath is different', async () => {
             const workspaceFolderPath = path.join('user', 'desktop', 'development');
@@ -78,7 +96,12 @@ suite('Python Path Settings Updater', () => {
 
             await updater.updatePythonPath(pythonPath);
             workspaceConfig.verify(
-                w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)),
+                w =>
+                    w.update(
+                        TypeMoq.It.isValue('pythonPath'),
+                        TypeMoq.It.isValue(pythonPath),
+                        TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)
+                    ),
                 TypeMoq.Times.once()
             );
         });
@@ -93,7 +116,12 @@ suite('Python Path Settings Updater', () => {
 
             await updater.updatePythonPath(pythonPath);
             workspaceConfig.verify(
-                w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)),
+                w =>
+                    w.update(
+                        TypeMoq.It.isValue('pythonPath'),
+                        TypeMoq.It.isValue(expectedPythonPath),
+                        TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)
+                    ),
                 TypeMoq.Times.once()
             );
         });
@@ -114,7 +142,10 @@ suite('Python Path Settings Updater', () => {
                 });
 
             await updater.updatePythonPath(pythonPath);
-            workspaceConfig.verify(w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
+            workspaceConfig.verify(
+                w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                TypeMoq.Times.never()
+            );
         });
         test('Python Path should be updated when current pythonPath is different', async () => {
             const workspaceFolderPath = path.join('user', 'desktop', 'development');
@@ -125,7 +156,15 @@ suite('Python Path Settings Updater', () => {
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
             await updater.updatePythonPath(pythonPath);
-            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(false)), TypeMoq.Times.once());
+            workspaceConfig.verify(
+                w =>
+                    w.update(
+                        TypeMoq.It.isValue('pythonPath'),
+                        TypeMoq.It.isValue(pythonPath),
+                        TypeMoq.It.isValue(false)
+                    ),
+                TypeMoq.Times.once()
+            );
         });
         test('Python Path should be truncated for workspace-relative paths', async () => {
             const workspaceFolderPath = path.join('user', 'desktop', 'development');
@@ -137,7 +176,15 @@ suite('Python Path Settings Updater', () => {
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
             await updater.updatePythonPath(pythonPath);
-            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(false)), TypeMoq.Times.once());
+            workspaceConfig.verify(
+                w =>
+                    w.update(
+                        TypeMoq.It.isValue('pythonPath'),
+                        TypeMoq.It.isValue(expectedPythonPath),
+                        TypeMoq.It.isValue(false)
+                    ),
+                TypeMoq.Times.once()
+            );
         });
     });
 });

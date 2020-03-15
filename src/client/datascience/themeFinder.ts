@@ -5,8 +5,9 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../common/constants';
+import { traceError } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { ICurrentProcess, IExtensions, ILogger } from '../common/types';
+import { ICurrentProcess, IExtensions } from '../common/types';
 import { IThemeFinder } from './types';
 
 // tslint:disable:no-any
@@ -24,7 +25,6 @@ export class ThemeFinder implements IThemeFinder {
     constructor(
         @inject(IExtensions) private extensions: IExtensions,
         @inject(ICurrentProcess) private currentProcess: ICurrentProcess,
-        @inject(ILogger) private logger: ILogger,
         @inject(IFileSystem) private fs: IFileSystem
     ) {}
 
@@ -44,7 +44,7 @@ export class ThemeFinder implements IThemeFinder {
             try {
                 this.languageCache[language] = await this.findMatchingLanguage(language);
             } catch (exc) {
-                this.logger.logError(exc);
+                traceError(exc);
             }
         }
         return this.languageCache[language];
@@ -66,7 +66,7 @@ export class ThemeFinder implements IThemeFinder {
             try {
                 this.themeCache[themeName] = await this.findMatchingTheme(themeName);
             } catch (exc) {
-                this.logger.logError(exc);
+                traceError(exc);
             }
         }
         return this.themeCache[themeName];
@@ -181,7 +181,9 @@ export class ThemeFinder implements IThemeFinder {
                 for (const t of grammars) {
                     if (t.hasOwnProperty('language') && t.language === language) {
                         // Path is relative to the package.json file.
-                        const rootFile = t.hasOwnProperty('path') ? path.join(path.dirname(packageJson), t.path.toString()) : '';
+                        const rootFile = t.hasOwnProperty('path')
+                            ? path.join(path.dirname(packageJson), t.path.toString())
+                            : '';
                         return this.fs.readFile(rootFile);
                     }
                 }
@@ -202,10 +204,15 @@ export class ThemeFinder implements IThemeFinder {
                 const themes = contributes.themes as any[];
                 // Go through each theme, seeing if the label matches our theme name
                 for (const t of themes) {
-                    if ((t.hasOwnProperty('label') && t.label === themeName) || (t.hasOwnProperty('id') && t.id === themeName)) {
+                    if (
+                        (t.hasOwnProperty('label') && t.label === themeName) ||
+                        (t.hasOwnProperty('id') && t.id === themeName)
+                    ) {
                         const isDark = t.hasOwnProperty('uiTheme') && t.uiTheme === 'vs-dark';
                         // Path is relative to the package.json file.
-                        const rootFile = t.hasOwnProperty('path') ? path.join(path.dirname(packageJson), t.path.toString()) : '';
+                        const rootFile = t.hasOwnProperty('path')
+                            ? path.join(path.dirname(packageJson), t.path.toString())
+                            : '';
 
                         return { isDark, rootFile };
                     }

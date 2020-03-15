@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 
+import { PYTHON_LANGUAGE } from '../common/constants';
 import { IS_WINDOWS } from '../common/platform/constants';
+import { IVariableQuery } from '../common/types';
 import { NativeCommandType } from './interactive-common/interactiveWindowTypes';
 
 export const DefaultTheme = 'Default Light+';
@@ -10,7 +12,22 @@ export const DefaultTheme = 'Default Light+';
 export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 
 // Python Module to be used when instantiating the Python Daemon.
-export const PythonDaemonModule = 'datascience.jupyter_daemon';
+export const PythonDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
+
+// List of 'language' names that we know about. All should be lower case as that's how we compare.
+export const KnownNotebookLanguages: string[] = [
+    'python',
+    'r',
+    'julia',
+    'c++',
+    'c#',
+    'f#',
+    'scala',
+    'haskell',
+    'bash',
+    'cling',
+    'sas'
+];
 
 export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
@@ -29,6 +46,7 @@ export namespace Commands {
     export const ImportNotebookFile = 'python.datascience.importnotebookfile';
     export const OpenNotebook = 'python.datascience.opennotebook';
     export const SelectJupyterURI = 'python.datascience.selectjupyteruri';
+    export const SelectJupyterCommandLine = 'python.datascience.selectjupytercommandline';
     export const ExportFileAsNotebook = 'python.datascience.exportfileasnotebook';
     export const ExportFileAndOutputAsNotebook = 'python.datascience.exportfileandoutputasnotebook';
     export const UndoCells = 'python.datascience.undocells';
@@ -60,6 +78,9 @@ export namespace Commands {
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
     export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';
+    export const SaveNotebookNonCustomEditor = 'python.datascience.notebookeditor.save';
+    export const SaveAsNotebookNonCustomEditor = 'python.datascience.notebookeditor.saveAs';
+    export const OpenNotebookNonCustomEditor = 'python.datascience.notebookeditor.open';
 }
 
 export namespace CodeLensCommands {
@@ -77,10 +98,16 @@ export namespace EditorContexts {
     export const HaveInteractiveCells = 'python.datascience.haveinteractivecells';
     export const HaveRedoableCells = 'python.datascience.haveredoablecells';
     export const HaveInteractive = 'python.datascience.haveinteractive';
+    export const IsInteractiveActive = 'python.datascience.isinteractiveactive';
     export const OwnsSelection = 'python.datascience.ownsSelection';
     export const HaveNativeCells = 'python.datascience.havenativecells';
     export const HaveNativeRedoableCells = 'python.datascience.havenativeredoablecells';
     export const HaveNative = 'python.datascience.havenative';
+    export const IsNativeActive = 'python.datascience.isnativeactive';
+    export const IsInteractiveOrNativeActive = 'python.datascience.isinteractiveornativeactive';
+    export const IsPythonOrNativeActive = 'python.datascience.ispythonornativeactive';
+    export const IsPythonOrInteractiveActive = 'python.datascience.ispythonorinteractiveeactive';
+    export const IsPythonOrInteractiveOrNativeActive = 'python.datascience.ispythonorinteractiveornativeeactive';
     export const HaveCellSelected = 'python.datascience.havecellselected';
 }
 
@@ -92,7 +119,8 @@ export namespace RegExpValues {
     export const KernelSpecOutputRegEx = /^\s*(\S+)\s+(\S+)$/;
     // This next one has to be a string because uglifyJS isn't handling the groups. We use named-js-regexp to parse it
     // instead.
-    export const UrlPatternRegEx = '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)';
+    export const UrlPatternRegEx =
+        '(?<PREFIX>https?:\\/\\/)((\\(.+\\s+or\\s+(?<IP>.+)\\))|(?<LOCAL>[^\\s]+))(?<REST>:.+)';
     export interface IUrlPatternGroupType {
         LOCAL: string | undefined;
         PREFIX: string | undefined;
@@ -126,7 +154,8 @@ export enum Telemetry {
     DeleteCell = 'DATASCIENCE.DELETE_CELL',
     GotoSourceCode = 'DATASCIENCE.GOTO_SOURCE',
     CopySourceCode = 'DATASCIENCE.COPY_SOURCE',
-    RestartKernel = 'DATASCIENCE.RESTART_KERNEL',
+    RestartKernel = 'DS_INTERNAL.RESTART_KERNEL',
+    RestartKernelCommand = 'DATASCIENCE.RESTART_KERNEL_COMMAND',
     ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
     Undo = 'DATASCIENCE.UNDO',
     Redo = 'DATASCIENCE.REDO',
@@ -134,7 +163,7 @@ export enum Telemetry {
      * Saving a notebook
      */
     Save = 'DATASCIENCE.SAVE',
-    CellCount = 'DATASCIENCE.CELL_COUNT',
+    CellCount = 'DS_INTERNAL.CELL_COUNT',
     /**
      * Whether auto save feature in VS Code is enabled or not.
      */
@@ -143,89 +172,119 @@ export enum Telemetry {
     CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
     SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI',
     SelectLocalJupyterKernel = 'DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL',
-    SelectRemoteJupyuterKernel = 'DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL',
+    SelectRemoteJupyterKernel = 'DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL',
     SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
     ExportPythonFile = 'DATASCIENCE.EXPORT_PYTHON_FILE',
     ExportPythonFileAndOutput = 'DATASCIENCE.EXPORT_PYTHON_FILE_AND_OUTPUT',
-    StartJupyter = 'DATASCIENCE.JUPYTERSTARTUPCOST',
+    StartJupyter = 'DS_INTERNAL.JUPYTERSTARTUPCOST',
     SubmitCellThroughInput = 'DATASCIENCE.SUBMITCELLFROMREPL',
-    ConnectLocalJupyter = 'DATASCIENCE.CONNECTLOCALJUPYTER',
-    ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER',
-    ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER',
-    ConnectRemoteFailedJupyter = 'DATASCIENCE.CONNECTREMOTEFAILEDJUPYTER',
-    StartSessionFailedJupyter = 'DATASCIENCE.START_SESSION_FAILED_JUPYTER',
-    ConnectRemoteSelfCertFailedJupyter = 'DATASCIENCE.CONNECTREMOTESELFCERTFAILEDJUPYTER',
-    RegisterAndUseInterpreterAsKernel = 'DATASCIENCE.REGISTER_AND_USE_INTERPRETER_AS_KERNEL',
-    UseInterpreterAsKernel = 'DATASCIENCE.USE_INTERPRETER_AS_KERNEL',
-    UseExistingKernel = 'DATASCIENCE.USE_EXISTING_KERNEL',
-    SwitchToInterpreterAsKernel = 'DATASCIENCE.SWITCH_TO_INTERPRETER_AS_KERNEL',
-    SwitchToExistingKernel = 'DATASCIENCE.SWITCH_TO_EXISTING_KERNEL',
+    ConnectLocalJupyter = 'DS_INTERNAL.CONNECTLOCALJUPYTER',
+    ConnectRemoteJupyter = 'DS_INTERNAL.CONNECTREMOTEJUPYTER',
+    ConnectRemoteJupyterViaLocalHost = 'DS_INTERNAL.CONNECTREMOTEJUPYTER_VIA_LOCALHOST',
+    ConnectFailedJupyter = 'DS_INTERNAL.CONNECTFAILEDJUPYTER',
+    ConnectRemoteFailedJupyter = 'DS_INTERNAL.CONNECTREMOTEFAILEDJUPYTER',
+    StartSessionFailedJupyter = 'DS_INTERNAL.START_SESSION_FAILED_JUPYTER',
+    ConnectRemoteSelfCertFailedJupyter = 'DS_INTERNAL.CONNECTREMOTESELFCERTFAILEDJUPYTER',
+    RegisterAndUseInterpreterAsKernel = 'DS_INTERNAL.REGISTER_AND_USE_INTERPRETER_AS_KERNEL',
+    UseInterpreterAsKernel = 'DS_INTERNAL.USE_INTERPRETER_AS_KERNEL',
+    UseExistingKernel = 'DS_INTERNAL.USE_EXISTING_KERNEL',
+    SwitchToInterpreterAsKernel = 'DS_INTERNAL.SWITCH_TO_INTERPRETER_AS_KERNEL',
+    SwitchToExistingKernel = 'DS_INTERNAL.SWITCH_TO_EXISTING_KERNEL',
     SelfCertsMessageEnabled = 'DATASCIENCE.SELFCERTSMESSAGEENABLED',
     SelfCertsMessageClose = 'DATASCIENCE.SELFCERTSMESSAGECLOSE',
     RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
     RemoteReexecuteCode = 'DATASCIENCE.LIVESHARE.REEXECUTECODE',
-    ShiftEnterBannerShown = 'DATASCIENCE.SHIFTENTER_BANNER_SHOWN',
+    ShiftEnterBannerShown = 'DS_INTERNAL.SHIFTENTER_BANNER_SHOWN',
     EnableInteractiveShiftEnter = 'DATASCIENCE.ENABLE_INTERACTIVE_SHIFT_ENTER',
     DisableInteractiveShiftEnter = 'DATASCIENCE.DISABLE_INTERACTIVE_SHIFT_ENTER',
     ShowDataViewer = 'DATASCIENCE.SHOW_DATA_EXPLORER',
     RunFileInteractive = 'DATASCIENCE.RUN_FILE_INTERACTIVE',
     DebugFileInteractive = 'DATASCIENCE.DEBUG_FILE_INTERACTIVE',
-    PandasNotInstalled = 'DATASCIENCE.SHOW_DATA_NO_PANDAS',
-    PandasTooOld = 'DATASCIENCE.SHOW_DATA_PANDAS_TOO_OLD',
-    DataScienceSettings = 'DATASCIENCE.SETTINGS',
+    PandasNotInstalled = 'DS_INTERNAL.SHOW_DATA_NO_PANDAS',
+    PandasTooOld = 'DS_INTERNAL.SHOW_DATA_PANDAS_TOO_OLD',
+    DataScienceSettings = 'DS_INTERNAL.SETTINGS',
     VariableExplorerToggled = 'DATASCIENCE.VARIABLE_EXPLORER_TOGGLE',
-    VariableExplorerVariableCount = 'DATASCIENCE.VARIABLE_EXPLORER_VARIABLE_COUNT',
+    VariableExplorerVariableCount = 'DS_INTERNAL.VARIABLE_EXPLORER_VARIABLE_COUNT',
     AddCellBelow = 'DATASCIENCE.ADD_CELL_BELOW',
     GetPasswordAttempt = 'DATASCIENCE.GET_PASSWORD_ATTEMPT',
-    GetPasswordFailure = 'DATASCIENCE.GET_PASSWORD_FAILURE',
-    GetPasswordSuccess = 'DATASCIENCE.GET_PASSWORD_SUCCESS',
+    GetPasswordFailure = 'DS_INTERNAL.GET_PASSWORD_FAILURE',
+    GetPasswordSuccess = 'DS_INTERNAL.GET_PASSWORD_SUCCESS',
     OpenPlotViewer = 'DATASCIENCE.OPEN_PLOT_VIEWER',
     DebugCurrentCell = 'DATASCIENCE.DEBUG_CURRENT_CELL',
-    CodeLensAverageAcquisitionTime = 'DATASCIENCE.CODE_LENS_ACQ_TIME',
-    ClassConstructionTime = 'DATASCIENCE.CLASS_CONSTRUCTION_TIME',
-    FindJupyterCommand = 'DATASCIENCE.FIND_JUPYTER_COMMAND',
-    StartJupyterProcess = 'DATASCIENCE.START_JUPYTER_PROCESS',
-    WaitForIdleJupyter = 'DATASCIENCE.WAIT_FOR_IDLE_JUPYTER',
-    HiddenCellTime = 'DATASCIENCE.HIDDEN_EXECUTION_TIME',
-    RestartJupyterTime = 'DATASCIENCE.RESTART_JUPYTER_TIME',
-    InterruptJupyterTime = 'DATASCIENCE.INTERRUPT_JUPYTER_TIME',
+    CodeLensAverageAcquisitionTime = 'DS_INTERNAL.CODE_LENS_ACQ_TIME',
+    ClassConstructionTime = 'DS_INTERNAL.CLASS_CONSTRUCTION_TIME',
+    FindJupyterCommand = 'DS_INTERNAL.FIND_JUPYTER_COMMAND',
+    /**
+     * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
+     */
+    SelectJupyterInterpreter = 'DS_INTERNAL.SELECT_JUPYTER_INTERPRETER',
+    /**
+     * User used command to select an intrepreter for the jupyter server.
+     */
+    SelectJupyterInterpreterCommand = 'DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command',
+    StartJupyterProcess = 'DS_INTERNAL.START_JUPYTER_PROCESS',
+    WaitForIdleJupyter = 'DS_INTERNAL.WAIT_FOR_IDLE_JUPYTER',
+    HiddenCellTime = 'DS_INTERNAL.HIDDEN_EXECUTION_TIME',
+    RestartJupyterTime = 'DS_INTERNAL.RESTART_JUPYTER_TIME',
+    InterruptJupyterTime = 'DS_INTERNAL.INTERRUPT_JUPYTER_TIME',
     ExecuteCell = 'DATASCIENCE.EXECUTE_CELL_TIME',
-    ExecuteCellPerceivedCold = 'DATASCIENCE.EXECUTE_CELL_PERCEIVED_COLD',
-    ExecuteCellPerceivedWarm = 'DATASCIENCE.EXECUTE_CELL_PERCEIVED_WARM',
-    WebviewStartup = 'DATASCIENCE.WEBVIEW_STARTUP',
-    VariableExplorerFetchTime = 'DATASCIENCE.VARIABLE_EXPLORER_FETCH_TIME',
-    WebviewStyleUpdate = 'DATASCIENCE.WEBVIEW_STYLE_UPDATE',
-    WebviewMonacoStyleUpdate = 'DATASCIENCE.WEBVIEW_MONACO_STYLE_UPDATE',
-    DataViewerFetchTime = 'DATASCIENCE.DATAVIEWER_FETCH_TIME',
-    FindJupyterKernelSpec = 'DATASCIENCE.FIND_JUPYTER_KERNEL_SPEC',
+    ExecuteCellPerceivedCold = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_COLD',
+    ExecuteCellPerceivedWarm = 'DS_INTERNAL.EXECUTE_CELL_PERCEIVED_WARM',
+    PerceivedJupyterStartupNotebook = 'DS_INTERNAL.PERCEIVED_JUPYTER_STARTUP_NOTEBOOK',
+    StartExecuteNotebookCellPerceivedCold = 'DS_INTERNAL.START_EXECUTE_NOTEBOOK_CELL_PERCEIVED_COLD',
+    WebviewStartup = 'DS_INTERNAL.WEBVIEW_STARTUP',
+    VariableExplorerFetchTime = 'DS_INTERNAL.VARIABLE_EXPLORER_FETCH_TIME',
+    WebviewStyleUpdate = 'DS_INTERNAL.WEBVIEW_STYLE_UPDATE',
+    WebviewMonacoStyleUpdate = 'DS_INTERNAL.WEBVIEW_MONACO_STYLE_UPDATE',
+    FindJupyterKernelSpec = 'DS_INTERNAL.FIND_JUPYTER_KERNEL_SPEC',
+    HashedCellOutputMimeType = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE',
+    HashedCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_OUTPUT_MIME_TYPE_PERF',
+    HashedNotebookCellOutputMimeTypePerf = 'DS_INTERNAL.HASHED_NOTEBOOK_OUTPUT_MIME_TYPE_PERF',
+    JupyterInstalledButNotKernelSpecModule = 'DS_INTERNAL.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE',
     PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
     PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
     PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',
+    PtvsdInstallCancelled = 'DATASCIENCE.PTVSD_INSTALL_CANCELLED',
     ScrolledToCell = 'DATASCIENCE.SCROLLED_TO_CELL',
-    ExecuteNativeCell = 'DATASCIENCE.EXECUTE_NATIVE_CELL',
-    CreateNewNotebook = 'DATASCIENCE.CREATE_NEW_NOTEBOOK',
+    ExecuteNativeCell = 'DATASCIENCE.NATIVE.EXECUTE_NATIVE_CELL',
+    CreateNewNotebook = 'DATASCIENCE.NATIVE.CREATE_NEW_NOTEBOOK',
     DebugStepOver = 'DATASCIENCE.DEBUG_STEP_OVER',
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
     DebugStop = 'DATASCIENCE.DEBUG_STOP',
     OpenNotebook = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK',
     OpenNotebookAll = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL',
     ConvertToPythonFile = 'DATASCIENCE.NATIVE.CONVERT_NOTEBOOK_TO_PYTHON',
-    NotebookWorkspaceCount = 'DATASCIENCE.NATIVE.WORKSPACE_NOTEBOOK_COUNT',
-    NotebookRunCount = 'DATASCIENCE.NATIVE.NOTEBOOK_RUN_COUNT',
-    NotebookOpenCount = 'DATASCIENCE.NATIVE.NOTEBOOK_OPEN_COUNT',
+    NotebookWorkspaceCount = 'DS_INTERNAL.NATIVE.WORKSPACE_NOTEBOOK_COUNT',
+    NotebookRunCount = 'DS_INTERNAL.NATIVE.NOTEBOOK_RUN_COUNT',
+    NotebookOpenCount = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_COUNT',
     NotebookOpenTime = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_TIME',
-    SessionIdleTimeout = 'DATASCIENCE.JUPYTER_IDLE_TIMEOUT',
-    JupyterStartTimeout = 'DATASCIENCE.JUPYTER_START_TIMEOUT',
-    NotebookExecutionActivated = 'DATASCIENCE.NOTEBOOK.EXECUTION.ACTIVATED',
+    SessionIdleTimeout = 'DS_INTERNAL.JUPYTER_IDLE_TIMEOUT',
+    JupyterStartTimeout = 'DS_INTERNAL.JUPYTER_START_TIMEOUT',
     JupyterNotInstalledErrorShown = 'DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN',
     JupyterCommandSearch = 'DATASCIENCE.JUPYTER_COMMAND_SEARCH',
-    RegisterInterpreterAsKernel = 'DATASCIENCE.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL',
+    RegisterInterpreterAsKernel = 'DS_INTERNAL.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL',
     UserInstalledJupyter = 'DATASCIENCE.USER_INSTALLED_JUPYTER',
+    UserInstalledPandas = 'DATASCIENCE.USER_INSTALLED_PANDAS',
     UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER',
+    UserDidNotInstallPandas = 'DATASCIENCE.USER_DID_NOT_INSTALL_PANDAS',
     OpenedInteractiveWindow = 'DATASCIENCE.OPENED_INTERACTIVE',
-    FindKernelForLocalConnection = 'DATASCIENCE.FIND_KERNEL_FOR_LOCAL_CONNECTION'
+    OpenNotebookFailure = 'DS_INTERNAL.NATIVE.OPEN_NOTEBOOK_FAILURE',
+    FindKernelForLocalConnection = 'DS_INTERNAL.FIND_KERNEL_FOR_LOCAL_CONNECTION',
+    CompletionTimeFromLS = 'DS_INTERNAL.COMPLETION_TIME_FROM_LS',
+    CompletionTimeFromJupyter = 'DS_INTERNAL.COMPLETION_TIME_FROM_JUPYTER',
+    NotebookLanguage = 'DATASCIENCE.NOTEBOOK_LANGUAGE',
+    KernelSpecNotFound = 'DS_INTERNAL.KERNEL_SPEC_NOT_FOUND',
+    KernelRegisterFailed = 'DS_INTERNAL.KERNEL_REGISTER_FAILED',
+    KernelEnumeration = 'DS_INTERNAL.KERNEL_ENUMERATION',
+    JupyterInstallFailed = 'DS_INTERNAL.JUPYTER_INSTALL_FAILED',
+    UserInstalledModule = 'DATASCIENCE.USER_INSTALLED_MODULE',
+    JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
+    NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
+    KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
+    GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
+    ZMQNotSupported = 'DATASCIENCE.ZMQ_NATIVE_BINARIES_NOT_LOADING'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -304,9 +363,17 @@ export namespace Settings {
     export const JupyterServerLocalLaunch = 'local';
     export const JupyterServerUriList = 'python.dataScience.jupyterServer.uriList';
     export const JupyterServerUriListMax = 10;
-    export const IntellisenseTimeout = 30000;
+    // If this timeout expires, ignore the completion request sent to Jupyter.
+    export const IntellisenseTimeout = 500;
+    // If this timeout expires, ignore the completions requests. (don't wait for it to complete).
+    export const MaxIntellisenseTimeout = 30_000;
     export const RemoteDebuggerPortBegin = 8889;
     export const RemoteDebuggerPortEnd = 9000;
+    export const DefaultVariableQuery: IVariableQuery = {
+        language: PYTHON_LANGUAGE,
+        query: '_rwho_ls = %who_ls\nprint(_rwho_ls)',
+        parseExpr: "'(\\w+)'"
+    };
 }
 
 export namespace Identifiers {
@@ -323,13 +390,25 @@ export namespace Identifiers {
 }
 
 export namespace CodeSnippits {
-    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', "\tos.chdir(os.path.join(os.getcwd(), '{2}'))", '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+    export const ChangeDirectory = [
+        '{0}',
+        '{1}',
+        'import os',
+        'try:',
+        "\tos.chdir(os.path.join(os.getcwd(), '{2}'))",
+        '\tprint(os.getcwd())',
+        'except:',
+        '\tpass',
+        ''
+    ];
     export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
     export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
-    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'svg', 'png'`;
-    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'png'`;
-    export const ConfigSvg = `%config InlineBackend.figure_formats = 'svg', 'png'`;
-    export const ConfigPng = `%config InlineBackend.figure_formats = 'png'`;
+    export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = {'svg', 'png'}`;
+    export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = {'png'}`;
+    export const ConfigSvg = `%config InlineBackend.figure_formats = {'svg', 'png'}`;
+    export const ConfigPng = `%config InlineBackend.figure_formats = {'png'}`;
+    export const UpdateCWDAndPath =
+        'import os\nimport sys\n%cd "{0}"\nif os.getcwd() not in sys.path:\n    sys.path.insert(0, os.getcwd())';
 }
 
 export enum JupyterCommands {
@@ -369,4 +448,5 @@ export namespace LiveShareCommands {
     export const disposeServer = 'disposeServer';
     export const guestCheck = 'guestCheck';
     export const createNotebook = 'createNotebook';
+    export const inspect = 'inspect';
 }

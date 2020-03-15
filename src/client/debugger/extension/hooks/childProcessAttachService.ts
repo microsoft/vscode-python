@@ -29,7 +29,10 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
     ) {}
 
     @captureTelemetry(EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS)
-    public async attach(data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration), parentSession: DebugSession): Promise<void> {
+    public async attach(
+        data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration),
+        parentSession: DebugSession
+    ): Promise<void> {
         let debugConfig: AttachRequestArguments & DebugConfiguration;
         let processId: number;
         if (this.isChildProcessLaunchData(data)) {
@@ -65,10 +68,13 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         // As debugger doesn't necessarily know whether the process being attached to is
         // a child process or not.
         const systemVariables = new SystemVariables(undefined, config.workspaceFolder);
-        const localRoot = config.cwd && config.cwd.length > 0 ? systemVariables.resolveAny(config.cwd) : config.workspaceFolder;
+        const localRoot =
+            config.cwd && config.cwd.length > 0 ? systemVariables.resolveAny(config.cwd) : config.workspaceFolder;
         config.pathMappings = [{ remoteRoot: '.', localRoot }];
     }
-    private getRelatedWorkspaceFolder(config: AttachRequestArguments & DebugConfiguration): WorkspaceFolder | undefined {
+    private getRelatedWorkspaceFolder(
+        config: AttachRequestArguments & DebugConfiguration
+    ): WorkspaceFolder | undefined {
         const workspaceFolder = config.workspaceFolder;
         if (!this.workspaceService.hasWorkspaceFolders || !workspaceFolder) {
             return;
@@ -87,7 +93,9 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         config.request = 'attach';
         return config;
     }
-    private isChildProcessLaunchData(data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration)): data is ChildProcessLaunchData {
+    private isChildProcessLaunchData(
+        data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration)
+    ): data is ChildProcessLaunchData {
         return data.rootStartRequest !== undefined;
     }
 }

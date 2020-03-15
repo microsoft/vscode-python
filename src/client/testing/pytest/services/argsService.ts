@@ -18,6 +18,7 @@ const OptionsWithArguments = [
     '-n', // -n is a pytest-xdist option
     '--assert',
     '--basetemp',
+    '--cache-show',
     '--capture',
     '--color',
     '--confcutdir',
@@ -31,6 +32,7 @@ const OptionsWithArguments = [
     '--doctest-report',
     '--durations',
     '--ignore',
+    '--ignore-glob',
     '--import-mode',
     '--junit-prefix',
     '--junit-xml',
@@ -65,7 +67,6 @@ const OptionsWithArguments = [
 
 const OptionsWithoutArguments = [
     '--cache-clear',
-    '--cache-show',
     '--collect-in-virtualenv',
     '--collect-only',
     '--continue-on-collection-errors',
@@ -106,7 +107,11 @@ const OptionsWithoutArguments = [
     '--setup-plan',
     '--setup-show',
     '--showlocals',
+    '--stepwise',
+    '--sw',
+    '--stepwise-skip',
     '--strict',
+    '--strict-markers',
     '--trace-config',
     '--verbose',
     '--version',
@@ -158,7 +163,9 @@ export class ArgumentsService implements IArgumentsService {
         } else {
             switch (argumentToRemoveOrFilter) {
                 case TestFilter.removeTests: {
-                    optionsWithoutArgsToRemove.push(...['--lf', '--last-failed', '--ff', '--failed-first', '--nf', '--new-first']);
+                    optionsWithoutArgsToRemove.push(
+                        ...['--lf', '--last-failed', '--ff', '--failed-first', '--nf', '--new-first']
+                    );
                     optionsWithArgsToRemove.push(...['-k', '-m', '--lfnf', '--last-failed-no-failures']);
                     removePositionalArgs = true;
                     break;
@@ -225,7 +232,18 @@ export class ArgumentsService implements IArgumentsService {
                 }
                 case TestFilter.debugSpecific:
                 case TestFilter.runSpecific: {
-                    optionsWithoutArgsToRemove.push(...['--collect-only', '--lf', '--last-failed', '--ff', '--failed-first', '--nf', '--new-first', '--trace']);
+                    optionsWithoutArgsToRemove.push(
+                        ...[
+                            '--collect-only',
+                            '--lf',
+                            '--last-failed',
+                            '--ff',
+                            '--failed-first',
+                            '--nf',
+                            '--new-first',
+                            '--trace'
+                        ]
+                    );
                     optionsWithArgsToRemove.push(...['-k', '-m', '--lfnf', '--last-failed-no-failures']);
                     removePositionalArgs = true;
                     break;
@@ -238,7 +256,11 @@ export class ArgumentsService implements IArgumentsService {
 
         let filteredArgs = args.slice();
         if (removePositionalArgs) {
-            const positionalArgs = this.helper.getPositionalArguments(filteredArgs, OptionsWithArguments, OptionsWithoutArguments);
+            const positionalArgs = this.helper.getPositionalArguments(
+                filteredArgs,
+                OptionsWithArguments,
+                OptionsWithoutArguments
+            );
             filteredArgs = filteredArgs.filter(item => positionalArgs.indexOf(item) === -1);
         }
         return this.helper.filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);

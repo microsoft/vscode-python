@@ -15,7 +15,10 @@ import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../.
 import { createDeferred, createDeferredFromPromise, sleep } from '../../../client/common/utils/async';
 import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../../client/common/utils/localize';
 import { IInterpreterService, InterpreterType } from '../../../client/interpreter/contracts';
-import { CondaInheritEnvPrompt, condaInheritEnvPromptKey } from '../../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
+import {
+    CondaInheritEnvPrompt,
+    condaInheritEnvPromptKey
+} from '../../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
 
 // tslint:disable:no-any
 
@@ -197,7 +200,9 @@ suite('Conda Inherit Env Prompt', async () => {
                     .setup(ws => ws.getConfiguration('terminal', resource))
                     .returns(() => workspaceConfig.object)
                     .verifiable(TypeMoq.Times.once());
-                workspaceConfig.setup(ws => ws.inspect<boolean>('integrated.inheritEnv')).returns(() => testParams.settings as any);
+                workspaceConfig
+                    .setup(ws => ws.inspect<boolean>('integrated.inheritEnv'))
+                    .returns(() => testParams.settings as any);
                 const result = await condaInheritEnvPrompt.shouldShowPrompt(resource);
                 expect(result).to.equal(false, 'Prompt should not be shown');
                 expect(condaInheritEnvPrompt.hasPromptBeenShownInCurrentSession).to.equal(false, 'Should be false');
@@ -343,7 +348,11 @@ suite('Conda Inherit Env Prompt', async () => {
     });
 
     suite('Method promptAndUpdate()', () => {
-        const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Common.moreInfo()];
+        const prompts = [
+            InteractiveShiftEnterBanner.bannerLabelYes(),
+            InteractiveShiftEnterBanner.bannerLabelNo(),
+            Common.moreInfo()
+        ];
         setup(() => {
             workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -352,7 +361,9 @@ suite('Conda Inherit Env Prompt', async () => {
             browserService = TypeMoq.Mock.ofType<IBrowserService>();
             notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<any>>();
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
-            when(persistentStateFactory.createGlobalPersistentState(condaInheritEnvPromptKey, true)).thenReturn(notificationPromptEnabled.object);
+            when(persistentStateFactory.createGlobalPersistentState(condaInheritEnvPromptKey, true)).thenReturn(
+                notificationPromptEnabled.object
+            );
             condaInheritEnvPrompt = new CondaInheritEnvPrompt(
                 interpreterService.object,
                 workspaceService.object,

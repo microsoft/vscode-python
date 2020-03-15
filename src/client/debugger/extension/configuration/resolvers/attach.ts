@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
-import { DebugAdapterDescriptorFactory, DebugAdapterNewPtvsd } from '../../../../common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../../../common/experimentGroups';
 import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService, IExperimentsManager } from '../../../../common/types';
 import { Diagnostics } from '../../../../common/utils/localize';
@@ -30,7 +30,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         _token?: CancellationToken
     ): Promise<AttachRequestArguments | undefined> {
         if (
-            !(this.experiments.inExperiment(DebugAdapterNewPtvsd.experiment) && this.experiments.inExperiment(DebugAdapterDescriptorFactory.experiment)) &&
+            !this.experiments.inExperiment(DebugAdapterNewPtvsd.experiment) &&
             debugConfiguration.processId !== undefined
         ) {
             throw Error(Diagnostics.processId());
@@ -41,12 +41,17 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
 
         const dbgConfig = debugConfiguration;
         if (Array.isArray(dbgConfig.debugOptions)) {
-            dbgConfig.debugOptions = dbgConfig.debugOptions!.filter((item, pos) => dbgConfig.debugOptions!.indexOf(item) === pos);
+            dbgConfig.debugOptions = dbgConfig.debugOptions!.filter(
+                (item, pos) => dbgConfig.debugOptions!.indexOf(item) === pos
+            );
         }
         return debugConfiguration;
     }
     // tslint:disable-next-line:cyclomatic-complexity
-    protected async provideAttachDefaults(workspaceFolder: Uri | undefined, debugConfiguration: AttachRequestArguments): Promise<void> {
+    protected async provideAttachDefaults(
+        workspaceFolder: Uri | undefined,
+        debugConfiguration: AttachRequestArguments
+    ): Promise<void> {
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
@@ -73,7 +78,11 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         if (debugConfiguration.subProcess === true) {
             this.debugOption(debugOptions, DebugOptions.SubProcess);
         }
-        if (debugConfiguration.pyramid && debugOptions.indexOf(DebugOptions.Jinja) === -1 && debugConfiguration.jinja !== false) {
+        if (
+            debugConfiguration.pyramid &&
+            debugOptions.indexOf(DebugOptions.Jinja) === -1 &&
+            debugConfiguration.jinja !== false
+        ) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
         }
         if (debugConfiguration.redirectOutput || debugConfiguration.redirectOutput === undefined) {
@@ -105,7 +114,13 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         this.sendTelemetry('attach', debugConfiguration);
     }
 
-    private resolvePathMappings(pathMappings: PathMapping[], host: string, localRoot?: string, remoteRoot?: string, workspaceFolder?: Uri) {
+    private resolvePathMappings(
+        pathMappings: PathMapping[],
+        host: string,
+        localRoot?: string,
+        remoteRoot?: string,
+        workspaceFolder?: Uri
+    ) {
         // This is for backwards compatibility.
         if (localRoot && remoteRoot) {
             pathMappings.push({

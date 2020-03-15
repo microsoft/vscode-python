@@ -11,8 +11,9 @@ import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../common/constants';
+import { traceError, traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
@@ -42,7 +43,6 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(ILogger) private logger: ILogger,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
@@ -53,64 +53,90 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
     public register(commandManager: ICommandManager): void {
         let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, () => this.showInteractiveWindow());
         this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ImportNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
-            return this.listenForErrors(() => {
-                if (file && file.fsPath) {
-                    return this.importNotebookOnFile(file.fsPath);
-                } else {
-                    return this.importNotebook();
-                }
-            });
-        });
-        this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ImportNotebookFile, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
-            return this.listenForErrors(() => {
-                if (file && file.fsPath) {
-                    return this.importNotebookOnFile(file.fsPath);
-                } else {
-                    return this.importNotebook();
-                }
-            });
-        });
-        this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ExportFileAsNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
-            return this.listenForErrors(() => {
-                if (file && file.fsPath) {
-                    return this.exportFile(file.fsPath);
-                } else {
-                    const activeEditor = this.documentManager.activeTextEditor;
-                    if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
-                        return this.exportFile(activeEditor.document.fileName);
+        disposable = commandManager.registerCommand(
+            Commands.ImportNotebook,
+            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
+                return this.listenForErrors(() => {
+                    if (file && file.fsPath) {
+                        return this.importNotebookOnFile(file.fsPath);
+                    } else {
+                        return this.importNotebook();
                     }
-                }
+                });
+            }
+        );
+        this.disposableRegistry.push(disposable);
+        disposable = commandManager.registerCommand(
+            Commands.ImportNotebookFile,
+            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
+                return this.listenForErrors(() => {
+                    if (file && file.fsPath) {
+                        return this.importNotebookOnFile(file.fsPath);
+                    } else {
+                        return this.importNotebook();
+                    }
+                });
+            }
+        );
+        this.disposableRegistry.push(disposable);
+        disposable = commandManager.registerCommand(
+            Commands.ExportFileAsNotebook,
+            (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
+                return this.listenForErrors(() => {
+                    if (file && file.fsPath) {
+                        return this.exportFile(file.fsPath);
+                    } else {
+                        const activeEditor = this.documentManager.activeTextEditor;
+                        if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
+                            return this.exportFile(activeEditor.document.fileName);
+                        }
+                    }
 
-                return Promise.resolve();
-            });
-        });
+                    return Promise.resolve();
+                });
+            }
+        );
         this.disposableRegistry.push(disposable);
-        disposable = commandManager.registerCommand(Commands.ExportFileAndOutputAsNotebook, (file: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
-            return this.listenForErrors(() => {
-                if (file && file.fsPath) {
-                    return this.exportFileAndOutput(file.fsPath);
-                } else {
-                    const activeEditor = this.documentManager.activeTextEditor;
-                    if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
-                        return this.exportFileAndOutput(activeEditor.document.fileName);
+        disposable = commandManager.registerCommand(
+            Commands.ExportFileAndOutputAsNotebook,
+            (file: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => {
+                return this.listenForErrors(() => {
+                    if (file && file.fsPath) {
+                        return this.exportFileAndOutput(file.fsPath);
+                    } else {
+                        const activeEditor = this.documentManager.activeTextEditor;
+                        if (activeEditor && activeEditor.document.languageId === PYTHON_LANGUAGE) {
+                            return this.exportFileAndOutput(activeEditor.document.fileName);
+                        }
                     }
-                }
-                return Promise.resolve();
-            });
-        });
+                    return Promise.resolve();
+                });
+            }
+        );
         this.disposableRegistry.push(disposable);
         this.disposableRegistry.push(commandManager.registerCommand(Commands.UndoCells, () => this.undoCells()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.RedoCells, () => this.redoCells()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.RemoveAllCells, () => this.removeAllCells()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.InterruptKernel, () => this.interruptKernel()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.RestartKernel, () => this.restartKernel()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.ExpandAllCells, () => this.expandAllCells()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.CollapseAllCells, () => this.collapseAllCells()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.ExportOutputAsNotebook, () => this.exportCells()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.ScrollToCell, (_file: string, id: string) => this.scrollToCell(id)));
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.RemoveAllCells, () => this.removeAllCells())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.InterruptKernel, () => this.interruptKernel())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.RestartKernel, () => this.restartKernel())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.ExpandAllCells, () => this.expandAllCells())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.CollapseAllCells, () => this.collapseAllCells())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.ExportOutputAsNotebook, () => this.exportCells())
+        );
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.ScrollToCell, (_file: string, id: string) => this.scrollToCell(id))
+        );
     }
 
     // tslint:disable:no-any
@@ -122,14 +148,14 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         } catch (err) {
             if (!(err instanceof CancellationError)) {
                 if (err.message) {
-                    this.logger.logError(err.message);
+                    traceError(err.message);
                     this.applicationShell.showErrorMessage(err.message);
                 } else {
-                    this.logger.logError(err.toString());
+                    traceError(err.toString());
                     this.applicationShell.showErrorMessage(err.toString());
                 }
             } else {
-                this.logger.logInformation('Canceled');
+                traceInfo('Canceled');
             }
         }
         return result;
@@ -149,7 +175,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (activeEditor && this.fileSystem.arePathsSame(activeEditor.document.fileName, file)) {
-                const cells = generateCellsFromDocument(activeEditor.document, this.configuration.getSettings().datascience);
+                const cells = generateCellsFromDocument(
+                    activeEditor.document,
+                    this.configuration.getSettings(activeEditor.document.uri).datascience
+                );
                 if (cells) {
                     const filtersKey = localize.DataScience.exportDialogFilter();
                     const filtersObject: { [name: string]: string[] } = {};
@@ -164,7 +193,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         async () => {
                             if (uri) {
                                 let directoryChange;
-                                const settings = this.configuration.getSettings();
+                                const settings = this.configuration.getSettings(activeEditor.document.uri);
                                 if (settings.datascience.changeDirOnImportExport) {
                                     directoryChange = uri.fsPath;
                                 }
@@ -179,11 +208,16 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     // When all done, show a notice that it completed.
                     if (uri && uri.fsPath) {
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
+                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
+                            ? localize.DataScience.exportOpenQuestion()
+                            : undefined;
                         const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
-                        const selection = await this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(uri.fsPath), ...questions);
+                        const selection = await this.applicationShell.showInformationMessage(
+                            localize.DataScience.exportDialogComplete().format(uri.fsPath),
+                            ...questions
+                        );
                         if (selection === openQuestion1) {
-                            await this.ipynbProvider.open(uri, await this.fileSystem.readFile(uri.fsPath));
+                            await this.ipynbProvider.open(uri);
                         }
                         if (selection === openQuestion2) {
                             // If the user wants to, open the notebook they just generated.
@@ -200,7 +234,11 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         if (file && file.length > 0 && (await this.jupyterExecution.isNotebookSupported())) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
-            if (activeEditor && activeEditor.document && this.fileSystem.arePathsSame(activeEditor.document.fileName, file)) {
+            if (
+                activeEditor &&
+                activeEditor.document &&
+                this.fileSystem.arePathsSame(activeEditor.document.fileName, file)
+            ) {
                 const ranges = generateCellRangesFromDocument(activeEditor.document);
                 if (ranges.length > 0) {
                     // Ask user for path
@@ -216,10 +254,17 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         await this.waitForStatus(
                             () => {
                                 try {
-                                    return this.exportCellsWithOutput(ranges, activeEditor.document, output, cancelSource.token);
+                                    return this.exportCellsWithOutput(
+                                        ranges,
+                                        activeEditor.document,
+                                        output,
+                                        cancelSource.token
+                                    );
                                 } catch (err) {
                                     if (!(err instanceof CancellationError)) {
-                                        this.showInformationMessage(localize.DataScience.exportDialogFailed().format(err));
+                                        this.showInformationMessage(
+                                            localize.DataScience.exportDialogFailed().format(err)
+                                        );
                                     }
                                 }
                                 return Promise.resolve();
@@ -233,11 +278,16 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
                         // When all done, show a notice that it completed.
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
-                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
+                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported())
+                            ? localize.DataScience.exportOpenQuestion()
+                            : undefined;
                         const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
-                        const selection = await this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(output), ...questions);
+                        const selection = await this.applicationShell.showInformationMessage(
+                            localize.DataScience.exportDialogComplete().format(output),
+                            ...questions
+                        );
                         if (selection === openQuestion1) {
-                            await this.ipynbProvider.open(Uri.file(output), await this.fileSystem.readFile(output));
+                            await this.ipynbProvider.open(Uri.file(output));
                         }
                         if (selection === openQuestion2) {
                             // If the user wants to, open the notebook they just generated.
@@ -258,23 +308,35 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         }
     }
 
-    private async exportCellsWithOutput(ranges: { range: Range; title: string }[], document: TextDocument, file: string, cancelToken: CancellationToken): Promise<void> {
+    private async exportCellsWithOutput(
+        ranges: { range: Range; title: string }[],
+        document: TextDocument,
+        file: string,
+        cancelToken: CancellationToken
+    ): Promise<void> {
         let server: INotebookServer | undefined;
         try {
-            const settings = this.configuration.getSettings();
+            const settings = this.configuration.getSettings(document.uri);
             const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
             // Try starting a server. Purpose should be unique so we
             // create a brand new one.
-            server = await this.jupyterExecution.connectToNotebookServer({ useDefaultConfig, purpose: uuid() }, cancelToken);
-            const notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+            server = await this.jupyterExecution.connectToNotebookServer(
+                { useDefaultConfig, purpose: uuid() },
+                cancelToken
+            );
+            const notebook = server
+                ? await server.createNotebook(undefined, Uri.parse(Identifiers.InteractiveWindowIdentity))
+                : undefined;
 
             // If that works, then execute all of the cells.
             const cells = Array.prototype.concat(
                 ...(await Promise.all(
                     ranges.map(r => {
                         const code = document.getText(r.range);
-                        return notebook ? notebook.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken) : [];
+                        return notebook
+                            ? notebook.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken)
+                            : [];
                     })
                 ))
             );
@@ -370,7 +432,13 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         return active.show();
     }
 
-    private waitForStatus<T>(promise: () => Promise<T>, format: string, file?: string, canceled?: () => void, interactiveWindow?: IInteractiveBase): Promise<T> {
+    private waitForStatus<T>(
+        promise: () => Promise<T>,
+        format: string,
+        file?: string,
+        canceled?: () => void,
+        interactiveWindow?: IInteractiveBase
+    ): Promise<T> {
         const message = file ? format.format(file) : format;
         return this.statusProvider.waitWithStatus(promise, message, true, undefined, canceled, interactiveWindow);
     }

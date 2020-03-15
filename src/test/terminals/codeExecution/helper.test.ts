@@ -7,6 +7,7 @@ import { expect } from 'chai';
 import * as fs from 'fs-extra';
 import { EOL } from 'os';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { Range, Selection, TextDocument, TextEditor, TextLine, Uri } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../../client/common/application/types';
@@ -14,9 +15,10 @@ import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../client/common/cons
 import '../../../client/common/extensions';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
-import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
-import { OSType } from '../../../client/common/utils/platform';
+import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
+import { Architecture, OSType } from '../../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
+import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CodeExecutionHelper } from '../../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
@@ -31,22 +33,52 @@ suite('Terminal - Code Execution Helper', () => {
     let helper: ICodeExecutionHelper;
     let document: TypeMoq.IMock<TextDocument>;
     let editor: TypeMoq.IMock<TextEditor>;
-    let pythonService: TypeMoq.IMock<IPythonExecutionService>;
+    let processService: TypeMoq.IMock<IProcessService>;
+    let interpreterService: TypeMoq.IMock<IInterpreterService>;
+    const workingPython: PythonInterpreter = {
+        path: PYTHON_PATH,
+        version: new SemVer('3.6.6-final'),
+        sysVersion: '1.0.0.0',
+        sysPrefix: 'Python',
+        displayName: 'Python',
+        type: InterpreterType.Unknown,
+        architecture: Architecture.x64
+    };
+
     setup(() => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         const envVariablesProvider = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>();
-        pythonService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+        processService = TypeMoq.Mock.ofType<IProcessService>();
+        interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         // tslint:disable-next-line:no-any
-        pythonService.setup((x: any) => x.then).returns(() => undefined);
-        envVariablesProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
-        const pythonExecFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
-        pythonExecFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonService.object));
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory), TypeMoq.It.isAny())).returns(() => pythonExecFactory.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDocumentManager), TypeMoq.It.isAny())).returns(() => documentManager.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny())).returns(() => applicationShell.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny())).returns(() => envVariablesProvider.object);
+        processService.setup((x: any) => x.then).returns(() => undefined);
+        interpreterService
+            .setup(i => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(workingPython));
+        const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+        processServiceFactory
+            .setup(p => p.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(processService.object));
+        envVariablesProvider
+            .setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve({}));
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny()))
+            .returns(() => processServiceFactory.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
+            .returns(() => interpreterService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IDocumentManager), TypeMoq.It.isAny()))
+            .returns(() => documentManager.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny()))
+            .returns(() => applicationShell.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny()))
+            .returns(() => envVariablesProvider.object);
         helper = new CodeExecutionHelper(serviceContainer.object);
 
         document = TypeMoq.Mock.ofType<TextDocument>();
@@ -56,10 +88,10 @@ suite('Terminal - Code Execution Helper', () => {
 
     async function ensureBlankLinesAreRemoved(source: string, expectedSource: string) {
         const actualProcessService = new ProcessService(new BufferDecoder());
-        pythonService
-            .setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((args, options) => {
-                return actualProcessService.exec.apply(actualProcessService, [PYTHON_PATH, args, options]);
+        processService
+            .setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((file, args, options) => {
+                return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
             });
         const normalizedZCode = await helper.normalizeLines(source);
         // In case file has been saved with different line endings.
@@ -74,16 +106,40 @@ suite('Terminal - Code Execution Helper', () => {
             return this.skip();
         }
 
-        const code = ['import sys', '', '', '', 'print(sys.executable)', '', 'print("1234")', '', '', 'print(1)', 'print(2)'];
+        const code = [
+            'import sys',
+            '',
+            '',
+            '',
+            'print(sys.executable)',
+            '',
+            'print("1234")',
+            '',
+            '',
+            'print(1)',
+            'print(2)'
+        ];
         const expectedCode = code.filter(line => line.trim().length > 0).join(EOL);
         await ensureBlankLinesAreRemoved(code.join(EOL), expectedCode);
     });
     test('Ensure there are no multiple-CR elements in the normalized code.', async () => {
-        const code = ['import sys', '', '', '', 'print(sys.executable)', '', 'print("1234")', '', '', 'print(1)', 'print(2)'];
+        const code = [
+            'import sys',
+            '',
+            '',
+            '',
+            'print(sys.executable)',
+            '',
+            'print("1234")',
+            '',
+            '',
+            'print(1)',
+            'print(2)'
+        ];
         const actualProcessService = new ProcessService(new BufferDecoder());
-        pythonService
-            .setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((args, options) => {
+        processService
+            .setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_file, args, options) => {
                 return actualProcessService.exec.apply(actualProcessService, [PYTHON_PATH, args, options]);
             });
         const normalizedCode = await helper.normalizeLines(code.join(EOL));
@@ -100,7 +156,10 @@ suite('Terminal - Code Execution Helper', () => {
             }
 
             const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
-            const expectedCode = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`), 'utf8');
+            const expectedCode = await fs.readFile(
+                path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
+                'utf8'
+            );
             await ensureBlankLinesAreRemoved(code, expectedCode);
         });
         test(`Ensure last two blank lines are preserved (Sample${fileNameSuffix})`, async function() {
@@ -112,7 +171,10 @@ suite('Terminal - Code Execution Helper', () => {
             }
 
             const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
-            const expectedCode = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`), 'utf8');
+            const expectedCode = await fs.readFile(
+                path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
+                'utf8'
+            );
             await ensureBlankLinesAreRemoved(code + EOL, expectedCode + EOL);
         });
         test(`Ensure last two blank lines are preserved even if we have more than 2 trailing blank lines (Sample${fileNameSuffix})`, async function() {
@@ -124,7 +186,10 @@ suite('Terminal - Code Execution Helper', () => {
             }
 
             const code = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_raw.py`), 'utf8');
-            const expectedCode = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`), 'utf8');
+            const expectedCode = await fs.readFile(
+                path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`),
+                'utf8'
+            );
             await ensureBlankLinesAreRemoved(code + EOL + EOL + EOL + EOL, expectedCode + EOL);
         });
     });
@@ -221,7 +286,9 @@ suite('Terminal - Code Execution Helper', () => {
         editor.setup(e => e.selection).returns(() => new Selection(3, 0, 10, 5));
         const textLine = TypeMoq.Mock.ofType<TextLine>();
         textLine.setup(t => t.text).returns(() => lineContents);
-        document.setup(d => d.getText(TypeMoq.It.isAny())).returns((r: Range) => `${r.start.line}.${r.start.character}.${r.end.line}.${r.end.character}`);
+        document
+            .setup(d => d.getText(TypeMoq.It.isAny()))
+            .returns((r: Range) => `${r.start.line}.${r.start.character}.${r.end.line}.${r.end.character}`);
 
         const content = await helper.getSelectedTextToExecute(editor.object);
         expect(content).to.be.equal('3.0.10.5');

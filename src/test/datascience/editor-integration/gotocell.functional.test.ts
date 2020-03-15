@@ -13,7 +13,14 @@ import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { traceError } from '../../../client/common/logger';
 import { Commands, Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICell, ICodeLensFactory, IDataScienceCodeLensProvider, IInteractiveWindowListener, IJupyterExecution, INotebook } from '../../../client/datascience/types';
+import {
+    ICell,
+    ICodeLensFactory,
+    IDataScienceCodeLensProvider,
+    IInteractiveWindowListener,
+    IJupyterExecution,
+    INotebook
+} from '../../../client/datascience/types';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { MockDocumentManager } from '../mockDocumentManager';
 
@@ -27,13 +34,14 @@ suite('DataScience gotocell tests', () => {
     let documentManager: MockDocumentManager;
     let visibleCells: ICell[] = [];
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         codeLensProvider = ioc.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         documentManager = ioc.serviceManager.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         codeLensFactory = ioc.serviceManager.get<ICodeLensFactory>(ICodeLensFactory);
+        await ioc.activate();
     });
 
     teardown(async () => {
@@ -67,15 +75,42 @@ suite('DataScience gotocell tests', () => {
         });
     }
 
-    async function createNotebook(useDefaultConfig: boolean, expectFailure?: boolean, usingDarkTheme?: boolean, purpose?: string): Promise<INotebook | undefined> {
+    async function createNotebook(
+        useDefaultConfig: boolean,
+        expectFailure?: boolean,
+        usingDarkTheme?: boolean,
+        purpose?: string
+    ): Promise<INotebook | undefined> {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
-            const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-            const server = await jupyterExecution.connectToNotebookServer({ usingDarkTheme, useDefaultConfig, workingDir: testDir, purpose: purpose ? purpose : '1' });
+            //const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+            // tslint:disable-next-line: no-invalid-template-strings
+            const testDir = '${fileDirname}';
+            const server = await jupyterExecution.connectToNotebookServer({
+                usingDarkTheme,
+                useDefaultConfig,
+                workingDir: testDir,
+                purpose: purpose ? purpose : Identifiers.HistoryPurpose,
+                enableDebugging: true
+            });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
-            return server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+
+            if (!server) {
+                return undefined;
+            } else {
+                const nb: INotebook = await server.createNotebook(
+                    undefined,
+                    Uri.parse(Identifiers.InteractiveWindowIdentity)
+                );
+                const listener = (codeLensFactory as any) as IInteractiveWindowListener;
+                listener.onMessage(
+                    InteractiveWindowMessages.NotebookExecutionActivated,
+                    Identifiers.InteractiveWindowIdentity
+                );
+                return nb;
+            }
         } catch (exc) {
             if (!expectFailure) {
                 assert.ok(false, `Expected server to be created, but got ${exc}`);
@@ -143,7 +178,9 @@ suite('DataScience gotocell tests', () => {
         const codeLenses = getCodeLenses();
 
         // There should be one with the ScrollTo command
-        const scrollTo = codeLenses.find(c => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine);
+        const scrollTo = codeLenses.find(
+            c => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine
+        );
         assert.equal(scrollTo, undefined, 'Goto cell code lens should not be found');
     }
 
@@ -152,7 +189,9 @@ suite('DataScience gotocell tests', () => {
         const codeLenses = getCodeLenses();
 
         // There should be one with the ScrollTo command
-        const scrollTo = codeLenses.find(c => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine);
+        const scrollTo = codeLenses.find(
+            c => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine
+        );
         assert.ok(scrollTo, 'Goto cell code lens not found');
 
         // It should have the same number as the execution count

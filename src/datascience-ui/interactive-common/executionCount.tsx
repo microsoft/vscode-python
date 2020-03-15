@@ -21,7 +21,10 @@ export class ExecutionCount extends React.Component<IExecutionCountProps> {
                 <div className="execution-count-busy-outer">
                     [
                     <svg className="execution-count-busy-svg" viewBox="0 0 16 16">
-                        <polyline points="8,0, 8,8, 14,3, 8,8, 16,8, 8,8, 14,14, 8,8 8,16 8,8 3,14 8,8 0,8 8,8 3,3" className="execution-count-busy-polyline" />
+                        <polyline
+                            points="8,0, 8,8, 14,3, 8,8, 16,8, 8,8, 14,14, 8,8 8,16 8,8 3,14 8,8 0,8 8,8 3,3"
+                            className="execution-count-busy-polyline"
+                        />
                     </svg>
                     ]
                 </div>

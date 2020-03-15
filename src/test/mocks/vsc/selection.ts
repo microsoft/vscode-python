@@ -66,7 +66,12 @@ export namespace vscMockSelection {
          */
         public readonly positionColumn: number;
 
-        constructor(selectionStartLineNumber: number, selectionStartColumn: number, positionLineNumber: number, positionColumn: number) {
+        constructor(
+            selectionStartLineNumber: number,
+            selectionStartColumn: number,
+            positionLineNumber: number,
+            positionColumn: number
+        ) {
             super(selectionStartLineNumber, selectionStartColumn, positionLineNumber, positionColumn);
             this.selectionStartLineNumber = selectionStartLineNumber;
             this.selectionStartColumn = selectionStartColumn;
@@ -78,14 +83,29 @@ export namespace vscMockSelection {
          * Clone this selection.
          */
         public clone(): Selection {
-            return new Selection(this.selectionStartLineNumber, this.selectionStartColumn, this.positionLineNumber, this.positionColumn);
+            return new Selection(
+                this.selectionStartLineNumber,
+                this.selectionStartColumn,
+                this.positionLineNumber,
+                this.positionColumn
+            );
         }
 
         /**
          * Transform to a human-readable representation.
          */
         public toString(): string {
-            return '[' + this.selectionStartLineNumber + ',' + this.selectionStartColumn + ' -> ' + this.positionLineNumber + ',' + this.positionColumn + ']';
+            return (
+                '[' +
+                this.selectionStartLineNumber +
+                ',' +
+                this.selectionStartColumn +
+                ' -> ' +
+                this.positionLineNumber +
+                ',' +
+                this.positionColumn +
+                ']'
+            );
         }
 
         /**
@@ -111,7 +131,10 @@ export namespace vscMockSelection {
          * Get directions (LTR or RTL).
          */
         public getDirection(): SelectionDirection {
-            if (this.selectionStartLineNumber === this.startLineNumber && this.selectionStartColumn === this.startColumn) {
+            if (
+                this.selectionStartLineNumber === this.startLineNumber &&
+                this.selectionStartColumn === this.startColumn
+            ) {
                 return SelectionDirection.LTR;
             }
             return SelectionDirection.RTL;
@@ -149,7 +172,10 @@ export namespace vscMockSelection {
         /**
          * Create a `Selection` from one or two positions
          */
-        public static fromPositions(start: vscMockPosition.IPosition, end: vscMockPosition.IPosition = start): Selection {
+        public static fromPositions(
+            start: vscMockPosition.IPosition,
+            end: vscMockPosition.IPosition = start
+        ): Selection {
             return new Selection(start.lineNumber, start.column, end.lineNumber, end.column);
         }
 
@@ -157,7 +183,12 @@ export namespace vscMockSelection {
          * Create a `Selection` from an `ISelection`.
          */
         public static liftSelection(sel: ISelection): Selection {
-            return new Selection(sel.selectionStartLineNumber, sel.selectionStartColumn, sel.positionLineNumber, sel.positionColumn);
+            return new Selection(
+                sel.selectionStartLineNumber,
+                sel.selectionStartColumn,
+                sel.positionLineNumber,
+                sel.positionColumn
+            );
         }
 
         /**
@@ -197,7 +228,13 @@ export namespace vscMockSelection {
         /**
          * Create with a direction.
          */
-        public static createWithDirection(startLineNumber: number, startColumn: number, endLineNumber: number, endColumn: number, direction: SelectionDirection): Selection {
+        public static createWithDirection(
+            startLineNumber: number,
+            startColumn: number,
+            endLineNumber: number,
+            endColumn: number,
+            direction: SelectionDirection
+        ): Selection {
             if (direction === SelectionDirection.LTR) {
                 return new Selection(startLineNumber, startColumn, endLineNumber, endColumn);
             }

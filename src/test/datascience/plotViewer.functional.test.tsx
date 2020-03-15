@@ -21,9 +21,10 @@ suite('DataScience PlotViewer tests', () => {
     let plotViewerProvider: IPlotViewerProvider;
     let ioc: DataScienceIocContainer;
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        await ioc.activate();
     });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
@@ -67,7 +68,10 @@ suite('DataScience PlotViewer tests', () => {
     }
 
     // tslint:disable-next-line:no-any
-    function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
+    function runMountedTest(
+        name: string,
+        testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>
+    ) {
         test(name, async () => {
             const wrapper = mountWebView();
             try {

@@ -21,15 +21,17 @@ import { Cancellation, CancellationError } from '../../client/common/cancellatio
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { traceError, traceInfo } from '../../client/common/logger';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory, Output } from '../../client/common/process/types';
+import { IPythonExecutionFactory, IPythonExecutionService, Output } from '../../client/common/process/types';
+import { Product } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
-import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import { ModuleExistsStatus } from '../../client/datascience/jupyter/jupyterCommandFinder';
+import { ModuleExistsStatus } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
+import { getMessageForLibrariesNotInstalled } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
+import { HostJupyterNotebook } from '../../client/datascience/jupyter/liveshare/hostJupyterNotebook';
 import {
     CellState,
     ICell,
@@ -42,12 +44,17 @@ import {
     INotebookImporter,
     InterruptResult
 } from '../../client/datascience/types';
-import { IInterpreterService, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import {
+    IInterpreterService,
+    IKnownSearchPathsForInterpreters,
+    InterpreterType,
+    PythonInterpreter
+} from '../../client/interpreter/contracts';
+import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
-import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getConnectionInfo, getIPConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
+import { getConnectionInfo, getIPConnectionInfo } from './jupyterHelpers';
 import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
 
@@ -55,23 +62,24 @@ import { MockPythonService } from './mockPythonService';
 suite('DataScience notebook tests', () => {
     const disposables: Disposable[] = [];
     let jupyterExecution: IJupyterExecution;
-    let processFactory: IProcessServiceFactory;
+    let pythonFactory: IPythonExecutionFactory;
     let ioc: DataScienceIocContainer;
     let modifiedConfig = false;
+    const baseUri = Uri.file('foo.py');
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        await ioc.activate();
     });
 
     teardown(async () => {
         try {
             if (modifiedConfig) {
                 traceInfo('Attempting to put jupyter default config back');
-                const python = await getNotebookCapableInterpreter(ioc, processFactory);
-                const procService = await processFactory.create();
-                if (procService && python) {
-                    await procService.exec(python.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], { env: process.env });
+                const procService = await createPythonService();
+                if (procService) {
+                    await procService.exec(['-m', 'jupyter', 'notebook', '--generate-config', '-y'], {});
                 }
             }
             traceInfo('Shutting down after test.');
@@ -90,10 +98,9 @@ suite('DataScience notebook tests', () => {
         } catch (e) {
             traceError(e);
         }
-    });
-
-    suiteTeardown(() => {
-        asyncDump();
+        if (process.env.PYTHONWARNINGS) {
+            delete process.env.PYTHONWARNINGS;
+        }
     });
 
     function escapePath(p: string) {
@@ -124,7 +131,12 @@ suite('DataScience notebook tests', () => {
         }
     }
 
-    async function verifySimple(notebook: INotebook | undefined, code: string, expectedValue: any, pathVerify = false): Promise<void> {
+    async function verifySimple(
+        notebook: INotebook | undefined,
+        code: string,
+        expectedValue: any,
+        pathVerify = false
+    ): Promise<void> {
         const cells = await notebook!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         const data = extractDataOutput(cells[0]);
@@ -151,7 +163,14 @@ suite('DataScience notebook tests', () => {
         }
     }
 
-    async function verifyCell(notebook: INotebook | undefined, index: number, code: string, mimeType: string, cellType: string, verifyValue: (data: any) => void): Promise<void> {
+    async function verifyCell(
+        notebook: INotebook | undefined,
+        index: number,
+        code: string,
+        mimeType: string,
+        cellType: string,
+        verifyValue: (data: any) => void
+    ): Promise<void> {
         // Verify results of an execute
         const cells = await notebook!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `${index}: Wrong number of cells returned`);
@@ -168,9 +187,13 @@ suite('DataScience notebook tests', () => {
             assert.ok(data || text, `${index}: No data object on the cell for ${code}`);
             if (data) {
                 // For linter
-                assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct for ${JSON.stringify(data)}`);
-                assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
-                verifyValue((data as any)[mimeType]);
+                assert.ok(
+                    data.hasOwnProperty(mimeType) || data.hasOwnProperty('text/plain'),
+                    `${index}: Cell mime type not correct for ${JSON.stringify(data)}`
+                );
+                const actualMimeType = data.hasOwnProperty(mimeType) ? mimeType : 'text/plain';
+                assert.ok((data as any)[actualMimeType], `${index}: Cell mime type not correct`);
+                verifyValue((data as any)[actualMimeType]);
             }
             if (text) {
                 verifyValue(text);
@@ -189,7 +212,16 @@ suite('DataScience notebook tests', () => {
         }
     }
 
-    function testMimeTypes(types: { markdownRegEx: string | undefined; code: string; mimeType: string; result: any; cellType: string; verifyValue(data: any): void }[]) {
+    function testMimeTypes(
+        types: {
+            markdownRegEx: string | undefined;
+            code: string;
+            mimeType: string;
+            result: any;
+            cellType: string;
+            verifyValue(data: any): void;
+        }[]
+    ) {
         runTest('MimeTypes', async () => {
             // Prefill with the output (This is only necessary for mocking)
             types.forEach(t => {
@@ -198,25 +230,44 @@ suite('DataScience notebook tests', () => {
 
             // Test all mime types together so we don't have to startup and shutdown between
             // each
-            const server = await createNotebook(true);
+            const server = await createNotebook(
+                true,
+                false,
+                false,
+                'history',
+                undefined,
+                path.join(srcDirectory(), 'foo.py')
+            );
             if (server) {
                 for (let i = 0; i < types.length; i += 1) {
                     const markdownRegex = types[i].markdownRegEx ? types[i].markdownRegEx : '';
                     ioc.getSettings().datascience.markdownRegularExpression = markdownRegex!;
-                    await verifyCell(server, i, types[i].code, types[i].mimeType, types[i].cellType, types[i].verifyValue);
+                    await verifyCell(
+                        server,
+                        i,
+                        types[i].code,
+                        types[i].mimeType,
+                        types[i].cellType,
+                        types[i].verifyValue
+                    );
                 }
             }
         });
     }
 
-    function runTest(name: string, func: (_this: Mocha.Context) => Promise<void>, _notebookProc?: ChildProcess, rebindFunc?: () => void) {
+    function runTest(
+        name: string,
+        func: (_this: Mocha.Context) => Promise<void>,
+        _notebookProc?: ChildProcess,
+        rebindFunc?: () => void
+    ) {
         test(name, async function() {
             // Give tests a chance to rebind IOC services before we fetch jupyterExecution and processFactory
             if (rebindFunc) {
                 rebindFunc();
             }
             jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-            processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
+            pythonFactory = ioc.serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
             console.log(`Starting test ${name} ...`);
             if (await jupyterExecution.isNotebookSupported()) {
                 // tslint:disable-next-line: no-invalid-this
@@ -248,7 +299,7 @@ suite('DataScience notebook tests', () => {
                 assert.ok(false, `Expected server to not be created`);
             }
             if (server) {
-                const notebook = await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity));
+                const notebook = await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity));
                 // If specified set our launch file
                 if (launchingFile) {
                     await notebook.setLaunchingFile(launchingFile);
@@ -278,29 +329,80 @@ suite('DataScience notebook tests', () => {
         }
     }
 
-    function addInterruptableMockData(code: string, resultGenerator: (c: CancellationToken) => Promise<{ result: string; haveMore: boolean }>) {
+    function addInterruptableMockData(
+        code: string,
+        resultGenerator: (c: CancellationToken) => Promise<{ result: string; haveMore: boolean }>
+    ) {
         if (ioc.mockJupyter) {
             ioc.mockJupyter.addContinuousOutputCell(code, resultGenerator);
         }
     }
 
-    runTest('Remote Self Certs', async () => {
-        const python = await getNotebookCapableInterpreter(ioc, processFactory);
-        const procService = await processFactory.create();
+    async function createPythonService(versionRequirement?: number): Promise<IPythonExecutionService | undefined> {
+        if (!ioc.mockJupyter) {
+            const python = await ioc.getJupyterCapableInterpreter();
 
-        // We will only connect if we allow for self signed cert connections
-        ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
+            if (
+                python &&
+                python.version?.major &&
+                (!versionRequirement || python.version?.major > versionRequirement)
+            ) {
+                return pythonFactory.createActivatedEnvironment({
+                    resource: undefined,
+                    interpreter: python,
+                    allowEnvironmentFetchExceptions: true,
+                    bypassCondaExecution: true
+                });
+            }
+        }
+    }
 
-        if (procService && python) {
+    runTest('Remote Self Certs', async (_this: Mocha.Context) => {
+        const pythonService = await createPythonService(2);
+
+        if (pythonService) {
+            // We will only connect if we allow for self signed cert connections
+            ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
+
             const connectionFound = createDeferred();
-            const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'selfCert.py');
-            const pemFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jcert.pem');
-            const keyFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jkey.key');
+            const configFile = path.join(
+                EXTENSION_ROOT_DIR,
+                'src',
+                'test',
+                'datascience',
+                'serverConfigFiles',
+                'selfCert.py'
+            );
+            const pemFile = path.join(
+                EXTENSION_ROOT_DIR,
+                'src',
+                'test',
+                'datascience',
+                'serverConfigFiles',
+                'jcert.pem'
+            );
+            const keyFile = path.join(
+                EXTENSION_ROOT_DIR,
+                'src',
+                'test',
+                'datascience',
+                'serverConfigFiles',
+                'jkey.key'
+            );
 
-            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`, `--certfile=${pemFile}`, `--keyfile=${keyFile}`], {
-                env: process.env,
-                throwOnStdErr: false
-            });
+            const exeResult = pythonService.execObservable(
+                [
+                    '-m',
+                    'jupyter',
+                    'notebook',
+                    `--config=${configFile}`,
+                    `--certfile=${pemFile}`,
+                    `--keyfile=${keyFile}`
+                ],
+                {
+                    throwOnStdErr: false
+                }
+            );
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
@@ -315,7 +417,9 @@ suite('DataScience notebook tests', () => {
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
             const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
-            const notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+            const notebook = server
+                ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
+                : undefined;
             if (!notebook) {
                 assert.fail('Failed to connect to remote self cert server');
             } else {
@@ -323,6 +427,9 @@ suite('DataScience notebook tests', () => {
             }
             // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
             await server!.dispose();
+        } else {
+            traceInfo('Remote Self Cert is not supported on 2.7');
+            _this.skip();
         }
     });
 
@@ -330,13 +437,22 @@ suite('DataScience notebook tests', () => {
     runTest(
         'Remote No Auth',
         async () => {
-            const python = await getNotebookCapableInterpreter(ioc, processFactory);
-            const procService = await processFactory.create();
+            const pythonService = await createPythonService();
 
-            if (procService && python) {
+            if (pythonService) {
                 const connectionFound = createDeferred();
-                const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'remoteNoAuth.py');
-                const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`], { env: process.env, throwOnStdErr: false });
+                const configFile = path.join(
+                    EXTENSION_ROOT_DIR,
+                    'src',
+                    'test',
+                    'datascience',
+                    'serverConfigFiles',
+                    'remoteNoAuth.py'
+                );
+                const exeResult = pythonService.execObservable(
+                    ['-m', 'jupyter', 'notebook', `--config=${configFile}`],
+                    { throwOnStdErr: false }
+                );
                 disposables.push(exeResult);
 
                 exeResult.out.subscribe((output: Output<string>) => {
@@ -351,8 +467,14 @@ suite('DataScience notebook tests', () => {
                 const uri = connString as string;
 
                 // We have a connection string here, so try to connect jupyterExecution to the notebook server
-                const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
-                const notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+                const server = await jupyterExecution.connectToNotebookServer({
+                    uri,
+                    useDefaultConfig: true,
+                    purpose: ''
+                });
+                const notebook = server
+                    ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
+                    : undefined;
                 if (!notebook) {
                     assert.fail('Failed to connect to remote password server');
                 } else {
@@ -375,12 +497,21 @@ suite('DataScience notebook tests', () => {
                 .returns(e => {
                     throw e;
                 });
-            appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+            appShell
+                .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve(''));
             appShell
                 .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
             appShell
-                .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup(a =>
+                    a.showInformationMessage(
+                        TypeMoq.It.isAny(),
+                        TypeMoq.It.isAny(),
+                        TypeMoq.It.isAny(),
+                        TypeMoq.It.isAny()
+                    )
+                )
                 .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
             appShell.setup(a => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
             appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
@@ -389,13 +520,21 @@ suite('DataScience notebook tests', () => {
     );
 
     runTest('Remote Password', async () => {
-        const python = await getNotebookCapableInterpreter(ioc, processFactory);
-        const procService = await processFactory.create();
+        const pythonService = await createPythonService();
 
-        if (procService && python) {
+        if (pythonService) {
             const connectionFound = createDeferred();
-            const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'remotePassword.py');
-            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`], { env: process.env, throwOnStdErr: false });
+            const configFile = path.join(
+                EXTENSION_ROOT_DIR,
+                'src',
+                'test',
+                'datascience',
+                'serverConfigFiles',
+                'remotePassword.py'
+            );
+            const exeResult = pythonService.execObservable(['-m', 'jupyter', 'notebook', `--config=${configFile}`], {
+                throwOnStdErr: false
+            });
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
@@ -411,7 +550,9 @@ suite('DataScience notebook tests', () => {
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
             const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
-            const notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+            const notebook = server
+                ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
+                : undefined;
             if (!notebook) {
                 assert.fail('Failed to connect to remote password server');
             } else {
@@ -423,13 +564,21 @@ suite('DataScience notebook tests', () => {
     });
 
     runTest('Remote', async () => {
-        const python = await getNotebookCapableInterpreter(ioc, processFactory);
-        const procService = await processFactory.create();
+        const pythonService = await createPythonService();
 
-        if (procService && python) {
+        if (pythonService) {
             const connectionFound = createDeferred();
-            const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'remoteToken.py');
-            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`], { env: process.env, throwOnStdErr: false });
+            const configFile = path.join(
+                EXTENSION_ROOT_DIR,
+                'src',
+                'test',
+                'datascience',
+                'serverConfigFiles',
+                'remoteToken.py'
+            );
+            const exeResult = pythonService.execObservable(['-m', 'jupyter', 'notebook', `--config=${configFile}`], {
+                throwOnStdErr: false
+            });
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
@@ -445,7 +594,9 @@ suite('DataScience notebook tests', () => {
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
             const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
-            const notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+            const notebook = server
+                ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
+                : undefined;
             if (!notebook) {
                 assert.fail('Failed to connect to remote server');
             } else {
@@ -475,17 +626,24 @@ suite('DataScience notebook tests', () => {
 
     test('Not installed', async () => {
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-        processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
         // Rewire our data we use to search for processes
         @injectable()
         class EmptyInterpreterService implements IInterpreterService {
             public get hasInterpreters(): Promise<boolean> {
                 return Promise.resolve(true);
             }
-            public onDidChangeInterpreter(_listener: (e: void) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+            public onDidChangeInterpreter(
+                _listener: (e: void) => any,
+                _thisArgs?: any,
+                _disposables?: Disposable[]
+            ): Disposable {
                 return { dispose: noop };
             }
-            public onDidChangeInterpreterInformation(_listener: (e: PythonInterpreter) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable {
+            public onDidChangeInterpreterInformation(
+                _listener: (e: PythonInterpreter) => any,
+                _thisArgs?: any,
+                _disposables?: Disposable[]
+            ): Disposable {
                 return { dispose: noop };
             }
             public getInterpreters(_resource?: Uri): Promise<PythonInterpreter[]> {
@@ -538,21 +696,27 @@ suite('DataScience notebook tests', () => {
         // Make sure we have a change dir happening
         const settings = { ...ioc.getSettings().datascience };
         settings.changeDirOnImportExport = true;
-        ioc.forceSettingsChanged(ioc.getSettings().pythonPath, settings);
+        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, settings);
 
         const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
-        const newFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'WorkspaceDir', 'WorkspaceSubDir', 'foo.ipynb');
+        const newFolderPath = path.join(
+            EXTENSION_ROOT_DIR,
+            'src',
+            'test',
+            'datascience',
+            'WorkspaceDir',
+            'WorkspaceSubDir',
+            'foo.ipynb'
+        );
         const notebook = await exporter.translateToNotebook(cells, newFolderPath);
         assert.ok(notebook, 'Translate to notebook is failing');
 
         // Make sure we added in our chdir
         if (notebook) {
-            // tslint:disable-next-line:no-string-literal
-            const nbcells = notebook['cells'];
+            const nbcells = notebook.cells;
             if (nbcells) {
-                // tslint:disable-next-line:no-string-literal
-                const firstCellText: string = (nbcells as any)[0]['source'] as string;
-                assert.ok(firstCellText.includes('os.chdir'));
+                const firstCellText: string = nbcells[0].source as string;
+                assert.ok(firstCellText.includes('os.chdir'), `${firstCellText} does not include 'os.chdir`);
             }
         }
 
@@ -584,14 +748,23 @@ suite('DataScience notebook tests', () => {
         // Instead of default, manually set a working directory
         const notebook = await createNotebook(true, undefined, undefined, undefined, EXTENSION_ROOT_DIR);
         await verifySimple(notebook, 'import os\nos.getcwd()', EXTENSION_ROOT_DIR, true);
+        await verifySimple(notebook, 'import sys\nsys.path[0]', EXTENSION_ROOT_DIR, true);
     });
 
     // tslint:disable-next-line:no-invalid-template-strings
     runTest('Verify ${fileDirname} working directory', async () => {
         // Verify that the default ${fileDirname} setting sets the working directory to the file path
         changeMockWorkingDirectory(`'${srcDirectory()}'`);
-        const notebook = await createNotebook(true, undefined, undefined, undefined, undefined, path.join(srcDirectory(), 'foo.py'));
+        const notebook = await createNotebook(
+            true,
+            undefined,
+            undefined,
+            undefined,
+            undefined,
+            path.join(srcDirectory(), 'foo.py')
+        );
         await verifySimple(notebook, 'import os\nos.getcwd()', srcDirectory(), true);
+        await verifySimple(notebook, 'import sys\nsys.path[0]', srcDirectory(), true);
     });
 
     runTest('Change Interpreter', async () => {
@@ -657,7 +830,10 @@ suite('DataScience notebook tests', () => {
             console.log('Verifying restart');
             await verifyError(server, 'a', `name 'a' is not defined`);
         } catch (exc) {
-            assert.ok(exc instanceof JupyterKernelPromiseFailedError, `Restarting did not timeout correctly for ${exc}`);
+            assert.ok(
+                exc instanceof JupyterKernelPromiseFailedError,
+                `Restarting did not timeout correctly for ${exc}`
+            );
         }
     });
 
@@ -669,7 +845,11 @@ suite('DataScience notebook tests', () => {
         }
     }
 
-    async function testCancelableCall<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, timeout: number): Promise<boolean> {
+    async function testCancelableCall<T>(
+        method: (t: CancellationToken) => Promise<T>,
+        messageFormat: string,
+        timeout: number
+    ): Promise<boolean> {
         const tokenSource = new TaggedCancellationTokenSource(messageFormat.format(timeout.toString()));
         const disp = setTimeout(
             _s => {
@@ -694,7 +874,11 @@ suite('DataScience notebook tests', () => {
         return true;
     }
 
-    async function testCancelableMethod<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, short?: boolean): Promise<boolean> {
+    async function testCancelableMethod<T>(
+        method: (t: CancellationToken) => Promise<T>,
+        messageFormat: string,
+        short?: boolean
+    ): Promise<boolean> {
         const timeouts = short ? [10, 20, 30, 100] : [300, 400, 500, 1000];
         // tslint:disable-next-line:prefer-for-of
         for (let i = 0; i < timeouts.length; i += 1) {
@@ -711,7 +895,12 @@ suite('DataScience notebook tests', () => {
         }
 
         // Try different timeouts, canceling after the timeout on each
-        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.connectToNotebookServer(undefined, t), 'Cancel did not cancel start after {0}ms'));
+        assert.ok(
+            await testCancelableMethod(
+                (t: CancellationToken) => jupyterExecution.connectToNotebookServer(undefined, t),
+                'Cancel did not cancel start after {0}ms'
+            )
+        );
 
         if (ioc.mockJupyter) {
             ioc.mockJupyter.setProcessDelay(undefined);
@@ -720,7 +909,9 @@ suite('DataScience notebook tests', () => {
         // Make sure doing normal start still works
         const nonCancelSource = new CancellationTokenSource();
         const server = await jupyterExecution.connectToNotebookServer(undefined, nonCancelSource.token);
-        const notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+        const notebook = server
+            ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
+            : undefined;
         assert.ok(notebook, 'Server not found with a cancel token that does not cancel');
 
         // Make sure can run some code too
@@ -731,14 +922,37 @@ suite('DataScience notebook tests', () => {
         }
 
         // Force a settings changed so that all of the cached data is cleared
-        ioc.forceSettingsChanged('/usr/bin/test3/python');
+        ioc.forceSettingsChanged(undefined, '/usr/bin/test3/python');
 
-        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.getUsableJupyterPython(t), 'Cancel did not cancel getusable after {0}ms', true));
-        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isNotebookSupported(t), 'Cancel did not cancel isNotebook after {0}ms', true));
-        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isImportSupported(t), 'Cancel did not cancel isImport after {0}ms', true));
+        assert.ok(
+            await testCancelableMethod(
+                (t: CancellationToken) => jupyterExecution.getUsableJupyterPython(t),
+                'Cancel did not cancel getusable after {0}ms',
+                true
+            )
+        );
+        assert.ok(
+            await testCancelableMethod(
+                (t: CancellationToken) => jupyterExecution.isNotebookSupported(t),
+                'Cancel did not cancel isNotebook after {0}ms',
+                true
+            )
+        );
+        assert.ok(
+            await testCancelableMethod(
+                (t: CancellationToken) => jupyterExecution.isImportSupported(t),
+                'Cancel did not cancel isImport after {0}ms',
+                true
+            )
+        );
     });
 
-    async function interruptExecute(notebook: INotebook | undefined, code: string, interruptMs: number, sleepMs: number): Promise<InterruptResult> {
+    async function interruptExecute(
+        notebook: INotebook | undefined,
+        code: string,
+        interruptMs: number,
+        sleepMs: number
+    ): Promise<InterruptResult> {
         let interrupted = false;
         let finishedBefore = false;
         const finishedPromise = createDeferred();
@@ -771,8 +985,8 @@ suite('DataScience notebook tests', () => {
         assert.equal(finishedBefore, false, 'Finished before the interruption');
         assert.equal(error, undefined, 'Error thrown during interrupt');
         assert.ok(
-            finishedPromise.completed || result === InterruptResult.TimedOut || result === InterruptResult.Restarted,
-            `Timed out before interrupt for result: ${result}: ${code}`
+            finishedPromise.completed || result === InterruptResult.TimedOut || result === InterruptResult.Success,
+            `Interrupt restarted ${result} for: ${code}`
         );
 
         return result;
@@ -958,13 +1172,13 @@ plt.show()`,
     ]);
 
     async function generateNonDefaultConfig() {
-        const usable = await getNotebookCapableInterpreter(ioc, processFactory);
+        const usable = await ioc.getJupyterCapableInterpreter();
         assert.ok(usable, 'Cant find jupyter enabled python');
 
         // Manually generate an invalid jupyter config
-        const procService = await processFactory.create();
+        const procService = await createPythonService();
         assert.ok(procService, 'Can not get a process service');
-        const results = await procService!.exec(usable!.path, ['-m', 'jupyter', 'notebook', '--generate-config', '-y'], { env: process.env });
+        const results = await procService!.exec(['-m', 'jupyter', 'notebook', '--generate-config', '-y'], {});
 
         // Results should have our path to the config.
         const match = /^.*\s+(.*jupyter_notebook_config.py)\s+.*$/m.exec(results.stdout);
@@ -1000,11 +1214,30 @@ plt.show()`,
         }
     });
 
+    runTest('Custom command line', async () => {
+        if (!ioc.mockJupyter) {
+            const tempDir = os.tmpdir();
+            const settings = ioc.getSettings();
+            settings.datascience.jupyterCommandLineArguments = ['--NotebookApp.port=9975', `--notebook-dir=${tempDir}`];
+            ioc.forceSettingsChanged(undefined, settings.pythonPath, settings.datascience);
+            const notebook = await createNotebook(true);
+            assert.ok(notebook, 'Server should have started on port 9975');
+            const hs = notebook as HostJupyterNotebook;
+            // Check port number. Should have at least started with the one specified.
+            assert.ok(hs.server.getConnectionInfo()?.baseUrl.startsWith('http://localhost:99'), 'Port was not used');
+
+            await verifySimple(hs, `a=1${os.EOL}a`, 1);
+        }
+    });
+
     runTest('Invalid kernel spec works', async () => {
         if (ioc.mockJupyter) {
             // Make a dummy class that will fail during launch
             class FailedKernelSpec extends JupyterExecutionFactory {
-                protected async getMatchingKernelSpec(_connection?: IConnection, _cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+                protected async getMatchingKernelSpec(
+                    _connection?: IConnection,
+                    _cancelToken?: CancellationToken
+                ): Promise<IJupyterKernelSpec | undefined> {
                     return Promise.resolve(undefined);
                 }
             }
@@ -1169,6 +1402,7 @@ plt.show()`,
         const factory = ioc.serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const service = await factory.create({ pythonPath });
         const mockService = service as MockPythonService;
+        // Used by commands (can be removed when `src/client/datascience/jupyter/interpreter/jupyterCommand.ts` is deleted).
         mockService.addExecResult(['-m', 'jupyter', 'notebook', '--version'], () => {
             return Promise.resolve({
                 stdout: '9.9.9.9',
@@ -1176,12 +1410,18 @@ plt.show()`,
             });
         });
 
+        // Used by commands (can be removed when `src/client/datascience/jupyter/interpreter/jupyterCommand.ts` is deleted).
         mockService.addExecResult(['-m', 'notebook', '--version'], () => {
             return Promise.resolve({
                 stdout: '',
                 stderr: 'Not supported'
             });
         });
+        // For new approach.
+        when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter)).thenResolve(false as any);
+        when(ioc.mockJupyter?.productInstaller.isInstalled(Product.notebook)).thenResolve(false as any);
+        when(ioc.mockJupyter?.productInstaller.isInstalled(Product.jupyter, anything())).thenResolve(false as any);
+        when(ioc.mockJupyter?.productInstaller.isInstalled(Product.notebook, anything())).thenResolve(false as any);
     }
 
     test('Notebook launch failure', async function() {
@@ -1190,11 +1430,12 @@ plt.show()`,
             this.skip();
         } else {
             const application = mock(ApplicationShell);
-            when(application.withProgress(anything(), anything())).thenResolve({ status: ModuleExistsStatus.NotFound } as any);
+            when(application.withProgress(anything(), anything())).thenResolve({
+                status: ModuleExistsStatus.NotFound
+            } as any);
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, instance(application));
 
             jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-            processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
 
             // Change notebook command to fail with some goofy output
             await disableJupyter(ioc.workingInterpreter.path);
@@ -1204,13 +1445,43 @@ plt.show()`,
             let threw = false;
             try {
                 const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-                await jupyterExecution.connectToNotebookServer({ usingDarkTheme: false, useDefaultConfig: true, workingDir: testDir, purpose: '1' });
+                await jupyterExecution.connectToNotebookServer({
+                    usingDarkTheme: false,
+                    useDefaultConfig: true,
+                    workingDir: testDir,
+                    purpose: '1'
+                });
             } catch (e) {
                 threw = true;
-                assert.ok(e.message.includes('Not supported'), `Wrong error thrown when notebook is created. Error is ${e.message}`);
+                // When using old command finder, the error is `Not Supported` (directly from stdout). - can be deprecated when jupyterCommandFinder.ts is deleted.
+                // When using new approach, we inform user that some packages are not installed.
+                const expectedErrorMsg = getMessageForLibrariesNotInstalled(
+                    [Product.jupyter, Product.notebook],
+                    'Python'
+                );
+
+                assert.ok(
+                    e.message.includes('Not supported') || e.message.includes(expectedErrorMsg),
+                    `Wrong error thrown when notebook is created. Error is ${e.message}`
+                );
             }
 
             assert.ok(threw, 'No exception thrown during notebook creation');
+        }
+    });
+
+    test('Notebook launch with PYTHONWARNINGS', async function() {
+        if (ioc.mockJupyter) {
+            // tslint:disable-next-line: no-invalid-this
+            this.skip();
+        } else {
+            // Force python warnings to always
+            process.env[`PYTHONWARNINGS`] = 'always';
+            jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+
+            // Try creating a notebook
+            const server = await createNotebook(true);
+            assert.ok(server, 'Server died before running');
         }
     });
 

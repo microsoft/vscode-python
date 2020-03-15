@@ -1,12 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
-import { createMessageConnection, MessageConnection, RequestType, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
+import {
+    createMessageConnection,
+    MessageConnection,
+    RequestType,
+    StreamMessageReader,
+    StreamMessageWriter
+} from 'vscode-jsonrpc';
+
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { PYTHON_WARNINGS } from '../constants';
 import { traceDecorators, traceError } from '../logger';
 import { IDisposableRegistry } from '../types';
 import { createDeferred, sleep } from '../utils/async';
@@ -33,6 +38,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     private readonly observableDaemons: IPythonDaemonExecutionService[] = [];
     private readonly envVariables: NodeJS.ProcessEnv;
     private readonly pythonPath: string;
+    private _disposed = false;
     constructor(
         private readonly logger: IProcessLogger,
         private readonly disposables: IDisposableRegistry,
@@ -48,21 +54,40 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         // Setup environment variables for the daemon.
         // The daemon must have access to the Python Module that'll run the daemon
         // & also access to a Python package used for the JSON rpc comms.
-        const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')}`;
+        const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(
+            EXTENSION_ROOT_DIR,
+            'pythonFiles',
+            'lib',
+            'python'
+        )}`;
         this.envVariables = this.activatedEnvVariables ? { ...this.activatedEnvVariables } : { ...process.env };
-        this.envVariables.PYTHONPATH = this.envVariables.PYTHONPATH ? `${this.envVariables.PYTHONPATH}${path.delimiter}${envPythonPath}` : envPythonPath;
+        this.envVariables.PYTHONPATH = this.envVariables.PYTHONPATH
+            ? `${this.envVariables.PYTHONPATH}${path.delimiter}${envPythonPath}`
+            : envPythonPath;
         this.envVariables.PYTHONUNBUFFERED = '1';
+
+        // Always ignore warnings as the user should never see the output of the daemon running
+        this.envVariables[PYTHON_WARNINGS] = 'ignore';
+        this.disposables.push(this);
     }
     public async initialize() {
-        // tslint:disable-next-line: prefer-array-literal
-        const promises = Promise.all([...new Array(this.options.daemonCount ?? 2).keys()].map(() => this.addDaemonService('StandardDaemon')));
-        // tslint:disable-next-line: prefer-array-literal
-        const promises2 = Promise.all([...new Array(this.options.observableDaemonCount ?? 1).keys()].map(() => this.addDaemonService('ObservableDaemon')));
+        const promises = Promise.all(
+            [
+                // tslint:disable-next-line: prefer-array-literal
+                ...new Array(this.options.daemonCount ?? 2).keys()
+            ].map(() => this.addDaemonService('StandardDaemon'))
+        );
+        const promises2 = Promise.all(
+            [
+                // tslint:disable-next-line: prefer-array-literal
+                ...new Array(this.options.observableDaemonCount ?? 1).keys()
+            ].map(() => this.addDaemonService('ObservableDaemon'))
+        );
 
         await Promise.all([promises, promises2]);
     }
     public dispose() {
-        noop();
+        this._disposed = true;
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         const msg = { args: ['GetPythonVersion'] };
@@ -83,7 +108,11 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         const msg = { args, options };
         return this.wrapCall(daemon => daemon.exec(args, options), msg);
     }
-    public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+    public async execModule(
+        moduleName: string,
+        args: string[],
+        options: SpawnOptions
+    ): Promise<ExecutionResult<string>> {
         const msg = { args: ['-m', moduleName].concat(args), options };
         return this.wrapCall(daemon => daemon.execModule(moduleName, args, options), msg);
     }
@@ -91,7 +120,11 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         const msg = { args, options };
         return this.wrapObservableCall(daemon => daemon.execObservable(args, options), msg);
     }
-    public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
+    public execModuleObservable(
+        moduleName: string,
+        args: string[],
+        options: SpawnOptions
+    ): ObservableExecutionResult<string> {
         const msg = { args: ['-m', moduleName].concat(args), options };
         return this.wrapObservableCall(daemon => daemon.execModuleObservable(moduleName, args, options), msg);
     }
@@ -109,9 +142,15 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     @traceDecorators.error('Failed to create daemon')
     protected async createDaemonServices(): Promise<IPythonDaemonExecutionService> {
         const loggingArgs: string[] = ['-v']; // Log information messages or greater (see daemon.__main__.py for options).
-        const args = (this.options.daemonModule ? [`--daemon-module=${this.options.daemonModule}`] : []).concat(loggingArgs);
+        const args = (this.options.daemonModule ? [`--daemon-module=${this.options.daemonModule}`] : []).concat(
+            loggingArgs
+        );
         const env = this.envVariables;
-        const daemonProc = this.pythonExecutionService!.execModuleObservable('datascience.daemon', args, { env });
+        const daemonProc = this.pythonExecutionService!.execModuleObservable(
+            'vscode_datascience_helpers.daemon',
+            args,
+            { env }
+        );
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }
@@ -153,7 +192,10 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
      * @returns {Promise<T>}
      * @memberof PythonDaemonExecutionServicePool
      */
-    private async wrapCall<T>(cb: (daemon: IPythonExecutionService) => Promise<T>, daemonLogMessage: { args: string[]; options?: SpawnOptions }): Promise<T> {
+    private async wrapCall<T>(
+        cb: (daemon: IPythonExecutionService) => Promise<T>,
+        daemonLogMessage: { args: string[]; options?: SpawnOptions }
+    ): Promise<T> {
         const daemon = await this.popDaemonFromPool();
         try {
             // When using the daemon, log the message ourselves.
@@ -195,7 +237,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
             completed = true;
             if (!daemonProc || (!daemonProc.killed && ProcessService.isAlive(daemonProc.pid))) {
                 this.pushDaemonIntoPool('ObservableDaemon', execService);
-            } else {
+            } else if (!this._disposed) {
                 // Possible daemon is dead (explicitly killed or died due to some error).
                 this.addDaemonService('ObservableDaemon').ignoreErrors();
             }
@@ -272,7 +314,11 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         const testAndPushIntoPool = async () => {
             const daemonService = daemon as PythonDaemonExecutionService;
             let procIsDead = false;
-            if (!daemonService.isAlive || daemonService.proc.killed || !ProcessService.isAlive(daemonService.proc.pid)) {
+            if (
+                !daemonService.isAlive ||
+                daemonService.proc.killed ||
+                !ProcessService.isAlive(daemonService.proc.pid)
+            ) {
                 procIsDead = true;
             } else {
                 // Test sending a ping.

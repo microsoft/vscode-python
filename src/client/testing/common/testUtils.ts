@@ -191,17 +191,23 @@ export class TestsHelper implements ITestsHelper {
             return undefined;
         }
         const absolutePath = path.isAbsolute(name) ? name : path.resolve(rootDirectory, name);
-        const testFolders = tests.testFolders.filter(folder => folder.nameToRun === name || folder.name === name || folder.name === absolutePath);
+        const testFolders = tests.testFolders.filter(
+            folder => folder.nameToRun === name || folder.name === name || folder.name === absolutePath
+        );
         if (testFolders.length > 0) {
             return { testFolder: testFolders };
         }
 
-        const testFiles = tests.testFiles.filter(file => file.nameToRun === name || file.name === name || file.fullPath === absolutePath);
+        const testFiles = tests.testFiles.filter(
+            file => file.nameToRun === name || file.name === name || file.fullPath === absolutePath
+        );
         if (testFiles.length > 0) {
             return { testFile: testFiles };
         }
 
-        const testFns = tests.testFunctions.filter(fn => fn.testFunction.nameToRun === name || fn.testFunction.name === name).map(fn => fn.testFunction);
+        const testFns = tests.testFunctions
+            .filter(fn => fn.testFunction.nameToRun === name || fn.testFunction.name === name)
+            .map(fn => fn.testFunction);
         if (testFns.length > 0) {
             return { testFunction: testFns };
         }
@@ -537,7 +543,9 @@ export function copyDesiredTestResults(source: Tests, target: Tests): void {
 
 function copyResultsForFolders(source: TestFolder[], target: TestFolder[]): void {
     source.forEach(sourceFolder => {
-        const targetFolder = target.find(folder => folder.name === sourceFolder.name && folder.nameToRun === sourceFolder.nameToRun);
+        const targetFolder = target.find(
+            folder => folder.name === sourceFolder.name && folder.nameToRun === sourceFolder.nameToRun
+        );
         if (!targetFolder) {
             return;
         }
@@ -573,7 +581,12 @@ function copyResultsForFunctions(source: TestFunction[], target: TestFunction[])
 
 function copyResultsForSuites(source: TestSuite[], target: TestSuite[]): void {
     source.forEach(sourceSuite => {
-        const targetSuite = target.find(suite => suite.name === sourceSuite.name && suite.nameToRun === sourceSuite.nameToRun && suite.xmlName === sourceSuite.xmlName);
+        const targetSuite = target.find(
+            suite =>
+                suite.name === sourceSuite.name &&
+                suite.nameToRun === sourceSuite.nameToRun &&
+                suite.xmlName === sourceSuite.xmlName
+        );
         if (!targetSuite) {
             return;
         }

@@ -5,13 +5,19 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
-
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
-import { LanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
-import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
-import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerProxy } from '../../../client/activation/types';
-import { IPythonExtensionBanner } from '../../../client/common/types';
+import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import { DotNetLanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
+import { DotNetLanguageServerManager } from '../../../client/activation/languageServer/manager';
+import {
+    ILanguageServerAnalysisOptions,
+    ILanguageServerExtension,
+    ILanguageServerFolderService,
+    ILanguageServerProxy
+} from '../../../client/activation/types';
+import { ExperimentsManager } from '../../../client/common/experiments';
+import { IExperimentsManager, IPythonExtensionBanner } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ProposeLanguageServerBanner } from '../../../client/languageServices/proposeLanguageServerBanner';
@@ -22,21 +28,32 @@ use(chaiAsPromised);
 // tslint:disable:max-func-body-length no-any chai-vague-errors no-unused-expression
 
 suite('Language Server - Manager', () => {
-    let manager: LanguageServerManager;
+    let manager: DotNetLanguageServerManager;
     let serviceContainer: IServiceContainer;
     let analysisOptions: ILanguageServerAnalysisOptions;
     let languageServer: ILanguageServerProxy;
     let lsExtension: ILanguageServerExtension;
     let onChangeAnalysisHandler: Function;
     let surveyBanner: IPythonExtensionBanner;
+    let folderService: ILanguageServerFolderService;
+    let experimentsManager: IExperimentsManager;
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         analysisOptions = mock(LanguageServerAnalysisOptions);
-        languageServer = mock(LanguageServerProxy);
+        languageServer = mock(DotNetLanguageServerProxy);
         lsExtension = mock(LanguageServerExtension);
         surveyBanner = mock(ProposeLanguageServerBanner);
-        manager = new LanguageServerManager(instance(serviceContainer), instance(analysisOptions), instance(lsExtension), instance(surveyBanner));
+        folderService = mock(DotNetLanguageServerFolderService);
+        experimentsManager = mock(ExperimentsManager);
+        manager = new DotNetLanguageServerManager(
+            instance(serviceContainer),
+            instance(analysisOptions),
+            instance(lsExtension),
+            instance(surveyBanner),
+            instance(folderService),
+            instance(experimentsManager)
+        );
     });
 
     [undefined, Uri.file(__filename)].forEach(resource => {
@@ -78,7 +95,9 @@ suite('Language Server - Manager', () => {
         test('Attempting to start LS will throw an exception', async () => {
             await startLanguageServer();
 
-            await expect(manager.start(resource, undefined)).to.eventually.be.rejectedWith('Language Server already started');
+            await expect(manager.start(resource, undefined)).to.eventually.be.rejectedWith(
+                'Language Server already started'
+            );
         });
         test('Changes in analysis options must restart LS', async () => {
             await startLanguageServer();

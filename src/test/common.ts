@@ -72,7 +72,12 @@ async function disposePythonSettings() {
     }
 }
 
-export async function updateSetting(setting: PythonSettingKeys, value: {} | undefined, resource: Uri | undefined, configTarget: ConfigurationTarget) {
+export async function updateSetting(
+    setting: PythonSettingKeys,
+    value: {} | undefined,
+    resource: Uri | undefined,
+    configTarget: ConfigurationTarget
+) {
     const vscode = require('vscode') as typeof import('vscode');
     const settings = vscode.workspace.getConfiguration('python', resource || null);
     const currentValue = settings.inspect(setting);
@@ -80,7 +85,8 @@ export async function updateSetting(setting: PythonSettingKeys, value: {} | unde
         currentValue !== undefined &&
         ((configTarget === vscode.ConfigurationTarget.Global && currentValue.globalValue === value) ||
             (configTarget === vscode.ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
-            (configTarget === vscode.ConfigurationTarget.WorkspaceFolder && currentValue.workspaceFolderValue === value))
+            (configTarget === vscode.ConfigurationTarget.WorkspaceFolder &&
+                currentValue.workspaceFolderValue === value))
     ) {
         await disposePythonSettings();
         return;
@@ -114,6 +120,11 @@ export async function restorePythonPathInWorkspaceRoot() {
 
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
+export async function setAutoSaveDelayInWorkspaceRoot(delayinMS: number) {
+    const vscode = require('vscode') as typeof import('vscode');
+    return retryAsync(setAutoSaveDelay)(undefined, vscode.ConfigurationTarget.Workspace, delayinMS);
+}
+
 function getWorkspaceRoot() {
     if (IS_SMOKE_TEST || IS_PERF_TEST) {
         return;
@@ -141,7 +152,10 @@ export function getExtensionSettings(resource: Uri | undefined): IPythonSettings
         public getAutoSelectedInterpreter(_resource: Resource): PythonInterpreter | undefined {
             return;
         }
-        public async setWorkspaceInterpreter(_resource: Uri, _interpreter: PythonInterpreter | undefined): Promise<void> {
+        public async setWorkspaceInterpreter(
+            _resource: Uri,
+            _interpreter: PythonInterpreter | undefined
+        ): Promise<void> {
             return;
         }
     }
@@ -170,7 +184,27 @@ export function retryAsync(this: any, wrapped: Function, retryCount: number = 2)
     };
 }
 
-async function setPythonPathInWorkspace(resource: string | Uri | undefined, config: ConfigurationTarget, pythonPath?: string) {
+async function setAutoSaveDelay(resource: string | Uri | undefined, config: ConfigurationTarget, delayinMS: number) {
+    const vscode = require('vscode') as typeof import('vscode');
+    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
+        return;
+    }
+    const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
+    const settings = vscode.workspace.getConfiguration('files', resourceUri || null);
+    const value = settings.inspect<number>('autoSaveDelay');
+    const prop: 'workspaceFolderValue' | 'workspaceValue' =
+        config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
+    if (value && value[prop] !== delayinMS) {
+        await settings.update('autoSaveDelay', delayinMS, config);
+        await settings.update('autoSave', 'afterDelay');
+    }
+}
+
+async function setPythonPathInWorkspace(
+    resource: string | Uri | undefined,
+    config: ConfigurationTarget,
+    pythonPath?: string
+) {
     const vscode = require('vscode') as typeof import('vscode');
     if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
         return;
@@ -178,7 +212,8 @@ async function setPythonPathInWorkspace(resource: string | Uri | undefined, conf
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
     const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
     const value = settings.inspect<string>('pythonPath');
-    const prop: 'workspaceFolderValue' | 'workspaceValue' = config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
+    const prop: 'workspaceFolderValue' | 'workspaceValue' =
+        config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (value && value[prop] !== pythonPath) {
         await settings.update('pythonPath', pythonPath, config);
         await disposePythonSettings();
@@ -367,7 +402,9 @@ export async function isPythonVersionInProcess(procService?: IProcessService, ..
     if (currentPyVersion) {
         return isVersionInList(currentPyVersion, ...versions);
     } else {
-        console.error(`Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
+        console.error(
+            `Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`
+        );
         return false;
     }
 }
@@ -398,7 +435,9 @@ export async function isPythonVersion(...versions: string[]): Promise<boolean> {
     if (currentPyVersion) {
         return isVersionInList(currentPyVersion, ...versions);
     } else {
-        console.error(`Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`);
+        console.error(
+            `Failed to determine the current Python version when comparing against list [${versions.join(', ')}].`
+        );
         return false;
     }
 }
@@ -436,7 +475,11 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
  * @param {string} errorMessage
  * @returns {Promise<void>}
  */
-export async function waitForCondition(condition: () => Promise<boolean>, timeoutMs: number, errorMessage: string): Promise<void> {
+export async function waitForCondition(
+    condition: () => Promise<boolean>,
+    timeoutMs: number,
+    errorMessage: string
+): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
         const timeout = setTimeout(() => {
             clearTimeout(timeout);

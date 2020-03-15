@@ -7,7 +7,15 @@ import { expect, use } from 'chai';
 import * as chaisAsPromised from 'chai-as-promised';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { CancellationTokenSource, DocumentSymbolProvider, SymbolInformation, SymbolKind, TextDocument, TextEditor, Uri } from 'vscode';
+import {
+    CancellationTokenSource,
+    DocumentSymbolProvider,
+    SymbolInformation,
+    SymbolKind,
+    TextDocument,
+    TextEditor,
+    Uri
+} from 'vscode';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { IDocumentManager } from '../../../client/common/application/types';
 import { LanguageServerSymbolProvider } from '../../../client/providers/symbolProvider';

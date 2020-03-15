@@ -66,6 +66,7 @@ export interface IExtensionActivationService {
 export enum LanguageServerType {
     Jedi = 'Jedi',
     Microsoft = 'Microsoft',
+    Node = 'Node',
     None = 'None'
 }
 
@@ -123,7 +124,7 @@ export interface ILanguageServerDownloader {
 export const ILanguageServerPackageService = Symbol('ILanguageServerPackageService');
 export interface ILanguageServerPackageService {
     getNugetPackageName(): string;
-    getLatestNugetPackageVersion(resource: Resource): Promise<NugetPackage>;
+    getLatestNugetPackageVersion(resource: Resource, minVersion?: string): Promise<NugetPackage>;
     getLanguageServerDownloadChannel(): LanguageServerDownloadChannels;
 }
 
@@ -143,7 +144,12 @@ export enum LanguageClientFactory {
 }
 export const ILanguageClientFactory = Symbol('ILanguageClientFactory');
 export interface ILanguageClientFactory {
-    createLanguageClient(resource: Resource, interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient>;
+    createLanguageClient(
+        resource: Resource,
+        interpreter: PythonInterpreter | undefined,
+        clientOptions: LanguageClientOptions,
+        env?: NodeJS.ProcessEnv
+    ): Promise<LanguageClient>;
 }
 export const ILanguageServerAnalysisOptions = Symbol('ILanguageServerAnalysisOptions');
 export interface ILanguageServerAnalysisOptions extends IDisposable {
@@ -170,7 +176,11 @@ export interface ILanguageServerProxy extends IDisposable {
      * LanguageClient in use
      */
     languageClient: LanguageClient | undefined;
-    start(resource: Resource, interpreter: PythonInterpreter | undefined, options: LanguageClientOptions): Promise<void>;
+    start(
+        resource: Resource,
+        interpreter: PythonInterpreter | undefined,
+        options: LanguageClientOptions
+    ): Promise<void>;
     /**
      * Sends a request to LS so as to load other extensions.
      * This is used as a plugin loader mechanism.

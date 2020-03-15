@@ -3,19 +3,42 @@
 'use strict';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
-import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscode';
-import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    ILiveShareApi,
+    IWebPanelProvider,
+    IWorkspaceService
+} from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento, IPersistentStateFactory } from '../../common/types';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentsManager,
+    IMemento,
+    IPersistentStateFactory,
+    Resource
+} from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
-import { InteractiveWindowMessages, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
+import {
+    InteractiveWindowMessages,
+    ISubmitNewCell,
+    NotebookModelChange,
+    SysInfoReason
+} from '../interactive-common/interactiveWindowTypes';
+import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
+import { ProgressReporter } from '../progress/progressReporter';
 import {
     ICell,
     ICodeCssGenerator,
@@ -27,18 +50,33 @@ import {
     IInteractiveWindowProvider,
     IJupyterDebugger,
     IJupyterExecution,
+    IJupyterKernelSpec,
     IJupyterVariables,
-    INotebookEditorProvider,
     INotebookExporter,
     INotebookServerOptions,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
+    WebViewViewChangeEventArgs
 } from '../types';
 
-const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react');
+const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
 @injectable()
 export class InteractiveWindow extends InteractiveBase implements IInteractiveWindow {
+    public get onDidChangeViewState(): Event<void> {
+        return this._onDidChangeViewState.event;
+    }
+    public get visible(): boolean {
+        return this.viewState.visible;
+    }
+    public get active(): boolean {
+        return this.viewState.active;
+    }
+
+    public get closed(): Event<IInteractiveWindow> {
+        return this.closedEvent.event;
+    }
+    private _onDidChangeViewState = new EventEmitter<void>();
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
     private trackedJupyterStart: boolean = false;
@@ -65,12 +103,15 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
-        @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
+        @inject(ProgressReporter) progressReporter: ProgressReporter,
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
+        @inject(KernelSwitcher) switcher: KernelSwitcher
     ) {
         super(
+            progressReporter,
             listeners,
             liveShare,
             applicationShell,
@@ -89,32 +130,34 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             dataExplorerProvider,
             jupyterVariables,
             jupyterDebugger,
-            editorProvider,
             errorHandler,
             commandManager,
             globalStorage,
             historyReactDir,
-            [path.join(historyReactDir, 'index_bundle.js')],
+            [
+                path.join(historyReactDir, 'monaco.bundle.js'),
+                path.join(historyReactDir, 'commons.initial.bundle.js'),
+                path.join(historyReactDir, 'interactiveWindow.js')
+            ],
             localize.DataScience.historyTitle(),
-            ViewColumn.Two
+            ViewColumn.Two,
+            experimentsManager,
+            switcher
         );
 
         // Send a telemetry event to indicate window is opening
         sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
 
         // Start the server as soon as we open
-        this.startServer().ignoreErrors();
+        this.ensureServerAndNotebook().ignoreErrors();
     }
 
     public dispose() {
-        super.dispose();
+        const promise = super.dispose();
         if (this.closedEvent) {
             this.closedEvent.fire(this);
         }
-    }
-
-    public get closed(): Event<IInteractiveWindow> {
-        return this.closedEvent.event;
+        return promise;
     }
 
     public addMessage(message: string): Promise<void> {
@@ -126,10 +169,21 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // When showing we have to load the web panel. Make sure
         // we use the last file sent through add code.
         await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
+
+        // Make sure we're loaded first. InteractiveWindow doesn't makes sense without an active server.
+        await this.ensureServerAndNotebook();
+
+        // Make sure we have at least the initial sys info
+        await this.addSysInfo(SysInfoReason.Start);
+
+        // Then show our web panel.
         return super.show();
     }
 
-    public async addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+    public async addCode(code: string, file: string, line: number): Promise<boolean> {
+        if (this.lastFile && !this.fileSystem.arePathsSame(file, this.lastFile)) {
+            sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
+        }
         // Save the last file we ran with.
         this.lastFile = file;
 
@@ -140,7 +194,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.updateCwd(path.dirname(file));
 
         // Call the internal method.
-        return this.submitCode(code, file, line, undefined, editor, false);
+        return this.submitCode(code, file, line);
     }
 
     public exportCells() {
@@ -164,12 +218,16 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 this.handleMessage(message, payload, this.handleReturnAllCells);
                 break;
 
+            case InteractiveWindowMessages.UpdateModel:
+                this.handleMessage(message, payload, this.handleModelChange);
+                break;
+
             default:
                 break;
         }
     }
 
-    public async debugCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+    public async debugCode(code: string, file: string, line: number): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
         const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, file));
@@ -188,16 +246,13 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
                     // Open the new document
                     await this.documentManager.openTextDocument(file);
-
-                    // Change the editor to the new file
-                    editor = this.documentManager.visibleTextEditors.find(e => e.document.fileName === file);
                 }
             }
         }
 
         // Call the internal method if we were able to save
         if (saved) {
-            return this.submitCode(code, file, line, undefined, editor, true);
+            return this.submitCode(code, file, line, undefined, undefined, true);
         }
 
         return false;
@@ -218,13 +273,28 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }).ignoreErrors();
     }
 
+    public async getOwningResource(): Promise<Resource> {
+        if (this.lastFile) {
+            return Uri.file(this.lastFile);
+        }
+        const root = this.workspaceService.rootPath;
+        if (root) {
+            return Uri.file(root);
+        }
+        return undefined;
+    }
+    protected async onViewStateChanged(args: WebViewViewChangeEventArgs) {
+        super.onViewStateChanged(args);
+        this._onDidChangeViewState.fire();
+    }
+
     @captureTelemetry(Telemetry.SubmitCellThroughInput, undefined, false)
     // tslint:disable-next-line:no-any
     protected submitNewCell(info: ISubmitNewCell) {
         // If there's any payload, it has the code and the id
         if (info && info.code && info.id) {
             // Send to ourselves.
-            this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id, undefined).ignoreErrors();
+            this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id).ignoreErrors();
 
             // Activate the other side, and send as if came from a file
             this.interactiveWindowProvider
@@ -243,8 +313,15 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    protected getNotebookOptions(): Promise<INotebookServerOptions> {
-        return this.interactiveWindowProvider.getNotebookOptions();
+    protected async getNotebookOptions(): Promise<INotebookServerOptions> {
+        return this.interactiveWindowProvider.getNotebookOptions(await this.getOwningResource());
+    }
+
+    protected async updateNotebookOptions(
+        _kernelSpec: IJupyterKernelSpec,
+        _interpreter: PythonInterpreter | undefined
+    ): Promise<void> {
+        // Do nothing as this data isn't stored in our options.
     }
 
     protected async getNotebookIdentity(): Promise<Uri> {
@@ -277,7 +354,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         this.dispose();
     }
-    protected startServer(): Promise<void> {
+    protected ensureServerAndNotebook(): Promise<void> {
         // Keep track of users who have used interactive window in a worksapce folder.
         // To be used if/when changing workflows related to startup of jupyter.
         if (!this.trackedJupyterStart) {
@@ -285,28 +362,43 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
             store.updateValue(true).ignoreErrors();
         }
-        return super.startServer();
+        return super.ensureServerAndNotebook();
     }
+
     @captureTelemetry(Telemetry.ExportNotebook, undefined, false)
     // tslint:disable-next-line: no-any no-empty
-    private export(cells: ICell[]) {
+    private async export(cells: ICell[]) {
         // Should be an array of cells
         if (cells && this.applicationShell) {
-            const filtersKey = localize.DataScience.exportDialogFilter();
-            const filtersObject: Record<string, string[]> = {};
-            filtersObject[filtersKey] = ['ipynb'];
+            // Indicate busy
+            this.startProgress();
+            try {
+                const filtersKey = localize.DataScience.exportDialogFilter();
+                const filtersObject: Record<string, string[]> = {};
+                filtersObject[filtersKey] = ['ipynb'];
 
-            // Bring up the open file dialog box
-            this.applicationShell
-                .showSaveDialog({
+                // Bring up the open file dialog box
+                const uri = await this.applicationShell.showSaveDialog({
                     saveLabel: localize.DataScience.exportDialogTitle(),
                     filters: filtersObject
-                })
-                .then(async (uri: Uri | undefined) => {
-                    if (uri) {
-                        await this.exportToFile(cells, uri.fsPath);
-                    }
                 });
+                if (uri) {
+                    await this.jupyterExporter.exportToFile(cells, uri.fsPath);
+                }
+            } finally {
+                this.stopProgress();
+            }
+        }
+    }
+
+    private handleModelChange(update: NotebookModelChange) {
+        // Send telemetry for delete and delete all. We don't send telemetry for the other updates yet
+        if (update.source === 'user') {
+            if (update.kind === 'remove_all') {
+                sendTelemetryEvent(Telemetry.DeleteAllCells);
+            } else if (update.kind === 'remove') {
+                sendTelemetryEvent(Telemetry.DeleteCell);
+            }
         }
     }
 
@@ -314,7 +406,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private handleReturnAllCells(cells: ICell[]) {
         // See what we're waiting for.
         if (this.waitingForExportCells) {
-            this.export(cells);
+            this.export(cells).catch(ex => traceError('Error exporting:', ex));
         }
     }
 }

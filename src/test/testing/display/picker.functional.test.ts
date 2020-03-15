@@ -9,7 +9,6 @@ import { ApplicationShell } from '../../../client/common/application/application
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { PlatformService } from '../../../client/common/platform/platformService';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -45,7 +44,9 @@ suite('Testing - TestDisplay', () => {
         mockedServiceContainer = mock(ServiceContainer);
         mockedTestCollectionStorage = mock(TestCollectionStorageService);
         mockedAppShell = mock(ApplicationShell);
-        when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(instance(mockedTestCollectionStorage));
+        when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(
+            instance(mockedTestCollectionStorage)
+        );
         when(mockedServiceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(mockedAppShell));
 
         testDisplay = new TestDisplay(instance(mockedServiceContainer), instance(mockedCommandManager));
@@ -75,7 +76,7 @@ suite('Testing - TestDisplay', () => {
 
         setup(() => {
             tests = createEmptyResults();
-            when(mockedServiceContainer.get<IFileSystem>(IFileSystem)).thenReturn(new FileSystem(new PlatformService()));
+            when(mockedServiceContainer.get<IFileSystem>(IFileSystem)).thenReturn(new FileSystem());
             when(mockedTestCollectionStorage.getTests(wkspace)).thenReturn(tests);
             when(mockedAppShell.showQuickPick(anything(), anything())).thenResolve();
         });
@@ -84,7 +85,13 @@ suite('Testing - TestDisplay', () => {
             const { fullPath, fileName } = paths.match;
             fullPathInTests(tests, fullPath);
 
-            testDisplay.displayFunctionTestPickerUI(CommandSource.commandPalette, wkspace, 'rootDirectory', Uri.file(fileName), codeLensTestFunctions());
+            testDisplay.displayFunctionTestPickerUI(
+                CommandSource.commandPalette,
+                wkspace,
+                'rootDirectory',
+                Uri.file(fileName),
+                codeLensTestFunctions()
+            );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).once();
         });
@@ -93,7 +100,13 @@ suite('Testing - TestDisplay', () => {
             const { fullPath, fileName } = paths.mismatch;
             fullPathInTests(tests, fullPath);
 
-            testDisplay.displayFunctionTestPickerUI(CommandSource.commandPalette, wkspace, 'rootDirectory', Uri.file(fileName), codeLensTestFunctions());
+            testDisplay.displayFunctionTestPickerUI(
+                CommandSource.commandPalette,
+                wkspace,
+                'rootDirectory',
+                Uri.file(fileName),
+                codeLensTestFunctions()
+            );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).never();
         });
@@ -108,7 +121,13 @@ suite('Testing - TestDisplay', () => {
             const fileName = 'c:\\path\\to\\testfile';
             fullPathInTests(tests, 'C:\\path\\to\\testfile');
 
-            testDisplay.displayFunctionTestPickerUI(CommandSource.commandPalette, wkspace, 'rootDirectory', Uri.file(fileName), codeLensTestFunctions());
+            testDisplay.displayFunctionTestPickerUI(
+                CommandSource.commandPalette,
+                wkspace,
+                'rootDirectory',
+                Uri.file(fileName),
+                codeLensTestFunctions()
+            );
 
             verify(mockedAppShell.showQuickPick(anything(), anything())).once();
         });

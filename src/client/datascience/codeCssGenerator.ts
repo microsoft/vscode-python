@@ -8,8 +8,9 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
 import { IWorkspaceService } from '../common/application/types';
+import { traceError, traceInfo, traceWarning } from '../common/logger';
 import { IFileSystem } from '../common/platform/types';
-import { IConfigurationService, ILogger } from '../common/types';
+import { IConfigurationService, Resource } from '../common/types';
 import { DefaultTheme } from './constants';
 import { ICodeCssGenerator, IThemeFinder } from './types';
 
@@ -98,39 +99,53 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IThemeFinder) private themeFinder: IThemeFinder,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(ILogger) private logger: ILogger,
         @inject(IFileSystem) private fs: IFileSystem
     ) {}
 
-    public generateThemeCss(isDark: boolean, theme: string): Promise<string> {
-        return this.applyThemeData(isDark, theme, '', this.generateCss.bind(this));
+    public generateThemeCss(resource: Resource, isDark: boolean, theme: string): Promise<string> {
+        return this.applyThemeData(resource, isDark, theme, '', this.generateCss.bind(this));
     }
 
-    public generateMonacoTheme(isDark: boolean, theme: string): Promise<JSONObject> {
-        return this.applyThemeData(isDark, theme, {} as any, this.generateMonacoThemeObject.bind(this));
+    public generateMonacoTheme(resource: Resource, isDark: boolean, theme: string): Promise<JSONObject> {
+        return this.applyThemeData(resource, isDark, theme, {} as any, this.generateMonacoThemeObject.bind(this));
     }
 
-    private async applyThemeData<T>(isDark: boolean, theme: string, defaultT: T, applier: (args: IApplyThemeArgs) => T): Promise<T> {
+    private async applyThemeData<T>(
+        resource: Resource,
+        isDark: boolean,
+        theme: string,
+        defaultT: T,
+        applier: (args: IApplyThemeArgs) => T
+    ): Promise<T> {
         let result = defaultT;
         try {
             // First compute our current theme.
-            const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
+            const ignoreTheme = this.configService.getSettings(resource).datascience.ignoreVscodeTheme ? true : false;
             theme = ignoreTheme ? DefaultTheme : theme;
             const editor = this.workspaceService.getConfiguration('editor', undefined);
-            const fontFamily = editor ? editor.get<string>('fontFamily', "Consolas, 'Courier New', monospace") : "Consolas, 'Courier New', monospace";
+            const fontFamily = editor
+                ? editor.get<string>('fontFamily', "Consolas, 'Courier New', monospace")
+                : "Consolas, 'Courier New', monospace";
             const fontSize = editor ? editor.get<number>('fontSize', 14) : 14;
             const isDarkUpdated = ignoreTheme ? false : isDark;
 
             // Then we have to find where the theme resources are loaded from
             if (theme) {
-                this.logger.logInformation('Searching for token colors ...');
+                traceInfo('Searching for token colors ...');
                 const tokenColors = await this.findTokenColors(theme);
                 const baseColors = await this.findBaseColors(theme);
 
                 // The tokens object then contains the necessary data to generate our css
                 if (tokenColors && fontFamily && fontSize) {
-                    this.logger.logInformation('Using colors to generate CSS ...');
-                    result = applier({ tokenColors, baseColors, fontFamily, fontSize, isDark: isDarkUpdated, defaultStyle: ignoreTheme ? LightTheme : undefined });
+                    traceInfo('Using colors to generate CSS ...');
+                    result = applier({
+                        tokenColors,
+                        baseColors,
+                        fontFamily,
+                        fontSize,
+                        isDark: isDarkUpdated,
+                        defaultStyle: ignoreTheme ? LightTheme : undefined
+                    });
                 } else if (tokenColors === null && fontFamily && fontSize) {
                     // No colors found. See if we can figure out what type of theme we have
                     const style = isDark ? DarkTheme : LightTheme;
@@ -139,7 +154,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
             }
         } catch (err) {
             // On error don't fail, just log
-            this.logger.logError(err);
+            traceError(err);
         }
 
         return result;
@@ -191,7 +206,9 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     };
 
     private getDefaultColor(style: string | undefined, scope: string): string {
-        return style ? DefaultColors[`${style}.${scope}`] : 'var(--override-foreground, var(--vscode-editor-foreground))';
+        return style
+            ? DefaultColors[`${style}.${scope}`]
+            : 'var(--override-foreground, var(--vscode-editor-foreground))';
     }
 
     // tslint:disable-next-line:max-func-body-length
@@ -201,21 +218,26 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         const numericStyle = this.getScopeStyle(args.tokenColors, 'constant.numeric', 'constant', args.defaultStyle);
         const stringStyle = this.getScopeStyle(args.tokenColors, 'string', 'string', args.defaultStyle);
         const variableStyle = this.getScopeStyle(args.tokenColors, 'variable', 'variable', args.defaultStyle);
-        const entityTypeStyle = this.getScopeStyle(args.tokenColors, 'entity.name.type', 'entity.name.type', args.defaultStyle);
+        const entityTypeStyle = this.getScopeStyle(
+            args.tokenColors,
+            'entity.name.type',
+            'entity.name.type',
+            args.defaultStyle
+        );
 
         // Use these values to fill in our format string
         return `
-        :root {
-            --code-comment-color: ${commentStyle.color};
-            --code-numeric-color: ${numericStyle.color};
-            --code-string-color: ${stringStyle.color};
-            --code-variable-color: ${variableStyle.color};
-            --code-type-color: ${entityTypeStyle.color};
-            --code-font-family: ${args.fontFamily};
-            --code-font-size: ${args.fontSize}px;
-        }
+:root {
+    --code-comment-color: ${commentStyle.color};
+    --code-numeric-color: ${numericStyle.color};
+    --code-string-color: ${stringStyle.color};
+    --code-variable-color: ${variableStyle.color};
+    --code-type-color: ${entityTypeStyle.color};
+    --code-font-family: ${args.fontFamily};
+    --code-font-size: ${args.fontSize}px;
+}
 
-        ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : undefined}
+${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
 `;
     }
 
@@ -295,9 +317,11 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                 }
             });
 
-            result.rules = result.rules.sort((a: monacoEditor.editor.ITokenThemeRule, b: monacoEditor.editor.ITokenThemeRule) => {
-                return a.token.localeCompare(b.token);
-            });
+            result.rules = result.rules.sort(
+                (a: monacoEditor.editor.ITokenThemeRule, b: monacoEditor.editor.ITokenThemeRule) => {
+                    return a.token.localeCompare(b.token);
+                }
+            );
         } else {
             // Otherwise use our default values.
             result.base = args.defaultStyle === DarkTheme ? 'vs-dark' : 'vs';
@@ -335,29 +359,42 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     };
 
     private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
-        const tokenContent = await this.fs.readFile(themeFile);
-        const theme = parse(tokenContent);
-        const tokenColors = theme.tokenColors as JSONArray;
-        if (tokenColors && tokenColors.length > 0) {
-            // This theme may include others. If so we need to combine the two together
-            const include = theme ? theme.include : undefined;
-            if (include) {
-                const includePath = path.join(path.dirname(themeFile), include.toString());
-                const includedColors = await this.readTokenColors(includePath);
-                return this.mergeColors(tokenColors, includedColors);
+        try {
+            const tokenContent = await this.fs.readFile(themeFile);
+            const theme = parse(tokenContent);
+            let tokenColors: JSONArray = [];
+
+            if (typeof theme.tokenColors === 'string') {
+                const style = await this.fs.readData(theme.tokenColors);
+                tokenColors = JSON.parse(style.toString());
+            } else {
+                tokenColors = theme.tokenColors as JSONArray;
             }
 
-            // Theme is a root, don't need to include others
-            return tokenColors;
-        }
+            if (tokenColors && tokenColors.length > 0) {
+                // This theme may include others. If so we need to combine the two together
+                const include = theme ? theme.include : undefined;
+                if (include) {
+                    const includePath = path.join(path.dirname(themeFile), include.toString());
+                    const includedColors = await this.readTokenColors(includePath);
+                    return this.mergeColors(tokenColors, includedColors);
+                }
 
-        // Might also have a 'settings' object that equates to token colors
-        const settings = theme.settings as JSONArray;
-        if (settings && settings.length > 0) {
-            return settings;
-        }
+                // Theme is a root, don't need to include others
+                return tokenColors;
+            }
 
-        return [];
+            // Might also have a 'settings' object that equates to token colors
+            const settings = theme.settings as JSONArray;
+            if (settings && settings.length > 0) {
+                return settings;
+            }
+
+            return [];
+        } catch (e) {
+            traceError('Python Extension: Error reading custom theme', e);
+            return [];
+        }
     };
 
     private readBaseColors = async (themeFile: string): Promise<JSONObject> => {
@@ -379,12 +416,12 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
     private findTokenColors = async (theme: string): Promise<JSONArray | null> => {
         try {
-            this.logger.logInformation('Attempting search for colors ...');
+            traceInfo('Attempting search for colors ...');
             const themeRoot = await this.themeFinder.findThemeRootJson(theme);
 
             // Use the first result if we have one
             if (themeRoot) {
-                this.logger.logInformation(`Loading colors from ${themeRoot} ...`);
+                traceInfo(`Loading colors from ${themeRoot} ...`);
 
                 // This should be the path to the file. Load it as a json object
                 const contents = await this.fs.readFile(themeRoot);
@@ -415,15 +452,15 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                     // Then the path entry should contain a relative path to the json file with
                     // the tokens in it
                     const themeFile = path.join(path.dirname(themeRoot), found.path);
-                    this.logger.logInformation(`Reading colors from ${themeFile}`);
+                    traceInfo(`Reading colors from ${themeFile}`);
                     return await this.readTokenColors(themeFile);
                 }
             } else {
-                this.logger.logWarning(`Color theme ${theme} not found. Using default colors.`);
+                traceWarning(`Color theme ${theme} not found. Using default colors.`);
             }
         } catch (err) {
             // Swallow any exceptions with searching or parsing
-            this.logger.logError(err);
+            traceError(err);
         }
 
         // Force the colors to the defaults
@@ -432,12 +469,12 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
     private findBaseColors = async (theme: string): Promise<JSONObject | null> => {
         try {
-            this.logger.logInformation('Attempting search for colors ...');
+            traceInfo('Attempting search for colors ...');
             const themeRoot = await this.themeFinder.findThemeRootJson(theme);
 
             // Use the first result if we have one
             if (themeRoot) {
-                this.logger.logInformation(`Loading base colors from ${themeRoot} ...`);
+                traceInfo(`Loading base colors from ${themeRoot} ...`);
 
                 // This should be the path to the file. Load it as a json object
                 const contents = await this.fs.readFile(themeRoot);
@@ -465,15 +502,15 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                     // Then the path entry should contain a relative path to the json file with
                     // the tokens in it
                     const themeFile = path.join(path.dirname(themeRoot), found.path);
-                    this.logger.logInformation(`Reading base colors from ${themeFile}`);
+                    traceInfo(`Reading base colors from ${themeFile}`);
                     return await this.readBaseColors(themeFile);
                 }
             } else {
-                this.logger.logWarning(`Color theme ${theme} not found. Using default colors.`);
+                traceWarning(`Color theme ${theme} not found. Using default colors.`);
             }
         } catch (err) {
             // Swallow any exceptions with searching or parsing
-            this.logger.logError(err);
+            traceError(err);
         }
 
         // Force the colors to the defaults

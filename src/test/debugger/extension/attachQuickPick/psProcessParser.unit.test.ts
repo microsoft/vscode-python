@@ -24,37 +24,49 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 label: 'launchd',
                 description: '1',
                 detail: 'launchd',
-                id: '1'
+                id: '1',
+                processName: 'launchd',
+                commandLine: 'launchd'
             },
             {
                 label: 'syslogd',
                 description: '41',
                 detail: 'syslogd',
-                id: '41'
+                id: '41',
+                processName: 'syslogd',
+                commandLine: 'syslogd'
             },
             {
                 label: 'UserEventAgent',
                 description: '42',
                 detail: 'UserEventAgent (System)',
-                id: '42'
+                id: '42',
+                processName: 'UserEventAgent',
+                commandLine: 'UserEventAgent (System)'
             },
             {
                 label: 'uninstalld',
                 description: '45',
                 detail: 'uninstalld',
-                id: '45'
+                id: '45',
+                processName: 'uninstalld',
+                commandLine: 'uninstalld'
             },
             {
                 label: 'kextd',
                 description: '146',
                 detail: 'kextd',
-                id: '146'
+                id: '146',
+                processName: 'kextd',
+                commandLine: 'kextd'
             },
             {
                 label: 'python',
                 description: '31896',
                 detail: 'python script.py',
-                id: '31896'
+                id: '31896',
+                processName: 'python',
+                commandLine: 'python script.py'
             }
         ];
 
@@ -78,31 +90,41 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 label: 'launchd',
                 description: '1',
                 detail: 'launchd',
-                id: '1'
+                id: '1',
+                processName: 'launchd',
+                commandLine: 'launchd'
             },
             {
                 label: 'syslogd',
                 description: '41',
                 detail: 'syslogd',
-                id: '41'
+                id: '41',
+                processName: 'syslogd',
+                commandLine: 'syslogd'
             },
             {
                 label: 'UserEventAgent',
                 description: '42',
                 detail: 'UserEventAgent (System)',
-                id: '42'
+                id: '42',
+                processName: 'UserEventAgent',
+                commandLine: 'UserEventAgent (System)'
             },
             {
                 label: 'kextd',
                 description: '146',
                 detail: 'kextd',
-                id: '146'
+                id: '146',
+                processName: 'kextd',
+                commandLine: 'kextd'
             },
             {
                 label: 'python',
                 description: '31896',
                 detail: 'python script.py',
-                id: '31896'
+                id: '31896',
+                processName: 'python',
+                commandLine: 'python script.py'
             }
         ];
 
@@ -126,31 +148,41 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 label: 'launchd',
                 description: '1',
                 detail: 'launchd',
-                id: '1'
+                id: '1',
+                processName: 'launchd',
+                commandLine: 'launchd'
             },
             {
                 label: 'syslogd',
                 description: '41',
                 detail: 'syslogd',
-                id: '41'
+                id: '41',
+                processName: 'syslogd',
+                commandLine: 'syslogd'
             },
             {
                 label: 'UserEventAgent',
                 description: '42',
                 detail: 'UserEventAgent (System)',
-                id: '42'
+                id: '42',
+                processName: 'UserEventAgent',
+                commandLine: 'UserEventAgent (System)'
             },
             {
                 label: 'kextd',
                 description: '146',
                 detail: 'kextd',
-                id: '146'
+                id: '146',
+                processName: 'kextd',
+                commandLine: 'kextd'
             },
             {
                 label: 'python',
                 description: '31896',
                 detail: 'python script.py',
-                id: '31896'
+                id: '31896',
+                processName: 'python',
+                commandLine: 'python script.py'
             }
         ];
 

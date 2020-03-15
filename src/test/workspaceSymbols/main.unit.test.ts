@@ -4,17 +4,22 @@
 'use strict';
 
 import * as assert from 'assert';
-import { use } from 'chai';
+import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { anyString, anything, instance, mock, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { EventEmitter, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
 import { DocumentManager } from '../../client/common/application/documentManager';
-import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import {
+    IApplicationShell,
+    ICommandManager,
+    IDocumentManager,
+    IWorkspaceService
+} from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
+import { Commands, STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
 import { ProcessService } from '../../client/common/process/proc';
@@ -90,13 +95,19 @@ suite('Workspace symbols main', () => {
             return mockDisposable;
         });
 
-        when(serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL)).thenReturn(instance(outputChannel));
+        when(serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL)).thenReturn(
+            instance(outputChannel)
+        );
         when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(commandManager));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
         when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
-        when(serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)).thenReturn(instance(processServiceFactory));
+        when(serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)).thenReturn(
+            instance(processServiceFactory)
+        );
         when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(applicationShell));
-        when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configurationService));
+        when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(
+            instance(configurationService)
+        );
         when(serviceContainer.get<IDocumentManager>(IDocumentManager)).thenReturn(instance(documentManager));
     });
 
@@ -106,7 +117,9 @@ suite('Workspace symbols main', () => {
 
     test('Should not rebuild on start if the setting is disabled', () => {
         when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
-        when(configurationService.getSettings(anything())).thenReturn({ workspaceSymbols: { rebuildOnStart: false } } as any);
+        when(configurationService.getSettings(anything())).thenReturn({
+            workspaceSymbols: { rebuildOnStart: false }
+        } as any);
 
         workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
 
@@ -115,7 +128,9 @@ suite('Workspace symbols main', () => {
 
     test("Should not rebuild on start if we don't have a workspace folder", () => {
         when(workspaceService.workspaceFolders).thenReturn([]);
-        when(configurationService.getSettings(anything())).thenReturn({ workspaceSymbols: { rebuildOnStart: false } } as any);
+        when(configurationService.getSettings(anything())).thenReturn({
+            workspaceSymbols: { rebuildOnStart: false }
+        } as any);
 
         workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
 
@@ -158,6 +173,38 @@ suite('Workspace symbols main', () => {
         await sleep(1);
 
         assert.equal(shellOutput, 'Generating Tags');
+    });
+
+    test('Command `Build Workspace symbols` is registered with the correct callback handlers and executing it returns `undefined` list if generating workspace tags fails with error', async () => {
+        let buildWorkspaceSymbolsHandler!: Function;
+        when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(workspaceFolders[0]);
+        when(configurationService.getSettings(anything())).thenReturn({
+            workspaceSymbols: {
+                ctagsPath,
+                enabled: true,
+                exclusionPatterns: [],
+                rebuildOnFileSave: true,
+                tagFilePath: 'foo'
+            }
+        } as any);
+        reset(commandManager);
+        when(commandManager.registerCommand(anything(), anything())).thenCall((commandID, cb) => {
+            expect(commandID).to.equal(Commands.Build_Workspace_Symbols);
+            buildWorkspaceSymbolsHandler = cb;
+            return mockDisposable;
+        });
+        reset(applicationShell);
+        when(applicationShell.setStatusBarMessage(anyString(), anything())).thenThrow(
+            new Error('Generating workspace tags failed with Error')
+        );
+
+        workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
+        expect(buildWorkspaceSymbolsHandler).to.not.equal(undefined, 'Handler not registered');
+        const symbols = await buildWorkspaceSymbolsHandler();
+
+        verify(commandManager.registerCommand(anything(), anything())).once();
+        assert.deepEqual(symbols, [undefined]);
     });
 
     test('Should not rebuild on save if the setting is disabled', () => {

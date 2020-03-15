@@ -5,6 +5,7 @@
 
 import { Session } from '@jupyterlab/services';
 import { CancellationToken, QuickPickItem } from 'vscode';
+import { Resource } from '../../../common/types';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IJupyterKernel, IJupyterKernelSpec } from '../../types';
 
@@ -30,5 +31,5 @@ export interface IKernelSpecQuickPickItem extends QuickPickItem {
 }
 
 export interface IKernelSelectionListProvider {
-    getKernelSelections(cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]>;
+    getKernelSelections(resource: Resource, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]>;
 }

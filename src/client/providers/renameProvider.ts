@@ -1,4 +1,14 @@
-import { CancellationToken, OutputChannel, Position, ProviderResult, RenameProvider, TextDocument, window, workspace, WorkspaceEdit } from 'vscode';
+import {
+    CancellationToken,
+    OutputChannel,
+    Position,
+    ProviderResult,
+    RenameProvider,
+    TextDocument,
+    window,
+    workspace,
+    WorkspaceEdit
+} from 'vscode';
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
 import { traceError } from '../common/logger';
@@ -21,7 +31,12 @@ export class PythonRenameProvider implements RenameProvider {
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     }
     @captureTelemetry(EventName.REFACTOR_RENAME)
-    public provideRenameEdits(document: TextDocument, position: Position, newName: string, _token: CancellationToken): ProviderResult<WorkspaceEdit> {
+    public provideRenameEdits(
+        document: TextDocument,
+        position: Position,
+        newName: string,
+        _token: CancellationToken
+    ): ProviderResult<WorkspaceEdit> {
         return workspace.saveAll(false).then(() => {
             return this.doRename(document, position, newName);
         });
@@ -62,7 +77,9 @@ export class PythonRenameProvider implements RenameProvider {
             .catch(reason => {
                 if (reason === 'Not installed') {
                     const installer = this.serviceContainer.get<IInstaller>(IInstaller);
-                    installer.promptToInstall(Product.rope, document.uri).catch(ex => traceError('Python Extension: promptToInstall', ex));
+                    installer
+                        .promptToInstall(Product.rope, document.uri)
+                        .catch(ex => traceError('Python Extension: promptToInstall', ex));
                     return Promise.reject('');
                 } else {
                     window.showErrorMessage(reason);

@@ -15,22 +15,29 @@ import subprocess
 lock_file = sys.argv[-1]
 shell_args = sys.argv[1:-1]
 
-print('Executing command in shell >> ' + ' '.join(shell_args))
+print("Executing command in shell >> " + " ".join(shell_args))
 
-with open(lock_file, 'w') as fp:
+with open(lock_file, "w") as fp:
     try:
         # Signal start of execution.
-        fp.write('START\n')
+        fp.write("START\n")
         fp.flush()
 
         subprocess.check_call(shell_args, stdout=sys.stdout, stderr=sys.stderr)
 
         # Signal start of execution.
-        fp.write('END\n')
+        fp.write("END\n")
         fp.flush()
     except Exception:
         import traceback
+
         print(traceback.format_exc())
         # Signal end of execution with failure state.
-        fp.write('FAIL\n')
+        fp.write("FAIL\n")
         fp.flush()
+        try:
+            # ALso log the error for use from the other side.
+            with open(lock_file + ".error", "w") as fpError:
+                fpError.write(traceback.format_exc())
+        except Exception:
+            pass

@@ -2,7 +2,6 @@
 {
     "files.exclude": {
         "out": true, // set this to true to hide the "out" folder with the compiled JS files
-        "uitests/out": true,
         "**/*.pyc": true,
         ".nyc_output": true,
         "obj": true,
@@ -16,7 +15,6 @@
     },
     "search.exclude": {
         "out": true, // set this to false to include "out" folder in search results
-        "uitests/out": true,
         "**/node_modules": true,
         "coverage": true,
         "languageServer*/**": true,
@@ -41,7 +39,7 @@
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
     "typescriptHero.imports.stringQuoteStyle": "'",
-    "prettier.printWidth": 180,
+    "prettier.printWidth": 120,
     "prettier.singleQuote": true,
     "editor.codeActionsOnSave": {
         "source.fixAll.eslint": true,
@@ -54,7 +52,8 @@
     "python.linting.flake8Enabled": true,
     "cucumberautocomplete.skipDocStringsFormat": true,
     "python.linting.flake8Args": [
-        "--max-line-length=120"
+        // Match what black does.
+        "--max-line-length=88"
     ],
     "typescript.preferences.importModuleSpecifier": "relative"
 }

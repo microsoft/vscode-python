@@ -155,7 +155,12 @@ export class JupyterImporter implements INotebookImporter {
                     const workspacePath = this.workspaceService.workspaceFolders![0].uri.fsPath;
 
                     // Make sure that we have everything that we need here
-                    if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
+                    if (
+                        workspacePath &&
+                        path.isAbsolute(workspacePath) &&
+                        notebookFilePath &&
+                        path.isAbsolute(notebookFilePath)
+                    ) {
                         directoryChange = path.relative(workspacePath, notebookFilePath);
                     }
                 }
@@ -187,7 +192,10 @@ export class JupyterImporter implements INotebookImporter {
             try {
                 // Save this file into our disposables so the temp file goes away
                 this.disposableRegistry.push(file);
-                await this.fileSystem.appendFile(file.filePath, this.nbconvertTemplateFormat.format(this.defaultCellMarker));
+                await this.fileSystem.appendFile(
+                    file.filePath,
+                    this.nbconvertTemplateFormat.format(this.defaultCellMarker)
+                );
 
                 // Now we should have a template that will convert
                 return file.filePath;

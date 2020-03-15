@@ -3,59 +3,78 @@
 'use strict';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
-import { IMainState } from '../../../interactive-common/mainState';
-import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { getSelectedAndFocusedInfo, IMainState } from '../../../interactive-common/mainState';
+import { postActionToExtension } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { ICellAction, ICellAndCursorAction, ICodeAction } from '../../../interactive-common/redux/reducers/types';
+import { ICellAction, ICellAndCursorAction } from '../../../interactive-common/redux/reducers/types';
 import { computeEditorOptions } from '../../../react-common/settingsReactSide';
 import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Effects {
     export function focusCell(arg: NativeEditorReducerArg<ICellAndCursorAction>): IMainState {
         // Do nothing if already the focused cell.
-        if (arg.prevState.focusedCellId !== arg.payload.cellId) {
-            const newVMs = [...arg.prevState.cellVMs];
+        let selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
+        if (selectionInfo.focusedCellId !== arg.payload.data.cellId) {
+            let prevState = arg.prevState;
 
-            // Focus one cell and unfocus another. Focus should always gain selection too.
-            const addFocusIndex = newVMs.findIndex(c => c.cell.id === arg.payload.cellId);
-            let removeFocusIndex = newVMs.findIndex(c => c.cell.id === arg.prevState.focusedCellId);
-            if (removeFocusIndex < 0) {
-                removeFocusIndex = newVMs.findIndex(c => c.cell.id === arg.prevState.selectedCellId);
+            // Ensure we unfocus & unselect all cells.
+            while (selectionInfo.focusedCellId || selectionInfo.selectedCellId) {
+                selectionInfo = getSelectedAndFocusedInfo(prevState);
+                // First find the old focused cell and unfocus it
+                let removeFocusIndex = selectionInfo.focusedCellIndex;
+                if (typeof removeFocusIndex !== 'number') {
+                    removeFocusIndex = selectionInfo.selectedCellIndex;
+                }
+
+                if (typeof removeFocusIndex === 'number') {
+                    prevState = unfocusCell({
+                        ...arg,
+                        prevState,
+                        payload: {
+                            ...arg.payload,
+                            data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id }
+                        }
+                    });
+                    prevState = deselectCell({
+                        ...arg,
+                        prevState,
+                        payload: { ...arg.payload, data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } }
+                    });
+                }
             }
+
+            const newVMs = [...prevState.cellVMs];
+
+            // Add focus on new cell
+            const addFocusIndex = newVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
             if (addFocusIndex >= 0) {
-                newVMs[addFocusIndex] = { ...newVMs[addFocusIndex], focused: true, selected: true, cursorPos: arg.payload.cursorPos };
+                newVMs[addFocusIndex] = {
+                    ...newVMs[addFocusIndex],
+                    focused: true,
+                    selected: true,
+                    cursorPos: arg.payload.data.cursorPos
+                };
             }
-            if (removeFocusIndex >= 0 && removeFocusIndex !== addFocusIndex) {
-                newVMs[removeFocusIndex] = { ...newVMs[removeFocusIndex], focused: false, selected: false };
-            }
+
             return {
-                ...arg.prevState,
-                cellVMs: newVMs,
-                focusedCellId: arg.payload.cellId,
-                selectedCellId: arg.payload.cellId
+                ...prevState,
+                cellVMs: newVMs
             };
         }
 
         return arg.prevState;
     }
 
-    export function unfocusCell(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
+    export function unfocusCell(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         // Unfocus the cell
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
-        if (index >= 0 && arg.prevState.focusedCellId === arg.payload.cellId) {
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
+        if (index >= 0 && selectionInfo.focusedCellId === arg.payload.data.cellId) {
             const newVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];
             const newCell = {
                 ...current,
-                inputBlockText: arg.payload.code,
-                focused: false,
-                cell: {
-                    ...current.cell,
-                    data: {
-                        ...current.cell.data,
-                        source: arg.payload.code
-                    }
-                }
+                focused: false
             };
 
             // tslint:disable-next-line: no-any
@@ -63,23 +82,14 @@ export namespace Effects {
 
             return {
                 ...arg.prevState,
-                cellVMs: newVMs,
-                focusedCellId: undefined
+                cellVMs: newVMs
             };
         } else if (index >= 0) {
             // Dont change focus state if not the focused cell. Just update the code.
             const newVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];
             const newCell = {
-                ...current,
-                inputBlockText: arg.payload.code,
-                cell: {
-                    ...current.cell,
-                    data: {
-                        ...current.cell.data,
-                        source: arg.payload.code
-                    }
-                }
+                ...current
             };
 
             // tslint:disable-next-line: no-any
@@ -94,37 +104,88 @@ export namespace Effects {
         return arg.prevState;
     }
 
-    export function selectCell(arg: NativeEditorReducerArg<ICellAndCursorAction>): IMainState {
-        // Skip doing anything if already selected.
-        if (arg.payload.cellId !== arg.prevState.selectedCellId) {
+    export function deselectCell(arg: NativeEditorReducerArg<ICellAction>): IMainState {
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
+        if (index >= 0 && selectionInfo.selectedCellId === arg.payload.data.cellId) {
             const newVMs = [...arg.prevState.cellVMs];
+            const target = arg.prevState.cellVMs[index];
+            const newCell = {
+                ...target,
+                selected: false
+            };
 
-            // Select one cell and unselect another.
-            const addIndex = newVMs.findIndex(c => c.cell.id === arg.payload.cellId);
-            const removeIndex = newVMs.findIndex(c => c.cell.id === arg.prevState.selectedCellId);
-            if (addIndex >= 0 && arg.payload.cellId !== arg.prevState.selectedCellId) {
-                newVMs[addIndex] = {
-                    ...newVMs[addIndex],
-                    focused: arg.prevState.focusedCellId !== undefined && arg.prevState.focusedCellId === arg.prevState.selectedCellId,
-                    selected: true,
-                    cursorPos: arg.payload.cursorPos
-                };
-            }
-            if (removeIndex >= 0 && removeIndex !== addIndex) {
-                newVMs[removeIndex] = { ...newVMs[removeIndex], focused: false, selected: false };
-            }
+            // tslint:disable-next-line: no-any
+            newVMs[index] = newCell as any; // This is because IMessageCell doesn't fit in here
+
             return {
                 ...arg.prevState,
-                cellVMs: newVMs,
-                focusedCellId: arg.prevState.focusedCellId !== undefined ? arg.payload.cellId : undefined,
-                selectedCellId: arg.payload.cellId
+                cellVMs: newVMs
+            };
+        }
+
+        return arg.prevState;
+    }
+
+    /**
+     * Select a cell.
+     *
+     * @param {boolean} [shouldFocusCell] If provided, then will control the focus behavior of the cell. (defaults to focus state of previously selected cell).
+     */
+    export function selectCell(
+        arg: NativeEditorReducerArg<ICellAndCursorAction>,
+        shouldFocusCell?: boolean
+    ): IMainState {
+        // Skip doing anything if already selected.
+        const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
+        if (arg.payload.data.cellId !== selectionInfo.selectedCellId) {
+            let prevState = arg.prevState;
+            const addIndex = prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+            const someOtherCellWasFocusedAndSelected =
+                selectionInfo.focusedCellId === selectionInfo.selectedCellId && !!selectionInfo.focusedCellId;
+            // First find the old focused cell and unfocus it
+            let removeFocusIndex = arg.prevState.cellVMs.findIndex(c => c.cell.id === selectionInfo.focusedCellId);
+            if (removeFocusIndex < 0) {
+                removeFocusIndex = arg.prevState.cellVMs.findIndex(c => c.cell.id === selectionInfo.selectedCellId);
+            }
+
+            if (removeFocusIndex >= 0) {
+                prevState = unfocusCell({
+                    ...arg,
+                    prevState,
+                    payload: {
+                        ...arg.payload,
+                        data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id }
+                    }
+                });
+                prevState = deselectCell({
+                    ...arg,
+                    prevState,
+                    payload: { ...arg.payload, data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } }
+                });
+            }
+
+            const newVMs = [...prevState.cellVMs];
+            if (addIndex >= 0 && arg.payload.data.cellId !== selectionInfo.selectedCellId) {
+                newVMs[addIndex] = {
+                    ...newVMs[addIndex],
+                    focused:
+                        typeof shouldFocusCell === 'boolean' ? shouldFocusCell : someOtherCellWasFocusedAndSelected,
+                    selected: true,
+                    cursorPos: arg.payload.data.cursorPos
+                };
+            }
+
+            return {
+                ...prevState,
+                cellVMs: newVMs
             };
         }
         return arg.prevState;
     }
 
     export function toggleLineNumbers(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             const newVMs = [...arg.prevState.cellVMs];
             newVMs[index] = { ...newVMs[index], showLineNumbers: !newVMs[index].showLineNumbers };
@@ -137,7 +198,7 @@ export namespace Effects {
     }
 
     export function toggleOutput(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             const newVMs = [...arg.prevState.cellVMs];
             newVMs[index] = { ...newVMs[index], hideOutput: !newVMs[index].hideOutput };
@@ -151,18 +212,26 @@ export namespace Effects {
 
     export function updateSettings(arg: NativeEditorReducerArg<string>): IMainState {
         // String arg should be the IDataScienceExtraSettings
-        const newSettingsJSON = JSON.parse(arg.payload);
+        const newSettingsJSON = JSON.parse(arg.payload.data);
         const newSettings = <IDataScienceExtraSettings>newSettingsJSON;
         const newEditorOptions = computeEditorOptions(newSettings);
-        const newFontFamily = newSettings.extraSettings ? newSettings.extraSettings.fontFamily : arg.prevState.font.family;
-        const newFontSize = newSettings.extraSettings ? newSettings.extraSettings.fontSize : arg.prevState.font.size;
+        const newFontFamily = newSettings.extraSettings
+            ? newSettings.extraSettings.editor.fontFamily
+            : arg.prevState.font.family;
+        const newFontSize = newSettings.extraSettings
+            ? newSettings.extraSettings.editor.fontSize
+            : arg.prevState.font.size;
 
         // Ask for new theme data if necessary
-        if (newSettings && newSettings.extraSettings && newSettings.extraSettings.theme !== arg.prevState.vscodeThemeName) {
+        if (
+            newSettings &&
+            newSettings.extraSettings &&
+            newSettings.extraSettings.theme !== arg.prevState.vscodeThemeName
+        ) {
             const knownDark = Helpers.computeKnownDark(newSettings);
             // User changed the current theme. Rerender
-            arg.queueAction(createPostableAction(CssMessages.GetCssRequest, { isDark: knownDark }));
-            arg.queueAction(createPostableAction(CssMessages.GetMonacoThemeRequest, { isDark: knownDark }));
+            postActionToExtension(arg, CssMessages.GetCssRequest, { isDark: knownDark });
+            postActionToExtension(arg, CssMessages.GetMonacoThemeRequest, { isDark: knownDark });
         }
 
         return {

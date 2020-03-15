@@ -3,12 +3,13 @@
 
 'use strict';
 
+import { LanguageServerType } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { registerTypes as diagnosticsRegisterTypes } from './diagnostics/serviceRegistry';
 import { SourceMapSupportService } from './diagnostics/surceMapSupportService';
 import { ISourceMapSupportService } from './diagnostics/types';
 
-export function registerTypes(serviceManager: IServiceManager) {
+export function registerTypes(serviceManager: IServiceManager, languageServerType: LanguageServerType) {
     serviceManager.addSingleton<ISourceMapSupportService>(ISourceMapSupportService, SourceMapSupportService);
-    diagnosticsRegisterTypes(serviceManager);
+    diagnosticsRegisterTypes(serviceManager, languageServerType);
 }

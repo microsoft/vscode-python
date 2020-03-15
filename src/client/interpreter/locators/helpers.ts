@@ -13,7 +13,9 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, fs: IF
     // that breaks some tests.  So we stick with the broader behavior.
     try {
         const subDirs = await fs.listdir(pathToCheck);
-        return subDirs.map(([filename, _ft]) => filename).filter(fileName => CheckPythonInterpreterRegEx.test(path.basename(fileName)));
+        return subDirs
+            .map(([filename, _ft]) => filename)
+            .filter(fileName => CheckPythonInterpreterRegEx.test(path.basename(fileName)));
     } catch (err) {
         traceError('Python Extension (lookForInterpretersInDirectory.fs.listdir):', err);
         return [] as string[];
@@ -22,7 +24,10 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, fs: IF
 
 @injectable()
 export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem, @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper) {}
+    constructor(
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IPipEnvServiceHelper) private readonly pipEnvServiceHelper: IPipEnvServiceHelper
+    ) {}
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
         const items = interpreters
             .map(item => {
@@ -56,7 +61,15 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                     if (existingItem.type === InterpreterType.Unknown && current.type !== InterpreterType.Unknown) {
                         existingItem.type = current.type;
                     }
-                    const props: (keyof PythonInterpreter)[] = ['envName', 'envPath', 'path', 'sysPrefix', 'architecture', 'sysVersion', 'version'];
+                    const props: (keyof PythonInterpreter)[] = [
+                        'envName',
+                        'envPath',
+                        'path',
+                        'sysPrefix',
+                        'architecture',
+                        'sysVersion',
+                        'version'
+                    ];
                     for (const prop of props) {
                         if (!existingItem[prop] && current[prop]) {
                             // tslint:disable-next-line: no-any

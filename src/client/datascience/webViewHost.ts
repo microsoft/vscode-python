@@ -4,11 +4,12 @@
 import '../common/extensions';
 
 import { injectable, unmanaged } from 'inversify';
-import { ConfigurationChangeEvent, ViewColumn, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationChangeEvent, ViewColumn, WebviewPanel, WorkspaceConfiguration } from 'vscode';
 
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceService } from '../common/application/types';
-import { traceInfo } from '../common/logger';
-import { IConfigurationService, IDisposable } from '../common/types';
+import { isTestExecution } from '../common/constants';
+import { traceInfo, traceWarning } from '../common/logger';
+import { IConfigurationService, IDisposable, Resource } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -16,10 +17,10 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { DefaultTheme, Telemetry } from './constants';
 import { CssMessages, IGetCssRequest, IGetMonacoThemeRequest, SharedMessages } from './messages';
-import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder } from './types';
+import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewViewChangeEventArgs } from './types';
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
-export class WebViewHost<IMapping> implements IDisposable {
+export abstract class WebViewHost<IMapping> implements IDisposable {
     protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
     private disposed: boolean = false;
     private webPanel: IWebPanel | undefined;
@@ -37,26 +38,38 @@ export class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
         @unmanaged()
-        messageListenerCtor: (callback: (message: string, payload: {}) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
+        messageListenerCtor: (
+            callback: (message: string, payload: {}) => void,
+            viewChanged: (panel: IWebPanel) => void,
+            disposed: () => void
+        ) => IWebPanelMessageListener,
         @unmanaged() private rootPath: string,
         @unmanaged() private scripts: string[],
         @unmanaged() private title: string,
-        @unmanaged() private viewColumn: ViewColumn
+        @unmanaged() private viewColumn: ViewColumn,
+        @unmanaged() private readonly useWebViewServer: boolean
     ) {
         // Create our message listener for our web panel.
-        this.messageListener = messageListenerCtor(this.onMessage.bind(this), this.webPanelViewStateChanged.bind(this), this.dispose.bind(this));
+        this.messageListener = messageListenerCtor(
+            this.onMessage.bind(this),
+            this.webPanelViewStateChanged.bind(this),
+            this.dispose.bind(this)
+        );
 
         // Listen for settings changes from vscode.
         this.themeChangeHandler = this.workspaceService.onDidChangeConfiguration(this.onPossibleSettingsChange, this);
 
         // Listen for settings changes
-        this.settingsChangeHandler = this.configService.getSettings().onDidChange(this.onDataScienceSettingsChanged.bind(this));
+        this.settingsChangeHandler = this.configService
+            .getSettings(undefined)
+            .onDidChange(this.onDataScienceSettingsChanged.bind(this));
 
         // Send the first settings message
-        this.onDataScienceSettingsChanged();
+        this.onDataScienceSettingsChanged().ignoreErrors();
 
-        // Send the loc strings
-        this.postMessageInternal(SharedMessages.LocInit, localize.getCollectionJSON()).ignoreErrors();
+        // Send the loc strings (skip during testing as it takes up a lot of memory)
+        const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
+        this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
     }
 
     public async show(preserveFocus: boolean): Promise<void> {
@@ -109,6 +122,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
+    protected abstract getOwningResource(): Promise<Resource>;
+
     protected get isDisposed(): boolean {
         return this.disposed;
     }
@@ -143,7 +158,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         this.messageListener.onMessage(type.toString(), payload);
     }
 
-    protected onViewStateChanged(_visible: boolean, _active: boolean) {
+    protected onViewStateChanged(_args: WebViewViewChangeEventArgs) {
         noop();
     }
 
@@ -158,12 +173,13 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
-    protected generateDataScienceExtraSettings(): IDataScienceExtraSettings {
+    protected async generateDataScienceExtraSettings(): Promise<IDataScienceExtraSettings> {
+        const resource = await this.getOwningResource();
         const editor = this.workspaceService.getConfiguration('editor');
         const workbench = this.workspaceService.getConfiguration('workbench');
         const theme = !workbench ? DefaultTheme : workbench.get<string>('colorTheme', DefaultTheme);
         return {
-            ...this.configService.getSettings().datascience,
+            ...this.configService.getSettings(resource).datascience,
             extraSettings: {
                 editor: {
                     cursor: this.getValue(editor, 'cursorStyle', 'line'),
@@ -172,10 +188,14 @@ export class WebViewHost<IMapping> implements IDisposable {
                     autoClosingQuotes: this.getValue(editor, 'autoClosingQuotes', 'languageDefined'),
                     autoSurround: this.getValue(editor, 'autoSurround', 'languageDefined'),
                     autoIndent: this.getValue(editor, 'autoIndent', false),
-                    fontLigatures: this.getValue(editor, 'fontLigatures', false)
+                    fontLigatures: this.getValue(editor, 'fontLigatures', false),
+                    scrollBeyondLastLine: this.getValue(editor, 'scrollBeyondLastLine', true),
+                    // VS Code puts a value for this, but it's 10 (the explorer bar size) not 14 the editor size for vert
+                    verticalScrollbarSize: this.getValue(editor, 'scrollbar.verticalScrollbarSize', 14),
+                    horizontalScrollbarSize: this.getValue(editor, 'scrollbar.horizontalScrollbarSize', 10),
+                    fontSize: this.getValue(editor, 'fontSize', 14),
+                    fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
                 },
-                fontSize: this.getValue(editor, 'fontSize', 14),
-                fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace"),
                 theme: theme
             },
             intellisenseOptions: {
@@ -200,7 +220,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         return this.themeIsDarkPromise ? this.themeIsDarkPromise.promise : Promise.resolve(false);
     }
 
-    protected async loadWebPanel(cwd: string) {
+    protected async loadWebPanel(cwd: string, webViewPanel?: WebviewPanel) {
         // Make not disposed anymore
         this.disposed = false;
 
@@ -218,15 +238,26 @@ export class WebViewHost<IMapping> implements IDisposable {
 
         // Create our web panel (it's the UI that shows up for the history)
         if (this.webPanel === undefined) {
+            const resource = await this.getOwningResource();
+
             // Get our settings to pass along to the react control
-            const settings = this.generateDataScienceExtraSettings();
-            const insiders = this.configService.getSettings().insidersChannel;
+            const settings = await this.generateDataScienceExtraSettings();
+            const insiders = this.configService.getSettings(resource).insidersChannel;
 
             traceInfo('Loading web view...');
 
-            // Determine if we should start an HTTP server or not based on if in the insider's channel or
-            // if it's forced on.
-            const startHttpServer = settings.useWebViewServer !== undefined ? settings.useWebViewServer : insiders !== 'off';
+            let startHttpServer = false;
+
+            if (typeof settings.useWebViewServer === 'boolean') {
+                // Always allow user to turn this feature on/off via settings.
+                startHttpServer = settings.useWebViewServer === true;
+            } else {
+                // Determine if we should start an HTTP server or not based on if in the insider's channel or
+                // if it's forced on.
+                startHttpServer = this.useWebViewServer || insiders !== 'off';
+            }
+
+            traceWarning(`startHttpServer=${startHttpServer}, will not be used. Temporarily turned off`);
 
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
@@ -237,8 +268,9 @@ export class WebViewHost<IMapping> implements IDisposable {
                 rootPath: this.rootPath,
                 scripts: this.scripts,
                 settings,
-                startHttpServer,
-                cwd
+                startHttpServer: false,
+                cwd,
+                webViewPanel
             });
 
             traceInfo('Web view created.');
@@ -253,29 +285,39 @@ export class WebViewHost<IMapping> implements IDisposable {
     }
 
     private webPanelViewStateChanged = (webPanel: IWebPanel) => {
-        const isVisible = webPanel.isVisible();
-        const isActive = webPanel.isActive();
-        this.onViewStateChanged(isVisible, isActive);
-        this.viewState.visible = isVisible;
-        this.viewState.active = isActive;
+        const visible = webPanel.isVisible();
+        const active = webPanel.isActive();
+        const current = { visible, active };
+        const previous = { visible: this.viewState.visible, active: this.viewState.active };
+        this.viewState.visible = visible;
+        this.viewState.active = active;
+        this.onViewStateChanged({ current, previous });
     };
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
     private async handleCssRequest(request: IGetCssRequest): Promise<void> {
-        const settings = this.generateDataScienceExtraSettings();
+        const settings = await this.generateDataScienceExtraSettings();
         const requestIsDark = settings.ignoreVscodeTheme ? false : request.isDark;
         this.setTheme(requestIsDark);
-        const isDark = settings.ignoreVscodeTheme ? false : await this.themeFinder.isThemeDark(settings.extraSettings.theme);
-        const css = await this.cssGenerator.generateThemeCss(requestIsDark, settings.extraSettings.theme);
-        return this.postMessageInternal(CssMessages.GetCssResponse, { css, theme: settings.extraSettings.theme, knownDark: isDark });
+        const isDark = settings.ignoreVscodeTheme
+            ? false
+            : await this.themeFinder.isThemeDark(settings.extraSettings.theme);
+        const resource = await this.getOwningResource();
+        const css = await this.cssGenerator.generateThemeCss(resource, requestIsDark, settings.extraSettings.theme);
+        return this.postMessageInternal(CssMessages.GetCssResponse, {
+            css,
+            theme: settings.extraSettings.theme,
+            knownDark: isDark
+        });
     }
 
     @captureTelemetry(Telemetry.WebviewMonacoStyleUpdate)
     private async handleMonacoThemeRequest(request: IGetMonacoThemeRequest): Promise<void> {
-        const settings = this.generateDataScienceExtraSettings();
+        const settings = await this.generateDataScienceExtraSettings();
         const isDark = settings.ignoreVscodeTheme ? false : request.isDark;
         this.setTheme(isDark);
-        const monacoTheme = await this.cssGenerator.generateMonacoTheme(isDark, settings.extraSettings.theme);
+        const resource = await this.getOwningResource();
+        const monacoTheme = await this.cssGenerator.generateMonacoTheme(resource, isDark, settings.extraSettings.theme);
         return this.postMessageInternal(CssMessages.GetMonacoThemeResponse, { theme: monacoTheme });
     }
 
@@ -287,11 +329,13 @@ export class WebViewHost<IMapping> implements IDisposable {
 
             // Resolve our started promise. This means the webpanel is ready to go.
             this.webPanelInit.resolve();
+
+            traceInfo('Web view react rendered');
         }
     }
 
     // Post a message to our webpanel and update our new datascience settings
-    private onPossibleSettingsChange = (event: ConfigurationChangeEvent) => {
+    private onPossibleSettingsChange = async (event: ConfigurationChangeEvent) => {
         if (
             event.affectsConfiguration('workbench.colorTheme') ||
             event.affectsConfiguration('editor.fontSize') ||
@@ -302,13 +346,16 @@ export class WebViewHost<IMapping> implements IDisposable {
             event.affectsConfiguration('editor.autoClosingQuotes') ||
             event.affectsConfiguration('editor.autoSurround') ||
             event.affectsConfiguration('editor.autoIndent') ||
+            event.affectsConfiguration('editor.scrollBeyondLastLine') ||
             event.affectsConfiguration('editor.fontLigatures') ||
+            event.affectsConfiguration('editor.scrollbar.verticalScrollbarSize') ||
+            event.affectsConfiguration('editor.scrollbar.horizontalScrollbarSize') ||
             event.affectsConfiguration('files.autoSave') ||
             event.affectsConfiguration('files.autoSaveDelay') ||
             event.affectsConfiguration('python.dataScience.enableGather')
         ) {
             // See if the theme changed
-            const newSettings = this.generateDataScienceExtraSettings();
+            const newSettings = await this.generateDataScienceExtraSettings();
             if (newSettings) {
                 const dsSettings = JSON.stringify(newSettings);
                 this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
@@ -317,9 +364,9 @@ export class WebViewHost<IMapping> implements IDisposable {
     };
 
     // Post a message to our webpanel and update our new datascience settings
-    private onDataScienceSettingsChanged = () => {
+    private onDataScienceSettingsChanged = async () => {
         // Stringify our settings to send over to the panel
-        const dsSettings = JSON.stringify(this.generateDataScienceExtraSettings());
+        const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
         this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
     };
 }

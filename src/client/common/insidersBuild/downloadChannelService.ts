@@ -28,9 +28,13 @@ export class ExtensionChannelService implements IExtensionChannelService {
     }
 
     public get isChannelUsingDefaultConfiguration(): boolean {
-        const settings = this.workspaceService.getConfiguration('python').inspect<ExtensionChannels>(insidersChannelSetting);
+        const settings = this.workspaceService
+            .getConfiguration('python')
+            .inspect<ExtensionChannels>(insidersChannelSetting);
         if (!settings) {
-            throw new Error(`WorkspaceConfiguration.inspect returns 'undefined' for setting 'python.${insidersChannelSetting}'`);
+            throw new Error(
+                `WorkspaceConfiguration.inspect returns 'undefined' for setting 'python.${insidersChannelSetting}'`
+            );
         }
         return !settings.globalValue;
     }

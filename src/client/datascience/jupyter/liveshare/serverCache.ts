@@ -5,39 +5,71 @@ import '../../../common/extensions';
 
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken } from 'vscode';
+import { CancellationToken, CancellationTokenSource } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
+import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { INotebookServer, INotebookServerOptions } from '../../types';
 
+interface IServerData {
+    options: INotebookServerOptions;
+    promise: Promise<INotebookServer | undefined>;
+    cancelSource: CancellationTokenSource;
+    resolved: boolean;
+}
+
 export class ServerCache implements IAsyncDisposable {
-    private cache: Map<string, Promise<INotebookServer | undefined>> = new Map<string, Promise<INotebookServer | undefined>>();
+    private cache: Map<string, IServerData> = new Map<string, IServerData>();
     private emptyKey = uuid();
 
-    constructor(private configService: IConfigurationService, private workspace: IWorkspaceService, private fileSystem: IFileSystem) {}
+    constructor(
+        private configService: IConfigurationService,
+        private workspace: IWorkspaceService,
+        private fileSystem: IFileSystem
+    ) {}
 
     public async getOrCreate(
-        createFunction: (options?: INotebookServerOptions, cancelToken?: CancellationToken) => Promise<INotebookServer | undefined>,
+        createFunction: (
+            options?: INotebookServerOptions,
+            cancelToken?: CancellationToken
+        ) => Promise<INotebookServer | undefined>,
         options?: INotebookServerOptions,
         cancelToken?: CancellationToken
     ): Promise<INotebookServer | undefined> {
+        const cancelSource = new CancellationTokenSource();
+        if (cancelToken) {
+            cancelToken.onCancellationRequested(() => cancelSource.cancel());
+        }
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
-        let createPromise: Promise<INotebookServer | undefined> | undefined;
+        let data: IServerData | undefined;
 
         // Check to see if we already have a promise for this key
-        createPromise = this.cache.get(key);
+        data = this.cache.get(key);
 
-        if (!createPromise) {
-            // Didn't find one, so start up our promise and cache it
-            const newCreatePromise = createFunction(options, cancelToken);
-            this.cache.set(key, newCreatePromise);
-            createPromise = newCreatePromise;
+        // See if the old options had the same UI setting. If not,
+        // cancel the old
+        if (data && !data.resolved && data.options.disableUI !== fixedOptions.disableUI) {
+            traceInfo('Cancelling server create as UI state has changed');
+            data.cancelSource.cancel();
+            data = undefined;
+            this.cache.delete(key);
         }
 
-        return createPromise
+        if (!data) {
+            // Didn't find one, so start up our promise and cache it
+            data = {
+                promise: createFunction(options, cancelSource.token),
+                options: fixedOptions,
+                cancelSource,
+                resolved: false
+            };
+            this.cache.set(key, data);
+        }
+
+        return data.promise
             .then((server: INotebookServer | undefined) => {
                 if (!server) {
                     this.cache.delete(key);
@@ -52,6 +84,11 @@ export class ServerCache implements IAsyncDisposable {
                     return oldDispose();
                 };
 
+                // We've resolved the promise at this point
+                if (data) {
+                    data.resolved = true;
+                }
+
                 return server;
             })
             .catch(e => {
@@ -64,14 +101,14 @@ export class ServerCache implements IAsyncDisposable {
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
         if (this.cache.has(key)) {
-            return this.cache.get(key);
+            return this.cache.get(key)?.promise;
         }
     }
 
     public async dispose(): Promise<void> {
         await Promise.all(
-            [...this.cache.values()].map(async serverPromise => {
-                const server = await serverPromise;
+            [...this.cache.values()].map(async d => {
+                const server = await d.promise;
                 await server?.dispose();
             })
         );
@@ -86,7 +123,8 @@ export class ServerCache implements IAsyncDisposable {
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
             purpose: options ? options.purpose : uuid(),
             workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
-            metadata: options?.metadata
+            metadata: options?.metadata,
+            disableUI: options?.disableUI
         };
     }
 
@@ -105,7 +143,7 @@ export class ServerCache implements IAsyncDisposable {
     private async calculateWorkingDirectory(): Promise<string | undefined> {
         let workingDir: string | undefined;
         // For a local launch calculate the working directory that we should switch into
-        const settings = this.configService.getSettings();
+        const settings = this.configService.getSettings(undefined);
         const fileRoot = settings.datascience.notebookFileRoot;
 
         // If we don't have a workspace open the notebookFileRoot seems to often have a random location in it (we use ${workspaceRoot} as default)

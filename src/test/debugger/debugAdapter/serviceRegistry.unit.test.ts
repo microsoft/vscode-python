@@ -16,7 +16,12 @@ import { ProtocolLogger } from '../../../client/debugger/debugAdapter/Common/pro
 import { ProtocolParser } from '../../../client/debugger/debugAdapter/Common/protocolParser';
 import { ProtocolMessageWriter } from '../../../client/debugger/debugAdapter/Common/protocolWriter';
 import { initializeIoc, registerTypes } from '../../../client/debugger/debugAdapter/serviceRegistry';
-import { IDebugStreamProvider, IProtocolLogger, IProtocolMessageWriter, IProtocolParser } from '../../../client/debugger/debugAdapter/types';
+import {
+    IDebugStreamProvider,
+    IProtocolLogger,
+    IProtocolMessageWriter,
+    IProtocolParser
+} from '../../../client/debugger/debugAdapter/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';
@@ -36,9 +41,13 @@ suite('Debugger debug adapter Service Registry', () => {
         verify(serviceManager.addSingleton<IProtocolLogger>(IProtocolLogger, ProtocolLogger)).once();
         verify(serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser)).once();
         verify(serviceManager.addSingleton<ISocketServer>(ISocketServer, SocketServer)).once();
-        verify(serviceManager.addSingleton<IProtocolMessageWriter>(IProtocolMessageWriter, ProtocolMessageWriter)).once();
+        verify(
+            serviceManager.addSingleton<IProtocolMessageWriter>(IProtocolMessageWriter, ProtocolMessageWriter)
+        ).once();
         verify(serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder)).once();
-        verify(serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, DebuggerProcessServiceFactory)).once();
+        verify(
+            serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, DebuggerProcessServiceFactory)
+        ).once();
     });
 
     test('Ensure service container is initialized', async () => {

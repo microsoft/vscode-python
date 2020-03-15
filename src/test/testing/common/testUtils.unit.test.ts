@@ -18,7 +18,16 @@ import {
     getTestFunction,
     getTestSuite
 } from '../../../client/testing/common/testUtils';
-import { FlattenedTestFunction, FlattenedTestSuite, SubtestParent, TestFile, TestFolder, TestFunction, Tests, TestSuite } from '../../../client/testing/common/types';
+import {
+    FlattenedTestFunction,
+    FlattenedTestSuite,
+    SubtestParent,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestSuite
+} from '../../../client/testing/common/types';
 import { TestDataItem, TestDataItemType, TestWorkspaceFolder } from '../../../client/testing/types';
 
 // tslint:disable:prefer-template
@@ -37,7 +46,12 @@ function longestCommonSubstring(strings: string[]): string {
     return substr;
 }
 
-export function createMockTestDataItem<T extends TestDataItem>(type: TestDataItemType, nameSuffix: string = '', name?: string, nameToRun?: string) {
+export function createMockTestDataItem<T extends TestDataItem>(
+    type: TestDataItemType,
+    nameSuffix: string = '',
+    name?: string,
+    nameToRun?: string
+) {
     const folder: TestFolder = {
         resource: Uri.file(__filename),
         folders: [],
@@ -115,7 +129,12 @@ export function createSubtestParent(funcs: TestFunction[]): SubtestParent {
     return subtestParent;
 }
 
-export function createTests(folders: TestFolder[], files: TestFile[], suites: TestSuite[], funcs: TestFunction[]): Tests {
+export function createTests(
+    folders: TestFolder[],
+    files: TestFile[],
+    suites: TestSuite[],
+    funcs: TestFunction[]
+): Tests {
     // tslint:disable:no-any
     return {
         summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },

@@ -5,7 +5,16 @@
 
 import * as assert from 'assert';
 import { copyDesiredTestResults } from '../../../../client/testing/common/testUtils';
-import { FlattenedTestFunction, FlattenedTestSuite, TestFile, TestFolder, TestFunction, Tests, TestStatus, TestSuite } from '../../../../client/testing/common/types';
+import {
+    FlattenedTestFunction,
+    FlattenedTestSuite,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestStatus,
+    TestSuite
+} from '../../../../client/testing/common/types';
 import { TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 

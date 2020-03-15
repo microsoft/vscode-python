@@ -5,11 +5,11 @@
 
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
+import { LanguageServerDownloadChannel } from '../../../client/activation/common/packageRepository';
 import {
-    BetaLanguageServerPackageRepository,
-    DailyLanguageServerPackageRepository,
-    LanguageServerDownloadChannel,
-    StableLanguageServerPackageRepository
+    BetaDotNetLanguageServerPackageRepository,
+    DailyDotNetLanguageServerPackageRepository,
+    StableDotNetLanguageServerPackageRepository
 } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -20,18 +20,18 @@ suite('Language Server Download Channels', () => {
     });
 
     function getPackageInfo(channel: LanguageServerDownloadChannel) {
-        let classToCreate = StableLanguageServerPackageRepository;
+        let classToCreate = StableDotNetLanguageServerPackageRepository;
         switch (channel) {
             case LanguageServerDownloadChannel.stable: {
-                classToCreate = StableLanguageServerPackageRepository;
+                classToCreate = StableDotNetLanguageServerPackageRepository;
                 break;
             }
             case LanguageServerDownloadChannel.beta: {
-                classToCreate = BetaLanguageServerPackageRepository;
+                classToCreate = BetaDotNetLanguageServerPackageRepository;
                 break;
             }
             case LanguageServerDownloadChannel.daily: {
-                classToCreate = DailyLanguageServerPackageRepository;
+                classToCreate = DailyDotNetLanguageServerPackageRepository;
                 break;
             }
             default: {
@@ -53,12 +53,21 @@ suite('Language Server Download Channels', () => {
         return [instance.storageAccount, instance.storageContainer];
     }
     test('Stable', () => {
-        expect(getPackageInfo(LanguageServerDownloadChannel.stable)).to.be.deep.equal(['https://pvsc.azureedge.net', 'python-language-server-stable']);
+        expect(getPackageInfo(LanguageServerDownloadChannel.stable)).to.be.deep.equal([
+            'https://pvsc.azureedge.net',
+            'python-language-server-stable'
+        ]);
     });
     test('Beta', () => {
-        expect(getPackageInfo(LanguageServerDownloadChannel.beta)).to.be.deep.equal(['https://pvsc.azureedge.net', 'python-language-server-beta']);
+        expect(getPackageInfo(LanguageServerDownloadChannel.beta)).to.be.deep.equal([
+            'https://pvsc.azureedge.net',
+            'python-language-server-beta'
+        ]);
     });
     test('Daily', () => {
-        expect(getPackageInfo(LanguageServerDownloadChannel.daily)).to.be.deep.equal(['https://pvsc.azureedge.net', 'python-language-server-daily']);
+        expect(getPackageInfo(LanguageServerDownloadChannel.daily)).to.be.deep.equal([
+            'https://pvsc.azureedge.net',
+            'python-language-server-daily'
+        ]);
     });
 });

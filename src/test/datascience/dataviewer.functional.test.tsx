@@ -14,7 +14,13 @@ import { Disposable, Uri } from 'vscode';
 
 import { Identifiers } from '../../client/datascience/constants';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
-import { IDataViewer, IDataViewerProvider, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../client/datascience/types';
+import {
+    IDataViewer,
+    IDataViewerProvider,
+    IInteractiveWindowProvider,
+    IJupyterExecution,
+    INotebook
+} from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 import { noop } from '../core';
@@ -40,9 +46,10 @@ suite('DataScience DataViewer tests', () => {
         }
     });
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        return ioc.activate();
     });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
@@ -74,15 +81,31 @@ suite('DataScience DataViewer tests', () => {
         // asyncDump();
     });
 
-    async function createDataViewer(variable: string): Promise<IDataViewer> {
-        return dataProvider.create(variable, notebook!);
+    async function createDataViewer(variable: string, type: string): Promise<IDataViewer> {
+        return dataProvider.create(
+            {
+                name: variable,
+                value: '',
+                supportsDataExplorer: true,
+                type,
+                size: 0,
+                truncated: true,
+                shape: '',
+                count: 0
+            },
+            notebook!
+        );
     }
 
     async function injectCode(code: string): Promise<void> {
         const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
         const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        const server = await exec.connectToNotebookServer(await interactiveWindowProvider.getNotebookOptions());
-        notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+        const server = await exec.connectToNotebookServer(
+            await interactiveWindowProvider.getNotebookOptions(undefined)
+        );
+        notebook = server
+            ? await server.createNotebook(undefined, Uri.parse(Identifiers.InteractiveWindowIdentity))
+            : undefined;
         if (notebook) {
             const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());
             assert.equal(cells.length, 1, `Wrong number of cells returned`);
@@ -102,7 +125,10 @@ suite('DataScience DataViewer tests', () => {
     }
 
     // tslint:disable-next-line:no-any
-    function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>) {
+    function runMountedTest(
+        name: string,
+        testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>
+    ) {
         test(name, async () => {
             const wrapper = mountWebView();
             try {
@@ -116,7 +142,11 @@ suite('DataScience DataViewer tests', () => {
         });
     }
 
-    function sortRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, sortCol: string, sortAsc: boolean): void {
+    function sortRows(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+        sortCol: string,
+        sortAsc: boolean
+    ): void {
         // Cause our sort
         const mainPanelWrapper = wrapper.find(MainPanel);
         assert.ok(mainPanelWrapper && mainPanelWrapper.length > 0, 'Grid not found to sort on');
@@ -128,7 +158,12 @@ suite('DataScience DataViewer tests', () => {
             const cols = reactGrid.state.grid.getColumns();
             const col = cols.find(c => c.field === sortCol);
             assert.ok(col, `${sortCol} is not a column of the grid`);
-            reactGrid.sort(new Slick.EventData(), { sortCol: col, sortAsc, multiColumnSort: false, grid: reactGrid.state.grid });
+            reactGrid.sort(new Slick.EventData(), {
+                sortCol: col,
+                sortAsc,
+                multiColumnSort: false,
+                grid: reactGrid.state.grid
+            });
         }
     }
 
@@ -155,7 +190,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('Data Frame', async wrapper => {
         await injectCode('import pandas as pd\r\ndf = pd.DataFrame([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('df');
+        const dv = await createDataViewer('df', 'DataFrame');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
@@ -165,7 +200,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('List', async wrapper => {
         await injectCode('ls = [0, 1, 2, 3]');
         const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('ls');
+        const dv = await createDataViewer('ls', 'list');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
@@ -175,7 +210,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('Series', async wrapper => {
         await injectCode('import pandas as pd\r\ns = pd.Series([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('s');
+        const dv = await createDataViewer('s', 'Series');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
@@ -185,7 +220,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('np.array', async wrapper => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('x');
+        const dv = await createDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
@@ -195,7 +230,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('Failure', async _wrapper => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
         try {
-            await createDataViewer('unknown variable');
+            await createDataViewer('unknown variable', 'ndarray');
             assert.fail('Exception should have been thrown');
         } catch {
             noop();
@@ -205,7 +240,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('Sorting', async wrapper => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('x');
+        const dv = await createDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 

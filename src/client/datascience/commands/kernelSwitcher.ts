@@ -18,11 +18,13 @@ export class KernelSwitcherCommand implements IDisposable {
     constructor(
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(KernelSwitcher) private kernelSwitcher: KernelSwitcher,
-        @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider,
+        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider
     ) {}
     public register() {
-        this.disposables.push(this.commandManager.registerCommand(Commands.SwitchJupyterKernel, this.switchKernel, this));
+        this.disposables.push(
+            this.commandManager.registerCommand(Commands.SwitchJupyterKernel, this.switchKernel, this)
+        );
     }
     public dispose() {
         this.disposables.forEach(d => d.dispose());
@@ -31,7 +33,9 @@ export class KernelSwitcherCommand implements IDisposable {
         // If notebook isn't know, then user invoked this command from command palette or similar.
         // We need to identify the current notebook (active native editor or interactive window).
         if (!notebook) {
-            notebook = this.notebookProvider.activeEditor?.notebook ?? this.interactiveWindowProvider.getActive()?.notebook;
+            notebook =
+                this.notebookEditorProvider.activeEditor?.notebook ??
+                this.interactiveWindowProvider.getActive()?.notebook;
         }
         if (!notebook) {
             traceError('No active notebook');

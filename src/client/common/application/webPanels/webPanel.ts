@@ -4,7 +4,7 @@
 import '../../extensions';
 
 import * as uuid from 'uuid/v4';
-import { Uri, Webview, WebviewPanel, window } from 'vscode';
+import { Uri, Webview, WebviewOptions, WebviewPanel, window } from 'vscode';
 
 import { Identifiers } from '../../../datascience/constants';
 import { InteractiveWindowMessages } from '../../../datascience/interactive-common/interactiveWindowTypes';
@@ -31,17 +31,26 @@ export class WebPanel implements IWebPanel {
         private token: string | undefined,
         private options: IWebPanelOptions
     ) {
-        this.panel = window.createWebviewPanel(
-            options.title.toLowerCase().replace(' ', ''),
-            options.title,
-            { viewColumn: options.viewColumn, preserveFocus: true },
-            {
-                enableScripts: true,
-                retainContextWhenHidden: true,
-                localResourceRoots: [Uri.file(this.options.rootPath)],
-                portMapping: port ? [{ webviewPort: RemappedPort, extensionHostPort: port }] : undefined
-            }
-        );
+        const webViewOptions: WebviewOptions = {
+            enableScripts: true,
+            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)],
+            portMapping: port ? [{ webviewPort: RemappedPort, extensionHostPort: port }] : undefined
+        };
+        if (options.webViewPanel) {
+            this.panel = options.webViewPanel;
+            this.panel.webview.options = webViewOptions;
+        } else {
+            this.panel = window.createWebviewPanel(
+                options.title.toLowerCase().replace(' ', ''),
+                options.title,
+                { viewColumn: options.viewColumn, preserveFocus: true },
+                {
+                    retainContextWhenHidden: true,
+                    enableFindWidget: true,
+                    ...webViewOptions
+                }
+            );
+        }
         this.loadPromise = this.load();
     }
 
@@ -92,7 +101,9 @@ export class WebPanel implements IWebPanel {
             if (localFilesExist.every(exists => exists === true)) {
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
-                this.panel.webview.html = this.options.startHttpServer ? this.generateServerReactHtml(this.panel.webview) : this.generateLocalReactHtml(this.panel.webview);
+                this.panel.webview.html = this.options.startHttpServer
+                    ? this.generateServerReactHtml(this.panel.webview)
+                    : await this.generateLocalReactHtml(this.panel.webview);
 
                 // Reset when the current panel is closed
                 this.disposableRegistry.push(
@@ -127,25 +138,37 @@ export class WebPanel implements IWebPanel {
     }
 
     // tslint:disable-next-line:no-any
-    private generateLocalReactHtml(webView: Webview) {
-        const uriBase = webView.asWebviewUri(Uri.file(this.options.rootPath));
+    private async generateLocalReactHtml(webView: Webview) {
+        const uriBase = webView.asWebviewUri(Uri.file(this.options.cwd)).toString();
         const uris = this.options.scripts.map(script => webView.asWebviewUri(Uri.file(script)));
+        const testFiles = await this.fs.getFiles(this.options.rootPath);
 
+        // This method must be called so VSC is aware of files that can be pulled.
+        // Allow js and js.map files to be loaded by webpack in the webview.
+        testFiles
+            .filter(f => f.toLowerCase().endsWith('.js') || f.toLowerCase().endsWith('.js.map'))
+            .forEach(f => webView.asWebviewUri(Uri.file(f)));
+
+        const rootPath = webView.asWebviewUri(Uri.file(this.options.rootPath)).toString();
         return `<!doctype html>
         <html lang="en">
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http: blob:;">
+                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob: ${
+                    webView.cspSource
+                }; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http: blob:;">
                 <meta name="theme-color" content="#000000">
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>React App</title>
-                <base href="${uriBase}"/>
+                <base href="${uriBase}${uriBase.endsWith('/') ? '' : '/'}"/>
             </head>
             <body>
                 <noscript>You need to enable JavaScript to run this app.</noscript>
                 <div id="root"></div>
                 <script type="text/javascript">
+                    // Public path that will be used by webpack.
+                    window.__PVSC_Public_Path = "${rootPath}/";
                     function resolvePath(relativePath) {
                         if (relativePath && relativePath[0] == '.' && relativePath[1] != '.') {
                             return "${uriBase}" + relativePath.substring(1);
@@ -163,7 +186,9 @@ export class WebPanel implements IWebPanel {
     private generateServerReactHtml(webView: Webview) {
         const uriBase = webView.asWebviewUri(Uri.file(this.options.rootPath));
         const relativeScripts = this.options.scripts.map(s => `.${s.substr(this.options.rootPath.length)}`);
-        const encoded = relativeScripts.map(s => encodeURIComponent(s.replace(/\\/g, '/')));
+        const encoded = relativeScripts.map(s =>
+            encodeURIComponent(s.replace(/\\/g, '/').replace('index_bundle.js', 'index_chunked_bundle.js'))
+        );
 
         return `<!doctype html>
         <html lang="en">
@@ -185,7 +210,9 @@ export class WebPanel implements IWebPanel {
                             const bodyClass = document.body.className;
                             const defaultStyles = document.getElementById('_defaultStyles').innerText;
                             window.console.log('posting styles to frame ');
-                            hostFrame.contentWindow.postMessage({ type: '${SharedMessages.StyleUpdate}', payload: { styleText, bodyClass, defaultStyles } }, '*');
+                            hostFrame.contentWindow.postMessage({ type: '${
+                                SharedMessages.StyleUpdate
+                            }', payload: { styleText, bodyClass, defaultStyles } }, '*');
                         }
                     };
                     const vscodeApi = acquireVsCodeApi ? acquireVsCodeApi() : undefined;
@@ -218,9 +245,11 @@ export class WebPanel implements IWebPanel {
                     });
                     document.addEventListener('DOMContentLoaded', () => {
                         styleObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
-                        const newSrc = 'http://localhost:${RemappedPort}/${this.id}?scripts=${encoded.join('%')}&cwd=${encodeURIComponent(
-            this.options.cwd
-        )}&rootPath=${encodeURIComponent(this.options.rootPath)}&token=${this.token}&baseTheme=' + document.body.className;
+                        const newSrc = 'http://localhost:${RemappedPort}/${this.id}?scripts=${encoded.join(
+            '%'
+        )}&cwd=${encodeURIComponent(this.options.cwd)}&rootPath=${encodeURIComponent(this.options.rootPath)}&token=${
+            this.token
+        }&baseTheme=' + document.body.className;
                         const hostFrame = document.getElementById('hostframe');
                         if (hostFrame) {
                             hostFrame.src = newSrc;

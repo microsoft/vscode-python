@@ -61,7 +61,10 @@ class TelemetryTracker implements DebugAdapterTracker {
 
 @injectable()
 export class DebugSessionTelemetry implements DebugAdapterTrackerFactory, IExtensionSingleActivationService {
-    constructor(@inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry, @inject(IDebugService) debugService: IDebugService) {
+    constructor(
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IDebugService) debugService: IDebugService
+    ) {
         disposableRegistry.push(debugService.registerDebugAdapterTrackerFactory('python', this));
     }
 

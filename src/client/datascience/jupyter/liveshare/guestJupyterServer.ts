@@ -6,16 +6,25 @@ import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { IConnection, IDataScience, IJupyterSessionManagerFactory, INotebook, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo } from '../../types';
+import {
+    IConnection,
+    IDataScience,
+    IJupyterSessionManagerFactory,
+    INotebook,
+    INotebookExecutionLogger,
+    INotebookServer,
+    INotebookServerLaunchInfo
+} from '../../types';
 import { GuestJupyterNotebook } from './guestJupyterNotebook';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ILiveShareParticipant } from './types';
 
-export class GuestJupyterServer extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterServerSharedService)
+export class GuestJupyterServer
+    extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterServerSharedService)
     implements INotebookServer, ILiveShareParticipant {
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
@@ -45,20 +54,29 @@ export class GuestJupyterServer extends LiveShareParticipantGuest(LiveShareParti
         return Promise.resolve();
     }
 
-    public async createNotebook(resource: Uri): Promise<INotebook> {
+    public async createNotebook(resource: Resource, identity: Uri): Promise<INotebook> {
         // Tell the host side to generate a notebook for this uri
         const service = await this.waitForService();
         if (service) {
-            const uriString = resource.toString();
-            await service.request(LiveShareCommands.createNotebook, [uriString]);
+            const resourceString = resource ? resource.toString() : undefined;
+            const identityString = identity.toString();
+            await service.request(LiveShareCommands.createNotebook, [resourceString, identityString]);
         }
 
         // Return a new notebook to listen to
-        const result = new GuestJupyterNotebook(this.liveShare, this.disposableRegistry, this.configService, resource, this, this.dataScience.activationStartTime);
-        this.notebooks.set(resource.toString(), result);
-        const oldDispose = result.dispose;
+        const result = new GuestJupyterNotebook(
+            this.liveShare,
+            this.disposableRegistry,
+            this.configService,
+            resource,
+            identity,
+            this,
+            this.dataScience.activationStartTime
+        );
+        this.notebooks.set(identity.toString(), result);
+        const oldDispose = result.dispose.bind(result);
         result.dispose = () => {
-            this.notebooks.delete(resource.toString());
+            this.notebooks.delete(identity.toString());
             return oldDispose();
         };
 
