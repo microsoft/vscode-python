@@ -28,13 +28,6 @@ export type ObservableExecutionResult<T extends string | Buffer> = {
 
 // tslint:disable-next-line:interface-name
 export type SpawnOptions = ChildProcessSpawnOptions & {
-    /**
-     * Content to be written to the STDIN pipe of the launched process.
-     *
-     * If present, once the input has been written, the input stream
-     * of the process will be closed.
-     */
-    input?: string;
     encoding?: string;
     token?: CancellationToken;
     mergeStdOutErr?: boolean;
