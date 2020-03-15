@@ -41,7 +41,7 @@ export class RawKernel implements Kernel.IKernel {
     }
 
     // IANHU: Implemented
-    public requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
+    public requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
         if (this.mainChannel) {
             const options = {
                 store_history: content.store_history, user_expressions: content.user_expressions, allow_stdin: content.allow_stdin,
@@ -55,7 +55,7 @@ export class RawKernel implements Kernel.IKernel {
 
             // IANHU: There seems to be mild type mismatches here, if I'm more or less specific
             // IANHU: Just cast to any for now and see if it breaks?
-            const newFuture = new RawFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>(fakeExecute as any);
+            const newFuture = new RawFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>(fakeExecute as any, disposeOnDone = true);
             // IANHU: Cast here is ugly as well
             this.futures.set(newFuture.msg.header.msg_id, newFuture as RawFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>);
 
@@ -205,6 +205,7 @@ export class RawKernel implements Kernel.IKernel {
     }
 
     // Just our quick message watcher for now
+    // Think there might be a cleaner way to route these with RxJS observables later
     private msgIn(message: JupyterMessage): void {
         console.log(message);
 
