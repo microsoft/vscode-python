@@ -5,8 +5,9 @@ import { CancellationToken, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { Commands, EXTENSION_ROOT_DIR, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { traceError } from '../common/logger';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
+import { IProcessServiceFactory, IPythonExecutionFactory, ObservableExecutionResult } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IEditorUtils, IOutputChannel } from '../common/types';
+import { createDeferred } from '../common/utils/async';
 import { noop } from '../common/utils/misc';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
@@ -21,6 +22,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
     private readonly documentManager: IDocumentManager;
     private readonly configurationService: IConfigurationService;
     private readonly editorUtils: IEditorUtils;
+
     public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
         this.shell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
@@ -29,6 +31,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.editorUtils = serviceContainer.get<IEditorUtils>(IEditorUtils);
     }
+
     @captureTelemetry(EventName.FORMAT_SORT_IMPORTS)
     public async provideDocumentSortImportsEdits(
         uri: Uri,
@@ -44,7 +47,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         const importScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'sortImports.py');
         const settings = this.configurationService.getSettings(uri);
         const isort = settings.sortImports.path;
-        let diffPatch: string;
 
         // We pass the content of the file to be sorted via stdin. This avoids
         // saving the file (as well as a potential temporary file), but does
@@ -55,7 +57,6 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         const spawnOptions = {
             token,
             throwOnStdErr: true,
-            input: document.getText(),
             cwd: path.dirname(uri.fsPath)
         };
 
@@ -63,14 +64,37 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             return;
         }
 
+        let result: ObservableExecutionResult<string>;
+
         if (typeof isort === 'string' && isort.length > 0) {
             // Lets just treat this as a standard tool.
             const processService = await this.processServiceFactory.create(document.uri);
-            diffPatch = (await processService.exec(isort, args, spawnOptions)).stdout;
+            result = processService.execObservable(isort, args, spawnOptions);
         } else {
             const processExeService = await this.pythonExecutionFactory.create({ resource: document.uri });
-            diffPatch = (await processExeService.exec([importScript].concat(args), spawnOptions)).stdout;
+            result = processExeService.execObservable([importScript].concat(args), spawnOptions);
         }
+
+        // Configure our listening to the output from isort ...
+        let outputBuffer = '';
+        const isortOutput = createDeferred<string>();
+        result.out.subscribe({
+            next: output => {
+                if (output.source === 'stdout') {
+                    outputBuffer += output.out;
+                }
+            },
+            complete: () => {
+                isortOutput.resolve(outputBuffer);
+            }
+        });
+
+        // ... then send isort the document content ...
+        result.proc?.stdin.write(document.getText());
+        result.proc?.stdin.end();
+
+        // .. and finally wait for isort to do its thing
+        const diffPatch = await isortOutput.promise;
 
         return this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri);
     }
