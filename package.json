@@ -5,7 +5,7 @@
     "version": "2020.4.0-dev",
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
-    "enableProposedApi": true,
+    "enableProposedApi": false,
     "author": {
         "name": "Microsoft Corporation"
     },
@@ -2869,18 +2869,7 @@
                     "when": "testsDiscovered"
                 }
             ]
-        },
-        "customEditors": [
-            {
-                "viewType": "NativeEditorProvider.ipynb",
-                "displayName": "Jupyter Notebook",
-                "selector": [
-                    {
-                        "filenamePattern": "*.ipynb"
-                    }
-                ]
-            }            
-        ]
+        }
     },
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",

@@ -8,9 +8,7 @@
             "request": "launch",
             "runtimeExecutable": "${execPath}",
             "args": [
-                "--extensionDevelopmentPath=${workspaceFolder}",
-                "--enable-proposed-api",
-                "ms-python.python"
+                "--extensionDevelopmentPath=${workspaceFolder}"
             ],
             "stopOnEntry": false,
             "smartStep": true,
