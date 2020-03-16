@@ -203,8 +203,11 @@ export class JupyterSession implements IJupyterSession {
         metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
         // IANHU: Just for testing
-        if (this.rawKernel) {
+        // Restrict to non-silent just to make things easier to watch what is happening
+        // Since that is just user code and not initialization code
+        if (this.rawKernel && !content.silent && content.store_history) {
             const future = this.rawKernel.requestExecute(content, disposeOnDone, metadata);
+            return future;
         }
 
         const result =
