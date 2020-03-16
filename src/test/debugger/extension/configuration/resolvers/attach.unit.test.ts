@@ -181,6 +181,32 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 .deep.equal(debugOptionsAvailable);
             expect(debugConfig).to.have.property('host', 'localhost');
         });
+        test('Default host should not be added if connect is available.', async () => {
+            const pythonFile = 'xyz.py';
+
+            setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
+            setupWorkspaces([]);
+
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, {
+                request: 'attach',
+                connect: { host: 'localhost', port: 5678 }
+            } as AttachRequestArguments);
+
+            expect(debugConfig).to.not.have.property('host', 'localhost');
+        });
+        test('Default host should not be added if listen is available.', async () => {
+            const pythonFile = 'xyz.py';
+
+            setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
+            setupWorkspaces([]);
+
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(undefined, {
+                request: 'attach',
+                listen: { host: 'localhost', port: 5678 }
+            } as AttachRequestArguments);
+
+            expect(debugConfig).to.not.have.property('host', 'localhost');
+        });
         test("Ensure 'localRoot' is left unaltered", async () => {
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);

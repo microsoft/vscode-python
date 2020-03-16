@@ -26,6 +26,11 @@ export type PathMapping = {
     localRoot: string;
     remoteRoot: string;
 };
+export type Connection = {
+    host: string;
+    port: number;
+};
+
 interface ICommonDebugArguments {
     redirectOutput?: boolean;
     django?: boolean;
@@ -54,6 +59,8 @@ export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     subProcessId?: number;
 
     processId?: number | string;
+    connect?: Connection;
+    listen?: Connection;
 }
 
 export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
