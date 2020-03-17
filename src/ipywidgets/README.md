@@ -15,3 +15,10 @@
     * `amd` is not what we want, as out `react ui` doesn't use `amd`.
     * `umd` is does not work as we have multiple `entry points` in `webpack`.
     * Heres' the solution `define('@jupyter-widgets/controls', () => widgets);`
+* We bundling the widget controls into our JS and exposing them for AMD using `define`
+    * We could instead include `https://unpkg.com/browse/@jupyter-widgets/html-manager@0.18.3/dist/embed-amd.js`
+    * However this is a 3.2MB file.
+    * Then our Widget manager also needs the widget controls. That would mean widget controls get included twice, once in our bundle and the other in the above mentioned `embed-amd.js` file.
+    * Solution is to include everything thats in `embed-amd.js` into our bundle.
+    * The `embed-amd.js` includes source from files other than the widget controls, those include `libembed-amd.js` and `embed-amd-render.js`.
+        * The source for this can be found in [scripts/concat-amd-build.js](https://github.com/jupyter-widgets/ipywidgets/blob/857bee9c15ca25bd6b47b7777e8fcd07407214cf/packages/html-manager/scripts/concat-amd-build.js#L15)

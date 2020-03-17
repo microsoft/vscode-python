@@ -33,6 +33,7 @@ import {
     GLOBAL_MEMENTO,
     IAsyncDisposableRegistry,
     IConfigurationService,
+    IDisposable,
     IDisposableRegistry,
     IExperimentsManager,
     IMemento,
@@ -55,11 +56,14 @@ import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
     INativeCommand,
     InteractiveWindowMessages,
+    IPyWidgetMessages,
     IReExecuteCells,
     ISubmitNewCell,
     NotebookModelChange,
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
+import { JupyterNotebookBase } from '../jupyter/jupyterNotebook';
+import { JupyterSession } from '../jupyter/jupyterSession';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     CellState,
@@ -78,6 +82,7 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookModel,
+    INotebookServer,
     INotebookServerOptions,
     IStatusProvider,
     IThemeFinder,
@@ -85,6 +90,7 @@ import {
 } from '../types';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import { KernelMessage } from '@jupyterlab/services';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
@@ -147,6 +153,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private loadedAllCells: boolean = false;
     private executeCancelTokens = new Set<CancellationTokenSource>();
 
+    private commtargetRegistered: boolean = false;
+    private readonly targetNames: string[] = [];
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -201,6 +209,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             globalStorage,
             nativeEditorDir,
             [
+                path.join(nativeEditorDir, 'require.js'),
+                path.join(nativeEditorDir, 'ipywidgets.js'),
                 path.join(nativeEditorDir, 'monaco.bundle.js'),
                 path.join(nativeEditorDir, 'commons.initial.bundle.js'),
                 path.join(nativeEditorDir, 'nativeEditor.js')
@@ -280,6 +290,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.interruptExecution();
                 break;
 
+            case IPyWidgetMessages.IPyWidgets_ShellSend:
+                this.handleMessage(message, payload, this.sendIPythonShellMsg);
+                break;
+
+            case IPyWidgetMessages.IPyWidgets_registerCommTarget:
+                this.handleMessage(message, payload, this.registerCommTarget);
+                break;
+
             default:
                 break;
         }
@@ -356,6 +374,204 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return super
             .submitCode(code, file, line, id, data, debug, cancelToken)
             .finally(() => this.sendPerceivedCellExecute(stopWatch));
+    }
+    protected handleOnIOPub(data: { msg: KernelMessage.IIOPubMessage; requestId: string }) {
+        if (KernelMessage.isDisplayDataMsg(data.msg)) {
+            this.postMessage(IPyWidgetMessages.IPyWidgets_display_data_msg, data.msg).catch(ex =>
+                console.error('Failed to post oniopub message', ex)
+            );
+        } else if (KernelMessage.isStatusMsg(data.msg)) {
+            // Do nothing.
+        } else if (KernelMessage.isCommOpenMsg(data.msg)) {
+            // Do nothing, handled in the place we have registered for a target.
+        } else if (KernelMessage.isCommMsgMsg(data.msg)) {
+            // tslint:disable-next-line: no-any
+            this.serializeDataViews(data.msg as any);
+            this.postMessage(IPyWidgetMessages.IPyWidgets_comm_msg, data.msg as KernelMessage.ICommMsgMsg).catch(ex =>
+                // tslint:disable-next-line: no-console
+                console.error('Failed to post oniopub message for handler', ex)
+            );
+        }
+    }
+    // tslint:disable-next-line: member-ordering
+    private disposable?: IDisposable;
+    protected async ensureNotebook(server: INotebookServer): Promise<void> {
+        await super.ensureNotebook(server);
+        // tslint:disable-next-line: no-console
+        console.log('Notebook created');
+        if (this.disposable) {
+            this.disposable.dispose();
+        }
+        this.disposable = (this.notebook as JupyterNotebookBase).onIOPub(this.handleOnIOPub.bind(this));
+        if ((this.notebook as JupyterNotebookBase).onIOPub) {
+            // tslint:disable-next-line: no-console
+            // console.log('Event handler added');
+            // (this.notebook as JupyterNotebookBase).onIOPub((data: {msg: KernelMessage.IIOPubMessage; requestId: string}) => {
+            //     if (KernelMessage.isDisplayDataMsg(data.msg)) {
+            //         this.postMessage(InteractiveWindowMessages.IPyWidgets_display_data_msg, data.msg).catch(ex => console.error('Failed to post oniopub message', ex));
+            //     }
+            // });
+
+            const kernel = ((this.notebook as JupyterNotebookBase).session as JupyterSession).session!.kernel;
+            if (!this.commtargetRegistered) {
+                this.commtargetRegistered = true;
+                this.targetNames.forEach(targetName => {
+                    // kernel.registerCommTarget('jupyter.widget', (_comm, msg) => {
+                    kernel.registerCommTarget(targetName, (_comm, msg) => {
+                        // tslint:disable-next-line: no-any
+                        this.serializeDataViews(msg as any);
+                        this.postMessage(IPyWidgetMessages.IPyWidgets_comm_open, msg).catch(ex =>
+                            console.error('Failed to post oniopub message', ex)
+                        );
+                    });
+                });
+            }
+        }
+    }
+    protected registerCommTarget(targetName: string) {
+        if (!this.commtargetRegistered) {
+            this.targetNames.push(targetName);
+            return;
+        }
+        const kernel = ((this.notebook as JupyterNotebookBase).session as JupyterSession).session!.kernel;
+        kernel.registerCommTarget(targetName, (_comm, msg) => {
+            // tslint:disable-next-line: no-any
+            this.serializeDataViews(msg as any);
+            this.postMessage(IPyWidgetMessages.IPyWidgets_comm_open, msg).catch(ex =>
+                console.error('Failed to post oniopub message', ex)
+            );
+        });
+    }
+    protected serializeDataViews(msg: KernelMessage.IIOPubMessage) {
+        if (!Array.isArray(msg.buffers) || msg.buffers.length === 0) {
+            return;
+        }
+        // tslint:disable-next-line: no-any
+        const newBufferView: any[] = [];
+        // tslint:disable-next-line: prefer-for-of
+        for (let i = 0; i < msg.buffers.length; i += 1) {
+            const item = msg.buffers[i];
+            if ('buffer' in item && 'byteOffset' in item) {
+                // It is an ArrayBufferView
+                // tslint:disable-next-line: no-any
+                const buffer = Array.apply(null, new Uint8Array(item.buffer as any) as any);
+                newBufferView.push({
+                    ...item,
+                    byteLength: item.byteLength,
+                    byteOffset: item.byteOffset,
+                    buffer
+                    // tslint:disable-next-line: no-any
+                } as any);
+            } else {
+                // tslint:disable-next-line: no-any
+                newBufferView.push(Array.apply(null, new Uint8Array(item as any) as any) as any);
+            }
+        }
+
+        // tslint:disable-next-line: no-any
+        // msg.buffers = JSON.stringify(newBufferView) as any;
+        msg.buffers = newBufferView;
+    }
+    protected restoreBuffers(buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined) {
+        if (!buffers || !Array.isArray(buffers) || buffers.length === 0) {
+            return buffers || [];
+        }
+        // tslint:disable-next-line: prefer-for-of no-any
+        const newBuffers: any[] = [];
+        // tslint:disable-next-line: prefer-for-of no-any
+        for (let i = 0; i < buffers.length; i += 1) {
+            const item = buffers[i];
+            if ('buffer' in item && 'byteOffset' in item) {
+                const buffer = new Uint8Array(item.buffer).buffer;
+                // It is an ArrayBufferView
+                // tslint:disable-next-line: no-any
+                const bufferView = new DataView(buffer, item.byteOffset, item.byteLength);
+                newBuffers.push(bufferView);
+            } else {
+                const buffer = new Uint8Array(item).buffer;
+                // tslint:disable-next-line: no-any
+                newBuffers.push(buffer);
+            }
+        }
+        return newBuffers;
+    }
+    // tslint:disable-next-line: no-any
+    protected async sendIPythonShellMsg(payload: {
+        data: any;
+        metadata: any;
+        commId: string;
+        requestId: string;
+        buffers?: any;
+        msgType: string;
+        targetName?: string;
+    }) {
+        const kernel = ((this.notebook as JupyterNotebookBase).session as JupyterSession).session!.kernel;
+        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
+            // tslint:disable-next-line: no-any
+            msgType: payload.msgType as any,
+            channel: 'shell',
+            buffers: this.restoreBuffers(payload.buffers),
+            content: {
+                data: payload.data,
+                comm_id: payload.commId
+            },
+            metadata: payload.metadata,
+            // tslint:disable-next-line: no-any
+            msgId: payload.requestId as any,
+            session: kernel.clientId,
+            username: kernel.username
+        });
+        // Note defined in type definition.
+        // tslint:disable-next-line: no-any
+        (shellMessage.content as any).target_name = payload.targetName;
+
+        // const shellMessage: KernelMessage.IShellMessage = KernelMessage.createMessage(
+        //     {
+        //         msgType: 'comm_msg',
+        //         channel: 'shell',
+        //         username: kernel.username,
+        //         session: kernel.clientId
+        //     },
+        //     {
+        //         data: payload.data,
+        //         comm_id: payload.commId,
+        //         target_name: 'jupyter.widget'
+        //     },
+        //     payload.metadata,
+        //     []
+        // // tslint:disable-next-line: no-any
+        // ) as any;
+        // tslint:disable-next-line: no-any
+        const requestId = (shellMessage.header.msg_id = payload.requestId as any);
+        const future = kernel.sendShellMessage(shellMessage, false, true);
+        future.done
+            .then(reply => {
+                this.postMessage(IPyWidgetMessages.IPyWidgets_ShellSend_resolve, { requestId, msg: reply }).catch(ex =>
+                    console.error('Failed to post oniopub message for handler', ex)
+                );
+            })
+            .catch(ex => {
+                this.postMessage(IPyWidgetMessages.IPyWidgets_ShellSend_reject, { requestId, msg: ex }).catch(ex =>
+                    console.error('Failed to post oniopub message for handler', ex)
+                );
+            });
+        future.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+            this.serializeDataViews(msg);
+            this.postMessage(IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub, { requestId, msg }).catch(ex =>
+                console.error('Failed to post oniopub message for handler', ex)
+            );
+
+            if (KernelMessage.isCommMsgMsg(msg)) {
+                this.postMessage(IPyWidgetMessages.IPyWidgets_comm_msg, msg as KernelMessage.ICommMsgMsg).catch(ex =>
+                    console.error('Failed to post oniopub message for handler', ex)
+                );
+            }
+        };
+        future.onReply = (reply: KernelMessage.IShellMessage) => {
+            this.postMessage(IPyWidgetMessages.IPyWidgets_ShellSend_reply, { requestId, msg: reply }).catch(ex =>
+                console.error('Failed to post oniopub message for handler', ex)
+            );
+        };
     }
 
     @captureTelemetry(Telemetry.SubmitCellThroughInput, undefined, false)

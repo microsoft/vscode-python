@@ -4,11 +4,13 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
+import * as fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 import '../../client/common/extensions';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
 import { ClassType } from '../../client/ioc/types';
+import { WidgetManager } from '../ipywidgets';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
@@ -52,12 +54,6 @@ interface ICellOutput {
 // tslint:disable: react-this-binding-issue
 export class CellOutput extends React.Component<ICellOutputProps> {
     // tslint:disable-next-line: no-any
-    private static ansiToHtmlClass_ctor: ClassType<any> | undefined;
-    constructor(prop: ICellOutputProps) {
-        super(prop);
-    }
-
-    // tslint:disable-next-line: no-any
     private static get ansiToHtmlClass(): ClassType<any> {
         if (!CellOutput.ansiToHtmlClass_ctor) {
             // ansiToHtml is different between the tests running and webpack. figure out which one
@@ -69,7 +65,18 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
         return CellOutput.ansiToHtmlClass_ctor!;
     }
-
+    // tslint:disable-next-line: no-any
+    private static ansiToHtmlClass_ctor: ClassType<any> | undefined;
+    private ipyWidgetRef: React.RefObject<HTMLDivElement>;
+    // private renderedWidgets: {dispose: Function }[] = [];
+    private renderId: number = 0;
+    private renderedView: { dispose: Function }[] = [];
+    // tslint:disable-next-line: no-any
+    private timeout: any;
+    constructor(prop: ICellOutputProps) {
+        super(prop);
+        this.ipyWidgetRef = React.createRef<HTMLDivElement>();
+    }
     private static getAnsiToHtmlOptions(): { fg: string; bg: string; colors: string[] } {
         // Here's the default colors for ansiToHtml. We need to use the
         // colors from our current theme.
@@ -122,9 +129,83 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 : 'markdown-cell-output-container';
 
             // Then combine them inside a div
-            return <div className={outputClassNames}>{this.renderResults()}</div>;
+            return (
+                <div className={outputClassNames} ref={this.ipyWidgetRef}>
+                    {this.renderResults()}
+                </div>
+            );
         }
         return null;
+    }
+    public componentWillUnmount() {
+        this.renderedView.forEach(view => {
+            try {
+                view.dispose();
+            } catch {
+                //
+            }
+        });
+        this.renderedView = [];
+    }
+    // tslint:disable-next-line: max-func-body-length
+    public componentDidUpdate(prevProps: ICellOutputProps) {
+        if (!this.isCodeCell() || !this.hasOutput() || !this.getCodeCell().outputs || this.props.hideOutput) {
+            return;
+        }
+        if (fastDeepEqual(this.props, prevProps)) {
+            return;
+        }
+        // Check if outupt has changed.
+        if (
+            prevProps.cellVM.cell.data.cell_type === 'code' &&
+            prevProps.cellVM.cell.state === this.getCell()!.state &&
+            prevProps.hideOutput === this.props.hideOutput &&
+            fastDeepEqual(this.props.cellVM.cell.data, prevProps.cellVM.cell.data)
+        ) {
+            return;
+        }
+        const renderId = (this.renderId += 1);
+        // Render the outputs
+        // tslint:disable-next-line: no-any
+        const outputs = this.getCodeCell().outputs;
+        this.renderedView.forEach(view => {
+            try {
+                view.dispose();
+            } catch {
+                //
+            }
+        });
+        this.renderedView = [];
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
+        this.timeout = setTimeout(async () => {
+            // Render the output in order.
+            const itemsToRender = [...outputs];
+            const renderOutput = async () => {
+                if (itemsToRender.length === 0) {
+                    return;
+                }
+                const output = itemsToRender.shift();
+                // tslint:disable-next-line: no-any
+                if (!output || !output.data || !(output.data as any)['application/vnd.jupyter.widget-view+json']) {
+                    return;
+                }
+                // tslint:disable-next-line: no-any
+                const widgetData: any = (output.data as any)['application/vnd.jupyter.widget-view+json'];
+                const element = this.ipyWidgetRef.current!;
+                const view = await WidgetManager.instance.renderWidget(widgetData, element);
+                if (renderId !== this.renderId) {
+                    view.dispose();
+                    return;
+                }
+                this.renderedView.push(view);
+                // tslint:disable-next-line: no-unnecessary-callback-wrapper
+                setTimeout(() => renderOutput(), 100);
+            };
+            // tslint:disable-next-line: no-unnecessary-callback-wrapper
+            setTimeout(() => renderOutput(), 100);
+        }, 1_00);
     }
 
     public shouldComponentUpdate(
@@ -201,7 +282,12 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private renderResults = (): JSX.Element[] => {
         // Results depend upon the type of cell
         if (this.isCodeCell()) {
-            return this.renderCodeOutputs();
+            return (
+                this.renderCodeOutputs()
+                    .filter(item => !!item)
+                    // tslint:disable-next-line: no-any
+                    .map(item => (item as any) as JSX.Element)
+            );
         } else if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
             return this.renderMarkdownOutputs();
         } else {
@@ -210,12 +296,13 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     };
 
     private renderCodeOutputs = () => {
+        // return [];
         if (this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && !this.props.hideOutput) {
             const trim = this.props.cellVM.cell.data.metadata.tags ? this.props.cellVM.cell.data.metadata.tags[0] : '';
             // Render the outputs
             return this.renderOutputs(this.getCodeCell().outputs, trim);
         }
-
+        console.log(this.renderOutputs);
         return [];
     };
 

@@ -3,11 +3,16 @@
 'use strict';
 import * as Redux from 'redux';
 
-import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    IInteractiveWindowMapping,
+    IPyWidgetMessages
+} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { PostOffice } from '../../react-common/postOffice';
 import { isAllowedAction, reBroadcastMessageIfRequired, unwrapPostableAction } from './helpers';
 import { CommonActionType } from './reducers/types';
+
+export const AllowedIPyWidgetMessages = [...Object.values(IPyWidgetMessages)];
 
 export function generatePostOfficeSendReducer(postOffice: PostOffice): Redux.Reducer<{}, Redux.AnyAction> {
     // tslint:disable-next-line: no-function-expression

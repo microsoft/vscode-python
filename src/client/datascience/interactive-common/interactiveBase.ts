@@ -1070,7 +1070,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
     // the same protection to not be called twice
-    private async ensureNotebook(server: INotebookServer): Promise<void> {
+    // tslint:disable-next-line: member-ordering
+    protected async ensureNotebook(server: INotebookServer): Promise<void> {
         if (!this.notebookPromise) {
             this.notebookPromise = this.ensureNotebookImpl(server);
         }

@@ -162,9 +162,10 @@ export class JupyterNotebookBase implements INotebook {
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
 
+    private _onIOPubMessage = new EventEmitter<{ msg: KernelMessage.IIOPubMessage; requestId: string }>();
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
-        private session: IJupyterSession,
+        public session: IJupyterSession,
         private configService: IConfigurationService,
         private disposableRegistry: IDisposableRegistry,
         private owner: INotebookServer,
@@ -190,7 +191,9 @@ export class JupyterNotebookBase implements INotebook {
         // Save our interpreter and don't change it. Later on when kernel changes
         // are possible, recompute it.
     }
-
+    public get onIOPub() {
+        return this._onIOPubMessage.event;
+    }
     public get server(): INotebookServer {
         return this.owner;
     }
@@ -874,7 +877,7 @@ export class JupyterNotebookBase implements INotebook {
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
                 subscriber.cell.data.execution_count = msg.content.execution_count as number;
             }
-
+            this._onIOPubMessage.fire({ msg, requestId: msg.header.msg_id });
             // Show our update if any new output.
             subscriber.next(this.sessionStartTime);
         } catch (err) {

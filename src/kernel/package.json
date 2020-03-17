@@ -1,0 +1,42 @@
+{
+    "name": "kernel",
+    "version": "1.0.0",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@jupyter-widgets/base": "^2.0.2",
+        "@jupyter-widgets/controls": "^1.5.3",
+        "@jupyter-widgets/html-manager": "^0.18.4",
+        "@jupyter-widgets/output": "^2.0.1",
+        "@jupyterlab/services": "^4.2.0",
+        "@phosphor/widgets": "^1.9.3"
+    },
+    "devDependencies": {
+        "css-loader": "^3.2.0",
+        "file-loader": "^4.2.0",
+        "fs-extra": "^8.1.0",
+        "json-loader": "^0.5.7",
+        "postcss": "^7.0.21",
+        "postcss-cssnext": "^3.1.0",
+        "postcss-import": "^12.0.1",
+        "postcss-loader": "^3.0.0",
+        "prettier": "^1.18.2",
+        "rimraf": "^3.0.0",
+        "serialize-javascript": "^2.1.2",
+        "style-loader": "^1.0.0",
+        "tslint": "^5.20.0",
+        "tslint-config-prettier": "^1.18.0",
+        "tslint-eslint-rules": "^5.4.0",
+        "tslint-microsoft-contrib": "^6.2.0",
+        "tslint-plugin-prettier": "^2.0.1",
+        "typescript": "^3.7.2",
+        "url-loader": "^2.2.0",
+        "webpack": "^4.41.2",
+        "webpack-cli": "^3.3.9"
+    }
+}
