@@ -22,6 +22,7 @@ import * as NativeStore from '../../datascience-ui/native-editor/redux/store';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
+import { PostOffice } from '../../datascience-ui/react-common/postOffice';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent } from './reactHelpers';
@@ -760,7 +761,7 @@ export function mountConnectedMainPanel(type: 'native' | 'interactive') {
 
     // Create the redux store in test mode.
     const createStore = type === 'native' ? NativeStore.createStore : InteractiveStore.createStore;
-    const store = createStore(true, 'vs-light', true);
+    const store = createStore(true, 'vs-light', true, new PostOffice());
 
     // Mount this with a react redux provider
     return mount(
@@ -773,7 +774,7 @@ export function mountConnectedMainPanel(type: 'native' | 'interactive') {
 export function mountComponent<P>(type: 'native' | 'interactive', Component: React.ReactElement<P>) {
     // Create the redux store in test mode.
     const createStore = type === 'native' ? NativeStore.createStore : InteractiveStore.createStore;
-    const store = createStore(true, 'vs-light', true);
+    const store = createStore(true, 'vs-light', true, new PostOffice());
 
     // Mount this with a react redux provider
     return mount(<Provider store={store}>{Component}</Provider>);

@@ -13,7 +13,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
-import { IVsCodeApi } from '../react-common/postOffice';
+import { IVsCodeApi, PostOffice } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
 import { getConnectedInteractiveEditor } from './interactivePanel';
 import { createStore } from './redux/store';
@@ -27,7 +27,7 @@ const testMode = (window as any).inTestMode;
 const skipDefault = testMode ? false : typeof acquireVsCodeApi !== 'undefined';
 
 // Create the redux store
-const store = createStore(skipDefault, baseTheme, testMode);
+const store = createStore(skipDefault, baseTheme, testMode, new PostOffice());
 
 // Wire up a connected react control for our InteractiveEditor
 const ConnectedInteractiveEditor = getConnectedInteractiveEditor();
