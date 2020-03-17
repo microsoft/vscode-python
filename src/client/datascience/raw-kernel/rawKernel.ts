@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
-import { Channels, executeRequest, ExecuteRequest, JupyterMessage, message, MessageType } from '@nteract/messaging';
+import { Channels, executeRequest, ExecuteRequest, JupyterMessage } from '@nteract/messaging';
 import { JSONObject } from '@phosphor/coreutils';
 import { ISignal } from '@phosphor/signaling';
-import { createMainChannel, JupyterConnectionInfo, createSockets } from 'enchannel-zmq-backend';
+import { createMainChannel, JupyterConnectionInfo } from 'enchannel-zmq-backend';
 import * as uuid from 'uuid/v4';
 import { RawFuture } from './rawFuture';
 
@@ -21,6 +21,8 @@ export class RawKernel implements Kernel.IKernel {
     // Keep track of all of our active futures
     private futures = new Map<string, RawFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>>();
 
+    public isDisposed: boolean = false;
+
     constructor() {
     }
 
@@ -31,13 +33,6 @@ export class RawKernel implements Kernel.IKernel {
             this.mainChannel = await createMainChannel(connectInfo, undefined, this.sessionId);
             this.mainChannel.subscribe(msg => { this.msgIn(msg) });
         }
-
-        // IANHU: Clean up initialization
-        //const { shell, control, stdin, iopub } = await createSockets(connectInfo);
-        //this.shellSocket = shell;
-        //this.controlSocket = control;
-        //this.stdinSocket = stdin;
-        //this.iopubSocket = iopub;
     }
 
     // IANHU: Implemented
@@ -55,7 +50,7 @@ export class RawKernel implements Kernel.IKernel {
 
             // IANHU: There seems to be mild type mismatches here, if I'm more or less specific
             // IANHU: Just cast to any for now and see if it breaks?
-            const newFuture = new RawFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>(fakeExecute as any, disposeOnDone = true);
+            const newFuture = new RawFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>(fakeExecute as any, disposeOnDone || true);
             // IANHU: Cast here is ugly as well
             this.futures.set(newFuture.msg.header.msg_id, newFuture as RawFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>);
 
@@ -67,16 +62,23 @@ export class RawKernel implements Kernel.IKernel {
         throw new Error('No session available?');
     }
 
+    public dispose(): void {
+        if (!this.isDisposed) {
+            // Unsub from our main channel
+            if (this.mainChannel) {
+                this.mainChannel.unsubscribe();
+            }
+
+            // Dispose of all our outstanding futures
+            this.futures.forEach(future => { future.dispose(); });
+
+            this.isDisposed = true;
+        }
+    }
+
+
     // IANHU: Don't Implement
     // IANHU: Dispose
-    get isDisposed(): boolean {
-        throw new Error('Not yet implemented');
-    }
-
-    public dispose(): void {
-        throw new Error('Not yet implemented');
-    }
-
     // IANHU: IKernel
     get terminated(): ISignal<this, void> {
         throw new Error('Not yet implemented');
@@ -191,16 +193,7 @@ export class RawKernel implements Kernel.IKernel {
 
 
     //IANHU: Privates
-    //private buildJupyterMessage(): JupyterMessage {
     private buildJupyterMessage(_code: string, _options: any): ExecuteRequest {
-        //header: { msg_type: MT; username?: string; session?: string },
-        //content: object = {}k
-
-        // IANHU: username? nteract just default to nteract
-        //const header = { msg_type: "execute_request", session: this.sessionId };
-        //const content = {};
-
-        //return message<'execute_request'>(header, content);
         return executeRequest('print("hello")');
     }
 

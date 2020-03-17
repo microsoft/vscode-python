@@ -85,13 +85,16 @@ export class RawFuture<REQUEST extends KernelMessage.IShellControlMessage,
     }
 
     public dispose(): void {
-        // First clear out our handlers
-        this.stdIn = noop;
-        this.ioPub = noop;
-        this.reply = noop;
+        if (!this.isDisposed) {
+            // First clear out our handlers
+            this.stdIn = noop;
+            this.ioPub = noop;
+            this.reply = noop;
 
-        // Reject our done promise
-        this.donePromise.reject(new Error('Disposed rawFuture'));
+            // Reject our done promise
+            this.donePromise.reject(new Error('Disposed rawFuture'));
+            this.isDisposed = true;
+        }
     }
 
     // IANHU: Not Implemented
