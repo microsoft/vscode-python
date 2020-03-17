@@ -11,7 +11,6 @@ import { Resource } from '../../client/common/types';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelConnection } from '../../client/datascience/kernel-launcher/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
-import { IServiceContainer } from '../../client/ioc/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 suite('Kernel Launcher', () => {
