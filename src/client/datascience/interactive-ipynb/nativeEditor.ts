@@ -427,6 +427,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             //     }
             // });
 
+            // tslint:disable-next-line: no-any
+            if (!((this.notebook as JupyterNotebookBase).session as JupyterSession).session) {
+                return;
+            }
             const kernel = ((this.notebook as JupyterNotebookBase).session as JupyterSession).session!.kernel;
             if (!this.commtargetRegistered) {
                 this.commtargetRegistered = true;
