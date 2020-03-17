@@ -68,11 +68,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     // tslint:disable-next-line: no-any
     private static ansiToHtmlClass_ctor: ClassType<any> | undefined;
     private ipyWidgetRef: React.RefObject<HTMLDivElement>;
-    // private renderedWidgets: {dispose: Function }[] = [];
-    private renderId: number = 0;
+    private ipyWidgetRenderCount: number = 0;
     private renderedView: { dispose: Function }[] = [];
     // tslint:disable-next-line: no-any
-    private timeout: any;
+    private ipyWidgetRenderTimeout?: any;
     constructor(prop: ICellOutputProps) {
         super(prop);
         this.ipyWidgetRef = React.createRef<HTMLDivElement>();
@@ -138,14 +137,13 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return null;
     }
     public componentWillUnmount() {
-        this.renderedView.forEach(view => {
-            try {
-                view.dispose();
-            } catch {
-                //
-            }
-        });
-        this.renderedView = [];
+        this.destroyIPyWidgets();
+    }
+    public componentDidMount() {
+        if (!this.isCodeCell() || !this.hasOutput() || !this.getCodeCell().outputs || this.props.hideOutput) {
+            return;
+        }
+        this.renderIPyWidgets(true);
     }
     // tslint:disable-next-line: max-func-body-length
     public componentDidUpdate(prevProps: ICellOutputProps) {
@@ -164,48 +162,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         ) {
             return;
         }
-        const renderId = (this.renderId += 1);
-        // Render the outputs
-        // tslint:disable-next-line: no-any
-        const outputs = this.getCodeCell().outputs;
-        this.renderedView.forEach(view => {
-            try {
-                view.dispose();
-            } catch {
-                //
-            }
-        });
-        this.renderedView = [];
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-        }
-        this.timeout = setTimeout(async () => {
-            // Render the output in order.
-            const itemsToRender = [...outputs];
-            const renderOutput = async () => {
-                if (itemsToRender.length === 0) {
-                    return;
-                }
-                const output = itemsToRender.shift();
-                // tslint:disable-next-line: no-any
-                if (!output || !output.data || !(output.data as any)['application/vnd.jupyter.widget-view+json']) {
-                    return;
-                }
-                // tslint:disable-next-line: no-any
-                const widgetData: any = (output.data as any)['application/vnd.jupyter.widget-view+json'];
-                const element = this.ipyWidgetRef.current!;
-                const view = await WidgetManager.instance.renderWidget(widgetData, element);
-                if (renderId !== this.renderId) {
-                    view.dispose();
-                    return;
-                }
-                this.renderedView.push(view);
-                // tslint:disable-next-line: no-unnecessary-callback-wrapper
-                setTimeout(() => renderOutput(), 100);
-            };
-            // tslint:disable-next-line: no-unnecessary-callback-wrapper
-            setTimeout(() => renderOutput(), 100);
-        }, 1_00);
+        this.renderIPyWidgets();
     }
 
     public shouldComponentUpdate(
@@ -253,6 +210,74 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     // Public for testing
     public getUnknownMimeTypeFormatString() {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
+    }
+    private destroyIPyWidgets() {
+        this.renderedView.forEach(view => {
+            try {
+                view.dispose();
+            } catch {
+                //
+            }
+        });
+        this.renderedView = [];
+        if (this.ipyWidgetRenderTimeout) {
+            clearTimeout(this.ipyWidgetRenderTimeout);
+        }
+    }
+    /**
+     * Renders ipywidgets
+     */
+    private renderIPyWidgets(calledFromComponentDidMount: boolean = true) {
+        this.destroyIPyWidgets();
+        // Keep track of current render counter.
+        // If this number changes, then it means this method was invoked again, and we need to cancel current rendering.
+        // I.e. we use this as a simplecancellation token.
+        const renderId = (this.ipyWidgetRenderCount += 1);
+        const outputs = this.getCodeCell().outputs;
+
+        // If we're rendering ipywidgets in the componentDidMount event, then
+        // this means we most likely have all of the data we need to render this output.
+        // Hence, there's no need to throttle the rendering, as we're not waiting for any new output.
+        // If on the other hand this method is called from componentDidUpdate, then output was updated
+        // after control was rendered. However its possible we haven't received all of the output, and it can keep coming through via multiple updates
+        // This happens today because we send output in waves. In such cases we should throttle rendering.
+        // Else, we'll end up rendering some part, then destroying it and rendering again due to updates.
+        // Long story short, if called form compnentDidMount, then just render without any delays, else throttle, (wait for more potential updates).
+
+        const delay = 100;
+        const immediateExecution = (cb: Function, _time: number) => {
+            cb();
+            return undefined;
+        };
+        const delayedRenderCallback = calledFromComponentDidMount ? immediateExecution : setTimeout;
+
+        this.ipyWidgetRenderTimeout = delayedRenderCallback(async () => {
+            // Render the output in order.
+            const itemsToRender = [...outputs];
+            // Render each ipywidget output, one at a time.
+            const renderOutput = async () => {
+                if (itemsToRender.length === 0) {
+                    return;
+                }
+                const output = itemsToRender.shift();
+                // tslint:disable-next-line: no-any
+                if (!output || !output.data || !(output.data as any)['application/vnd.jupyter.widget-view+json']) {
+                    return;
+                }
+                // tslint:disable-next-line: no-any
+                const widgetData: any = (output.data as any)['application/vnd.jupyter.widget-view+json'];
+                const element = this.ipyWidgetRef.current!;
+                const view = await WidgetManager.instance.renderWidget(widgetData, element);
+                // Check if we received a new update request (simplem cancellation mechanism).
+                if (renderId !== this.ipyWidgetRenderCount) {
+                    view.dispose();
+                    return;
+                }
+                this.renderedView.push(view);
+                delayedRenderCallback(renderOutput, delay);
+            };
+            delayedRenderCallback(renderOutput, delay);
+        }, delay);
     }
 
     private getCell = () => {

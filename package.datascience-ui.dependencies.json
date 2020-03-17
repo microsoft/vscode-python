@@ -172,6 +172,7 @@
     "remark-parse",
     "repeat-string",
     "roughjs-es5",
+    "rxjs",
     "scheduler",
     "semiotic-mark",
     "semiotic",

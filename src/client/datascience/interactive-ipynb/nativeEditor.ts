@@ -412,6 +412,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         //         this.postMessage(InteractiveWindowMessages.IPyWidgets_display_data_msg, data.msg).catch(ex => console.error('Failed to post oniopub message', ex));
         //     }
         // });
+        // tslint:disable-next-line: no-any
+        if (!((this.notebook as JupyterNotebookBase).session as JupyterSession).session) {
+            return;
+        }
 
         const kernel = ((this.notebook as JupyterNotebookBase).session as JupyterSession).session!.kernel;
         if (!this.commtargetRegistered) {

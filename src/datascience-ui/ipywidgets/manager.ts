@@ -18,13 +18,6 @@ import {
 import { ProxyKernel } from './kernel';
 import { IHtmlWidgetManager, IHtmlWidgetManagerCtor, IIPyWidgetManager, IMessageSender } from './types';
 
-// The HTMLWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
-// tslint:disable-next-line: no-any
-const HtmlWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IHtmlWidgetManagerCtor;
-if (!HtmlWidgetManager) {
-    throw new Error('HtmlWidgetManager not defined. Please include/check ipywidgets.js file');
-}
-
 export class WidgetManager implements IIPyWidgetManager, IMessageSender {
     public static instance: WidgetManager;
     public manager!: IHtmlWidgetManager;
@@ -50,11 +43,21 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
         ) => void
     ) {
         this.proxyKernel = new ProxyKernel(this);
-        // tslint:disable-next-line: no-any
-        const kernel = (this.proxyKernel as any) as Kernel.IKernel;
-        this.manager = new HtmlWidgetManager(kernel, widgetContainer);
-        WidgetManager.instance = this;
-        this.registerPostOffice();
+        try {
+            // The HTMLWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
+            // tslint:disable-next-line: no-any
+            const HtmlWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IHtmlWidgetManagerCtor;
+            if (!HtmlWidgetManager) {
+                throw new Error('HtmlWidgetManager not defined. Please include/check ipywidgets.js file');
+            }        
+            // tslint:disable-next-line: no-any
+            const kernel = (this.proxyKernel as any) as Kernel.IKernel;
+            this.manager = new HtmlWidgetManager(kernel, widgetContainer);
+            WidgetManager.instance = this;
+            this.registerPostOffice();
+        } catch (ex){
+            console.error('Failed to initialize WidgetManager', ex);
+        }
     }
     public dispose(): void {
         this.proxyKernel.dispose();

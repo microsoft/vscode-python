@@ -14,7 +14,7 @@ import * as ReactDOM from 'react-dom';
 import { Provider } from 'react-redux';
 
 import { WidgetManagerComponent } from '../ipywidgets/container';
-import { IVsCodeApi } from '../react-common/postOffice';
+import { IVsCodeApi, PostOffice } from '../react-common/postOffice';
 import { detectBaseTheme } from '../react-common/themeDetector';
 import { getConnectedNativeEditor } from './nativeEditor';
 import { createStore } from './redux/store';
@@ -28,17 +28,17 @@ const testMode = (window as any).inTestMode;
 const skipDefault = testMode ? false : typeof acquireVsCodeApi !== 'undefined';
 
 // Create the redux store
-const store = createStore(skipDefault, baseTheme, testMode);
+const postOffice = new PostOffice();
+const store = createStore(skipDefault, baseTheme, testMode, postOffice);
 
 // Wire up a connected react control for our NativeEditor
 const ConnectedNativeEditor = getConnectedNativeEditor();
 
 // Stick them all together
-// tslint:disable:no-typeof-undefined
 ReactDOM.render(
     <Provider store={store}>
         <ConnectedNativeEditor />
-        <WidgetManagerComponent />
+        <WidgetManagerComponent postOffice={postOffice} widgetContainerId={'rootWidget'} />
     </Provider>,
     document.getElementById('root') as HTMLElement
 );

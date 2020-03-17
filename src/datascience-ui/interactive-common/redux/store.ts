@@ -6,14 +6,9 @@ import * as path from 'path';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
 
-import { Observable } from 'rxjs/Observable';
-import { Subject } from 'rxjs/Subject';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { Identifiers } from '../../../client/datascience/constants';
-import {
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages
-} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { MessageType } from '../../../client/datascience/interactive-common/synchronization';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages } from '../../../client/datascience/messages';
@@ -26,7 +21,7 @@ import { computeEditorOptions, getDefaultSettings } from '../../react-common/set
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { forceLoad } from '../transforms';
 import { isAllowedAction, isAllowedMessage, postActionToExtension } from './helpers';
-import { AllowedIPyWidgetMessages, generatePostOfficeSendReducer } from './postOffice';
+import { generatePostOfficeSendReducer } from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
 
@@ -294,9 +289,6 @@ export interface IStore {
     variables: IVariableState;
     monaco: IMonacoState;
     post: {};
-    // tslint:disable-next-line: no-any
-    widgetMessagses: Observable<{ type: string; payload?: any }>;
-    sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void;
 }
 
 export interface IMainWithVariables extends IMainState {
@@ -323,12 +315,9 @@ export function createStore<M>(
     baseTheme: string,
     testMode: boolean,
     editable: boolean,
-    reducerMap: M
+    reducerMap: M,
+    postOffice: PostOffice
 ) {
-    // Create a post office to listen to store dispatches and allow reducers to
-    // send messages
-    const postOffice = new PostOffice();
-
     // Create reducer for the main react UI
     const mainReducer = generateMainReducer(skipDefault, testMode, baseTheme, editable, reducerMap);
 
@@ -341,16 +330,12 @@ export function createStore<M>(
     // Create another reducer for handling variable state
     const variableReducer = generateVariableReducer();
 
-    // tslint:disable-next-line: no-any
-    const widgetMessages = new Subject<{ type: string; payload?: any }>();
     // Combine these together
     const rootReducer = Redux.combineReducers<IStore>({
         main: mainReducer,
         variables: variableReducer,
         monaco: monacoReducer,
-        post: postOfficeReducer,
-        widgetMessagses: () => widgetMessages.asObservable(),
-        sendMessage: () => postOffice.sendMessage.bind(postOffice)
+        post: postOfficeReducer
     });
 
     // Create our middleware
@@ -380,9 +365,6 @@ export function createStore<M>(
                     basePayload.messageType = basePayload.messageType ?? MessageType.other;
                 }
                 store.dispatch({ type: message, payload: basePayload });
-            }
-            if (AllowedIPyWidgetMessages.find(k => k === message)) {
-                widgetMessages.next({ type: message, payload });
             }
             return true;
         }
