@@ -7,7 +7,7 @@
         "obj": true,
         "bin": true,
         "**/__pycache__": true,
-        "**/node_modules": false,
+        "**/node_modules": true,
         ".vscode-test": false,
         ".vscode test": false,
         "**/.mypy_cache/**": true,
@@ -55,9 +55,5 @@
         // Match what black does.
         "--max-line-length=88"
     ],
-    "typescript.preferences.importModuleSpecifier": "relative",
-    "editor.overviewRulerBorder": false,
-    "editor.glyphMargin": true,
-    "editor.rulers": [],
-
+    "typescript.preferences.importModuleSpecifier": "relative"
 }
