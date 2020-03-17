@@ -274,7 +274,9 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/ws/lib/validation.js',
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
-                'WARNING in ./node_modules/any-promise/register.js'
+                'WARNING in ./node_modules/any-promise/register.js',
+                'WARNING in ./node_modules/log4js/lib/appenders/index.js',
+                'WARNING in ./node_modules/log4js/lib/clustering.js'
             ];
         case 'extension':
             return [
