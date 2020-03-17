@@ -173,8 +173,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Create a server tha  t we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
-                    // In a remote situation, figure out a kernel spec too.
-                    if (!kernelSpecInterpreter.kernelSpec && connection) {
+                    // In a remote non quest situation, figure out a kernel spec too.
+                    if (!kernelSpecInterpreter.kernelSpec && connection && !options?.skipSearchingForKernel) {
                         const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(
                             IJupyterSessionManagerFactory
                         );

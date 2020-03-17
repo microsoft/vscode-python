@@ -152,6 +152,7 @@ export interface INotebookServerOptions {
     purpose: string;
     metadata?: nbformat.INotebookMetadata;
     disableUI?: boolean;
+    skipSearchingForKernel?: boolean;
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
