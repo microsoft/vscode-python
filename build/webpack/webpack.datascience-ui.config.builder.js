@@ -181,7 +181,11 @@ function buildConfiguration(isNotebook) {
                     { from: './**/*.png', to: '.' },
                     { from: './**/*.svg', to: '.' },
                     { from: './**/*.css', to: '.' },
-                    { from: './**/*theme*.json', to: '.' }
+                    { from: './**/*theme*.json', to: '.' },
+                    {
+                        from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
+                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                    }
                 ],
                 { context: 'src' }
             ),
