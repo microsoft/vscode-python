@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Position, TextDocument, TextEditor, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Position, Uri, ViewColumn } from 'vscode';
 import { createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
