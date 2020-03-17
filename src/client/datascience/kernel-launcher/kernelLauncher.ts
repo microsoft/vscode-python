@@ -4,19 +4,19 @@
 
 import { ChildProcess } from 'child_process';
 import { inject, injectable } from 'inversify';
-import { getPorts } from 'portfinder';
-import uuid from 'uuid';
+import * as portfinder from 'portfinder';
+import { promisify } from 'util';
+import * as uuid from 'uuid/v4';
 import { InterpreterUri } from '../../common/installer/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { isResource } from '../../common/utils/misc';
-import { IServiceContainer } from '../../ioc/types';
 import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
 
 class KernelProcess implements IKernelProcess {
     private _process?: ChildProcess;
     private _connection?: IKernelConnection;
     private interpreter: InterpreterUri;
-    private serviceContainer: IServiceContainer;
+    private executionFactory: IPythonExecutionFactory;
     public get process(): ChildProcess {
         return this._process!;
     }
@@ -24,27 +24,27 @@ class KernelProcess implements IKernelProcess {
         return this._connection!;
     }
 
-    constructor(interpreter: InterpreterUri, @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+    constructor(
+        interpreter: InterpreterUri,
+        @inject(IPythonExecutionFactory) executionFactory: IPythonExecutionFactory
+    ) {
         this.interpreter = interpreter;
-        this.serviceContainer = serviceContainer;
+        this.executionFactory = executionFactory;
     }
 
     public async launch(): Promise<void> {
-        const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const resource = isResource(this.interpreter) ? this.interpreter : undefined;
         const pythonPath = isResource(this.interpreter) ? undefined : this.interpreter.path;
 
-        const executionService = await pythonExecutionFactory.create({ resource, pythonPath });
+        const executionService = await this.executionFactory.create({ resource, pythonPath });
         const kernelProcess = executionService.execObservable([], {});
 
         this._process = kernelProcess.proc;
 
-        getPorts(5, { host: '127.0.0.1', port: 9000 }, (error: Error, ports: number[]) => {
-            if (error) {
-                throw error;
-            }
-            this._connection = this.getKernelConnection(ports);
-        });
+        const getPorts = promisify(portfinder.getPorts);
+        const ports = await getPorts(5, { host: '127.0.0.1', port: 9000 });
+
+        this._connection = this.getKernelConnection(ports);
 
         return Promise.resolve();
     }
@@ -55,7 +55,7 @@ class KernelProcess implements IKernelProcess {
     private getKernelConnection(ports: number[]): IKernelConnection {
         return {
             version: 1,
-            key: uuid.v4(),
+            key: uuid(),
             signature_scheme: 'hmac-sha256',
             transport: 'tcp',
             ip: '127.0.0.1',
@@ -70,14 +70,14 @@ class KernelProcess implements IKernelProcess {
 
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
-    private serviceContainer: IServiceContainer;
+    private executionFactory: IPythonExecutionFactory;
 
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        this.serviceContainer = serviceContainer;
+    constructor(@inject(IPythonExecutionFactory) executionFactory: IPythonExecutionFactory) {
+        this.executionFactory = executionFactory;
     }
 
     public async launch(interpreterUri: InterpreterUri): Promise<IKernelProcess> {
-        const kernel = new KernelProcess(interpreterUri, this.serviceContainer);
+        const kernel = new KernelProcess(interpreterUri, this.executionFactory);
         await kernel.launch();
         return kernel;
     }
