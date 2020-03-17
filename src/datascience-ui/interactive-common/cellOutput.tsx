@@ -16,7 +16,7 @@ import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { fixLatexEquations } from './latexManipulation';
 import { ICellViewModel } from './mainState';
-import { getRichestMimetype, getTransform, isMimeTypeSupported } from './transforms';
+import { getRichestMimetype, getTransform, isIPyWidgetOutput, isMimeTypeSupported } from './transforms';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
@@ -504,8 +504,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         transformedList.forEach((transformed, index) => {
             let mimetype = transformed.output.mimeType;
 
-            // If that worked, use the transform
-            if (mimetype && isMimeTypeSupported(mimetype)) {
+            if (isIPyWidgetOutput(transformed.output.mimeBundle)) {
+                return;
+            } else if (mimetype && isMimeTypeSupported(mimetype)) {
+                // If that worked, use the transform
                 // Get the matching React.Component for that mimetype
                 const Transform = getTransform(mimetype);
 
