@@ -234,16 +234,16 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                //"--grep", "<suite name>",
+                "--grep", "LiveLoss",
                 "--timeout=300000"
             ],
             "env": {
                 // Remove `X` prefix to test with real python (for DS functional tests).
-                "XVSCODE_PYTHON_ROLLING": "1",
+                "VSCODE_PYTHON_ROLLING": "1",
                 // Remove 'X' to turn on all logging in the debug output
                 "XVSC_PYTHON_FORCE_LOGGING": "1",
                 // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
-                "XCI_PYTHON_PATH": "<Python Path>"
+                "XCI_PYTHON_PATH": "<Python Path>",
             },
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"

@@ -1377,7 +1377,9 @@
                                         "default": "127.0.0.1"
                                     }
                                 },
-                                "required": ["port"]
+                                "required": [
+                                    "port"
+                                ]
                             },
                             "listen": {
                                 "type": "object",
@@ -1393,7 +1395,9 @@
                                         "default": "127.0.0.1"
                                     }
                                 },
-                                "required": ["port"]
+                                "required": [
+                                    "port"
+                                ]
                             },
                             "port": {
                                 "type": "number",
@@ -2918,6 +2922,7 @@
         "koa-logger": "^3.2.1",
         "line-by-line": "^0.1.6",
         "lodash": "^4.17.15",
+        "log4js": "^6.1.2",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "named-js-regexp": "^1.3.3",

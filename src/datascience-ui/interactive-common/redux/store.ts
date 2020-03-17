@@ -2,8 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
+import * as log4js from 'log4js';
+import * as path from 'path';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { MessageType } from '../../../client/datascience/interactive-common/synchronization';
@@ -112,6 +115,18 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
         }
         return res;
     };
+}
+
+function createTestLogger() {
+    const logFileEnv = process.env.VSC_PYTHON_WEBVIEW_LOG_FILE;
+    if (logFileEnv) {
+        const logFilePath = path.isAbsolute(logFileEnv) ? logFileEnv : path.join(EXTENSION_ROOT_DIR, logFileEnv);
+        log4js.configure({
+            appenders: { reduxLogger: { type: 'file', filename: logFilePath } },
+            categories: { default: { appenders: ['reduxLogger'], level: 'debug' } }
+        });
+        return log4js.getLogger();
+    }
 }
 
 function createTestMiddleware(): Redux.Middleware<{}, IStore> {
@@ -243,7 +258,8 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
                 return { ...action, payload: reduceLogMessage };
             }
             return action;
-        }
+        },
+        logger: testMode ? createTestLogger() : undefined
     });
     // On CI we might want to disable logging, as its a big wall of text.
     // TO disable that add the variable `VSC_PYTHON_DS_NO_REDUX_LOGGING=1`
