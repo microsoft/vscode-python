@@ -284,6 +284,7 @@ export enum Telemetry {
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
     GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
+    GatheredNotebookSaved = 'DATASCIENCE.GATHERED_NOTEBOOK_SAVED',
     ZMQNotSupported = 'DATASCIENCE.ZMQ_NATIVE_BINARIES_NOT_LOADING'
 }
 

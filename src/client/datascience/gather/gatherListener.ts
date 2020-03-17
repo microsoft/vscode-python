@@ -1,6 +1,6 @@
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Position, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Position, TextDocument, TextEditor, Uri, ViewColumn } from 'vscode';
 import { createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
@@ -21,6 +21,7 @@ import {
     IInteractiveWindowProvider,
     IJupyterExecution,
     INotebook,
+    INotebookEditor,
     INotebookEditorProvider,
     INotebookExecutionLogger,
     INotebookExporter
@@ -37,6 +38,7 @@ export class GatherListener implements IInteractiveWindowListener {
     private notebookUri: Uri | undefined;
     private gatherProvider: IGatherProvider | undefined;
     private gatherTimer: StopWatch | undefined;
+    private gatheredNotebookList: INotebookEditor[] = [];
 
     constructor(
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
@@ -173,9 +175,10 @@ export class GatherListener implements IInteractiveWindowListener {
 
             const notebook = await this.jupyterExporter.translateToNotebook(cells);
             if (notebook) {
-                notebook.metadata.gatheredNotebook = true;
                 const contents = JSON.stringify(notebook);
-                await this.ipynbProvider.createNew(contents);
+                const editor = await this.ipynbProvider.createNew(contents);
+                this.gatheredNotebookList.push(editor);
+                editor.saved(this.onSavedGatheredNotebook.bind(this));
             }
         }
     }
@@ -211,5 +214,17 @@ export class GatherListener implements IInteractiveWindowListener {
         editor.edit(editBuilder => {
             editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
         });
+    }
+
+    private onSavedGatheredNotebook(editor: INotebookEditor) {
+        const n = this.gatheredNotebookList.findIndex(e => e === editor);
+
+        // If the editor is in our list of editors representing gathered
+        // notebooks, send telemetry that it's being saved, then remove it
+        // from the list so we don't send another event for the same one.
+        if (n !== -1) {
+            sendTelemetryEvent(Telemetry.GatheredNotebookSaved);
+            this.gatheredNotebookList.splice(n, 1);
+        }
     }
 }
