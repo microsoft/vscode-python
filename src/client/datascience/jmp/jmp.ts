@@ -35,7 +35,7 @@
 
 var crypto = require("crypto");
 var uuid = require("uuid/v4");
-var zmq = require("zeromq");
+var zmq = require("zeromq/v5-compat");
 
 //var DEBUG = global.DEBUG || false;
 
@@ -53,6 +53,10 @@ var zmq = require("zeromq");
 //log = function noop() { };
 //}
 //}
+
+var log;
+log = function noop() { };
+
 
 /**
  * @module jmp
