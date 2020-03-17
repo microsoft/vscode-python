@@ -33,6 +33,9 @@ import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
 import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
+//import * as jmp from './../jmp/jmp';
+//const jmp = require('./../jmp/jmp');
+//import * as jmp from './../jmp/jmp';
 
 type ISession = Session.ISession & {
     /**
@@ -235,6 +238,11 @@ export class JupyterSession implements IJupyterSession {
         if (!this.connInfo) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
+
+        // Test JMP here
+        const kci = { version: 0, transport: 'tcp', ip: '127.0.0.1', shell_port: 55196, iopub_port: 55197, stdin_port: 55198, hb_port: 55200, control_port: 55199, signature_scheme: 'hmac-sha256', key: 'adaf9032-487d222a85026db284c3d5e7' };
+        const jmp = require('./../jmp/jmp');
+
 
         // Start a new session
         this.session = await this.createSession(
