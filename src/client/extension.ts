@@ -36,8 +36,9 @@ import { IAsyncDisposableRegistry, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
 import { activateComponents } from './extensionActivation';
+import { isBlocked } from './extensionBlocked';
 import { initializeComponents, initializeGlobals } from './extensionInit';
-import { IServiceContainer } from './ioc/types';
+import { IServiceContainer, IServiceManager } from './ioc/types';
 import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
@@ -53,10 +54,9 @@ let activatedServiceContainer: IServiceContainer | undefined;
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     let api: IExtensionApi;
-    let ready: Promise<void>;
-    let serviceContainer: IServiceContainer;
+    let sendTelemetry: () => Promise<void>;
     try {
-        [api, ready, serviceContainer] = await activateUnsafe(context, stopWatch, durations);
+        [api, sendTelemetry] = await activateMaybeDeferred(context, stopWatch, durations);
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
@@ -65,7 +65,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
     }
     // Send the "success" telemetry only if activation did not fail.
     // Otherwise Telemetry is send via the error handler.
-    sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
+    sendTelemetry()
         // Run in the background.
         .ignoreErrors();
     return api;
@@ -86,12 +86,35 @@ export function deactivate(): Thenable<void> {
 /////////////////////////////
 // activation helpers
 
+async function activateMaybeDeferred(
+    context: IExtensionContext,
+    startupStopWatch: StopWatch,
+    startupDurations: Record<string, number>
+): Promise<[IExtensionApi, () => Promise<void>]> {
+    const blocked = await isBlocked(context);
+    if (blocked === undefined) {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: prompt
+        throw Error('not implemented yet');
+    } else if (blocked) {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: prompt?
+        throw Error('not implemented yet');
+    }
+
+    const [ready, serviceManager, serviceContainer] = await activateUnsafe(context, startupStopWatch, startupDurations);
+    return [
+        buildApi(ready, serviceManager, serviceContainer),
+        () => sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
+    ];
+}
+
 // tslint:disable-next-line:max-func-body-length
 async function activateUnsafe(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
     startupDurations: Record<string, number>
-): Promise<[IExtensionApi, Promise<void>, IServiceContainer]> {
+): Promise<[Promise<void>, IServiceManager, IServiceContainer]> {
     const activationDeferred = createDeferred<void>();
     displayProgress(activationDeferred.promise);
     startupDurations.startActivateTime = startupStopWatch.elapsedTime;
@@ -110,8 +133,7 @@ async function activateUnsafe(
     startupDurations.endActivateTime = startupStopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = buildApi(activationPromise, serviceManager, serviceContainer);
-    return [api, activationPromise, serviceContainer];
+    return [activationPromise, serviceManager, serviceContainer];
 }
 
 // tslint:disable-next-line:no-any
