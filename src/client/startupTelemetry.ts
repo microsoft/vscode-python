@@ -17,15 +17,10 @@ import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry } from './telemetry/types';
 
-interface IStopWatch {
-    elapsedTime: number;
-}
-
-export async function sendStartupTelemetry(
-    // tslint:disable-next-line:no-any
-    activatedPromise: Promise<any>,
+export async function sendSuccessTelemetry(
+    // The startup durations are send as-is with the telemetry data.
     durations: Record<string, number>,
-    stopWatch: IStopWatch,
+    // "services" are used to populate the telemetry data.
     serviceContainer: IServiceContainer
 ) {
     if (isTestExecution()) {
@@ -33,8 +28,6 @@ export async function sendStartupTelemetry(
     }
 
     try {
-        await activatedPromise;
-        durations.totalActivateTime = stopWatch.elapsedTime;
         const props = await getActivationTelemetryProps(serviceContainer);
         sendTelemetryEvent(EventName.EDITOR_LOAD, durations, props);
     } catch (ex) {

@@ -39,7 +39,7 @@ import { activateComponents } from './extensionActivation';
 import { isBlocked } from './extensionBlocked';
 import { initializeComponents, initializeGlobals } from './extensionInit';
 import { IServiceContainer, IServiceManager } from './ioc/types';
-import { sendErrorTelemetry, sendStartupTelemetry } from './startupTelemetry';
+import { sendErrorTelemetry, sendSuccessTelemetry } from './startupTelemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 
@@ -54,9 +54,10 @@ let activatedServiceContainer: IServiceContainer | undefined;
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
     let api: IExtensionApi;
-    let sendTelemetry: () => Promise<void>;
+    // tslint:disable-next-line:no-any
+    let ready: Promise<any>;
     try {
-        [api, sendTelemetry] = await activateMaybeDeferred(context, stopWatch, durations);
+        [api, ready] = await activateMaybeDeferred(context, stopWatch, durations);
     } catch (ex) {
         // We want to completely handle the error
         // before notifying VS Code.
@@ -65,7 +66,15 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
     }
     // Send the "success" telemetry only if activation did not fail.
     // Otherwise Telemetry is send via the error handler.
-    sendTelemetry()
+    ready
+        .catch(err => {
+            traceError('deferred activation failed', err);
+            throw err; // re-throw
+        })
+        .then(() => {
+            durations.totalActivateTime = stopWatch.elapsedTime;
+        })
+        .then(() => sendSuccessTelemetry(durations, activatedServiceContainer!))
         // Run in the background.
         .ignoreErrors();
     return api;
@@ -90,7 +99,7 @@ async function activateMaybeDeferred(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
     startupDurations: Record<string, number>
-): Promise<[IExtensionApi, () => Promise<void>]> {
+): Promise<[IExtensionApi, Promise<void>]> {
     const blocked = await isBlocked(context);
     if (blocked === undefined) {
         // tslint:disable-next-line:no-suspicious-comment
@@ -103,10 +112,8 @@ async function activateMaybeDeferred(
     }
 
     const [ready, serviceManager, serviceContainer] = await activateUnsafe(context, startupStopWatch, startupDurations);
-    return [
-        buildApi(ready, serviceManager, serviceContainer),
-        () => sendStartupTelemetry(ready, durations, stopWatch, serviceContainer)
-    ];
+    const api = buildApi(ready, serviceManager, serviceContainer);
+    return [api, ready];
 }
 
 // tslint:disable-next-line:max-func-body-length
