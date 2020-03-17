@@ -8,8 +8,15 @@ import { Deferred } from '../../client/common/utils/async';
 import { IPyWidgetMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
 export class ClassicCommShellCallbackManager {
-    private requestFutureMap = new Map<string, { future: Kernel.IShellFuture; deferred: Deferred<KernelMessage.IShellMessage | undefined> }>();
-    public registerFuture(requestId: string, future: Kernel.IShellFuture, deferred: Deferred<KernelMessage.IShellMessage | undefined>) {
+    private requestFutureMap = new Map<
+        string,
+        { future: Kernel.IShellFuture; deferred: Deferred<KernelMessage.IShellMessage | undefined> }
+    >();
+    public registerFuture(
+        requestId: string,
+        future: Kernel.IShellFuture,
+        deferred: Deferred<KernelMessage.IShellMessage | undefined>
+    ) {
         this.requestFutureMap.set(requestId, { future, deferred });
     }
     public unregisterFuture(requestId: string) {

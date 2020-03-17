@@ -3,5 +3,11 @@
 
 'use strict';
 
-var fs = require('fs');
-fs.copyFileSync('src/widgets.css', 'out/widgets.css');
+const path = require('path');
+const fs = require('fs');
+const outputDir = path.join(__dirname, '..', '..', '..', 'out/ipywidgets');
+
+if (!fs.existsSync(outputDir)) {
+    fs.mkdirSync(outputDir);
+}
+fs.copyFileSync(path.join(__dirname, '../src/widgets.css'), path.join(outputDir, 'widgets.css'));

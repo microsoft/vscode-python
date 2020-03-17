@@ -2,6 +2,10 @@
 
 * We have built a custom solution based on `web3` sample to host ipywidgets outside of `Jupyter Notebook`.
 
+# Warning
+* Most of the code has been copied as is from `https://github.com/jupyter-widgets/ipywidgets/blob/master/examples/web3` & `https://github.com/jupyter-widgets/ipywidgets/blob/master/packages/html-manager/webpack.config.js`.
+    * Please try to minimize changes to original code to facilitate easier updatess.
+
 # Solution for IPywidgets
 
 * IPywidgets traditionally use [requirejs](https://requirejs.org).
@@ -22,3 +26,6 @@
     * Solution is to include everything thats in `embed-amd.js` into our bundle.
     * The `embed-amd.js` includes source from files other than the widget controls, those include `libembed-amd.js` and `embed-amd-render.js`.
         * The source for this can be found in [scripts/concat-amd-build.js](https://github.com/jupyter-widgets/ipywidgets/blob/857bee9c15ca25bd6b47b7777e8fcd07407214cf/packages/html-manager/scripts/concat-amd-build.js#L15)
+* We need types for `requirejs`, but installing this into `node_modules`, for extension causes conflicts as we use `require` in standard node (extension and UI).
+    * Solution is to just copy the `@types/requirejs/index.d.ts` into the `types` folder.
+

@@ -1377,7 +1377,9 @@
                                         "default": "127.0.0.1"
                                     }
                                 },
-                                "required": ["port"]
+                                "required": [
+                                    "port"
+                                ]
                             },
                             "listen": {
                                 "type": "object",
@@ -1393,7 +1395,9 @@
                                         "default": "127.0.0.1"
                                     }
                                 },
-                                "required": ["port"]
+                                "required": [
+                                    "port"
+                                ]
                             },
                             "port": {
                                 "type": "number",
@@ -2872,7 +2876,12 @@
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
-        "compile-webviews-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watch": "npm run build-ipywidgets && cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "build-ipywidgets": "npm run build-ipywidgets-clean && npm run build-ipywidgets-compile && npm run build-ipywidgets-webpack && npm run build-ipywidgets-update",
+        "build-ipywidgets-clean": "node ./src/ipywidgets/scripts/clean.js",
+        "build-ipywidgets-compile": "tsc -p ./src/ipywidgets && rimraf ./out/tsconfig.tsbuildinfo && node ./src/ipywidgets/scripts/copyfiles.js",
+        "build-ipywidgets-webpack": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./src/ipywidgets/webpack.config.js",
+        "build-ipywidgets-update": "node ./src/ipywidgets/scripts/copyBuild.js",
         "checkDependencies": "gulp checkDependencies",
         "postinstall": "node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
@@ -2889,6 +2898,7 @@
         "testSmoke": "node ./out/test/smokeTest.js",
         "lint-staged": "node gulpfile.js",
         "lint": "tslint src/**/*.ts -t verbose",
+        "prettier-fix": "prettier 'src/**/*.ts*' --write && prettier 'build/**/*.js' --write",
         "clean": "gulp clean",
         "updateBuildNumber": "gulp updateBuildNumber",
         "verifyBundle": "gulp verifyBundle",
@@ -2971,6 +2981,7 @@
         "@jupyter-widgets/base": "^2.0.1",
         "@jupyter-widgets/controls": "^1.5.2",
         "@jupyter-widgets/html-manager": "^0.18.3",
+        "@jupyter-widgets/output": "^2.0.1",
         "@nteract/plotly": "^1.48.3",
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
@@ -2978,6 +2989,7 @@
         "@nteract/transform-plotly": "^6.0.0",
         "@nteract/transform-vega": "^6.0.3",
         "@nteract/transforms": "^4.4.4",
+        "@phosphor/widgets": "^1.9.3",
         "@testing-library/react": "^9.4.0",
         "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",
@@ -3064,6 +3076,7 @@
         "expose-loader": "^0.7.5",
         "extract-zip": "^1.6.7",
         "fast-xml-parser": "^3.16.0",
+        "file-loader": "^5.1.0",
         "filemanager-webpack-plugin": "^2.0.5",
         "flat": "^4.0.0",
         "gulp": "^4.0.0",
@@ -3080,6 +3093,7 @@
         "husky": "^1.1.2",
         "immutable": "^4.0.0-rc.12",
         "jsdom": "^15.0.0",
+        "json-loader": "^0.5.7",
         "less": "^3.9.0",
         "less-loader": "^5.0.0",
         "less-plugin-inline-urls": "^1.2.0",
@@ -3097,6 +3111,10 @@
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
+        "postcss": "^7.0.27",
+        "postcss-cssnext": "^3.1.0",
+        "postcss-import": "^12.0.1",
+        "postcss-loader": "^3.0.0",
         "prettier": "^1.19.1",
         "range-inclusive": "^1.0.2",
         "raw-loader": "^0.5.1",
@@ -3115,6 +3133,7 @@
         "remove-files-webpack-plugin": "^1.4.0",
         "requirejs": "^2.3.6",
         "rewiremock": "^3.13.0",
+        "rimraf": "^3.0.2",
         "sass-loader": "^7.1.0",
         "serialize-javascript": "^2.1.2",
         "shortid": "^2.2.8",

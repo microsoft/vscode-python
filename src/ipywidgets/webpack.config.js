@@ -7,8 +7,16 @@
 
 const postcss = require('postcss');
 const path = require('path');
-const version = require(path.join(__dirname, 'node_modules', '@jupyter-widgets', 'html-manager', 'package.json')).version;
-
+const outDir = path.join(__dirname, '..', '..', 'out', 'ipywidgets');
+const version = require(path.join(
+    __dirname,
+    '..',
+    '..',
+    'node_modules',
+    '@jupyter-widgets',
+    'html-manager',
+    'package.json'
+)).version;
 const publicPath = 'https://unpkg.com/@jupyter-widgets/html-manager@' + version + '/dist/';
 const rules = [
     { test: /\.css$/, use: ['style-loader', 'css-loader'] },
@@ -61,10 +69,10 @@ const rules = [
 module.exports = [
     {
         mode: 'production',
-        entry: './out/index.js',
+        entry: path.join(outDir, 'index.js'),
         output: {
             filename: 'ipywidgets.js',
-            path: path.resolve(__dirname, 'dist', 'ipywidgets'),
+            path: path.resolve(outDir, 'dist'),
             publicPath: 'built/',
             library: 'vscIPyWidgets',
             libraryTarget: 'window'
@@ -148,10 +156,10 @@ module.exports = [
     },
     {
         // script that renders widgets using the amd embedding and can render third-party custom widgets
-        entry: './lib/embed-amd-render.js',
+        entry: path.join(__dirname, 'lib/embed-amd-render.js'),
         output: {
             filename: 'embed-amd-render.js',
-            path: path.resolve(__dirname, 'dist', 'lib', 'amd'),
+            path: path.resolve(outDir, 'dist', 'lib', 'amd'),
             publicPath: publicPath
         },
         module: { rules: rules },
@@ -160,11 +168,11 @@ module.exports = [
 
     {
         // embed library that depends on requirejs, and can load third-party widgets dynamically
-        entry: './lib/libembed-amd.js',
+        entry: path.join(__dirname, 'lib/libembed-amd.js'),
         output: {
             library: '@jupyter-widgets/html-manager/dist/libembed-amd',
             filename: 'libembed-amd.js',
-            path: path.resolve(__dirname, 'dist', 'lib', 'amd'),
+            path: path.resolve(outDir, 'dist', 'lib', 'amd'),
             publicPath: publicPath,
             libraryTarget: 'amd'
         },

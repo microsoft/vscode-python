@@ -11,7 +11,10 @@ import { IDisposable } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { deserializeDataViews } from '../../client/common/utils/serializers';
-import { IInteractiveWindowMapping, IPyWidgetMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    IInteractiveWindowMapping,
+    IPyWidgetMessages
+} from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ProxyKernel } from './kernel';
 import { IHtmlWidgetManager, IHtmlWidgetManagerCtor, IIPyWidgetManager, IMessageSender } from './types';
 
@@ -41,7 +44,10 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
         // tslint:disable-next-line: no-any
         private readonly messages: Observable<{ type: string; payload?: any }>,
         // tslint:disable-next-line: no-any
-        private readonly dispatcher: <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => void
+        private readonly dispatcher: <M extends IInteractiveWindowMapping, T extends keyof M>(
+            type: T,
+            payload?: M[T]
+        ) => void
     ) {
         this.proxyKernel = new ProxyKernel(this);
         // tslint:disable-next-line: no-any
@@ -71,7 +77,11 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
             // General IOPub message
             const displayMsg = payload as KernelMessage.IDisplayDataMsg;
 
-            if (displayMsg.content && displayMsg.content.data && displayMsg.content.data['application/vnd.jupyter.widget-view+json']) {
+            if (
+                displayMsg.content &&
+                displayMsg.content.data &&
+                displayMsg.content.data['application/vnd.jupyter.widget-view+json']
+            ) {
                 // tslint:disable-next-line: no-any
                 const data = displayMsg.content.data['application/vnd.jupyter.widget-view+json'] as any;
                 const modelId = data.model_id;
@@ -96,9 +106,14 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
      * @returns {Promise<{ dispose: Function }>}
      * @memberof WidgetManager
      */
-    public async renderWidget(data: nbformat.IMimeBundle & { model_id: string; version_major: number }, ele: HTMLElement): Promise<IDisposable> {
+    public async renderWidget(
+        data: nbformat.IMimeBundle & { model_id: string; version_major: number },
+        ele: HTMLElement
+    ): Promise<IDisposable> {
         if (!data) {
-            throw new Error('application/vnd.jupyter.widget-view+json not in msg.content.data, as msg.content.data is \'undefined\'.');
+            throw new Error(
+                "application/vnd.jupyter.widget-view+json not in msg.content.data, as msg.content.data is 'undefined'."
+            );
         }
 
         if (!data || data.version_major !== 2) {

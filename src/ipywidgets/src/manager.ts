@@ -36,7 +36,12 @@ export class WidgetManager extends HTMLManager {
     /**
      * Create a comm.
      */
-    public async _create_comm(target_name: string, model_id: string, data?: any, metadata?: any): Promise<shims.services.Comm> {
+    public async _create_comm(
+        target_name: string,
+        model_id: string,
+        data?: any,
+        metadata?: any
+    ): Promise<shims.services.Comm> {
         const comm = this.kernel.connectToComm(target_name, model_id);
         if (data || metadata) {
             comm.open(data, metadata);
@@ -48,9 +53,13 @@ export class WidgetManager extends HTMLManager {
      * Get the currently-registered comms.
      */
     public _get_comm_info(): Promise<any> {
-        return this.kernel.requestCommInfo({ target: this.comm_target_name }).then(reply => (reply.content as any).comms);
+        return this.kernel
+            .requestCommInfo({ target: this.comm_target_name })
+            .then(reply => (reply.content as any).comms);
     }
     protected loadClass(className: string, moduleName: string, moduleVersion: string): Promise<any> {
-        return super.loadClass(className, moduleName, moduleVersion).catch(() => requireLoader(moduleName, moduleVersion));
+        return super
+            .loadClass(className, moduleName, moduleVersion)
+            .catch(() => requireLoader(moduleName, moduleVersion));
     }
 }

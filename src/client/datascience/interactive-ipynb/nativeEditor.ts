@@ -402,6 +402,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (this.disposable) {
             this.disposable.dispose();
         }
+        if (!this.notebook) {
+            return;
+        }
         this.disposable = (this.notebook as JupyterNotebookBase).onIOPub(this.handleOnIOPub.bind(this));
         if ((this.notebook as JupyterNotebookBase).onIOPub) {
             // tslint:disable-next-line: no-console

@@ -8,6 +8,7 @@ import * as base from '@jupyter-widgets/base';
 import * as widgets from '@jupyter-widgets/controls';
 import * as htmlManager from '@jupyter-widgets/html-manager';
 import * as outputWidgets from '@jupyter-widgets/output';
+import './widgets.css';
 
 // Export the following for `requirejs`.
 // tslint:disable-next-line: no-any no-function-expression no-empty

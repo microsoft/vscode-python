@@ -185,6 +185,10 @@ function buildConfiguration(isNotebook) {
                     {
                         from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
                         to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                    },
+                    {
+                        from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
+                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
                     }
                 ],
                 { context: 'src' }

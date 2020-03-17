@@ -24,7 +24,11 @@ export class ClassicComm implements Kernel.IComm {
         private readonly callbackManager: ClassicCommShellCallbackManager
     ) {}
     // tslint:disable-next-line: no-any
-    public open(data?: any, metadata?: any, buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined): Kernel.IShellFuture {
+    public open(
+        data?: any,
+        metadata?: any,
+        buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined
+    ): Kernel.IShellFuture {
         // tslint:disable-next-line: no-console
         const requestId = uuid();
         const commId: string = this.commId;
@@ -64,7 +68,11 @@ export class ClassicComm implements Kernel.IComm {
         return future;
     }
     // tslint:disable-next-line: no-any
-    public close(_data?: any, _metadata?: any, _buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined): Kernel.IShellFuture {
+    public close(
+        _data?: any,
+        _metadata?: any,
+        _buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined
+    ): Kernel.IShellFuture {
         this.registeredFutures.forEach(item => this.callbackManager.unregisterFuture(item));
         throw new Error('VSCPython.IClassicComm.Close method not implemented!');
     }
@@ -72,7 +80,12 @@ export class ClassicComm implements Kernel.IComm {
         this.registeredFutures.forEach(item => this.callbackManager.unregisterFuture(item));
     }
     // tslint:disable-next-line: no-any
-    public send(data: any, metadata?: any, buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined, disposeOnDone?: boolean | undefined): Kernel.IShellFuture {
+    public send(
+        data: any,
+        metadata?: any,
+        buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined,
+        disposeOnDone?: boolean | undefined
+    ): Kernel.IShellFuture {
         // tslint:disable-next-line: no-console
         const requestId = uuid();
         const commId: string = this.commId;

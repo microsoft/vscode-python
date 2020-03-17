@@ -50,7 +50,9 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         }
     }
     public initialize(): void {
-        this.commRegistrationMessagesToSend.forEach(targetName => this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_registerCommTarget, targetName));
+        this.commRegistrationMessagesToSend.forEach(targetName =>
+            this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_registerCommTarget, targetName)
+        );
         this.commRegistrationMessagesToSend = [];
     }
     // tslint:disable-next-line: no-any

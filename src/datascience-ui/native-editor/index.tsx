@@ -37,7 +37,7 @@ const ConnectedNativeEditor = getConnectedNativeEditor();
 // tslint:disable:no-typeof-undefined
 ReactDOM.render(
     <Provider store={store}>
-        <ConnectedNativeEditor/>
+        <ConnectedNativeEditor />
         <WidgetManagerComponent />
     </Provider>,
     document.getElementById('root') as HTMLElement

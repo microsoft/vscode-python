@@ -15,7 +15,7 @@
         "lib": ["es6", "es2018", "dom"],
         "jsx": "react",
         "sourceMap": true,
-        "outDir": "./out",
+        "outDir": "../../out/ipywidgets",
         "experimentalDecorators": true,
         "allowSyntheticDefaultImports": true,
         "strict": false,
@@ -25,5 +25,5 @@
         "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true
     },
-    "exclude": ["node_modules"]
+    "exclude": ["node_modules", "../node_modules"]
 }

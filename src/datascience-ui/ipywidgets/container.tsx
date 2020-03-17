@@ -11,14 +11,17 @@ import { IStore } from '../interactive-common/redux/store';
 import { WidgetManager } from './manager';
 
 // tslint:disable-next-line: no-any
-type Props = { messages: Observable<{type: string; payload?: any}>; sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void };
+type Props = {
+    messages: Observable<{ type: string; payload?: any }>;
+    sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void;
+};
 
 function mapStateToProps(state: IStore): Props {
-    return { messages: state.widgetMessagses, sendMessage: state.sendMessage } ;
+    return { messages: state.widgetMessagses, sendMessage: state.sendMessage };
 }
 // Default dispatcher (not required, but required for strictness).
 function mapDispatchToProps(dispatch: Function) {
-    return {dispatch};
+    return { dispatch };
 }
 
 class Container extends React.Component<Props> {
@@ -26,12 +29,16 @@ class Container extends React.Component<Props> {
 
     constructor(props: Props) {
         super(props);
-        this.widgetManager = new WidgetManager(document.getElementById('rootWidget')!, props.messages, props.sendMessage);
+        this.widgetManager = new WidgetManager(
+            document.getElementById('rootWidget')!,
+            props.messages,
+            props.sendMessage
+        );
     }
     public render() {
         return null;
     }
-    public componentWillUnmount(){
+    public componentWillUnmount() {
         this.widgetManager.dispose();
     }
 }
