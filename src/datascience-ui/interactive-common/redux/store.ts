@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
-import * as log4js from 'log4js';
 import * as path from 'path';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
@@ -120,6 +119,8 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
 function createTestLogger() {
     const logFileEnv = process.env.VSC_PYTHON_WEBVIEW_LOG_FILE;
     if (logFileEnv) {
+        // tslint:disable-next-line: no-require-imports
+        const log4js = require('log4js') as typeof import('log4js');
         const logFilePath = path.isAbsolute(logFileEnv) ? logFileEnv : path.join(EXTENSION_ROOT_DIR, logFileEnv);
         log4js.configure({
             appenders: { reduxLogger: { type: 'file', filename: logFilePath } },
