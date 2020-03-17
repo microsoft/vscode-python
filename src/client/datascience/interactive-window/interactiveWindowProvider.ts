@@ -7,19 +7,13 @@ import { Disposable, Event, EventEmitter } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi } from '../../common/application/types';
-import {
-    IAsyncDisposable,
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    Resource
-} from '../../common/types';
+import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
-import { Identifiers, LiveShare, LiveShareCommands, Settings } from '../constants';
+import { LiveShare, LiveShareCommands } from '../constants';
 import { PostOffice } from '../liveshare/postOffice';
-import { IInteractiveWindow, IInteractiveWindowProvider, INotebookServerOptions } from '../types';
+import { IInteractiveWindow, IInteractiveWindowProvider } from '../types';
 
 interface ISyncData {
     count: number;
@@ -42,8 +36,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
-        @inject(IConfigurationService) private configService: IConfigurationService
+        @inject(IDisposableRegistry) private disposables: IDisposableRegistry
     ) {
         asyncRegistry.push(this);
 
@@ -88,25 +81,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         }
 
         throw new Error(localize.DataScience.pythonInteractiveCreateFailed());
-    }
-
-    public async getNotebookOptions(resource: Resource): Promise<INotebookServerOptions> {
-        // Find the settings that we are going to launch our server with
-        const settings = this.configService.getSettings(resource);
-        let serverURI: string | undefined = settings.datascience.jupyterServerURI;
-        const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
-
-        // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-        if (serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-            serverURI = undefined;
-        }
-
-        return {
-            enableDebugging: true,
-            uri: serverURI,
-            useDefaultConfig,
-            purpose: Identifiers.HistoryPurpose
-        };
     }
 
     public dispose(): Promise<void> {

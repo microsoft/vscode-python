@@ -78,7 +78,6 @@ export interface INotebookServerLaunchInfo {
     kernelSpec: IJupyterKernelSpec | undefined | LiveKernelModel;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
-    enableDebugging: boolean | undefined; // If we should enable debugging for this server
 }
 
 export interface INotebookCompletion {
@@ -145,14 +144,13 @@ export interface INotebook extends IAsyncDisposable {
 }
 
 export interface INotebookServerOptions {
-    enableDebugging?: boolean;
     uri?: string;
     usingDarkTheme?: boolean;
     useDefaultConfig?: boolean;
     workingDir?: string;
     purpose: string;
     metadata?: nbformat.INotebookMetadata;
-    disableUI?: boolean;
+    allowUI(): boolean;
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
@@ -312,7 +310,6 @@ export interface IInteractiveWindowProvider {
     onExecutedCode: Event<string>;
     getActive(): IInteractiveWindow | undefined;
     getOrCreateActive(): Promise<IInteractiveWindow>;
-    getNotebookOptions(resource: Resource): Promise<INotebookServerOptions>;
 }
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
@@ -371,7 +368,6 @@ export interface INotebookEditorProvider {
     open(file: Uri): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(contents?: string): Promise<INotebookEditor>;
-    getNotebookOptions(resource: Resource): Promise<INotebookServerOptions>;
 }
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
@@ -850,9 +846,32 @@ type WebViewViewState = {
 };
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
 
+export const INotebookProvider = Symbol('INotebookProvider');
+
+export type GetServerOptions = {
+    fetchOnly?: boolean;
+    disableUI?: boolean;
+    localOnly?: boolean;
+};
+
+/**
+ * Options for getting a notebook
+ */
+export type GetNotebookOptions = {
+    identity: Uri;
+    fetchOnly?: boolean;
+    disableUI?: boolean;
+    metadata?: nbformat.INotebookMetadata;
+};
+
 export interface INotebookProvider {
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */
-    getNotebook(server: INotebookServer, resource: Uri, options?: nbformat.INotebookMetadata): Promise<INotebook>;
+    getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
+
+    /**
+     * Gets the server used for starting notebooks
+     */
+    getServer(options: GetServerOptions): Promise<INotebookServer | undefined>;
 }

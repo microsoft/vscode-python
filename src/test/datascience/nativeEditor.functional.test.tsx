@@ -719,10 +719,10 @@ df.head()`;
                         // Close editor. Should still have the server up
                         await closeNotebook(editor, wrapper);
                         const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-                        const editorProvider = ioc.serviceManager.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const server = await jupyterExecution.getServer(
-                            await editorProvider.getNotebookOptions(undefined)
-                        );
+                        const server = await jupyterExecution.getServer({
+                            allowUI: () => false,
+                            purpose: Identifiers.HistoryPurpose
+                        });
                         assert.ok(server, 'Server was destroyed on notebook shutdown');
 
                         // Reopen, and rerun

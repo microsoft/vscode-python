@@ -293,7 +293,8 @@ suite('DataScience notebook tests', () => {
                 usingDarkTheme,
                 useDefaultConfig,
                 workingDir: workingDir ? workingDir : ioc.getSettings().datascience.notebookFileRoot,
-                purpose: purpose ? purpose : '1'
+                purpose: purpose ? purpose : '1',
+                allowUI: () => false
             });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
@@ -416,7 +417,12 @@ suite('DataScience notebook tests', () => {
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
+            const server = await jupyterExecution.connectToNotebookServer({
+                uri,
+                useDefaultConfig: true,
+                purpose: '',
+                allowUI: () => false
+            });
             const notebook = server
                 ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
                 : undefined;
@@ -470,7 +476,8 @@ suite('DataScience notebook tests', () => {
                 const server = await jupyterExecution.connectToNotebookServer({
                     uri,
                     useDefaultConfig: true,
-                    purpose: ''
+                    purpose: '',
+                    allowUI: () => false
                 });
                 const notebook = server
                     ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
@@ -549,7 +556,12 @@ suite('DataScience notebook tests', () => {
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
+            const server = await jupyterExecution.connectToNotebookServer({
+                uri,
+                useDefaultConfig: true,
+                purpose: '',
+                allowUI: () => false
+            });
             const notebook = server
                 ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
                 : undefined;
@@ -593,7 +605,12 @@ suite('DataScience notebook tests', () => {
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
+            const server = await jupyterExecution.connectToNotebookServer({
+                uri,
+                useDefaultConfig: true,
+                purpose: '',
+                allowUI: () => false
+            });
             const notebook = server
                 ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
                 : undefined;
@@ -1449,7 +1466,8 @@ plt.show()`,
                     usingDarkTheme: false,
                     useDefaultConfig: true,
                     workingDir: testDir,
-                    purpose: '1'
+                    purpose: '1',
+                    allowUI: () => false
                 });
             } catch (e) {
                 threw = true;

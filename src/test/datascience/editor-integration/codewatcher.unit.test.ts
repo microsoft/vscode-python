@@ -21,7 +21,7 @@ import {
     IDebugLocationTracker,
     IInteractiveWindow,
     IInteractiveWindowProvider,
-    IJupyterExecution
+    INotebookProvider
 } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
@@ -33,7 +33,7 @@ import { createDocument } from './helpers';
 suite('DataScience Code Watcher Unit Tests', () => {
     let codeWatcher: CodeWatcher;
     let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
-    let jupyterExecution: TypeMoq.IMock<IJupyterExecution>;
+    let notebookProvider: TypeMoq.IMock<INotebookProvider>;
     let activeInteractiveWindow: TypeMoq.IMock<IInteractiveWindow>;
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
@@ -57,7 +57,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     setup(() => {
         tokenSource = new CancellationTokenSource();
         interactiveWindowProvider = TypeMoq.Mock.ofType<IInteractiveWindowProvider>();
-        jupyterExecution = TypeMoq.Mock.ofType<IJupyterExecution>();
+        notebookProvider = TypeMoq.Mock.ofType<INotebookProvider>();
         activeInteractiveWindow = createTypeMoq<IInteractiveWindow>('history');
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         textEditor = TypeMoq.Mock.ofType<TextEditor>();
@@ -104,12 +104,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup the file system
         fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
 
-        const codeLensFactory = new CodeLensFactory(
-            configService.object,
-            interactiveWindowProvider.object,
-            jupyterExecution.object,
-            fileSystem.object
-        );
+        const codeLensFactory = new CodeLensFactory(configService.object, notebookProvider.object, fileSystem.object);
         serviceContainer
             .setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher)))
             .returns(
@@ -148,12 +143,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
                 return Promise.resolve();
             });
 
-        const codeLens = new CodeLensFactory(
-            configService.object,
-            interactiveWindowProvider.object,
-            jupyterExecution.object,
-            fileSystem.object
-        );
+        const codeLens = new CodeLensFactory(configService.object, notebookProvider.object, fileSystem.object);
 
         codeWatcher = new CodeWatcher(
             interactiveWindowProvider.object,

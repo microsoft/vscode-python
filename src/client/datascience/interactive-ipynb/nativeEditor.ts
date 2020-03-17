@@ -43,7 +43,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import {
     EditorContexts,
@@ -64,7 +64,6 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterNotebookBase } from '../jupyter/jupyterNotebook';
 import { JupyterSession } from '../jupyter/jupyterSession';
-import { ProgressReporter } from '../progress/progressReporter';
 import {
     CellState,
     ICell,
@@ -84,7 +83,6 @@ import {
     INotebookModel,
     INotebookProvider,
     INotebookServer,
-    INotebookServerOptions,
     IStatusProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
@@ -97,7 +95,6 @@ import { KernelMessage } from '@jupyterlab/services';
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { NativeNotebookProvider } from './notebookProvider';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 @injectable()
@@ -163,7 +160,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
@@ -183,19 +179,16 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(INotebookImporter) protected readonly importer: INotebookImporter,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(NativeNotebookProvider) notebookProvider: INotebookProvider
+        @inject(INotebookProvider) notebookProvider: INotebookProvider
     ) {
         super(
-            progressReporter,
             listeners,
             liveShare,
             applicationShell,
             documentManager,
-            interpreterService,
             provider,
             disposables,
             cssGenerator,
@@ -315,17 +308,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    public async getNotebookOptions(): Promise<INotebookServerOptions> {
-        const options = await this.editorProvider.getNotebookOptions(await this.getOwningResource());
+    public async getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined> {
         await this.loadedPromise.promise;
         if (this.model) {
-            const metadata = (await this.model.getJson()).metadata;
-            return {
-                ...options,
-                metadata
-            };
-        } else {
-            return options;
+            return (await this.model.getJson()).metadata;
         }
     }
 
@@ -390,6 +376,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     protected handleOnIOPub(data: { msg: KernelMessage.IIOPubMessage; requestId: string }) {
         if (KernelMessage.isDisplayDataMsg(data.msg)) {
             this.postMessage(IPyWidgetMessages.IPyWidgets_display_data_msg, data.msg).catch(ex =>
+                // tslint:disable-next-line: no-console
                 console.error('Failed to post oniopub message', ex)
             );
         } else if (KernelMessage.isStatusMsg(data.msg)) {
@@ -418,29 +405,28 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             return;
         }
         this.disposable = (this.notebook as JupyterNotebookBase).onIOPub(this.handleOnIOPub.bind(this));
-        if ((this.notebook as JupyterNotebookBase).onIOPub) {
-            // tslint:disable-next-line: no-console
-            // console.log('Event handler added');
-            // (this.notebook as JupyterNotebookBase).onIOPub((data: {msg: KernelMessage.IIOPubMessage; requestId: string}) => {
-            //     if (KernelMessage.isDisplayDataMsg(data.msg)) {
-            //         this.postMessage(InteractiveWindowMessages.IPyWidgets_display_data_msg, data.msg).catch(ex => console.error('Failed to post oniopub message', ex));
-            //     }
-            // });
+        // tslint:disable-next-line: no-console
+        // console.log('Event handler added');
+        // (this.notebook as JupyterNotebookBase).onIOPub((data: {msg: KernelMessage.IIOPubMessage; requestId: string}) => {
+        //     if (KernelMessage.isDisplayDataMsg(data.msg)) {
+        //         this.postMessage(InteractiveWindowMessages.IPyWidgets_display_data_msg, data.msg).catch(ex => console.error('Failed to post oniopub message', ex));
+        //     }
+        // });
 
-            const kernel = ((this.notebook as JupyterNotebookBase).session as JupyterSession).session!.kernel;
-            if (!this.commtargetRegistered) {
-                this.commtargetRegistered = true;
-                this.targetNames.forEach(targetName => {
-                    // kernel.registerCommTarget('jupyter.widget', (_comm, msg) => {
-                    kernel.registerCommTarget(targetName, (_comm, msg) => {
-                        // tslint:disable-next-line: no-any
-                        this.serializeDataViews(msg as any);
-                        this.postMessage(IPyWidgetMessages.IPyWidgets_comm_open, msg).catch(ex =>
-                            console.error('Failed to post oniopub message', ex)
-                        );
-                    });
+        const kernel = ((this.notebook as JupyterNotebookBase).session as JupyterSession).session!.kernel;
+        if (!this.commtargetRegistered) {
+            this.commtargetRegistered = true;
+            this.targetNames.forEach(targetName => {
+                // kernel.registerCommTarget('jupyter.widget', (_comm, msg) => {
+                kernel.registerCommTarget(targetName, (_comm, msg) => {
+                    // tslint:disable-next-line: no-any
+                    this.serializeDataViews(msg as any);
+                    this.postMessage(IPyWidgetMessages.IPyWidgets_comm_open, msg).catch(ex =>
+                        // tslint:disable-next-line: no-console
+                        console.error('Failed to post oniopub message', ex)
+                    );
                 });
-            }
+            });
         }
     }
     protected registerCommTarget(targetName: string) {
@@ -453,6 +439,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // tslint:disable-next-line: no-any
             this.serializeDataViews(msg as any);
             this.postMessage(IPyWidgetMessages.IPyWidgets_comm_open, msg).catch(ex =>
+                // tslint:disable-next-line: no-console
                 console.error('Failed to post oniopub message', ex)
             );
         });
@@ -510,7 +497,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
         return newBuffers;
     }
-    // tslint:disable-next-line: no-any
+    // tslint:disable: no-any
     protected async sendIPythonShellMsg(payload: {
         data: any;
         metadata: any;
@@ -562,28 +549,33 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         future.done
             .then(reply => {
                 this.postMessage(IPyWidgetMessages.IPyWidgets_ShellSend_resolve, { requestId, msg: reply }).catch(ex =>
+                    // tslint:disable-next-line: no-console
                     console.error('Failed to post oniopub message for handler', ex)
                 );
             })
             .catch(ex => {
-                this.postMessage(IPyWidgetMessages.IPyWidgets_ShellSend_reject, { requestId, msg: ex }).catch(ex =>
-                    console.error('Failed to post oniopub message for handler', ex)
+                this.postMessage(IPyWidgetMessages.IPyWidgets_ShellSend_reject, { requestId, msg: ex }).catch(ex2 =>
+                    // tslint:disable-next-line: no-console
+                    console.error('Failed to post oniopub message for handler', ex2)
                 );
             });
         future.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
             this.serializeDataViews(msg);
             this.postMessage(IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub, { requestId, msg }).catch(ex =>
+                // tslint:disable-next-line: no-console
                 console.error('Failed to post oniopub message for handler', ex)
             );
 
             if (KernelMessage.isCommMsgMsg(msg)) {
                 this.postMessage(IPyWidgetMessages.IPyWidgets_comm_msg, msg as KernelMessage.ICommMsgMsg).catch(ex =>
+                    // tslint:disable-next-line: no-console
                     console.error('Failed to post oniopub message for handler', ex)
                 );
             }
         };
         future.onReply = (reply: KernelMessage.IShellMessage) => {
             this.postMessage(IPyWidgetMessages.IPyWidgets_ShellSend_reply, { requestId, msg: reply }).catch(ex =>
+                // tslint:disable-next-line: no-console
                 console.error('Failed to post oniopub message for handler', ex)
             );
         };

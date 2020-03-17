@@ -133,7 +133,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             let kernelSpecInterpreter: KernelSpecInterpreter | undefined;
             let kernelSpecInterpreterPromise: Promise<KernelSpecInterpreter> = Promise.resolve({});
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
-            const allowUI = !options || !options.disableUI;
+            const allowUI = !options || options.allowUI();
             const kernelSpecCancelSource = new CancellationTokenSource();
             if (cancelToken) {
                 cancelToken.onCancellationRequested(() => {
@@ -200,8 +200,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         kernelSpec: kernelSpecInterpreter.kernelSpec,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
-                        purpose: options ? options.purpose : uuid(),
-                        enableDebugging: options ? options.enableDebugging : false
+                        purpose: options ? options.purpose : uuid()
                     };
 
                     // tslint:disable-next-line: no-constant-condition
