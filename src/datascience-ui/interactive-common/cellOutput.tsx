@@ -302,7 +302,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             // Render the outputs
             return this.renderOutputs(this.getCodeCell().outputs, trim);
         }
-        console.log(this.renderOutputs);
         return [];
     };
 

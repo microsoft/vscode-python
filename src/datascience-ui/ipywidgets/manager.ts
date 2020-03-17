@@ -164,7 +164,6 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
         this.proxyKernel.initialize();
     }
     private restoreBuffers(msg: KernelMessage.IIOPubMessage) {
-        debugger;
         if (!msg || !Array.isArray(msg.buffers) || msg.buffers.length === 0) {
             return;
         }

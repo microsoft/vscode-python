@@ -4,6 +4,7 @@
 'use strict';
 
 import { Kernel, KernelMessage } from '@jupyterlab/services';
+import { JSONObject, JSONValue } from '@phosphor/coreutils';
 import * as uuid from 'uuid/v4';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -23,13 +24,11 @@ export class ClassicComm implements Kernel.IComm {
         private readonly messageSender: IMessageSender,
         private readonly callbackManager: ClassicCommShellCallbackManager
     ) {}
-    // tslint:disable-next-line: no-any
     public open(
-        data?: any,
-        metadata?: any,
+        data?: JSONValue,
+        metadata?: JSONValue,
         buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined
     ): Kernel.IShellFuture {
-        // tslint:disable-next-line: no-console
         const requestId = uuid();
         const commId: string = this.commId;
         const deferred = createDeferred<KernelMessage.IShellMessage | undefined>();
@@ -69,8 +68,8 @@ export class ClassicComm implements Kernel.IComm {
     }
     // tslint:disable-next-line: no-any
     public close(
-        _data?: any,
-        _metadata?: any,
+        _data?: JSONValue,
+        _metadata?: JSONObject,
         _buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined
     ): Kernel.IShellFuture {
         this.registeredFutures.forEach(item => this.callbackManager.unregisterFuture(item));
@@ -81,12 +80,11 @@ export class ClassicComm implements Kernel.IComm {
     }
     // tslint:disable-next-line: no-any
     public send(
-        data: any,
-        metadata?: any,
+        data: JSONValue,
+        metadata?: JSONObject,
         buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined,
         disposeOnDone?: boolean | undefined
     ): Kernel.IShellFuture {
-        // tslint:disable-next-line: no-console
         const requestId = uuid();
         const commId: string = this.commId;
         const deferred = createDeferred<KernelMessage.IShellMessage | undefined>();

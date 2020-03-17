@@ -10,8 +10,8 @@ import { IInteractiveWindowMapping } from '../../client/datascience/interactive-
 import { IStore } from '../interactive-common/redux/store';
 import { WidgetManager } from './manager';
 
-// tslint:disable-next-line: no-any
 type Props = {
+    // tslint:disable-next-line: no-any
     messages: Observable<{ type: string; payload?: any }>;
     sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void;
 };
