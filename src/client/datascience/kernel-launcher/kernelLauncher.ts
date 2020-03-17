@@ -4,6 +4,8 @@
 
 import { ChildProcess } from 'child_process';
 import { inject, injectable } from 'inversify';
+import { getPorts } from 'portfinder';
+import uuid from 'uuid';
 import { InterpreterUri } from '../../common/installer/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { isResource } from '../../common/utils/misc';
@@ -33,10 +35,16 @@ class KernelProcess implements IKernelProcess {
         const pythonPath = isResource(this.interpreter) ? undefined : this.interpreter.path;
 
         const executionService = await pythonExecutionFactory.create({ resource, pythonPath });
-        await executionService.exec([], {});
+        const kernelProcess = executionService.execObservable([], {});
 
-        this._connection = this.getKernelConnection();
-        this._process = this.getChildProcess();
+        this._process = kernelProcess.proc;
+
+        getPorts(5, { host: '127.0.0.1', port: 9000 }, (error: Error, ports: number[]) => {
+            if (error) {
+                throw error;
+            }
+            this._connection = this.getKernelConnection(ports);
+        });
 
         return Promise.resolve();
     }
@@ -44,12 +52,19 @@ class KernelProcess implements IKernelProcess {
         this._process?.kill();
     }
 
-    private getKernelConnection(): IKernelConnection {
-        throw new Error('Method not implemented.');
-    }
-
-    private getChildProcess(): ChildProcess {
-        throw new Error('Method not implemented.');
+    private getKernelConnection(ports: number[]): IKernelConnection {
+        return {
+            version: 1,
+            key: uuid.v4(),
+            signature_scheme: 'hmac-sha256',
+            transport: 'tcp',
+            ip: '127.0.0.1',
+            hb_port: ports[0],
+            control_port: ports[1],
+            shell_port: ports[2],
+            stdin_port: ports[3],
+            iopub_port: ports[4]
+        };
     }
 }
 
