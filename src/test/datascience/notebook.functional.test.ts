@@ -358,6 +358,10 @@ suite('DataScience notebook tests', () => {
     }
 
     runTest('Remote Self Certs', async (_this: Mocha.Context) => {
+        // Skip this. Entered a bug here to fix: https://github.com/microsoft/vscode-python/issues/10622
+        _this.skip();
+
+        /*
         const pythonService = await createPythonService(2);
 
         if (pythonService) {
@@ -431,6 +435,7 @@ suite('DataScience notebook tests', () => {
             traceInfo('Remote Self Cert is not supported on 2.7');
             _this.skip();
         }
+        */
     });
 
     // Connect to a server that doesn't have a token or password, customers use this and we regressed it once
