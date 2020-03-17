@@ -36,7 +36,7 @@ import {
 export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private serverPromise: Promise<INotebookServer | undefined> | undefined;
-    private canShowUIDuringServerStart = false;
+    private allowingUI = false;
     constructor(
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
@@ -104,7 +104,7 @@ export class NotebookProvider implements INotebookProvider {
     private async createServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
         // When we finally try to create a server, update our flag indicating if we're going to allow UI or not. This
         // allows the server to be attempted without a UI, but a future request can come in and use the same startup
-        this.canShowUIDuringServerStart = options.disableUI ? this.canShowUIDuringServerStart : true;
+        this.allowingUI = options.disableUI ? this.allowingUI : true;
 
         if (!this.serverPromise) {
             // Start a server
@@ -125,9 +125,11 @@ export class NotebookProvider implements INotebookProvider {
         traceInfo(`Checking for server existence.`);
 
         // Status depends upon if we're about to connect to existing server or not.
-        const progressReporter = (await this.jupyterExecution.getServer(serverOptions))
-            ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
-            : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter());
+        const progressReporter = this.allowingUI
+            ? (await this.jupyterExecution.getServer(serverOptions))
+                ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
+                : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter())
+            : undefined;
 
         // Check to see if we support ipykernel or not
         try {
@@ -144,13 +146,13 @@ export class NotebookProvider implements INotebookProvider {
             }
             // Then actually start the server
             traceInfo(`Starting notebook server.`);
-            const result = await this.jupyterExecution.connectToNotebookServer(serverOptions, progressReporter.token);
+            const result = await this.jupyterExecution.connectToNotebookServer(serverOptions, progressReporter?.token);
             traceInfo(`Server started.`);
             return result;
         } catch (e) {
-            progressReporter.dispose();
+            progressReporter?.dispose();
             // If user cancelled, then do nothing.
-            if (progressReporter.token.isCancellationRequested && e instanceof CancellationError) {
+            if (progressReporter && progressReporter.token.isCancellationRequested && e instanceof CancellationError) {
                 return;
             }
 
@@ -188,7 +190,7 @@ export class NotebookProvider implements INotebookProvider {
                 throw e;
             }
         } finally {
-            progressReporter.dispose();
+            progressReporter?.dispose();
         }
     }
 
@@ -243,7 +245,7 @@ export class NotebookProvider implements INotebookProvider {
     }
 
     private allowUI(): boolean {
-        return this.canShowUIDuringServerStart;
+        return this.allowingUI;
     }
 
     private async onDidCloseNotebookEditor(editor: INotebookEditor) {
