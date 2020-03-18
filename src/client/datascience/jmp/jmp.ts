@@ -71,8 +71,8 @@ module.exports = {
     Socket: Socket,
 
     /**
-     * ZeroMQ bindings
-     */
+    * ZeroMQ bindings
+    */
     zmq: zmq,
 };
 
@@ -288,6 +288,56 @@ Message.prototype._encode = function (scheme, key) {
 
     return response;
 };
+
+
+//class Socket extends zmq.Socket {
+//constructor(socketType, scheme, key) {
+//super(socketType);
+//this._jmp = {
+//scheme: scheme,
+//key: key,
+//_listeners: [],
+//};
+//}
+
+//send(message, flags) {
+//var p = Object.getPrototypeOf(Socket.prototype);
+
+//if (message instanceof Message) {
+//log("SOCKET: SEND:", message);
+
+//return p.send.call(
+//this, message._encode(this._jmp.scheme, this._jmp.key), flags
+//);
+//}
+
+//return p.send.apply(this, arguments);
+//}
+
+//on(event, listener) {
+//var p = Object.getPrototypeOf(Socket.prototype);
+
+//if (event !== "message") {
+//return p.on.apply(this, arguments);
+//}
+
+//var _listener = {
+//unwrapped: listener,
+//wrapped: (function () {
+//var message = Message._decode(
+//arguments, this._jmp.scheme, this._jmp.key
+//);
+//if (message) {
+//listener(message);
+//}
+//}).bind(this),
+//};
+//this._jmp._listeners.push(_listener);
+//return p.on.call(this, event, _listener.wrapped);
+//}
+//}
+
+//exports.Socket = Socket;
 
 /**
  * @class

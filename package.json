@@ -1377,7 +1377,9 @@
                                         "default": "127.0.0.1"
                                     }
                                 },
-                                "required": ["port"]
+                                "required": [
+                                    "port"
+                                ]
                             },
                             "listen": {
                                 "type": "object",
@@ -1393,7 +1395,9 @@
                                         "default": "127.0.0.1"
                                     }
                                 },
-                                "required": ["port"]
+                                "required": [
+                                    "port"
+                                ]
                             },
                             "port": {
                                 "type": "number",
@@ -2899,6 +2903,7 @@
         "@jupyterlab/services": "^4.2.0",
         "@koa/cors": "^3.0.0",
         "@loadable/component": "^5.12.0",
+        "@nteract/messaging": "^7.0.3-alpha.0",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.3",
@@ -2930,7 +2935,8 @@
         "reflect-metadata": "^0.1.12",
         "request": "^2.87.0",
         "request-progress": "^3.0.0",
-        "rxjs": "^5.5.9",
+        "rxjs": "^6.3.3",
+        "rxjs-compat": "^6.3.3",
         "semver": "^5.5.0",
         "stack-trace": "0.0.10",
         "string-argv": "^0.3.1",
