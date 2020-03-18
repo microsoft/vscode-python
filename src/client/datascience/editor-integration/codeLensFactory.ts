@@ -114,7 +114,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         }
 
         // First get the active server
-        const nb = await this.notebookProvider.getNotebook({ identity: nbUri, fetchOnly: true });
+        const nb = await this.notebookProvider.getOrCreateNotebook({ identity: nbUri, getOnly: true });
 
         // If we have an executing notebook, get its cell hash provider service.
         if (nb) {

@@ -784,7 +784,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Make sure we're loaded first.
         try {
             traceInfo('Waiting for jupyter server and web panel ...');
-            const server = await this.notebookProvider.getServer({ fetchOnly: false, disableUI: false });
+            const server = await this.notebookProvider.getOrCreateServer({ getOnly: false, disableUI: false });
             if (server) {
                 await this.ensureNotebook(server);
             }
@@ -984,7 +984,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             await notebook.dispose();
         }
         // If we have a server, dispose of it too. We are requesting total shutdown
-        const server = await this.notebookProvider.getServer({ fetchOnly: true });
+        const server = await this.notebookProvider.getOrCreateServer({ getOnly: true });
         if (server) {
             await server.dispose();
         }
@@ -1016,7 +1016,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.getNotebookMetadata()
             ]);
             try {
-                notebook = uri ? await this.notebookProvider.getNotebook({ identity: uri, metadata }) : undefined;
+                notebook = uri
+                    ? await this.notebookProvider.getOrCreateNotebook({ identity: uri, metadata })
+                    : undefined;
             } catch (e) {
                 // If we get an invalid kernel error, make sure to ask the user to switch
                 if (e instanceof JupyterInvalidKernelError && server && server.getConnectionInfo()?.localLaunch) {
@@ -1104,7 +1106,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async checkForServerStart(): Promise<void> {
         // See if a server already started or not
-        const server = await this.notebookProvider.getServer({ fetchOnly: true });
+        const server = await this.notebookProvider.getOrCreateServer({ getOnly: true });
 
         // This means a server that matches our options has started already. Use
         // it to ensure we have a notebook to run.

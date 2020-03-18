@@ -54,11 +54,11 @@ export class NotebookProvider implements INotebookProvider {
         );
     }
 
-    public async getServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
+    public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
         const serverOptions = this.getNotebookServerOptions();
 
         // If we are just fetching or only want to create for local, see if exists
-        if (options.fetchOnly || (options.localOnly && serverOptions.uri)) {
+        if (options.getOnly || (options.localOnly && serverOptions.uri)) {
             return this.jupyterExecution.getServer(serverOptions);
         } else {
             // Otherwise create a new server
@@ -66,9 +66,9 @@ export class NotebookProvider implements INotebookProvider {
         }
     }
 
-    public async getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
+    public async getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined> {
         // Make sure we have a server
-        const server = await this.getServer({ fetchOnly: options.fetchOnly, disableUI: options.disableUI });
+        const server = await this.getOrCreateServer({ getOnly: options.getOnly, disableUI: options.disableUI });
         if (server) {
             // We could have multiple native editors opened for the same file/model.
             const notebook = await server.getNotebook(options.identity);

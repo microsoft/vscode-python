@@ -54,12 +54,16 @@ export class ServerPreload implements IExtensionSingleActivationService {
             traceInfo(`Attempting to start a server because of preload conditions ...`);
 
             // May already have this server started.
-            let server = await this.notebookProvider.getServer({ fetchOnly: true, disableUI: true });
+            let server = await this.notebookProvider.getOrCreateServer({ getOnly: true, disableUI: true });
 
             // If it didn't start, attempt for local and if allowed.
             if (!server && !this.configService.getSettings(undefined).datascience.disableJupyterAutoStart) {
                 // Local case, try creating one
-                server = await this.notebookProvider.getServer({ fetchOnly: false, disableUI: true, localOnly: true });
+                server = await this.notebookProvider.getOrCreateServer({
+                    getOnly: false,
+                    disableUI: true,
+                    localOnly: true
+                });
             }
 
             if (server) {

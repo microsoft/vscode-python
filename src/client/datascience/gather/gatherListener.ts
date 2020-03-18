@@ -95,7 +95,7 @@ export class GatherListener implements IInteractiveWindowListener {
     private async initGather(notebookUri: string) {
         this.notebookUri = Uri.parse(notebookUri);
 
-        const nb = await this.notebookProvider.getNotebook({ identity: this.notebookUri, fetchOnly: true });
+        const nb = await this.notebookProvider.getOrCreateNotebook({ identity: this.notebookUri, getOnly: true });
         // If we have an executing notebook, get its gather execution service.
         if (nb) {
             this.gatherProvider = this.getGatherProvider(nb);

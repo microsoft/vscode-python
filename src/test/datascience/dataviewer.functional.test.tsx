@@ -93,7 +93,7 @@ suite('DataScience DataViewer tests', () => {
 
     async function injectCode(code: string): Promise<void> {
         const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
-        notebook = await notebookProvider.getNotebook({
+        notebook = await notebookProvider.getOrCreateNotebook({
             identity: Uri.parse(Identifiers.InteractiveWindowIdentity)
         });
         if (notebook) {

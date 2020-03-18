@@ -849,7 +849,7 @@ export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: 
 export const INotebookProvider = Symbol('INotebookProvider');
 
 export type GetServerOptions = {
-    fetchOnly?: boolean;
+    getOnly?: boolean;
     disableUI?: boolean;
     localOnly?: boolean;
 };
@@ -859,7 +859,7 @@ export type GetServerOptions = {
  */
 export type GetNotebookOptions = {
     identity: Uri;
-    fetchOnly?: boolean;
+    getOnly?: boolean;
     disableUI?: boolean;
     metadata?: nbformat.INotebookMetadata;
 };
@@ -868,10 +868,10 @@ export interface INotebookProvider {
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */
-    getNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
+    getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
 
     /**
      * Gets the server used for starting notebooks
      */
-    getServer(options: GetServerOptions): Promise<INotebookServer | undefined>;
+    getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined>;
 }
