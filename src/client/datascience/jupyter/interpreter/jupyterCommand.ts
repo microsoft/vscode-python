@@ -107,7 +107,14 @@ class InterpreterJupyterCommand implements IJupyterCommand {
                 ) {
                     try {
                         const output = await svc.exec(
-                            [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'jupyter_nbInstalled.py')],
+                            [
+                                path.join(
+                                    EXTENSION_ROOT_DIR,
+                                    'pythonFiles',
+                                    'vscode_datascience_helpers',
+                                    'jupyter_nbInstalled.py'
+                                )
+                            ],
                             {}
                         );
                         if (output.stdout.toLowerCase().includes('available')) {
@@ -264,7 +271,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
             bypassCondaExecution: true
         });
         return activatedEnv.exec(
-            [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterKernels.py')],
+            [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getJupyterKernels.py')],
             { ...options, throwOnStdErr: true }
         );
     }
@@ -275,7 +282,14 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
             bypassCondaExecution: true
         });
         return activatedEnv.exec(
-            [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterKernelspecVersion.py')],
+            [
+                path.join(
+                    EXTENSION_ROOT_DIR,
+                    'pythonFiles',
+                    'vscode_datascience_helpers',
+                    'getJupyterKernelspecVersion.py'
+                )
+            ],
             { ...options, throwOnStdErr: true }
         );
     }

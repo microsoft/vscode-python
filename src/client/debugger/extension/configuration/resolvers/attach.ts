@@ -55,7 +55,8 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         if (!Array.isArray(debugConfiguration.debugOptions)) {
             debugConfiguration.debugOptions = [];
         }
-        if (!debugConfiguration.host) {
+        if (!(debugConfiguration.connect || debugConfiguration.listen) && !debugConfiguration.host) {
+            // Connect and listen cannot be mixed with host property.
             debugConfiguration.host = 'localhost';
         }
         if (debugConfiguration.justMyCode === undefined) {
@@ -116,7 +117,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
 
     private resolvePathMappings(
         pathMappings: PathMapping[],
-        host: string,
+        host?: string,
         localRoot?: string,
         remoteRoot?: string,
         workspaceFolder?: Uri

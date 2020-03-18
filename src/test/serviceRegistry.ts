@@ -244,6 +244,8 @@ export class IocContainer {
                 await promise;
             }
         }
+        this.disposables = [];
+        this.serviceManager.dispose();
     }
 
     public registerCommonTypes(registerFileSystem: boolean = true) {

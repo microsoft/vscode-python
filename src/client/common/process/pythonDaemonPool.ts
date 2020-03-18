@@ -38,6 +38,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     private readonly observableDaemons: IPythonDaemonExecutionService[] = [];
     private readonly envVariables: NodeJS.ProcessEnv;
     private readonly pythonPath: string;
+    private _disposed = false;
     constructor(
         private readonly logger: IProcessLogger,
         private readonly disposables: IDisposableRegistry,
@@ -67,6 +68,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
 
         // Always ignore warnings as the user should never see the output of the daemon running
         this.envVariables[PYTHON_WARNINGS] = 'ignore';
+        this.disposables.push(this);
     }
     public async initialize() {
         const promises = Promise.all(
@@ -85,7 +87,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         await Promise.all([promises, promises2]);
     }
     public dispose() {
-        noop();
+        this._disposed = true;
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         const msg = { args: ['GetPythonVersion'] };
@@ -144,7 +146,11 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
             loggingArgs
         );
         const env = this.envVariables;
-        const daemonProc = this.pythonExecutionService!.execModuleObservable('datascience.daemon', args, { env });
+        const daemonProc = this.pythonExecutionService!.execModuleObservable(
+            'vscode_datascience_helpers.daemon',
+            args,
+            { env }
+        );
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }
@@ -231,7 +237,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
             completed = true;
             if (!daemonProc || (!daemonProc.killed && ProcessService.isAlive(daemonProc.pid))) {
                 this.pushDaemonIntoPool('ObservableDaemon', execService);
-            } else {
+            } else if (!this._disposed) {
                 // Possible daemon is dead (explicitly killed or died due to some error).
                 this.addDaemonService('ObservableDaemon').ignoreErrors();
             }

@@ -5,6 +5,7 @@
     "version": "2020.4.0-dev",
     "languageServerVersion": "0.5.30",
     "publisher": "ms-python",
+    "enableProposedApi": false,
     "author": {
         "name": "Microsoft Corporation"
     },
@@ -24,7 +25,7 @@
         "theme": "dark"
     },
     "engines": {
-        "vscode": "^1.42.0"
+        "vscode": "^1.43.0"
     },
     "keywords": [
         "python",
@@ -83,7 +84,8 @@
         "onCommand:python.datascience.exportfileandoutputasnotebook",
         "onCommand:python.datascience.selectJupyterInterpreter",
         "onCommand:python.datascience.selectjupytercommandline",
-        "onCommand:python.enableSourceMapSupport"
+        "onCommand:python.enableSourceMapSupport",
+        "onCustomEditor:NativeEditorProvider.ipynb"
     ],
     "main": "./out/client/extension",
     "contributes": {
@@ -1363,15 +1365,50 @@
                     },
                     "attach": {
                         "properties": {
+                            "connect": {
+                                "type": "object",
+                                "label": "Attach by connecting to debugpy over a socket.",
+                                "properties": {
+                                    "port": {
+                                        "type": "number",
+                                        "description": "Port to connect to."
+                                    },
+                                    "host": {
+                                        "type": "string",
+                                        "description": "Hostname or IP address to connect to.",
+                                        "default": "127.0.0.1"
+                                    }
+                                },
+                                "required": [
+                                    "port"
+                                ]
+                            },
+                            "listen": {
+                                "type": "object",
+                                "label": "Attach by listening for incoming socket connection from debugpy",
+                                "properties": {
+                                    "port": {
+                                        "type": "number",
+                                        "description": "Port to listen on."
+                                    },
+                                    "host": {
+                                        "type": "string",
+                                        "description": "Hostname or IP address of the interface to listen on.",
+                                        "default": "127.0.0.1"
+                                    }
+                                },
+                                "required": [
+                                    "port"
+                                ]
+                            },
                             "port": {
                                 "type": "number",
-                                "description": "Debug port to attach",
-                                "default": 0
+                                "description": "Port to connect to."
                             },
                             "host": {
                                 "type": "string",
-                                "description": "IP Address of the of remote server (default is localhost or use 127.0.0.1).",
-                                "default": "localhost"
+                                "description": "Hostname or IP address to connect to.",
+                                "default": "127.0.0.1"
                             },
                             "pathMappings": {
                                 "type": "array",
@@ -1832,14 +1869,14 @@
                 },
                 "python.dataScience.enableGather": {
                     "type": "boolean",
-                    "default": false,
-                    "description": "Enable experimental code gathering for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
+                    "default": true,
+                    "description": "Python Insiders Only: Enable experimental gather feature for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
                     "scope": "resource"
                 },
                 "python.dataScience.gatherToScript": {
                     "type": "boolean",
-                    "default": true,
-                    "description": "If experimental code gather is enabled, gather code to a python script rather than a notebook.",
+                    "default": false,
+                    "description": "Python Insiders Only: If experimental gather feature is enabled, gather code to a python script rather than a notebook.",
                     "scope": "resource"
                 },
                 "python.dataScience.codeLenses": {
@@ -2887,6 +2924,7 @@
         "koa-logger": "^3.2.1",
         "line-by-line": "^0.1.6",
         "lodash": "^4.17.15",
+        "log4js": "^6.1.2",
         "md5": "^2.2.1",
         "minimatch": "^3.0.4",
         "named-js-regexp": "^1.3.3",
@@ -2923,7 +2961,8 @@
         "winreg": "^1.2.4",
         "winston": "^3.2.1",
         "ws": "^6.0.0",
-        "xml2js": "^0.4.19"
+        "xml2js": "^0.4.19",
+        "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {
         "@babel/cli": "^7.4.4",
@@ -2998,7 +3037,7 @@
         "@types/winreg": "^1.2.30",
         "@types/ws": "^6.0.1",
         "@types/xml2js": "^0.4.2",
-        "acorn": "^6.0.0",
+        "acorn": "^6.4.1",
         "ansi-to-html": "^0.6.7",
         "awesome-typescript-loader": "^5.2.1",
         "babel-loader": "^8.0.3",
@@ -3078,6 +3117,7 @@
         "redux": "^4.0.4",
         "redux-logger": "^3.0.6",
         "relative": "^3.0.2",
+        "remove-files-webpack-plugin": "^1.4.0",
         "rewiremock": "^3.13.0",
         "sass-loader": "^7.1.0",
         "serialize-javascript": "^2.1.2",

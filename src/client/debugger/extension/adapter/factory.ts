@@ -38,48 +38,60 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         const configuration = session.configuration as LaunchRequestArguments | AttachRequestArguments;
 
         if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            const isAttach = configuration.request === 'attach';
-            const port = configuration.port ?? 0;
-            // When processId is provided we may have to inject the debugger into the process.
-            // This is done by the debug adapter, so we need to start it. The adapter will handle injecting the debugger when it receives the attach request.
-            const processId = configuration.processId ?? 0;
+            // There are four distinct scenarios here:
+            //
+            // 1. "launch";
+            // 2. "attach" with "processId";
+            // 3. "attach" with "listen";
+            // 4. "attach" with "connect" (or legacy "host"/"port");
+            //
+            // For the first three, we want to spawn the debug adapter directly.
+            // For the last one, the adapter is already listening on the specified socket.
+            // When "debugServer" is used, the standard adapter factory takes care of it - no need to check here.
 
-            if (isAttach && processId === 0) {
-                if (port === 0) {
-                    throw new Error('Port or processId must be specified for request type attach');
-                } else {
-                    return new DebugAdapterServer(port, configuration.host);
+            if (configuration.request === 'attach') {
+                if (configuration.connect !== undefined) {
+                    return new DebugAdapterServer(
+                        configuration.connect.port,
+                        configuration.connect.host ?? '127.0.0.1'
+                    );
+                } else if (configuration.port !== undefined) {
+                    return new DebugAdapterServer(configuration.port, configuration.host ?? '127.0.0.1');
+                } else if (configuration.listen === undefined && configuration.processId === undefined) {
+                    throw new Error('"request":"attach" requires either "connect", "listen", or "processId"');
                 }
-            } else {
-                const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
-                // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
+            }
+
+            const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
+            if (pythonPath.length !== 0) {
+                if (configuration.request === 'attach' && configuration.processId !== undefined) {
+                    sendTelemetryEvent(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS);
+                }
+
+                // "logToFile" is not handled directly by the adapter - instead, we need to pass
+                // the corresponding CLI switch when spawning it.
                 const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
+
+                if (configuration.debugAdapterPath !== undefined) {
+                    return new DebugAdapterExecutable(pythonPath, [configuration.debugAdapterPath, ...logArgs]);
+                }
+
                 const debuggerPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'debugpy');
 
-                if (pythonPath.length !== 0) {
-                    if (processId) {
-                        sendTelemetryEvent(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS);
-                    }
-
-                    if (configuration.debugAdapterPath) {
-                        return new DebugAdapterExecutable(pythonPath, [configuration.debugAdapterPath, ...logArgs]);
-                    }
-
-                    if (await this.useNewDebugger(pythonPath)) {
-                        sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
-                        return new DebugAdapterExecutable(pythonPath, [
-                            path.join(debuggerPathToUse, 'wheels', 'debugpy', 'adapter'),
-                            ...logArgs
-                        ]);
-                    } else {
-                        sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, {
-                            usingWheels: false
-                        });
-                        return new DebugAdapterExecutable(pythonPath, [
-                            path.join(debuggerPathToUse, 'no_wheels', 'debugpy', 'adapter'),
-                            ...logArgs
-                        ]);
-                    }
+                if (await this.useNewDebugger(pythonPath)) {
+                    sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
+                    return new DebugAdapterExecutable(pythonPath, [
+                        path.join(debuggerPathToUse, 'wheels', 'debugpy', 'adapter'),
+                        ...logArgs
+                    ]);
+                } else {
+                    sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, {
+                        usingWheels: false
+                    });
+                    return new DebugAdapterExecutable(pythonPath, [
+                        path.join(debuggerPathToUse, 'no_wheels', 'debugpy', 'adapter'),
+                        ...logArgs
+                    ]);
                 }
             }
         } else {

@@ -290,24 +290,12 @@ Overall steps for releasing are covered in the
 To create a release _build_, follow the steps outlined in the [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan) (which has a [template](https://github.com/Microsoft/vscode-python/blob/master/.github/release_plan.md)).
 
 ## Development Build
+If you would like to use the latest version of the extension as committed to `master` that has passed our test suite, then you may set the `"python.insidersChannel"` setting to `"daily"` or `"weekly"` based on how often you would like the extension to check for updates. 
 
-We publish the latest development
-build of the extension onto a cloud storage provider.
-If you are interested in helping us test our development builds or would like
-to stay ahead of the curve, then please feel free to download and install the
-extension from the following
+You may also download and install the extension manually from the following
 [location](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix).
 Once you have downloaded the
 [ms-python-insiders.vsix](https://pvsc.blob.core.windows.net/extension-builds/ms-python-insiders.vsix)
 file, please follow the instructions on
 [this page](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix)
-to install the extension.
-
-The development build of the extension:
-
-* Will be replaced with new releases published onto the
-  [VS Code Marketplace](https://marketplace.visualstudio.com/VSCode).
-* Does not get updated with new development builds of the extension (if you want to
-  test a newer development build, uninstall the old version of the
-  extension and then install the new version)
-* Is built every time a PR is committed into the [`master` branch](https://github.com/Microsoft/vscode-python).
+to install the extension. Do note that the manual install will not automatically update to newer builds unless you set the `"python.insidersChannel"` setting (it will get replaced with released versions from the Marketplace once they are newer than the version install manually).

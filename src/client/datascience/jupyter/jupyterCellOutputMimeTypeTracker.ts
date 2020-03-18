@@ -17,8 +17,8 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
     private pendingChecks = new Map<string, NodeJS.Timer | number>();
     private sentMimeTypes: Set<string> = new Set<string>();
 
-    constructor(@inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider) {
-        this.notebookProvider.onDidOpenNotebookEditor(t => this.onOpenedOrClosedNotebook(t));
+    constructor(@inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider) {
+        this.notebookEditorProvider.onDidOpenNotebookEditor(t => this.onOpenedOrClosedNotebook(t));
     }
     public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
         // Do nothing on pre execute
@@ -30,7 +30,7 @@ export class CellOutputMimeTypeTracker implements IExtensionSingleActivationServ
     }
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
-        this.notebookProvider.editors.forEach(e => this.onOpenedOrClosedNotebook(e));
+        this.notebookEditorProvider.editors.forEach(e => this.onOpenedOrClosedNotebook(e));
     }
 
     private onOpenedOrClosedNotebook(e: INotebookEditor) {

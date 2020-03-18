@@ -72,11 +72,11 @@ suite('Data Science - Jupyter Server URI Selector', () => {
     test('Local pick server uri', async () => {
         let value = '';
         const ds = createDataScienceObject('$(zap) Default', '', v => (value = v));
-        await ds.selectJupyterURI();
+        await ds.selectJupyterURI(true);
         assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
 
         // Try a second time.
-        await ds.selectJupyterURI();
+        await ds.selectJupyterURI(true);
         assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
 
         // Verify active items
@@ -94,7 +94,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
             mockStorage
         );
 
-        await ds.selectJupyterURI();
+        await ds.selectJupyterURI(true);
         // Verify initial default items
         assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
 
@@ -102,14 +102,14 @@ suite('Data Science - Jupyter Server URI Selector', () => {
         const serverA1 = { uri: 'ServerA', time: 1, date: new Date(1) };
         addToUriList(mockStorage, serverA1.uri, serverA1.time);
 
-        await ds.selectJupyterURI();
+        await ds.selectJupyterURI(true);
         assert.equal(quickPick?.items.length, 3, 'Wrong number of items in the quick pick');
         quickPickCheck(quickPick?.items[2], serverA1);
 
         // Add in a second server, the newer server should be higher in the list due to newer time
         const serverB1 = { uri: 'ServerB', time: 2, date: new Date(2) };
         addToUriList(mockStorage, serverB1.uri, serverB1.time);
-        await ds.selectJupyterURI();
+        await ds.selectJupyterURI(true);
         assert.equal(quickPick?.items.length, 4, 'Wrong number of items in the quick pick');
         quickPickCheck(quickPick?.items[2], serverB1);
         quickPickCheck(quickPick?.items[3], serverA1);
@@ -117,7 +117,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
         // Reconnect to server A with a new time, it should now be higher in the list
         const serverA3 = { uri: 'ServerA', time: 3, date: new Date(3) };
         addToUriList(mockStorage, serverA3.uri, serverA3.time);
-        await ds.selectJupyterURI();
+        await ds.selectJupyterURI(true);
         assert.equal(quickPick?.items.length, 4, 'Wrong number of items in the quick pick');
         quickPickCheck(quickPick?.items[3], serverB1);
         quickPickCheck(quickPick?.items[2], serverA1);
@@ -127,7 +127,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
             addToUriList(mockStorage, i.toString(), i);
         }
 
-        await ds.selectJupyterURI();
+        await ds.selectJupyterURI(true);
         // Need a plus 2 here for the two default items
         assert.equal(
             quickPick?.items.length,
@@ -151,14 +151,21 @@ suite('Data Science - Jupyter Server URI Selector', () => {
     test('Remote server uri', async () => {
         let value = '';
         const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', v => (value = v));
-        await ds.selectJupyterURI();
+        await ds.selectJupyterURI(true);
+        assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
+    });
+
+    test('Remote server uri no local', async () => {
+        let value = '';
+        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', v => (value = v));
+        await ds.selectJupyterURI(false);
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
     });
 
     test('Remote server uri (reload VSCode if there is a change in settings)', async () => {
         let value = '';
         const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', v => (value = v));
-        await ds.selectJupyterURI();
+        await ds.selectJupyterURI(true);
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
         verify(cmdManager.executeCommand(anything(), anything())).once();
     });
@@ -167,7 +174,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
         let value = '';
         const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', v => (value = v));
         dsSettings.jupyterServerURI = 'http://localhost:1111';
-        await ds.selectJupyterURI();
+        await ds.selectJupyterURI(true);
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
         verify(cmdManager.executeCommand(anything(), anything())).never();
     });
@@ -175,7 +182,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
     test('Invalid server uri', async () => {
         let value = '';
         const ds = createDataScienceObject('$(server) Existing', 'httx://localhost:1111', v => (value = v));
-        await ds.selectJupyterURI();
+        await ds.selectJupyterURI(true);
         assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
         assert.equal(value, '', 'Validation failed');
     });
@@ -188,7 +195,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
             const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', noop);
             when(clipboard.readText()).thenResolve(clipboardValue || '');
 
-            await ds.selectJupyterURI();
+            await ds.selectJupyterURI(true);
 
             assert.equal(showInputBox.firstCall.args[0].value, expectedDefaultUri);
         }

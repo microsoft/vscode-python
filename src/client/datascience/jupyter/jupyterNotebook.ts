@@ -154,12 +154,15 @@ export class JupyterNotebookBase implements INotebook {
     private _identity: Uri;
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
-    private _loggers: INotebookExecutionLogger[] = [];
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
+    public get onDisposed(): Event<void> {
+        return this.disposed.event;
+    }
     public get onKernelChanged(): Event<IJupyterKernelSpec | LiveKernelModel> {
         return this.kernelChanged.event;
     }
     private kernelChanged = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>();
+    private disposed = new EventEmitter<void>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
 
@@ -170,7 +173,7 @@ export class JupyterNotebookBase implements INotebook {
         private disposableRegistry: IDisposableRegistry,
         private owner: INotebookServer,
         private launchInfo: INotebookServerLaunchInfo,
-        loggers: INotebookExecutionLogger[],
+        private loggers: INotebookExecutionLogger[],
         resource: Resource,
         identity: Uri,
         private getDisposedError: () => Error,
@@ -188,7 +191,6 @@ export class JupyterNotebookBase implements INotebook {
         this.sessionStatusChanged = this.session.onSessionStatusChanged(statusChangeHandler);
         this._identity = identity;
         this._resource = resource;
-        this._loggers = [...loggers];
         // Save our interpreter and don't change it. Later on when kernel changes
         // are possible, recompute it.
     }
@@ -211,6 +213,7 @@ export class JupyterNotebookBase implements INotebook {
             const dispose = this.session ? this.session.dispose() : undefined;
             return dispose ? dispose : Promise.resolve();
         }
+        this.disposed.fire();
         return Promise.resolve();
     }
 
@@ -617,7 +620,7 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public getLoggers(): INotebookExecutionLogger[] {
-        return this._loggers;
+        return this.loggers;
     }
 
     private async initializeMatplotlib(cancelToken?: CancellationToken): Promise<void> {
@@ -1051,11 +1054,11 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private async logPreCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this._loggers.map(l => l.preExecute(cell, silent)));
+        await Promise.all(this.loggers.map(l => l.preExecute(cell, silent)));
     }
 
     private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this._loggers.map(l => l.postExecute(cloneDeep(cell), silent)));
+        await Promise.all(this.loggers.map(l => l.postExecute(cloneDeep(cell), silent)));
     }
 
     private addToCellData = (

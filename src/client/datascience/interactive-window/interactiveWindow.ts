@@ -53,11 +53,13 @@ import {
     IJupyterKernelSpec,
     IJupyterVariables,
     INotebookExporter,
+    INotebookProvider,
     INotebookServerOptions,
     IStatusProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
+import { InteractiveWindowNotebookProvider } from './notebookProvider';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
@@ -108,7 +110,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
-        @inject(KernelSwitcher) switcher: KernelSwitcher
+        @inject(KernelSwitcher) switcher: KernelSwitcher,
+        @inject(InteractiveWindowNotebookProvider) notebookProvider: INotebookProvider
     ) {
         super(
             progressReporter,
@@ -142,7 +145,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             localize.DataScience.historyTitle(),
             ViewColumn.Two,
             experimentsManager,
-            switcher
+            switcher,
+            notebookProvider
         );
 
         // Send a telemetry event to indicate window is opening
@@ -153,10 +157,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public dispose() {
-        super.dispose();
+        const promise = super.dispose();
         if (this.closedEvent) {
             this.closedEvent.fire(this);
         }
+        return promise;
     }
 
     public addMessage(message: string): Promise<void> {
@@ -180,20 +185,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public async addCode(code: string, file: string, line: number): Promise<boolean> {
-        if (this.lastFile && !this.fileSystem.arePathsSame(file, this.lastFile)) {
-            sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
-        }
-        // Save the last file we ran with.
-        this.lastFile = file;
-
-        // Make sure our web panel opens.
-        await this.show();
-
-        // Tell the webpanel about the new directory.
-        this.updateCwd(path.dirname(file));
-
-        // Call the internal method.
-        return this.submitCode(code, file, line);
+        return this.addOrDebugCode(code, file, line, false);
     }
 
     public exportCells() {
@@ -251,7 +243,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
         // Call the internal method if we were able to save
         if (saved) {
-            return this.submitCode(code, file, line, undefined, undefined, true);
+            return this.addOrDebugCode(code, file, line, true);
         }
 
         return false;
@@ -272,7 +264,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.postMessage(InteractiveWindowMessages.ScrollToCell, { id }).ignoreErrors();
     }
 
-    protected async getOwningResource(): Promise<Resource> {
+    public async getOwningResource(): Promise<Resource> {
         if (this.lastFile) {
             return Uri.file(this.lastFile);
         }
@@ -362,6 +354,23 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             store.updateValue(true).ignoreErrors();
         }
         return super.ensureServerAndNotebook();
+    }
+
+    private async addOrDebugCode(code: string, file: string, line: number, debug: boolean): Promise<boolean> {
+        if (this.lastFile && !this.fileSystem.arePathsSame(file, this.lastFile)) {
+            sendTelemetryEvent(Telemetry.NewFileForInteractiveWindow);
+        }
+        // Save the last file we ran with.
+        this.lastFile = file;
+
+        // Make sure our web panel opens.
+        await this.show();
+
+        // Tell the webpanel about the new directory.
+        this.updateCwd(path.dirname(file));
+
+        // Call the internal method.
+        return this.submitCode(code, file, line, undefined, undefined, debug);
     }
 
     @captureTelemetry(Telemetry.ExportNotebook, undefined, false)

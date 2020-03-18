@@ -3,13 +3,16 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Disposable, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Uri, WebviewPanel } from 'vscode';
 import { arePathsSame } from '../../../datascience-ui/react-common/arePathsSame';
 import {
+    CustomDocument,
+    CustomDocumentEditEvent,
+    CustomDocumentRevert,
+    CustomEditorEditingDelegate,
+    CustomEditorProvider,
     ICustomEditorService,
-    IWorkspaceService,
-    WebviewCustomEditorEditingDelegate,
-    WebviewCustomEditorProvider
+    IWorkspaceService
 } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import {
@@ -21,6 +24,7 @@ import {
 } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Identifiers, Settings, Telemetry } from '../constants';
@@ -39,28 +43,26 @@ import {
 export class NativeEditorProvider
     implements
         INotebookEditorProvider,
-        WebviewCustomEditorProvider,
-        WebviewCustomEditorEditingDelegate<NotebookModelChange>,
-        IAsyncDisposable {
+        CustomEditorProvider,
+        IAsyncDisposable,
+        CustomEditorEditingDelegate<NotebookModelChange> {
     public get onDidChangeActiveNotebookEditor(): Event<INotebookEditor | undefined> {
         return this._onDidChangeActiveNotebookEditor.event;
     }
     public get onDidCloseNotebookEditor(): Event<INotebookEditor> {
         return this._onDidCloseNotebookEditor.event;
     }
-    public get onEdit(): Event<{ readonly resource: Uri; readonly edit: NotebookModelChange }> {
-        return this._editEventEmitter.event;
-    }
-
-    public get editingDelegate(): WebviewCustomEditorEditingDelegate<unknown> | undefined {
-        return this;
-    }
-
     public get onDidOpenNotebookEditor(): Event<INotebookEditor> {
         return this._onDidOpenNotebookEditor.event;
     }
     public get activeEditor(): INotebookEditor | undefined {
         return this.editors.find(e => e.visible && e.active);
+    }
+    public get editingDelegate(): CustomEditorEditingDelegate<NotebookModelChange> {
+        return this;
+    }
+    public get onDidEdit(): Event<CustomDocumentEditEvent<NotebookModelChange>> {
+        return this._onDidEdit.event;
     }
 
     public get editors(): INotebookEditor[] {
@@ -70,15 +72,13 @@ export class NativeEditorProvider
     public static readonly customEditorViewType = 'NativeEditorProvider.ipynb';
     protected readonly _onDidChangeActiveNotebookEditor = new EventEmitter<INotebookEditor | undefined>();
     protected readonly _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
+    protected readonly _onDidEdit = new EventEmitter<CustomDocumentEditEvent<NotebookModelChange>>();
+    protected customDocuments = new Map<string, CustomDocument>();
     private readonly _onDidCloseNotebookEditor = new EventEmitter<INotebookEditor>();
-    private readonly _editEventEmitter = new EventEmitter<{
-        readonly resource: Uri;
-        readonly edit: NotebookModelChange;
-    }>();
     private openedEditors: Set<INotebookEditor> = new Set<INotebookEditor>();
-    private models = new Map<string, Promise<{ model: INotebookModel; storage: INotebookStorage }>>();
-    private modelChangedHandlers: Map<string, Disposable> = new Map<string, Disposable>();
+    private storageAndModels = new Map<string, Promise<{ model: INotebookModel; storage: INotebookStorage }>>();
     private executedEditors: Set<string> = new Set<string>();
+    private models = new WeakSet<INotebookModel>();
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
     private _id = uuid();
@@ -101,42 +101,64 @@ export class NativeEditorProvider
         }
 
         // Register for the custom editor service.
-        customEditorService.registerWebviewCustomEditorProvider(NativeEditorProvider.customEditorViewType, this, {
+        customEditorService.registerCustomEditorProvider(NativeEditorProvider.customEditorViewType, this, {
             enableFindWidget: true,
             retainContextWhenHidden: true
         });
     }
 
-    public save(resource: Uri): Promise<void> {
-        return this.loadStorage(resource).then(async s => {
+    public save(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
+        return this.loadStorage(document.uri).then(async s => {
             if (s) {
-                await s.save();
+                await s.save(cancellation);
             }
         });
     }
-    public saveAs(resource: Uri, targetResource: Uri): Promise<void> {
-        return this.loadStorage(resource).then(async s => {
+    public saveAs(document: CustomDocument, targetResource: Uri): Promise<void> {
+        return this.loadStorage(document.uri).then(async s => {
             if (s) {
                 await s.saveAs(targetResource);
             }
         });
     }
-    public applyEdits(resource: Uri, edits: readonly NotebookModelChange[]): Promise<void> {
-        return this.loadModel(resource).then(s => {
+    public applyEdits(document: CustomDocument, edits: readonly NotebookModelChange[]): Promise<void> {
+        return this.loadModel(document.uri).then(s => {
             if (s) {
                 edits.forEach(e => s.update({ ...e, source: 'redo' }));
             }
         });
     }
-    public undoEdits(resource: Uri, edits: readonly NotebookModelChange[]): Promise<void> {
-        return this.loadModel(resource).then(s => {
+    public undoEdits(document: CustomDocument, edits: readonly NotebookModelChange[]): Promise<void> {
+        return this.loadModel(document.uri).then(s => {
             if (s) {
                 edits.forEach(e => s.update({ ...e, source: 'undo' }));
             }
         });
     }
-    public async resolveWebviewEditor(resource: Uri, panel: WebviewPanel) {
-        await this.createNotebookEditor(resource, panel);
+    public async revert(_document: CustomDocument, _edits: CustomDocumentRevert<NotebookModelChange>): Promise<void> {
+        noop();
+    }
+    public async backup(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
+        return this.loadStorage(document.uri).then(async s => {
+            if (s) {
+                await s.backup(cancellation);
+            }
+        });
+    }
+
+    public async resolveCustomEditor(document: CustomDocument, panel: WebviewPanel) {
+        this.customDocuments.set(document.uri.fsPath, document);
+        await this.createNotebookEditor(document.uri, panel);
+    }
+
+    public async resolveCustomDocument(document: CustomDocument): Promise<void> {
+        this.customDocuments.set(document.uri.fsPath, document);
+        await this.loadStorage(document.uri);
+    }
+
+    public async resolveNativeEditorStorage(document: CustomDocument): Promise<INotebookStorage> {
+        this.customDocuments.set(document.uri.fsPath, document);
+        return this.loadStorage(document.uri);
     }
 
     public async dispose(): Promise<void> {
@@ -247,8 +269,7 @@ export class NativeEditorProvider
         // If last editor, dispose of the storage
         const key = editor.file.toString();
         if (![...this.openedEditors].find(e => e.file.toString() === key)) {
-            this.modelChangedHandlers.delete(key);
-            this.models.delete(key);
+            this.storageAndModels.delete(key);
         }
         this._onDidCloseNotebookEditor.fire(editor);
     }
@@ -263,23 +284,20 @@ export class NativeEditorProvider
         }
     }
 
-    private async modelChanged(file: Uri, change: NotebookModelChange): Promise<void> {
-        // If the cells change because of a UI event, tell VS code about it
-        if (change.source === 'user') {
-            // Skip version and file changes. They can't be undone
-            switch (change.kind) {
-                case 'version':
-                    break;
-                case 'file':
-                    // Update our storage
-                    const promise = this.models.get(change.oldFile.toString());
-                    this.models.delete(change.oldFile.toString());
-                    this.models.set(change.newFile.toString(), promise!);
-                    break;
-                default:
-                    this._editEventEmitter.fire({ resource: file, edit: change });
-                    break;
-            }
+    private async modelChanged(change: NotebookModelChange) {
+        if (change.source === 'user' && change.kind === 'file') {
+            // Update our storage
+            const promise = this.storageAndModels.get(change.oldFile.toString());
+            this.storageAndModels.delete(change.oldFile.toString());
+            this.storageAndModels.set(change.newFile.toString(), promise!);
+        }
+    }
+
+    private async modelEdited(model: INotebookModel, change: NotebookModelChange) {
+        // Find the document associated with this edit.
+        const document = this.customDocuments.get(model.file.fsPath);
+        if (document) {
+            this._onDidEdit.fire({ document, edit: change });
         }
     }
 
@@ -295,24 +313,25 @@ export class NativeEditorProvider
 
     private loadModelAndStorage(file: Uri, contents?: string) {
         const key = file.toString();
-        let modelPromise = this.models.get(key);
+        let modelPromise = this.storageAndModels.get(key);
         if (!modelPromise) {
             const storage = this.serviceContainer.get<INotebookStorage>(INotebookStorage);
             modelPromise = storage.load(file, contents).then(m => {
-                if (!this.modelChangedHandlers.has(key)) {
-                    this.modelChangedHandlers.set(key, m.changed(this.modelChanged.bind(this, file)));
+                if (!this.models.has(m)) {
+                    this.models.add(m);
+                    this.disposables.push(m.changed(this.modelChanged.bind(this)));
+                    this.disposables.push(storage.onDidEdit(this.modelEdited.bind(this, m)));
                 }
                 return { model: m, storage };
             });
-
-            this.models.set(key, modelPromise);
+            this.storageAndModels.set(key, modelPromise);
         }
         return modelPromise;
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {
         // See if we have any untitled storage already
-        const untitledStorage = [...this.models.keys()].filter(k => Uri.parse(k).scheme === 'untitled');
+        const untitledStorage = [...this.storageAndModels.keys()].filter(k => Uri.parse(k).scheme === 'untitled');
 
         // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
         // our map, so we'll keep creating new untitled notebooks.

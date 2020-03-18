@@ -3,7 +3,7 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Memento, Uri } from 'vscode';
+import { CancellationToken, Event, EventEmitter, Memento, Uri } from 'vscode';
 import { concatMultilineStringInput, splitMultilineString } from '../../../datascience-ui/common';
 import { createCodeCell } from '../../../datascience-ui/common/cellFactory';
 import { traceError } from '../../common/logger';
@@ -20,6 +20,8 @@ import { CellState, ICell, IJupyterExecution, IJupyterKernelSpec, INotebookModel
 // tslint:disable-next-line:no-require-imports no-var-requires
 import detectIndent = require('detect-indent');
 import { sendTelemetryEvent } from '../../telemetry';
+// tslint:disable-next-line:no-require-imports no-var-requires
+const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 const KeyPrefix = 'notebook-storage-';
 const NotebookTransferKey = 'notebook-transfered';
@@ -50,7 +52,12 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     public get cells(): ICell[] {
         return this._state.cells;
     }
+    public get onDidEdit(): Event<NotebookModelChange> {
+        return this._editEventEmitter.event;
+    }
+
     private _changedEmitter = new EventEmitter<NotebookModelChange>();
+    private _editEventEmitter = new EventEmitter<NotebookModelChange>();
     private _state: INativeEditorStorageState = {
         file: Uri.file(''),
         changeCount: 0,
@@ -59,6 +66,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         notebookJson: {}
     };
     private indentAmount: string = ' ';
+    private debouncedWriteToStorage = debounce(this.writeToStorage.bind(this), 250);
 
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
@@ -79,11 +87,17 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         this.handleModelChange(change);
     }
 
-    public save(): Promise<INotebookModel> {
+    public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {
+        edits.forEach(e => this.update({ ...e, source: 'redo' }));
+    }
+    public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
+        edits.forEach(e => this.update({ ...e, source: 'undo' }));
+    }
+    public save(): Promise<void> {
         return this.saveAs(this.file);
     }
 
-    public async saveAs(file: Uri): Promise<INotebookModel> {
+    public async saveAs(file: Uri): Promise<void> {
         const contents = await this.getContent();
         await this.fileSystem.writeFile(file.fsPath, contents, 'utf-8');
         if (this.isDirty || file.fsPath !== this.file.fsPath) {
@@ -96,9 +110,11 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 oldDirty: this.isDirty
             });
         }
-        return this;
     }
-
+    public async backup(cancellation: CancellationToken): Promise<void> {
+        // Should send to extension context storage path
+        return this.storeContentsInHotExitFile(cancellation);
+    }
     public async getJson(): Promise<Partial<nbformat.INotebookContent>> {
         await this.ensureNotebookJson();
         return this._state.notebookJson;
@@ -113,7 +129,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
      * Also keep track of the current time. This way we can check whether changes were
      * made to the file since the last time uncommitted changes were stored.
      */
-    public async storeContentsInHotExitFile(): Promise<void> {
+    public async storeContentsInHotExitFile(cancelToken?: CancellationToken): Promise<void> {
         const contents = await this.getContent();
         const key = this.getStorageKey();
         const filePath = this.getHashedFileName(key);
@@ -123,15 +139,19 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
 
         // Write but debounced (wait at least 250 ms)
-        return this.writeToStorage(filePath, specialContents);
+        return this.debouncedWriteToStorage(filePath, specialContents, cancelToken);
     }
-    private async writeToStorage(filePath: string, contents?: string): Promise<void> {
+    private async writeToStorage(filePath: string, contents?: string, cancelToken?: CancellationToken): Promise<void> {
         try {
-            if (contents) {
-                await this.fileSystem.createDirectory(path.dirname(filePath));
-                return this.fileSystem.writeFile(filePath, contents);
-            } else {
-                return this.fileSystem.deleteFile(filePath);
+            if (!cancelToken?.isCancellationRequested) {
+                if (contents) {
+                    await this.fileSystem.createDirectory(path.dirname(filePath));
+                    if (!cancelToken?.isCancellationRequested) {
+                        return this.fileSystem.writeFile(filePath, contents);
+                    }
+                } else {
+                    return this.fileSystem.deleteFile(filePath);
+                }
             }
         } catch (exc) {
             traceError(`Error writing storage for ${filePath}: `, exc);
@@ -178,6 +198,15 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Forward onto our listeners if necessary
         if (changed || this.isDirty !== oldDirty) {
             this._changedEmitter.fire({ ...change, newDirty: this.isDirty, oldDirty });
+        }
+        // Slightly different for the event we send to VS code. Skip version and file changes. Only send user events.
+        if (
+            (changed || this.isDirty !== oldDirty) &&
+            change.kind !== 'version' &&
+            change.kind !== 'file' &&
+            change.source === 'user'
+        ) {
+            this._editEventEmitter.fire(change);
         }
     }
 

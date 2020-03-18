@@ -113,6 +113,7 @@ export interface INotebook extends IAsyncDisposable {
     readonly server: INotebookServer;
     readonly status: ServerStatus;
     onSessionStatusChanged: Event<ServerStatus>;
+    onDisposed: Event<void>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
@@ -152,6 +153,7 @@ export interface INotebookServerOptions {
     purpose: string;
     metadata?: nbformat.INotebookMetadata;
     disableUI?: boolean;
+    skipSearchingForKernel?: boolean;
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
@@ -835,12 +837,23 @@ export interface INotebookModel {
 export const INotebookStorage = Symbol('INotebookStorage');
 
 export interface INotebookStorage {
+    readonly onDidEdit: Event<NotebookModelChange>;
+    save(cancellation: CancellationToken): Thenable<void>;
+    saveAs(targetResource: Uri): Thenable<void>;
+    applyEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
+    undoEdits(edits: readonly NotebookModelChange[]): Thenable<void>;
+    backup(cancellation: CancellationToken): Thenable<void>;
     load(file: Uri, contents?: string): Promise<INotebookModel>;
-    save(): Promise<INotebookModel>;
-    saveAs(file: Uri): Promise<INotebookModel>;
 }
 type WebViewViewState = {
     readonly visible: boolean;
     readonly active: boolean;
 };
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
+
+export interface INotebookProvider {
+    /**
+     * Gets or creates a notebook, and manages the lifetime of notebooks.
+     */
+    getNotebook(server: INotebookServer, resource: Uri, options?: nbformat.INotebookMetadata): Promise<INotebook>;
+}

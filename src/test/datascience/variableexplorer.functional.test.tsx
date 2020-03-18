@@ -37,10 +37,11 @@ suite('DataScience Interactive Window variable explorer tests', () => {
         }
     });
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         createdNotebook = false;
+        await ioc.activate();
     });
 
     teardown(async () => {

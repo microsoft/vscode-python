@@ -12,7 +12,7 @@ export const DefaultTheme = 'Default Light+';
 export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 
 // Python Module to be used when instantiating the Python Daemon.
-export const PythonDaemonModule = 'datascience.jupyter_daemon';
+export const PythonDaemonModule = 'vscode_datascience_helpers.jupyter_daemon';
 
 // List of 'language' names that we know about. All should be lower case as that's how we compare.
 export const KnownNotebookLanguages: string[] = [
@@ -283,7 +283,8 @@ export enum Telemetry {
     JupyterCommandLineNonDefault = 'DS_INTERNAL.JUPYTER_CUSTOM_COMMAND_LINE',
     NewFileForInteractiveWindow = 'DS_INTERNAL.NEW_FILE_USED_IN_INTERACTIVE',
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
-    GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED'
+    GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
+    ZMQNotSupported = 'DATASCIENCE.ZMQ_NATIVE_BINARIES_NOT_LOADING'
 }
 
 export enum NativeKeyboardCommandTelemetry {

@@ -52,12 +52,12 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
 
     constructor(
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider
+        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider
     ) {
         this.documentManager.onDidOpenTextDocument(t => this.onOpenedOrSavedDocument(t));
         this.documentManager.onDidSaveTextDocument(t => this.onOpenedOrSavedDocument(t));
-        this.notebookProvider.onDidOpenNotebookEditor(t => this.onOpenedOrClosedNotebook(t));
-        this.notebookProvider.onDidCloseNotebookEditor(t => this.onOpenedOrClosedNotebook(t));
+        this.notebookEditorProvider.onDidOpenNotebookEditor(t => this.onOpenedOrClosedNotebook(t));
+        this.notebookEditorProvider.onDidCloseNotebookEditor(t => this.onOpenedOrClosedNotebook(t));
     }
     public async preExecute(_cell: ICell, _silent: boolean): Promise<void> {
         // Do nothing on pre execute
@@ -72,7 +72,7 @@ export class ImportTracker implements IExtensionSingleActivationService, INotebo
     public async activate(): Promise<void> {
         // Act like all of our open documents just opened; our timeout will make sure this is delayed.
         this.documentManager.textDocuments.forEach(d => this.onOpenedOrSavedDocument(d));
-        this.notebookProvider.editors.forEach(e => this.onOpenedOrClosedNotebook(e));
+        this.notebookEditorProvider.editors.forEach(e => this.onOpenedOrClosedNotebook(e));
     }
 
     private getDocumentLines(document: TextDocument): (string | undefined)[] {

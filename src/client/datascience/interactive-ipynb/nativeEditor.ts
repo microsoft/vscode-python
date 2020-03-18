@@ -78,17 +78,20 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookModel,
+    INotebookProvider,
     INotebookServerOptions,
     IStatusProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
+import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 
 import { nbformat } from '@jupyterlab/coreutils';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
+import { NativeNotebookProvider } from './notebookProvider';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 @injectable()
@@ -164,6 +167,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(INotebookExporter) jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
+        @inject(NativeEditorSynchronizer) private readonly synchronizer: NativeEditorSynchronizer,
         @inject(INotebookEditorProvider) private editorProvider: INotebookEditorProvider,
         @inject(IDataViewerProvider) dataExplorerProvider: IDataViewerProvider,
         @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
@@ -174,7 +178,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(KernelSwitcher) switcher: KernelSwitcher
+        @inject(KernelSwitcher) switcher: KernelSwitcher,
+        @inject(NativeNotebookProvider) notebookProvider: INotebookProvider
     ) {
         super(
             progressReporter,
@@ -208,9 +213,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active,
             experimentsManager,
-            switcher
+            switcher,
+            notebookProvider
         );
         asyncRegistry.push(this);
+
+        this.synchronizer.subscribeToUserActions(this, this.postMessage.bind(this));
     }
 
     public dispose(): Promise<void> {
@@ -247,6 +255,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
         switch (message) {
+            case InteractiveWindowMessages.Sync:
+                this.synchronizer.notifyUserAction(payload, this);
+                break;
+
             case InteractiveWindowMessages.ReExecuteCells:
                 this.executedEvent.fire(this);
                 break;
@@ -512,18 +524,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     protected async close(): Promise<void> {
         // Fire our event
         this.closedEvent.fire(this);
-
-        // Restart our kernel so that execution counts are reset
-        let oldAsk: boolean | undefined = false;
-        const settings = this.configuration.getSettings(await this.getOwningResource());
-        if (settings && settings.datascience) {
-            oldAsk = settings.datascience.askForKernelRestart;
-            settings.datascience.askForKernelRestart = false;
-        }
-        await this.restartKernel(true);
-        if (oldAsk && settings && settings.datascience) {
-            settings.datascience.askForKernelRestart = true;
-        }
     }
 
     protected saveAll() {

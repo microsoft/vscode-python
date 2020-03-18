@@ -463,7 +463,12 @@ suite('Jupyter Execution', async () => {
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             }
         );
-        const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+        const getServerInfoPath = path.join(
+            EXTENSION_ROOT_DIR,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'getServerInfo.py'
+        );
         setupPythonService(
             service,
             undefined,
@@ -502,7 +507,12 @@ suite('Jupyter Execution', async () => {
             ['kernelspec', 'list', '--json'],
             Promise.resolve({ stdout: JSON.stringify(kernelSpecs) })
         );
-        const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+        const getServerInfoPath = path.join(
+            EXTENSION_ROOT_DIR,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'getServerInfo.py'
+        );
         setupPythonService(
             service,
             undefined,
@@ -599,7 +609,12 @@ suite('Jupyter Execution', async () => {
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             }
         );
-        const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+        const getServerInfoPath = path.join(
+            EXTENSION_ROOT_DIR,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'getServerInfo.py'
+        );
         setupProcessServiceExec(
             service,
             workingPython.path,
@@ -638,7 +653,12 @@ suite('Jupyter Execution', async () => {
             ['-m', 'jupyter', 'kernelspec', 'list', '--json'],
             Promise.resolve({ stdout: JSON.stringify(kernelSpecs) })
         );
-        const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+        const getServerInfoPath = path.join(
+            EXTENSION_ROOT_DIR,
+            'pythonFiles',
+            'vscode_datascience_helpers',
+            'getServerInfo.py'
+        );
         setupProcessServiceExec(
             service,
             missingKernelPython.path,

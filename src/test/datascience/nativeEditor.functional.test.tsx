@@ -13,7 +13,12 @@ import * as sinon from 'sinon';
 import { anything, objectContaining, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
-import { IApplicationShell, ICustomEditorService, IDocumentManager } from '../../client/common/application/types';
+import {
+    IApplicationShell,
+    ICustomEditorService,
+    IDocumentManager,
+    IWorkspaceService
+} from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -36,6 +41,7 @@ import { ExecutionCount } from '../../datascience-ui/interactive-common/executio
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
+import { UseCustomEditor } from '../../datascience-ui/react-common/constants';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
@@ -127,8 +133,10 @@ suite('DataScience Native Editor', () => {
                 };
 
                 setup(async () => {
+                    UseCustomEditor.enabled = useCustomEditorApi;
                     ioc = new DataScienceIocContainer();
                     ioc.registerDataScienceTypes(useCustomEditorApi);
+                    await ioc.activate();
 
                     const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                     appShell
@@ -476,6 +484,10 @@ df.head()`;
                     async (_wrapper, context) => {
                         if (ioc.mockJupyter) {
                             await ioc.activate();
+                            ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
+                                ...ioc.getSettings().datascience,
+                                disableJupyterAutoStart: false
+                            });
 
                             // Create an editor so something is listening to messages
                             const editor = await createNewEditor(ioc);
@@ -899,8 +911,10 @@ df.head()`;
                     cleanupCallback: Function;
                 };
                 function initIoc() {
+                    UseCustomEditor.enabled = useCustomEditorApi;
                     ioc = new DataScienceIocContainer();
                     ioc.registerDataScienceTypes(useCustomEditorApi);
+                    return ioc.activate();
                 }
                 async function setupFunction(this: Mocha.Context, fileContents?: any) {
                     const wrapperPossiblyUndefined = await setupWebview(ioc);
@@ -1040,7 +1054,7 @@ df.head()`;
 
                 suite('Selection/Focus', () => {
                     setup(async function() {
-                        initIoc();
+                        await initIoc();
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this);
                     });
@@ -1137,7 +1151,7 @@ df.head()`;
 
                 suite('Model updates', () => {
                     setup(async function() {
-                        initIoc();
+                        await initIoc();
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this);
                     });
@@ -1272,8 +1286,8 @@ df.head()`;
                         assert.ok(isCellFocused(wrapper, 'NativeCell', cellIndex));
                         assert.equal(wrapper.find('NativeCell').length, 4, 'Cell not added');
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const model = (notebookProvider.editors[0] as NativeEditorWebView).model;
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const model = (notebookEditorProvider.editors[0] as NativeEditorWebView).model;
 
                         // This is the string the user will type in a character at a time into the editor.
                         const stringToType = 'Hi! Bob!';
@@ -1327,8 +1341,8 @@ df.head()`;
                         assert.ok(isCellFocused(wrapper, 'NativeCell', cellIndex));
                         assert.equal(wrapper.find('NativeCell').length, 4, 'Cell not added');
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const model = (notebookProvider.editors[0] as NativeEditorWebView).model;
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const model = (notebookEditorProvider.editors[0] as NativeEditorWebView).model;
 
                         // This is the string the user will type in a character at a time into the editor.
                         const stringToType = 'Hi Bob!';
@@ -1399,7 +1413,7 @@ df.head()`;
                 suite('Keyboard Shortcuts', () => {
                     setup(async function() {
                         (window.navigator as any).platform = originalPlatform;
-                        initIoc();
+                        await initIoc();
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this);
                     });
@@ -1697,8 +1711,8 @@ df.head()`;
                         await addCell(wrapper, ioc, '7', false);
 
                         // Access the code in the cells.
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const model = (notebookProvider.editors[0] as NativeEditorWebView).model;
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const model = (notebookEditorProvider.editors[0] as NativeEditorWebView).model;
 
                         // Set focus to the first cell.
                         let update = waitForUpdate(wrapper, NativeEditor, 1);
@@ -2003,8 +2017,8 @@ df.head()`;
                         await addCell(wrapper, ioc, 'a=1\na', true);
                         await dirtyPromise;
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
                         const savedPromise = createDeferred();
                         editor.saved(() => savedPromise.resolve());
@@ -2032,8 +2046,8 @@ df.head()`;
                         await addCell(wrapper, ioc, 'a=1\na', true);
                         await dirtyPromise;
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
                         const savedPromise = createDeferred();
                         editor.saved(() => savedPromise.resolve());
@@ -2064,8 +2078,8 @@ df.head()`;
                         await addCell(wrapper, ioc, 'a=1\na', true);
                         await dirtyPromise;
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
                         const savedPromise = createDeferred();
                         editor.saved(() => savedPromise.resolve());
@@ -2093,8 +2107,8 @@ df.head()`;
 
                         await addCell(wrapper, ioc, 'a=1\na', true);
 
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
                         const savedPromise = createDeferred();
                         editor.saved(() => savedPromise.resolve());
@@ -2121,7 +2135,7 @@ df.head()`;
                             // tslint:disable-next-line: no-invalid-this
                             return this.skip();
                         }
-                        initIoc();
+                        await initIoc();
 
                         windowStateChangeHandlers = [];
                         // Keep track of all handlers for the onDidChangeWindowState event.
@@ -2144,11 +2158,18 @@ df.head()`;
                         await addCell(wrapper, ioc, 'a', false);
                     }
 
+                    async function updateFileConfig(key: string, value: any) {
+                        return ioc
+                            .get<IWorkspaceService>(IWorkspaceService)
+                            .getConfiguration('file')
+                            .update(key, value);
+                    }
+
                     test('Auto save notebook every 1s', async () => {
                         // Configure notebook to save automatically ever 1s.
-                        when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('afterDelay');
-                        when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(1_000);
-                        ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
+                        await updateFileConfig('autoSave', 'afterDelay');
+                        await updateFileConfig('autoSaveDelay', 1_000);
+                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         /**
                          * Make some changes to a cell of a notebook, then verify the notebook is auto saved.
@@ -2176,13 +2197,14 @@ df.head()`;
                         await makeChangesAndConfirmFileIsUpdated();
                         await makeChangesAndConfirmFileIsUpdated();
                         await makeChangesAndConfirmFileIsUpdated();
-                    });
+                    }).retries(2);
 
                     test('File saved with same format', async () => {
                         // Configure notebook to save automatically ever 1s.
-                        when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('afterDelay');
-                        when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(2_000);
-                        ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
+                        await updateFileConfig('autoSave', 'afterDelay');
+                        await updateFileConfig('autoSaveDelay', 2_000);
+
+                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
                         const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
                         const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
@@ -2204,11 +2226,12 @@ df.head()`;
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
 
                         // Configure notebook to to never save.
-                        when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('off');
-                        when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(1000);
+                        await updateFileConfig('autoSave', 'off');
+                        await updateFileConfig('autoSaveDelay', 1_000);
+
                         // Update the settings and wait for the component to receive it and process it.
                         const promise = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
-                        ioc.forceSettingsChanged(ioc.getSettings().pythonPath, {
+                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
                             ...defaultDataScienceSettings(),
                             showCellInputCode: false
                         });
@@ -2244,8 +2267,8 @@ df.head()`;
                         await dirtyPromise;
 
                         // Configure notebook to save when active editor changes.
-                        when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onFocusChange');
-                        ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
+                        await updateFileConfig('autoSave', 'onFocusChange');
+                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         // Now that the notebook is dirty, change the active editor.
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
@@ -2276,8 +2299,8 @@ df.head()`;
                         await dirtyPromise;
 
                         // Configure notebook to save when window state changes.
-                        when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onWindowChange');
-                        ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
+                        await updateFileConfig('autoSave', 'onWindowChange');
+                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         // Now that the notebook is dirty, change the active editor.
                         // This should not trigger a save of notebook (as its configured to save only when window state changes).
@@ -2299,8 +2322,8 @@ df.head()`;
                         await dirtyPromise;
 
                         // Configure notebook to save when active editor changes.
-                        when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onWindowChange');
-                        ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
+                        await updateFileConfig('autoSave', 'onWindowChange');
+                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         // Now that the notebook is dirty, send notification about changes to window state.
                         windowStateChangeHandlers.forEach(item => item({ focused }));
@@ -2329,8 +2352,8 @@ df.head()`;
                         await dirtyPromise;
 
                         // Configure notebook to save when active editor changes.
-                        when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onFocusChange');
-                        ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
+                        await updateFileConfig('autoSave', 'onFocusChange');
+                        ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         // Now that the notebook is dirty, change window state.
                         // This should not trigger a save of notebook (as its configured to save only when focus is changed).
@@ -2414,14 +2437,14 @@ df.head()`;
 
                 suite('Update Metadata', () => {
                     setup(async function() {
-                        initIoc();
+                        await initIoc();
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this, JSON.stringify(oldJson));
                     });
 
                     test('Update notebook metadata on execution', async () => {
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
 
                         // add cells, run them and save
@@ -2460,7 +2483,7 @@ df.head()`;
 
                 suite('Clear Outputs', () => {
                     setup(async function() {
-                        initIoc();
+                        await initIoc();
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this, JSON.stringify(oldJson));
                     });
@@ -2499,8 +2522,8 @@ df.head()`;
                     });
 
                     test('Clear execution_count and outputs in notebook', async () => {
-                        const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const editor = notebookProvider.editors[0];
+                        const notebookEditorProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                        const editor = notebookEditorProvider.editors[0];
                         assert.ok(editor, 'No editor when saving');
                         // add cells, run them and save
                         // await addCell(wrapper, ioc, 'a=1\na');

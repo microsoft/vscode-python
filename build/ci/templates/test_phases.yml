@@ -97,16 +97,7 @@ steps:
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
-
-  # Install the additional sqlite requirements
-  #
-  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
-  - bash: |
-      sudo apt-get install libsqlite3-dev
-      python -m pip install pysqlite
-    displayName: 'Setup python to run with sqlite on 2.7'
-    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Linux'), eq(variables['PythonVersion'], '2.7'))
-
+    
   # Install the requirements for functional tests.
   #
   # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
@@ -118,8 +109,68 @@ steps:
   - bash: |
       python -m pip install numpy
       python -m pip install --upgrade -r ./build/functional-test-requirements.txt
+      python -c "import sys;print(sys.executable)"
     displayName: 'pip install functional requirements'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))    
+
+  # Add CONDA to the path so anaconda works
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      echo "##vso[task.prependpath]$CONDA/bin"
+    displayName: 'Add conda to the path'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), ne(variables['Agent.Os'], 'Windows_NT'))
+
+  # Add CONDA to the path so anaconda works (windows)
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - powershell: |
+      Write-Host "##vso[task.prependpath]$env:CONDA\Scripts"
+    displayName: 'Add conda to the path'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'))
+
+  # On MAC let CONDA update install paths
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  - bash: |
+      sudo chown -R $USER $CONDA
+    displayName: 'Give CONDA permission to its own files'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Darwin'))
+
+  # Create the two anaconda environments
+  #
+  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
+  #
+  - script: |
+      conda env create --quiet --force --file build/ci/conda_env_1.yml
+      conda env create --quiet --force --file build/ci/conda_env_2.yml
+    displayName: 'Create CONDA Environments'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'))
+
+  # Run the pip installs in the 3 environments (darwin linux)
+  - bash: |
+      source activate base
+      conda install --quiet -y --file build/ci/conda_base.yml
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      source activate conda_env_1
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      source activate conda_env_2
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      conda deactivate
+    displayName: 'Install Pip requirements for CONDA envs'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), ne(variables['Agent.Os'], 'Windows_NT'))
+
+  # Run the pip installs in the 3 environments (windows)
+  - script: |
+      call activate base
+      conda install --quiet -y --file build/ci/conda_base.yml      
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      call activate conda_env_1
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+      call activate conda_env_2
+      python -m pip install --upgrade -r build/conda-functional-requirements.txt
+    displayName: 'Install Pip requirements for CONDA envs'
+    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'))
 
   # Downgrade pywin32 on Windows due to bug https://github.com/jupyter/notebook/issues/4909
   #

@@ -8,7 +8,8 @@ import * as fs from 'fs-extra';
 import { convertStat, FileSystem, FileSystemUtils, RawFileSystem } from '../../../client/common/platform/fileSystem';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
 import { FileType } from '../../../client/common/platform/types';
-import { sleep } from '../../../client/common/utils/async';
+import { createDeferred, sleep } from '../../../client/common/utils/async';
+import { noop } from '../../../client/common/utils/misc';
 import {
     assertDoesNotExist,
     assertFileText,
@@ -267,13 +268,24 @@ suite('FileSystem - raw', () => {
             }
         });
 
+        async function writeToStream(filename: string, write: (str: fs.WriteStream) => void) {
+            const closeDeferred = createDeferred();
+            const stream = fileSystem.createWriteStream(filename);
+            stream.on('close', () => closeDeferred.resolve());
+            write(stream);
+            stream.end();
+            stream.close();
+            stream.destroy();
+            await closeDeferred.promise;
+            return stream;
+        }
+
         test('returns the correct WriteStream', async () => {
             const filename = await fix.resolve('x/y/z/spam.py');
             const expected = fs.createWriteStream(filename);
             expected.destroy();
 
-            const stream = fileSystem.createWriteStream(filename);
-            stream.destroy();
+            const stream = await writeToStream(filename, noop);
 
             expect(stream.path).to.deep.equal(expected.path);
         });
@@ -283,9 +295,7 @@ suite('FileSystem - raw', () => {
             await assertDoesNotExist(filename);
             const data = 'line1\nline2\n';
 
-            const stream = fileSystem.createWriteStream(filename);
-            stream.write(data);
-            stream.destroy();
+            await writeToStream(filename, s => s.write(data));
 
             await assertFileText(filename, data);
         });
@@ -294,9 +304,7 @@ suite('FileSystem - raw', () => {
             const filename = await fix.resolve('x/y/z/spam.py');
             const data = '... 😁 ...';
 
-            const stream = fileSystem.createWriteStream(filename);
-            stream.write(data);
-            stream.destroy();
+            await writeToStream(filename, s => s.write(data));
 
             await assertFileText(filename, data);
         });
@@ -305,9 +313,7 @@ suite('FileSystem - raw', () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const data = 'line1\nline2\n';
 
-            const stream = fileSystem.createWriteStream(filename);
-            stream.write(data);
-            stream.destroy();
+            await writeToStream(filename, s => s.write(data));
 
             await assertFileText(filename, data);
         });

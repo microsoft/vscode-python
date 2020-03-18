@@ -24,4 +24,4 @@ export function getOSType() {
     }
 }
 
-export const UseCustomEditor = false;
+export const UseCustomEditor = { enabled: true };

@@ -24,14 +24,7 @@ export function generatePostOfficeSendReducer(postOffice: PostOffice): Redux.Red
                 // Do not rebroadcast messages that have been sent through as part of a synchronization packet.
                 // If `messageType` is a number, then its some part of a synchronization packet.
                 if (payload?.messageDirection === 'incoming') {
-                    // We can delay this, first focus on UX perf.
-                    setTimeout(() => {
-                        reBroadcastMessageIfRequired(
-                            postOffice.sendMessage.bind(postOffice),
-                            action.type,
-                            action?.payload
-                        );
-                    }, 1);
+                    reBroadcastMessageIfRequired(postOffice.sendMessage.bind(postOffice), action.type, action?.payload);
                 }
             }
         }

@@ -15,11 +15,11 @@ export class ServerPreload implements IExtensionSingleActivationService {
     constructor(
         @inject(IJupyterExecution) private execution: IJupyterExecution,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private mementoStorage: Memento,
-        @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider,
+        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
         @inject(IConfigurationService) private configService: IConfigurationService
     ) {
-        this.notebookProvider.onDidOpenNotebookEditor(this.onDidOpenNotebook.bind(this));
+        this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebook.bind(this));
         this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.onDidOpenOrCloseInteractive.bind(this));
     }
     public activate(): Promise<void> {

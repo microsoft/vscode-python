@@ -808,6 +808,22 @@ export namespace DataScience {
         'DataScience.kernelInvalid',
         'Kernel {0} is not usable. Check the Jupyter output tab for more information.'
     );
+
+    export const nativeDependencyFail = localize(
+        'DataScience.nativeDependencyFail',
+        '{0}. We cannot launch a jupyter server for you because your OS is not supported. Select an already running server if you wish to continue.'
+    );
+
+    export const selectNewServer = localize('DataScience.selectNewServer', 'Pick Running Server');
+    export const jupyterSelectURIRemoteLabel = localize('DataScience.jupyterSelectURIRemoteLabel', 'Existing');
+    export const jupyterSelectURIQuickPickTitleRemoteOnly = localize(
+        'DataScience.jupyterSelectURIQuickPickTitleRemoteOnly',
+        'Pick an already running jupyter server'
+    );
+    export const jupyterSelectURIRemoteDetail = localize(
+        'DataScience.jupyterSelectURIRemoteDetail',
+        'Specify the URI of an existing server'
+    );
 }
 
 export namespace DebugConfigStrings {

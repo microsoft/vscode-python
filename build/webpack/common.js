@@ -35,7 +35,8 @@ exports.nodeModulesToExternalize = [
     '@koa/cors',
     'koa',
     'koa-compress',
-    'koa-logger'
+    'koa-logger',
+    'zeromq'
 ];
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {

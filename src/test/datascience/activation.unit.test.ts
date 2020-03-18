@@ -22,7 +22,7 @@ import { createPythonInterpreter } from '../utils/interpreters';
 
 suite('Data Science - Activation', () => {
     let activator: IExtensionSingleActivationService;
-    let notebookProvider: INotebookEditorProvider;
+    let notebookEditorProvider: INotebookEditorProvider;
     let jupyterInterpreterService: JupyterInterpreterService;
     let executionFactory: IPythonExecutionFactory;
     let openedEventEmitter: EventEmitter<INotebookEditor>;
@@ -36,16 +36,16 @@ suite('Data Science - Activation', () => {
         openedEventEmitter = new EventEmitter<INotebookEditor>();
         interpreterEventEmitter = new EventEmitter<PythonInterpreter>();
 
-        notebookProvider = mock(NativeEditorProvider);
+        notebookEditorProvider = mock(NativeEditorProvider);
         jupyterInterpreterService = mock(JupyterInterpreterService);
         executionFactory = mock(PythonExecutionFactory);
         contextService = mock(ActiveEditorContextService);
-        when(notebookProvider.onDidOpenNotebookEditor).thenReturn(openedEventEmitter.event);
+        when(notebookEditorProvider.onDidOpenNotebookEditor).thenReturn(openedEventEmitter.event);
         when(jupyterInterpreterService.onDidChangeInterpreter).thenReturn(interpreterEventEmitter.event);
         when(executionFactory.createDaemon(anything())).thenResolve();
         when(contextService.activate()).thenResolve();
         activator = new Activation(
-            instance(notebookProvider),
+            instance(notebookEditorProvider),
             instance(jupyterInterpreterService),
             instance(executionFactory),
             [],

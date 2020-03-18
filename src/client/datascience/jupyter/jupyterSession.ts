@@ -137,6 +137,12 @@ export class JupyterSession implements IJupyterSession {
             await this.session.kernel.restart();
             return;
         }
+
+        // Start the restart session now in case it wasn't started
+        if (!this.restartSessionPromise) {
+            this.startRestartSession();
+        }
+
         // Just kill the current session and switch to the other
         if (this.restartSessionPromise && this.session && this.sessionManager && this.contentsManager) {
             traceInfo(`Restarting ${this.session.kernel.id}`);
@@ -196,7 +202,7 @@ export class JupyterSession implements IJupyterSession {
                 : undefined;
         // It has been observed that starting the restart session slows down first time to execute a cell.
         // Solution is to start the restart session after the first execution of user code.
-        if (!content.silent && result) {
+        if (!content.silent && result && !isTestExecution()) {
             result.done.finally(() => this.startRestartSession()).ignoreErrors();
         }
         return result;
@@ -337,6 +343,8 @@ export class JupyterSession implements IJupyterSession {
                     resolve();
                 } else if (e === 'dead') {
                     traceError('Kernel died while waiting for idle');
+                    // If we throw an exception, make sure to shutdown the session as it's not usable anymore
+                    this.shutdownSession(session, this.statusHandler).ignoreErrors();
                     reject(
                         new JupyterInvalidKernelError({
                             ...session.kernel,
@@ -377,6 +385,8 @@ export class JupyterSession implements IJupyterSession {
                 return;
             }
 
+            // If we throw an exception, make sure to shutdown the session as it's not usable anymore
+            this.shutdownSession(session, this.statusHandler).ignoreErrors();
             throw new JupyterWaitForIdleError(localize.DataScience.jupyterLaunchTimedOut());
         }
     }
@@ -432,7 +442,7 @@ export class JupyterSession implements IJupyterSession {
                 this.sessionManager!.startNew(options)
                     .then(s => {
                         this.logRemoteOutput(
-                            localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, s.kernel.id)
+                            localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, s?.kernel?.id)
                         );
                         return s;
                     })

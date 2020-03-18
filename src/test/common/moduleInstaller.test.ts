@@ -86,7 +86,6 @@ suite('Module Installer', () => {
         });
         suiteTeardown(async () => {
             await closeActiveWindows();
-            await resetSettings();
         });
         teardown(async () => {
             await ioc.dispose();

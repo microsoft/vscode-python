@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-import { inject, injectable, multiInject, named, optional } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
@@ -18,13 +18,13 @@ import {
     Resource
 } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
+import { IServiceContainer } from '../../ioc/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import {
     IConnection,
     IDataScience,
     IJupyterSessionManagerFactory,
     INotebook,
-    INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../types';
@@ -46,7 +46,7 @@ type JupyterServerClassType = {
         configService: IConfigurationService,
         sessionManager: IJupyterSessionManagerFactory,
         workspaceService: IWorkspaceService,
-        loggers: INotebookExecutionLogger[],
+        serviceContainer: IServiceContainer,
         appShell: IApplicationShell,
         fs: IFileSystem,
         kernelSelector: KernelSelector,
@@ -73,12 +73,12 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(KernelSelector) kernelSelector: KernelSelector,
-        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutput: IOutputChannel,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         // The server factory will create the appropriate HostJupyterServer or GuestJupyterServer based on
         // the liveshare state.
@@ -93,7 +93,7 @@ export class JupyterServerWrapper implements INotebookServer, ILiveShareHasRole 
             configService,
             sessionManager,
             workspaceService,
-            loggers ? loggers : [],
+            serviceContainer,
             appShell,
             fs,
             kernelSelector,

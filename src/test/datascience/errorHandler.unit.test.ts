@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { IApplicationShell } from '../../client/common/application/types';
 import { IInstallationChannelManager, IModuleInstaller } from '../../client/common/installer/types';
@@ -9,18 +10,25 @@ import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/e
 import { JupyterCommandInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterDependencyService';
 import { JupyterInstallError } from '../../client/datascience/jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../client/datascience/jupyter/jupyterSelfCertsError';
+import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
+import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: typemoq.IMock<IApplicationShell>;
     let channels: typemoq.IMock<IInstallationChannelManager>;
     let dependencyManager: JupyterCommandInterpreterDependencyService;
     let dataScienceErrorHandler: DataScienceErrorHandler;
+    const serverSelector = mock(JupyterServerSelector);
 
     setup(() => {
         applicationShell = typemoq.Mock.ofType<IApplicationShell>();
         channels = typemoq.Mock.ofType<IInstallationChannelManager>();
         dependencyManager = new JupyterCommandInterpreterDependencyService(applicationShell.object, channels.object);
-        dataScienceErrorHandler = new DataScienceErrorHandler(applicationShell.object, dependencyManager);
+        dataScienceErrorHandler = new DataScienceErrorHandler(
+            applicationShell.object,
+            dependencyManager,
+            instance(serverSelector)
+        );
     });
     const message = 'Test error message.';
 
@@ -88,5 +96,19 @@ suite('DataScience Error Handler Unit Tests', () => {
 
         applicationShell.verifyAll();
         channels.verifyAll();
+    });
+
+    test('ZMQ Install Error', async () => {
+        applicationShell
+            .setup(app =>
+                app.showErrorMessage(typemoq.It.isAny(), typemoq.It.isValue(localize.DataScience.selectNewServer()))
+            )
+            .returns(() => Promise.resolve(localize.DataScience.selectNewServer()))
+            .verifiable(typemoq.Times.once());
+        when(serverSelector.selectJupyterURI(anything())).thenCall(() => Promise.resolve());
+        const err = new JupyterZMQBinariesNotFoundError('Not found');
+        await dataScienceErrorHandler.handleError(err);
+        verify(serverSelector.selectJupyterURI(anything())).once();
+        applicationShell.verifyAll();
     });
 });

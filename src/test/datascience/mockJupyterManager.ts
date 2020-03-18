@@ -762,7 +762,12 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     });
                 }
             );
-            const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+            const getServerInfoPath = path.join(
+                EXTENSION_ROOT_DIR,
+                'pythonFiles',
+                'vscode_datascience_helpers',
+                'getServerInfo.py'
+            );
             this.setupProcessServiceExec(this.processService, workingPython.path, [getServerInfoPath], () =>
                 Promise.resolve({ stdout: 'failure to get server infos' })
             );
@@ -812,7 +817,12 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     return Promise.resolve({ stdout: JSON.stringify(createKernelSpecs(kernels)) });
                 }
             );
-            const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+            const getServerInfoPath = path.join(
+                EXTENSION_ROOT_DIR,
+                'pythonFiles',
+                'vscode_datascience_helpers',
+                'getServerInfo.py'
+            );
             this.setupProcessServiceExec(this.processService, workingPython.path, [getServerInfoPath], () =>
                 Promise.resolve({ stdout: 'failure to get server infos' })
             );

@@ -29,6 +29,7 @@ interface ISelectUriQuickPickItem extends QuickPickItem {
 export class JupyterServerSelector {
     private readonly localLabel = `$(zap) ${DataScience.jupyterSelectURILocalLabel()}`;
     private readonly newLabel = `$(server) ${DataScience.jupyterSelectURINewLabel()}`;
+    private readonly remoteLabel = `$(server) ${DataScience.jupyterSelectURIRemoteLabel()}`;
     constructor(
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: Memento,
         @inject(IClipboard) private readonly clipboard: IClipboard,
@@ -38,18 +39,24 @@ export class JupyterServerSelector {
     ) {}
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    public selectJupyterURI(): Promise<void> {
+    public selectJupyterURI(allowLocal: boolean): Promise<void> {
         const multiStep = this.multiStepFactory.create<{}>();
-        return multiStep.run(this.startSelectingURI.bind(this), {});
+        return multiStep.run(this.startSelectingURI.bind(this, allowLocal), {});
     }
 
-    private async startSelectingURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
+    private async startSelectingURI(
+        allowLocal: boolean,
+        input: IMultiStepInput<{}>,
+        _state: {}
+    ): Promise<InputStep<{}> | void> {
         // First step, show a quick pick to choose either the remote or the local.
         // newChoice element will be set if the user picked 'enter a new server'
         const item = await input.showQuickPick<ISelectUriQuickPickItem, IQuickPickParameters<ISelectUriQuickPickItem>>({
             placeholder: DataScience.jupyterSelectURIQuickPickPlaceholder(),
-            items: this.getUriPickList(),
-            title: DataScience.jupyterSelectURIQuickPickTitle()
+            items: this.getUriPickList(allowLocal),
+            title: allowLocal
+                ? DataScience.jupyterSelectURIQuickPickTitle()
+                : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly()
         });
         if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
@@ -131,11 +138,19 @@ export class JupyterServerSelector {
         }
     };
 
-    private getUriPickList(): ISelectUriQuickPickItem[] {
+    private getUriPickList(allowLocal: boolean): ISelectUriQuickPickItem[] {
         // Always have 'local' and 'add new'
         const items: ISelectUriQuickPickItem[] = [];
-        items.push({ label: this.localLabel, detail: DataScience.jupyterSelectURILocalDetail(), newChoice: false });
-        items.push({ label: this.newLabel, detail: DataScience.jupyterSelectURINewDetail(), newChoice: true });
+        if (allowLocal) {
+            items.push({ label: this.localLabel, detail: DataScience.jupyterSelectURILocalDetail(), newChoice: false });
+            items.push({ label: this.newLabel, detail: DataScience.jupyterSelectURINewDetail(), newChoice: true });
+        } else {
+            items.push({
+                label: this.remoteLabel,
+                detail: DataScience.jupyterSelectURIRemoteDetail(),
+                newChoice: true
+            });
+        }
 
         // Get our list of recent server connections and display that as well
         const savedURIList = getSavedUriList(this.globalState);

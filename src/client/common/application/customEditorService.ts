@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 
 import { UseCustomEditorApi } from '../constants';
 import { noop } from '../utils/misc';
-import { ICommandManager, ICustomEditorService, WebviewCustomEditorProvider } from './types';
+import { CustomEditorProvider, ICommandManager, ICustomEditorService } from './types';
 
 @injectable()
 export class CustomEditorService implements ICustomEditorService {
@@ -15,14 +15,14 @@ export class CustomEditorService implements ICustomEditorService {
         @inject(UseCustomEditorApi) private readonly useCustomEditorApi: boolean
     ) {}
 
-    public registerWebviewCustomEditorProvider(
+    public registerCustomEditorProvider(
         viewType: string,
-        provider: WebviewCustomEditorProvider,
+        provider: CustomEditorProvider,
         options?: vscode.WebviewPanelOptions
     ): vscode.Disposable {
         if (this.useCustomEditorApi) {
             // tslint:disable-next-line: no-any
-            return (vscode.window as any).registerWebviewCustomEditorProvider(viewType, provider, options);
+            return (vscode.window as any).registerCustomEditorProvider(viewType, provider, options);
         } else {
             return { dispose: noop };
         }

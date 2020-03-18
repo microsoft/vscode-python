@@ -46,9 +46,10 @@ suite('DataScience DataViewer tests', () => {
         }
     });
 
-    setup(() => {
+    setup(async () => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
+        return ioc.activate();
     });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {

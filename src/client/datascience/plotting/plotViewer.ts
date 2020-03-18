@@ -145,12 +145,14 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
                         const SVGtoPDF = require('svg-to-pdfkit');
                         const deferred = createDeferred<void>();
                         // tslint:disable-next-line: no-require-imports
-                        const pdfkit = require('pdfkit');
+                        const pdfkit = require('pdfkit') as typeof import('pdfkit');
                         const doc = new pdfkit();
                         const ws = this.fileSystem.createWriteStream(file.fsPath);
                         traceInfo(`Writing pdf to ${file.fsPath}`);
                         ws.on('finish', () => deferred.resolve);
-                        SVGtoPDF(doc, payload.svg, 0, 0);
+                        // See docs or demo from source https://cdn.statically.io/gh/alafr/SVG-to-PDFKit/master/examples/demo.htm
+                        // How to resize to fit (fit within the height & width of page).
+                        SVGtoPDF(doc, payload.svg, 0, 0, { preserveAspectRatio: 'xMinYMin meet' });
                         doc.pipe(ws);
                         doc.end();
                         traceInfo(`Finishing pdf to ${file.fsPath}`);

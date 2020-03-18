@@ -35,7 +35,7 @@ export class CommandRegistry implements IDisposable {
         @inject(KernelSwitcherCommand) private readonly kernelSwitcherCommand: KernelSwitcherCommand,
         @inject(JupyterCommandLineSelectorCommand)
         private readonly commandLineCommand: JupyterCommandLineSelectorCommand,
-        @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider,
+        @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel
     ) {
@@ -312,7 +312,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private async createNewNotebook(): Promise<void> {
-        await this.notebookProvider.createNew();
+        await this.notebookEditorProvider.createNew();
     }
     private viewJupyterOutput() {
         this.jupyterOutput.show(true);

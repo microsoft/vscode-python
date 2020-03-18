@@ -6,7 +6,7 @@ import logging
 import os
 import subprocess
 import sys
-from datascience.daemon.daemon_python import (
+from vscode_datascience_helpers.daemon.daemon_python import (
     error_decorator,
     PythonDaemon as BasePythonDaemon,
     change_exec_context,

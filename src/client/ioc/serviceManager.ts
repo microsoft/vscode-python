@@ -121,4 +121,9 @@ export class ServiceManager implements IServiceManager {
             this.container.rebind<T>(serviceIdentifier).toConstantValue(instance);
         }
     }
+
+    public dispose() {
+        this.container.unbindAll();
+        this.container.unload();
+    }
 }

@@ -20,7 +20,7 @@ export class JupyterServerSelectorCommand implements IDisposable {
         this.disposables.push(
             this.commandManager.registerCommand(
                 Commands.SelectJupyterURI,
-                this.serverSelector.selectJupyterURI,
+                () => this.serverSelector.selectJupyterURI(true),
                 this.serverSelector
             )
         );

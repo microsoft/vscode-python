@@ -318,7 +318,7 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
             assert.equal(output, convertOutput);
         });
         test('Return list of running jupyter servers', async () => {
-            const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+            const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getServerInfo.py');
             const expectedServers: JupyterServerInfo[] = [
                 {
                     base_url: '1',

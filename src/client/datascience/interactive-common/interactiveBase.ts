@@ -3,6 +3,7 @@
 'use strict';
 import '../../common/extensions';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -22,8 +23,6 @@ import {
     ViewColumn
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
-
-import { nbformat } from '@jupyterlab/coreutils';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import {
     IApplicationShell,
@@ -65,6 +64,7 @@ import {
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
+import { JupyterZMQBinariesNotFoundError } from '../jupyter/jupyterZMQBinariesNotFoundError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../jupyter/kernels/types';
@@ -89,6 +89,7 @@ import {
     IMessageCell,
     INotebook,
     INotebookExporter,
+    INotebookProvider,
     INotebookServer,
     INotebookServerOptions,
     InterruptResult,
@@ -152,7 +153,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() title: string,
         @unmanaged() viewColumn: ViewColumn,
         @unmanaged() experimentsManager: IExperimentsManager,
-        @unmanaged() private switcher: KernelSwitcher
+        @unmanaged() private switcher: KernelSwitcher,
+        @unmanaged() private readonly notebookProvider: INotebookProvider
     ) {
         super(
             configuration,
@@ -832,7 +834,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 );
             }
             // Then load the jupyter server
-            return this.connectToServer(progressReporter.token);
+            return await this.connectToServer(progressReporter.token);
         } catch (e) {
             progressReporter.dispose();
             // If user cancelled, then do nothing.
@@ -1086,7 +1088,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.getNotebookOptions()
             ]);
             try {
-                notebook = uri ? await server.createNotebook(resource, uri, options?.metadata) : undefined;
+                notebook = uri ? await this.notebookProvider.getNotebook(server, uri, options?.metadata) : undefined;
             } catch (e) {
                 // If we get an invalid kernel error, make sure to ask the user to switch
                 if (e instanceof JupyterInvalidKernelError && server && server.getConnectionInfo()?.localLaunch) {
@@ -1152,11 +1154,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Create a new notebook if we need to.
         if (!this._notebook) {
             // While waiting make the notebook look busy
-            await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+            this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.Busy,
                 localizedUri: this.getServerUri(server),
                 displayName: ''
-            });
+            }).ignoreErrors();
 
             this._notebook = await this.createNotebook(server);
 
@@ -1391,6 +1393,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 return true;
             }
         } catch (e) {
+            if (e instanceof JupyterZMQBinariesNotFoundError) {
+                throw e;
+            }
             // Can't find a usable interpreter, show the error.
             if (activeInterpreter) {
                 const displayName = activeInterpreter.displayName
@@ -1412,7 +1417,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Request our new list of variables
         const response: IJupyterVariablesResponse = this._notebook
             ? await this.jupyterVariables.getVariables(this._notebook, args)
-            : { totalCount: 0, pageResponse: [], pageStartIndex: args.startIndex, executionCount: args.executionCount };
+            : {
+                  totalCount: 0,
+                  pageResponse: [],
+                  pageStartIndex: args?.startIndex,
+                  executionCount: args?.executionCount
+              };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });

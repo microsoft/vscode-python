@@ -37,7 +37,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
     constructor(
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
+        @inject(INotebookEditorProvider) private readonly notebookEditorProvider: INotebookEditorProvider,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
@@ -89,7 +89,9 @@ export class AutoSaveService implements IInteractiveWindowListener {
         if (!uri) {
             return;
         }
-        return this.notebookProvider.editors.find(item => this.fileSystem.arePathsSame(item.file.fsPath, uri.fsPath));
+        return this.notebookEditorProvider.editors.find(item =>
+            this.fileSystem.arePathsSame(item.file.fsPath, uri.fsPath)
+        );
     }
     private getAutoSaveSettings(): FileSettings {
         const filesConfig = this.workspace.getConfiguration('files', this.notebookUri);

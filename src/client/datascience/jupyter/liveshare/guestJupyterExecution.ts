@@ -101,7 +101,8 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
                         uri: newUri,
                         useDefaultConfig: options && options.useDefaultConfig,
                         workingDir: options ? options.workingDir : undefined,
-                        purpose
+                        purpose,
+                        skipSearchingForKernel: true
                     },
                     cancelToken
                 );
