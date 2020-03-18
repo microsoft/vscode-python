@@ -99,7 +99,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
                 return super.connectToNotebookServer(
                     {
                         uri: newUri,
-                        useDefaultConfig: options && options.useDefaultConfig,
+                        skipUsingDefaultConfig: options && options.skipUsingDefaultConfig,
                         workingDir: options ? options.workingDir : undefined,
                         purpose,
                         allowUI: () => false

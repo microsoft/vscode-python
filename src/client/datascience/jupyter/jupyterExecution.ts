@@ -365,7 +365,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
             // If that works, then attempt to start the server
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
-            const useDefaultConfig = options && options.useDefaultConfig ? true : false;
+            const useDefaultConfig = !options || options.skipUsingDefaultConfig ? false : true;
             const connection = await this.startNotebookServer(
                 useDefaultConfig,
                 this.configuration.getSettings(undefined).datascience.jupyterCommandLineArguments,

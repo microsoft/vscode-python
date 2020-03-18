@@ -396,8 +396,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private disposable?: IDisposable;
     protected async ensureNotebook(server: INotebookServer): Promise<void> {
         await super.ensureNotebook(server);
-        // tslint:disable-next-line: no-console
-        console.log('Notebook created');
         if (this.disposable) {
             this.disposable.dispose();
         }

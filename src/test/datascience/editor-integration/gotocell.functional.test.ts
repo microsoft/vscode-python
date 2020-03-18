@@ -88,7 +88,7 @@ suite('DataScience gotocell tests', () => {
             const testDir = '${fileDirname}';
             const server = await jupyterExecution.connectToNotebookServer({
                 usingDarkTheme,
-                useDefaultConfig,
+                skipUsingDefaultConfig: !useDefaultConfig,
                 workingDir: testDir,
                 purpose: purpose ? purpose : Identifiers.HistoryPurpose,
                 allowUI: () => false

@@ -146,7 +146,7 @@ export interface INotebook extends IAsyncDisposable {
 export interface INotebookServerOptions {
     uri?: string;
     usingDarkTheme?: boolean;
-    useDefaultConfig?: boolean;
+    skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     purpose: string;
     metadata?: nbformat.INotebookMetadata;

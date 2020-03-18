@@ -545,7 +545,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IDataScienceCommandListener,
             InteractiveWindowCommandListener
         );
-        this.serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
+        this.serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [

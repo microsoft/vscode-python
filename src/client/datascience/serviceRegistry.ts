@@ -128,7 +128,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ICellHashLogger>(ICellHashLogger, CellHashLogger, undefined, [INotebookExecutionLogger]);
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
-    serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
+    serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);

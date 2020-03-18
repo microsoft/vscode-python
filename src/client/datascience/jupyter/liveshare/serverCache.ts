@@ -108,7 +108,7 @@ export class ServerCache implements IAsyncDisposable {
     public async generateDefaultOptions(options?: INotebookServerOptions): Promise<INotebookServerOptions> {
         return {
             uri: options ? options.uri : undefined,
-            useDefaultConfig: options ? options.useDefaultConfig : true, // Default for this is true.
+            skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
             purpose: options ? options.purpose : uuid(),
             workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
@@ -123,7 +123,7 @@ export class ServerCache implements IAsyncDisposable {
         } else {
             // combine all the values together to make a unique key
             const uri = options.uri ? options.uri : '';
-            const useFlag = options.useDefaultConfig ? 'true' : 'false';
+            const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
             return `${options.purpose}${uri}${useFlag}${options.workingDir}`;
         }
     }

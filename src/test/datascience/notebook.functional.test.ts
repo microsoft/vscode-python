@@ -291,7 +291,7 @@ suite('DataScience notebook tests', () => {
         try {
             const server = await jupyterExecution.connectToNotebookServer({
                 usingDarkTheme,
-                useDefaultConfig,
+                skipUsingDefaultConfig: !useDefaultConfig,
                 workingDir: workingDir ? workingDir : ioc.getSettings().datascience.notebookFileRoot,
                 purpose: purpose ? purpose : '1',
                 allowUI: () => false
@@ -419,7 +419,6 @@ suite('DataScience notebook tests', () => {
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
             const server = await jupyterExecution.connectToNotebookServer({
                 uri,
-                useDefaultConfig: true,
                 purpose: '',
                 allowUI: () => false
             });
@@ -475,7 +474,6 @@ suite('DataScience notebook tests', () => {
                 // We have a connection string here, so try to connect jupyterExecution to the notebook server
                 const server = await jupyterExecution.connectToNotebookServer({
                     uri,
-                    useDefaultConfig: true,
                     purpose: '',
                     allowUI: () => false
                 });
@@ -558,7 +556,6 @@ suite('DataScience notebook tests', () => {
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
             const server = await jupyterExecution.connectToNotebookServer({
                 uri,
-                useDefaultConfig: true,
                 purpose: '',
                 allowUI: () => false
             });
@@ -607,7 +604,6 @@ suite('DataScience notebook tests', () => {
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
             const server = await jupyterExecution.connectToNotebookServer({
                 uri,
-                useDefaultConfig: true,
                 purpose: '',
                 allowUI: () => false
             });
@@ -1464,7 +1460,6 @@ plt.show()`,
                 const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
                 await jupyterExecution.connectToNotebookServer({
                     usingDarkTheme: false,
-                    useDefaultConfig: true,
                     workingDir: testDir,
                     purpose: '1',
                     allowUI: () => false

@@ -32,7 +32,8 @@ import {
     IDataScienceErrorHandler,
     IJupyterExecution,
     INotebookEditorProvider,
-    INotebookExporter
+    INotebookExporter,
+    INotebookProvider
 } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
@@ -748,25 +749,23 @@ df.head()`;
                 test('Failure', async () => {
                     let fail = true;
                     const errorThrownDeferred = createDeferred<Error>();
-                    // Make a dummy class that will fail during launch
-                    class FailedProcess extends JupyterExecutionFactory {
-                        public getUsableJupyterPython(): Promise<PythonInterpreter | undefined> {
-                            if (fail) {
-                                return Promise.resolve(undefined);
-                            }
-                            return super.getUsableJupyterPython();
-                        }
-                    }
 
-                    class CustomErrorHandler extends DataScienceErrorHandler {
-                        public handleError(exc: Error): Promise<void> {
-                            errorThrownDeferred.resolve(exc);
-                            return Promise.resolve();
+                    // REmap the functions in the execution and error handler. Note, we can't rebind them as
+                    // they've already been injected into the INotebookProvider
+                    const execution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+                    const errorHandler = ioc.serviceManager.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+                    const originalGetUsable = execution.getUsableJupyterPython.bind(execution);
+                    execution.getUsableJupyterPython = () => {
+                        if (fail) {
+                            return Promise.resolve(undefined);
                         }
-                    }
-                    ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
-                    ioc.serviceManager.rebind<IDataScienceErrorHandler>(IDataScienceErrorHandler, CustomErrorHandler);
-                    ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+                        return originalGetUsable();
+                    };
+                    errorHandler.handleError = (exc: Error) => {
+                        errorThrownDeferred.resolve(exc);
+                        return Promise.resolve();
+                    };
+
                     addMockData(ioc, 'a=1\na', 1);
                     const wrapper = mountNativeWebView(ioc);
                     await createNewEditor(ioc);

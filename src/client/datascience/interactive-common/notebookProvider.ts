@@ -59,7 +59,7 @@ export class NotebookProvider implements INotebookProvider {
 
         // If we are just fetching or only want to create for local, see if exists
         if (options.fetchOnly || (options.localOnly && serverOptions.uri)) {
-            return this.jupyterExecution.getServer();
+            return this.jupyterExecution.getServer(serverOptions);
         } else {
             // Otherwise create a new server
             return this.createServer(options);
@@ -238,7 +238,7 @@ export class NotebookProvider implements INotebookProvider {
 
         return {
             uri: serverURI,
-            useDefaultConfig,
+            skipUsingDefaultConfig: !useDefaultConfig,
             purpose: Identifiers.HistoryPurpose,
             allowUI: this.allowUI.bind(this)
         };
