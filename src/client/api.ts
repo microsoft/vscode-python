@@ -41,11 +41,8 @@ export function buildApi(
     // tslint:disable-next-line:no-any
     ready: Promise<any>,
     serviceManager: IServiceManager,
-    serviceContainer: IServiceContainer
+    services: IServiceContainer
 ) {
-    const experimentsManager = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-    const debugFactory = serviceContainer.get<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory);
-
     const api = {
         // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch(ex => {
@@ -58,14 +55,14 @@ export function buildApi(
                 port: number,
                 waitUntilDebuggerAttaches: boolean = true
             ): Promise<string[]> {
+                const experimentsManager = services.get<IExperimentsManager>(IExperimentsManager);
                 const useNewDADebugger = experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
-
                 if (useNewDADebugger) {
+                    const debugFactory = services.get<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory);
                     // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
                     const args = debugFactory.getRemoteDebuggerArgs({ host, port, waitUntilDebuggerAttaches });
                     return [debugFactory.getDebuggerPath(), ...args];
                 }
-
                 return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({
                     host,
                     port,
@@ -78,7 +75,7 @@ export function buildApi(
     // In test environment return the DI Container.
     if (isTestExecution()) {
         // tslint:disable:no-any
-        (api as any).serviceContainer = serviceContainer;
+        (api as any).serviceContainer = services;
         (api as any).serviceManager = serviceManager;
         // tslint:enable:no-any
     }
