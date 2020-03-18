@@ -49,13 +49,14 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
             const HtmlWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IHtmlWidgetManagerCtor;
             if (!HtmlWidgetManager) {
                 throw new Error('HtmlWidgetManager not defined. Please include/check ipywidgets.js file');
-            }        
+            }
             // tslint:disable-next-line: no-any
             const kernel = (this.proxyKernel as any) as Kernel.IKernel;
             this.manager = new HtmlWidgetManager(kernel, widgetContainer);
             WidgetManager.instance = this;
             this.registerPostOffice();
-        } catch (ex){
+        } catch (ex) {
+            // tslint:disable-next-line: no-console
             console.error('Failed to initialize WidgetManager', ex);
         }
     }
