@@ -33,11 +33,7 @@ import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
 import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
-import { createMainChannel, JupyterConnectionInfo } from './../enchannel-zmq-backend/enchannel-zmq-backend';
-import { RawKernelConnection } from '../tsjmp/tsjmp';
-//import * as jmp from './../jmp/jmp';
-//const jmp = require('./../jmp/jmp');
-//import * as jmp from './../jmp/jmp';
+import { RawKernelConnection } from '../raw-kernel/RawKernelConnection';
 
 type ISession = Session.ISession & {
     /**
@@ -242,7 +238,7 @@ export class JupyterSession implements IJupyterSession {
         }
 
         // Test JMP here
-        const kci: JupyterConnectionInfo = { version: 0, transport: 'tcp', ip: '127.0.0.1', shell_port: 55196, iopub_port: 55197, stdin_port: 55198, hb_port: 55200, control_port: 55199, signature_scheme: 'hmac-sha256', key: 'adaf9032-487d222a85026db284c3d5e7' };
+        const kci = { version: 0, transport: 'tcp', ip: '127.0.0.1', shell_port: 55196, iopub_port: 55197, stdin_port: 55198, hb_port: 55200, control_port: 55199, signature_scheme: 'hmac-sha256', key: 'adaf9032-487d222a85026db284c3d5e7' };
         const rawConnection = new RawKernelConnection(kci);
         const message = {
             header: {

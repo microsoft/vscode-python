@@ -9,11 +9,11 @@ export interface RawKernelConnectionInfo {
     shell_port: number;
     stdin_port: number;
     control_port: number;
-    signature_scheme: "hmac-sha256";
+    signature_scheme: string;
     hb_port: number;
     ip: string;
     key: string;
-    transport: "tcp" | "ipc";
+    transport: string;
 }
 
 //export interface JupyterMessageHeader<MT extends MessageType = MessageType> {
