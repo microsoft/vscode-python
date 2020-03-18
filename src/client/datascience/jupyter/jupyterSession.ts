@@ -250,10 +250,10 @@ export class JupyterSession implements IJupyterSession {
                 username: 'vscode',
                 session: uuid(),
                 date: new Date().toISOString(),
-                version: "5.0",
+                version: '5.2',
                 msg_type: 'execute_request'
             },
-            content: {}
+            content: { code: 'print("hello")', silent: false }
         };
         const reply = await rawConnection.sendMessage(message, 'shell');
         rawConnection.dispose();
