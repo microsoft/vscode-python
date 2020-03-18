@@ -36,7 +36,7 @@ import { IAsyncDisposableRegistry, IExtensionContext } from './common/types';
 import { createDeferred } from './common/utils/async';
 import { Common } from './common/utils/localize';
 import { activateComponents } from './extensionActivation';
-import { isBlocked } from './extensionBlocked';
+import { isBlocked, promptBlock, promptUnblock } from './extensionBlocked';
 import { initializeComponents, initializeGlobals } from './extensionInit';
 import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendSuccessTelemetry } from './startupTelemetry';
@@ -100,14 +100,29 @@ async function activateMaybeDeferred(
     if (blocked === false) {
         await activated;
     } else if (blocked) {
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO: prompt
-        throw Error('not implemented yet');
-        //started.catch(err => handleError(ex, durations));
+        async function runInBackground() {
+            if (await promptUnblock()) {
+                try {
+                    await activated;
+                } catch (ex) {
+                    await handleError(ex, startupDurations);
+                }
+            }
+        }
+        // Do not await.
+        runInBackground().ignoreErrors();
     } else {
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO: prompt?
-        throw Error('not implemented yet');
+        async function runInBackground() {
+            if ((await promptBlock()) === false) {
+                try {
+                    await activated;
+                } catch (ex) {
+                    await handleError(ex, startupDurations);
+                }
+            }
+        }
+        // Do not await.
+        runInBackground().ignoreErrors();
     }
     return [started, api];
 }

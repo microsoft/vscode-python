@@ -5,8 +5,14 @@
 
 import { IExtensionContext } from './common/types';
 
-export const ERR_BLOCKED = new Error('extension activation blocked');
-
 export async function isBlocked(_context: IExtensionContext): Promise<boolean | undefined> {
     return false;
+}
+
+export async function promptBlock(): Promise<boolean> {
+    return false;
+}
+
+export async function promptUnblock(): Promise<boolean> {
+    return true;
 }
