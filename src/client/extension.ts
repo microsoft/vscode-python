@@ -38,7 +38,7 @@ import { Common } from './common/utils/localize';
 import { activateComponents } from './extensionActivation';
 import { isBlocked } from './extensionBlocked';
 import { initializeComponents, initializeGlobals } from './extensionInit';
-import { IServiceContainer, IServiceManager } from './ioc/types';
+import { IServiceContainer } from './ioc/types';
 import { sendErrorTelemetry, sendSuccessTelemetry } from './startupTelemetry';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
@@ -94,47 +94,63 @@ async function activateMaybeDeferred(
     startupStopWatch: StopWatch,
     startupDurations: Record<string, number>
 ): Promise<[Promise<void>, IExtensionApi]> {
+    const [activated, started, api] = startActivation(context, startupStopWatch, startupDurations);
+
     const blocked = await isBlocked(context);
-    if (blocked === undefined) {
+    if (blocked === false) {
+        await activated;
+    } else if (blocked) {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: prompt
         throw Error('not implemented yet');
-    } else if (blocked) {
+        //started.catch(err => handleError(ex, durations));
+    } else {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: prompt?
         throw Error('not implemented yet');
     }
-
-    const [ready, serviceManager, serviceContainer] = await activateUnsafe(context, startupStopWatch, startupDurations);
-    const api = buildApi(ready, serviceManager, serviceContainer);
-    return [ready, api];
+    return [started, api];
 }
 
-// tslint:disable-next-line:max-func-body-length
-async function activateUnsafe(
+function startActivation(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
     startupDurations: Record<string, number>
-): Promise<[Promise<void>, IServiceManager, IServiceContainer]> {
-    const activationDeferred = createDeferred<void>();
-    displayProgress(activationDeferred.promise);
-    startupDurations.startActivateTime = startupStopWatch.elapsedTime;
+): [Promise<void>, Promise<void>, IExtensionApi] {
+    const activated = createDeferred<void>();
+    displayProgress(activated.promise);
+    try {
+        startupDurations.startActivateTime = startupStopWatch.elapsedTime;
 
-    //===============================================
-    // activation starts here
+        const [serviceManager, serviceContainer] = initializeGlobals(context);
+        activatedServiceContainer = serviceContainer;
+        initializeComponents(context, serviceManager, serviceContainer);
 
-    const [serviceManager, serviceContainer] = initializeGlobals(context);
-    activatedServiceContainer = serviceContainer;
-    initializeComponents(context, serviceManager, serviceContainer);
-    const activationPromise = activateComponents(context, serviceManager, serviceContainer);
-
-    //===============================================
-    // activation ends here
-
-    startupDurations.endActivateTime = startupStopWatch.elapsedTime;
-    activationDeferred.resolve();
-
-    return [activationPromise, serviceManager, serviceContainer];
+        const started = createDeferred<void>();
+        async function activateExtension() {
+            try {
+                const [promise, _activated] = await activateComponents(context, serviceManager, serviceContainer);
+                // tslint:disable-next-line:no-unused-expression
+                _activated; // This quiets the compiler.
+                // Propagate the non-blocking activation promise.
+                promise.then(() => started.resolve(), started.reject);
+                startupDurations.endActivateTime = startupStopWatch.elapsedTime;
+            } finally {
+                activated.resolve();
+            }
+        }
+        return [
+            activateExtension(),
+            started.promise,
+            // We can create the API object at this point, but not
+            // all of it is guaranteed to work until the extension
+            // has fully started.
+            buildApi(started.promise, serviceManager, serviceContainer)
+        ];
+    } catch (err) {
+        activated.resolve();
+        throw err; // re-throw
+    }
 }
 
 // tslint:disable-next-line:no-any

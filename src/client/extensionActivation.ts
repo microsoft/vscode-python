@@ -86,7 +86,7 @@ async function activateLegacy(
     context: IExtensionContext,
     serviceManager: IServiceManager,
     serviceContainer: IServiceContainer
-) {
+): Promise<[Promise<void>, boolean]> {
     // register "services"
 
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
@@ -149,6 +149,8 @@ async function activateLegacy(
 
     const manager = serviceContainer.get<IExtensionActivationManager>(IExtensionActivationManager);
     context.subscriptions.push(manager);
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: Why aren't we await'ing this?
     const activationPromise = manager.activate();
 
     serviceManager.get<ITerminalAutoActivation>(ITerminalAutoActivation).register();
@@ -202,5 +204,8 @@ async function activateLegacy(
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
 
-    return activationPromise;
+    // We must multi-return because the return value of an async
+    // function is passed through Promise.resolve(), which flattens
+    // nested promises.
+    return [activationPromise, true];
 }
