@@ -8,6 +8,7 @@ import * as uuid from 'uuid/v4';
 import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import { IWebPanel, IWebPanelOptions, IWebPanelProvider } from '../types';
+import { WebBrowserPanel } from './webBrowserPanel';
 import { WebPanel } from './webPanel';
 
 @injectable()
@@ -25,6 +26,10 @@ export class WebPanelProvider implements IWebPanelProvider {
         const serverData = options.startHttpServer
             ? await this.ensureServerIsRunning()
             : { port: undefined, token: undefined };
+
+        if (WebBrowserPanel.canUse) {
+            return new WebBrowserPanel(this.disposableRegistry, options);
+        }
         return new WebPanel(this.fs, this.disposableRegistry, serverData.port, serverData.token, options);
     }
 
