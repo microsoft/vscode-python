@@ -92,6 +92,6 @@ suite('Data Science - ServerCache', () => {
             return Promise.resolve(server);
         }, options);
         assert.ok(result2, 'Second did not work');
-        assert.equal(token?.isCancellationRequested, true, 'First request was not canceled');
+        assert.notOk(token?.isCancellationRequested, 'First request should not be canceled');
     });
 });
