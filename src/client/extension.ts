@@ -53,17 +53,10 @@ let activatedServiceContainer: IServiceContainer | undefined;
 // public functions
 
 export async function activate(context: IExtensionContext): Promise<IExtensionApi> {
-    let api: IExtensionApi;
-    // tslint:disable-next-line:no-any
-    let ready: Promise<any>;
-    try {
-        [api, ready] = await activateMaybeDeferred(context, stopWatch, durations);
-    } catch (ex) {
-        // We want to completely handle the error
-        // before notifying VS Code.
-        await handleError(ex, durations);
-        throw ex; // re-raise
-    }
+    const [ready, api] = await activationErrorsTracked(async () => {
+        return activateMaybeDeferred(context, stopWatch, durations);
+    });
+
     // Send the "success" telemetry only if activation did not fail.
     // Otherwise Telemetry is send via the error handler.
     ready
@@ -77,6 +70,7 @@ export async function activate(context: IExtensionContext): Promise<IExtensionAp
         .then(() => sendSuccessTelemetry(durations, activatedServiceContainer!))
         // Run in the background.
         .ignoreErrors();
+
     return api;
 }
 
@@ -99,7 +93,7 @@ async function activateMaybeDeferred(
     context: IExtensionContext,
     startupStopWatch: StopWatch,
     startupDurations: Record<string, number>
-): Promise<[IExtensionApi, Promise<void>]> {
+): Promise<[Promise<void>, IExtensionApi]> {
     const blocked = await isBlocked(context);
     if (blocked === undefined) {
         // tslint:disable-next-line:no-suspicious-comment
@@ -113,7 +107,7 @@ async function activateMaybeDeferred(
 
     const [ready, serviceManager, serviceContainer] = await activateUnsafe(context, startupStopWatch, startupDurations);
     const api = buildApi(ready, serviceManager, serviceContainer);
-    return [api, ready];
+    return [ready, api];
 }
 
 // tslint:disable-next-line:max-func-body-length
@@ -147,6 +141,17 @@ async function activateUnsafe(
 function displayProgress(promise: Promise<any>) {
     const progressOptions: ProgressOptions = { location: ProgressLocation.Window, title: Common.loadingExtension() };
     window.withProgress(progressOptions, () => promise);
+}
+
+async function activationErrorsTracked(activateExtension: () => Promise<[Promise<void>, IExtensionApi]>) {
+    try {
+        return activateExtension();
+    } catch (ex) {
+        // We want to completely handle the error
+        // before notifying VS Code.
+        await handleError(ex, durations);
+        throw ex; // re-raise
+    }
 }
 
 /////////////////////////////
