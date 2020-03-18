@@ -1,7 +1,6 @@
 import { injectable } from 'inversify';
 import { Event, EventEmitter } from 'vscode';
 import { noop } from '../../common/utils/misc';
-import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { IInteractiveWindowListener } from '../types';
 
 @injectable()
@@ -27,9 +26,9 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
     // tslint:disable-next-line: no-any
     public onMessage(message: string, _payload?: any): void {
         switch (message) {
-            case InteractiveWindowMessages.NotebookExecutionActivated:
-                // Finish this after the notebook provider redesign
-                break;
+            // case InteractiveWindowMessages.NotebookExecutionActivated:
+            //     // Finish this after the notebook provider redesign
+            //     break;
 
             default:
                 break;
