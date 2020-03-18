@@ -299,6 +299,47 @@ export class JupyterSession implements IJupyterSession {
         this.restartSessionPromise = this.createRestartSession(this.serverSettings, kernel, this.contentsManager);
     }
 
+    public registerCommTarget(
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ) {
+        if (this.session && this.session.kernel) {
+            this.session.kernel.registerCommTarget(targetName, callback);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+
+    public sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    > {
+        if (this.session && this.session.kernel) {
+            const shellMessage = KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
+                // tslint:disable-next-line: no-any
+                msgType: 'comm_msg',
+                channel: 'shell',
+                buffers,
+                content,
+                metadata,
+                msgId,
+                session: this.session.kernel.clientId,
+                username: this.session.kernel.username
+            });
+
+            return this.session.kernel.sendShellMessage(shellMessage, false, true);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+
     private getServerStatus(): ServerStatus {
         if (this.session) {
             switch (this.session.kernel.status) {

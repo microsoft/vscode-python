@@ -155,18 +155,21 @@ export class JupyterNotebookBase implements INotebook {
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
+    private ioPubEvent = new EventEmitter<{ msg: KernelMessage.IIOPubMessage; requestId: string }>();
     public get onDisposed(): Event<void> {
         return this.disposed.event;
     }
     public get onKernelChanged(): Event<IJupyterKernelSpec | LiveKernelModel> {
         return this.kernelChanged.event;
     }
+    public get ioPub(): Event<{ msg: KernelMessage.IIOPubMessage; requestId: string }> {
+        return this.ioPubEvent.event;
+    }
     private kernelChanged = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>();
     private disposed = new EventEmitter<void>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
 
-    private _onIOPubMessage = new EventEmitter<{ msg: KernelMessage.IIOPubMessage; requestId: string }>();
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
         public session: IJupyterSession,
@@ -194,9 +197,6 @@ export class JupyterNotebookBase implements INotebook {
         this._resource = resource;
         // Save our interpreter and don't change it. Later on when kernel changes
         // are possible, recompute it.
-    }
-    public get onIOPub() {
-        return this._onIOPubMessage.event;
     }
     public get server(): INotebookServer {
         return this.owner;
@@ -626,6 +626,35 @@ export class JupyterNotebookBase implements INotebook {
         return this.loggers;
     }
 
+    public registerCommTarget(
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ) {
+        if (this.session) {
+            this.session.registerCommTarget(targetName, callback);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+
+    public sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    > {
+        if (this.session) {
+            return this.session.sendCommMessage(buffers, content, metadata, msgId);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+
     private async initializeMatplotlib(cancelToken?: CancellationToken): Promise<void> {
         const settings = this.configService.getSettings(this.resource).datascience;
         if (settings && settings.themeMatplotlibPlots) {
@@ -882,7 +911,10 @@ export class JupyterNotebookBase implements INotebook {
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
                 subscriber.cell.data.execution_count = msg.content.execution_count as number;
             }
-            this._onIOPubMessage.fire({ msg, requestId: msg.header.msg_id });
+
+            // Send our event
+            this.ioPubEvent.fire({ msg, requestId: msg.header.msg_id });
+
             // Show our update if any new output.
             subscriber.next(this.sessionStartTime);
         } catch (err) {
