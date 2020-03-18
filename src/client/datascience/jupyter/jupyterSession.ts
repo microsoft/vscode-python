@@ -27,13 +27,14 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
+// RAWKERNEL
+//import { RawKernelConnection } from '../raw-kernel/RawKernelConnection';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
 import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
-import { RawKernelConnection } from '../raw-kernel/RawKernelConnection';
 
 type ISession = Session.ISession & {
     /**
@@ -239,22 +240,33 @@ export class JupyterSession implements IJupyterSession {
 
         // RAWKERNEL: Test JMP here just for testing
         // Connection info here is output from kernelmanager.get_connection_info()
-        const kci = { version: 0, transport: 'tcp', ip: '127.0.0.1', shell_port: 55196, iopub_port: 55197, stdin_port: 55198, hb_port: 55200, control_port: 55199, signature_scheme: 'hmac-sha256', key: 'adaf9032-487d222a85026db284c3d5e7' };
-        const rawConnection = new RawKernelConnection(kci);
-        const message = {
-            header: {
-                msg_id: uuid(),
-                username: 'vscode',
-                session: uuid(),
-                date: new Date().toISOString(),
-                version: '5.2',
-                msg_type: 'execute_request'
-            },
-            content: { code: 'print("hello")', silent: false }
-        };
-        const reply = await rawConnection.sendMessage(message, 'shell');
-        traceInfo(reply);
-        rawConnection.dispose();
+        //const kci = {
+        //version: 0,
+        //transport: 'tcp',
+        //ip: '127.0.0.1',
+        //shell_port: 55196,
+        //iopub_port: 55197,
+        //stdin_port: 55198,
+        //hb_port: 55200,
+        //control_port: 55199,
+        //signature_scheme: 'hmac-sha256',
+        //key: 'adaf9032-487d222a85026db284c3d5e7'
+        //};
+        //const rawConnection = new RawKernelConnection(kci);
+        //const message = {
+        //header: {
+        //msg_id: uuid(),
+        //username: 'vscode',
+        //session: uuid(),
+        //date: new Date().toISOString(),
+        //version: '5.2',
+        //msg_type: 'execute_request'
+        //},
+        //content: { code: 'print("hello")', silent: false }
+        //};
+        //const reply = await rawConnection.sendMessage(message, 'shell');
+        //traceInfo(reply);
+        //rawConnection.dispose();
 
         // Start a new session
         this.session = await this.createSession(

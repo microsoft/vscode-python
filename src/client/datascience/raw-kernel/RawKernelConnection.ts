@@ -3,7 +3,7 @@ import { wireProtocol } from '@nteract/messaging';
 import * as zmq from 'zeromq';
 import { IDisposable } from '../../common/types';
 
-export interface RawKernelConnectionInfo {
+export interface IRawKernelConnectionInfo {
     version: number;
     iopub_port: number;
     shell_port: number;
@@ -16,7 +16,7 @@ export interface RawKernelConnectionInfo {
     transport: string;
 }
 
-interface RawJupyterMessageHeader {
+interface IRawJupyterMessageHeader {
     msg_id: string;
     username: string;
     date: string;
@@ -25,56 +25,54 @@ interface RawJupyterMessageHeader {
     session: string;
 }
 
-interface RawJupyterMessage {
-    header: RawJupyterMessageHeader;
-    parent_header: RawJupyterMessageHeader;
+interface IRawJupyterMessage {
+    header: IRawJupyterMessageHeader | {};
+    parent_header: IRawJupyterMessageHeader | {};
     metadata: object;
     content: object;
+    // tslint:disable-next-line:array-type prefer-array-literal
     buffers: Array<Buffer>;
+    // tslint:disable-next-line:array-type prefer-array-literal
     idents: Array<Buffer>;
 }
 
-export type ChannelName = "iopub" | "stdin" | "shell" | "control";
+export type ChannelName = 'iopub' | 'stdin' | 'shell' | 'control';
 
-// IANHU: Encode / decode moved to a service behind interface?
-// IANHU: Types for message classes? Don't like the any here
-function encodeMessage(message: RawJupyterMessage, key: string | undefined, scheme: string | undefined): Buffer[] {
+// RAWKERNEL: Encode / decode moved to a service behind interface?
+// RAWKERNEL: Types for message classes? Don't like the any here
+function encodeMessage(message: IRawJupyterMessage, key: string | undefined, scheme: string | undefined): Buffer[] {
+    // tslint:disable-next-line:no-any
     return wireProtocol.encode(message as any, key, scheme);
 }
 
-function decodeMessage(frames: Buffer[], key: string | undefined, scheme: string | undefined): RawJupyterMessage {
+function decodeMessage(frames: Buffer[], key: string | undefined, scheme: string | undefined): IRawJupyterMessage {
+    // tslint:disable-next-line:no-any
     return wireProtocol.decode(frames, key, scheme) as any;
 }
 
 // Fill out any missing defaults from the input message
-function initializeRawMessage(message: Partial<RawJupyterMessage>): RawJupyterMessage {
-    const newMessage = Object.assign(
-        {},
-        {
-            header: {},
-            parent_header: {},
-            metadata: {},
-            content: {},
-            idents: [],
-            buffers: []
-        },
-        message
-    );
-
-    return newMessage;
+function initializeRawMessage(message: Partial<IRawJupyterMessage>): IRawJupyterMessage {
+    return {
+        header: {},
+        parent_header: {},
+        metadata: {},
+        content: {},
+        idents: [],
+        buffers: [],
+        ...message
+    };
 }
 
 export class RawKernelConnection implements IDisposable {
+    public isDisposed = false;
     // Our sockets that we will connect to
     private iopubSocket: zmq.Subscriber;
     private stdinSocket: zmq.Dealer;
     private shellSocket: zmq.Dealer;
     private controlSocket: zmq.Dealer;
-    private connectionInfo: RawKernelConnectionInfo;
+    private connectionInfo: IRawKernelConnectionInfo;
 
-    public isDisposed = false;
-
-    constructor(kernelConnectInfo: RawKernelConnectionInfo) {
+    constructor(kernelConnectInfo: IRawKernelConnectionInfo) {
         this.connectionInfo = kernelConnectInfo;
 
         // Clean this up. Promise all?
@@ -85,10 +83,17 @@ export class RawKernelConnection implements IDisposable {
     }
 
     // Types still causing issues here
-    public async sendMessage(message: Partial<RawJupyterMessage>, channel: ChannelName): Promise<RawJupyterMessage | undefined> {
+    public async sendMessage(
+        message: Partial<IRawJupyterMessage>,
+        channel: ChannelName
+    ): Promise<IRawJupyterMessage | undefined> {
         // Encode our message
         const initializedMessage = initializeRawMessage(message);
-        const encodedMessage = encodeMessage(initializedMessage, this.connectionInfo.key, this.connectionInfo.signature_scheme);
+        const encodedMessage = encodeMessage(
+            initializedMessage,
+            this.connectionInfo.key,
+            this.connectionInfo.signature_scheme
+        );
 
         switch (channel) {
             case 'control':
@@ -96,10 +101,16 @@ export class RawKernelConnection implements IDisposable {
             case 'shell':
                 await this.shellSocket.send(encodedMessage);
                 const replyFrames = await this.shellSocket.receive();
-                const decodedReply = decodeMessage(replyFrames, this.connectionInfo.key, this.connectionInfo.signature_scheme);
+                const decodedReply = decodeMessage(
+                    replyFrames,
+                    this.connectionInfo.key,
+                    this.connectionInfo.signature_scheme
+                );
                 return decodedReply;
                 break;
             case 'stdin':
+                break;
+            default:
                 break;
         }
 
@@ -115,7 +126,7 @@ export class RawKernelConnection implements IDisposable {
         }
     }
 
-    private createSocket(kernelConnectInfo: RawKernelConnectionInfo, channel: ChannelName): zmq.Socket {
+    private createSocket(kernelConnectInfo: IRawKernelConnectionInfo, channel: ChannelName): zmq.Socket {
         const url = this.formConnectionString(kernelConnectInfo, channel);
         let socket: zmq.Socket;
         switch (channel) {
@@ -140,12 +151,12 @@ export class RawKernelConnection implements IDisposable {
         return socket;
     }
 
-    private formConnectionString(config: RawKernelConnectionInfo, channel: ChannelName): string {
-        const portDelimiter = config.transport === "tcp" ? ":" : "-";
-        const port = config[`${channel}_port` as keyof RawKernelConnectionInfo];
+    private formConnectionString(config: IRawKernelConnectionInfo, channel: ChannelName): string {
+        const portDelimiter = config.transport === 'tcp' ? ':' : '-';
+        const port = config[`${channel}_port` as keyof IRawKernelConnectionInfo];
         if (!port) {
             throw new Error(`Port not found for channel "${channel}"`);
         }
         return `${config.transport}://${config.ip}${portDelimiter}${port}`;
-    };
+    }
 }
