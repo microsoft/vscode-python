@@ -22,6 +22,35 @@
             ]
         },
         {
+            "name": "Extension (DS UI in Browser)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "stopOnEntry": false,
+            "smartStep": true,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*"
+            ],
+            "preLaunchTask": "Compile",
+            "skipFiles": [
+                "<node_internals>/**"
+            ],
+            "env": {
+                // When set, DS UI will be displayed in a browser instaed of VSCode WebView.
+                "VSC_PYTHON_DS_UI_BROWSER": "true",
+                // Port number to launch a webserver, if not defined, will use a random port.
+                // Use with care, if you open multiple notebooks or data frame viewer, then all will share same host and things will NOT work as expected.
+                "XVSC_PYTHON_DS_UI_PORT": "3000",
+                // When set, VSC will display a message indicating WebServer is ready to view DS React UI in browser.
+                // Message will contain the link (server address).
+                "VSC_PYTHON_DS_UI_PROMPT": "true"
+            }
+        },
+        {
             "name": "Extension inside container",
             "type": "extensionHost",
             "request": "launch",

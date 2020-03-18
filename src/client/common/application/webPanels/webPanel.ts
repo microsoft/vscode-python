@@ -5,7 +5,6 @@ import '../../extensions';
 
 import * as uuid from 'uuid/v4';
 import { Uri, Webview, WebviewOptions, WebviewPanel, window } from 'vscode';
-
 import { Identifiers } from '../../../datascience/constants';
 import { InteractiveWindowMessages } from '../../../datascience/interactive-common/interactiveWindowTypes';
 import { SharedMessages } from '../../../datascience/messages';
@@ -13,6 +12,7 @@ import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
 import { IWebPanel, IWebPanelOptions, WebPanelMessage } from '../types';
+import { WebBrowserPanel } from './webBrowserPanel';
 
 // Pick a static port to remap the remote port to one that VS code will route traffic to.
 // According to this, it should be a static number:
@@ -23,6 +23,7 @@ export class WebPanel implements IWebPanel {
     private panel: WebviewPanel | undefined;
     private loadPromise: Promise<void>;
     private id = uuid();
+    private webBrowserPanel?: WebBrowserPanel;
 
     constructor(
         private fs: IFileSystem,
@@ -68,6 +69,7 @@ export class WebPanel implements IWebPanel {
     }
 
     public close() {
+        this.webBrowserPanel?.dispose();
         if (this.panel) {
             this.panel.dispose();
         }
@@ -82,6 +84,7 @@ export class WebPanel implements IWebPanel {
     }
 
     public postMessage(message: WebPanelMessage) {
+        this.webBrowserPanel?.postMessage(message);
         if (this.panel && this.panel.webview) {
             this.panel.webview.postMessage(message);
         }
@@ -96,6 +99,15 @@ export class WebPanel implements IWebPanel {
 
     // tslint:disable-next-line:no-any
     private async load() {
+        // If required, use the webbrowser panel.
+        if (WebBrowserPanel.canUse) {
+            this.webBrowserPanel = new WebBrowserPanel();
+            await this.webBrowserPanel.launchServer(this.options.cwd, this.options.rootPath);
+            this.webBrowserPanel.onDidReceiveMessage(message => {
+                this.options.listener.onMessage(message.type, message.payload);
+            });
+            return;
+        }
         if (this.panel) {
             const localFilesExist = await Promise.all(this.options.scripts.map(s => this.fs.fileExists(s)));
             if (localFilesExist.every(exists => exists === true)) {

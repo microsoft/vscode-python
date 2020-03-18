@@ -63,13 +63,6 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         this.settingsChangeHandler = this.configService
             .getSettings(undefined)
             .onDidChange(this.onDataScienceSettingsChanged.bind(this));
-
-        // Send the first settings message
-        this.onDataScienceSettingsChanged().ignoreErrors();
-
-        // Send the loc strings (skip during testing as it takes up a lot of memory)
-        const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
-        this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
     }
 
     public async show(preserveFocus: boolean): Promise<void> {
@@ -275,6 +268,13 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
 
             traceInfo('Web view created.');
         }
+
+        // Send the first settings message
+        this.onDataScienceSettingsChanged().ignoreErrors();
+
+        // Send the loc strings (skip during testing as it takes up a lot of memory)
+        const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
+        this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
     }
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {

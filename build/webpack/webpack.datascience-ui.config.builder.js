@@ -46,14 +46,17 @@ function getPlugins(isNotebook) {
                 languages: [] // force to empty so onigasm will be used
             }),
             new HtmlWebpackPlugin({
+                template: path.join(__dirname, '/nativeOrInteractivePicker.html'),
+                chunks: [],
+                filename: 'index.html'
+            }),
+            new HtmlWebpackPlugin({
                 template: 'src/datascience-ui/native-editor/index.html',
-                indexUrl: `${constants.ExtensionRootDir}/out/1`,
                 chunks: ['monaco', 'commons', 'nativeEditor'],
                 filename: 'index.nativeEditor.html'
             }),
             new HtmlWebpackPlugin({
                 template: 'src/datascience-ui/history-react/index.html',
-                indexUrl: `${constants.ExtensionRootDir}/out/1`,
                 chunks: ['monaco', 'commons', 'interactiveWindow'],
                 filename: 'index.interactiveWindow.html'
             })
