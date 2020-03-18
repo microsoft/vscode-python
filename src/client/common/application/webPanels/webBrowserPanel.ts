@@ -95,6 +95,7 @@ export class WebBrowserPanel implements IDisposable {
 
         // Display a message if this env variable is set (used when debugging).
         if (process.env.VSC_PYTHON_DS_UI_PROMPT) {
+            // tslint:disable-next-line: no-http-string
             const url = `http:///localhost:${port}/index.html`;
             window
                 // tslint:disable-next-line: messages-must-be-localized
