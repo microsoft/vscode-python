@@ -237,7 +237,8 @@ export class JupyterSession implements IJupyterSession {
             throw new Error(localize.DataScience.sessionDisposed());
         }
 
-        // Test JMP here
+        // RAWKERNEL: Test JMP here just for testing
+        // Connection info here is output from kernelmanager.get_connection_info()
         const kci = { version: 0, transport: 'tcp', ip: '127.0.0.1', shell_port: 55196, iopub_port: 55197, stdin_port: 55198, hb_port: 55200, control_port: 55199, signature_scheme: 'hmac-sha256', key: 'adaf9032-487d222a85026db284c3d5e7' };
         const rawConnection = new RawKernelConnection(kci);
         const message = {
@@ -252,10 +253,8 @@ export class JupyterSession implements IJupyterSession {
             content: { code: 'print("hello")', silent: false }
         };
         const reply = await rawConnection.sendMessage(message, 'shell');
+        traceInfo(reply);
         rawConnection.dispose();
-        //const jmp = require('./../jmp/jmp');
-        //const mainChannel = await createMainChannel(kci, undefined, undefined, undefined, jmp);
-
 
         // Start a new session
         this.session = await this.createSession(

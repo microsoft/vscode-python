@@ -1,5 +1,5 @@
 import { wireProtocol } from '@nteract/messaging';
-import { KernelMessage } from '@jupyterlab/services';
+//import { KernelMessage } from '@jupyterlab/services';
 import * as zmq from 'zeromq';
 import { IDisposable } from '../../common/types';
 
@@ -16,14 +16,6 @@ export interface RawKernelConnectionInfo {
     transport: string;
 }
 
-//export interface JupyterMessageHeader<MT extends MessageType = MessageType> {
-//msg_id: string;
-//username: string;
-//date: string;
-//msg_type: MT;
-//version: string;
-//session: string;
-//}
 interface RawJupyterMessageHeader {
     msg_id: string;
     username: string;
@@ -124,8 +116,6 @@ export class RawKernelConnection implements IDisposable {
     }
 
     private createSocket(kernelConnectInfo: RawKernelConnectionInfo, channel: ChannelName): zmq.Socket {
-        // IANHU: identity / scheme?
-        const scheme = kernelConnectInfo.signature_scheme.slice("hmac-".length);
         const url = this.formConnectionString(kernelConnectInfo, channel);
         let socket: zmq.Socket;
         switch (channel) {
