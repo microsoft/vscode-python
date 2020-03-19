@@ -7,6 +7,9 @@ if __name__ != '__main__':
 import runpy
 import sys
 
+# We "isolate" the script/module (sys.argv[1]) by
+# deleting sys.path[0] and then sending the target
+# on to runpy.
 del sys.path[0]
 del sys.argv[0]
 module = sys.argv[0]
