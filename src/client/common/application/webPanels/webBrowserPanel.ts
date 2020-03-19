@@ -161,8 +161,9 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
                     }
                 }, noop);
         }
-
-        this.panel.webview.html = `<!DOCTYPE html><html><html><body><h1>${url}</h1></body>`;
+        if (this.panel) {
+            this.panel.webview.html = `<!DOCTYPE html><html><html><body><h1>${url}</h1><h1>If you close this the notebook is disposed (browser will no longer work).</h1></body>`;
+        }
         await this.socketPromise.promise;
     }
 }
