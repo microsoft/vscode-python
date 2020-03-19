@@ -1901,6 +1901,10 @@ export interface IEventNamePropertyMapping {
      */
     [Telemetry.GatheredNotebookSaved]: undefined | never;
     /**
+     * Telemetry event sent when the user reports whether Gathered notebook was good or not
+     */
+    [Telemetry.GatherQualityReport]: { result: 'good' | 'bad' };
+    /**
      * Telemetry event sent when the ZMQ native binaries do not work.
      */
     [Telemetry.ZMQNotSupported]: undefined | never;

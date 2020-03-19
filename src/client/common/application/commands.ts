@@ -161,4 +161,5 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.SaveNotebookNonCustomEditor]: [Uri];
     [DSCommands.SaveAsNotebookNonCustomEditor]: [Uri, Uri];
     [DSCommands.OpenNotebookNonCustomEditor]: [Uri];
+    [DSCommands.GatherQuality]: [string];
 }

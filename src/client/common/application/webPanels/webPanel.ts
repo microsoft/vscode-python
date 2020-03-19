@@ -34,7 +34,8 @@ export class WebPanel implements IWebPanel {
         const webViewOptions: WebviewOptions = {
             enableScripts: true,
             localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)],
-            portMapping: port ? [{ webviewPort: RemappedPort, extensionHostPort: port }] : undefined
+            portMapping: port ? [{ webviewPort: RemappedPort, extensionHostPort: port }] : undefined,
+            enableCommandUris: true
         };
         if (options.webViewPanel) {
             this.panel = options.webViewPanel;

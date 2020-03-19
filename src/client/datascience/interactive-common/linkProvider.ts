@@ -6,6 +6,7 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
 
+import * as vscode from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import * as localize from '../../common/utils/localize';
@@ -40,9 +41,14 @@ export class LinkProvider implements IInteractiveWindowListener {
             case InteractiveWindowMessages.OpenLink:
                 if (payload) {
                     // Special case file URIs
-                    const href = payload.toString();
+                    const href: string = payload.toString();
                     if (href.startsWith('file')) {
                         this.openFile(href);
+                    } else if (href.startsWith('https://command:')) {
+                        const temp: string = href.split(':')[2];
+                        const command = temp.split('/?')[0];
+                        const param: string = temp.split('/?')[1];
+                        vscode.commands.executeCommand(command, [param]);
                     } else {
                         this.applicationShell.openUrl(href);
                     }

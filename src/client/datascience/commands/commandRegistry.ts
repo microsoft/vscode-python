@@ -9,7 +9,8 @@ import { ICommandNameArgumentTypeMapping } from '../../common/application/comman
 import { ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { captureTelemetry } from '../../telemetry';
+import { noop } from '../../common/utils/misc';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import {
     ICodeWatcher,
@@ -68,6 +69,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor);
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
+        this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);
@@ -343,5 +345,9 @@ export class CommandRegistry implements IDisposable {
 
         // Ask our code lens provider to find the matching code watcher for the current document
         return this.dataScienceCodeLensProvider.getCodeWatcher(activeEditor.document);
+    }
+
+    private reportGatherQuality(val: string) {
+        sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val === '0' ? 'bad' : 'good' });
     }
 }
