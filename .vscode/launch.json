@@ -229,18 +229,17 @@
             "stopOnEntry": false,
             "sourceMaps": true,
             "args": [
-                "./out/test/**/*.ui.functional.test.js",
+                "./out/test/**/*.functional.test.js",
                 "--require=out/test/unittests.js",
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep",
-                "yyy",
-                "--timeout=300000",
-                "--fast"
+                //"--grep", "<suite>",
+                "--timeout=300000"
             ],
             "env": {
-                "VSC_PYTHON_DS_UI_BROWSER": "1",
+                // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
+                "xVSC_PYTHON_DS_UI_BROWSER": "1",
                 // Remove `X` prefix to test with real python (for DS functional tests).
                 "XVSCODE_PYTHON_ROLLING": "1",
                 // Remove 'X' to turn on all logging in the debug output
@@ -251,7 +250,7 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            // "preLaunchTask": "Compile",
+            "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
             ]
