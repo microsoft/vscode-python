@@ -360,6 +360,7 @@
                 var socket = io();
                 var messageHandler = undefined;
                 let messagesReceived = [];
+                socket.on('fromServer', function(msg) {
                     if (messageHandler) {
                         if (messagesReceived.length > 0) {
                             while (messagesReceived.length) {

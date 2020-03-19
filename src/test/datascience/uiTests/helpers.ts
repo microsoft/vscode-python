@@ -101,7 +101,8 @@ export class BaseWebUI implements IAsyncDisposable {
      * Opens a browser an loads the webpage, effectively loading the UI.
      */
     public async loadUI(url: string) {
-        this.browser = await playwright.chromium.launch({ headless: false });
+        // Configure to display browser while debugging.
+        this.browser = await playwright.chromium.launch({ headless: true, devtools: false });
         await this.browser.newContext();
         this.page = await this.browser.newPage();
         await this.page.goto(url);

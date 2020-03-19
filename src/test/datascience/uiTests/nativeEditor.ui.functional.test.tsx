@@ -14,6 +14,7 @@ import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { openNotebook } from './notebookHelpers';
 import { NotebookEditorUI } from './notebookUi';
+
 // tslint:disable-next-line: no-var-requires no-require-imports
 const sanitize = require('sanitize-filename');
 
