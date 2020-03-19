@@ -135,7 +135,7 @@ use(chaiAsPromised);
         });
         setup(async () => {
             UseCustomEditor.enabled = useCustomEditorApi;
-            ioc = new DataScienceIocContainer();
+            ioc = new DataScienceIocContainer(true);
             ioc.registerDataScienceTypes(useCustomEditorApi);
             await ioc.activate();
         });

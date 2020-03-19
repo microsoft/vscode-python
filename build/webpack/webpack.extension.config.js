@@ -64,8 +64,7 @@ const config = {
     // Packages listed in externals keeps webpack from trying to package them.
     // The ppaPackageList variable is set to non-empty if the build pipeline has been
     // authenticated to install @msrvida/python-program-analysis.
-    // socket.io, cors, and expressjs are only used when we launch a local webserver for dev/testing. (those need not ever be included into the vsix).
-    externals: ['vscode', 'commonjs', ...ppaPackageList, ...existingModulesInOutDir, 'socket.io', 'cors', 'express'],
+    externals: ['vscode', 'commonjs', ...ppaPackageList, ...existingModulesInOutDir],
     plugins: [
         ...common.getDefaultPlugins('extension'),
         // Copy pdfkit bits after extension builds. webpack can't handle pdfkit.
