@@ -4,7 +4,8 @@
 import { KernelMessage } from '@jupyterlab/services';
 import { assert } from 'chai';
 import * as uuid from 'uuid/v4';
-import { IPythonExecutionFactory } from '../../../client/common/process/types';
+import { IPythonExecutionFactory, ObservableExecutionResult } from '../../../client/common/process/types';
+import { createDeferred } from '../../../client/common/utils/async';
 import { IJMPConnection } from '../../../client/datascience/types';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 
@@ -13,33 +14,40 @@ suite('DataScience raw kernel tests', () => {
     let ioc: DataScienceIocContainer;
     let enchannelConnection: IJMPConnection;
     let connectionInfo: any;
+    let kernelResult: ObservableExecutionResult<string>;
+    const connectionReturned = createDeferred();
     setup(async function() {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         await ioc.activate();
-        enchannelConnection = ioc.get<IJMPConnection>(IJMPConnection);
         if (ioc.mockJupyter) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
+            enchannelConnection = ioc.get<IJMPConnection>(IJMPConnection);
+
             // Find our jupyter interpreter
             const interpreter = await ioc.getJupyterCapableInterpreter();
             assert.ok(interpreter, 'No jupyter interpreter found');
             // Start our kernel
             const execFactory = ioc.get<IPythonExecutionFactory>(IPythonExecutionFactory);
             const env = await execFactory.createActivatedEnvironment({ interpreter });
-            const result = await env.exec(
+            kernelResult = env.execObservable(
                 [
                     '-c',
                     'import jupyter_client;km,kc = jupyter_client.manager.start_new_kernel(kernel_name="python3");print(km.get_connection_info())'
                 ],
                 { throwOnStdErr: true }
             );
-            connectionInfo = JSON.parse(result.stdout);
+            kernelResult.out.subscribe(out => {
+                connectionInfo = JSON.parse(out.out.replace(/b*\'/g, '"'));
+                connectionReturned.resolve();
+            });
         }
     });
 
     teardown(async () => {
+        kernelResult.proc?.kill();
         await ioc.dispose();
     });
 
@@ -62,6 +70,7 @@ suite('DataScience raw kernel tests', () => {
 
     // tslint:disable-next-line: no-function-expression
     test('Basic iopub', async function() {
+        await connectionReturned.promise;
         const sessionId = uuid();
         await enchannelConnection.connect(connectionInfo, sessionId);
         enchannelConnection.subscribe(msg => {
