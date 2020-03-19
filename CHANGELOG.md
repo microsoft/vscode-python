@@ -8,7 +8,7 @@
    ([#4466](https://github.com/Microsoft/vscode-python/issues/4466))
 1. Support scrolling beyond the last line in the notebook editor and the interactive window. Uses the `editor.scrollBeyondLastLine` setting.
    ([#7892](https://github.com/Microsoft/vscode-python/issues/7892))
-1. Allow user to override the arguments passed to Jupyter on startup. To change the arguments, run the 'Python: Specify Jupyter command line arguments" command.
+1. Allow user to override the arguments passed to Jupyter on startup. To change the arguments, run the `Python: Specify Jupyter command line arguments` command.
    ([#8698](https://github.com/Microsoft/vscode-python/issues/8698))
 1. When entering remote Jupyter Server, default the input value to uri in clipboard.
    ([#9163](https://github.com/Microsoft/vscode-python/issues/9163))
