@@ -857,3 +857,24 @@ export interface INotebookProvider {
      */
     getNotebook(server: INotebookServer, resource: Uri, options?: nbformat.INotebookMetadata): Promise<INotebook>;
 }
+
+// Connection info to connect to a kernel over JMP
+export interface IJMPConnectionInfo {
+    version: number;
+    iopub_port: number;
+    shell_port: number;
+    stdin_port: number;
+    control_port: number;
+    signature_scheme: string;
+    hb_port: number;
+    ip: string;
+    key: string;
+    transport: string;
+}
+
+// A service to send and recieve messages over Jupyter messaging protocol
+export interface IJMPConnection extends IDisposable {
+    connect(connectInfo: IJMPConnectionInfo, sessionID: string): Promise<void>;
+    sendMessage(message: KernelMessage.IMessage): void;
+    subscribe(handlerFunc: (message: KernelMessage.IMessage) => void): void;
+}
