@@ -26,6 +26,7 @@ import { PostOffice } from '../../datascience-ui/react-common/postOffice';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent } from './reactHelpers';
+export * from './testHelpersCore';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {

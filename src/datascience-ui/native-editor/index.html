@@ -358,15 +358,27 @@
             // Assume that we're always using socket.io and running this in a browser.
             if (io) {
                 var socket = io();
+                var messageHandler = undefined;
+                let messagesReceived = [];
+                    if (messageHandler) {
+                        if (messagesReceived.length > 0) {
+                            while (messagesReceived.length) {
+                                const data = messagesReceived.shift();
+                                messageHandler({ data: data });
+                            }
+                        }
+                        messageHandler({ data: msg });
+                    } else {
+                        messagesReceived.push(msg);
+                    }
+                });
                 function acquireVsCodeApi() {
                     return {
                         postMessage: function(message) {
                             socket.emit('fromClient', message);
                         },
                         handleMessage: function(handler) {
-                            socket.on('fromServer', function(msg) {
-                                handler({ data: msg });
-                            });
+                            messageHandler = handler;
                         }
                     };
                 }

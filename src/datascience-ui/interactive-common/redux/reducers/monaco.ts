@@ -79,9 +79,7 @@ function finishTokenizer<T>(buffer: ArrayBuffer, tmJson: string, arg: MonacoRedu
 
 function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState {
     // Have to convert the buffer into an ArrayBuffer for the tokenizer to load it.
-    // tslint:disable-next-line: no-any
-    const typedArray = new Uint8Array((arg.payload.data as any).data);
-
+    const typedArray = new Uint8Array(arg.payload.data);
     if (arg.prevState.tmLanguageData && !arg.prevState.onigasmData && typedArray.length > 0) {
         // Monaco is ready. Initialize the tokenizer
         finishTokenizer(typedArray.buffer, arg.prevState.tmLanguageData, arg);

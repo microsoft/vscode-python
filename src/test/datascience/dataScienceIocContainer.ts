@@ -358,10 +358,10 @@ import { MockLanguageServerProxy } from './mockLanguageServerProxy';
 import { MockLiveShareApi } from './mockLiveShare';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
-import { blurWindow, createMessageEvent } from './reactHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
+import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -442,7 +442,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         await super.dispose();
 
         // Blur window focus so we don't have editors polling
-        blurWindow();
+        // blurWindow();
 
         if (this.wrapper && this.wrapper.length) {
             this.wrapper.unmount();
@@ -452,26 +452,26 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Bounce this so that our editor has time to shutdown
         await sleep(150);
 
-        // Clear out the monaco global services. Some of these services are preventing shutdown.
-        // tslint:disable: no-require-imports
-        const services = require('monaco-editor/esm/vs/editor/standalone/browser/standaloneServices') as any;
-        if (services.StaticServices) {
-            const keys = Object.keys(services.StaticServices);
-            keys.forEach(k => {
-                const service = services.StaticServices[k] as any;
-                if (service && service._value && service._value.dispose) {
-                    if (typeof service._value.dispose === 'function') {
-                        service._value.dispose();
-                    }
-                }
-            });
-        }
+        // // Clear out the monaco global services. Some of these services are preventing shutdown.
+        // // tslint:disable: no-require-imports
+        // const services = require('monaco-editor/esm/vs/editor/standalone/browser/standaloneServices') as any;
+        // if (services.StaticServices) {
+        //     const keys = Object.keys(services.StaticServices);
+        //     keys.forEach(k => {
+        //         const service = services.StaticServices[k] as any;
+        //         if (service && service._value && service._value.dispose) {
+        //             if (typeof service._value.dispose === 'function') {
+        //                 service._value.dispose();
+        //             }
+        //         }
+        //     });
+        // }
 
-        // This file doesn't have an export so we can't force a dispose. Instead it has a 5 second timeout
-        const config = require('monaco-editor/esm/vs/editor/browser/config/configuration') as any;
-        if (config.getCSSBasedConfiguration) {
-            config.getCSSBasedConfiguration().dispose();
-        }
+        // // This file doesn't have an export so we can't force a dispose. Instead it has a 5 second timeout
+        // const config = require('monaco-editor/esm/vs/editor/browser/config/configuration') as any;
+        // if (config.getCSSBasedConfiguration) {
+        //     config.getCSSBasedConfiguration().dispose();
+        // }
 
         // Because there are outstanding promises holding onto this object, clear out everything we can
         this.workspaceFolders = [];
@@ -504,7 +504,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Setup our webpanel provider to create our dummy web panel
         when(this.webPanelProvider.create(anything())).thenCall(this.onCreateWebPanel.bind(this));
-        this.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, instance(this.webPanelProvider));
+        this.serviceManager.addSingleton<IWebPanelProvider>(IWebPanelProvider, WebBrowserPanelProvider);
 
         this.registerFileSystemTypes();
         this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
@@ -1263,10 +1263,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private createWebPanel(): IWebPanel {
         const webPanel = mock(WebPanel);
         when(webPanel.postMessage(anything())).thenCall(m => {
-            const message = createMessageEvent(m);
-            if (this.postMessage) {
-                this.postMessage(message);
-            }
+            // const message = createMessageEvent(m);
+            // if (this.postMessage) {
+            //     this.postMessage(message);
+            // }
             if (m.payload) {
                 delete m.payload;
             }
