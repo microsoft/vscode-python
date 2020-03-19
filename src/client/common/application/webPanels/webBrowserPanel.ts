@@ -149,9 +149,9 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
         });
 
         // Display a message if this env variable is set (used when debugging).
+        // tslint:disable-next-line: no-http-string
         const url = `http:///localhost:${port}/index.html`;
         if (process.env.VSC_PYTHON_DS_UI_PROMPT) {
-            // tslint:disable-next-line: no-http-string
             window
                 // tslint:disable-next-line: messages-must-be-localized
                 .showInformationMessage(`Open browser to '${url}'`, 'Copy')
