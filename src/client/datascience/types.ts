@@ -872,6 +872,8 @@ export interface IJMPConnectionInfo {
     transport: string;
 }
 
+export const IJMPConnection = Symbol('IJMPConnection');
+
 // A service to send and recieve messages over Jupyter messaging protocol
 export interface IJMPConnection extends IDisposable {
     connect(connectInfo: IJMPConnectionInfo, sessionID: string): Promise<void>;
