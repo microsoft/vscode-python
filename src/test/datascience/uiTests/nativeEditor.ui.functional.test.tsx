@@ -5,10 +5,10 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Disposable } from 'vscode';
-import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { UseCustomEditor } from '../../../datascience-ui/react-common/constants';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
@@ -164,7 +164,8 @@ use(chaiAsPromised);
         teardown(async function() {
             if (this.test && this.test.state === 'failed') {
                 const imageName = `${sanitize(this.test.fullTitle())}.png`;
-                await notebookUi.captureScreenshot(path.join(EXTENSION_ROOT_DIR, 'tmp', 'screenshots', imageName));
+                await notebookUi.captureScreenshot(path.join(os.tmpdir(), 'tmp', 'screenshots', imageName));
+                // await notebookUi.captureScreenshot(path.join(EXTENSION_ROOT_DIR, 'tmp', 'screenshots', imageName));
             }
         });
         async function openNotebookFile(fileContents: string) {

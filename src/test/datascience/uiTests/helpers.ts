@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 
+import * as fs from 'fs-extra';
+import * as path from 'path';
 import * as playwright from 'playwright';
 import { IAsyncDisposable, IDisposable } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
@@ -106,6 +108,11 @@ export class BaseWebUI implements IAsyncDisposable {
     }
 
     public async captureScreenshot(filePath: string): Promise<void> {
+        if (!(await fs.pathExists(path.basename(filePath)))) {
+            await fs.ensureDir(path.basename(filePath));
+        }
         await this.page?.screenshot({ path: filePath });
+        // tslint:disable-next-line: no-console
+        console.info(`Screenshot captured in ${filePath}`);
     }
 }
