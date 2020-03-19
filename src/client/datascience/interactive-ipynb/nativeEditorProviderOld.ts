@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationTokenSource, TextDocument, TextEditor, Uri } from 'vscode';
+import { CancellationTokenSource, EventEmitter, TextDocument, TextEditor, Uri } from 'vscode';
 
 import {
     ICommandManager,
@@ -88,6 +88,16 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {
+        // Save a custom document as we use it to search for the object later.
+        if (!this.customDocuments.has(file.fsPath)) {
+            // Required for old editor
+            this.customDocuments.set(file.fsPath, {
+                uri: file,
+                viewType: NativeEditorProvider.customEditorViewType,
+                onDidDispose: new EventEmitter<void>().event
+            });
+        }
+
         // See if this file is open or not already
         let editor = this.activeEditors.get(file.fsPath);
         if (!editor) {
