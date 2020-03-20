@@ -70,7 +70,7 @@ export async function createSubscriber(
     const socket = new zmq.Subscriber();
 
     const url = formConnectionString(config, channel);
-    await socket.bind(url);
+    socket.connect(url);
     return socket;
 }
 
@@ -93,13 +93,21 @@ export async function createDealer(
     const socket = new zmq.Dealer({routingId: identity});
 
     const url = formConnectionString(config, channel);
-    await socket.bind(url);
+    socket.connect(url);
     return socket;
 }
 
 
 export const getUsername = () =>
     process.env.LOGNAME || process.env.USER || process.env.LNAME || process.env.USERNAME || 'username'; // This is the fallback that the classic notebook uses
+
+interface Sockets {
+    shell: Dealer;
+    control: Dealer;
+    stdin: Dealer;
+    iopub: Subscriber;
+    connectionInfo: JupyterConnectionInfo;
+}
 
 /**
  * Sets up the sockets for each of the jupyter channels.
@@ -115,7 +123,7 @@ export const createSockets = async (
     config: JupyterConnectionInfo,
     subscription: string = '',
     identity = uuid()
-) => {
+): Promise<Sockets> => {
     const [shell, control, stdin, iopub] = await Promise.all([
         createDealer('shell', identity, config),
         createDealer('control', identity, config),
@@ -130,7 +138,8 @@ export const createSockets = async (
         shell,
         control,
         stdin,
-        iopub
+        iopub,
+        connectionInfo: config
     };
 };
 
@@ -162,9 +171,7 @@ class SocketEventEmitter extends Events.EventEmitter {
  * to send and receive messages through the Jupyter protocol.
  */
 export const createMainChannelFromSockets = (
-    sockets: {
-        [name: string]: Subscriber | Dealer;
-    },
+    sockets: Sockets,
     header: HeaderFiller = {
         session: uuid(),
         username: getUsername()
@@ -181,7 +188,7 @@ export const createMainChannelFromSockets = (
                 console.warn('message sent without a channel', message);
                 return;
             }
-            const socket = sockets[message.channel];
+            const socket = (sockets as any)[message.channel];
             if (!socket) {
                 // If, for some reason, a message is sent on a channel we don't have
                 // a socket for, warn about it but don't bomb the stream
@@ -199,30 +206,33 @@ export const createMainChannelFromSockets = (
                     idents: []
                 };
                 if ((socket as any).send !== undefined) {
-                    await (socket as Dealer).send(wireProtocol.encode(jMessage));
+                    await (socket as Dealer).send(wireProtocol.encode(jMessage, sockets.connectionInfo.key, sockets.connectionInfo.signature_scheme));
                 }
             } catch (err) {
                 traceError('Error sending message', err, message);
             }
         },
         undefined, // not bothering with sending errors on
-        () =>
+        () => {
             // When the subject is completed / disposed, close all the event
             // listeners and shutdown the socket
-            Object.keys(sockets).forEach(name => {
-                const socket = sockets[name];
-                if (socket.close) {
-                    socket.close();
-                }
-            })
+            try {
+                sockets.control.close();
+                sockets.iopub.close();
+                sockets.shell.close();
+                sockets.stdin.close();
+            } catch (ex) {
+                traceError(`Error during socket shutdown`, ex);
+            }
+        }
     );
 
     // Messages from kernel on the sockets
     const incomingMessages: rxjs.Observable<JupyterMessage> = rxjs.merge(
         // Form an Observable with each socket
-        ...Object.keys(sockets).map(name => {
+        ...Object.keys(sockets).filter(s => s.hasOwnProperty('connect')).map(name => {
             // Wrap in something that will emit an event whenever a message is received.
-            const socketEmitter = new SocketEventEmitter(sockets[name]);
+            const socketEmitter = new SocketEventEmitter((sockets as any)[name]);
             return rxjs.fromEvent(
                 socketEmitter,
                 'message'
@@ -234,7 +244,7 @@ export const createMainChannelFromSockets = (
                         // Conform to same message format as notebook websockets
                         // See https://github.com/n-riesco/jmp/issues/10
                         delete (msg as any).idents;
-                        return wireProtocol.decode(msg) as any;
+                        return wireProtocol.decode(msg, sockets.connectionInfo.key, sockets.connectionInfo.signature_scheme) as any;
                     }
                 ),
                 publish(),

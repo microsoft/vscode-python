@@ -3,6 +3,11 @@
 'use strict';
 import { KernelMessage } from '@jupyterlab/services';
 import { assert } from 'chai';
+import { ChildProcess } from 'child_process';
+import * as fs from 'fs-extra';
+import { noop } from 'jquery';
+import * as os from 'os';
+import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { IPythonExecutionFactory, ObservableExecutionResult } from '../../../client/common/process/types';
 import { createDeferred } from '../../../client/common/utils/async';
@@ -13,9 +18,21 @@ import { DataScienceIocContainer } from '../dataScienceIocContainer';
 suite('DataScience raw kernel tests', () => {
     let ioc: DataScienceIocContainer;
     let enchannelConnection: IJMPConnection;
-    let connectionInfo: any;
-    let kernelResult: ObservableExecutionResult<string>;
-    const connectionReturned = createDeferred();
+    let connectionFile: string;
+    let kernelProcResult: ObservableExecutionResult<string>;
+    const connectionInfo = {
+        shell_port: 57718,
+        iopub_port: 57719,
+        stdin_port: 57720,
+        control_port: 57721,
+        hb_port: 57722,
+        ip: '127.0.0.1',
+        key: 'c29c2121-d277576c2c035f0aceeb5068',
+        transport: 'tcp',
+        signature_scheme: 'hmac-sha256',
+        kernel_name: 'python3',
+        version: 5.1
+    };
     setup(async function() {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
@@ -32,31 +49,44 @@ suite('DataScience raw kernel tests', () => {
             // Start our kernel
             const execFactory = ioc.get<IPythonExecutionFactory>(IPythonExecutionFactory);
             const env = await execFactory.createActivatedEnvironment({ interpreter });
-            kernelResult = env.execObservable(
-                [
-                    '-c',
-                    'import jupyter_client;km,kc = jupyter_client.manager.start_new_kernel(kernel_name="python3");print(km.get_connection_info());import time;while(True): time.sleep(.1);'
-                ],
-                { throwOnStdErr: true }
-            );
-            kernelResult.out.subscribe(out => {
-                if (!connectionReturned.resolved) {
-                    connectionInfo = JSON.parse(out.out.replace(/b*\'/g, '"'));
-                    connectionReturned.resolve();
-                }
+
+            connectionFile = path.join(os.tmpdir(), `tmp_${Date.now()}_k.json`);
+            await fs.writeFile(connectionFile, JSON.stringify(connectionInfo), { encoding: 'utf-8', flag: 'w' });
+
+            // Keep kernel alive while the tests are running.
+            kernelProcResult = env.execObservable(['-m', 'ipykernel_launcher', '-f', connectionFile], {
+                throwOnStdErr: false
             });
+            kernelProcResult.out.subscribe(
+                out => {
+                    console.log(out.out);
+                },
+                error => {
+                    console.error(error);
+                },
+                () => {
+                    enchannelConnection.dispose();
+                }
+            );
         }
     });
 
     teardown(async () => {
-        kernelResult.proc?.kill();
+        kernelProcResult?.proc?.kill();
+        try {
+            await fs.remove(connectionFile);
+        } catch {
+            noop();
+        }
         await ioc.dispose();
     });
 
     function createShutdownMessage(sessionId: string): KernelMessage.IMessage<'shutdown_request'> {
         return {
             channel: 'control',
-            content: {},
+            content: {
+                restart: false
+            },
             header: {
                 date: Date.now().toString(),
                 msg_id: uuid(),
@@ -72,12 +102,17 @@ suite('DataScience raw kernel tests', () => {
 
     // tslint:disable-next-line: no-function-expression
     test('Basic iopub', async function() {
-        await connectionReturned.promise;
         const sessionId = uuid();
+        const reply = createDeferred();
         await enchannelConnection.connect(connectionInfo, sessionId);
         enchannelConnection.subscribe(msg => {
-            assert.equal(msg.header.msg_type, 'shutdown_reply', 'Shutdown reply not sent');
+            if (msg.header.msg_type === 'shutdown_reply') {
+                reply.resolve();
+            } else {
+                reply.reject(new Error('Shutdown reply not sent'));
+            }
         });
         enchannelConnection.sendMessage(createShutdownMessage(sessionId));
+        await reply.promise;
     });
 });
