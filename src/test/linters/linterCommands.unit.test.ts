@@ -12,6 +12,7 @@ import { CommandManager } from '../../client/common/application/commandManager';
 import { DocumentManager } from '../../client/common/application/documentManager';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../client/common/application/types';
 import { Commands } from '../../client/common/constants';
+import { Product } from '../../client/common/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { LinterCommands } from '../../client/linters/linterCommands';
 import { LinterManager } from '../../client/linters/linterManager';
@@ -163,6 +164,6 @@ suite('Linting - Linter Commands', () => {
         verify(shell.showWarningMessage(anything(), 'Yes', 'No')).once();
         const quickPickOptions = capture(shell.showQuickPick).last()[1];
         expect(quickPickOptions).to.deep.equal(expectedQuickPickOptions);
-        verify(manager.setActiveLintersAsync(deepEqual(['Three']), anything())).once();
+        verify(manager.setActiveLintersAsync(deepEqual([('Three' as any) as Product]), anything())).once();
     });
 });

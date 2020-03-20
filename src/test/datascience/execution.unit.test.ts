@@ -769,7 +769,7 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getInterpreterDetails(match('/foo/baz/python.exe'))).thenResolve(missingKernelPython);
         when(interpreterService.getInterpreterDetails(match('/bar/baz/python.exe'))).thenResolve(missingNotebookPython);
         when(interpreterService.getInterpreterDetails(argThat(o => !o.includes || !o.includes('python')))).thenReject(
-            'Unknown interpreter'
+            ('Unknown interpreter' as any) as Error
         );
         if (runInDocker) {
             when(fileSystem.readFile('/proc/self/cgroup')).thenResolve('hello docker world');
