@@ -29,7 +29,11 @@ export type WaitForMessageOptions = {
 };
 
 export class BaseWebUI implements IAsyncDisposable {
-    protected readonly waitTimeForUIToUpdate = 1_000;
+    /**
+     * UI could take a while to update, could be slower on CI server.
+     * (500ms is generally enough, but increasing to 3s to avoid flaky CI tests).
+     */
+    protected readonly waitTimeForUIToUpdate = 3_000;
     protected page?: playwright.Page;
     private readonly disposables: IDisposable[] = [];
     private readonly webServerPromise = createDeferred<WebServer>();
