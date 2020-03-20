@@ -3,8 +3,8 @@
 
 import { Channels, JupyterMessage } from '@nteract/messaging';
 import * as wireProtocol from '@nteract/messaging/lib/wire-protocol';
+import * as Events from 'events';
 import * as rxjs from 'rxjs';
-import { FromEventTarget } from "rxjs/internal/observable/fromEvent";
 import { map, publish, refCount } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
 // tslint:disable-next-line: prettier
@@ -134,6 +134,23 @@ export const createSockets = async (
     };
 };
 
+class SocketEventEmitter extends Events.EventEmitter {
+    constructor(socket: Dealer | Subscriber) {
+        super();
+        this.listenToSocket(socket);
+    }
+
+    private listenToSocket(socket: Dealer | Subscriber) {
+        if (!socket.closed) {
+            // tslint:disable-next-line: no-floating-promises
+            socket.receive().then(b => {
+                this.emit('message', b);
+                this.listenToSocket(socket);
+            });
+        }
+    }
+}
+
 /**
  * Creates a multiplexed set of channels.
  *
@@ -204,12 +221,10 @@ export const createMainChannelFromSockets = (
     const incomingMessages: rxjs.Observable<JupyterMessage> = rxjs.merge(
         // Form an Observable with each socket
         ...Object.keys(sockets).map(name => {
-            const socket = sockets[name];
-            // fromEvent typings are broken. socket will work as an event target.
+            // Wrap in something that will emit an event whenever a message is received.
+            const socketEmitter = new SocketEventEmitter(sockets[name]);
             return rxjs.fromEvent(
-                // Pending a refactor around jmp, this allows us to treat the socket
-                // as a normal event emitter
-                (socket as unknown) as FromEventTarget<JupyterMessage>,
+                socketEmitter,
                 'message'
             ).pipe(
                 map(

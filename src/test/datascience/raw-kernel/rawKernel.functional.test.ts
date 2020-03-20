@@ -35,13 +35,15 @@ suite('DataScience raw kernel tests', () => {
             kernelResult = env.execObservable(
                 [
                     '-c',
-                    'import jupyter_client;km,kc = jupyter_client.manager.start_new_kernel(kernel_name="python3");print(km.get_connection_info())'
+                    'import jupyter_client;km,kc = jupyter_client.manager.start_new_kernel(kernel_name="python3");print(km.get_connection_info());import time;while(True): time.sleep(.1);'
                 ],
                 { throwOnStdErr: true }
             );
             kernelResult.out.subscribe(out => {
-                connectionInfo = JSON.parse(out.out.replace(/b*\'/g, '"'));
-                connectionReturned.resolve();
+                if (!connectionReturned.resolved) {
+                    connectionInfo = JSON.parse(out.out.replace(/b*\'/g, '"'));
+                    connectionReturned.resolve();
+                }
             });
         }
     });
