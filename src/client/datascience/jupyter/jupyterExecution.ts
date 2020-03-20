@@ -339,16 +339,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
             throw this.zmqError;
         }
         try {
-            const zmq = await import('zeromq');
-            const sock = new zmq.Push();
-            const port = await portfinder.getPortPromise();
-
-            await sock.bind(`tcp://127.0.0.1:${port}`);
-            sock.send('some work').ignoreErrors(); // This will never return unless there's a listener. Just used for testing the API is available
-            await sleep(50);
-            await sock.unbind(`tcp://127.0.0.1:${port}`);
-            sock.close();
-            traceInfo(`ZMQ connection to port ${port} verified.`);
+            await import('zeromq');
+            traceInfo(`ZMQ install verified.`);
         } catch (e) {
             traceError(`Exception while attempting zmq :`, e);
             sendTelemetryEvent(Telemetry.ZMQNotSupported);

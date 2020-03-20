@@ -589,6 +589,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     });
                 }
                 const owningResource = await this.getOwningResource();
+                const stopOnError = this.configuration.getSettings(owningResource).datascience.stopOnError;
                 const observable = this._notebook.executeObservable(code, file, line, id, false);
 
                 // Indicate we executed some code
@@ -604,7 +605,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                         this.sendCellsToWebView(combined);
 
                         // Any errors will move our result to false (if allowed)
-                        if (this.configuration.getSettings(owningResource).datascience.stopOnError) {
+                        if (stopOnError) {
                             result = result && cells.find(c => c.state === CellState.error) === undefined;
                         }
                     },

@@ -112,8 +112,10 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
     ): Promise<IKernelSpecQuickPickItem[]> {
         const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
         return items
-            .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
-            .map(item => getQuickPickItemForKernelSpec(item, this.pathUtils));
+            ? items
+                  .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
+                  .map(item => getQuickPickItemForKernelSpec(item, this.pathUtils))
+            : [];
     }
 }
 
