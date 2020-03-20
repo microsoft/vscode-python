@@ -7,8 +7,7 @@ import * as Events from 'events';
 import * as rxjs from 'rxjs';
 import { map, publish, refCount } from 'rxjs/operators';
 import { v4 as uuid } from 'uuid';
-// tslint:disable-next-line: prettier
-import type { Dealer, Subscriber } from 'zeromq';
+import * as zeromq from 'zeromq';
 import { traceError } from '../../../common/logger';
 
 type ChannelName = 'iopub' | 'stdin' | 'shell' | 'control';
@@ -51,7 +50,6 @@ export const formConnectionString = (config: JupyterConnectionInfo, channel: Cha
     return `${config.transport}://${config.ip}${portDelimiter}${port}`;
 };
 
-
 /**
  * Creates a socket for the given channel with ZMQ channel type given a config
  *
@@ -64,10 +62,8 @@ export const formConnectionString = (config: JupyterConnectionInfo, channel: Cha
 export async function createSubscriber(
     channel: ChannelName,
     config: JupyterConnectionInfo
-): Promise<Subscriber> {
-    // tslint:disable-next-line: no-require-imports
-    const zmq = await require('zeromq') as typeof import('zeromq');
-    const socket = new zmq.Subscriber();
+): Promise<zeromq.Subscriber> {
+    const socket = new zeromq.Subscriber();
 
     const url = formConnectionString(config, channel);
     socket.connect(url);
@@ -87,25 +83,23 @@ export async function createDealer(
     channel: ChannelName,
     identity: string,
     config: JupyterConnectionInfo
-): Promise<Dealer> {
+): Promise<zeromq.Dealer> {
     // tslint:disable-next-line: no-require-imports
-    const zmq = await require('zeromq') as typeof import('zeromq');
-    const socket = new zmq.Dealer({routingId: identity});
+    const socket = new zeromq.Dealer({ routingId: identity });
 
     const url = formConnectionString(config, channel);
     socket.connect(url);
     return socket;
 }
 
-
 export const getUsername = () =>
     process.env.LOGNAME || process.env.USER || process.env.LNAME || process.env.USERNAME || 'username'; // This is the fallback that the classic notebook uses
 
 interface Sockets {
-    shell: Dealer;
-    control: Dealer;
-    stdin: Dealer;
-    iopub: Subscriber;
+    shell: zeromq.Dealer;
+    control: zeromq.Dealer;
+    stdin: zeromq.Dealer;
+    iopub: zeromq.Subscriber;
 }
 
 /**
@@ -142,12 +136,12 @@ export const createSockets = async (
 };
 
 class SocketEventEmitter extends Events.EventEmitter {
-    constructor(socket: Dealer | Subscriber) {
+    constructor(socket: zeromq.Dealer | zeromq.Subscriber) {
         super();
         this.listenToSocket(socket);
     }
 
-    private listenToSocket(socket: Dealer | Subscriber) {
+    private listenToSocket(socket: zeromq.Dealer | zeromq.Subscriber) {
         if (!socket.closed) {
             // RAWKERNEL: determine if this is a stack problem.
             // tslint:disable-next-line: no-floating-promises
@@ -175,12 +169,12 @@ export const createMainChannelFromSockets = (
     header: HeaderFiller = {
         session: uuid(),
         username: getUsername()
-    },
+    }
 ): Channels => {
     // The mega subject that encapsulates all the sockets as one multiplexed
     // stream
     const outgoingMessages = rxjs.Subscriber.create<JupyterMessage>(
-        async (message) => {
+        async message => {
             // There's always a chance that a bad message is sent, we'll ignore it
             // instead of consuming it
             if (!message || !message.channel) {
@@ -205,7 +199,9 @@ export const createMainChannelFromSockets = (
                     idents: []
                 };
                 if ((socket as any).send !== undefined) {
-                    await (socket as Dealer).send(wireProtocol.encode(jMessage, connectionInfo.key, connectionInfo.signature_scheme));
+                    await (socket as zeromq.Dealer).send(
+                        wireProtocol.encode(jMessage, connectionInfo.key, connectionInfo.signature_scheme)
+                    );
                 }
             } catch (err) {
                 traceError('Error sending message', err, message);
@@ -227,25 +223,28 @@ export const createMainChannelFromSockets = (
     );
 
     // Messages from kernel on the sockets
-    const incomingMessages: rxjs.Observable<JupyterMessage> = rxjs.merge(
-        // Form an Observable with each socket
-        ...Object.keys(sockets).map(name => {
-            // Wrap in something that will emit an event whenever a message is received.
-            const socketEmitter = new SocketEventEmitter((sockets as any)[name]);
-            return rxjs.fromEvent(
-                socketEmitter,
-                'message'
-            ).pipe(
-                map(
-                    (body: any): JupyterMessage => {
-                        return wireProtocol.decode(body, connectionInfo.key, connectionInfo.signature_scheme) as any;
-                    }
-                ),
-                publish(),
-                refCount()
-            );
-        })
-    ).pipe(publish(), refCount());
+    const incomingMessages: rxjs.Observable<JupyterMessage> = rxjs
+        .merge(
+            // Form an Observable with each socket
+            ...Object.keys(sockets).map(name => {
+                // Wrap in something that will emit an event whenever a message is received.
+                const socketEmitter = new SocketEventEmitter((sockets as any)[name]);
+                return rxjs.fromEvent(socketEmitter, 'message').pipe(
+                    map(
+                        (body: any): JupyterMessage => {
+                            return wireProtocol.decode(
+                                body,
+                                connectionInfo.key,
+                                connectionInfo.signature_scheme
+                            ) as any;
+                        }
+                    ),
+                    publish(),
+                    refCount()
+                );
+            })
+        )
+        .pipe(publish(), refCount());
 
     return rxjs.Subject.create(outgoingMessages, incomingMessages);
 };
