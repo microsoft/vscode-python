@@ -1903,7 +1903,7 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when the user reports whether Gathered notebook was good or not
      */
-    [Telemetry.GatherQualityReport]: { result: 'good' | 'bad' };
+    [Telemetry.GatherQualityReport]: { result: 'yes' | 'no' };
     /**
      * Telemetry event sent when the ZMQ native binaries do not work.
      */

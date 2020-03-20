@@ -347,7 +347,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private reportGatherQuality(val: string) {
-        sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val === '0' ? 'bad' : 'good' });
-        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed_value=${val}`));
+        sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val === 'no' ? 'no' : 'yes' });
+        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed=${val}`));
     }
 }
