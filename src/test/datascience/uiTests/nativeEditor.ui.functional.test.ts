@@ -106,7 +106,6 @@ use(chaiAsPromised);
             const { notebookUI } = await openSampeABCIpynb();
             await notebookUI.assertCellCount(3);
             await notebookUI.executeCell(0);
-            await sleep(20_000);
         });
     });
 });
