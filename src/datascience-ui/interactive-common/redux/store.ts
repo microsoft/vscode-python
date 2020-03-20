@@ -220,7 +220,11 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     const updateContext = createSendInfoMiddleware();
 
     // Create the test middle ware. It sends messages that are used for testing only
-    const testMiddleware = testMode ? createTestMiddleware() : undefined;
+    // Or if testing in UI Test.
+    // tslint:disable-next-line: no-any
+    const acquireVsCodeApi = (window as any).acquireVsCodeApi as Function;
+    const isUITest = acquireVsCodeApi && acquireVsCodeApi().handleMessage ? true : false;
+    const testMiddleware = testMode || isUITest ? createTestMiddleware() : undefined;
 
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';

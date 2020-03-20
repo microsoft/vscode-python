@@ -3,8 +3,10 @@
 
 'use strict';
 
+import { assert } from 'chai';
 import { ElementHandle } from 'playwright';
-import { waitForCondition } from '../../common';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { BaseWebUI } from './helpers';
 
 enum CellToolbarButton {
@@ -12,20 +14,32 @@ enum CellToolbarButton {
 }
 
 export class NotebookEditorUI extends BaseWebUI {
-    public async assertCellCount(count: number): Promise<void> {
-        await waitForCondition(
-            async () => {
-                const items = await this.page!.$$('.cell-wrapper');
-                return items.length === count;
-            },
-            this.waitTimeForUIToUpdate,
-            'Invalid Cell Count'
-        );
+    public async getCellCount(): Promise<number> {
+        const items = await this.page!.$$('.cell-wrapper');
+        return items.length;
     }
 
     public async executeCell(cellIndex: number): Promise<void> {
+        const renderedPromise = this.waitForMessage(InteractiveWindowMessages.ExecutionRendered);
+        const executedPromise = this.waitForMessage(CommonActionType.EXECUTE_CELL);
         const runButton = await this.getToolbarButton(cellIndex, CellToolbarButton.run);
-        await runButton.click({ button: 'left' });
+        await Promise.all([runButton.click({ button: 'left' }), renderedPromise, executedPromise]);
+    }
+
+    public async cellHasOutput(cellIndex: number): Promise<boolean> {
+        const cell = await this.getCell(cellIndex);
+        const output = await cell.$$('.cell-output-wrapper');
+        return output.length > 0;
+    }
+
+    public async getCellOutputHTML(cellIndex: number): Promise<string> {
+        const cell = await this.getCell(cellIndex);
+        const output = await cell.$$('.cell-output-wrapper');
+        if (output.length === 0) {
+            assert.fail('Cell does not have any output');
+        }
+        const outputHtmls = await Promise.all(output.map(item => item.getProperty('innerHTML')));
+        return outputHtmls.join('');
     }
 
     private async getCell(cellIndex: number): Promise<ElementHandle<Element>> {

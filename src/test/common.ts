@@ -498,6 +498,28 @@ export async function waitForCondition(
     });
 }
 
+/**
+ * Execute a method until it executes without any exceptions.
+ */
+export async function retryIfFail<T>(fn: () => Promise<T>, timeoutMs: number = 60_000): Promise<T> {
+    let lastEx: Error | undefined;
+    const started = new Date().getTime();
+    while (timeoutMs > new Date().getTime() - started) {
+        try {
+            // tslint:disable-next-line: no-unnecessary-local-variable
+            const result = await fn();
+            // Capture result, if no exceptions return that.
+            return result;
+        } catch (ex) {
+            lastEx = ex;
+        }
+    }
+    if (lastEx) {
+        throw lastEx;
+    }
+    throw new Error('Timeout waiting for function to complete without any errors');
+}
+
 export async function openFile(file: string): Promise<TextDocument> {
     const vscode = require('vscode') as typeof import('vscode');
     const textDocument = await vscode.workspace.openTextDocument(file);

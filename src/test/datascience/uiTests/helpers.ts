@@ -8,6 +8,8 @@ import * as playwright from 'playwright';
 import { IAsyncDisposable, IDisposable } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { CssMessages } from '../../../client/datascience/messages';
+import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { WebServer } from './webBrowserPanel';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -28,12 +30,14 @@ export type WaitForMessageOptions = {
     numberOfTimes?: number;
 };
 
+const maxWaitTimeForMessage = 15_000;
+/**
+ * UI could take a while to update, could be slower on CI server.
+ * (500ms is generally enough, but increasing to 3s to avoid flaky CI tests).
+ */
+export const waitTimeForUIToUpdate = 3_000;
+
 export class BaseWebUI implements IAsyncDisposable {
-    /**
-     * UI could take a while to update, could be slower on CI server.
-     * (500ms is generally enough, but increasing to 3s to avoid flaky CI tests).
-     */
-    protected readonly waitTimeForUIToUpdate = 3_000;
     protected page?: playwright.Page;
     private readonly disposables: IDisposable[] = [];
     private readonly webServerPromise = createDeferred<WebServer>();
@@ -52,14 +56,25 @@ export class BaseWebUI implements IAsyncDisposable {
     }
     public async waitUntilLoaded(): Promise<void> {
         await this.webServerPromise.promise.then(() =>
-            this.waitForMessage(InteractiveWindowMessages.LoadAllCellsComplete)
+            // The UI is deemed loaded when we have seen all of the following messages.
+            // We cannot guarantee the order of these messages, however they are all part of the load process.
+            Promise.all([
+                this.waitForMessage(InteractiveWindowMessages.LoadAllCellsComplete),
+                this.waitForMessage(InteractiveWindowMessages.LoadAllCells),
+                this.waitForMessage(InteractiveWindowMessages.MonacoReady), // Sometimes the last thing to happen.
+                this.waitForMessage(InteractiveWindowMessages.SettingsUpdated),
+                this.waitForMessage(CommonActionType.EDITOR_LOADED),
+                this.waitForMessage(CommonActionType.CODE_CREATED), // When a cell has been created.
+                this.waitForMessage(CssMessages.GetMonacoThemeResponse),
+                this.waitForMessage(CssMessages.GetCssResponse)
+            ])
         );
     }
     public async waitForMessage(message: string, options?: WaitForMessageOptions): Promise<void> {
         if (!this.webServer) {
             throw new Error('WebServer not yet started');
         }
-        const timeoutMs = options && options.timeoutMs ? options.timeoutMs : undefined;
+        const timeoutMs = options && options.timeoutMs ? options.timeoutMs : maxWaitTimeForMessage;
         const numberOfTimes = options && options.numberOfTimes ? options.numberOfTimes : 1;
         // Wait for the mounted web panel to send a message back to the data explorer
         const promise = createDeferred<void>();
@@ -106,7 +121,7 @@ export class BaseWebUI implements IAsyncDisposable {
      */
     public async loadUI(url: string) {
         // Configure to display browser while debugging.
-        this.browser = await playwright.chromium.launch({ headless: true, devtools: false });
+        this.browser = await playwright.chromium.launch({ headless: false, devtools: true });
         await this.browser.newContext();
         this.page = await this.browser.newPage();
         await this.page.goto(url);

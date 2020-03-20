@@ -22,6 +22,28 @@
             ]
         },
         {
+            "name": "Extension (DS UI in Browser)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "stopOnEntry": false,
+            "smartStep": true,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*"
+            ],
+            "preLaunchTask": "Inject DS WebBrowser UI",
+            "env": {
+                "VSC_PYTHON_DS_UI_PROMPT": "1"
+            },
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
             "name": "Extension inside container",
             "type": "extensionHost",
             "request": "launch",
@@ -274,7 +296,7 @@
             ],
             "env": {
                 // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
-                "xVSC_PYTHON_DS_UI_BROWSER": "1",
+                "XVSC_PYTHON_DS_UI_BROWSER": "1",
                 // Remove `X` prefix to test with real python (for DS functional tests).
                 "XVSCODE_PYTHON_ROLLING": "1",
                 // Remove 'X' to turn on all logging in the debug output

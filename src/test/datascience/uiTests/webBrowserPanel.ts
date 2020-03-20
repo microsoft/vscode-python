@@ -49,7 +49,7 @@ export class WebServer implements IDisposable {
      * Starts a WebServer, and optionally displays a Message when server is ready.
      * Used only for debugging and testing purposes.
      */
-    public async launchServer(cwd: string, resourcesRoot: string, port: number = 0): Promise<void> {
+    public async launchServer(cwd: string, resourcesRoot: string, port: number = 0): Promise<number> {
         // tslint:disable-next-line: no-require-imports
         const express = require('express') as typeof import('express');
         // tslint:disable-next-line: no-require-imports
@@ -96,6 +96,8 @@ export class WebServer implements IDisposable {
                     }
                 }, noop);
         }
+
+        return port;
     }
 
     public async waitForConnection(): Promise<void> {
@@ -192,7 +194,12 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
             this.options.listener.onMessage(data.type, data.payload);
         });
 
-        await this.server.launchServer(cwd, resourcesRoot, portToUse);
+        const port = await this.server.launchServer(cwd, resourcesRoot, portToUse);
+        if (this.panel?.webview) {
+            // tslint:disable-next-line: no-http-string
+            const url = `http:///localhost:${port}/index.html`;
+            this.panel.webview.html = `<!DOCTYPE html><html><html><body><h1>${url}</h1></body>`;
+        }
         await this.server.waitForConnection();
     }
 }
