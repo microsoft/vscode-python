@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
 'use strict';
+
+// tslint:disable: no-var-requires no-require-imports no-invalid-this no-any no-invalid-this
 
 import { use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -18,12 +21,9 @@ import { addMockData } from '../testHelpersCore';
 import { openNotebook } from './notebookHelpers';
 import { NotebookEditorUI } from './notebookUi';
 
-// tslint:disable-next-line: no-var-requires no-require-imports
 const sanitize = require('sanitize-filename');
 
 use(chaiAsPromised);
-
-// tslint:disable: no-invalid-this no-any
 
 [false].forEach(useCustomEditorApi => {
     //import { asyncDump } from '../common/asyncDump';
@@ -34,8 +34,8 @@ use(chaiAsPromised);
 
         suiteSetup(function() {
             UseCustomEditor.enabled = useCustomEditorApi;
-            // tslint:disable-next-line: no-invalid-this
             this.timeout(30_000);
+            this.retries(3);
             process.env.VSC_PYTHON_DS_UI_BROWSER = '1';
         });
         suiteTeardown(() => {
@@ -95,6 +95,7 @@ use(chaiAsPromised);
             addMockData(ioc, 'c=3\nc', 3);
             return openNotebookFile('simple_abc.ipynb');
         }
+
         test('Notebook has 3 cells', async () => {
             const { notebookUI } = await openSampeABCIpynb();
             await notebookUI.assertCellCount(3);
