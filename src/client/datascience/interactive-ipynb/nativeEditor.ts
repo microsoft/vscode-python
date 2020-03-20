@@ -234,22 +234,25 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Sign up for dirty events
         model.changed(this.modelChanged.bind(this));
-
-        // Load our cells, but don't wait for this to finish, otherwise the window won't load.
-        this.sendInitialCellsToWebView(model.cells)
-            .then(() => {
-                // May alread be dirty, if so send a message
-                if (model.isDirty) {
-                    this.postMessage(InteractiveWindowMessages.NotebookDirty).ignoreErrors();
-                }
-            })
-            .catch(exc => traceError('Error loading cells: ', exc));
     }
 
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
         switch (message) {
+            case InteractiveWindowMessages.Started:
+                if (this.model) {
+                    // Load our cells, but don't wait for this to finish, otherwise the window won't load.
+                    this.sendInitialCellsToWebView(this.model.cells)
+                        .then(() => {
+                            // May alread be dirty, if so send a message
+                            if (this.model?.isDirty) {
+                                this.postMessage(InteractiveWindowMessages.NotebookDirty).ignoreErrors();
+                            }
+                        })
+                        .catch(exc => traceError('Error loading cells: ', exc));
+                }
+                break;
             case InteractiveWindowMessages.Sync:
                 this.synchronizer.notifyUserAction(payload, this);
                 break;

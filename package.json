@@ -3115,6 +3115,7 @@
         "monaco-editor-textmate": "^2.2.1",
         "monaco-editor-webpack-plugin": "^1.7.0",
         "monaco-textmate": "^3.0.1",
+        "nocache": "^2.1.0",
         "nock": "^10.0.6",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",

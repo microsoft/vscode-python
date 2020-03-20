@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable: no-var-requires no-require-imports no-invalid-this no-any no-invalid-this
+// tslint:disable: no-var-requires no-require-imports no-invalid-this no-any no-invalid-this no-console
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert, use } from 'chai';
@@ -32,7 +32,6 @@ use(chaiAsPromised);
 [false].forEach(useCustomEditorApi => {
     //import { asyncDump } from '../common/asyncDump';
     suite(`${useCustomEditorApi ? 'With' : 'Without'} Custom Editor API`, () => {
-        const originalValue_VSC_PYTHON_DS_UI_BROWSER = process.env.VSC_PYTHON_DS_UI_BROWSER;
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
 
@@ -45,14 +44,6 @@ use(chaiAsPromised);
             UseCustomEditor.enabled = useCustomEditorApi;
             this.timeout(30_000); // UI Tests, need time to start jupyter.
             this.retries(3); // UI Tests can be flaky.
-            process.env.VSC_PYTHON_DS_UI_BROWSER = '1';
-        });
-        suiteTeardown(() => {
-            if (originalValue_VSC_PYTHON_DS_UI_BROWSER === undefined) {
-                delete process.env.VSC_PYTHON_DS_UI_BROWSER;
-            } else {
-                process.env.VSC_PYTHON_DS_UI_BROWSER = originalValue_VSC_PYTHON_DS_UI_BROWSER;
-            }
         });
         setup(async () => {
             UseCustomEditor.enabled = useCustomEditorApi;
@@ -75,11 +66,6 @@ use(chaiAsPromised);
             }
             await ioc.dispose();
             mockedVSCodeNamespaces.window?.reset();
-            if (originalValue_VSC_PYTHON_DS_UI_BROWSER === undefined) {
-                delete process.env.VSC_PYTHON_DS_UI_BROWSER;
-            } else {
-                process.env.VSC_PYTHON_DS_UI_BROWSER = originalValue_VSC_PYTHON_DS_UI_BROWSER;
-            }
         });
         let notebookUi: NotebookEditorUI;
         teardown(async function() {
@@ -109,7 +95,7 @@ use(chaiAsPromised);
             addMockData(ioc, 'c=3\nc', 3);
             return openNotebookFile('simple_abc.ipynb');
         }
-        async function openStandardWidgetspynb() {
+        async function openStandardWidgetsIpynb() {
             return openNotebookFile('standard_widgets.ipynb');
         }
 
@@ -134,17 +120,35 @@ use(chaiAsPromised);
                 assert.include(outputHtml, '<span>1</span>');
             });
         });
-        suite('Actual Jupyter', () => {
-            suiteSetup(function() {
+        suite('Live Jupyter', () => {
+            setup(function() {
                 if (ioc.mockJupyter) {
                     return this.skip();
                 }
             });
 
-            test('Slider Widget (WIP)', async () => {
-                const { notebookUI } = await openStandardWidgetspynb();
+            test('Slider Widget', async () => {
+                const { notebookUI } = await openStandardWidgetsIpynb();
+                let hasOutput = await notebookUI.cellHasOutput(1);
+                assert.isFalse(hasOutput);
+
                 await notebookUI.executeCell(0);
-                await notebookUI.executeCell(2);
+                await notebookUI.executeCell(1);
+
+                await retryIfFail(async () => {
+                    hasOutput = await notebookUI.cellHasOutput(1);
+                    assert.isTrue(hasOutput);
+                    const outputHtml = await notebookUI.getCellOutputHTML(1);
+
+                    // Should not contain the string representation of widget (rendered when ipywidgets wasn't supported).
+                    // We should only render widget not string representation.
+                    assert.notInclude(outputHtml, 'IntSlider(value=0)');
+
+                    // Ensure Widget HTML exists
+                    assert.include(outputHtml, 'jupyter-widgets');
+                    assert.include(outputHtml, 'ui-slider');
+                    assert.include(outputHtml, '<div class="ui-slider');
+                });
             });
         });
     });

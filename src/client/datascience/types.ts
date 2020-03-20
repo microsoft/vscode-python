@@ -899,6 +899,10 @@ export type GetNotebookOptions = {
 
 export interface INotebookProvider {
     /**
+     * Fired when a notebook has been created for a given Uri/Identity
+     */
+    notebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
+    /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */
     getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;

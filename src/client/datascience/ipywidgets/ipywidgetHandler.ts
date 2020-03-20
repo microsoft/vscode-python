@@ -1,6 +1,7 @@
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
+import { IDisposableRegistry } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import {
     IInteractiveWindowMapping,
@@ -19,6 +20,7 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
     }
     private pendingTargetNames: string[] = [];
     private notebookIdentity: Uri | undefined;
+    private notebookInitializedForIpyWidgets: boolean = false;
 
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
@@ -27,7 +29,12 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
         payload: any;
     }>();
 
-    constructor(@inject(INotebookProvider) private notebookProvider: INotebookProvider) {}
+    constructor(
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
+    ) {
+        disposables.push(notebookProvider.notebookCreated(this.initialize, this));
+    }
 
     public dispose() {
         noop();
@@ -183,17 +190,29 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
     private async saveIdentity(args: INotebookIdentity) {
         this.notebookIdentity = Uri.parse(args.resource);
 
+        await this.initialize();
+    }
+
+    private async initialize() {
+        if (this.notebookInitializedForIpyWidgets) {
+            return;
+        }
+
         // If we have any pending targets, register them now
         const notebook = await this.getNotebook();
-        if (this.pendingTargetNames.length > 0 && notebook) {
+        if (!notebook) {
+            return;
+        }
+
+        this.notebookInitializedForIpyWidgets = true;
+
+        if (this.pendingTargetNames.length > 0) {
             this.registerCommTargets(notebook, this.pendingTargetNames);
             this.pendingTargetNames = [];
         }
 
         // Sign up for io pub messages (could probably do a better job here. Do we want all display data messages?)
-        if (notebook) {
-            notebook.ioPub(this.handleOnIOPub.bind(this));
-        }
+        notebook.ioPub(this.handleOnIOPub.bind(this));
     }
 
     private handleOnIOPub(data: { msg: KernelMessage.IIOPubMessage; requestId: string }) {

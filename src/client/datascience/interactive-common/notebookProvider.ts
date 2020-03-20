@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, Uri } from 'vscode';
+import { ConfigurationTarget, EventEmitter, Uri } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { traceInfo } from '../../common/logger';
@@ -37,6 +37,7 @@ export class NotebookProvider implements INotebookProvider {
     private readonly notebooks = new Map<string, Promise<INotebook>>();
     private serverPromise: Promise<INotebookServer | undefined> | undefined;
     private allowingUI = false;
+    private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
     constructor(
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
@@ -52,6 +53,9 @@ export class NotebookProvider implements INotebookProvider {
         disposables.push(
             interactiveWindowProvider.onDidChangeActiveInteractiveWindow(this.checkAndDisposeNotebook, this)
         );
+    }
+    public get notebookCreated() {
+        return this._notebookCreated.event;
     }
 
     public async getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined> {
@@ -91,8 +95,13 @@ export class NotebookProvider implements INotebookProvider {
                 }
             };
 
-            // If the notebook is disposed, remove from cache.
-            promise.then(nb => nb.onDisposed(removeFromCache)).catch(noop);
+            promise
+                .then(nb => {
+                    // If the notebook is disposed, remove from cache.
+                    nb.onDisposed(removeFromCache);
+                    this._notebookCreated.fire({ identity: options.identity, notebook: nb });
+                })
+                .catch(noop);
 
             // If promise fails, then remove the promise from cache.
             promise.catch(removeFromCache);

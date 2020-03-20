@@ -1,29 +1,31 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as expressTypes from 'express';
+import * as cors from 'cors';
+import * as express from 'express';
 import * as http from 'http';
 import { IDisposable } from 'monaco-editor';
-import * as socketIOTypes from 'socket.io';
+import * as socketIO from 'socket.io';
 import { env, EventEmitter, Uri, WebviewOptions, WebviewPanel, window } from 'vscode';
 import { IWebPanel, IWebPanelOptions } from '../../../client/common/application/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
 import { noop } from '../../../client/common/utils/misc';
 
+// tslint:disable: no-any no-console no-require-imports no-var-requires
+const nocache = require('nocache');
+
 export class WebServer implements IDisposable {
-    // tslint:disable-next-line: no-any
     public get onDidReceiveMessage() {
         return this._onDidReceiveMessage.event;
     }
-    private app?: expressTypes.Express;
-    private io?: socketIOTypes.Server;
+    private app?: express.Express;
+    private io?: socketIO.Server;
     private server?: http.Server;
     private disposed: boolean = false;
-    private readonly socketPromise = createDeferred<socketIOTypes.Socket>();
-    // tslint:disable-next-line: no-any
+    private readonly socketPromise = createDeferred<socketIO.Socket>();
     private readonly _onDidReceiveMessage = new EventEmitter<any>();
-    private socket?: socketIOTypes.Socket;
+    private socket?: socketIO.Socket;
 
     public dispose() {
         this.server?.close();
@@ -40,7 +42,6 @@ export class WebServer implements IDisposable {
                 this.socket?.emit('fromServer', message);
             })
             .catch(ex => {
-                // tslint:disable-next-line: no-console
                 console.error('Failed to connect to socket', ex);
             });
     }
@@ -50,18 +51,15 @@ export class WebServer implements IDisposable {
      * Used only for debugging and testing purposes.
      */
     public async launchServer(cwd: string, resourcesRoot: string, port: number = 0): Promise<number> {
-        // tslint:disable-next-line: no-require-imports
-        const express = require('express') as typeof import('express');
-        // tslint:disable-next-line: no-require-imports
-        const cors = require('cors') as typeof import('cors');
-        // tslint:disable-next-line: no-require-imports
-        const socketIO = require('socket.io') as typeof import('socket.io');
         this.app = express();
         this.server = http.createServer(this.app);
         this.io = socketIO(this.server);
-        this.app.use(express.static(resourcesRoot));
+        this.app.use(express.static(resourcesRoot, { cacheControl: false, etag: false }));
         this.app.use(express.static(cwd));
         this.app.use(cors());
+        // Ensure browser does'nt cache anything (for UI tests/debugging).
+        this.app.use(nocache());
+        this.app.disable('view cache');
 
         this.io.on('connection', socket => {
             // Possible we close browser and reconnect, or hit refresh button.
@@ -110,9 +108,6 @@ export class WebServer implements IDisposable {
  * Also, if you set `VSC_PYTHON_DS_UI_PROMPT`, you'll be presented with a VS Code messagebox when URL/endpoint is ready.
  */
 export class WebBrowserPanel implements IWebPanel, IDisposable {
-    public static get canUse() {
-        return (process.env.VSC_PYTHON_DS_UI_BROWSER || '').length > 0;
-    }
     private panel?: WebviewPanel;
     private server?: WebServer;
     constructor(private readonly disposableRegistry: IDisposableRegistry, private readonly options: IWebPanelOptions) {
@@ -176,7 +171,7 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
         this.panel?.dispose();
     }
 
-    public postMessage(message: {}) {
+    public postMessage(message: any) {
         this.server?.postMessage(message);
     }
 

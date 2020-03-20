@@ -186,6 +186,7 @@ import { NativeEditorStorage } from '../../client/datascience/interactive-ipynb/
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
+import { IpywidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
 import { JupyterCommandInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterDependencyService';
@@ -672,6 +673,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
+        if (this.uiTest) {
+            this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IpywidgetHandler);
+        }
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
         this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
