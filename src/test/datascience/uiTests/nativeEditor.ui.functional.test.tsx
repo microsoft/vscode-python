@@ -2,16 +2,19 @@
 // Licensed under the MIT License.
 'use strict';
 
-import { nbformat } from '@jupyterlab/coreutils';
 import { use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { Disposable } from 'vscode';
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { UseCustomEditor } from '../../../datascience-ui/react-common/constants';
+import { sleep } from '../../core';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
+import { addMockData } from '../testHelpersCore';
 import { openNotebook } from './notebookHelpers';
 import { NotebookEditorUI } from './notebookUi';
 
@@ -28,98 +31,6 @@ use(chaiAsPromised);
         const originalValue_VSC_PYTHON_DS_UI_BROWSER = process.env.VSC_PYTHON_DS_UI_BROWSER;
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
-
-        const baseFileJson: nbformat.INotebookContent = {
-            cells: [
-                {
-                    cell_type: 'code',
-                    execution_count: 1,
-                    metadata: {
-                        collapsed: true
-                    },
-                    outputs: [
-                        {
-                            data: {
-                                'text/plain': ['1']
-                            },
-                            execution_count: 1,
-                            metadata: {},
-                            output_type: 'execute_result'
-                        }
-                    ],
-                    source: ['a=1\n', 'a']
-                },
-                {
-                    cell_type: 'code',
-                    execution_count: 2,
-                    metadata: {},
-                    outputs: [
-                        {
-                            data: {
-                                'text/plain': ['2']
-                            },
-                            execution_count: 2,
-                            metadata: {},
-                            output_type: 'execute_result'
-                        }
-                    ],
-                    source: ['b=2\n', 'b']
-                },
-                {
-                    cell_type: 'code',
-                    execution_count: 3,
-                    metadata: {},
-                    outputs: [
-                        {
-                            data: {
-                                'text/plain': ['3']
-                            },
-                            execution_count: 3,
-                            metadata: {},
-                            output_type: 'execute_result'
-                        }
-                    ],
-                    source: ['c=3\n', 'c']
-                }
-            ],
-            metadata: {
-                file_extension: '.py',
-                kernelspec: {
-                    display_name: 'Python 3',
-                    language: 'python',
-                    name: 'python3'
-                },
-                language_info: {
-                    codemirror_mode: {
-                        name: 'ipython',
-                        version: 3
-                    },
-                    file_extension: '.py',
-                    mimetype: 'text/x-python',
-                    name: 'python',
-                    nbconvert_exporter: 'python',
-                    pygments_lexer: 'ipython3',
-                    version: '3.7.4'
-                },
-                mimetype: 'text/x-python',
-                name: 'python',
-                npconvert_exporter: 'python',
-                pygments_lexer: 'ipython3',
-                version: 3,
-                orig_nbformat: 3
-            },
-            nbformat: 4,
-            nbformat_minor: 2
-        };
-        const baseFile = JSON.stringify(baseFileJson);
-        const addedJSON = baseFileJson;
-        addedJSON.cells.splice(3, 0, {
-            cell_type: 'code',
-            execution_count: null,
-            metadata: {},
-            outputs: [],
-            source: ['a']
-        });
 
         suiteSetup(function() {
             UseCustomEditor.enabled = useCustomEditorApi;
@@ -169,15 +80,26 @@ use(chaiAsPromised);
                 // await notebookUi.captureScreenshot(path.join(EXTENSION_ROOT_DIR, 'tmp', 'screenshots', imageName));
             }
         });
-        async function openNotebookFile(fileContents: string) {
+        function getIpynbFilePath(fileName: string) {
+            return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'uiTests', 'notebooks', fileName);
+        }
+        async function openNotebookFile(ipynbFile: string) {
+            const fileContents = await fs.readFile(getIpynbFilePath(ipynbFile), 'utf8');
             const result = await openNotebook(ioc, disposables, fileContents);
             notebookUi = result.notebookUI;
             return result;
         }
+        async function openSampeABCIpynb() {
+            addMockData(ioc, 'a=1\na', 1);
+            addMockData(ioc, 'b=2\nb', 2);
+            addMockData(ioc, 'c=3\nc', 3);
+            return openNotebookFile('simple_abc.ipynb');
+        }
         test('Notebook has 3 cells', async () => {
-            const { notebookUI } = await openNotebookFile(baseFile);
+            const { notebookUI } = await openSampeABCIpynb();
             await notebookUI.assertCellCount(3);
             await notebookUI.executeCell(0);
+            await sleep(20_000);
         });
     });
 });

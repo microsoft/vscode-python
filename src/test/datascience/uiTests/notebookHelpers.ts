@@ -14,7 +14,6 @@ import { INotebookEditor, INotebookEditorProvider } from '../../../client/datasc
 import { createTemporaryFile } from '../../utils/fs';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
-import { addMockData } from '../testHelpersCore';
 import { NotebookEditorUI } from './notebookUi';
 import { WebServer } from './webBrowserPanel';
 
@@ -78,10 +77,6 @@ export async function openNotebook(
     disposables: IDisposable[],
     notebookFileContents: string
 ) {
-    addMockData(ioc, 'a=1\na', 1);
-    addMockData(ioc, 'b=2\nb', 2);
-    addMockData(ioc, 'c=3\nc', 3);
-
     const notebookFile = await createNotebookFileWithContents(notebookFileContents, disposables);
     const notebookUI = new NotebookEditorUI();
     disposables.push(notebookUI);
