@@ -3,7 +3,6 @@
 'use strict';
 import { KernelMessage } from '@jupyterlab/services';
 import { assert } from 'chai';
-import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { noop } from 'jquery';
 import * as os from 'os';

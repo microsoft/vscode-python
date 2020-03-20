@@ -106,7 +106,6 @@ interface Sockets {
     control: Dealer;
     stdin: Dealer;
     iopub: Subscriber;
-    connectionInfo: JupyterConnectionInfo;
 }
 
 /**
@@ -138,8 +137,7 @@ export const createSockets = async (
         shell,
         control,
         stdin,
-        iopub,
-        connectionInfo: config
+        iopub
     };
 };
 
@@ -172,6 +170,7 @@ class SocketEventEmitter extends Events.EventEmitter {
  */
 export const createMainChannelFromSockets = (
     sockets: Sockets,
+    connectionInfo: JupyterConnectionInfo,
     header: HeaderFiller = {
         session: uuid(),
         username: getUsername()
@@ -179,7 +178,6 @@ export const createMainChannelFromSockets = (
 ): Channels => {
     // The mega subject that encapsulates all the sockets as one multiplexed
     // stream
-
     const outgoingMessages = rxjs.Subscriber.create<JupyterMessage>(
         async (message) => {
             // There's always a chance that a bad message is sent, we'll ignore it
@@ -206,7 +204,7 @@ export const createMainChannelFromSockets = (
                     idents: []
                 };
                 if ((socket as any).send !== undefined) {
-                    await (socket as Dealer).send(wireProtocol.encode(jMessage, sockets.connectionInfo.key, sockets.connectionInfo.signature_scheme));
+                    await (socket as Dealer).send(wireProtocol.encode(jMessage, connectionInfo.key, connectionInfo.signature_scheme));
                 }
             } catch (err) {
                 traceError('Error sending message', err, message);
@@ -230,7 +228,7 @@ export const createMainChannelFromSockets = (
     // Messages from kernel on the sockets
     const incomingMessages: rxjs.Observable<JupyterMessage> = rxjs.merge(
         // Form an Observable with each socket
-        ...Object.keys(sockets).filter(s => s.hasOwnProperty('connect')).map(name => {
+        ...Object.keys(sockets).map(name => {
             // Wrap in something that will emit an event whenever a message is received.
             const socketEmitter = new SocketEventEmitter((sockets as any)[name]);
             return rxjs.fromEvent(
@@ -239,12 +237,7 @@ export const createMainChannelFromSockets = (
             ).pipe(
                 map(
                     (body: any): JupyterMessage => {
-                        // Route the message for the frontend by setting the channel
-                        const msg = { ...body, channel: name };
-                        // Conform to same message format as notebook websockets
-                        // See https://github.com/n-riesco/jmp/issues/10
-                        delete (msg as any).idents;
-                        return wireProtocol.decode(msg, sockets.connectionInfo.key, sockets.connectionInfo.signature_scheme) as any;
+                        return wireProtocol.decode(body, connectionInfo.key, connectionInfo.signature_scheme) as any;
                     }
                 ),
                 publish(),
@@ -279,5 +272,5 @@ export const createMainChannel = async (
     }
 ): Promise<Channels> => {
     const sockets = await createSockets(config, subscription, identity);
-    return createMainChannelFromSockets(sockets, header);
+    return createMainChannelFromSockets(sockets, config, header);
 };
