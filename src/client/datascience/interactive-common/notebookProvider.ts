@@ -54,7 +54,7 @@ export class NotebookProvider implements INotebookProvider {
             interactiveWindowProvider.onDidChangeActiveInteractiveWindow(this.checkAndDisposeNotebook, this)
         );
     }
-    public get notebookCreated() {
+    public get onNotebookCreated() {
         return this._notebookCreated.event;
     }
 

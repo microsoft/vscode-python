@@ -33,7 +33,7 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        disposables.push(notebookProvider.notebookCreated(this.initialize, this));
+        disposables.push(notebookProvider.onNotebookCreated(this.initialize, this));
     }
 
     public dispose() {
