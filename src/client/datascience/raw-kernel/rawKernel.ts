@@ -95,12 +95,14 @@ export class RawKernel implements Kernel.IKernel {
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
         if (this.jmpConnection && this.sessionId) {
             // Build our execution message
+            // Silent is supposed to be options, but in my testing the message was not passing
+            // correctly without it, so specifying it here with default false
             const executeOptions: KernelMessage.IOptions<KernelMessage.IExecuteRequestMsg> = {
                 session: this.sessionId,
                 channel: 'shell',
                 msgType: 'execute_request',
                 username: 'vscode',
-                content: { ...content, silent: false }
+                content: { ...content, silent: content.silent || false }
             };
             const executeMessage = KernelMessage.createMessage<KernelMessage.IExecuteRequestMsg>(executeOptions);
 

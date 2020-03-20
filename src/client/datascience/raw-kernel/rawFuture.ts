@@ -82,7 +82,7 @@ export class RawFuture<
             this.reply = noop;
 
             // Reject our done promise
-            this.donePromise.reject(new Error('Disposed rawFuture'));
+            this.donePromise.reject(new Error('Disposed Future'));
             this.isDisposed = true;
         }
     }
