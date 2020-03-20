@@ -600,8 +600,7 @@
             {
                 "command": "python.datascience.gatherquality",
                 "title": "%DataScience.gatherGood%",
-                "category": "Python",
-                "enablement": "python.datascience.isnativeactive"
+                "category": "Python"
             }
         ],
         "menus": {
