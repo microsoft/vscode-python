@@ -14,6 +14,7 @@ import * as sinon from 'sinon';
 import { Disposable } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { UseCustomEditor } from '../../../datascience-ui/react-common/constants';
+import { getOSType, OSType } from '../../common';
 import { sleep } from '../../core';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
@@ -33,9 +34,14 @@ use(chaiAsPromised);
         let ioc: DataScienceIocContainer;
 
         suiteSetup(function() {
+            // These are UI tests, hence nothing to do with platforms.
+            // Skip windows, as that is slow.
+            if (getOSType() === OSType.Windows) {
+                return this.skip();
+            }
             UseCustomEditor.enabled = useCustomEditorApi;
-            this.timeout(30_000);
-            this.retries(3);
+            this.timeout(30_000); // UI Tests, need time to start jupyter.
+            this.retries(3); // UI Tests can be flaky.
             process.env.VSC_PYTHON_DS_UI_BROWSER = '1';
         });
         suiteTeardown(() => {
