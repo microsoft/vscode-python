@@ -1,8 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import {
+    ContentsManager,
+    Kernel,
+    KernelMessage,
+    ServerConnection,
+    Session,
+    SessionManager
+} from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
-import { KernelFutureHandler } from '@jupyterlab/services/lib/kernel/future';
 import { DefaultSession } from '@jupyterlab/services/lib/session/default';
 import { ISignal, Signal } from '@phosphor/commands/node_modules/@phosphor/signaling';
 import { assert } from 'chai';
@@ -321,7 +327,9 @@ suite('Data Science - JupyterSession', () => {
                 setup(executeUserCode);
 
                 async function executeUserCode() {
-                    const future = mock(KernelFutureHandler);
+                    const future = mock<
+                        Kernel.IFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>
+                    >();
                     // tslint:disable-next-line: no-any
                     when(future.done).thenReturn(Promise.resolve(undefined as any));
                     // tslint:disable-next-line: no-any

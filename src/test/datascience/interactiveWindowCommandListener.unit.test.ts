@@ -107,7 +107,7 @@ suite('Interactive window command listener', async () => {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
         when(interpreterService.getInterpreterDetails(argThat(o => !o.includes || !o.includes('python')))).thenReject(
-            'Unknown interpreter'
+            ('Unknown interpreter' as any) as Error
         );
 
         // Service container needs logger, file system, and config service
