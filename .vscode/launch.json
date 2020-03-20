@@ -285,7 +285,7 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            // "preLaunchTask": "Compile",
+            "preLaunchTask": "Compile",
             "skipFiles": [
                 "<node_internals>/**"
             ]
