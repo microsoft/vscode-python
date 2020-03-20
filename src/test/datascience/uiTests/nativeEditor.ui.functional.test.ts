@@ -120,7 +120,7 @@ use(chaiAsPromised);
                 assert.include(outputHtml, '<span>1</span>');
             });
         });
-        suite('Live Jupyter', () => {
+        suite('Standard IPyWidgets', () => {
             setup(function() {
                 if (ioc.mockJupyter) {
                     return this.skip();
@@ -133,12 +133,11 @@ use(chaiAsPromised);
                 assert.isFalse(hasOutput);
 
                 await notebookUI.executeCell(0);
-                await notebookUI.executeCell(1);
 
                 await retryIfFail(async () => {
-                    hasOutput = await notebookUI.cellHasOutput(1);
+                    hasOutput = await notebookUI.cellHasOutput(0);
                     assert.isTrue(hasOutput);
-                    const outputHtml = await notebookUI.getCellOutputHTML(1);
+                    const outputHtml = await notebookUI.getCellOutputHTML(0);
 
                     // Should not contain the string representation of widget (rendered when ipywidgets wasn't supported).
                     // We should only render widget not string representation.
@@ -148,6 +147,69 @@ use(chaiAsPromised);
                     assert.include(outputHtml, 'jupyter-widgets');
                     assert.include(outputHtml, 'ui-slider');
                     assert.include(outputHtml, '<div class="ui-slider');
+                });
+            });
+            test('Text Widget', async () => {
+                const { notebookUI } = await openStandardWidgetsIpynb();
+                let hasOutput = await notebookUI.cellHasOutput(1);
+                assert.isFalse(hasOutput);
+
+                await notebookUI.executeCell(1);
+
+                await retryIfFail(async () => {
+                    hasOutput = await notebookUI.cellHasOutput(1);
+                    assert.isTrue(hasOutput);
+                    const outputHtml = await notebookUI.getCellOutputHTML(1);
+
+                    // Ensure Widget HTML exists
+                    assert.include(outputHtml, 'jupyter-widgets');
+                    assert.include(outputHtml, 'widget-text');
+                    assert.include(outputHtml, '<input type="text');
+                });
+            });
+            test('Checkox Widget', async () => {
+                const { notebookUI } = await openStandardWidgetsIpynb();
+                let hasOutput = await notebookUI.cellHasOutput(2);
+                assert.isFalse(hasOutput);
+
+                await notebookUI.executeCell(2);
+
+                await retryIfFail(async () => {
+                    hasOutput = await notebookUI.cellHasOutput(2);
+                    assert.isTrue(hasOutput);
+                    const outputHtml = await notebookUI.getCellOutputHTML(2);
+
+                    // Ensure Widget HTML exists
+                    assert.include(outputHtml, 'jupyter-widgets');
+                    assert.include(outputHtml, 'widget-checkbox');
+                    assert.include(outputHtml, '<input type="checkbox');
+                });
+            });
+            test('Button Interaction across Cells', async () => {
+                const { notebookUI } = await openStandardWidgetsIpynb();
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(4));
+
+                await notebookUI.executeCell(3);
+                await notebookUI.executeCell(4);
+                // await sleep(500_000);
+                const button = await retryIfFail(async () => {
+                    // Find the button & the lable in cell output for 3 & 4 respectively.
+                    const buttons = await (await notebookUI.getCellOutput(3)).$$('button.widget-button');
+                    const cell4Output = await notebookUI.getCellOutputHTML(4);
+
+                    assert.equal(buttons.length, 1, 'No button');
+                    assert.include(cell4Output, 'Not Clicked');
+
+                    return buttons[0];
+                });
+
+                await retryIfFail(async () => {
+                    // When we click the button, the text in the label will get updated (i.e. output in Cell 4 will be udpated).
+                    await button.click();
+
+                    const cell4Output = await notebookUI.getCellOutputHTML(4);
+                    assert.include(cell4Output, 'Button Clicked');
                 });
             });
         });

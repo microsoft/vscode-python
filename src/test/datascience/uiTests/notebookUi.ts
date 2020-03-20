@@ -33,16 +33,21 @@ export class NotebookEditorUI extends BaseWebUI {
     }
 
     public async getCellOutputHTML(cellIndex: number): Promise<string> {
+        const output = await this.getCellOutput(cellIndex);
+        const outputHtml = await output.getProperty('innerHTML');
+        return outputHtml?.toString() || '';
+    }
+
+    public async getCellOutput(cellIndex: number): Promise<ElementHandle<Element>> {
         const cell = await this.getCell(cellIndex);
         const output = await cell.$$('.cell-output-wrapper');
         if (output.length === 0) {
             assert.fail('Cell does not have any output');
         }
-        const outputHtmls = await Promise.all(output.map(item => item.getProperty('innerHTML')));
-        return outputHtmls.join('');
+        return output[0];
     }
 
-    private async getCell(cellIndex: number): Promise<ElementHandle<Element>> {
+    public async getCell(cellIndex: number): Promise<ElementHandle<Element>> {
         const items = await this.page!.$$('.cell-wrapper');
         return items[cellIndex];
     }
