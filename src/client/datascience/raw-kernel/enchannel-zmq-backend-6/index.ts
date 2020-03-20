@@ -138,16 +138,15 @@ export const createSockets = async (
 class SocketEventEmitter extends Events.EventEmitter {
     constructor(socket: zeromq.Dealer | zeromq.Subscriber) {
         super();
-        this.listenToSocket(socket);
+        this.waitForReceive(socket);
     }
 
-    private listenToSocket(socket: zeromq.Dealer | zeromq.Subscriber) {
+    private waitForReceive(socket: zeromq.Dealer | zeromq.Subscriber) {
         if (!socket.closed) {
-            // RAWKERNEL: determine if this is a stack problem.
             // tslint:disable-next-line: no-floating-promises
             socket.receive().then(b => {
                 this.emit('message', b);
-                this.listenToSocket(socket);
+                setTimeout(this.waitForReceive.bind(this, socket), 0);
             });
         }
     }

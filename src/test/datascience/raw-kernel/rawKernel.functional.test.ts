@@ -105,10 +105,8 @@ suite('DataScience raw kernel tests', () => {
         const reply = createDeferred();
         await enchannelConnection.connect(connectionInfo, sessionId);
         enchannelConnection.subscribe(msg => {
-            if (msg.header.msg_type === 'shutdown_reply') {
+            if (msg.header.msg_type === 'status') {
                 reply.resolve();
-            } else {
-                reply.reject(new Error('Shutdown reply not sent'));
             }
         });
         enchannelConnection.sendMessage(createShutdownMessage(sessionId));
