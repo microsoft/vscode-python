@@ -4,12 +4,11 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, Range } from 'vscode';
+import { CodeLens, env, Range, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import {
@@ -349,5 +348,6 @@ export class CommandRegistry implements IDisposable {
 
     private reportGatherQuality(val: string) {
         sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val === '0' ? 'bad' : 'good' });
+        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed_value=${val}`));
     }
 }

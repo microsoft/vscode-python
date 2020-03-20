@@ -4,9 +4,8 @@
 import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
-import { Event, EventEmitter, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
+import { commands, Event, EventEmitter, Position, Range, Selection, TextEditorRevealType, Uri } from 'vscode';
 
-import * as vscode from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import * as localize from '../../common/utils/localize';
@@ -15,6 +14,10 @@ import { IInteractiveWindowListener } from '../types';
 import { InteractiveWindowMessages } from './interactiveWindowTypes';
 
 const LineQueryRegex = /line=(\d+)/;
+
+// The following list of commands represent those that can be executed
+// in a markdown cell using the syntax: https://command:[my.vscode.command].
+const linkCommandWhitelist = ['python.datascience.gatherquality'];
 
 // tslint:disable: no-any
 @injectable()
@@ -47,8 +50,10 @@ export class LinkProvider implements IInteractiveWindowListener {
                     } else if (href.startsWith('https://command:')) {
                         const temp: string = href.split(':')[2];
                         const command = temp.split('/?')[0];
-                        const param: string = temp.split('/?')[1];
-                        vscode.commands.executeCommand(command, [param]);
+                        const params: string[] = temp.split('/?')[1].split(',');
+                        if (linkCommandWhitelist.includes(command)) {
+                            commands.executeCommand(command, params);
+                        }
                     } else {
                         this.applicationShell.openUrl(href);
                     }
