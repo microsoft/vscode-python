@@ -149,6 +149,7 @@ class SocketEventEmitter extends Events.EventEmitter {
 
     private listenToSocket(socket: Dealer | Subscriber) {
         if (!socket.closed) {
+            // RAWKERNEL: determine if this is a stack problem.
             // tslint:disable-next-line: no-floating-promises
             socket.receive().then(b => {
                 this.emit('message', b);
