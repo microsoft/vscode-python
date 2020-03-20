@@ -21,11 +21,13 @@ export class RawFuture<
     private reply: (msg: REPLY) => void | PromiseLike<void> = noop;
     private replyMessage: REPLY | undefined;
     private disposeOnDone: boolean;
+    private idleSeen: boolean;
 
     constructor(msg: REQUEST, disposeOnDone: boolean) {
         this.msg = msg;
         this.donePromise = createDeferred<REPLY>();
         this.disposeOnDone = disposeOnDone;
+        this.idleSeen = false;
     }
 
     get done(): Promise<REPLY | undefined> {
@@ -113,10 +115,13 @@ export class RawFuture<
         // tslint:disable-next-line:no-any
         await this.ioPub(message);
 
-        // If we get an idle status message then we are done
-        //if (message.header.msg_type === 'status' && message.content.execution_state === 'idle') {
+        // If we get an idle status message and a reply then we are done
         if (KernelMessage.isStatusMsg(message) && message.content.execution_state === 'idle') {
-            this.handleDone();
+            this.idleSeen = true;
+
+            if (this.replyMessage) {
+                this.handleDone();
+            }
         }
     }
 
@@ -134,7 +139,10 @@ export class RawFuture<
 
         this.replyMessage = message;
 
-        this.handleDone();
+        // If we've gotten an idle status message we are done now
+        if (this.idleSeen) {
+            this.handleDone();
+        }
     }
 
     private handleDone(): void {

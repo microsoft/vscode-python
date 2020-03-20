@@ -32,13 +32,13 @@ suite('Data Science - RawKernel', () => {
         };
     });
 
-    test('IANHU RawKernel connect should connect and subscribe to JMP', async () => {
+    test('RawKernel connect should connect and subscribe to JMP', async () => {
         await rawKernel.connect(connectInfo);
         verify(jmpConnection.connect(deepEqual(connectInfo), anything())).once();
         verify(jmpConnection.subscribe(anything())).once();
     });
 
-    test('IANHU RawKernel dispose should dispose the jmp', async () => {
+    test('RawKernel dispose should dispose the jmp', async () => {
         when(jmpConnection.dispose()).thenReturn();
 
         await rawKernel.connect(connectInfo);
@@ -50,7 +50,7 @@ suite('Data Science - RawKernel', () => {
         assert.isTrue(rawKernel.isDisposed);
     });
 
-    test('IANHU RawKernel requestExecute should pass a valid execute message to JMP', async () => {
+    test('RawKernel requestExecute should pass a valid execute message to JMP', async () => {
         when(jmpConnection.sendMessage(anything())).thenReturn();
 
         await rawKernel.connect(connectInfo);
@@ -71,7 +71,7 @@ suite('Data Science - RawKernel', () => {
         expect(future.msg.content.code).to.equal(code);
     });
 
-    test('IANHU RawKernel dispose should also dispose of any futures', async () => {
+    test('RawKernel dispose should also dispose of any futures', async () => {
         when(jmpConnection.sendMessage(anything())).thenReturn();
         when(jmpConnection.dispose()).thenReturn();
 
