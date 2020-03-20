@@ -7,6 +7,7 @@ import * as fs from 'fs-extra';
 import { noop } from 'jquery';
 import * as os from 'os';
 import * as path from 'path';
+import { Observable } from 'rxjs';
 import * as uuid from 'uuid/v4';
 import { IPythonExecutionFactory, ObservableExecutionResult } from '../../../client/common/process/types';
 import { createDeferred } from '../../../client/common/utils/async';
@@ -19,6 +20,8 @@ suite('DataScience raw kernel tests', () => {
     let enchannelConnection: IJMPConnection;
     let connectionFile: string;
     let kernelProcResult: ObservableExecutionResult<string>;
+    let messageObservable: Observable<KernelMessage.IMessage<KernelMessage.MessageType>>;
+    let sessionId: string;
     const connectionInfo = {
         shell_port: 57718,
         iopub_port: 57719,
@@ -67,6 +70,11 @@ suite('DataScience raw kernel tests', () => {
                     enchannelConnection.dispose();
                 }
             );
+            sessionId = uuid();
+            await enchannelConnection.connect(connectionInfo, sessionId);
+            messageObservable = new Observable(subscriber => {
+                enchannelConnection.subscribe(subscriber.next.bind(subscriber));
+            });
         }
     });
 
@@ -77,10 +85,11 @@ suite('DataScience raw kernel tests', () => {
         } catch {
             noop();
         }
+        enchannelConnection.dispose();
         await ioc.dispose();
     });
 
-    function createShutdownMessage(sessionId: string): KernelMessage.IMessage<'shutdown_request'> {
+    function createShutdownMessage(): KernelMessage.IMessage<'shutdown_request'> {
         return {
             channel: 'control',
             content: {
@@ -99,17 +108,36 @@ suite('DataScience raw kernel tests', () => {
         };
     }
 
-    // tslint:disable-next-line: no-function-expression
-    test('Basic iopub', async function() {
-        const sessionId = uuid();
-        const reply = createDeferred();
-        await enchannelConnection.connect(connectionInfo, sessionId);
-        enchannelConnection.subscribe(msg => {
-            if (msg.header.msg_type === 'status') {
-                reply.resolve();
+    function sendMessage(
+        message: KernelMessage.IMessage<KernelMessage.MessageType>
+    ): Promise<KernelMessage.IMessage<KernelMessage.MessageType>[]> {
+        const waiter = createDeferred<KernelMessage.IMessage<KernelMessage.MessageType>[]>();
+        const replies: KernelMessage.IMessage<KernelMessage.MessageType>[] = [];
+
+        const subscr = messageObservable.subscribe(m => {
+            replies.push(m);
+            if (m.header.msg_type === 'status' && (m.content as any).execution_state === 'idle') {
+                waiter.resolve(replies);
+            } else if (m.header.msg_type === 'shutdown_reply') {
+                // Special case, status may never come after this.
+                waiter.resolve(replies);
             }
         });
-        enchannelConnection.sendMessage(createShutdownMessage(sessionId));
-        await reply.promise;
+        enchannelConnection.sendMessage(message);
+        return waiter.promise.then(m => {
+            subscr.unsubscribe();
+            return m;
+        });
+    }
+
+    // tslint:disable-next-line: no-function-expression
+    test('Basic connection', async function() {
+        const replies = await sendMessage(createShutdownMessage());
+        assert.ok(
+            replies.find(r => r.header.msg_type === 'shutdown_reply'),
+            'Reply not sent for shutdown'
+        );
     });
+
+    test('Basic request', async function() {});
 });

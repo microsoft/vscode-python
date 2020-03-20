@@ -34,6 +34,7 @@ export class EnchannelJMPConnection implements IJMPConnection {
     public dispose(): void {
         if (this.mainChannel) {
             this.mainChannel.unsubscribe();
+            this.mainChannel = undefined;
         }
     }
 }
