@@ -5,8 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import * as requestTypes from 'request';
-import { Progress, ProgressLocation } from 'vscode';
+import { StatusBarAlignment, StatusBarItem } from 'vscode';
 import { IApplicationShell } from '../application/types';
+import { Octicons } from '../constants';
 import { IFileSystem, WriteStream } from '../platform/types';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
 import { Http } from '../utils/localize';
@@ -24,14 +25,12 @@ export class FileDownloader implements IFileDownloader {
             options.outputChannel.appendLine(Http.downloadingFile().format(uri));
         }
         const tempFile = await this.fs.createTemporaryFile(options.extension);
+        const progressMessageWithIcon = `${Octicons.Downloading} ${options.progressMessagePrefix}`;
 
-        await this.downloadFileWithStatusBarProgress(uri, options.progressMessagePrefix, tempFile.filePath).then(
-            noop,
-            (ex) => {
-                tempFile.dispose();
-                return Promise.reject(ex);
-            }
-        );
+        await this.downloadFileWithStatusBarProgress(uri, progressMessageWithIcon, tempFile.filePath).then(noop, ex => {
+            tempFile.dispose();
+            return Promise.reject(ex);
+        });
 
         return tempFile.filePath;
     }
@@ -40,21 +39,26 @@ export class FileDownloader implements IFileDownloader {
         progressMessage: string,
         tmpFilePath: string
     ): Promise<void> {
-        await this.appShell.withProgress({ location: ProgressLocation.Window }, async (progress) => {
-            const req = await this.httpClient.downloadFile(uri);
-            const fileStream = this.fs.createWriteStream(tmpFilePath);
-            return this.displayDownloadProgress(uri, progress, req, fileStream, progressMessage);
-        });
+        const statusBarProgress = this.appShell.createStatusBarItem(StatusBarAlignment.Left);
+        const req = await this.httpClient.downloadFile(uri);
+        const fileStream = this.fs.createWriteStream(tmpFilePath);
+        statusBarProgress.show();
+        try {
+            await this.displayDownloadProgress(uri, statusBarProgress, req, fileStream, progressMessage);
+        } finally {
+            statusBarProgress.dispose();
+        }
     }
+
     public async displayDownloadProgress(
         uri: string,
-        progress: Progress<{ message?: string; increment?: number }>,
+        statusBarProgress: StatusBarItem,
         request: requestTypes.Request,
         fileStream: WriteStream,
         progressMessagePrefix: string
     ): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            request.on('response', (response) => {
+            request.on('response', response => {
                 if (response.statusCode !== 200) {
                     reject(
                         new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`)
@@ -75,7 +79,7 @@ export class FileDownloader implements IFileDownloader {
                         total.toString(),
                         percentage.toString()
                     );
-                    progress.report({ message });
+                    statusBarProgress.text = message;
                 })
                 // Handle errors from download.
                 .on('error', reject)
