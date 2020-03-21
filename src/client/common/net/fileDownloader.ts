@@ -12,6 +12,7 @@ import { IFileSystem, WriteStream } from '../platform/types';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
 import { Http } from '../utils/localize';
 import { noop } from '../utils/misc';
+import { RequestProgressState } from './types';
 
 @injectable()
 export class FileDownloader implements IFileDownloader {
@@ -68,18 +69,8 @@ export class FileDownloader implements IFileDownloader {
             // tslint:disable-next-line: no-require-imports
             const requestProgress = require('request-progress');
             requestProgress(request)
-                // tslint:disable-next-line: no-any
-                .on('progress', (state: any) => {
-                    const received = Math.round(state.size.transferred / 1024);
-                    const total = Math.round(state.size.total / 1024);
-                    const percentage = Math.round(100 * state.percent);
-                    const message = Http.downloadingFileProgress().format(
-                        progressMessagePrefix,
-                        received.toString(),
-                        total.toString(),
-                        percentage.toString()
-                    );
-                    statusBarProgress.text = message;
+                .on('progress', (state: RequestProgressState) => {
+                    statusBarProgress.text = this.formatProgressMessageWithState(progressMessagePrefix, state);
                 })
                 // Handle errors from download.
                 .on('error', reject)
@@ -88,5 +79,18 @@ export class FileDownloader implements IFileDownloader {
                 .on('error', reject)
                 .on('close', resolve);
         });
+    }
+
+    private formatProgressMessageWithState(progressMessagePrefix: string, state: RequestProgressState): string {
+        const received = Math.round(state.size.transferred / 1024);
+        const total = Math.round(state.size.total / 1024);
+        const percentage = Math.round(100 * state.percent);
+
+        return Http.downloadingFileProgress().format(
+            progressMessagePrefix,
+            received.toString(),
+            total.toString(),
+            percentage.toString()
+        );
     }
 }
