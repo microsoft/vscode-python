@@ -3,20 +3,38 @@
 'use strict';
 
 import { ChildProcess } from 'child_process';
+import * as fs from 'fs';
+import * as fse from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
 import { InterpreterUri } from '../../common/installer/types';
+import { PlatformService } from '../../common/platform/platformService';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { isResource } from '../../common/utils/misc';
-import { IKernelConnection, IKernelLauncher, IKernelProcess } from './types';
+import { IInterpreterService } from '../../interpreter/contracts';
+import { IJupyterKernelSpec } from '../types';
+import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
+
+const windowsPaths = new Map([
+    ['users', 'C:\\Users\\'],
+    ['jupyter', '\\AppData\\Roaming\\jupyter\\kernels\\'],
+    ['kernel', 'share\\jupyter\\kernels']
+]);
+
+const unixPaths = new Map([
+    ['home', '/home/'],
+    ['linuxJupyterPath', '/.local/share/jupyter/kernels/'],
+    ['macJupyterPath', '/Library/Jupyter/kernels/'],
+    ['kernel', 'share/jupyter/kernels']
+]);
+
+const cachedPaths: Map<string, string> = new Map();
 
 class KernelProcess implements IKernelProcess {
     private _process?: ChildProcess;
     private _connection?: IKernelConnection;
-    private interpreter: InterpreterUri;
-    private executionFactory: IPythonExecutionFactory;
     public get process(): ChildProcess {
         return this._process!;
     }
@@ -25,8 +43,8 @@ class KernelProcess implements IKernelProcess {
     }
 
     constructor(
-        interpreter: InterpreterUri,
-        @inject(IPythonExecutionFactory) executionFactory: IPythonExecutionFactory
+        private interpreter: InterpreterUri,
+        @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory
     ) {
         this.interpreter = interpreter;
         this.executionFactory = executionFactory;
@@ -37,7 +55,7 @@ class KernelProcess implements IKernelProcess {
         const pythonPath = isResource(this.interpreter) ? undefined : this.interpreter.path;
 
         const executionService = await this.executionFactory.create({ resource, pythonPath });
-        const kernelProcess = executionService.execObservable([], {});
+        const kernelProcess = executionService.execObservable(['-m', 'ipykernel'], {});
 
         this._process = kernelProcess.proc;
 
@@ -68,15 +86,139 @@ class KernelProcess implements IKernelProcess {
     }
 }
 
-@injectable()
-export class KernelLauncher implements IKernelLauncher {
-    private executionFactory: IPythonExecutionFactory;
+class KernelFinder implements IKernelFinder {
+    public findKernelSpec(kernelName: string, interpreterPaths: string[]): IJupyterKernelSpec | undefined {
+        // Jupyter looks for kernels in these paths:
+        // https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
+        // So we do the same
 
-    constructor(@inject(IPythonExecutionFactory) executionFactory: IPythonExecutionFactory) {
-        this.executionFactory = executionFactory;
+        let spec: IJupyterKernelSpec | undefined;
+
+        for (const entry of cachedPaths.entries()) {
+            if (entry[1] === kernelName) {
+                const kernelSpec = fse.readJSONSync(entry[0]);
+
+                return {
+                    name: kernelSpec.name,
+                    language: kernelSpec.language,
+                    path: kernelSpec.metadata?.interpreter?.path,
+                    display_name: kernelSpec.display_name,
+                    metadata: kernelSpec.metadata,
+                    argv: kernelSpec.argv
+                };
+            }
+        }
+
+        const platform = new PlatformService();
+
+        for (const path of interpreterPaths) {
+            const index = path.lastIndexOf(platform.isWindows ? '\\' : '/');
+            const fixedPath = path.substring(0, index + 1);
+            const secondPart = platform.isWindows ? windowsPaths.get('kernel')! : unixPaths.get('kernel')!;
+            spec = this.getKernelSpec(fixedPath + secondPart, kernelName);
+
+            if (spec) {
+                return spec;
+            }
+        }
+
+        if (platform.isWindows) {
+            // system paths
+            spec = this.getKernelSpec('C:\\ProgramData\\jupyter\\kernels\\', kernelName);
+            if (spec) {
+                return spec;
+            }
+
+            // users paths
+            if (fs.existsSync(windowsPaths.get('users')!)) {
+                for (const user of fs.readdirSync(windowsPaths.get('users')!)) {
+                    spec = this.getKernelSpec(
+                        windowsPaths.get('users')! + user + windowsPaths.get('jupyter')!,
+                        kernelName
+                    );
+
+                    if (spec) {
+                        return spec;
+                    }
+                }
+            }
+            // Unix based
+        } else {
+            // system paths
+            spec = this.getKernelSpec('/usr/share/jupyter/kernels', kernelName);
+            if (spec) {
+                return spec;
+            }
+
+            spec = this.getKernelSpec('/usr/local/share/jupyter/kernels', kernelName);
+            if (spec) {
+                return spec;
+            }
+
+            // users paths
+            if (fs.existsSync(unixPaths.get('home')!)) {
+                for (const user of fs.readdirSync(unixPaths.get('home')!)) {
+                    const secondPart = platform.isMac
+                        ? unixPaths.get('macJupyterPath')!
+                        : unixPaths.get('linuxJupyterPath')!;
+                    spec = this.getKernelSpec(unixPaths.get('home')! + user + secondPart, kernelName);
+
+                    if (spec) {
+                        return spec;
+                    }
+                }
+            }
+        }
+
+        return undefined;
     }
 
-    public async launch(interpreterUri: InterpreterUri): Promise<IKernelProcess> {
+    private getKernelSpec(path: string, kernelName: string): IJupyterKernelSpec | undefined {
+        const kernelJSON = '\\kernel.json';
+
+        if (fs.existsSync(path)) {
+            const kernels = fs.readdirSync(path);
+
+            for (const kernel of kernels) {
+                const kernelSpec = fse.readJSONSync(path + kernel + kernelJSON);
+                cachedPaths.set(path + kernel + kernelJSON, kernelSpec.display_name);
+
+                if (kernelName === kernelSpec.name || kernelName === kernelSpec.display_name) {
+                    return {
+                        name: kernelSpec.name,
+                        language: kernelSpec.language,
+                        path: kernelSpec.metadata?.interpreter?.path,
+                        display_name: kernelSpec.display_name,
+                        metadata: kernelSpec.metadata,
+                        argv: kernelSpec.argv
+                    };
+                }
+            }
+        }
+
+        return undefined;
+    }
+}
+
+@injectable()
+export class KernelLauncher implements IKernelLauncher {
+    constructor(
+        @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService
+    ) {}
+
+    public async launch(interpreterUri: InterpreterUri, kernelName: string): Promise<IKernelProcess> {
+        const currentInterpreter = await this.interpreterService.getActiveInterpreter();
+
+        const interpreters = await this.interpreterService.getInterpreters();
+        const interpreterPaths = [];
+        for (const interp of interpreters) {
+            interpreterPaths.push(interp.path);
+        }
+
+        const finder = new KernelFinder();
+        const kernelSpec = finder.findKernelSpec(kernelName, interpreterPaths);
+
         const kernel = new KernelProcess(interpreterUri, this.executionFactory);
         await kernel.launch();
         return kernel;
