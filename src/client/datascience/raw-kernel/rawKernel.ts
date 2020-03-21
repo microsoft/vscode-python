@@ -4,6 +4,7 @@ import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
+import { traceError } from '../../common/logger';
 import { IJMPConnection, IJMPConnectionInfo } from '../types';
 import { RawFuture } from './rawFuture';
 
@@ -67,6 +68,7 @@ export class RawKernel implements Kernel.IKernel {
 
     public isDisposed: boolean = false;
     private jmpConnection: IJMPConnection;
+    private messageChain: Promise<void> = Promise.resolve();
 
     private _clientId: string;
     private _status: Kernel.Status;
@@ -88,8 +90,8 @@ export class RawKernel implements Kernel.IKernel {
 
     public async connect(connectInfo: IJMPConnectionInfo) {
         await this.jmpConnection.connect(connectInfo);
-        this.jmpConnection.subscribe(msg => {
-            this.handleMessage(msg).ignoreErrors();
+        this.jmpConnection.subscribe(message => {
+            this.msgIn(message);
         });
     }
 
@@ -247,6 +249,21 @@ export class RawKernel implements Kernel.IKernel {
         _hook: (_msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
         throw new Error('Not yet implemented');
+    }
+
+    // Message incoming from the JMP connection. Queue it up for processing
+    private msgIn(message: KernelMessage.IMessage) {
+        // Add the message onto our message chain, we want to process them async
+        // but in order so use a chain like this
+        this.messageChain = this.messageChain
+            .then(() => {
+                // Return so any promises from each message all resolve before
+                // processing the next one
+                return this.handleMessage(message);
+            })
+            .catch(error => {
+                traceError(error);
+            });
     }
 
     // Handle a new message arriving from JMP connection

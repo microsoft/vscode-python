@@ -154,14 +154,13 @@ suite('Data Science - RawKernel', () => {
 
             // We should also see a new status
             const statusHandler: Slot<RawKernel, Kernel.Status> = (_sender: RawKernel, args: Kernel.Status) => {
+                expect(rawKernel.status).to.equal('busy');
                 expect(args).to.equal('busy');
             };
             rawKernel.statusChanged.connect(statusHandler);
 
             // Post the message
             mockJmpConnection.messageBack(iopubBusyMessage);
-            // Check our status
-            //expect(rawKernel.status).to.equal('busy');
 
             await future.done;
         });
