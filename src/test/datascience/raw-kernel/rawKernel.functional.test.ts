@@ -108,18 +108,82 @@ suite('DataScience raw kernel tests', () => {
         };
     }
 
+    function createExecutionMessage(code: string): KernelMessage.IExecuteRequestMsg {
+        return {
+            channel: 'shell',
+            content: {
+                code,
+                silent: false,
+                store_history: false
+            },
+            header: {
+                date: Date.now().toString(),
+                msg_id: uuid(),
+                msg_type: 'execute_request',
+                session: sessionId,
+                username: 'user',
+                version: '5.1'
+            },
+            parent_header: {},
+            metadata: {}
+        };
+    }
+
+    function createInspectMessage(code: string): KernelMessage.IInspectRequestMsg {
+        return {
+            channel: 'shell',
+            content: {
+                code,
+                cursor_pos: code.length,
+                detail_level: 1
+            },
+            header: {
+                date: Date.now().toString(),
+                msg_id: uuid(),
+                msg_type: 'inspect_request',
+                session: sessionId,
+                username: 'user',
+                version: '5.1'
+            },
+            parent_header: {},
+            metadata: {}
+        };
+    }
+
     function sendMessage(
         message: KernelMessage.IMessage<KernelMessage.MessageType>
     ): Promise<KernelMessage.IMessage<KernelMessage.MessageType>[]> {
         const waiter = createDeferred<KernelMessage.IMessage<KernelMessage.MessageType>[]>();
         const replies: KernelMessage.IMessage<KernelMessage.MessageType>[] = [];
+        let expectedReplyType = 'status';
+        switch (message.header.msg_type) {
+            case 'shutdown_request':
+                expectedReplyType = 'shutdown_reply';
+                break;
 
+            case 'execute_request':
+                expectedReplyType = 'execute_reply';
+                break;
+
+            case 'inspect_request':
+                expectedReplyType = 'inspect_reply';
+                break;
+            default:
+                break;
+        }
+        let foundReply = false;
+        let foundIdle = false;
         const subscr = messageObservable.subscribe(m => {
             replies.push(m);
-            if (m.header.msg_type === 'status' && (m.content as any).execution_state === 'idle') {
-                waiter.resolve(replies);
+            if (m.header.msg_type === 'status') {
+                foundIdle = (m.content as any).execution_state === 'idle';
+            } else if (m.header.msg_type === expectedReplyType) {
+                foundReply = true;
             } else if (m.header.msg_type === 'shutdown_reply') {
                 // Special case, status may never come after this.
+                waiter.resolve(replies);
+            }
+            if (!waiter.resolved && foundReply && foundIdle) {
                 waiter.resolve(replies);
             }
         });
@@ -130,8 +194,7 @@ suite('DataScience raw kernel tests', () => {
         });
     }
 
-    // tslint:disable-next-line: no-function-expression
-    test('Basic connection', async function() {
+    test('Basic connection', async () => {
         const replies = await sendMessage(createShutdownMessage());
         assert.ok(
             replies.find(r => r.header.msg_type === 'shutdown_reply'),
@@ -139,5 +202,24 @@ suite('DataScience raw kernel tests', () => {
         );
     });
 
-    test('Basic request', async function() {});
+    test('Basic request', async () => {
+        const replies = await sendMessage(createExecutionMessage('a=1\na'));
+        const executeResult = replies.find(r => r.header.msg_type === 'execute_result');
+        assert.ok(executeResult, 'Result not found');
+        assert.equal((executeResult?.content as any).data['text/plain'], '1', 'Results were not computed');
+    });
+
+    test('Multiple requests', async () => {
+        let replies = await sendMessage(createExecutionMessage('a=1\na'));
+        let executeResult = replies.find(r => r.header.msg_type === 'execute_result');
+        assert.ok(executeResult, 'Result not found');
+        replies = await sendMessage(createExecutionMessage('a=2\na'));
+        executeResult = replies.find(r => r.header.msg_type === 'execute_result');
+        assert.ok(executeResult, 'Result 2 not found');
+        assert.equal((executeResult?.content as any).data['text/plain'], '2', 'Results were not computed');
+        replies = await sendMessage(createInspectMessage('a'));
+        const inspectResult = replies.find(r => r.header.msg_type === 'inspect_reply');
+        assert.ok(inspectResult, 'Inspect result not found');
+        assert.ok((inspectResult?.content as any).data['text/plain'], 'Inspect reply was not computed');
+    });
 });
