@@ -6,7 +6,7 @@ import { IJMPConnection, IJMPConnectionInfo } from '../types';
 export class EnchannelJMPConnection implements IJMPConnection {
     //private mainChannel: Channels | undefined;
 
-    public async connect(_connectInfo: IJMPConnectionInfo, _sessionID: string): Promise<void> {
+    public async connect(_connectInfo: IJMPConnectionInfo): Promise<void> {
         // tslint:disable-next-line:no-any
         //this.mainChannel = await createMainChannel(connectInfo as any, undefined, sessionID);
     }

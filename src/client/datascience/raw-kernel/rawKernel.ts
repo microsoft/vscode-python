@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
-import { ISignal } from '@phosphor/signaling';
+import { ISignal, Signal } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
 import { IJMPConnection, IJMPConnectionInfo } from '../types';
 import { RawFuture } from './rawFuture';
@@ -18,7 +18,7 @@ export class RawKernel implements Kernel.IKernel {
         throw new Error('Not yet implemented');
     }
     get statusChanged(): ISignal<this, Kernel.Status> {
-        throw new Error('Not yet implemented');
+        return this._statusChanged;
     }
     get iopubMessage(): ISignal<this, KernelMessage.IIOPubMessage> {
         throw new Error('Not yet implemented');
@@ -47,10 +47,10 @@ export class RawKernel implements Kernel.IKernel {
         throw new Error('Not yet implemented');
     }
     get clientId(): string {
-        throw new Error('Not yet implemented');
+        return this._clientId;
     }
     get status(): Kernel.Status {
-        throw new Error('Not yet implemented');
+        return this._status;
     }
     get info(): KernelMessage.IInfoReply | null {
         throw new Error('Not yet implemented');
@@ -67,7 +67,10 @@ export class RawKernel implements Kernel.IKernel {
 
     public isDisposed: boolean = false;
     private jmpConnection: IJMPConnection;
-    private sessionId: string | undefined;
+
+    private _clientId: string;
+    private _status: Kernel.Status;
+    private _statusChanged: Signal<this, Kernel.Status>;
 
     // Keep track of all of our active futures
     private futures = new Map<
@@ -77,12 +80,14 @@ export class RawKernel implements Kernel.IKernel {
 
     // JMP connection should be injected, but no need to yet until it actually exists
     constructor(connection: IJMPConnection) {
+        this._clientId = uuid();
+        this._status = 'unknown';
+        this._statusChanged = new Signal<this, Kernel.Status>(this);
         this.jmpConnection = connection;
     }
 
     public async connect(connectInfo: IJMPConnectionInfo) {
-        this.sessionId = uuid();
-        await this.jmpConnection.connect(connectInfo, this.sessionId);
+        await this.jmpConnection.connect(connectInfo);
         this.jmpConnection.subscribe(msg => {
             this.handleMessage(msg).ignoreErrors();
         });
@@ -93,12 +98,12 @@ export class RawKernel implements Kernel.IKernel {
         disposeOnDone?: boolean,
         _metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
-        if (this.jmpConnection && this.sessionId) {
+        if (this.jmpConnection) {
             // Build our execution message
             // Silent is supposed to be options, but in my testing the message was not passing
             // correctly without it, so specifying it here with default false
             const executeOptions: KernelMessage.IOptions<KernelMessage.IExecuteRequestMsg> = {
-                session: this.sessionId,
+                session: this._clientId,
                 channel: 'shell',
                 msgType: 'execute_request',
                 username: 'vscode',
@@ -257,12 +262,29 @@ export class RawKernel implements Kernel.IKernel {
                 // Let the parent future message handle it here
                 await parentFuture.handleMessage(message);
             } else {
-                if (message.header.session === this.sessionId && message.channel !== 'iopub') {
+                if (message.header.session === this._clientId && message.channel !== 'iopub') {
                     // RAWKERNEL: emit unhandled
                 }
             }
         }
 
-        // RAWKERNEL: Handle general IOpub messages
+        // Check for ioPub status messages
+        if (message.channel === 'iopub' && message.header.msg_type === 'status') {
+            const newStatus = (message as KernelMessage.IStatusMsg).content.execution_state;
+            this.updateStatus(newStatus);
+        }
+    }
+
+    // The status for our kernel has changed
+    private updateStatus(newStatus: Kernel.Status) {
+        if (this._status === newStatus || this._status === 'dead') {
+            return;
+        }
+
+        this._status = newStatus;
+        this._statusChanged.emit(newStatus);
+        if (status === 'dead') {
+            this.dispose();
+        }
     }
 }
