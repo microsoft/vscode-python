@@ -120,24 +120,7 @@ suite('Data Science - RawKernel', () => {
             };
             const future = rawKernel.requestExecute(executeContent, true, undefined);
 
-            // First back is a reply message
-            const replyOptions: KernelMessage.IOptions<KernelMessage.IExecuteReplyMsg> = {
-                channel: 'shell',
-                session: rawKernel.clientId,
-                msgType: 'execute_reply',
-                content: { status: 'ok', execution_count: 1, payload: [], user_expressions: {} }
-            };
-            const replyMessage = KernelMessage.createMessage<KernelMessage.IExecuteReplyMsg>(replyOptions);
-            replyMessage.parent_header = future.msg.header;
-
-            // Our future should see the reply come in
-            future.onReply = msg => {
-                expect(msg.header.msg_id).to.equal(replyMessage.header.msg_id);
-            };
-
-            mockJmpConnection.messageBack(replyMessage);
-
-            // Second message is iopub busy status
+            // First message is iopub busy status
             const iopubBusyOptions: KernelMessage.IOptions<KernelMessage.IStatusMsg> = {
                 channel: 'iopub',
                 session: rawKernel.clientId,
@@ -147,22 +130,97 @@ suite('Data Science - RawKernel', () => {
             const iopubBusyMessage = KernelMessage.createMessage<KernelMessage.IStatusMsg>(iopubBusyOptions);
             iopubBusyMessage.parent_header = future.msg.header;
 
-            // Our future should see the reply come in
-            future.onIOPub = msg => {
-                expect(msg.header.msg_id).to.equal(iopubBusyMessage.header.msg_id);
-            };
-
-            // We should also see a new status
-            const statusHandler: Slot<RawKernel, Kernel.Status> = (_sender: RawKernel, args: Kernel.Status) => {
-                expect(rawKernel.status).to.equal('busy');
-                expect(args).to.equal('busy');
-            };
-            rawKernel.statusChanged.connect(statusHandler);
-
             // Post the message
             mockJmpConnection.messageBack(iopubBusyMessage);
 
+            // Next iopub execute input
+            const iopubExecuteInputOptions: KernelMessage.IOptions<KernelMessage.IExecuteInputMsg> = {
+                channel: 'iopub',
+                session: rawKernel.clientId,
+                msgType: 'execute_input',
+                content: { code, execution_count: 1 }
+            };
+            const iopubExecuteInputMessage = KernelMessage.createMessage<KernelMessage.IExecuteInputMsg>(
+                iopubExecuteInputOptions
+            );
+            iopubExecuteInputMessage.parent_header = future.msg.header;
+
+            // Post the message
+            mockJmpConnection.messageBack(iopubExecuteInputMessage);
+
+            // Next iopub stream input
+            const iopubStreamOptions: KernelMessage.IOptions<KernelMessage.IStreamMsg> = {
+                channel: 'iopub',
+                session: rawKernel.clientId,
+                msgType: 'stream',
+                content: { name: 'stdout', text: 'hello' }
+            };
+            const iopubStreamMessage = KernelMessage.createMessage<KernelMessage.IStreamMsg>(iopubStreamOptions);
+            iopubStreamMessage.parent_header = future.msg.header;
+
+            // Post the message
+            mockJmpConnection.messageBack(iopubStreamMessage);
+
+            // Finally an idle message
+            const iopubIdleOptions: KernelMessage.IOptions<KernelMessage.IStatusMsg> = {
+                channel: 'iopub',
+                session: rawKernel.clientId,
+                msgType: 'status',
+                content: { execution_state: 'idle' }
+            };
+            const iopubIdleMessage = KernelMessage.createMessage<KernelMessage.IStatusMsg>(iopubIdleOptions);
+            iopubIdleMessage.parent_header = future.msg.header;
+
+            // Post the message
+            mockJmpConnection.messageBack(iopubIdleMessage);
+
+            // Last thing back is a reply message
+            const replyOptions: KernelMessage.IOptions<KernelMessage.IExecuteReplyMsg> = {
+                channel: 'shell',
+                session: rawKernel.clientId,
+                msgType: 'execute_reply',
+                content: { status: 'ok', execution_count: 1, payload: [], user_expressions: {} }
+            };
+            const replyMessage = KernelMessage.createMessage<KernelMessage.IExecuteReplyMsg>(replyOptions);
+            replyMessage.parent_header = future.msg.header;
+
+            mockJmpConnection.messageBack(replyMessage);
+
+            // Before we await for done we need to set up what we expect to see in our output
+
+            // Check our IOPub Messages
+            const iopubMessages = [iopubBusyMessage, iopubExecuteInputMessage, iopubStreamMessage, iopubIdleMessage];
+            let iopubHit = 0;
+            future.onIOPub = msg => {
+                const targetMsg = iopubMessages[iopubHit];
+                expect(msg.header.msg_id).to.equal(targetMsg.header.msg_id);
+                iopubHit = iopubHit + 1;
+            };
+
+            // Check our reply messages
+            const replyMessages = [replyMessage];
+            let replyHit = 0;
+            future.onReply = msg => {
+                const targetMsg = replyMessages[replyHit];
+                expect(msg.header.msg_id).to.equal(targetMsg.header.msg_id);
+                replyHit = replyHit + 1;
+            };
+
+            // Check our status changes
+            const statusChanges = ['busy', 'idle'];
+            let statusHit = 0;
+            const statusHandler: Slot<RawKernel, Kernel.Status> = (_sender: RawKernel, args: Kernel.Status) => {
+                const targetStatus = statusChanges[statusHit];
+                expect(rawKernel.status).to.equal(targetStatus);
+                expect(args).to.equal(targetStatus);
+                statusHit = statusHit + 1;
+            };
+            rawKernel.statusChanged.connect(statusHandler);
+
             await future.done;
+            expect(iopubHit).to.equal(iopubMessages.length);
+            expect(replyHit).to.equal(replyMessages.length);
+            expect(statusHit).to.equal(statusChanges.length);
         });
     });
 });
