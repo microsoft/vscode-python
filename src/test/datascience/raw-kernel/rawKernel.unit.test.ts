@@ -102,7 +102,6 @@ suite('Data Science - RawKernel', () => {
         let mockJmpConnection: MockJMPConnection;
 
         setup(() => {
-            //jmpConnection = new MockJMPConnection();
             mockJmpConnection = new MockJMPConnection();
             rawKernel = new RawKernel(mockJmpConnection);
         });

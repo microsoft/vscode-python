@@ -235,7 +235,6 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite>",
-                "--grep", "iopub",
                 "--timeout=300000"
             ],
             "env": {
