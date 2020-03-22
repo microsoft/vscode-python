@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as portfinder from 'portfinder';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
@@ -9,7 +8,6 @@ import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../commo
 import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
-import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -339,15 +337,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
             throw this.zmqError;
         }
         try {
-            const zmq = await import('zeromq');
-            const sock = new zmq.Push();
-            const port = await portfinder.getPortPromise();
-
-            await sock.bind(`tcp://127.0.0.1:${port}`);
-            sock.send('some work').ignoreErrors(); // This will never return unless there's a listener. Just used for testing the API is available
-            await sleep(50);
-            sock.close();
-            traceInfo(`ZMQ connection to port ${port} verified.`);
+            await import('zeromq');
+            traceInfo(`ZMQ install verified.`);
         } catch (e) {
             traceError(`Exception while attempting zmq :`, e);
             sendTelemetryEvent(Telemetry.ZMQNotSupported);

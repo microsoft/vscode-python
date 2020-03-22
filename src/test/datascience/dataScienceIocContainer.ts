@@ -216,6 +216,7 @@ import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSe
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { ProgressReporter } from '../../client/datascience/progress/progressReporter';
+import { EnchannelJMPConnection } from '../../client/datascience/raw-kernel/enchannelJMPConnection';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
@@ -237,6 +238,7 @@ import {
     IInteractiveWindow,
     IInteractiveWindowListener,
     IInteractiveWindowProvider,
+    IJMPConnection,
     IJupyterCommandFactory,
     IJupyterDebugger,
     IJupyterExecution,
@@ -1030,6 +1032,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
+            this.serviceManager.add<IJMPConnection>(IJMPConnection, EnchannelJMPConnection);
 
             // Make sure full interpreter services are available.
             registerInterpreterTypes(this.serviceManager);
