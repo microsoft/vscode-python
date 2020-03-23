@@ -146,7 +146,7 @@ export class RawKernel implements Kernel.IKernel {
                 completeOptions
             );
 
-            return this.handleShellMessage(completeMessage) as Promise<KernelMessage.ICompleteReplyMsg>;
+            return this.sendShellMessage(completeMessage).done as Promise<KernelMessage.ICompleteReplyMsg>;
         }
 
         // RAWKERNEL: What should we do here? Throw?
@@ -172,7 +172,7 @@ export class RawKernel implements Kernel.IKernel {
                 inspectOptions
             );
 
-            return this.handleShellMessage(inspectMessage) as Promise<KernelMessage.IInspectReplyMsg>;
+            return this.sendShellMessage(inspectMessage).done as Promise<KernelMessage.IInspectReplyMsg>;
         }
 
         // RAWKERNEL: What should we do here? Throw?
@@ -341,14 +341,6 @@ export class RawKernel implements Kernel.IKernel {
             const newStatus = (message as KernelMessage.IStatusMsg).content.execution_state;
             this.updateStatus(newStatus);
         }
-    }
-
-    // Some shell messages just need to wait for a reply, so return back the done promise for when it is
-    // completed
-    private handleShellMessage<T extends KernelMessage.ShellMessageType>(message: KernelMessage.IShellMessage<T>) {
-        // Create a future that expects a reply
-        const future = this.sendShellMessage(message, true);
-        return future.done;
     }
 
     // The status for our kernel has changed
