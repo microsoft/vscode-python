@@ -191,7 +191,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: [2.7, 3.8]
-        test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
+        test-suite: [ts-unit, python-unit]
     env:
       # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
       # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
@@ -254,7 +254,7 @@ jobs:
         run: |
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_debugpy.py
-        if: steps.pythonFiles-cache.outputs.cache-hit == false
+        if: steps.pythonFiles-cache.outputs.cache-hit == false && startsWith(matrix.python, "3.")
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
@@ -321,7 +321,7 @@ jobs:
       # Run TypeScript unit tests only for Python 3.X.
       - name: Run TypeScript unit tests
         run: npm run test:unittests:cover
-        if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
+        if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, "3.")
 
       # Upload unit test coverage reports for later use in the "reports" job.
       - name: Upload unit test coverage reports
@@ -329,7 +329,7 @@ jobs:
         with:
           name: ${{runner.os}}-${{env.COVERAGE_REPORTS}}
           path: .nyc_output
-        if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, 3.)
+        if: matrix.test-suite == 'ts-unit' && startsWith(matrix.python, "3.")
 
       # Run the Python and IPython tests in our codebase.
       - name: Run Python and IPython unit tests
