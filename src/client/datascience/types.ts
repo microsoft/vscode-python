@@ -876,7 +876,7 @@ export const IJMPConnection = Symbol('IJMPConnection');
 
 // A service to send and recieve messages over Jupyter messaging protocol
 export interface IJMPConnection extends IDisposable {
-    connect(connectInfo: IJMPConnectionInfo, sessionID: string): Promise<void>;
+    connect(connectInfo: IJMPConnectionInfo): Promise<void>;
     sendMessage(message: KernelMessage.IMessage): void;
     subscribe(handlerFunc: (message: KernelMessage.IMessage) => void): void;
 }
