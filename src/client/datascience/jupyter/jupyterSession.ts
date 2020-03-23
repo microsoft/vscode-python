@@ -65,6 +65,7 @@ export class JupyterSession implements IJupyterSession {
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     private statusHandler: Slot<ISession, Kernel.Status>;
     private connected: boolean = false;
+    private _jupyterLab?: typeof import('@jupyterlab/services');
     constructor(
         private connInfo: IConnection,
         private serverSettings: ServerConnection.ISettings,
@@ -76,7 +77,13 @@ export class JupyterSession implements IJupyterSession {
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
     }
-
+    private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
+        if (this._jupyterLab) {
+            // tslint:disable-next-line:no-require-imports
+            this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+        }
+        return this._jupyterLab;
+    }
     public dispose(): Promise<void> {
         return this.shutdown();
     }
@@ -321,8 +328,8 @@ export class JupyterSession implements IJupyterSession {
         KernelMessage.IShellMessage<'comm_msg'>,
         KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
     > {
-        if (this.session && this.session.kernel) {
-            const shellMessage = KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
+        if (this.session && this.session.kernel && this.jupyterLab) {
+            const shellMessage = this.jupyterLab.KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
                 // tslint:disable-next-line: no-any
                 msgType: 'comm_msg',
                 channel: 'shell',

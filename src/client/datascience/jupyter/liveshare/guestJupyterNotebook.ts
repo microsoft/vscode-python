@@ -34,10 +34,45 @@ import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } fr
 export class GuestJupyterNotebook
     extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
     implements INotebook, ILiveShareParticipant {
+    private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
+        if (this._jupyterLab) {
+            // tslint:disable-next-line:no-require-imports
+            this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+        }
+        return this._jupyterLab;
+    }
+
+    public get identity(): Uri {
+        return this._identity;
+    }
+
+    public get resource(): Resource {
+        return this._resource;
+    }
+
+    public get server(): INotebookServer {
+        return this._owner;
+    }
+
+    public get onSessionStatusChanged(): Event<ServerStatus> {
+        if (!this.onStatusChangedEvent) {
+            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
+        }
+        return this.onStatusChangedEvent.event;
+    }
+
+    public get status(): ServerStatus {
+        return ServerStatus.Idle;
+    }
+
+    public get ioPub(): Event<{ msg: KernelMessage.IIOPubMessage; requestId: string }> {
+        return this.ioPubEvent.event;
+    }
     public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
         IJupyterKernelSpec | LiveKernelModel
     >().event;
     public onDisposed = new EventEmitter<void>().event;
+    private _jupyterLab?: typeof import('@jupyterlab/services');
     private responseQueue: ResponseQueue = new ResponseQueue();
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
     private ioPubEvent = new EventEmitter<{ msg: KernelMessage.IIOPubMessage; requestId: string }>();
@@ -52,18 +87,6 @@ export class GuestJupyterNotebook
         private startTime: number
     ) {
         super(liveShare);
-    }
-
-    public get identity(): Uri {
-        return this._identity;
-    }
-
-    public get resource(): Resource {
-        return this._resource;
-    }
-
-    public get server(): INotebookServer {
-        return this._owner;
     }
 
     public shutdown(): Promise<void> {
@@ -84,17 +107,6 @@ export class GuestJupyterNotebook
     public clear(_id: string): void {
         // We don't do anything as we don't cache results in this class.
         noop();
-    }
-
-    public get onSessionStatusChanged(): Event<ServerStatus> {
-        if (!this.onStatusChangedEvent) {
-            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
-        }
-        return this.onStatusChangedEvent.event;
-    }
-
-    public get status(): ServerStatus {
-        return ServerStatus.Idle;
     }
 
     public async execute(
@@ -262,7 +274,7 @@ export class GuestJupyterNotebook
         KernelMessage.IShellMessage<'comm_msg'>,
         KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
     > {
-        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
+        const shellMessage = this.jupyterLab?.KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
             // tslint:disable-next-line: no-any
             msgType: 'comm_msg',
             channel: 'shell',
@@ -276,7 +288,7 @@ export class GuestJupyterNotebook
 
         return {
             done: Promise.resolve(undefined),
-            msg: shellMessage,
+            msg: shellMessage!,
             onReply: noop,
             onIOPub: noop,
             onStdin: noop,
@@ -286,10 +298,6 @@ export class GuestJupyterNotebook
             isDisposed: false,
             dispose: noop
         };
-    }
-
-    public get ioPub(): Event<{ msg: KernelMessage.IIOPubMessage; requestId: string }> {
-        return this.ioPubEvent.event;
     }
 
     private onServerResponse = (args: Object) => {

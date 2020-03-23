@@ -17,6 +17,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
     private readonly commTargetsRegistered = new Map<string, KernelMessage.ICommOpenMsg | undefined>();
     private ioPubCallbackRegistered: boolean = false;
+    private jupyterLab?: typeof import('@jupyterlab/services');
     private pendingTargetNames = new Set<string>();
     private notebook?: INotebook;
     private _onMessage = new EventEmitter<IPyWidgetMessage>();
@@ -70,7 +71,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                     payload: { requestId, msg }
                 });
 
-                if (KernelMessage.isCommMsgMsg(msg)) {
+                if (this.jupyterLab?.KernelMessage.isCommMsgMsg(msg)) {
                     this.raiseOnMessage({
                         message: IPyWidgetMessages.IPyWidgets_comm_msg,
                         payload: msg as KernelMessage.ICommMsgMsg
@@ -91,6 +92,11 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     public async initialize() {
+        if (!this.jupyterLab) {
+            // tslint:disable-next-line:no-require-imports
+            this.jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+        }
+
         // If we have any pending targets, register them now
         await this.getNotebook();
 
@@ -149,13 +155,13 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     private handleOnIOPub(data: { msg: KernelMessage.IIOPubMessage; requestId: string }) {
-        if (KernelMessage.isDisplayDataMsg(data.msg)) {
+        if (this.jupyterLab?.KernelMessage.isDisplayDataMsg(data.msg)) {
             this.raiseOnMessage({ message: IPyWidgetMessages.IPyWidgets_display_data_msg, payload: data.msg });
-        } else if (KernelMessage.isStatusMsg(data.msg)) {
+        } else if (this.jupyterLab?.KernelMessage.isStatusMsg(data.msg)) {
             // Do nothing.
-        } else if (KernelMessage.isCommOpenMsg(data.msg)) {
+        } else if (this.jupyterLab?.KernelMessage.isCommOpenMsg(data.msg)) {
             // Do nothing, handled in the place we have registered for a target.
-        } else if (KernelMessage.isCommMsgMsg(data.msg)) {
+        } else if (this.jupyterLab?.KernelMessage.isCommMsgMsg(data.msg)) {
             this.raiseOnMessage({ message: IPyWidgetMessages.IPyWidgets_comm_msg, payload: data.msg });
         }
     }
