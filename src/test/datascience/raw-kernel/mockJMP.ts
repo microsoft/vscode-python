@@ -4,12 +4,16 @@ import { KernelMessage } from '@jupyterlab/services';
 import { IJMPConnection, IJMPConnectionInfo } from '../../../client/datascience/types';
 
 export class MockJMPConnection implements IJMPConnection {
+    public firstHeaderSeen: KernelMessage.IHeader | undefined;
     private callback: ((message: KernelMessage.IMessage) => void) | undefined;
 
     public async connect(_connectInfo: IJMPConnectionInfo): Promise<void> {
         return;
     }
-    public sendMessage(_message: KernelMessage.IMessage): void {
+    public sendMessage(message: KernelMessage.IMessage): void {
+        if (!this.firstHeaderSeen) {
+            this.firstHeaderSeen = message.header;
+        }
         return;
     }
     public subscribe(handlerFunc: (message: KernelMessage.IMessage) => void): void {

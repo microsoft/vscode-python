@@ -113,32 +113,85 @@ export class RawKernel implements Kernel.IKernel {
             };
             const executeMessage = KernelMessage.createMessage<KernelMessage.IExecuteRequestMsg>(executeOptions);
 
-            // Send off our message to our jmp connection
-            this.jmpConnection.sendMessage(executeMessage);
+            const newFuture = this.sendShellMessage(executeMessage, disposeOnDone || true);
 
-            // Create a future to watch for reply messages
-            const newFuture = new RawFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>(
-                executeMessage,
-                disposeOnDone || true
-            );
-            this.futures.set(
-                newFuture.msg.header.msg_id,
-                newFuture as RawFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>
-            );
-
-            // Set our future to remove itself when disposed
-            const oldDispose = newFuture.dispose.bind(newFuture);
-            newFuture.dispose = () => {
-                this.futures.delete(newFuture.msg.header.msg_id);
-                return oldDispose();
-            };
-
-            return newFuture;
+            return newFuture as Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
         }
 
         // RAWKERNEL: What should we do here? Throw?
         // Probably should not get here if session is not available
         throw new Error('No session available?');
+    }
+
+    public requestComplete(
+        content: KernelMessage.ICompleteRequestMsg['content']
+    ): Promise<KernelMessage.ICompleteReplyMsg> {
+        if (this.jmpConnection) {
+            const completeOptions: KernelMessage.IOptions<KernelMessage.ICompleteRequestMsg> = {
+                session: this._clientId,
+                channel: 'shell',
+                msgType: 'complete_request',
+                username: 'vscode',
+                content
+            };
+            const completeMessage = KernelMessage.createMessage<KernelMessage.ICompleteRequestMsg>(completeOptions);
+
+            return this.handleShellMessage(completeMessage) as Promise<KernelMessage.ICompleteReplyMsg>;
+        }
+
+        // RAWKERNEL: What should we do here? Throw?
+        // Probably should not get here if session is not available
+        throw new Error('No session available?');
+    }
+
+    public requestInspect(
+        content: KernelMessage.IInspectRequestMsg['content']
+    ): Promise<KernelMessage.IInspectReplyMsg> {
+        if (this.jmpConnection) {
+            const inspectOptions: KernelMessage.IOptions<KernelMessage.IInspectRequestMsg> = {
+                session: this._clientId,
+                channel: 'shell',
+                msgType: 'inspect_request',
+                username: 'vscode',
+                content
+            };
+            const inspectMessage = KernelMessage.createMessage<KernelMessage.IInspectRequestMsg>(inspectOptions);
+
+            return this.handleShellMessage(inspectMessage) as Promise<KernelMessage.IInspectReplyMsg>;
+        }
+
+        // RAWKERNEL: What should we do here? Throw?
+        // Probably should not get here if session is not available
+        throw new Error('No session available?');
+    }
+
+    public sendShellMessage<T extends KernelMessage.ShellMessageType>(
+        message: KernelMessage.IShellMessage<T>,
+        _expectReply?: boolean,
+        disposeOnDone?: boolean
+    ): Kernel.IShellFuture<KernelMessage.IShellMessage<T>> {
+        if (this.jmpConnection) {
+            // First send our message
+            this.jmpConnection.sendMessage(message);
+
+            // Next we need to build our future
+            const future = new RawFuture(message, disposeOnDone || true);
+
+            // RAWKERNEL: DisplayID calculations need to happen here
+            this.futures.set(message.header.msg_id, future);
+
+            // Set our future to remove itself when disposed
+            const oldDispose = future.dispose.bind(future);
+            future.dispose = () => {
+                this.futures.delete(future.msg.header.msg_id);
+                return oldDispose();
+            };
+
+            return future as Kernel.IShellFuture<KernelMessage.IShellMessage<T>>;
+        }
+
+        // RAWKERNEL: sending without a connection
+        throw new Error('Attemping to send shell message without connection');
     }
 
     // On dispose close down our connection and get rid of saved futures
@@ -163,13 +216,6 @@ export class RawKernel implements Kernel.IKernel {
     public getSpec(): Promise<Kernel.ISpecModel> {
         throw new Error('Not yet implemented');
     }
-    public sendShellMessage<T extends KernelMessage.ShellMessageType>(
-        _msg: KernelMessage.IShellMessage<T>,
-        _expectReply?: boolean,
-        _disposeOnDone?: boolean
-    ): Kernel.IShellFuture<KernelMessage.IShellMessage<T>> {
-        throw new Error('Not yet implemented');
-    }
     public sendControlMessage<T extends KernelMessage.ControlMessageType>(
         _msg: KernelMessage.IControlMessage<T>,
         _expectReply?: boolean,
@@ -187,16 +233,6 @@ export class RawKernel implements Kernel.IKernel {
         throw new Error('Not yet implemented');
     }
     public requestKernelInfo(): Promise<KernelMessage.IInfoReplyMsg> {
-        throw new Error('Not yet implemented');
-    }
-    public requestComplete(
-        _content: KernelMessage.ICompleteRequestMsg['content']
-    ): Promise<KernelMessage.ICompleteReplyMsg> {
-        throw new Error('Not yet implemented');
-    }
-    public requestInspect(
-        _content: KernelMessage.IInspectRequestMsg['content']
-    ): Promise<KernelMessage.IInspectReplyMsg> {
         throw new Error('Not yet implemented');
     }
     public requestHistory(
@@ -290,6 +326,14 @@ export class RawKernel implements Kernel.IKernel {
             const newStatus = (message as KernelMessage.IStatusMsg).content.execution_state;
             this.updateStatus(newStatus);
         }
+    }
+
+    // Some shell messages just need to wait for a reply, so return back the done promise for when it is
+    // completed
+    private handleShellMessage<T extends KernelMessage.ShellMessageType>(message: KernelMessage.IShellMessage<T>) {
+        // Create a future that expects a reply
+        const future = this.sendShellMessage(message, true);
+        return future.done;
     }
 
     // The status for our kernel has changed

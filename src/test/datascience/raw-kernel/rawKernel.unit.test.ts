@@ -120,14 +120,7 @@ suite('Data Science - RawKernel', () => {
             const future = rawKernel.requestExecute(executeContent, true, undefined);
 
             // First message is iopub busy status
-            const iopubBusyOptions: KernelMessage.IOptions<KernelMessage.IStatusMsg> = {
-                channel: 'iopub',
-                session: rawKernel.clientId,
-                msgType: 'status',
-                content: { execution_state: 'busy' }
-            };
-            const iopubBusyMessage = KernelMessage.createMessage<KernelMessage.IStatusMsg>(iopubBusyOptions);
-            iopubBusyMessage.parent_header = future.msg.header;
+            const iopubBusyMessage = buildStatusMessage('busy', rawKernel.clientId, future.msg.header);
 
             // Post the message
             mockJmpConnection.messageBack(iopubBusyMessage);
@@ -161,14 +154,7 @@ suite('Data Science - RawKernel', () => {
             mockJmpConnection.messageBack(iopubStreamMessage);
 
             // Finally an idle message
-            const iopubIdleOptions: KernelMessage.IOptions<KernelMessage.IStatusMsg> = {
-                channel: 'iopub',
-                session: rawKernel.clientId,
-                msgType: 'status',
-                content: { execution_state: 'idle' }
-            };
-            const iopubIdleMessage = KernelMessage.createMessage<KernelMessage.IStatusMsg>(iopubIdleOptions);
-            iopubIdleMessage.parent_header = future.msg.header;
+            const iopubIdleMessage = buildStatusMessage('idle', rawKernel.clientId, future.msg.header);
 
             // Post the message
             mockJmpConnection.messageBack(iopubIdleMessage);
@@ -221,5 +207,91 @@ suite('Data Science - RawKernel', () => {
             expect(replyHit).to.equal(replyMessages.length);
             expect(statusHit).to.equal(statusChanges.length);
         });
+
+        test('RawKernel requestInspect messages', async () => {
+            await rawKernel.connect(connectInfo);
+
+            // Check our status at the start
+            expect(rawKernel.status).to.equal('unknown');
+
+            // Create future for inspect request
+            const inspectContent: KernelMessage.IInspectRequestMsg['content'] = {
+                code: 'testing',
+                cursor_pos: 0,
+                detail_level: 0
+            };
+            const inspectPromise = rawKernel.requestInspect(inspectContent);
+
+            // Pull out our parent header
+            const parentHeader = mockJmpConnection.firstHeaderSeen as KernelMessage.IHeader<'inspect_request'>;
+
+            // pump an idle message as we need idle and a reply to be done
+            const iopubIdleMessage = buildStatusMessage('idle', rawKernel.clientId, parentHeader);
+
+            // Post the message
+            mockJmpConnection.messageBack(iopubIdleMessage);
+
+            // Send a reply message into our connection
+            const replyOptions: KernelMessage.IOptions<KernelMessage.IInspectReplyMsg> = {
+                channel: 'shell',
+                session: rawKernel.clientId,
+                msgType: 'inspect_reply',
+                parentHeader,
+                content: { status: 'ok', found: true, metadata: {}, data: { myData: 'myData' } }
+            };
+            const replyMessage = KernelMessage.createMessage<KernelMessage.IInspectReplyMsg>(replyOptions);
+            mockJmpConnection.messageBack(replyMessage);
+
+            const reply = await inspectPromise;
+            expect(reply.header.msg_id).to.equal(replyMessage.header.msg_id);
+        });
+
+        test('RawKernel requestComplete messages', async () => {
+            await rawKernel.connect(connectInfo);
+
+            // Check our status at the start
+            expect(rawKernel.status).to.equal('unknown');
+
+            // Create future for inspect request
+            const completeContent: KernelMessage.ICompleteRequestMsg['content'] = {
+                code: 'testing',
+                cursor_pos: 0
+            };
+            const inspectPromise = rawKernel.requestComplete(completeContent);
+
+            // Pull out our parent header
+            const parentHeader = mockJmpConnection.firstHeaderSeen as KernelMessage.IHeader<'complete_request'>;
+
+            // pump an idle message as we need idle and a reply to be done
+            const iopubIdleMessage = buildStatusMessage('idle', rawKernel.clientId, parentHeader);
+
+            // Post the message
+            mockJmpConnection.messageBack(iopubIdleMessage);
+
+            // Send a reply message into our connection
+            const replyOptions: KernelMessage.IOptions<KernelMessage.ICompleteReplyMsg> = {
+                channel: 'shell',
+                session: rawKernel.clientId,
+                msgType: 'complete_reply',
+                parentHeader,
+                content: { status: 'ok', metadata: {}, cursor_start: 0, cursor_end: 0, matches: ['testing'] }
+            };
+            const replyMessage = KernelMessage.createMessage<KernelMessage.ICompleteReplyMsg>(replyOptions);
+            mockJmpConnection.messageBack(replyMessage);
+
+            const reply = await inspectPromise;
+            expect(reply.header.msg_id).to.equal(replyMessage.header.msg_id);
+        });
     });
 });
+
+function buildStatusMessage(status: Kernel.Status, session: string, parentHeader: KernelMessage.IHeader) {
+    const iopubStatusOptions: KernelMessage.IOptions<KernelMessage.IStatusMsg> = {
+        channel: 'iopub',
+        session,
+        msgType: 'status',
+        parentHeader,
+        content: { execution_state: status }
+    };
+    return KernelMessage.createMessage<KernelMessage.IStatusMsg>(iopubStatusOptions);
+}
