@@ -111,12 +111,15 @@ export class RawFuture<
     }
 
     private async handleIOPub(message: KernelMessage.IIOPubMessage): Promise<void> {
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
         // RAWKERNEL: Check hooks process first?
         // tslint:disable-next-line:no-any
         await this.ioPub(message);
 
         // If we get an idle status message and a reply then we are done
-        if (KernelMessage.isStatusMsg(message) && message.content.execution_state === 'idle') {
+        if (jupyterLab.KernelMessage.isStatusMsg(message) && message.content.execution_state === 'idle') {
             this.idleSeen = true;
 
             if (this.replyMessage) {

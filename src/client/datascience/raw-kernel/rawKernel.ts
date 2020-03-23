@@ -101,6 +101,9 @@ export class RawKernel implements Kernel.IKernel {
         _metadata?: JSONObject
     ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> {
         if (this.jmpConnection) {
+            // tslint:disable-next-line:no-require-imports
+            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
             // Build our execution message
             // Silent is supposed to be options, but in my testing the message was not passing
             // correctly without it, so specifying it here with default false
@@ -111,7 +114,9 @@ export class RawKernel implements Kernel.IKernel {
                 username: 'vscode',
                 content: { ...content, silent: content.silent || false }
             };
-            const executeMessage = KernelMessage.createMessage<KernelMessage.IExecuteRequestMsg>(executeOptions);
+            const executeMessage = jupyterLab.KernelMessage.createMessage<KernelMessage.IExecuteRequestMsg>(
+                executeOptions
+            );
 
             const newFuture = this.sendShellMessage(executeMessage, disposeOnDone || true);
 
@@ -127,6 +132,9 @@ export class RawKernel implements Kernel.IKernel {
         content: KernelMessage.ICompleteRequestMsg['content']
     ): Promise<KernelMessage.ICompleteReplyMsg> {
         if (this.jmpConnection) {
+            // tslint:disable-next-line:no-require-imports
+            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
             const completeOptions: KernelMessage.IOptions<KernelMessage.ICompleteRequestMsg> = {
                 session: this._clientId,
                 channel: 'shell',
@@ -134,7 +142,9 @@ export class RawKernel implements Kernel.IKernel {
                 username: 'vscode',
                 content
             };
-            const completeMessage = KernelMessage.createMessage<KernelMessage.ICompleteRequestMsg>(completeOptions);
+            const completeMessage = jupyterLab.KernelMessage.createMessage<KernelMessage.ICompleteRequestMsg>(
+                completeOptions
+            );
 
             return this.handleShellMessage(completeMessage) as Promise<KernelMessage.ICompleteReplyMsg>;
         }
@@ -148,6 +158,9 @@ export class RawKernel implements Kernel.IKernel {
         content: KernelMessage.IInspectRequestMsg['content']
     ): Promise<KernelMessage.IInspectReplyMsg> {
         if (this.jmpConnection) {
+            // tslint:disable-next-line:no-require-imports
+            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
             const inspectOptions: KernelMessage.IOptions<KernelMessage.IInspectRequestMsg> = {
                 session: this._clientId,
                 channel: 'shell',
@@ -155,7 +168,9 @@ export class RawKernel implements Kernel.IKernel {
                 username: 'vscode',
                 content
             };
-            const inspectMessage = KernelMessage.createMessage<KernelMessage.IInspectRequestMsg>(inspectOptions);
+            const inspectMessage = jupyterLab.KernelMessage.createMessage<KernelMessage.IInspectRequestMsg>(
+                inspectOptions
+            );
 
             return this.handleShellMessage(inspectMessage) as Promise<KernelMessage.IInspectReplyMsg>;
         }
