@@ -43,42 +43,56 @@ suite('DataScience raw kernel tests', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            enchannelConnection = ioc.get<IJMPConnection>(IJMPConnection);
-
-            // Find our jupyter interpreter
-            const interpreter = await ioc.getJupyterCapableInterpreter();
-            assert.ok(interpreter, 'No jupyter interpreter found');
-            // Start our kernel
-            const execFactory = ioc.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-            const env = await execFactory.createActivatedEnvironment({ interpreter });
-
-            connectionFile = path.join(os.tmpdir(), `tmp_${Date.now()}_k.json`);
-            await fs.writeFile(connectionFile, JSON.stringify(connectionInfo), { encoding: 'utf-8', flag: 'w' });
-
-            // Keep kernel alive while the tests are running.
-            kernelProcResult = env.execObservable(['-m', 'ipykernel_launcher', '-f', connectionFile], {
-                throwOnStdErr: false
-            });
-            kernelProcResult.out.subscribe(
-                out => {
-                    console.log(out.out);
-                },
-                error => {
-                    console.error(error);
-                },
-                () => {
-                    enchannelConnection.dispose();
-                }
-            );
-            sessionId = uuid();
-            await enchannelConnection.connect(connectionInfo, sessionId);
-            messageObservable = new Observable(subscriber => {
-                enchannelConnection.subscribe(subscriber.next.bind(subscriber));
-            });
+            await connectToKernel(57718);
         }
     });
 
     teardown(async () => {
+        await disconnectFromKernel();
+        await ioc.dispose();
+    });
+
+    async function connectToKernel(startPort: number) {
+        connectionInfo.stdin_port = startPort;
+        connectionInfo.shell_port = startPort + 1;
+        connectionInfo.iopub_port = startPort + 2;
+        connectionInfo.hb_port = startPort + 3;
+        connectionInfo.control_port = startPort + 4;
+        enchannelConnection = ioc.get<IJMPConnection>(IJMPConnection);
+
+        // Find our jupyter interpreter
+        const interpreter = await ioc.getJupyterCapableInterpreter();
+        assert.ok(interpreter, 'No jupyter interpreter found');
+        // Start our kernel
+        const execFactory = ioc.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const env = await execFactory.createActivatedEnvironment({ interpreter });
+
+        connectionFile = path.join(os.tmpdir(), `tmp_${Date.now()}_k.json`);
+        await fs.writeFile(connectionFile, JSON.stringify(connectionInfo), { encoding: 'utf-8', flag: 'w' });
+
+        // Keep kernel alive while the tests are running.
+        kernelProcResult = env.execObservable(['-m', 'ipykernel_launcher', '-f', connectionFile], {
+            throwOnStdErr: false
+        });
+        kernelProcResult.out.subscribe(
+            out => {
+                console.log(out.out);
+            },
+            error => {
+                console.error(error);
+            },
+            () => {
+                enchannelConnection.dispose();
+            }
+        );
+        sessionId = uuid();
+        await enchannelConnection.connect(connectionInfo, sessionId);
+        messageObservable = new Observable(subscriber => {
+            enchannelConnection.subscribe(subscriber.next.bind(subscriber));
+        });
+    }
+
+    async function disconnectFromKernel() {
         kernelProcResult?.proc?.kill();
         try {
             await fs.remove(connectionFile);
@@ -86,8 +100,7 @@ suite('DataScience raw kernel tests', () => {
             noop();
         }
         enchannelConnection.dispose();
-        await ioc.dispose();
-    });
+    }
 
     function createShutdownMessage(): KernelMessage.IMessage<'shutdown_request'> {
         return {
@@ -179,7 +192,9 @@ suite('DataScience raw kernel tests', () => {
                 foundIdle = (m.content as any).execution_state === 'idle';
             } else if (m.header.msg_type === expectedReplyType) {
                 foundReply = true;
-            } else if (m.header.msg_type === 'shutdown_reply') {
+            }
+
+            if (m.header.msg_type === 'shutdown_reply') {
                 // Special case, status may never come after this.
                 waiter.resolve(replies);
             }
@@ -221,5 +236,16 @@ suite('DataScience raw kernel tests', () => {
         const inspectResult = replies.find(r => r.header.msg_type === 'inspect_reply');
         assert.ok(inspectResult, 'Inspect result not found');
         assert.ok((inspectResult?.content as any).data['text/plain'], 'Inspect reply was not computed');
+    });
+
+    test('Startup and shutdown', async () => {
+        let replies = await sendMessage(createExecutionMessage('a=1\na'));
+        let executeResult = replies.find(r => r.header.msg_type === 'execute_result');
+        assert.ok(executeResult, 'Result not found');
+        await disconnectFromKernel();
+        await connectToKernel(57418);
+        replies = await sendMessage(createExecutionMessage('a=1\na'));
+        executeResult = replies.find(r => r.header.msg_type === 'execute_result');
+        assert.ok(executeResult, 'Result not found');
     });
 });
