@@ -265,7 +265,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
             }
             return action;
         },
-        logger: testMode ? createTestLogger() : undefined
+        logger: testMode ? createTestLogger() : window.console
     });
     // On CI we might want to disable logging, as its a big wall of text.
     // TO disable that add the variable `VSC_PYTHON_DS_NO_REDUX_LOGGING=1`
