@@ -85,6 +85,12 @@ use(chaiAsPromised);
             if (nb.metadata && nb.metadata.kernelspec) {
                 delete nb.metadata.kernelspec;
             }
+            // Clear all output (from previous executions).
+            nb.cells.forEach(cell => {
+                if (Array.isArray(cell.outputs)) {
+                    cell.outputs = [];
+                }
+            });
             const result = await openNotebook(ioc, disposables, JSON.stringify(nb));
             notebookUi = result.notebookUI;
             return result;
@@ -97,6 +103,9 @@ use(chaiAsPromised);
         }
         async function openStandardWidgetsIpynb() {
             return openNotebookFile('standard_widgets.ipynb');
+        }
+        async function openIPySheetsIpynb() {
+            return openNotebookFile('ipySheet_widgets.ipynb');
         }
 
         test('Notebook has 3 cells', async () => {
@@ -192,7 +201,7 @@ use(chaiAsPromised);
 
                 await notebookUI.executeCell(3);
                 await notebookUI.executeCell(4);
-                // await sleep(500_000);
+
                 const button = await retryIfFail(async () => {
                     // Find the button & the lable in cell output for 3 & 4 respectively.
                     const buttons = await (await notebookUI.getCellOutput(3)).$$('button.widget-button');
@@ -210,6 +219,141 @@ use(chaiAsPromised);
 
                     const cell4Output = await notebookUI.getCellOutputHTML(4);
                     assert.include(cell4Output, 'Button Clicked');
+                });
+            });
+            test('Render ipysheets', async () => {
+                const { notebookUI } = await openIPySheetsIpynb();
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+
+                await notebookUI.executeCell(1);
+                await notebookUI.executeCell(3);
+
+                await retryIfFail(async () => {
+                    const cellOutput = await notebookUI.getCellOutputHTML(3);
+
+                    assert.include(cellOutput, 'Hello</td>');
+                    assert.include(cellOutput, 'World</td>');
+                });
+            });
+            test('Render ipysheets', async () => {
+                const { notebookUI } = await openIPySheetsIpynb();
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+
+                await notebookUI.executeCell(1);
+                await notebookUI.executeCell(3);
+
+                await retryIfFail(async () => {
+                    const cellOutput = await notebookUI.getCellOutputHTML(3);
+
+                    assert.include(cellOutput, 'Hello</td>');
+                    assert.include(cellOutput, 'World</td>');
+                });
+            });
+            test('Search ipysheets with textbox in another cell', async () => {
+                const { notebookUI } = await openIPySheetsIpynb();
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(6));
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(7));
+
+                await notebookUI.executeCell(5);
+                await notebookUI.executeCell(6);
+                await notebookUI.executeCell(7);
+
+                // Wait for sheets to get rendered.
+                await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(7);
+
+                    assert.include(cellOutputHtml, 'test</td>');
+                    assert.include(cellOutputHtml, 'train</td>');
+
+                    const cellOutput = await notebookUI.getCellOutput(6);
+                    const highlighted = await cellOutput.$$('td.htSearchResult');
+                    assert.equal(highlighted.length, 0);
+                });
+
+                // Type `test` into textbox.
+                await retryIfFail(async () => {
+                    const cellOutput = await notebookUI.getCellOutput(6);
+                    const textboxes = await cellOutput.$$('input[type=text]');
+                    assert.equal(textboxes.length, 1, 'No Texbox');
+                    await textboxes[0].focus();
+
+                    await notebookUI.type('test');
+                });
+
+                // Confirm cell is filtered and highlighted.
+                await retryIfFail(async () => {
+                    const cellOutput = await notebookUI.getCellOutput(7);
+                    const highlighted = await cellOutput.$$('td.htSearchResult');
+                    assert.equal(highlighted.length, 2);
+                });
+            });
+            test('Update ipysheets cells with textbox & slider in another cell', async () => {
+                const { notebookUI } = await openIPySheetsIpynb();
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(10));
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(12));
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(13));
+
+                await notebookUI.executeCell(9);
+                await notebookUI.executeCell(10);
+                await notebookUI.executeCell(12);
+                await notebookUI.executeCell(13);
+
+                // Wait for slider to get rendered with value `0`.
+                const sliderLabel = await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(10);
+
+                    assert.include(cellOutputHtml, 'ui-slider-handle');
+                    assert.include(cellOutputHtml, 'left: 0%');
+
+                    const cellOutput = await notebookUI.getCellOutput(10);
+                    const sliderLables = await cellOutput.$$('div.widget-readout');
+
+                    return sliderLables[0];
+                });
+
+                // Confirm slider lable reads `0`.
+                await retryIfFail(async () => {
+                    const sliderValue = await notebookUI.page?.evaluate(ele => ele.innerHTML.trim(), sliderLabel);
+                    assert.equal(sliderValue || '', '0');
+                });
+
+                // Wait for textbox to get rendered.
+                const textbox = await retryIfFail(async () => {
+                    const cellOutput = await notebookUI.getCellOutput(12);
+                    const textboxes = await cellOutput.$$('input[type=number]');
+                    assert.equal(textboxes.length, 1);
+
+                    const value = await notebookUI.page?.evaluate(el => (el as HTMLInputElement).value, textboxes[0]);
+                    assert.equal(value || '', '0');
+
+                    return textboxes[0];
+                });
+
+                // Wait for sheets to get rendered.
+                await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(13);
+                    assert.include(cellOutputHtml, '>50.000</td>');
+                    assert.notInclude(cellOutputHtml, '>100.000</td>');
+                });
+
+                // Type `50` into textbox.
+                await retryIfFail(async () => {
+                    await textbox.focus();
+                    await notebookUI.type('50');
+                });
+
+                // Confirm slider label reads `50`.
+                await retryIfFail(async () => {
+                    const sliderValue = await notebookUI.page?.evaluate(ele => ele.innerHTML.trim(), sliderLabel);
+                    assert.equal(sliderValue || '', '50');
+                });
+
+                // Wait for sheets to get updated with calculation.
+                await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(13);
+
+                    assert.include(cellOutputHtml, '>50.000</td>');
+                    assert.include(cellOutputHtml, '>100.000</td>');
                 });
             });
         });
