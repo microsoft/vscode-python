@@ -198,7 +198,8 @@ export class PythonSettings implements IPythonSettings {
         this.pythonPath = getAbsolutePath(this.pythonPath, workspaceRoot);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
-        this.defaultInterpreterPath = systemVariables.resolveAny(pythonSettings.get<string>('defaultInterpreterPath'))!;
+        const defaultInterpreterPath = systemVariables.resolveAny(pythonSettings.get<string>('defaultInterpreterPath'));
+        this.defaultInterpreterPath = defaultInterpreterPath ? defaultInterpreterPath : 'python';
         this.defaultInterpreterPath = getAbsolutePath(this.defaultInterpreterPath, workspaceRoot);
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
