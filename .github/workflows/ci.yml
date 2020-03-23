@@ -248,13 +248,8 @@ jobs:
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
         if: steps.pythonFiles-cache.outputs.cache-hit == false
-
-      - name: Install debugpy wheels if not cached
-        run: |
-          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
-          python ./pythonFiles/install_debugpy.py
-        if: steps.pythonFiles-cache.outputs.cache-hit == false && startsWith(matrix.python, 3.)
 
       - name: Install test requirements
         run: python -m pip install --upgrade -r build/test-requirements.txt
