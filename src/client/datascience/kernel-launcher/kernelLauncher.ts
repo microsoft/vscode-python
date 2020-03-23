@@ -20,14 +20,14 @@ import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } fro
 const windowsPaths = new Map([
     ['users', 'C:\\Users\\'],
     ['jupyter', '\\AppData\\Roaming\\jupyter\\kernels\\'],
-    ['kernel', 'share\\jupyter\\kernels']
+    ['kernel', 'share\\jupyter\\kernels\\']
 ]);
 
 const unixPaths = new Map([
     ['home', '/home/'],
     ['linuxJupyterPath', '/.local/share/jupyter/kernels/'],
     ['macJupyterPath', '/Library/Jupyter/kernels/'],
-    ['kernel', 'share/jupyter/kernels']
+    ['kernel', 'share/jupyter/kernels/']
 ]);
 
 const cachedPaths: Map<string, string> = new Map();
@@ -232,7 +232,7 @@ export class KernelLauncher implements IKernelLauncher {
             currentInterpreter &&
             pythonPath &&
             (pythonPath.path === currentInterpreter.path ||
-                pythonPath.displayName!.toLowerCase().indexOf('python 3') !== -1)
+                (pythonPath.displayName && pythonPath.displayName.toLowerCase().indexOf('python 3') !== -1))
         ) {
             const platform = new PlatformService();
 
