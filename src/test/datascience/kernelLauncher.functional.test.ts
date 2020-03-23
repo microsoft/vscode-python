@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 'use strict';
 
-// import { assert } from 'chai';
+import { assert } from 'chai';
 import { Uri } from 'vscode';
 
-// import { ChildProcess } from 'child_process';
+import { ChildProcess } from 'child_process';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
-// import { IKernelConnection } from '../../client/datascience/kernel-launcher/types';
+import { IKernelConnection } from '../../client/datascience/kernel-launcher/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { PYTHON_PATH } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -40,26 +40,20 @@ suite('Kernel Launcher', () => {
         kernelName = 'Python 3';
     });
 
-    // test('Launch from resource', async () => {
-    //     const kernel = await kernelLauncher.launch(resource, kernelName);
-
-    //     assert.isOk<IKernelConnection>(kernel.connection, 'Connection not found');
-    //     assert.isOk<ChildProcess>(kernel.process, 'Child Process not found');
-
-    //     kernel.dispose();
-    // });
-
-    // test('Launch from PythonInterpreter', async () => {
-    //     const kernel = await kernelLauncher.launch(pythonInterpreter, kernelName);
-
-    //     assert.isOk<IKernelConnection>(kernel.connection, 'Connection not found');
-    //     assert.isOk<ChildProcess>(kernel.process, 'Child Process not found');
-
-    //     kernel.dispose();
-    // });
-
-    test('Dev test', async () => {
+    test('Launch from resource', async () => {
         const kernel = await kernelLauncher.launch(resource, kernelName);
+
+        assert.isOk<IKernelConnection>(kernel.connection, 'Connection not found');
+        assert.isOk<ChildProcess>(kernel.process, 'Child Process not found');
+
+        kernel.dispose();
+    });
+
+    test('Launch from PythonInterpreter', async () => {
+        const kernel = await kernelLauncher.launch(pythonInterpreter, kernelName);
+
+        assert.isOk<IKernelConnection>(kernel.connection, 'Connection not found');
+        assert.isOk<ChildProcess>(kernel.process, 'Child Process not found');
 
         kernel.dispose();
     });

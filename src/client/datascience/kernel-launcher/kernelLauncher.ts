@@ -68,6 +68,7 @@ class KernelProcess implements IKernelProcess {
 
         return Promise.resolve();
     }
+
     public dispose() {
         this._process?.kill();
     }
