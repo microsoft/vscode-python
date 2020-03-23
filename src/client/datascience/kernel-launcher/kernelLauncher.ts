@@ -187,7 +187,7 @@ class KernelFinder implements IKernelFinder {
         return undefined;
     }
 
-    private getKernelSpec(path: string, kernelName: string): IJupyterKernelSpec | undefined {
+    public getKernelSpec(path: string, kernelName: string): IJupyterKernelSpec | undefined {
         const kernelJSON = '\\kernel.json';
 
         if (fs.existsSync(path)) {
@@ -222,16 +222,33 @@ export class KernelLauncher implements IKernelLauncher {
     ) {}
 
     public async launch(interpreterUri: InterpreterUri, kernelName: string): Promise<IKernelProcess> {
-        const currentInterpreter = await this.interpreterService.getActiveInterpreter();
-
-        const interpreters = await this.interpreterService.getInterpreters();
-        const interpreterPaths = [];
-        for (const interp of interpreters) {
-            interpreterPaths.push(interp.path);
-        }
-
         const finder = new KernelFinder();
-        const kernelSpec = finder.findKernelSpec(kernelName, interpreterPaths);
+        const pythonPath = isResource(interpreterUri) ? undefined : interpreterUri;
+        const currentInterpreter = await this.interpreterService.getActiveInterpreter();
+        let kernelSpec: IJupyterKernelSpec | undefined;
+
+        if (
+            currentInterpreter &&
+            pythonPath &&
+            (pythonPath.path === currentInterpreter.path ||
+                pythonPath.displayName!.toLowerCase().indexOf('python 3') !== -1)
+        ) {
+            const platform = new PlatformService();
+
+            const index = currentInterpreter.path.lastIndexOf(platform.isWindows ? '\\' : '/');
+            const fixedPath = currentInterpreter.path.substring(0, index + 1);
+            const secondPart = platform.isWindows ? windowsPaths.get('kernel')! : unixPaths.get('kernel')!;
+            kernelSpec = finder.getKernelSpec(fixedPath + secondPart, kernelName);
+        } else {
+            const interpreters = await this.interpreterService.getInterpreters();
+
+            const interpreterPaths: string[] = [];
+            for (const interp of interpreters) {
+                interpreterPaths.push(interp.path);
+            }
+
+            kernelSpec = finder.findKernelSpec(kernelName, interpreterPaths);
+        }
 
         const kernel = new KernelProcess(interpreterUri, this.executionFactory, kernelSpec);
         await kernel.launch();
