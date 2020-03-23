@@ -44,7 +44,8 @@ class KernelProcess implements IKernelProcess {
 
     constructor(
         private interpreter: InterpreterUri,
-        @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory
+        @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
+        private kernelSpec: IJupyterKernelSpec | undefined
     ) {
         this.interpreter = interpreter;
         this.executionFactory = executionFactory;
@@ -53,9 +54,10 @@ class KernelProcess implements IKernelProcess {
     public async launch(): Promise<void> {
         const resource = isResource(this.interpreter) ? this.interpreter : undefined;
         const pythonPath = isResource(this.interpreter) ? undefined : this.interpreter.path;
+        const args = this.getArgs(this.kernelSpec);
 
         const executionService = await this.executionFactory.create({ resource, pythonPath });
-        const kernelProcess = executionService.execObservable(['-m', 'ipykernel'], {});
+        const kernelProcess = executionService.execObservable(args, {});
 
         this._process = kernelProcess.proc;
 
@@ -83,6 +85,18 @@ class KernelProcess implements IKernelProcess {
             stdin_port: ports[3],
             iopub_port: ports[4]
         };
+    }
+
+    private getArgs(kernelSpec: IJupyterKernelSpec | undefined): string[] {
+        if (kernelSpec) {
+            switch (kernelSpec.language) {
+                case 'python':
+                default:
+                    return [kernelSpec.argv[1], kernelSpec.argv[2]];
+            }
+        }
+
+        return ['-m', 'ipykernel_launcher'];
     }
 }
 
@@ -219,7 +233,7 @@ export class KernelLauncher implements IKernelLauncher {
         const finder = new KernelFinder();
         const kernelSpec = finder.findKernelSpec(kernelName, interpreterPaths);
 
-        const kernel = new KernelProcess(interpreterUri, this.executionFactory);
+        const kernel = new KernelProcess(interpreterUri, this.executionFactory, kernelSpec);
         await kernel.launch();
         return kernel;
     }
