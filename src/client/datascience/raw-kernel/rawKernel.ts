@@ -300,7 +300,7 @@ export class RawKernel implements Kernel.IKernel {
 
         this._status = newStatus;
         this._statusChanged.emit(newStatus);
-        if (status === 'dead') {
+        if (newStatus === 'dead') {
             this.dispose();
         }
     }
