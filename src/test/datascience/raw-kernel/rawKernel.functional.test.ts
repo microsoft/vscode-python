@@ -86,7 +86,7 @@ suite('DataScience raw kernel tests', () => {
             }
         );
         sessionId = uuid();
-        await enchannelConnection.connect(connectionInfo, sessionId);
+        await enchannelConnection.connect(connectionInfo);
         messageObservable = new Observable(subscriber => {
             enchannelConnection.subscribe(subscriber.next.bind(subscriber));
         });
