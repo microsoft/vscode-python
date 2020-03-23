@@ -144,10 +144,13 @@ class SocketEventEmitter extends Events.EventEmitter {
     private waitForReceive(socket: zeromq.Dealer | zeromq.Subscriber) {
         if (!socket.closed) {
             // tslint:disable-next-line: no-floating-promises
-            socket.receive().then(b => {
-                this.emit('message', b);
-                setTimeout(this.waitForReceive.bind(this, socket), 0);
-            });
+            socket
+                .receive()
+                .then(b => {
+                    this.emit('message', b);
+                    setTimeout(this.waitForReceive.bind(this, socket), 0);
+                })
+                .ignoreErrors();
         }
     }
 }
@@ -210,14 +213,17 @@ export const createMainChannelFromSockets = (
         () => {
             // When the subject is completed / disposed, close all the event
             // listeners and shutdown the socket
-            try {
-                sockets.control.close();
-                sockets.iopub.close();
-                sockets.shell.close();
-                sockets.stdin.close();
-            } catch (ex) {
-                traceError(`Error during socket shutdown`, ex);
-            }
+            const closer = (closable: { close(): void }) => {
+                try {
+                    closable.close();
+                } catch (ex) {
+                    traceError(`Error during socket shutdown`, ex);
+                }
+            };
+            closer(sockets.control);
+            closer(sockets.iopub);
+            closer(sockets.shell);
+            closer(sockets.stdin);
         }
     );
 

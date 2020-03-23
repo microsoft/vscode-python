@@ -91,11 +91,13 @@ suite('Unit Tests - PyTest - Discovery', () => {
             throw new Error('Unrecognized directory');
         };
         when(argsService.getTestFolders(deepEqual(options.args))).thenReturn(directories);
-        when(helper.mergeTests(deepEqual(['Result A', 'Result B']))).thenReturn('mergedTests' as any);
+        when(helper.mergeTests(deepEqual([('Result A' as any) as Tests, ('Result B' as any) as Tests]))).thenReturn(
+            'mergedTests' as any
+        );
 
         const tests = await discoveryService.discoverTests(options);
 
-        verify(helper.mergeTests(deepEqual(['Result A', 'Result B']))).once();
+        verify(helper.mergeTests(deepEqual([('Result A' as any) as Tests, ('Result B' as any) as Tests]))).once();
         expect(tests).equal('mergedTests');
     });
     test('Build collection arguments', async () => {
