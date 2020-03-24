@@ -24,6 +24,7 @@ suite('Kernel Launcher', () => {
     let kernelName: string;
 
     setup(() => {
+        process.env[`VSCODE_PYTHON_ROLLING`] = '1';
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
         const execFactory = ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
@@ -39,6 +40,12 @@ suite('Kernel Launcher', () => {
         };
         resource = Uri.file(PYTHON_PATH);
         kernelName = 'Python 3';
+    });
+
+    teardown(async () => {
+        if (process.env.VSCODE_PYTHON_ROLLING) {
+            delete process.env.VSCODE_PYTHON_ROLLING;
+        }
     });
 
     test('Launch from resource', async () => {
