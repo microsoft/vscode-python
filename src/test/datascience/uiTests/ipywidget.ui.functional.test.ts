@@ -488,7 +488,6 @@ use(chaiAsPromised);
                     assert.include(cellOutputHtml, 'plotarea_events');
                 });
 
-
                 // Render empty plot
                 await notebookUI.executeCell(4);
                 await retryIfFail(async () => {
