@@ -18,7 +18,7 @@
     "python.command.python.execSelectionInTerminal.title": "पायथन टर्मिनल में चयनित पंक्तियां चलाएं",
     "python.command.python.execSelectionInDjangoShell.title": "Django शेल में चलाएं या लाइन चलाएं",
     "python.command.python.goToPythonObject.title": "पायथन ऑब्जेक्ट पर जाएं",
-    "python.command.python.setLinter.title": "लिंटर चुनें",
+    "python.command.python.setLinter.title": "Linter चुनें",
     "python.command.python.enableLinting.title": "Linting सक्षम करें",
     "python.command.python.runLinting.title": "Linting चलाएं",
     "python.snippet.launch.standard.label": "पायथन: वर्तमान फ़ाइल",
