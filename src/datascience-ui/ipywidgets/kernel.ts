@@ -30,6 +30,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
     private commsById = new Map<string, Kernel.IComm>();
     private readonly shellCallbackManager = new ClassicCommShellCallbackManager();
     private pendingCommInfoResponses = new Map<string | undefined, Deferred<KernelMessage.ICommInfoReplyMsg>>();
+    private messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
     constructor(private readonly messageSender: IMessageSender) {}
     /**
      * This method is used by ipywidgets manager.
@@ -50,9 +51,27 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         content: KernelMessage.ICommInfoRequestMsg['content']
     ): Promise<KernelMessage.ICommInfoReplyMsg> {
         const promiseHolder = createDeferred<KernelMessage.ICommInfoReplyMsg>();
-        this.pendingCommInfoResponses.set(content.target || content.target_name, promiseHolder);
-        this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_RequestCommInfo, content);
+        const requestId = uuid();
+        this.pendingCommInfoResponses.set(requestId, promiseHolder);
+        this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_RequestCommInfo_request, {
+            requestId,
+            msg: content
+        });
         return promiseHolder.promise;
+    }
+    public registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        this.messageHooks.set(msgId, hook);
+        this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_RegisterMessageHook, msgId);
+    }
+    public removeMessageHook(
+        msgId: string,
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        this.messageHooks.delete(msgId);
+        this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, msgId);
     }
     public dispose() {
         while (this.handlers.shift()) {
@@ -90,8 +109,8 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
             case IPyWidgetMessages.IPyWidgets_comm_open:
                 await this.handleCommOpen(msg, payload);
                 break;
-            case IPyWidgetMessages.IPyWidgets_ReplyCommInfo:
-                this.handleCommInfoReply(payload);
+            case IPyWidgetMessages.IPyWidgets_RequestCommInfo_reply:
+                this.handleCommInfo(payload);
                 break;
 
             default:
@@ -117,6 +136,12 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         // tslint:disable-next-line: no-any
         if (promise && (promise as any).then) {
             await promise;
+        }
+    }
+    private handleCommInfo(reply: { requestId: string; msg: KernelMessage.ICommInfoReplyMsg }) {
+        const promise = this.pendingCommInfoResponses.get(reply.requestId);
+        if (promise) {
+            promise.resolve(reply.msg);
         }
     }
     private createComm(targetName: string, commId: string): Kernel.IComm {

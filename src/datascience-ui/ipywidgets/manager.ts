@@ -42,7 +42,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
             payload?: M[T]
         ) => void
     ) {
-        this.proxyKernel = new ProxyKernel(this, dispatcher);
+        this.proxyKernel = new ProxyKernel(this);
         try {
             // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
             // tslint:disable-next-line: no-any

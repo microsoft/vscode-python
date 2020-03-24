@@ -61,6 +61,13 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
                 this.handleMessage(message, payload, this.attemptToRegisterCommTarget);
                 break;
 
+            case IPyWidgetMessages.IPyWidgets_RequestCommInfo_request:
+                this.handleMessage(message, payload, this.requestCommInfo);
+                break;
+
+            case IPyWidgetMessages.IP
+
+
             default:
                 break;
         }
