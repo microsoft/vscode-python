@@ -10,7 +10,7 @@
     "python.command.python.refactorExtractVariable.title": "वेरिएबल निकालें",
     "python.command.python.refactorExtractMethod.title": "मेथड निकालें",
     "python.command.python.viewTestOutput.title": "टेस्ट आउटपुट दिखाएँ",
-    "python.command.python.selectAndRunTestMethod.title": "टेस्ट विधि चलाएँ ...",
+    "python.command.python.selectAndRunTestMethod.title": "टेस्ट मेथड चलाएँ ...",
     "python.command.python.selectAndDebugTestMethod.title": "डिबग टेस्ट विधि ...",
     "python.command.python.selectAndRunTestFile.title": "टेस्ट फ़ाइल चलाएँ ...",
     "python.command.python.runCurrentTestFile.title": "वर्तमान परीक्षण फ़ाइल चलाएँ",
