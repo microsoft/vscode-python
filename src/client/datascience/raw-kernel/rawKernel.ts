@@ -229,10 +229,6 @@ export class RawKernel implements Kernel.IKernel {
             // Send off our input reply no futures or promises
             this.jmpConnection.sendMessage(inputReplyMessage);
         }
-
-        // RAWKERNEL: What should we do here? Throw?
-        // Probably should not get here if session is not available
-        throw new Error('No session available?');
     }
 
     // On dispose close down our connection and get rid of saved futures

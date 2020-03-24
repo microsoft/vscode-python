@@ -186,7 +186,6 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite name>",
-                "--grep", "RawSession",
                 "--timeout=300000"
             ],
             "outFiles": [
