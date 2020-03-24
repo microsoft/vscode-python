@@ -17,3 +17,4 @@ define('@jupyter-widgets/controls', () => widgets);
 define('@jupyter-widgets/base', () => base);
 define('@jupyter-widgets/output', () => outputWidgets);
 define('@jupyter-widgets/jupyterlab-manager', () => jupyterlab);
+define('@jupyter-widgets/jupyterlab-manager/dist/libembed-amd', () => jupyterlab);

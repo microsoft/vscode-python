@@ -171,7 +171,6 @@ module.exports = [
         // embed library that depends on requirejs, and can load third-party widgets dynamically
         entry: path.join(__dirname, 'lib/libembed-amd.js'),
         output: {
-            library: '@jupyter-widgets/jupyterlab-manager/dist/libembed-amd',
             filename: 'libembed-amd.js',
             path: path.resolve(outDir, 'dist', 'lib', 'amd'),
             publicPath: publicPath,

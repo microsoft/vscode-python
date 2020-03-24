@@ -77,7 +77,7 @@ export function requireLoader(moduleName, moduleVersion) {
  * the widgets' models and views classes. (The default loader looks them up on unpkg.com)
  */
 export function renderWidgets(element = document.documentElement, loader = requireLoader) {
-    requirePromise(['@jupyter-widgets/jupyterlab-manager']).then(manager => {
+    requirePromise(['manager']).then(manager => {
         let managerFactory = () => {
             return new manager.WidgetManager({ loader: loader });
         };

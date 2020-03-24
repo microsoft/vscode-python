@@ -4,26 +4,19 @@
 'use strict';
 
 import { IClientSession } from '@jupyterlab/apputils';
-import { nbformat } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
+import { INotebookModel, NotebookModel } from '@jupyterlab/notebook/lib';
 import { IRenderMime } from '@jupyterlab/rendermime';
 import { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
 import { Widget } from '@phosphor/widgets';
 import { Signal } from './signal';
 // tslint:disable: no-any
-export class DocumentContext implements DocumentRegistry.IContext<any>, IClientSession {
+export class DocumentContext implements DocumentRegistry.IContext<INotebookModel>, IClientSession {
     public pathChanged = new Signal<this, string>();
     public fileChanged = new Signal<this, Contents.IModel>();
     public saveState = new Signal<this, DocumentRegistry.SaveState>();
     public disposed = new Signal<this, void>();
-    public model: nbformat.INotebookContent = {
-        metadata: {
-            orig_nbformat: 4
-        },
-        nbformat: 4,
-        cells: [],
-        nbformat_minor: 0
-    };
+    public model: INotebookModel;
     public session: IClientSession = this;
     public path: string;
     public localPath: string;
@@ -45,6 +38,9 @@ export class DocumentContext implements DocumentRegistry.IContext<any>, IClientS
     public kernelDisplayName: string;
     constructor(public kernel: Kernel.IKernelConnection) {
         // We are the session.
+
+        // Generate a dummy notebook model
+        this.model = new NotebookModel();
     }
 
     public changeKernel(_options: Partial<Kernel.IModel>): Promise<Kernel.IKernelConnection> {

@@ -1,6 +1,6 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
-window.require(['@jupyter-widgets/jupterlab-manager/dist/libembed-amd'], function(embed) {
+window.require(['libembed-amd'], function(embed) {
     if (document.readyState === 'complete') {
         embed.renderWidgets();
     } else {
