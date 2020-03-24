@@ -184,6 +184,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [IPyWidgetMessages.IPyWidgets_ShellSend_reply]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_ShellSend_resolve]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_comm_msg]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_comm_msg_reply]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_comm_open]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_display_data_msg]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea,

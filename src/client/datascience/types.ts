@@ -111,7 +111,6 @@ export interface INotebook extends IAsyncDisposable {
     readonly identity: Uri;
     readonly server: INotebookServer;
     readonly status: ServerStatus;
-    readonly ioPub: Event<{ msg: KernelMessage.IIOPubMessage; requestId: string }>;
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
@@ -142,6 +141,7 @@ export interface INotebook extends IAsyncDisposable {
     setKernelSpec(spec: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
     setInterpreter(interpeter: PythonInterpreter): void;
     getLoggers(): INotebookExecutionLogger[];
+    registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>): void;
     registerCommTarget(
         targetName: string,
         callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>

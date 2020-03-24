@@ -6,7 +6,7 @@
 export { WidgetManager } from './manager';
 import * as base from '@jupyter-widgets/base';
 import * as widgets from '@jupyter-widgets/controls';
-import * as outputWidgets from '@jupyter-widgets/output';
+import * as outputWidgets from '@jupyter-widgets/jupyterlab-manager/lib/output';
 import * as embed from './embed';
 import './widgets.css';
 

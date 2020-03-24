@@ -32,6 +32,7 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
     }>();
     private messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
     private messageHookRequests = new Map<string, Deferred<boolean>>();
+    private pendingReplies = new Map<string, Deferred<void>>();
 
     constructor(
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
@@ -79,6 +80,10 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
 
             case IPyWidgetMessages.IPyWidgets_MessageHookResponse:
                 this.handleMessage(message, payload, this.handleMessageHookResponse);
+                break;
+
+            case IPyWidgetMessages.IPyWidgets_comm_msg_reply:
+                this.handleMessage(message, payload, this.handlePendingReply);
                 break;
 
             default:
@@ -133,6 +138,14 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
         }
     }
 
+    private handlePendingReply(msgId: string) {
+        if (this.pendingReplies.has(msgId)) {
+            const promise = this.pendingReplies.get(msgId);
+            promise!.resolve();
+            this.pendingReplies.delete(msgId);
+        }
+    }
+
     private postMessageToWebView<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) {
         // First send to our listeners
         this.postEmitter.fire({ message: type.toString(), payload });
@@ -154,13 +167,13 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
 
     private onCommTargetCallback(_comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) {
         // tslint:disable-next-line: no-any
-        this.serializeDataViews(msg as any);
-        this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_comm_open, msg);
+        const newMsg = this.serializeDataViews(msg as any);
+        this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_comm_open, newMsg as KernelMessage.ICommOpenMsg);
     }
 
-    private serializeDataViews(msg: KernelMessage.IIOPubMessage) {
+    private serializeDataViews(msg: KernelMessage.IIOPubMessage): KernelMessage.IIOPubMessage {
         if (!Array.isArray(msg.buffers) || msg.buffers.length === 0) {
-            return;
+            return msg;
         }
         // tslint:disable-next-line: no-any
         const newBufferView: any[] = [];
@@ -184,7 +197,10 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
             }
         }
 
-        msg.buffers = newBufferView;
+        return {
+            ...msg,
+            buffers: newBufferView
+        };
     }
 
     private async sendIPythonShellMsg(payload: {
@@ -216,18 +232,26 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
                 .catch(ex => {
                     this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_ShellSend_reject, { requestId, msg: ex });
                 });
-            future.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-                this.serializeDataViews(msg);
-                this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub, { requestId, msg });
-
-                if (KernelMessage.isCommMsgMsg(msg)) {
-                    this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_comm_msg, msg as KernelMessage.ICommMsgMsg);
-                }
+            future.onIOPub = async (msg: KernelMessage.IIOPubMessage) => {
+                const newMsg = this.serializeDataViews(msg);
+                this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub, { requestId, msg: newMsg });
+                return this.postCommMessage(newMsg as KernelMessage.ICommMsgMsg);
             };
             future.onReply = (reply: KernelMessage.IShellMessage) => {
                 this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_ShellSend_reply, { requestId, msg: reply });
             };
         }
+    }
+
+    private async postCommMessage(msg: KernelMessage.ICommMsgMsg) {
+        const promise = createDeferred<void>();
+        if (KernelMessage.isCommMsgMsg(msg)) {
+            this.pendingReplies.set(msg.header.msg_id, promise);
+            this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_comm_msg, msg);
+        } else {
+            promise.resolve();
+        }
+        return promise.promise;
     }
 
     private restoreBuffers(buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined) {
@@ -285,20 +309,20 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
         }
 
         // Sign up for io pub messages (could probably do a better job here. Do we want all display data messages?)
-        notebook.ioPub(this.handleOnIOPub.bind(this));
+        notebook.registerIOPubListener(this.handleOnIOPub.bind(this));
     }
 
-    private handleOnIOPub(data: { msg: KernelMessage.IIOPubMessage; requestId: string }) {
-        if (KernelMessage.isDisplayDataMsg(data.msg)) {
-            this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_display_data_msg, data.msg);
-        } else if (KernelMessage.isStatusMsg(data.msg)) {
+    private async handleOnIOPub(msg: KernelMessage.IIOPubMessage): Promise<void> {
+        if (KernelMessage.isDisplayDataMsg(msg)) {
+            this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_display_data_msg, msg);
+        } else if (KernelMessage.isStatusMsg(msg)) {
             // Do nothing.
-        } else if (KernelMessage.isCommOpenMsg(data.msg)) {
+        } else if (KernelMessage.isCommOpenMsg(msg)) {
             // Do nothing, handled in the place we have registered for a target.
-        } else if (KernelMessage.isCommMsgMsg(data.msg)) {
+        } else if (KernelMessage.isCommMsgMsg(msg)) {
             // tslint:disable-next-line: no-any
-            this.serializeDataViews(data.msg as any);
-            this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_comm_msg, data.msg as KernelMessage.ICommMsgMsg);
+            const newMsg = this.serializeDataViews(msg as any);
+            return this.postCommMessage(newMsg as KernelMessage.ICommMsgMsg);
         }
     }
 

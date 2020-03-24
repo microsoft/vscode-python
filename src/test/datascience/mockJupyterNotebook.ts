@@ -29,7 +29,6 @@ export class MockJupyterNotebook implements INotebook {
     >().event;
     public onDisposed = new EventEmitter<void>().event;
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
-    private ioPubEvent = new EventEmitter<{ msg: KernelMessage.IIOPubMessage; requestId: string }>();
 
     constructor(private owner: INotebookServer) {
         noop();
@@ -39,8 +38,10 @@ export class MockJupyterNotebook implements INotebook {
         return this.owner;
     }
 
-    public get ioPub(): Event<{ msg: KernelMessage.IIOPubMessage; requestId: string }> {
-        return this.ioPubEvent.event;
+    public registerIOPubListener(
+        _listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
+    ): void {
+        noop();
     }
 
     public get identity(): Uri {

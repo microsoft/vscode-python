@@ -40,7 +40,6 @@ export class GuestJupyterNotebook
     public onDisposed = new EventEmitter<void>().event;
     private responseQueue: ResponseQueue = new ResponseQueue();
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
-    private ioPubEvent = new EventEmitter<{ msg: KernelMessage.IIOPubMessage; requestId: string }>();
 
     constructor(
         liveShare: ILiveShareApi,
@@ -318,8 +317,10 @@ export class GuestJupyterNotebook
         noop();
     }
 
-    public get ioPub(): Event<{ msg: KernelMessage.IIOPubMessage; requestId: string }> {
-        return this.ioPubEvent.event;
+    public registerIOPubListener(
+        _listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
+    ): void {
+        noop();
     }
 
     private onServerResponse = (args: Object) => {

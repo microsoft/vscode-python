@@ -104,6 +104,10 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                         }
                     }
                 }
+
+                // Have to indicate to the real kernel when this message has been handled. Otherwise the
+                // kernel will start executing before the widget is ready to handle it
+                this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_comm_msg_reply, commMsg.header.msg_id);
                 break;
             }
             case IPyWidgetMessages.IPyWidgets_comm_open:

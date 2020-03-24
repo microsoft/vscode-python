@@ -106,6 +106,7 @@ export enum InteractiveWindowMessages {
 export enum IPyWidgetMessages {
     IPyWidgets_display_data_msg = 'IPyWidgets_display_data_msg',
     IPyWidgets_comm_msg = 'IPyWidgets_comm_msg',
+    IPyWidgets_comm_msg_reply = 'IPyWidgets_comm_msg_reply',
     IPyWidgets_comm_open = 'IPyWidgets_comm_open',
     IPyWidgets_ShellSend = 'IPyWidgets_ShellSend',
     IPyWidgets_ShellCommOpen = 'IPyWidgets_ShellCommOpen',
@@ -491,6 +492,7 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
     public [IPyWidgetMessages.IPyWidgets_comm_open]: KernelMessage.ICommOpenMsg;
     public [IPyWidgetMessages.IPyWidgets_comm_msg]: KernelMessage.ICommMsgMsg;
+    public [IPyWidgetMessages.IPyWidgets_comm_msg_reply]: string;
     public [IPyWidgetMessages.IPyWidgets_display_data_msg]: KernelMessage.IDisplayDataMsg;
     public [IPyWidgetMessages.IPyWidgets_RequestCommInfo_request]: {
         requestId: string;
