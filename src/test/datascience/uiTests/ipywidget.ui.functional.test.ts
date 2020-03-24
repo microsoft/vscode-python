@@ -438,35 +438,35 @@ use(chaiAsPromised);
             test('Render beakerx', async () => {
                 const { notebookUI } = await openBeakerXIpynb();
                 if (!ioc.mockJupyter) {
-                    await assert.eventually.isFalse(notebookUI.cellHasOutput(0));
                     await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
                     await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
+                    await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
                 }
 
-                await notebookUI.executeCell(0);
+                await notebookUI.executeCell(1);
                 await retryIfFail(async () => {
-                    const cellOutputHtml = await notebookUI.getCellOutputHTML(0);
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
                     // Confirm svg graph has been rendered.
                     assert.include(cellOutputHtml, '<svg');
 
                     // Confirm graph legened has been rendered.
-                    const cellOutput = await notebookUI.getCellOutput(0);
+                    const cellOutput = await notebookUI.getCellOutput(1);
                     const legends = await cellOutput.$$('div.plot-legend');
                     assert.isAtLeast(legends.length, 1);
                 });
 
-                await notebookUI.executeCell(1);
+                await notebookUI.executeCell(2);
                 await retryIfFail(async () => {
                     // Confirm graph modal dialog has been rendered.
-                    const cellOutput = await notebookUI.getCellOutput(1);
+                    const cellOutput = await notebookUI.getCellOutput(2);
                     const modals = await cellOutput.$$('div.modal-content');
                     assert.isAtLeast(modals.length, 1);
                 });
 
-                await notebookUI.executeCell(2);
+                await notebookUI.executeCell(3);
                 await retryIfFail(async () => {
                     // Confirm form with fields have been rendered.
-                    const cellOutput = await notebookUI.getCellOutput(2);
+                    const cellOutput = await notebookUI.getCellOutput(3);
                     const textAreas = await cellOutput.$$('div.widget-textarea');
                     assert.isAtLeast(textAreas.length, 1);
                 });
