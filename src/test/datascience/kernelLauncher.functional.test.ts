@@ -9,10 +9,11 @@ import { ChildProcess } from 'child_process';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
+import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
 import { IKernelConnection } from '../../client/datascience/kernel-launcher/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
-import { PYTHON_PATH } from '../common';
+import { PYTHON_PATH, sleep } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 suite('Kernel Launcher', () => {
@@ -56,5 +57,23 @@ suite('Kernel Launcher', () => {
         assert.isOk<ChildProcess>(kernel.process, 'Child Process not found');
 
         kernel.dispose();
+    });
+
+    test('Bind with ZMQ', async () => {
+        const kernel = await kernelLauncher.launch(resource, kernelName);
+
+        try {
+            const zmq = await import('zeromq');
+            const sock = new zmq.Push();
+
+            await sock.bind(`tcp://${kernel.connection.ip}:${kernel.connection.stdin_port}`);
+            sock.send('some work').ignoreErrors(); // This will never return unless there's a listener. Just used for testing the API is available
+            await sleep(50);
+            sock.close();
+        } catch (e) {
+            throw new JupyterZMQBinariesNotFoundError(e.toString());
+        } finally {
+            kernel.dispose();
+        }
     });
 });

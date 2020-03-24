@@ -102,7 +102,13 @@ class KernelProcess implements IKernelProcess {
 }
 
 class KernelFinder implements IKernelFinder {
-    public findKernelSpec(kernelName: string, interpreterPaths: string[]): IJupyterKernelSpec | undefined {
+    private exists = promisify(fs.exists);
+    private readdir = promisify(fs.readdir);
+
+    public async findKernelSpec(
+        kernelName: string,
+        interpreterPaths: string[]
+    ): Promise<IJupyterKernelSpec | undefined> {
         // Jupyter looks for kernels in these paths:
         // https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
         // So we do the same
@@ -111,7 +117,7 @@ class KernelFinder implements IKernelFinder {
 
         for (const entry of cachedPaths.entries()) {
             if (entry[1] === kernelName) {
-                const kernelSpec = fse.readJSONSync(entry[0]);
+                const kernelSpec = await fse.readJSON(entry[0]);
 
                 return {
                     name: kernelSpec.name,
@@ -130,7 +136,7 @@ class KernelFinder implements IKernelFinder {
             const index = path.lastIndexOf(platform.isWindows ? '\\' : '/');
             const fixedPath = path.substring(0, index + 1);
             const secondPart = platform.isWindows ? windowsPaths.get('kernel')! : unixPaths.get('kernel')!;
-            spec = this.getKernelSpec(fixedPath + secondPart, kernelName);
+            spec = await this.getKernelSpec(fixedPath + secondPart, kernelName);
 
             if (spec) {
                 return spec;
@@ -139,15 +145,17 @@ class KernelFinder implements IKernelFinder {
 
         if (platform.isWindows) {
             // system paths
-            spec = this.getKernelSpec('C:\\ProgramData\\jupyter\\kernels\\', kernelName);
+            spec = await this.getKernelSpec('C:\\ProgramData\\jupyter\\kernels\\', kernelName);
             if (spec) {
                 return spec;
             }
 
             // users paths
-            if (fs.existsSync(windowsPaths.get('users')!)) {
-                for (const user of fs.readdirSync(windowsPaths.get('users')!)) {
-                    spec = this.getKernelSpec(
+            const userPathExists = await this.exists(windowsPaths.get('users')!);
+            if (userPathExists) {
+                const users = await this.readdir(windowsPaths.get('users')!);
+                for (const user of users) {
+                    spec = await this.getKernelSpec(
                         windowsPaths.get('users')! + user + windowsPaths.get('jupyter')!,
                         kernelName
                     );
@@ -160,23 +168,25 @@ class KernelFinder implements IKernelFinder {
             // Unix based
         } else {
             // system paths
-            spec = this.getKernelSpec('/usr/share/jupyter/kernels', kernelName);
+            spec = await this.getKernelSpec('/usr/share/jupyter/kernels', kernelName);
             if (spec) {
                 return spec;
             }
 
-            spec = this.getKernelSpec('/usr/local/share/jupyter/kernels', kernelName);
+            spec = await this.getKernelSpec('/usr/local/share/jupyter/kernels', kernelName);
             if (spec) {
                 return spec;
             }
 
             // users paths
-            if (fs.existsSync(unixPaths.get('home')!)) {
-                for (const user of fs.readdirSync(unixPaths.get('home')!)) {
+            const userPathExists = await this.exists(unixPaths.get('home')!);
+            if (userPathExists) {
+                const users = await this.readdir(unixPaths.get('home')!);
+                for (const user of users) {
                     const secondPart = platform.isMac
                         ? unixPaths.get('macJupyterPath')!
                         : unixPaths.get('linuxJupyterPath')!;
-                    spec = this.getKernelSpec(unixPaths.get('home')! + user + secondPart, kernelName);
+                    spec = await this.getKernelSpec(unixPaths.get('home')! + user + secondPart, kernelName);
 
                     if (spec) {
                         return spec;
@@ -188,14 +198,15 @@ class KernelFinder implements IKernelFinder {
         return undefined;
     }
 
-    public getKernelSpec(path: string, kernelName: string): IJupyterKernelSpec | undefined {
+    public async getKernelSpec(path: string, kernelName: string): Promise<IJupyterKernelSpec | undefined> {
         const kernelJSON = '\\kernel.json';
+        const pathExists = await this.exists(path);
 
-        if (fs.existsSync(path)) {
-            const kernels = fs.readdirSync(path);
+        if (pathExists) {
+            const kernels = await this.readdir(path);
 
             for (const kernel of kernels) {
-                const kernelSpec = fse.readJSONSync(path + kernel + kernelJSON);
+                const kernelSpec = await fse.readJSON(path + kernel + kernelJSON);
                 cachedPaths.set(path + kernel + kernelJSON, kernelSpec.display_name);
 
                 if (kernelName === kernelSpec.name || kernelName === kernelSpec.display_name) {
@@ -239,7 +250,7 @@ export class KernelLauncher implements IKernelLauncher {
             const index = currentInterpreter.path.lastIndexOf(platform.isWindows ? '\\' : '/');
             const fixedPath = currentInterpreter.path.substring(0, index + 1);
             const secondPart = platform.isWindows ? windowsPaths.get('kernel')! : unixPaths.get('kernel')!;
-            kernelSpec = finder.getKernelSpec(fixedPath + secondPart, kernelName);
+            kernelSpec = await finder.getKernelSpec(fixedPath + secondPart, kernelName);
         } else {
             const interpreters = await this.interpreterService.getInterpreters();
 
@@ -248,7 +259,7 @@ export class KernelLauncher implements IKernelLauncher {
                 interpreterPaths.push(interp.path);
             }
 
-            kernelSpec = finder.findKernelSpec(kernelName, interpreterPaths);
+            kernelSpec = await finder.findKernelSpec(kernelName, interpreterPaths);
         }
 
         const kernel = new KernelProcess(interpreterUri, this.executionFactory, kernelSpec);

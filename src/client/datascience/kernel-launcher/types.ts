@@ -31,5 +31,6 @@ export interface IKernelProcess extends IDisposable {
 }
 
 export interface IKernelFinder {
-    findKernelSpec(kernelName: string, interpreterPaths: string[]): IJupyterKernelSpec | undefined;
+    findKernelSpec(kernelName: string, interpreterPaths: string[]): Promise<IJupyterKernelSpec | undefined>;
+    getKernelSpec(path: string, kernelName: string): Promise<IJupyterKernelSpec | undefined>;
 }
