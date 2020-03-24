@@ -6,7 +6,7 @@
     "python.command.python.runtests.title": "सभी टेस्ट चलाएं",
     "python.command.python.debugtests.title": "सभी टेस्ट डीबग करें",
     "python.command.python.execInTerminal.title": "टर्मिनल में पायथन फाइल चलाएं",
-    "python.command.python.setInterpreter.title": "इंटरप्रेटर चुनें",
+    "python.command.python.setInterpreter.title": "इंटरप्रिटर चुनें",
     "python.command.python.refactorExtractVariable.title": "वेरिएबल निकालें",
     "python.command.python.refactorExtractMethod.title": "मेथड निकालें",
     "python.command.python.viewTestOutput.title": "टेस्ट आउटपुट दिखाएँ",
