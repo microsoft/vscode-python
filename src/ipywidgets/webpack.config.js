@@ -154,29 +154,5 @@ module.exports = [
                 }
             ]
         }
-    },
-    {
-        // script that renders widgets using the amd embedding and can render third-party custom widgets
-        entry: path.join(__dirname, 'lib/embed-amd-render.js'),
-        output: {
-            filename: 'embed-amd-render.js',
-            path: path.resolve(outDir, 'dist', 'lib', 'amd'),
-            publicPath: publicPath
-        },
-        module: { rules: rules },
-        mode: 'production'
-    },
-
-    {
-        // embed library that depends on requirejs, and can load third-party widgets dynamically
-        entry: path.join(__dirname, 'lib/libembed-amd.js'),
-        output: {
-            filename: 'libembed-amd.js',
-            path: path.resolve(outDir, 'dist', 'lib', 'amd'),
-            publicPath: publicPath,
-            libraryTarget: 'amd'
-        },
-        module: { rules: rules },
-        mode: 'production'
     }
 ];

@@ -151,7 +151,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
         const model = await modelPromise;
         const view = await this.manager.create_view(model, { el: ele });
         // tslint:disable-next-line: no-any
-        return this.manager.display_view(view, { el: ele }).then(vw => ({ dispose: vw.remove.bind(vw) }));
+        return this.manager.display_view(data, view, { node: ele });
     }
     public sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) {
         this.dispatcher(type, payload);

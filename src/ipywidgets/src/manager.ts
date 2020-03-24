@@ -7,6 +7,7 @@ import { shims } from '@jupyter-widgets/base';
 import * as jupyterlab from '@jupyter-widgets/jupyterlab-manager';
 import { RenderMimeRegistry, standardRendererFactories } from '@jupyterlab/rendermime';
 import { Kernel } from '@jupyterlab/services';
+import { Widget } from '@phosphor/widgets';
 import { DocumentContext } from './documentContext';
 import { requireLoader } from './widgetLoader';
 
@@ -68,9 +69,28 @@ export class WidgetManager extends jupyterlab.WidgetManager {
             .requestCommInfo({ target: this.comm_target_name })
             .then(reply => (reply.content as any).comms);
     }
-    protected loadClass(className: string, moduleName: string, moduleVersion: string): Promise<any> {
-        return super
-            .loadClass(className, moduleName, moduleVersion)
-            .catch(() => requireLoader(moduleName, moduleVersion));
+    public async display_view(msg: any, view: Backbone.View<Backbone.Model>, options: any): Promise<Widget> {
+        const widget = await super.display_view(msg, view, options);
+        const element = options.node ? (options.node as HTMLElement) : this.el;
+        // When do we detach?
+        Widget.attach(widget, element);
+        return widget;
+    }
+    protected async loadClass(className: string, moduleName: string, moduleVersion: string): Promise<any> {
+        // Call the base class to try and load. If that fails, look locally
+        const result = await super.loadClass(className, moduleName, moduleVersion).catch(async x => {
+            const m = await requireLoader(moduleName, moduleVersion);
+            if (m && m[className]) {
+                return m[className];
+            }
+            throw x;
+        });
+
+        // Check it has a _deserialize_state
+        if (!result._deserialize_state) {
+            window.console.log('_deserialize_state not found on class');
+        }
+
+        return result;
     }
 }

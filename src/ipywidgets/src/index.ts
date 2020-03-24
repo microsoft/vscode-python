@@ -6,8 +6,8 @@
 export { WidgetManager } from './manager';
 import * as base from '@jupyter-widgets/base';
 import * as widgets from '@jupyter-widgets/controls';
-import * as jupyterlab from '@jupyter-widgets/jupyterlab-manager';
 import * as outputWidgets from '@jupyter-widgets/output';
+import * as embed from './embed';
 import './widgets.css';
 
 // Export the following for `requirejs`.
@@ -16,5 +16,12 @@ const define = (window as any).define || function() {};
 define('@jupyter-widgets/controls', () => widgets);
 define('@jupyter-widgets/base', () => base);
 define('@jupyter-widgets/output', () => outputWidgets);
-define('@jupyter-widgets/jupyterlab-manager', () => jupyterlab);
-define('@jupyter-widgets/jupyterlab-manager/dist/libembed-amd', () => jupyterlab);
+
+// Render existing widgets without a kernel
+if (document.readyState === 'complete') {
+    embed.renderWidgets();
+} else {
+    window.addEventListener('load', () => {
+        embed.renderWidgets();
+    });
+}
