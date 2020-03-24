@@ -23,8 +23,8 @@
     "python.command.python.runLinting.title": "Linting चलाएं",
     "python.snippet.launch.standard.label": "पायथन: वर्तमान फ़ाइल",
     "python.snippet.launch.module.label": "पायथन: मॉड्यूल",
-    "python.snippet.launch.django.label": "Python: Django",
-    "python.snippet.launch.flask.label": "Python: Flask",
+    "python.snippet.launch.django.label": "पायथन: Django",
+    "python.snippet.launch.flask.label": "पायथन: Flask",
     "python.snippet.launch.pyramid.label": "पायथन: Pyramid अनुप्रयोग",
     "python.snippet.launch.attach.label": "पायथन: रिमोट अटैच",
     "LanguageService.bannerLabelYes": "हाँ, अब सर्वेक्षण करें"
