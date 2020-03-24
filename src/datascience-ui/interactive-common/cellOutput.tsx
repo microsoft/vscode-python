@@ -273,6 +273,13 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     view.dispose();
                     return;
                 }
+                // No support for theming of ipywidgets, hence white bg for ipywidgets.
+                if (
+                    this.ipyWidgetRef.current &&
+                    !this.ipyWidgetRef.current?.className.includes('cell-output-ipywidget-background')
+                ) {
+                    this.ipyWidgetRef.current.className += ' cell-output-ipywidget-background';
+                }
                 this.renderedView.push(view);
                 delayedRenderCallback(renderOutput, delay);
             };
