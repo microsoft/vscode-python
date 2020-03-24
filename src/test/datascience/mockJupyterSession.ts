@@ -238,6 +238,36 @@ export class MockJupyterSession implements IJupyterSession {
         };
     }
 
+    public requestCommInfo(
+        _content: KernelMessage.ICommInfoRequestMsg['content']
+    ): Promise<KernelMessage.ICommInfoReplyMsg> {
+        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommInfoReplyMsg>({
+            msgType: 'comm_info_reply',
+            channel: 'shell',
+            content: {
+                status: 'ok'
+                // tslint:disable-next-line: no-any
+            } as any,
+            metadata: {},
+            session: '1',
+            username: '1'
+        });
+
+        return Promise.resolve(shellMessage);
+    }
+    public registerMessageHook(
+        _msgId: string,
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        noop();
+    }
+    public removeMessageHook(
+        _msgId: string,
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        noop();
+    }
+
     private findCell = (code: string): ICell => {
         // Match skipping line separators
         const withoutLines = code.replace(LineFeedRegEx, '').toLowerCase();

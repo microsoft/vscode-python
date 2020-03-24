@@ -340,6 +340,36 @@ export class JupyterSession implements IJupyterSession {
         }
     }
 
+    public requestCommInfo(
+        content: KernelMessage.ICommInfoRequestMsg['content']
+    ): Promise<KernelMessage.ICommInfoReplyMsg> {
+        if (this.session?.kernel) {
+            return this.session.kernel.requestCommInfo(content);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+    public registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        if (this.session?.kernel) {
+            return this.session.kernel.registerMessageHook(msgId, hook);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+    public removeMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        if (this.session?.kernel) {
+            return this.session.kernel.removeMessageHook(msgId, hook);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+
     private getServerStatus(): ServerStatus {
         if (this.session) {
             switch (this.session.kernel.status) {

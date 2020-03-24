@@ -4,6 +4,7 @@
 'use strict';
 
 import { IClientSession } from '@jupyterlab/apputils';
+import { nbformat } from '@jupyterlab/coreutils';
 import { DocumentRegistry } from '@jupyterlab/docregistry';
 import { IRenderMime } from '@jupyterlab/rendermime';
 import { Contents, Kernel, KernelMessage, Session } from '@jupyterlab/services';
@@ -15,7 +16,14 @@ export class DocumentContext implements DocumentRegistry.IContext<any>, IClientS
     public fileChanged = new Signal<this, Contents.IModel>();
     public saveState = new Signal<this, DocumentRegistry.SaveState>();
     public disposed = new Signal<this, void>();
-    public model: any = {};
+    public model: nbformat.INotebookContent = {
+        metadata: {
+            orig_nbformat: 4
+        },
+        nbformat: 4,
+        cells: [],
+        nbformat_minor: 0
+    };
     public session: IClientSession = this;
     public path: string;
     public localPath: string;

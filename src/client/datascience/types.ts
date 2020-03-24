@@ -157,6 +157,12 @@ export interface INotebook extends IAsyncDisposable {
         KernelMessage.IShellMessage<'comm_msg'>,
         KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
     >;
+    requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
+    registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void;
+    removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
 }
 
 export interface INotebookServerOptions {
@@ -266,6 +272,12 @@ export interface IJupyterSession extends IAsyncDisposable {
         KernelMessage.IShellMessage<'comm_msg'>,
         KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
     >;
+    requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
+    registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void;
+    removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');

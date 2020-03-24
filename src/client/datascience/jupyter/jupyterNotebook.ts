@@ -655,6 +655,36 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
+    public requestCommInfo(
+        content: KernelMessage.ICommInfoRequestMsg['content']
+    ): Promise<KernelMessage.ICommInfoReplyMsg> {
+        if (this.session) {
+            return this.session.requestCommInfo(content);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+    public registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        if (this.session) {
+            return this.session.registerMessageHook(msgId, hook);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+    public removeMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        if (this.session) {
+            return this.session.removeMessageHook(msgId, hook);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+
     private async initializeMatplotlib(cancelToken?: CancellationToken): Promise<void> {
         const settings = this.configService.getSettings(this.resource).datascience;
         if (settings && settings.themeMatplotlibPlots) {

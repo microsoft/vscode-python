@@ -113,6 +113,10 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                 this.handleCommInfo(payload);
                 break;
 
+            case IPyWidgetMessages.IPyWidgets_MessageHookCall:
+                this.handleMessageHookCall(payload);
+                break;
+
             default:
                 await this.shellCallbackManager.handleShellCallbacks(msg, payload);
                 break;
@@ -136,6 +140,27 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         // tslint:disable-next-line: no-any
         if (promise && (promise as any).then) {
             await promise;
+        }
+    }
+    private handleMessageHookCall(args: { requestId: string; msg: KernelMessage.IIOPubMessage }) {
+        const hook = this.messageHooks.get(args.msg.header.msg_id);
+        if (hook) {
+            const result = hook(args.msg);
+            // tslint:disable-next-line: no-any
+            if ((result as any).then) {
+                // tslint:disable-next-line: no-any
+                (result as any).then((r: boolean) => {
+                    this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_MessageHookResponse, {
+                        requestId: args.requestId,
+                        result: r
+                    });
+                });
+            } else {
+                this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_MessageHookResponse, {
+                    requestId: args.requestId,
+                    result: !result
+                });
+            }
         }
     }
     private handleCommInfo(reply: { requestId: string; msg: KernelMessage.ICommInfoReplyMsg }) {
