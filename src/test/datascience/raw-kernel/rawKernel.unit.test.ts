@@ -282,10 +282,32 @@ suite('Data Science - RawKernel', () => {
             const reply = await inspectPromise;
             expect(reply.header.msg_id).to.equal(replyMessage.header.msg_id);
         });
+
+        test('RawKernel sendInput messages', async () => {
+            await rawKernel.connect(connectInfo);
+
+            // Check our status at the start
+            expect(rawKernel.status).to.equal('unknown');
+
+            // Create future for inspect request
+            const inputReplyContent: KernelMessage.IInputReplyMsg['content'] = {
+                value: 'input',
+                status: 'ok'
+            };
+            rawKernel.sendInputReply(inputReplyContent);
+
+            expect(mockJmpConnection.messagesSeen.length).to.equal(1);
+            const messageIn = mockJmpConnection.messagesSeen[0] as KernelMessage.IInputReplyMsg;
+            expect(messageIn.header.msg_type).to.equal('input_reply');
+            // Type system kept fussing on the value type, so just any it
+            // tslint:disable-next-line:no-any
+            expect((messageIn.content as any).value).to.equal('input');
+            expect(messageIn.content.status).to.equal('ok');
+        });
     });
 });
 
-function buildStatusMessage(status: Kernel.Status, session: string, parentHeader: KernelMessage.IHeader) {
+export function buildStatusMessage(status: Kernel.Status, session: string, parentHeader: KernelMessage.IHeader) {
     const iopubStatusOptions: KernelMessage.IOptions<KernelMessage.IStatusMsg> = {
         channel: 'iopub',
         session,
@@ -294,4 +316,15 @@ function buildStatusMessage(status: Kernel.Status, session: string, parentHeader
         content: { execution_state: status }
     };
     return KernelMessage.createMessage<KernelMessage.IStatusMsg>(iopubStatusOptions);
+}
+
+export function buildExecuteReplyMessage(session: string, parentHeader: KernelMessage.IHeader<'execute_request'>) {
+    const replyOptions: KernelMessage.IOptions<KernelMessage.IExecuteReplyMsg> = {
+        channel: 'shell',
+        session: session,
+        msgType: 'execute_reply',
+        parentHeader,
+        content: { status: 'ok', execution_count: 1, payload: [], user_expressions: {} }
+    };
+    return KernelMessage.createMessage<KernelMessage.IExecuteReplyMsg>(replyOptions);
 }

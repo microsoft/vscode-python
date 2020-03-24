@@ -118,7 +118,7 @@ export class RawKernel implements Kernel.IKernel {
                 executeOptions
             );
 
-            const newFuture = this.sendShellMessage(executeMessage, disposeOnDone || true);
+            const newFuture = this.sendShellMessage(executeMessage, true, disposeOnDone || true);
 
             return newFuture as Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg>;
         }
@@ -146,7 +146,7 @@ export class RawKernel implements Kernel.IKernel {
                 completeOptions
             );
 
-            return this.sendShellMessage(completeMessage).done as Promise<KernelMessage.ICompleteReplyMsg>;
+            return this.sendShellMessage(completeMessage, true).done as Promise<KernelMessage.ICompleteReplyMsg>;
         }
 
         // RAWKERNEL: What should we do here? Throw?
@@ -172,7 +172,7 @@ export class RawKernel implements Kernel.IKernel {
                 inspectOptions
             );
 
-            return this.sendShellMessage(inspectMessage).done as Promise<KernelMessage.IInspectReplyMsg>;
+            return this.sendShellMessage(inspectMessage, true).done as Promise<KernelMessage.IInspectReplyMsg>;
         }
 
         // RAWKERNEL: What should we do here? Throw?
@@ -182,7 +182,7 @@ export class RawKernel implements Kernel.IKernel {
 
     public sendShellMessage<T extends KernelMessage.ShellMessageType>(
         message: KernelMessage.IShellMessage<T>,
-        _expectReply?: boolean,
+        expectReply?: boolean,
         disposeOnDone?: boolean
     ): Kernel.IShellFuture<KernelMessage.IShellMessage<T>> {
         if (this.jmpConnection) {
@@ -190,7 +190,7 @@ export class RawKernel implements Kernel.IKernel {
             this.jmpConnection.sendMessage(message);
 
             // Next we need to build our future
-            const future = new RawFuture(message, disposeOnDone || true);
+            const future = new RawFuture(message, expectReply || false, disposeOnDone || true);
 
             // RAWKERNEL: DisplayID calculations need to happen here
             this.futures.set(message.header.msg_id, future);
@@ -207,6 +207,25 @@ export class RawKernel implements Kernel.IKernel {
 
         // RAWKERNEL: sending without a connection
         throw new Error('Attemping to send shell message without connection');
+    }
+
+    public sendInputReply(content: KernelMessage.IInputReplyMsg['content']): void {
+        if (this.jmpConnection) {
+            // tslint:disable-next-line:no-require-imports
+            const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+            const inputOptions: KernelMessage.IOptions<KernelMessage.IInputReplyMsg> = {
+                session: this.clientId,
+                channel: 'stdin',
+                msgType: 'input_reply',
+                content
+            };
+            const inputReplyMessage = jupyterLab.KernelMessage.createMessage<KernelMessage.IInputReplyMsg>(
+                inputOptions
+            );
+
+            // Send off our input reply no futures or promises
+            this.jmpConnection.sendMessage(inputReplyMessage);
+        }
     }
 
     // On dispose close down our connection and get rid of saved futures
@@ -269,9 +288,6 @@ export class RawKernel implements Kernel.IKernel {
     public requestCommInfo(
         _content: KernelMessage.ICommInfoRequestMsg['content']
     ): Promise<KernelMessage.ICommInfoReplyMsg> {
-        throw new Error('Not yet implemented');
-    }
-    public sendInputReply(_content: KernelMessage.IInputReplyMsg['content']): void {
         throw new Error('Not yet implemented');
     }
     public connectToComm(_targetName: string, _commId?: string): Kernel.IComm {

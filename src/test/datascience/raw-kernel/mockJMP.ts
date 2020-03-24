@@ -5,6 +5,7 @@ import { IJMPConnection, IJMPConnectionInfo } from '../../../client/datascience/
 
 export class MockJMPConnection implements IJMPConnection {
     public firstHeaderSeen: KernelMessage.IHeader | undefined;
+    public messagesSeen: KernelMessage.IMessage[] = [];
     private callback: ((message: KernelMessage.IMessage) => void) | undefined;
 
     public async connect(_connectInfo: IJMPConnectionInfo): Promise<void> {
@@ -14,6 +15,9 @@ export class MockJMPConnection implements IJMPConnection {
         if (!this.firstHeaderSeen) {
             this.firstHeaderSeen = message.header;
         }
+
+        this.messagesSeen.push(message);
+
         return;
     }
     public subscribe(handlerFunc: (message: KernelMessage.IMessage) => void): void {

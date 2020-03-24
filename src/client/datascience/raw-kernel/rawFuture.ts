@@ -21,13 +21,19 @@ export class RawFuture<
     private reply: (msg: REPLY) => void | PromiseLike<void> = noop;
     private replyMessage: REPLY | undefined;
     private disposeOnDone: boolean;
-    private idleSeen: boolean;
+    private idleSeen: boolean = false;
+    private replySeen: boolean = false;
 
-    constructor(msg: REQUEST, disposeOnDone: boolean) {
+    constructor(msg: REQUEST, expectReply: boolean, disposeOnDone: boolean) {
         this.msg = msg;
         this.donePromise = createDeferred<REPLY>();
         this.disposeOnDone = disposeOnDone;
-        this.idleSeen = false;
+
+        // If we don't expect a reply then indicate that we've already seen one
+        // for done checks
+        if (!expectReply) {
+            this.replySeen = true;
+        }
     }
 
     get done(): Promise<REPLY | undefined> {
@@ -122,7 +128,7 @@ export class RawFuture<
         if (jupyterLab.KernelMessage.isStatusMsg(message) && message.content.execution_state === 'idle') {
             this.idleSeen = true;
 
-            if (this.replyMessage) {
+            if (this.replySeen) {
                 this.handleDone();
             }
         }
@@ -141,6 +147,7 @@ export class RawFuture<
         await this.reply(message);
 
         this.replyMessage = message;
+        this.replySeen = true;
 
         // If we've gotten an idle status message we are done now
         if (this.idleSeen) {
