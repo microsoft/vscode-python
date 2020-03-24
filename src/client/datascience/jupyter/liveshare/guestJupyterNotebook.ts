@@ -35,7 +35,7 @@ export class GuestJupyterNotebook
     extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
     implements INotebook, ILiveShareParticipant {
     private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
-        if (this._jupyterLab) {
+        if (!this._jupyterLab) {
             // tslint:disable-next-line:no-require-imports
             this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
         }
