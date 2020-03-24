@@ -138,6 +138,12 @@ use(chaiAsPromised);
         async function openIPySheetsIpynb() {
             return openNotebookFile('ipySheet_widgets.ipynb');
         }
+        async function openBeakerXIpynb() {
+            return openNotebookFile('beakerx_widgets.ipynb');
+        }
+        async function openBqplotIpynb() {
+            return openNotebookFile('bqplot_widgets.ipynb');
+        }
         async function openIPyVolumeIpynb() {
             return openNotebookFile('ipyvolume_widgets.ipynb');
         }
@@ -237,6 +243,7 @@ use(chaiAsPromised);
             await retryIfFail(async () => {
                 const cellOutput = await notebookUI.getCellOutputHTML(3);
 
+                // Confirm cells with output has been rendered.
                 assert.include(cellOutput, 'Hello</td>');
                 assert.include(cellOutput, 'World</td>');
             });
@@ -426,6 +433,100 @@ use(chaiAsPromised);
                     assert.include(cellOutputHtml, '<canvas ');
                     cellOutputHtml = await notebookUI.getCellOutputHTML(8);
                     assert.include(cellOutputHtml, '<canvas ');
+                });
+            });
+            test('Render beakerx', async () => {
+                const { notebookUI } = await openBeakerXIpynb();
+                if (!ioc.mockJupyter) {
+                    await assert.eventually.isFalse(notebookUI.cellHasOutput(0));
+                    await assert.eventually.isFalse(notebookUI.cellHasOutput(1));
+                    await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
+                }
+
+                await notebookUI.executeCell(0);
+                await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(0);
+                    // Confirm svg graph has been rendered.
+                    assert.include(cellOutputHtml, '<svg');
+
+                    // Confirm graph legened has been rendered.
+                    const cellOutput = await notebookUI.getCellOutput(0);
+                    const legends = await cellOutput.$$('div.plot-legend');
+                    assert.isAtLeast(legends.length, 1);
+                });
+
+                await notebookUI.executeCell(1);
+                await retryIfFail(async () => {
+                    // Confirm graph modal dialog has been rendered.
+                    const cellOutput = await notebookUI.getCellOutput(1);
+                    const modals = await cellOutput.$$('div.modal-content');
+                    assert.isAtLeast(modals.length, 1);
+                });
+
+                await notebookUI.executeCell(2);
+                await retryIfFail(async () => {
+                    // Confirm form with fields have been rendered.
+                    const cellOutput = await notebookUI.getCellOutput(2);
+                    const textAreas = await cellOutput.$$('div.widget-textarea');
+                    assert.isAtLeast(textAreas.length, 1);
+                });
+            });
+            test('Render bqplot', async () => {
+                const { notebookUI } = await openBqplotIpynb();
+                if (!ioc.mockJupyter) {
+                    await assert.eventually.isFalse(notebookUI.cellHasOutput(2));
+                    await assert.eventually.isFalse(notebookUI.cellHasOutput(4));
+                }
+
+                await notebookUI.executeCell(1);
+                await notebookUI.executeCell(2);
+
+                await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(2);
+                    // Confirm svg graph has been rendered.
+                    assert.include(cellOutputHtml, '<svg');
+                    assert.include(cellOutputHtml, 'plotarea_events');
+                });
+
+
+                // Render empty plot
+                await notebookUI.executeCell(4);
+                await retryIfFail(async () => {
+                    const cellOutput = await notebookUI.getCellOutput(4);
+                    // Confirm no points have been rendered.
+                    const dots = await cellOutput.$$('path.dot');
+                    assert.equal(dots.length, 0);
+                });
+
+                // Draw points on previous plot.
+                await notebookUI.executeCell(5);
+                await retryIfFail(async () => {
+                    const cellOutput = await notebookUI.getCellOutput(4);
+                    // Confirm points have been rendered.
+                    const dots = await cellOutput.$$('path.dot');
+                    assert.isAtLeast(dots.length, 1);
+                });
+
+                // Chage color of plot points to red.
+                await notebookUI.executeCell(7);
+                await retryIfFail(async () => {
+                    const cellOutput = await notebookUI.getCellOutput(4);
+                    const dots = await cellOutput.$$('path.dot');
+                    assert.isAtLeast(dots.length, 1);
+                    const dotHtml = await notebookUI.page?.evaluate(ele => ele.outerHTML, dots[0]);
+                    // Confirm color of dot is red.
+                    assert.include(dotHtml || '', 'red');
+                });
+
+                // Chage color of plot points to red.
+                await notebookUI.executeCell(8);
+                await retryIfFail(async () => {
+                    const cellOutput = await notebookUI.getCellOutput(4);
+                    const dots = await cellOutput.$$('path.dot');
+                    assert.isAtLeast(dots.length, 1);
+                    const dotHtml = await notebookUI.page?.evaluate(ele => ele.outerHTML, dots[0]);
+                    // Confirm color of dot is red.
+                    assert.include(dotHtml || '', 'yellow');
                 });
             });
         });
