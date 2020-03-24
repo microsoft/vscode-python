@@ -107,6 +107,12 @@ use(chaiAsPromised);
         async function openIPySheetsIpynb() {
             return openNotebookFile('ipySheet_widgets.ipynb');
         }
+        async function openIPyVolumeIpynb() {
+            return openNotebookFile('ipyvolume_widgets.ipynb');
+        }
+        async function openPyThreejsIpynb() {
+            return openNotebookFile('pythreejs_widgets.ipynb');
+        }
 
         test('Notebook has 3 cells', async () => {
             const { notebookUI } = await openABCIpynb();
@@ -354,6 +360,53 @@ use(chaiAsPromised);
 
                     assert.include(cellOutputHtml, '>50.000</td>');
                     assert.include(cellOutputHtml, '>100.000</td>');
+                });
+            });
+            test('Render ipyvolume', async () => {
+                const { notebookUI } = await openIPyVolumeIpynb();
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+
+                await notebookUI.executeCell(1);
+                await notebookUI.executeCell(2);
+                await notebookUI.executeCell(3);
+                await notebookUI.executeCell(4);
+
+                // Confirm sliders and canvas are rendered.
+                await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
+                    assert.include(cellOutputHtml, '<canvas ');
+
+                    const cellOutput = await notebookUI.getCellOutput(1);
+                    const sliders = await cellOutput.$$('div.ui-slider');
+                    assert.equal(sliders.length, 2);
+                });
+
+                // Confirm canvas is rendered.
+                await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(4);
+                    assert.include(cellOutputHtml, '<canvas ');
+                });
+            });
+            test('Render pythreejs', async () => {
+                const { notebookUI } = await openPyThreejsIpynb();
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(3));
+                await assert.eventually.isFalse(notebookUI.cellHasOutput(8));
+
+                await notebookUI.executeCell(1);
+                await notebookUI.executeCell(2);
+                await notebookUI.executeCell(3);
+                await notebookUI.executeCell(4);
+                await notebookUI.executeCell(5);
+                await notebookUI.executeCell(6);
+                await notebookUI.executeCell(7);
+                await notebookUI.executeCell(8);
+
+                // Confirm canvas is rendered.
+                await retryIfFail(async () => {
+                    let cellOutputHtml = await notebookUI.getCellOutputHTML(3);
+                    assert.include(cellOutputHtml, '<canvas ');
+                    cellOutputHtml = await notebookUI.getCellOutputHTML(8);
+                    assert.include(cellOutputHtml, '<canvas ');
                 });
             });
         });

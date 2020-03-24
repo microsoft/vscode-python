@@ -38,7 +38,7 @@ const maxWaitTimeForMessage = 15_000;
 export const waitTimeForUIToUpdate = 3_000;
 
 export class BaseWebUI implements IAsyncDisposable {
-    protected page?: playwright.Page;
+    public page?: playwright.Page;
     private readonly disposables: IDisposable[] = [];
     private readonly webServerPromise = createDeferred<WebServer>();
     private webServer?: WebServer;
@@ -49,6 +49,9 @@ export class BaseWebUI implements IAsyncDisposable {
         }
         await this.browser?.close();
         await this.page?.close();
+    }
+    public async type(text: string): Promise<void> {
+        await this.page?.keyboard.type(text);
     }
     public _setWebServer(webServer: WebServer) {
         this.webServer = webServer;
