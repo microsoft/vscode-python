@@ -11,7 +11,6 @@ import * as path from 'path';
 import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
-import { DeprecatePythonPath } from '../client/common/experimentGroups';
 import { IProcessService } from '../client/common/process/types';
 import { IExperimentsManager, IInterpreterPathService, IPythonSettings, Resource } from '../client/common/types';
 import { PythonInterpreter } from '../client/interpreter/contracts';
@@ -228,7 +227,11 @@ async function setPythonPathInWorkspace(
     if (serviceContainer) {
         interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-        inExperiment = abExperiments.inExperiment(DeprecatePythonPath.experiment);
+        /**
+         * 'DeprecatePythonPath - experiment' string is used directly instead of `DeprecatePythonPath.experiment` object,
+         * because`DeprecatePythonPath` object cannot be imported before running tests in CI
+         */
+        inExperiment = abExperiments.inExperiment('DeprecatePythonPath - experiment');
     }
     const value =
         inExperiment && interpreterPathService
