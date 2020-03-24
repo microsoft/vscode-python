@@ -36,7 +36,7 @@ export class RawKernel implements Kernel.IKernel {
 
     // IKernelConnection properties
     get id(): string {
-        throw new Error('Not yet implemented');
+        return this._id;
     }
     get name(): string {
         throw new Error('Not yet implemented');
@@ -70,6 +70,7 @@ export class RawKernel implements Kernel.IKernel {
     private jmpConnection: IJMPConnection;
     private messageChain: Promise<void> = Promise.resolve();
 
+    private _id: string;
     private _clientId: string;
     private _status: Kernel.Status;
     private _statusChanged: Signal<this, Kernel.Status>;
@@ -81,11 +82,13 @@ export class RawKernel implements Kernel.IKernel {
     >();
 
     // JMP connection should be injected, but no need to yet until it actually exists
-    constructor(connection: IJMPConnection) {
-        this._clientId = uuid();
+    constructor(jmpConnection: IJMPConnection, clientID: string) {
+        // clientID is controlled by the session as we keep the same id
+        this._clientId = clientID;
+        this._id = uuid();
         this._status = 'unknown';
         this._statusChanged = new Signal<this, Kernel.Status>(this);
-        this.jmpConnection = connection;
+        this.jmpConnection = jmpConnection;
     }
 
     public async connect(connectInfo: IJMPConnectionInfo) {
@@ -226,6 +229,10 @@ export class RawKernel implements Kernel.IKernel {
             // Send off our input reply no futures or promises
             this.jmpConnection.sendMessage(inputReplyMessage);
         }
+
+        // RAWKERNEL: What should we do here? Throw?
+        // Probably should not get here if session is not available
+        throw new Error('No session available?');
     }
 
     // On dispose close down our connection and get rid of saved futures

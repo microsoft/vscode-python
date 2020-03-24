@@ -14,6 +14,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { JupyterSessionStartError } from '../baseJupyterSession';
 import { Commands, Telemetry } from '../constants';
 import {
     IConnection,
@@ -25,7 +26,6 @@ import {
     INotebookServerOptions
 } from '../types';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
-import { JupyterSessionStartError } from './jupyterSession';
 import { createRemoteConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterZMQBinariesNotFoundError } from './jupyterZMQBinariesNotFoundError';

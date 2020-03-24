@@ -4,6 +4,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { Slot } from '@phosphor/signaling';
 import { assert, expect } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import * as uuid from 'uuid/v4';
 import { RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
 import { IJMPConnection, IJMPConnectionInfo } from '../../../client/datascience/types';
 import { MockJMPConnection } from './mockJMP';
@@ -19,7 +20,7 @@ suite('Data Science - RawKernel', () => {
             jmpConnection = mock<IJMPConnection>();
             when(jmpConnection.connect(anything())).thenResolve();
             when(jmpConnection.subscribe(anything())).thenReturn();
-            rawKernel = new RawKernel(instance(jmpConnection));
+            rawKernel = new RawKernel(instance(jmpConnection), uuid());
 
             connectInfo = {
                 version: 0,
@@ -39,6 +40,8 @@ suite('Data Science - RawKernel', () => {
             await rawKernel.connect(connectInfo);
             verify(jmpConnection.connect(deepEqual(connectInfo))).once();
             verify(jmpConnection.subscribe(anything())).once();
+            // Verify that we have a client id an a kernel id
+            expect(rawKernel.id).to.not.equal(rawKernel.clientId);
         });
 
         test('RawKernel dispose should dispose the jmp', async () => {
@@ -103,7 +106,7 @@ suite('Data Science - RawKernel', () => {
 
         setup(() => {
             mockJmpConnection = new MockJMPConnection();
-            rawKernel = new RawKernel(mockJmpConnection);
+            rawKernel = new RawKernel(mockJmpConnection, uuid());
         });
 
         test('RawKernel executeRequest messages', async () => {

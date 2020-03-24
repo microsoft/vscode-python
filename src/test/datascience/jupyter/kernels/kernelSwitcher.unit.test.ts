@@ -13,10 +13,10 @@ import { ConfigurationService } from '../../../../client/common/configuration/se
 import { IConfigurationService, IPythonSettings } from '../../../../client/common/types';
 import { Common, DataScience } from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
+import { JupyterSessionStartError } from '../../../../client/datascience/baseJupyterSession';
 import { Commands } from '../../../../client/datascience/constants';
 import { JupyterNotebookBase } from '../../../../client/datascience/jupyter/jupyterNotebook';
 import { JupyterServerWrapper } from '../../../../client/datascience/jupyter/jupyterServerWrapper';
-import { JupyterSessionStartError } from '../../../../client/datascience/jupyter/jupyterSession';
 import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';

@@ -9,10 +9,10 @@ import { IApplicationShell } from '../../../common/application/types';
 import { IConfigurationService, Resource } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
+import { JupyterSessionStartError } from '../../baseJupyterSession';
 import { Commands, Settings } from '../../constants';
 import { IConnection, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebook } from '../../types';
 import { JupyterInvalidKernelError } from '../jupyterInvalidKernelError';
-import { JupyterSessionStartError } from '../jupyterSession';
 import { KernelSelector, KernelSpecInterpreter } from './kernelSelector';
 import { LiveKernelModel } from './types';
 
