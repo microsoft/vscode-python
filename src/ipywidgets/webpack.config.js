@@ -14,10 +14,10 @@ const version = require(path.join(
     '..',
     'node_modules',
     '@jupyter-widgets',
-    'html-manager',
+    'jupyterlab-manager',
     'package.json'
 )).version;
-const publicPath = 'https://unpkg.com/@jupyter-widgets/html-manager@' + version + '/dist/';
+const publicPath = 'https://unpkg.com/@jupyter-widgets/jupyterlab-manager@' + version + '/dist/';
 const rules = [
     { test: /\.css$/, use: ['style-loader', 'css-loader'] },
     // jquery-ui loads some images
@@ -68,7 +68,8 @@ const rules = [
 
 module.exports = [
     {
-        mode: 'production',
+        mode: 'development',
+        devtool: 'inline-source-map',
         entry: path.join(outDir, 'index.js'),
         output: {
             filename: 'ipywidgets.js',
@@ -170,7 +171,7 @@ module.exports = [
         // embed library that depends on requirejs, and can load third-party widgets dynamically
         entry: path.join(__dirname, 'lib/libembed-amd.js'),
         output: {
-            library: '@jupyter-widgets/html-manager/dist/libembed-amd',
+            library: '@jupyter-widgets/jupyterlab-manager/dist/libembed-amd',
             filename: 'libembed-amd.js',
             path: path.resolve(outDir, 'dist', 'lib', 'amd'),
             publicPath: publicPath,

@@ -5,6 +5,7 @@
 
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
+import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { IPyWidgetMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ClassicCommShellCallbackManager } from './callbackManager';
@@ -28,6 +29,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
     private commTargetCallbacks = new Map<string, CommTargetCallback>();
     private commsById = new Map<string, Kernel.IComm>();
     private readonly shellCallbackManager = new ClassicCommShellCallbackManager();
+    private pendingCommInfoResponses = new Map<string | undefined, Deferred<KernelMessage.ICommInfoReplyMsg>>();
     constructor(private readonly messageSender: IMessageSender) {}
     /**
      * This method is used by ipywidgets manager.
@@ -43,6 +45,14 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
     }
     public connectToComm(targetName: string, commId: string = uuid()): Kernel.IComm {
         return this.commsById.get(commId) || this.createComm(targetName, commId);
+    }
+    public requestCommInfo(
+        content: KernelMessage.ICommInfoRequestMsg['content']
+    ): Promise<KernelMessage.ICommInfoReplyMsg> {
+        const promiseHolder = createDeferred<KernelMessage.ICommInfoReplyMsg>();
+        this.pendingCommInfoResponses.set(content.target || content.target_name, promiseHolder);
+        this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_RequestCommInfo, content);
+        return promiseHolder.promise;
     }
     public dispose() {
         while (this.handlers.shift()) {
@@ -80,6 +90,10 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
             case IPyWidgetMessages.IPyWidgets_comm_open:
                 await this.handleCommOpen(msg, payload);
                 break;
+            case IPyWidgetMessages.IPyWidgets_ReplyCommInfo:
+                this.handleCommInfoReply(payload);
+                break;
+
             default:
                 await this.shellCallbackManager.handleShellCallbacks(msg, payload);
                 break;

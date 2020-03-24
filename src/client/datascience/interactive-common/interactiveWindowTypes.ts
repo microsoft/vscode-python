@@ -113,7 +113,9 @@ export enum IPyWidgetMessages {
     IPyWidgets_ShellSend_onIOPub = 'IPyWidgets_ShellSend_onIOPub',
     IPyWidgets_ShellSend_reply = 'IPyWidgets_ShellSend_reply',
     IPyWidgets_ShellSend_resolve = 'IPyWidgets_ShellSend_resolve',
-    IPyWidgets_ShellSend_reject = 'IPyWidgets_ShellSend_reject'
+    IPyWidgets_ShellSend_reject = 'IPyWidgets_ShellSend_reject',
+    IPyWidgets_RequestCommInfo = 'IPyWidgets_RequestCommInfo',
+    IPyWidgets_ReplyCommInfo = 'IPyWidgets_ReplyCommInfo'
 }
 export enum NativeCommandType {
     AddToEnd = 0,

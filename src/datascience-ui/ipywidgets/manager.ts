@@ -16,11 +16,11 @@ import {
     IPyWidgetMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ProxyKernel } from './kernel';
-import { IHtmlWidgetManager, IHtmlWidgetManagerCtor, IIPyWidgetManager, IMessageSender } from './types';
+import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, IMessageSender } from './types';
 
 export class WidgetManager implements IIPyWidgetManager, IMessageSender {
     public static instance: WidgetManager;
-    public manager!: IHtmlWidgetManager;
+    public manager!: IJupyterLabWidgetManager;
     private readonly proxyKernel: ProxyKernel;
     /**
      * Contains promises related to model_ids that need to be displayed.
@@ -42,17 +42,17 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
             payload?: M[T]
         ) => void
     ) {
-        this.proxyKernel = new ProxyKernel(this);
+        this.proxyKernel = new ProxyKernel(this, dispatcher);
         try {
-            // The HTMLWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
+            // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
             // tslint:disable-next-line: no-any
-            const HtmlWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IHtmlWidgetManagerCtor;
-            if (!HtmlWidgetManager) {
-                throw new Error('HtmlWidgetManager not defined. Please include/check ipywidgets.js file');
+            const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
+            if (!JupyterLabWidgetManager) {
+                throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
             }
             // tslint:disable-next-line: no-any
             const kernel = (this.proxyKernel as any) as Kernel.IKernel;
-            this.manager = new HtmlWidgetManager(kernel, widgetContainer);
+            this.manager = new JupyterLabWidgetManager(kernel, widgetContainer);
             WidgetManager.instance = this;
             this.registerPostOffice();
         } catch (ex) {

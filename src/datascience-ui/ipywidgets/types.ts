@@ -16,9 +16,12 @@ export type CommTargetCallback = (comm: Kernel.IComm, msg: KernelMessage.ICommOp
 type WidgetView = { remove: Function };
 type WidgetModel = {};
 
-export type IHtmlWidgetManagerCtor = new (kernel: Kernel.IKernelConnection, el: HTMLElement) => IHtmlWidgetManager;
+export type IJupyterLabWidgetManagerCtor = new (
+    kernel: Kernel.IKernelConnection,
+    el: HTMLElement
+) => IJupyterLabWidgetManager;
 
-export interface IHtmlWidgetManager {
+export interface IJupyterLabWidgetManager {
     /**
      * Close all widgets and empty the widget state.
      * @return Promise that resolves when the widget state is cleared.

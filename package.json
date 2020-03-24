@@ -2907,6 +2907,7 @@
         "webpack": "webpack"
     },
     "dependencies": {
+        "@jupyter-widgets/schema": "^0.4.0",
         "@jupyterlab/coreutils": "^3.1.0",
         "@jupyterlab/services": "^4.2.0",
         "@koa/cors": "^3.0.0",
@@ -2971,19 +2972,19 @@
         "zeromq": "^6.0.0-beta.6"
     },
     "devDependencies": {
-        "@babel/cli": "^7.4.4",
+        "@babel/cli": "^7.8.4",
         "@babel/core": "^7.4.4",
         "@babel/plugin-transform-runtime": "^7.4.4",
         "@babel/polyfill": "^7.4.4",
         "@babel/preset-env": "^7.1.0",
         "@babel/preset-react": "^7.0.0",
-        "@babel/register": "^7.4.4",
+        "@babel/register": "^7.9.0",
         "@blueprintjs/select": "^3.11.2",
         "@enonic/fnv-plus": "^1.3.0",
         "@istanbuljs/nyc-config-typescript": "^0.1.3",
         "@jupyter-widgets/base": "^2.0.1",
         "@jupyter-widgets/controls": "^1.5.2",
-        "@jupyter-widgets/html-manager": "^0.18.3",
+        "@jupyter-widgets/jupyterlab-manager": "^1.0.2",
         "@jupyter-widgets/output": "^2.0.1",
         "@nteract/plotly": "^1.48.3",
         "@nteract/transform-dataresource": "^4.3.5",

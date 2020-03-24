@@ -3,33 +3,44 @@
 
 'use strict';
 
-import { DOMWidgetView, shims } from '@jupyter-widgets/base';
-import { HTMLManager } from '@jupyter-widgets/html-manager';
+import { shims } from '@jupyter-widgets/base';
+import * as jupyterlab from '@jupyter-widgets/jupyterlab-manager';
+import { RenderMimeRegistry, standardRendererFactories } from '@jupyterlab/rendermime';
 import { Kernel } from '@jupyterlab/services';
-import * as pWidget from '@phosphor/widgets';
+import { DocumentContext } from './documentContext';
 import { requireLoader } from './widgetLoader';
+
+export const WIDGET_MIMETYPE = 'application/vnd.jupyter.widget-view+json';
 
 // tslint:disable: no-any
 // Source borrowed from https://github.com/jupyter-widgets/ipywidgets/blob/master/examples/web3/src/manager.ts
 
-export class WidgetManager extends HTMLManager {
+export class WidgetManager extends jupyterlab.WidgetManager {
     public kernel: Kernel.IKernelConnection;
     public el: HTMLElement;
+
     constructor(kernel: Kernel.IKernelConnection, el: HTMLElement) {
-        super({ loader: requireLoader });
+        super(
+            new DocumentContext(kernel),
+            new RenderMimeRegistry({
+                initialFactories: standardRendererFactories
+            }),
+            { saveState: false }
+        );
         this.kernel = kernel;
         this.el = el;
+        this.rendermime.addFactory(
+            {
+                safe: false,
+                mimeTypes: [WIDGET_MIMETYPE],
+                createRenderer: options => new jupyterlab.WidgetRenderer(options, this)
+            },
+            0
+        );
 
         kernel.registerCommTarget(this.comm_target_name, async (comm, msg) => {
             const oldComm = new shims.services.Comm(comm);
             return this.handle_comm_open(oldComm, msg) as Promise<any>;
-        });
-    }
-
-    public display_view(view: DOMWidgetView, options: { el: HTMLElement }) {
-        return Promise.resolve(view).then(vw => {
-            pWidget.Widget.attach(view.pWidget, options.el);
-            return vw;
         });
     }
 
