@@ -14,7 +14,7 @@
     "python.command.python.selectAndDebugTestMethod.title": "डिबग टेस्ट विधि ...",
     "python.command.python.selectAndRunTestFile.title": "टेस्ट फ़ाइल चलाएँ ...",
     "python.command.python.runCurrentTestFile.title": "वर्तमान टेस्ट फ़ाइल चलाएँ",
-    "python.command.python.runFailedTests.title": "रन विफल परीक्षण",
+    "python.command.python.runFailedTests.title": "विफल टेस्ट चलाएँ",
     "python.command.python.execSelectionInTerminal.title": "पायथन टर्मिनल में चयनित पंक्तियां चलाएं",
     "python.command.python.execSelectionInDjangoShell.title": "Django शेल में चलाएं या लाइन चलाएं",
     "python.command.python.goToPythonObject.title": "पायथन ऑब्जेक्ट पर जाएं",
