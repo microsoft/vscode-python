@@ -70,7 +70,14 @@ export class InterpreterDisplay implements IInterpreterDisplay {
             );
             if (this.interpreterPath !== interpreter.path) {
                 const output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-                output.appendLine(Interpreters.pythonInterpreterPath().format(interpreter.path));
+                output.appendLine(
+                    Interpreters.pythonInterpreterPath().format(
+                        this.pathUtils.getDisplayName(
+                            interpreter.path,
+                            workspaceFolder ? workspaceFolder.fsPath : undefined
+                        )
+                    )
+                );
                 this.interpreterPath = interpreter.path;
             }
             this.statusBar.text = interpreter.displayName!;

@@ -148,7 +148,7 @@ suite('Interpreters Display', () => {
 
         verify(autoSelection.autoSelectInterpreter(anything())).once();
         statusBar.verify(s => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!), TypeMoq.Times.once());
-        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(activeInterpreter.path)!), TypeMoq.Times.once());
+        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(activeInterpreter.path)!), TypeMoq.Times.atLeastOnce());
     });
     test('Log the output channel if displayed needs to be updated with a new interpreter', async () => {
         const resource = Uri.file('x');
@@ -159,6 +159,9 @@ suite('Interpreters Display', () => {
             type: InterpreterType.Unknown,
             path: path.join('user', 'development', 'env', 'bin', 'python')
         };
+        pathUtils
+            .setup(p => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => activeInterpreter.path);
         setupWorkspaceFolder(resource, workspaceFolder);
         when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
         interpreterService
@@ -193,7 +196,7 @@ suite('Interpreters Display', () => {
 
         await interpreterDisplay.refresh(resource);
 
-        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(pythonPath)), TypeMoq.Times.once());
+        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(pythonPath)), TypeMoq.Times.atLeastOnce());
         statusBar.verify(s => (s.text = TypeMoq.It.isValue(displayName)), TypeMoq.Times.once());
     });
     test('If interpreter file does not exist then update status bar accordingly', async () => {
@@ -257,6 +260,6 @@ suite('Interpreters Display', () => {
         interpreterHelper.verifyAll();
         interpreterService.verifyAll();
         statusBar.verify(s => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!), TypeMoq.Times.once());
-        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(pythonPath)!), TypeMoq.Times.once());
+        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(pythonPath)!), TypeMoq.Times.atLeastOnce());
     });
 });
