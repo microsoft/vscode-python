@@ -6,6 +6,7 @@ import { assert } from 'chai';
 import { Uri } from 'vscode';
 
 import { ChildProcess } from 'child_process';
+import { IPlatformService } from '../../client/common/platform/types';
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
@@ -29,7 +30,8 @@ suite('Kernel Launcher', () => {
         ioc.registerDataScienceTypes();
         const execFactory = ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const interpreterService = ioc.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        kernelLauncher = new KernelLauncher(execFactory, interpreterService);
+        const paltformService = ioc.serviceContainer.get<IPlatformService>(IPlatformService);
+        kernelLauncher = new KernelLauncher(execFactory, interpreterService, paltformService);
         pythonInterpreter = {
             path: PYTHON_PATH,
             sysPrefix: '1',
