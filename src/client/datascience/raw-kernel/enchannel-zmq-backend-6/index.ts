@@ -136,7 +136,7 @@ export const createSockets = async (
 };
 
 class SocketEventEmitter extends Events.EventEmitter {
-    constructor(socket: zeromq.Dealer | zeromq.Subscriber, private channel: string) {
+    constructor(socket: zeromq.Dealer | zeromq.Subscriber) {
         super();
         this.waitForReceive(socket);
     }
@@ -147,7 +147,7 @@ class SocketEventEmitter extends Events.EventEmitter {
             socket
                 .receive()
                 .then(b => {
-                    this.emit('message', { buffers: b, channel: this.channel });
+                    this.emit('message', b);
                     setTimeout(this.waitForReceive.bind(this, socket), 0);
                 })
                 .ignoreErrors();
@@ -233,19 +233,18 @@ export const createMainChannelFromSockets = (
             // Form an Observable with each socket
             ...Object.keys(sockets).map(name => {
                 // Wrap in something that will emit an event whenever a message is received.
-                const socketEmitter = new SocketEventEmitter((sockets as any)[name], name);
+                const socketEmitter = new SocketEventEmitter((sockets as any)[name]);
                 return rxjs.fromEvent(socketEmitter, 'message').pipe(
                     map(
                         (body: any): JupyterMessage => {
-                            const messageBody = body as { buffers: Buffer[]; name: string };
                             const message = wireProtocol.decode(
-                                messageBody.buffers,
+                                body,
                                 connectionInfo.key,
                                 connectionInfo.signature_scheme
-                            );
+                            ) as any;
                             // Add on our channel property
-                            (message as any).channel = name;
-                            return message as any;
+                            message.channel = name;
+                            return message;
                         }
                     ),
                     publish(),
