@@ -38,6 +38,11 @@ export class JupyterSessionStartError extends Error {
     }
 }
 
+/*
+BaseJupyterSession represention functionality shared by a session regardless of if you are connected to a 
+server via JupyterLabs interfaces or via a raw ZMQ connection to a kernel. Raw classes implement the 
+jupyterlab interfaces so shared functionality that goes through the ISession or IKernel should go in here
+*/
 export abstract class BaseJupyterSession implements IJupyterSession {
     protected session: ISession | undefined;
     protected connected: boolean = false;
@@ -49,7 +54,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
     }
 
     // Abstracts for each Session type to implement
-    //public abstract async connect(cancelToken?: CancellationToken): Promise<void>;
     public abstract async shutdown(): Promise<void>;
     public abstract async restart(timeout: number): Promise<void>;
     public abstract async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
@@ -135,10 +139,10 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         kernelPromise: Promise<void>,
         timeout: number,
         errorMessage: string
-    ): Promise<void | null> {
+    ): Promise<void> {
         // Wait for this kernel promise to happen
         try {
-            return await waitForPromise(kernelPromise, timeout);
+            await waitForPromise(kernelPromise, timeout);
         } catch (e) {
             if (!e) {
                 // We timed out. Throw a specific exception

@@ -40,7 +40,7 @@ export class RawJupyterSession extends BaseJupyterSession {
 
     @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
     public async waitForIdle(_timeout: number): Promise<void> {
-        // RAWKERNEL: Do We have the same issue here with waiting for idle?
+        // RawKernels are good to go right away
     }
 
     public async restart(_timeout: number): Promise<void> {
