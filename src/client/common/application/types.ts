@@ -468,7 +468,7 @@ export interface IDocumentManager {
      *
      * @readonly
      */
-    readonly textDocuments: TextDocument[];
+    readonly textDocuments: readonly TextDocument[];
     /**
      * The currently active editor or `undefined`. The active editor is the one
      * that currently has focus or, when none has focus, the one that has changed
@@ -638,7 +638,7 @@ export interface IWorkspaceService {
      *
      * @readonly
      */
-    readonly workspaceFolders: WorkspaceFolder[] | undefined;
+    readonly workspaceFolders: readonly WorkspaceFolder[] | undefined;
 
     /**
      * An event that is emitted when a workspace folder is added or removed.
