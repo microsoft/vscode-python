@@ -205,7 +205,8 @@ export class RawKernel implements Kernel.IKernel {
             // Set our future to remove itself when disposed
             const oldDispose = future.dispose.bind(future);
             future.dispose = () => {
-                this.futures.delete(future.msg.header.msg_id);
+                this.futureDisposed(future);
+                //this.futures.delete(future.msg.header.msg_id);
                 return oldDispose();
             };
 
@@ -323,6 +324,12 @@ export class RawKernel implements Kernel.IKernel {
         _hook: (_msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
         throw new Error('Not yet implemented');
+    }
+
+    // When a future is disposed this function is called to remove it from our
+    // various tracking lists
+    private futureDisposed(future: RawFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>) {
+        this.futures.delete(future.msg.header.msg_id);
     }
 
     // Message incoming from the JMP connection. Queue it up for processing
