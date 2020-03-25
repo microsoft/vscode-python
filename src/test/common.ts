@@ -12,7 +12,7 @@ import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
-import { IPythonSettings, Resource } from '../client/common/types';
+import { IExperimentsManager, IPythonSettings, Resource } from '../client/common/types';
 import { PythonInterpreter } from '../client/interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
@@ -205,6 +205,8 @@ async function setPythonPathInWorkspace(
     config: ConfigurationTarget,
     pythonPath?: string
 ) {
+    // tslint:disable-next-line: no-unused-expression
+    IExperimentsManager;
     const vscode = require('vscode') as typeof import('vscode');
     if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
         return;
