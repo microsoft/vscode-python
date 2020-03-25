@@ -15,7 +15,7 @@ import * as sinon from 'sinon';
 import { Disposable } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { UseCustomEditor } from '../../../datascience-ui/react-common/constants';
-import { getOSType, OSType, retryIfFail as retryIfFailOriginal } from '../../common';
+import { retryIfFail as retryIfFailOriginal } from '../../common';
 import { mockedVSCodeNamespaces } from '../../vscode-mock';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { addMockData } from '../testHelpersCore';

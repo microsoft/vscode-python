@@ -7,6 +7,7 @@
 
 const postcss = require('postcss');
 const path = require('path');
+const constants = require('../../build/constants');
 const outDir = path.join(__dirname, '..', '..', 'out', 'ipywidgets');
 const version = require(path.join(
     __dirname,

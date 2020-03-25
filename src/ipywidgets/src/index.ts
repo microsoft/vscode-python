@@ -7,7 +7,7 @@ export { WidgetManager } from './manager';
 import * as base from '@jupyter-widgets/base';
 import * as widgets from '@jupyter-widgets/controls';
 import * as outputWidgets from '@jupyter-widgets/jupyterlab-manager/lib/output';
-import * as embed from './embed';
+//import * as embed from './embed';
 import './widgets.css';
 
 // Export the following for `requirejs`.
@@ -18,10 +18,12 @@ define('@jupyter-widgets/base', () => base);
 define('@jupyter-widgets/output', () => outputWidgets);
 
 // Render existing widgets without a kernel
-if (document.readyState === 'complete') {
-    embed.renderWidgets();
-} else {
-    window.addEventListener('load', () => {
-        embed.renderWidgets();
-    });
-}
+// This is not done yet. See this issue here: https://github.com/microsoft/vscode-python/issues/10794
+// Likely we'll do this in a different spot.
+// if (document.readyState === 'complete') {
+//     embed.renderWidgets();
+// } else {
+//     window.addEventListener('load', () => {
+//         embed.renderWidgets();
+//     });
+// }
