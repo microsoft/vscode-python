@@ -59,8 +59,10 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         if (message === InteractiveWindowMessages.NotebookIdentity) {
             this.saveIdentity(payload).catch(ex => traceError('Failed to initialize ipywidgetHandler', ex));
         } else if (this.ipywidgetMessages.includes(message)) {
+            // Need a temp variable so SONAR doesn't flip out.
+            const ipywidgetMulticaster = this.getIPyWidgetMulticaster();
             // tslint:disable-next-line: no-any
-            this.getIPyWidgetMulticaster()?.receiveMessage({ message: message as any, payload });
+            ipywidgetMulticaster!.receiveMessage({ message: message as any, payload });
         }
     }
 

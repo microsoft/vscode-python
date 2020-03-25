@@ -108,7 +108,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 });
             future.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
                 this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub, { requestId, msg });
-                return this.waitForCommMessage(msg as KernelMessage.ICommMsgMsg);
+                return this.waitForCommMessage(msg as KernelMessage.ICommMsgMsg); // NOSONAR
             };
             future.onReply = (reply: KernelMessage.IShellMessage) => {
                 this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ShellSend_reply, { requestId, msg: reply });
@@ -268,7 +268,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         } else if (this.jupyterLab?.KernelMessage.isCommOpenMsg(msg)) {
             // Do nothing, handled in the place we have registered for a target.
         } else if (this.jupyterLab?.KernelMessage.isCommMsgMsg(msg)) {
-            return this.waitForCommMessage(msg as KernelMessage.ICommMsgMsg);
+            return this.waitForCommMessage(msg as KernelMessage.ICommMsgMsg); // NOSONAR
         }
     }
 }
