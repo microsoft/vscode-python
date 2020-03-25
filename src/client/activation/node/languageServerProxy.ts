@@ -17,11 +17,13 @@ import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
 import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
+import { FileBasedCancellationStrategy } from './cancellationUtils';
 
 @injectable()
 export class NodeLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
     private startupCompleted: Deferred<void>;
+    private cancellationStrategy: FileBasedCancellationStrategy | undefined;
     private readonly disposables: Disposable[] = [];
     private disposed: boolean = false;
 
@@ -39,6 +41,10 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
             // Do not await on this.
             this.languageClient.stop().then(noop, (ex) => traceError('Stopping language client failed', ex));
             this.languageClient = undefined;
+        }
+        if (this.cancellationStrategy) {
+            this.cancellationStrategy.dispose();
+            this.cancellationStrategy = undefined;
         }
         while (this.disposables.length > 0) {
             const d = this.disposables.shift()!;
@@ -59,6 +65,9 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
         options: LanguageClientOptions
     ): Promise<void> {
         if (!this.languageClient) {
+            this.cancellationStrategy = new FileBasedCancellationStrategy();
+            options.connectionOptions = { cancellationStrategy: this.cancellationStrategy };
+
             this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
             this.disposables.push(this.languageClient!.start());
             await this.serverReady();
