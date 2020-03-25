@@ -19,6 +19,7 @@ import {
     NotificationType0,
     Position,
     Protocol2CodeConverter,
+    Range,
     RequestHandler,
     RequestHandler0,
     RequestType,
@@ -74,7 +75,7 @@ export class MockLanguageClient extends LanguageClient {
         return this.versionId;
     }
 
-    public stop(): Thenable<void> {
+    public stop(): Promise<void> {
         throw new Error('Method not implemented.');
     }
     public registerProposedFeatures(): void {
@@ -83,15 +84,11 @@ export class MockLanguageClient extends LanguageClient {
     public get initializeResult(): InitializeResult | undefined {
         throw new Error('Method not implemented.');
     }
-    public sendRequest<R, E, RO>(type: RequestType0<R, E, RO>, token?: CancellationToken | undefined): Thenable<R>;
-    public sendRequest<P, R, E, RO>(
-        type: RequestType<P, R, E, RO>,
-        params: P,
-        token?: CancellationToken | undefined
-    ): Thenable<R>;
-    public sendRequest<R>(method: string, token?: CancellationToken | undefined): Thenable<R>;
-    public sendRequest<R>(method: string, param: any, token?: CancellationToken | undefined): Thenable<R>;
-    public sendRequest(_method: any, _param?: any, _token?: any): Thenable<any> {
+    public sendRequest<R, E, RO>(type: RequestType0<R, E, RO>, token?: CancellationToken): Promise<R>;
+    public sendRequest<P, R, E, RO>(type: RequestType<P, R, E, RO>, params: P, token?: CancellationToken): Promise<R>;
+    public sendRequest<R>(method: string, token?: CancellationToken): Promise<R>;
+    public sendRequest<R>(method: string, param: any, token?: CancellationToken): Promise<R>;
+    public sendRequest(_method: any, _param?: any, _token?: any): Promise<any> {
         switch (_method.method) {
             case 'textDocument/completion':
                 // Just return one for each line of our contents
@@ -209,7 +206,7 @@ export class MockLanguageClient extends LanguageClient {
     protected handleConnectionClosed(): void {
         throw new Error('Method not implemented.');
     }
-    protected createMessageTransports(_encoding: string): Thenable<MessageTransports> {
+    protected createMessageTransports(_encoding: string): Promise<MessageTransports> {
         throw new Error('Method not implemented.');
     }
     protected registerBuiltinFeatures(): void {
@@ -217,11 +214,14 @@ export class MockLanguageClient extends LanguageClient {
     }
 
     private applyChanges(changes: TextDocumentContentChangeEvent[]) {
-        changes.forEach((c: TextDocumentContentChangeEvent) => {
-            const offset = c.range ? this.getOffset(c.range.start) : 0;
-            const before = this.contents.substr(0, offset);
-            const after = c.rangeLength ? this.contents.substr(offset + c.rangeLength) : '';
-            this.contents = `${before}${c.text}${after}`;
+        changes.forEach((change: TextDocumentContentChangeEvent) => {
+            const c = change as { range: Range; rangeLength?: number; text: string };
+            if (c.range) {
+                const offset = c.range ? this.getOffset(c.range.start) : 0;
+                const before = this.contents.substr(0, offset);
+                const after = c.rangeLength ? this.contents.substr(offset + c.rangeLength) : '';
+                this.contents = `${before}${c.text}${after}`;
+            }
         });
     }
 
