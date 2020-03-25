@@ -17,6 +17,8 @@ const version = require(path.join(
     'jupyterlab-manager',
     'package.json'
 )).version;
+// Any build on the CI is considered production mode.
+const isProdBuild = constants.isCI || process.argv.includes('--mode');
 const publicPath = 'https://unpkg.com/@jupyter-widgets/jupyterlab-manager@' + version + '/dist/';
 const rules = [
     { test: /\.css$/, use: ['style-loader', 'css-loader'] },
@@ -68,8 +70,8 @@ const rules = [
 
 module.exports = [
     {
-        mode: 'development',
-        devtool: 'inline-source-map',
+        mode: isProdBuild ? 'production' : 'development',
+        devtool: isProdBuild ? 'source-map' : 'inline-source-map',
         entry: path.join(outDir, 'index.js'),
         output: {
             filename: 'ipywidgets.js',

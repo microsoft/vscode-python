@@ -174,6 +174,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
     private handleCommInfo(reply: { requestId: string; msg: KernelMessage.ICommInfoReplyMsg }) {
         const promise = this.pendingCommInfoResponses.get(reply.requestId);
         if (promise) {
+            this.pendingCommInfoResponses.delete(reply.requestId);
             promise.resolve(reply.msg);
         }
     }
