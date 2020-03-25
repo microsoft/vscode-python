@@ -12,9 +12,8 @@ import { coerce, SemVer } from 'semver';
 import { ConfigurationTarget, Event, TextDocument, Uri } from 'vscode';
 import { IExtensionApi } from '../client/api';
 import { IProcessService } from '../client/common/process/types';
-import { IExperimentsManager, IInterpreterPathService, IPythonSettings, Resource } from '../client/common/types';
+import { IPythonSettings, Resource } from '../client/common/types';
 import { PythonInterpreter } from '../client/interpreter/contracts';
-import { ServiceContainer } from '../client/ioc/container';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop } from './core';
@@ -109,7 +108,7 @@ export async function clearPythonPathInWorkspaceFolder(resource: string | Uri) {
     return retryAsync(setPythonPathInWorkspace)(resource, vscode.ConfigurationTarget.WorkspaceFolder);
 }
 
-export async function setPythonPathInWorkspaceRoot(pythonPath: string, serviceContainer?: ServiceContainer) {
+export async function setPythonPathInWorkspaceRoot(pythonPath: string, serviceContainer?: IServiceContainer) {
     const vscode = require('vscode') as typeof import('vscode');
     return retryAsync(setPythonPathInWorkspace)(
         undefined,
@@ -214,7 +213,7 @@ async function setPythonPathInWorkspace(
     resource: string | Uri | undefined,
     config: ConfigurationTarget,
     pythonPath?: string,
-    serviceContainer?: ServiceContainer
+    serviceContainer?: IServiceContainer
 ) {
     const vscode = require('vscode') as typeof import('vscode');
     if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
@@ -222,11 +221,11 @@ async function setPythonPathInWorkspace(
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
     const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
-    let interpreterPathService: IInterpreterPathService | undefined;
+    let interpreterPathService: any;
     let inExperiment: boolean | undefined;
     if (serviceContainer) {
-        interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
-        const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        interpreterPathService = serviceContainer.get<any>(Symbol('IInterpreterPathService'));
+        const abExperiments = serviceContainer.get<any>(Symbol('IInterpreterPathService'));
         /**
          * 'DeprecatePythonPath - experiment' string is used directly instead of `DeprecatePythonPath.experiment` object,
          * because`DeprecatePythonPath` object cannot be imported before running tests in CI
