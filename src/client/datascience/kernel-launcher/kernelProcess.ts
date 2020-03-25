@@ -16,6 +16,8 @@ import { isResource, noop } from '../../common/utils/misc';
 import { IJupyterKernelSpec } from '../types';
 import { IKernelConnection, IKernelProcess } from './types';
 
+// Launches and disposes a kernel process given a kernelspec and a resource or python interpreter.
+// Exposes connection information and the process itself.
 @injectable()
 export class KernelProcess implements IKernelProcess {
     private _process?: ChildProcess;
@@ -55,8 +57,8 @@ export class KernelProcess implements IKernelProcess {
     }
 
     public async dispose() {
-        this._process?.kill();
         try {
+            this._process?.kill();
             await this.file.deleteFile(this.connectionFile);
         } catch {
             noop();

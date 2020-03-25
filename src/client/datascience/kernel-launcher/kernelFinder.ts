@@ -11,18 +11,22 @@ import { IJupyterKernelSpec } from '../types';
 import { IKernelFinder } from './types';
 
 const windowsPaths = new Map([
-    ['users', 'C:\\Users\\'],
+    ['users', process.env.HOMEPATH?.substr(0, 9)],
     ['jupyter', '\\AppData\\Roaming\\jupyter\\kernels\\'],
     ['kernel', 'share\\jupyter\\kernels\\']
 ]);
 
 const unixPaths = new Map([
-    ['home', '/home/'],
+    ['home', process.env.HOME],
     ['linuxJupyterPath', '/.local/share/jupyter/kernels/'],
     ['macJupyterPath', '/Library/Jupyter/kernels/'],
     ['kernel', 'share/jupyter/kernels/']
 ]);
 
+// This class searches for a kernel that matches the given kernel name.
+// First it seraches on a global persistent state, then on the installed python interpreters,
+// and finally on the default locations that jupyter installs kernels on.
+// If a kernel name is not given, it returns a default IJupyterKernelSpec created from the current interpreter.
 @injectable()
 export class KernelFinder implements IKernelFinder {
     private state: IPersistentState<Map<string, string>>;
@@ -57,24 +61,24 @@ export class KernelFinder implements IKernelFinder {
         return this.getDefaultKernelSpec(currentInterpreter);
     }
 
-    public async getKernelSpec(kernelPath: string, kernelName: string): Promise<IJupyterKernelSpec | undefined> {
+    private async getKernelSpec(kernelPath: string, kernelName: string): Promise<IJupyterKernelSpec | undefined> {
         const kernelJSON = '\\kernel.json';
         const pathExists = await this.file.fileExists(kernelPath);
 
         if (pathExists) {
             const kernels = await this.file.getSubDirectories(kernelPath);
 
-            for (const kernel of kernels) {
-                const kernelSpec = JSON.parse(await this.file.readFile(path.join(kernelPath, kernel, kernelJSON)));
+            const promises = kernels.map(async kernel => {
+                const kernelSpec: IJupyterKernelSpec = JSON.parse(
+                    await this.file.readFile(path.join(kernelPath, kernel, kernelJSON))
+                );
                 this.state.value.set(path.join(kernelPath, kernel, kernelJSON), kernelSpec.display_name);
+                return kernelSpec;
+            });
 
-                if (kernelName === kernelSpec.name || kernelName === kernelSpec.display_name) {
-                    return kernelSpec as IJupyterKernelSpec;
-                }
-            }
+            const specs = await Promise.all(promises);
+            return specs.find(sp => kernelName === sp.name || kernelName === sp.display_name);
         }
-
-        return undefined;
     }
 
     private async findCachePath(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
@@ -89,9 +93,12 @@ export class KernelFinder implements IKernelFinder {
         interpreterPaths: string[],
         kernelName: string
     ): Promise<IJupyterKernelSpec | undefined> {
-        for (const path1 of interpreterPaths) {
-            return this.getKernelSpec(path.join(path1, unixPaths.get('kernel')!), kernelName);
-        }
+        const promises = interpreterPaths.map(intPath =>
+            this.getKernelSpec(path.join(intPath, unixPaths.get('kernel')!), kernelName)
+        );
+
+        const specs = await Promise.all(promises);
+        return specs.find(sp => sp !== undefined);
     }
 
     private async findDiskPath(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
@@ -111,16 +118,16 @@ export class KernelFinder implements IKernelFinder {
             const userPathExists = await this.file.fileExists(windowsPaths.get('users')!);
             if (userPathExists) {
                 const users = await this.file.getSubDirectories(windowsPaths.get('users')!);
-                for (const user of users) {
-                    spec = await this.getKernelSpec(
+
+                const promises = users.map(user =>
+                    this.getKernelSpec(
                         path.join(windowsPaths.get('users')!, user, windowsPaths.get('jupyter')!),
                         kernelName
-                    );
+                    )
+                );
 
-                    if (spec) {
-                        return spec;
-                    }
-                }
+                const specs = await Promise.all(promises);
+                return specs.find(sp => sp !== undefined);
             }
             // Unix based
         } else {
@@ -139,16 +146,16 @@ export class KernelFinder implements IKernelFinder {
             const userPathExists = await this.file.fileExists(unixPaths.get('home')!);
             if (userPathExists) {
                 const users = await this.file.getSubDirectories(unixPaths.get('home')!);
-                for (const user of users) {
+
+                const promises = users.map(user => {
                     const secondPart = this.platformService.isMac
                         ? unixPaths.get('macJupyterPath')!
                         : unixPaths.get('linuxJupyterPath')!;
-                    spec = await this.getKernelSpec(path.join(unixPaths.get('home')!, user, secondPart), kernelName);
+                    return this.getKernelSpec(path.join(unixPaths.get('home')!, user, secondPart), kernelName);
+                });
 
-                    if (spec) {
-                        return spec;
-                    }
-                }
+                const specs = await Promise.all(promises);
+                return specs.find(sp => sp !== undefined);
             }
         }
     }

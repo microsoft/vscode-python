@@ -11,6 +11,9 @@ import { IInterpreterService, PythonInterpreter } from '../../interpreter/contra
 import { IJupyterKernelSpec } from '../types';
 import { IKernelFinder, IKernelLauncher, IKernelProcess } from './types';
 
+// Launches and returns a kernel process given a resource or python interpreter.
+// If the given interpreter is undefined, it will try to use the selected interpreter.
+// If the selected interpreter doesn't have a kernel, it will find a kernel on disk and use that.
 @injectable()
 export class KernelLauncher implements IKernelLauncher {
     constructor(

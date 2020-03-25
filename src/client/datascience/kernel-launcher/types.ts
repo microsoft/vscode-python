@@ -41,5 +41,4 @@ export interface IKernelFinder {
         currentInterpreter: PythonInterpreter | undefined,
         kernelName?: string
     ): Promise<IJupyterKernelSpec>;
-    getKernelSpec(path: string, kernelName: string): Promise<IJupyterKernelSpec | undefined>;
 }
