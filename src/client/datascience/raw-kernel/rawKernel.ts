@@ -3,6 +3,8 @@
 import { Kernel, KernelMessage, ServerConnection } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { ISignal, Signal } from '@phosphor/signaling';
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 import * as uuid from 'uuid/v4';
 import { traceError } from '../../common/logger';
 import { IJMPConnection, IJMPConnectionInfo } from '../types';
@@ -69,6 +71,8 @@ export class RawKernel implements Kernel.IKernel {
     public isDisposed: boolean = false;
     private jmpConnection: IJMPConnection;
     private messageChain: Promise<void> = Promise.resolve();
+    private displayIdToParentIds = new Map<string, string[]>();
+    private msgIdToDisplayIds = new Map<string, string[]>();
 
     private _id: string;
     private _clientId: string;
@@ -336,12 +340,92 @@ export class RawKernel implements Kernel.IKernel {
             });
     }
 
+    private async handleDisplayId(displayId: string, message: KernelMessage.IMessage): Promise<boolean> {
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+        const messageId = (message.parent_header as KernelMessage.IHeader).msg_id;
+
+        // Get all parent ids for this display id
+        let parentIds = this.displayIdToParentIds.get(displayId);
+
+        // If we have seen this id before
+        if (parentIds) {
+            // We need to create a new update display data message to update the parents
+            const updateMessage: KernelMessage.IMessage = {
+                header: cloneDeep(message.header),
+                parent_header: cloneDeep(message.parent_header),
+                metadata: cloneDeep(message.metadata),
+                content: cloneDeep(message.content),
+                channel: message.channel,
+                buffers: message.buffers ? message.buffers.slice() : []
+            };
+            updateMessage.header.msg_type = 'update_display_data';
+
+            // Now send it out to all the parents
+            await Promise.all(
+                parentIds.map(async parentId => {
+                    const future = this.futures && this.futures.get(parentId);
+                    if (future) {
+                        await future.handleMessage(updateMessage);
+                    }
+                })
+            );
+        }
+
+        if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(message)) {
+            // End here for an update display data, indicate that we have handed it
+            // so it skip the normal displaying in handleMessage
+            return true;
+        }
+
+        // For display_data message record the mapping from
+        // the displayId to the parent messageId
+        parentIds = this.displayIdToParentIds.get(displayId) ?? [];
+        if (parentIds.indexOf(messageId) === -1) {
+            parentIds.push(messageId);
+        }
+        this.displayIdToParentIds.set(displayId, parentIds);
+
+        // Add to mapping of message -> display ids
+        const displayIds = this.msgIdToDisplayIds.get(messageId) ?? [];
+        if (displayIds.indexOf(messageId) === -1) {
+            displayIds.push(messageId);
+        }
+        this.msgIdToDisplayIds.set(messageId, displayIds);
+
+        // Return false so message continues to get processed
+        return false;
+    }
+
     // Handle a new message arriving from JMP connection
     private async handleMessage(message: KernelMessage.IMessage): Promise<void> {
-        // RAWKERNEL: display_data messages can route based on their id here first
+        // IANHU: CONVERT TO USING ONE REQUIRE?
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+        let handled = false;
+
+        // Check to see if we have the right type of message for a display id
+        if (
+            message.parent_header &&
+            message.channel === 'iopub' &&
+            (jupyterLab.KernelMessage.isDisplayDataMsg(message) ||
+                jupyterLab.KernelMessage.isUpdateDisplayDataMsg(message) ||
+                jupyterLab.KernelMessage.isExecuteResultMsg(message))
+        ) {
+            // Display id can be found in transient message content
+            // https://jupyter-client.readthedocs.io/en/stable/messaging.html#display-data
+            const displayId = message.content.transient?.display_id;
+            if (displayId) {
+                handled = await this.handleDisplayId(displayId, message);
+
+                // IANHU: CHECK ASSERT CURRENT MESSAGE? DUE TO AWAIT?
+            }
+        }
 
         // Look up in our future list and see if a future needs to be updated on this message
-        if (message.parent_header) {
+        if (!handled && message.parent_header) {
             const parentHeader = message.parent_header as KernelMessage.IHeader;
             const parentFuture = this.futures.get(parentHeader.msg_id);
 
