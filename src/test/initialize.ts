@@ -7,7 +7,7 @@ import {
     clearPythonPathInWorkspaceFolder,
     IExtensionTestApi,
     PYTHON_PATH,
-    resetGlobalPythonPathSetting,
+    resetGlobalInterpreterPathSetting,
     setGlobalInterpreterPath,
     setPythonPathInWorkspaceRoot
 } from './common';
@@ -25,7 +25,7 @@ process.env['VSC_PYTHON_CI_TEST'] = '1';
 
 // Ability to use custom python environments for testing
 export async function initializePython() {
-    await resetGlobalPythonPathSetting();
+    await resetGlobalInterpreterPathSetting();
     await clearPythonPathInWorkspaceFolder(dummyPythonFile);
     await clearPythonPathInWorkspaceFolder(workspace3Uri);
     await setPythonPathInWorkspaceRoot(PYTHON_PATH);

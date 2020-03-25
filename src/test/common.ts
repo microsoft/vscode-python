@@ -108,18 +108,13 @@ export async function clearPythonPathInWorkspaceFolder(resource: string | Uri) {
     return retryAsync(setPythonPathInWorkspace)(resource, vscode.ConfigurationTarget.WorkspaceFolder);
 }
 
-export async function setPythonPathInWorkspaceRoot(pythonPath: string, serviceContainer?: IServiceContainer) {
+export async function setPythonPathInWorkspaceRoot(pythonPath: string) {
     const vscode = require('vscode') as typeof import('vscode');
-    return retryAsync(setPythonPathInWorkspace)(
-        undefined,
-        vscode.ConfigurationTarget.Workspace,
-        pythonPath,
-        serviceContainer
-    );
+    return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, pythonPath);
 }
 
 export async function setGlobalInterpreterPath(pythonPath: string) {
-    return retryAsync(setGlobalPythonPath)(pythonPath);
+    return retryAsync(setGlobalPathToInterpreter)(pythonPath);
 }
 
 export async function restorePythonPathInWorkspaceRoot() {
@@ -127,7 +122,7 @@ export async function restorePythonPathInWorkspaceRoot() {
     return retryAsync(setPythonPathInWorkspace)(undefined, vscode.ConfigurationTarget.Workspace, PYTHON_PATH);
 }
 
-export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
+export const resetGlobalInterpreterPathSetting = async () => retryAsync(restoreGlobalInterpreterPathSetting)();
 
 export async function setAutoSaveDelayInWorkspaceRoot(delayinMS: number) {
     const vscode = require('vscode') as typeof import('vscode');
@@ -212,8 +207,7 @@ async function setAutoSaveDelay(resource: string | Uri | undefined, config: Conf
 async function setPythonPathInWorkspace(
     resource: string | Uri | undefined,
     config: ConfigurationTarget,
-    pythonPath?: string,
-    serviceContainer?: IServiceContainer
+    pythonPath?: string
 ) {
     const vscode = require('vscode') as typeof import('vscode');
     if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
@@ -221,21 +215,7 @@ async function setPythonPathInWorkspace(
     }
     const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
     const settings = vscode.workspace.getConfiguration('python', resourceUri || null);
-    let interpreterPathService: any;
-    let inExperiment: boolean | undefined;
-    if (serviceContainer) {
-        interpreterPathService = serviceContainer.get<any>(Symbol('IInterpreterPathService'));
-        const abExperiments = serviceContainer.get<any>(Symbol('IInterpreterPathService'));
-        /**
-         * 'DeprecatePythonPath - experiment' string is used directly instead of `DeprecatePythonPath.experiment` object,
-         * because`DeprecatePythonPath` object cannot be imported before running tests in CI
-         */
-        inExperiment = abExperiments.inExperiment('DeprecatePythonPath - experiment');
-    }
-    const value =
-        inExperiment && interpreterPathService
-            ? interpreterPathService.inspect(resourceUri)
-            : settings.inspect<string>('pythonPath');
+    const value = settings.inspect<string>('pythonPath');
     const prop: 'workspaceFolderValue' | 'workspaceValue' =
         config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
     if (value && value[prop] !== pythonPath) {
@@ -243,7 +223,7 @@ async function setPythonPathInWorkspace(
         await disposePythonSettings();
     }
 }
-async function restoreGlobalPythonPathSetting(): Promise<void> {
+async function restoreGlobalInterpreterPathSetting(): Promise<void> {
     const vscode = require('vscode') as typeof import('vscode');
     const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
     await pythonConfig.update('pythonPath', undefined, true);
@@ -251,9 +231,10 @@ async function restoreGlobalPythonPathSetting(): Promise<void> {
     await disposePythonSettings();
 }
 
-async function setGlobalPythonPath(pythonPath?: string): Promise<void> {
+async function setGlobalPathToInterpreter(pythonPath?: string): Promise<void> {
     const vscode = require('vscode') as typeof import('vscode');
     const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
+    await pythonConfig.update('pythonPath', pythonPath, true);
     await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
     await disposePythonSettings();
 }
