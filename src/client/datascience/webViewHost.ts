@@ -280,11 +280,12 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
     }
 
-    protected async sendNewSettings() {
+    // Post a message to our webpanel and update our new datascience settings
+    protected onDataScienceSettingsChanged = async () => {
         // Stringify our settings to send over to the panel
         const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
         this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
-    }
+    };
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
         if (workspaceConfig) {
@@ -344,7 +345,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
 
         // On started, resend our init data.
         this.sendLocStrings().ignoreErrors();
-        this.sendNewSettings().ignoreErrors();
+        this.onDataScienceSettingsChanged().ignoreErrors();
     }
 
     // Post a message to our webpanel and update our new datascience settings
@@ -374,10 +375,5 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
             }
         }
-    };
-
-    // Post a message to our webpanel and update our new datascience settings
-    private onDataScienceSettingsChanged = async () => {
-        return this.sendNewSettings();
     };
 }

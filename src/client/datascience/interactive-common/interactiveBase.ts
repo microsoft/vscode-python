@@ -33,7 +33,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
-import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
+import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { WebHostNotebook } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -65,7 +65,7 @@ import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError'
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../jupyter/kernels/types';
-import { CssMessages } from '../messages';
+import { CssMessages, SharedMessages } from '../messages';
 import {
     CellState,
     ICell,
@@ -202,6 +202,15 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
     public onMessage(message: string, payload: any) {
         switch (message) {
+            case InteractiveWindowMessages.Started:
+                // Send the first settings message
+                this.onDataScienceSettingsChanged().ignoreErrors();
+
+                // Send the loc strings (skip during testing as it takes up a lot of memory)
+                const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
+                this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
+                break;
+
             case InteractiveWindowMessages.GotoCodeCell:
                 this.handleMessage(message, payload, this.gotoCode);
                 break;

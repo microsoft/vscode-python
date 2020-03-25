@@ -6,7 +6,7 @@ import * as express from 'express';
 import * as http from 'http';
 import { IDisposable } from 'monaco-editor';
 import * as socketIO from 'socket.io';
-import { env, EventEmitter, Uri, WebviewOptions, WebviewPanel, window } from 'vscode';
+import { env, Event, EventEmitter, Uri, WebviewOptions, WebviewPanel, window } from 'vscode';
 import { IWebPanel, IWebPanelOptions } from '../../../client/common/application/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
@@ -15,7 +15,14 @@ import { noop } from '../../../client/common/utils/misc';
 // tslint:disable: no-any no-console no-require-imports no-var-requires
 const nocache = require('nocache');
 
-export class WebServer implements IDisposable {
+export interface IWebServer extends IDisposable {
+    onDidReceiveMessage: Event<any>;
+    postMessage(message: {}): void;
+    launchServer(cwd: string, resourcesRoot: string, port?: number): Promise<number>;
+    waitForConnection(): Promise<void>;
+}
+
+export class WebServer implements IWebServer {
     public get onDidReceiveMessage() {
         return this._onDidReceiveMessage.event;
     }
@@ -26,7 +33,9 @@ export class WebServer implements IDisposable {
     private readonly socketPromise = createDeferred<socketIO.Socket>();
     private readonly _onDidReceiveMessage = new EventEmitter<any>();
     private socket?: socketIO.Socket;
-
+    public static create() {
+        return new WebServer();
+    }
     public dispose() {
         this.server?.close();
         this.io?.close();
@@ -109,7 +118,7 @@ export class WebServer implements IDisposable {
  */
 export class WebBrowserPanel implements IWebPanel, IDisposable {
     private panel?: WebviewPanel;
-    private server?: WebServer;
+    private server?: IWebServer;
     constructor(private readonly disposableRegistry: IDisposableRegistry, private readonly options: IWebPanelOptions) {
         this.disposableRegistry.push(this);
         const webViewOptions: WebviewOptions = {
@@ -184,7 +193,7 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
         const dsUIPort = parseInt(process.env.VSC_PYTHON_DS_UI_PORT || '', 10);
         const portToUse = isNaN(dsUIPort) ? 0 : dsUIPort;
 
-        this.server = new WebServer();
+        this.server = WebServer.create();
         this.server.onDidReceiveMessage(data => {
             this.options.listener.onMessage(data.type, data.payload);
         });

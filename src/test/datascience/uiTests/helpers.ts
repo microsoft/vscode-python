@@ -10,7 +10,7 @@ import { createDeferred } from '../../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../client/datascience/messages';
 import { CommonActionType } from '../../../datascience-ui/interactive-common/redux/reducers/types';
-import { WebServer } from './webBrowserPanel';
+import { IWebServer } from './webBrowserPanel';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 export type WaitForMessageOptions = {
@@ -35,13 +35,13 @@ const maxWaitTimeForMessage = 15_000;
  * UI could take a while to update, could be slower on CI server.
  * (500ms is generally enough, but increasing to 3s to avoid flaky CI tests).
  */
-export const waitTimeForUIToUpdate = 3_000;
+export const waitTimeForUIToUpdate = 5_000;
 
 export class BaseWebUI implements IAsyncDisposable {
-    protected page?: playwright.Page;
+    public page?: playwright.Page;
     private readonly disposables: IDisposable[] = [];
-    private readonly webServerPromise = createDeferred<WebServer>();
-    private webServer?: WebServer;
+    private readonly webServerPromise = createDeferred<IWebServer>();
+    private webServer?: IWebServer;
     private browser?: playwright.ChromiumBrowser;
     public async dispose() {
         while (this.disposables.length) {
@@ -50,7 +50,10 @@ export class BaseWebUI implements IAsyncDisposable {
         await this.browser?.close();
         await this.page?.close();
     }
-    public _setWebServer(webServer: WebServer) {
+    public async type(text: string): Promise<void> {
+        await this.page?.keyboard.type(text);
+    }
+    public _setWebServer(webServer: IWebServer) {
         this.webServer = webServer;
         this.webServerPromise.resolve(webServer);
     }

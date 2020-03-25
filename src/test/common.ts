@@ -16,7 +16,7 @@ import { IPythonSettings, Resource } from '../client/common/types';
 import { PythonInterpreter } from '../client/interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
-import { noop } from './core';
+import { noop, sleep } from './core';
 
 const StreamZip = require('node-stream-zip');
 
@@ -513,6 +513,7 @@ export async function retryIfFail<T>(fn: () => Promise<T>, timeoutMs: number = 6
         } catch (ex) {
             lastEx = ex;
         }
+        await sleep(10);
     }
     if (lastEx) {
         throw lastEx;

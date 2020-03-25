@@ -17,3 +17,7 @@ flask
 django
 isort
 pathlib2>=2.2.0 ; python_version<'3.6' # Python 2.7 compatibility (pytest)
+pythreejs
+ipyvolume
+beakerx
+bqplot
