@@ -76,7 +76,7 @@ export class PythonSettings implements IPythonSettings {
     public languageServer: LanguageServerType = LanguageServerType.Microsoft;
 
     protected readonly changed = new EventEmitter<void>();
-    private workspaceRoot: Uri;
+    private workspaceRoot: Resource;
     private disposables: Disposable[] = [];
     // tslint:disable-next-line:variable-name
     private _pythonPath = '';
@@ -94,7 +94,7 @@ export class PythonSettings implements IPythonSettings {
         private readonly interpreterPathService?: IInterpreterPathService
     ) {
         this.workspace = workspace || new WorkspaceService();
-        this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
+        this.workspaceRoot = workspaceFolder;
         this.initialize();
     }
     // tslint:disable-next-line:function-name
@@ -164,7 +164,7 @@ export class PythonSettings implements IPythonSettings {
     }
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     protected update(pythonSettings: WorkspaceConfiguration) {
-        const workspaceRoot = this.workspaceRoot.fsPath;
+        const workspaceRoot = this.workspaceRoot?.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this.workspace);
 
         /**
@@ -188,7 +188,7 @@ export class PythonSettings implements IPythonSettings {
             const autoSelectedPythonInterpreter = this.interpreterAutoSelectionService.getAutoSelectedInterpreter(
                 this.workspaceRoot
             );
-            if (autoSelectedPythonInterpreter) {
+            if (autoSelectedPythonInterpreter && this.workspaceRoot) {
                 this.interpreterAutoSelectionService
                     .setWorkspaceInterpreter(this.workspaceRoot, autoSelectedPythonInterpreter)
                     .ignoreErrors();
@@ -414,7 +414,7 @@ export class PythonSettings implements IPythonSettings {
                   exclusionPatterns: [],
                   rebuildOnFileSave: true,
                   rebuildOnStart: true,
-                  tagFilePath: path.join(workspaceRoot, 'tags')
+                  tagFilePath: workspaceRoot ? path.join(workspaceRoot, 'tags') : ''
               };
         this.workspaceSymbols.tagFilePath = getAbsolutePath(
             systemVariables.resolveAny(this.workspaceSymbols.tagFilePath),
@@ -604,7 +604,10 @@ export class PythonSettings implements IPythonSettings {
     }
 }
 
-function getAbsolutePath(pathToCheck: string, rootDir: string): string {
+function getAbsolutePath(pathToCheck: string, rootDir: string | undefined): string {
+    if (!rootDir) {
+        return pathToCheck;
+    }
     // tslint:disable-next-line:prefer-type-cast no-unsafe-any
     pathToCheck = untildify(pathToCheck) as string;
     if (isTestExecution() && !pathToCheck) {
