@@ -35,6 +35,7 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
     private messageHooks = new Map<string, (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>>();
     private messageHookRequests = new Map<string, Deferred<boolean>>();
     private pendingReplies = new Map<string, Deferred<void>>();
+    private pendingShellMessages = new Set<string>();
 
     constructor(
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
@@ -113,7 +114,7 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
     private registerMessageHook(msgId: string) {
         // This has to be synchronous or we don't register the hook fast enough
         if (this.notebook && !this.messageHooks.has(msgId)) {
-            const callback = this.messageHookCallback.bind(this, msgId);
+            const callback = this.messageHookCallback.bind(this);
             this.messageHooks.set(msgId, callback);
             this.notebook.registerMessageHook(msgId, callback);
         }
@@ -127,23 +128,27 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
         }
     }
 
-    private async messageHookCallback(msgId: string, msg: KernelMessage.IIOPubMessage): Promise<boolean> {
+    private async messageHookCallback(msg: KernelMessage.IIOPubMessage): Promise<boolean> {
         const promise = createDeferred<boolean>();
         const requestId = uuid();
-        if (this.messageHooks.has(msgId)) {
+        // tslint:disable-next-line: no-any
+        const parentId = (msg.parent_header as any).msg_id;
+        if (this.messageHooks.has(parentId)) {
             this.messageHookRequests.set(requestId, promise);
-            this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_MessageHookCall, { requestId, msg });
+            this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_MessageHookCall, { requestId, parentId, msg });
         } else {
             promise.resolve(true);
         }
         return promise.promise;
     }
 
-    private async handleMessageHookResponse(args: { requestId: string; result: boolean }) {
+    private async handleMessageHookResponse(args: { requestId: string; parentId: string; result: boolean }) {
         const promise = this.messageHookRequests.get(args.requestId);
         if (promise) {
             this.messageHookRequests.delete(args.requestId);
-            promise.resolve(args.result);
+
+            // During a shell message, make sure all messages come out.
+            promise.resolve(this.pendingShellMessages.has(args.parentId) ? true : args.result);
         }
     }
 
@@ -224,6 +229,7 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
     }) {
         const notebook = await this.getNotebook();
         if (notebook) {
+            this.pendingShellMessages.add(payload.requestId);
             const future = notebook.sendCommMessage(
                 this.restoreBuffers(payload.buffers),
                 { data: payload.data, comm_id: payload.commId, target_name: payload.targetName },
@@ -237,11 +243,17 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
                         requestId,
                         msg: reply
                     });
+                    this.pendingShellMessages.delete(requestId);
                     future.dispose();
                 })
                 .catch(ex => {
                     this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_ShellSend_reject, { requestId, msg: ex });
                 });
+
+            future.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+                this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub, { requestId, msg });
+                return this.postCommMessage(msg as KernelMessage.ICommMsgMsg);
+            };
             future.onReply = (reply: KernelMessage.IShellMessage) => {
                 this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_ShellSend_reply, { requestId, msg: reply });
             };

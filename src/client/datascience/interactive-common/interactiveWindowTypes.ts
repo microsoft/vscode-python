@@ -504,8 +504,12 @@ export class IInteractiveWindowMapping {
     };
     public [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: string;
     public [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: string;
-    public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: { requestId: string; msg: KernelMessage.IIOPubMessage };
-    public [IPyWidgetMessages.IPyWidgets_MessageHookResponse]: { requestId: string; result: boolean };
+    public [IPyWidgetMessages.IPyWidgets_MessageHookCall]: {
+        requestId: string;
+        parentId: string;
+        msg: KernelMessage.IIOPubMessage;
+    };
+    public [IPyWidgetMessages.IPyWidgets_MessageHookResponse]: { requestId: string; parentId: string; result: boolean };
 
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.FinishCell]: ICell;

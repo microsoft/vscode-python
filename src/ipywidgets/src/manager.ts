@@ -86,9 +86,9 @@ export class WidgetManager extends jupyterlab.WidgetManager {
             throw x;
         });
 
-        // Check it has a _deserialize_state
-        if (!result._deserialize_state) {
-            window.console.log('_deserialize_state not found on class');
+        // Log to output
+        if (result) {
+            window.console.log(`WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);
         }
 
         return result;
