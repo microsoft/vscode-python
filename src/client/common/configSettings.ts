@@ -606,7 +606,7 @@ export class PythonSettings implements IPythonSettings {
 
 function getAbsolutePath(pathToCheck: string, rootDir: string | undefined): string {
     if (!rootDir) {
-        return pathToCheck;
+        rootDir = __dirname;
     }
     // tslint:disable-next-line:prefer-type-cast no-unsafe-any
     pathToCheck = untildify(pathToCheck) as string;
