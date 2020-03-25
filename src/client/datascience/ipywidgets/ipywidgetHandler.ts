@@ -28,7 +28,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
     private notebookIdentity: Uri | undefined;
-    private ipywigetMessages = Object.keys(IPyWidgetMessages);
+    private ipywidgetMessages = Object.keys(IPyWidgetMessages);
 
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
@@ -58,7 +58,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.NotebookIdentity) {
             this.saveIdentity(payload).catch(ex => traceError('Failed to initialize ipywidgetHandler', ex));
-        } else if (this.ipywigetMessages.includes(message)) {
+        } else if (this.ipywidgetMessages.includes(message)) {
             // tslint:disable-next-line: no-any
             this.getIPyWidgetMulticaster()?.receiveMessage({ message: message as any, payload });
         }
