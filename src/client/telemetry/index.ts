@@ -644,6 +644,15 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.ENVFILE_VARIABLE_SUBSTITUTION]: never | undefined;
     /**
+     * Telemetry event sent when an environment file is detected in the workspace.
+     */
+    [EventName.ENVFILE_WORKSPACE]: {
+        /**
+         * If there's a custom path speficied in the python.envFile workspace settings.
+         */
+        customEnvPath: boolean;
+    };
+    /**
      * Telemetry Event sent when user sends code to be executed in the terminal.
      *
      */
