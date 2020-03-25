@@ -289,6 +289,27 @@ Overall steps for releasing are covered in the
 
 To create a release _build_, follow the steps outlined in the [release plan](https://github.com/Microsoft/vscode-python/labels/release%20plan) (which has a [template](https://github.com/Microsoft/vscode-python/blob/master/.github/release_plan.md)).
 
+## Local Build
+
+Steps to build the extension on your machine once you've cloned the repo:
+
+```bash
+> npm install -g vsce
+# Perform the next steps in the vscode-python folder.
+> npm ci
+> python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
+> python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+> python3 -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/debugpy/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre debugpy
+> python3 -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+> python3 ./pythonFiles/install_debugpy.py
+> npm run clean
+> npm run package # This step takes around 10 minutes.
+```
+
+Resulting in a `ms-python-insiders.vsix` file in your `vscode-python` folder.
+
+⚠️ If you made changes to `package.json`, run `npm install` (instead of `npm ci`) to update `package-lock.json` and install dependencies all at once.
+
 ## Development Build
 If you would like to use the latest version of the extension as committed to `master` that has passed our test suite, then you may set the `"python.insidersChannel"` setting to `"daily"` or `"weekly"` based on how often you would like the extension to check for updates. 
 
