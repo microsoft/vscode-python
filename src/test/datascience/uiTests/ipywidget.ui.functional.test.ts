@@ -39,10 +39,6 @@ use(chaiAsPromised);
 
         suiteSetup(function() {
             // These are UI tests, hence nothing to do with platforms.
-            // Skip windows, as that is slow.
-            if (getOSType() === OSType.Windows) {
-                return this.skip();
-            }
             UseCustomEditor.enabled = useCustomEditorApi;
             this.timeout(30_000); // UI Tests, need time to start jupyter.
             this.retries(3); // UI Tests can be flaky.
@@ -149,6 +145,9 @@ use(chaiAsPromised);
         }
         async function openPyThreejsIpynb() {
             return openNotebookFile('pythreejs_widgets.ipynb');
+        }
+        async function openOutputAndInteractIpynb() {
+            return openNotebookFile('outputinteract_widgets.ipynb');
         }
 
         test('Notebook has 3 cells', async () => {
@@ -526,6 +525,61 @@ use(chaiAsPromised);
                     const dotHtml = await notebookUI.page?.evaluate(ele => ele.outerHTML, dots[0]);
                     // Confirm color of dot is red.
                     assert.include(dotHtml || '', 'yellow');
+                });
+            });
+            test('Render output and interact', async () => {
+                const { notebookUI } = await openOutputAndInteractIpynb();
+                await notebookUI.executeCell(0);
+                await notebookUI.executeCell(1);
+
+                await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
+                    // Confirm border is visible
+                    assert.include(cellOutputHtml, 'border');
+                });
+
+                // Run the cell that will stick output into the out border
+                await notebookUI.executeCell(2);
+
+                // Make sure output is shown
+                await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(1);
+                    // Confirm output went inside of previous cell
+                    assert.include(cellOutputHtml, 'Hello world');
+                });
+
+                // Make sure output on print cell is empty
+                await retryIfFail(async () => {
+                    const cell = await notebookUI.getCell(2);
+                    const output = await cell.$$('.cell-output-wrapper');
+                    assert.equal(output.length, 0, 'Cell should not have any output');
+                });
+
+                // interact portion
+                await notebookUI.executeCell(3);
+                await notebookUI.executeCell(4);
+                await notebookUI.executeCell(5);
+                // See if we have a slider in our output
+                const slider = await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(5);
+                    assert.include(cellOutputHtml, 'slider', 'Cell output should have rendered a slider');
+                    const sliderInner = await (await notebookUI.getCellOutput(5)).$$('.slider-container');
+                    assert.ok(sliderInner.length, 'Slider not found');
+                    return sliderInner[0];
+                });
+
+                // Click on the slider to change the value.
+                const rect = await slider.boundingBox();
+                if (rect) {
+                    await notebookUI.page?.mouse.move(rect?.x + 5, rect.y + rect.height / 2);
+                    await notebookUI.page?.mouse.down();
+                    await notebookUI.page?.mouse.up();
+                }
+
+                // Make sure the output value has changed to something other than 10
+                await retryIfFail(async () => {
+                    const cellOutputHtml = await notebookUI.getCellOutputHTML(5);
+                    assert.notInclude(cellOutputHtml, '<pre>10', 'Slider click did not update the span');
                 });
             });
         });
