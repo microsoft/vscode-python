@@ -6,13 +6,12 @@ import { assert } from 'chai';
 import { Uri } from 'vscode';
 
 import { ChildProcess } from 'child_process';
-import { IPlatformService } from '../../client/common/platform/types';
-import { IPythonExecutionFactory } from '../../client/common/process/types';
+import { IFileSystem } from '../../client/common/platform/types';
 import { Resource } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { JupyterZMQBinariesNotFoundError } from '../../client/datascience/jupyter/jupyterZMQBinariesNotFoundError';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
-import { IKernelConnection } from '../../client/datascience/kernel-launcher/types';
+import { IKernelConnection, IKernelFinder, IKernelProcess } from '../../client/datascience/kernel-launcher/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { PYTHON_PATH, sleep } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -25,13 +24,13 @@ suite('Kernel Launcher', () => {
     let kernelName: string;
 
     setup(() => {
-        process.env[`VSCODE_PYTHON_ROLLING`] = '1';
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-        const execFactory = ioc.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const interpreterService = ioc.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const paltformService = ioc.serviceContainer.get<IPlatformService>(IPlatformService);
-        kernelLauncher = new KernelLauncher(execFactory, interpreterService, paltformService);
+        const file = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
+        const finder = ioc.serviceContainer.get<IKernelFinder>(IKernelFinder);
+        const kernelProcess = ioc.serviceContainer.get<IKernelProcess>(IKernelProcess);
+        kernelLauncher = new KernelLauncher(interpreterService, file, finder, kernelProcess);
         pythonInterpreter = {
             path: PYTHON_PATH,
             sysPrefix: '1',
@@ -44,45 +43,54 @@ suite('Kernel Launcher', () => {
         kernelName = 'Python 3';
     });
 
-    teardown(async () => {
-        if (process.env.VSCODE_PYTHON_ROLLING) {
-            delete process.env.VSCODE_PYTHON_ROLLING;
+    test('Launch from resource', async function() {
+        if (!process.env.VSCODE_PYTHON_ROLLING) {
+            // tslint:disable-next-line: no-invalid-this
+            this.skip();
+        } else {
+            const kernel = await kernelLauncher.launch(resource, kernelName);
+
+            assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
+            assert.isOk<ChildProcess | undefined>(kernel.process, 'Child Process not found');
+
+            await kernel.dispose();
         }
     });
 
-    test('Launch from resource', async () => {
-        const kernel = await kernelLauncher.launch(resource, kernelName);
+    test('Launch from PythonInterpreter', async function() {
+        if (!process.env.VSCODE_PYTHON_ROLLING) {
+            // tslint:disable-next-line: no-invalid-this
+            this.skip();
+        } else {
+            const kernel = await kernelLauncher.launch(pythonInterpreter, kernelName);
 
-        assert.isOk<IKernelConnection>(kernel.connection, 'Connection not found');
-        assert.isOk<ChildProcess>(kernel.process, 'Child Process not found');
+            assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
+            assert.isOk<ChildProcess | undefined>(kernel.process, 'Child Process not found');
 
-        kernel.dispose();
+            await kernel.dispose();
+        }
     });
 
-    test('Launch from PythonInterpreter', async () => {
-        const kernel = await kernelLauncher.launch(pythonInterpreter, kernelName);
+    test('Bind with ZMQ', async function() {
+        if (!process.env.VSCODE_PYTHON_ROLLING) {
+            // tslint:disable-next-line: no-invalid-this
+            this.skip();
+        } else {
+            const kernel = await kernelLauncher.launch(resource, kernelName);
 
-        assert.isOk<IKernelConnection>(kernel.connection, 'Connection not found');
-        assert.isOk<ChildProcess>(kernel.process, 'Child Process not found');
+            try {
+                const zmq = await import('zeromq');
+                const sock = new zmq.Push();
 
-        kernel.dispose();
-    });
-
-    test('Bind with ZMQ', async () => {
-        const kernel = await kernelLauncher.launch(resource, kernelName);
-
-        try {
-            const zmq = await import('zeromq');
-            const sock = new zmq.Push();
-
-            await sock.bind(`tcp://${kernel.connection.ip}:${kernel.connection.stdin_port}`);
-            sock.send('some work').ignoreErrors(); // This will never return unless there's a listener. Just used for testing the API is available
-            await sleep(50);
-            sock.close();
-        } catch (e) {
-            throw new JupyterZMQBinariesNotFoundError(e.toString());
-        } finally {
-            kernel.dispose();
+                await sock.bind(`tcp://${kernel.connection!.ip}:${kernel.connection!.stdin_port}`);
+                sock.send('some work').ignoreErrors(); // This will never return unless there's a listener. Just used for testing the API is available
+                await sleep(50);
+                sock.close();
+            } catch (e) {
+                throw new JupyterZMQBinariesNotFoundError(e.toString());
+            } finally {
+                await kernel.dispose();
+            }
         }
     });
 });

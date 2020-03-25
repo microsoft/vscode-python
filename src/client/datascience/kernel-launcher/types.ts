@@ -4,7 +4,6 @@
 
 import { ChildProcess } from 'child_process';
 import { InterpreterUri } from '../../common/installer/types';
-import { IDisposable } from '../../common/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';
 
@@ -26,16 +25,21 @@ export interface IKernelConnection {
     transport: 'tcp' | 'ipc';
 }
 
-export interface IKernelProcess extends IDisposable {
-    process: ChildProcess;
-    connection: IKernelConnection;
+export const IKernelProcess = Symbol('IKernelProcess');
+
+export interface IKernelProcess {
+    process: ChildProcess | undefined;
+    connection: IKernelConnection | undefined;
+    dispose(): Promise<void | undefined>;
+    launch(interpreter: InterpreterUri, kernelSpec: IJupyterKernelSpec): Promise<void>;
 }
 
+export const IKernelFinder = Symbol('IKernelFinder');
 export interface IKernelFinder {
     findKernelSpec(
-        kernelName: string,
         interpreterPaths: string[],
-        currentInterpreter: PythonInterpreter | undefined
-    ): Promise<IJupyterKernelSpec | undefined>;
+        currentInterpreter: PythonInterpreter | undefined,
+        kernelName?: string
+    ): Promise<IJupyterKernelSpec>;
     getKernelSpec(path: string, kernelName: string): Promise<IJupyterKernelSpec | undefined>;
 }
