@@ -24,8 +24,6 @@
     * However this is a 3.2MB file.
     * Then our Widget manager also needs the widget controls. That would mean widget controls get included twice, once in our bundle and the other in the above mentioned `embed-amd.js` file.
     * Solution is to include everything thats in `embed-amd.js` into our bundle.
-    * The `embed-amd.js` includes source from files other than the widget controls, those include `libembed-amd.js` and `embed-amd-render.js`.
-        * The source for this can be found in [scripts/concat-amd-build.js](https://github.com/jupyter-widgets/ipywidgets/blob/857bee9c15ca25bd6b47b7777e8fcd07407214cf/packages/html-manager/scripts/concat-amd-build.js#L15)
 * We need types for `requirejs`, but installing this into `node_modules`, for extension causes conflicts as we use `require` in standard node (extension and UI).
     * Solution is to just copy the `@types/requirejs/index.d.ts` into the `types` folder.
 

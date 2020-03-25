@@ -14,6 +14,9 @@ import { restoreBuffers, serializeDataViews } from './serialization';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
 // tslint:disable: no-any
+/**
+ * This class maps between messages from the react code and talking to a real kernel.
+ */
 export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     public get postMessage(): Event<IPyWidgetMessage> {
         return this._postMessageEmitter.event;
