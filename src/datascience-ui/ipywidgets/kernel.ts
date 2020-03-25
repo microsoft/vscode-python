@@ -147,7 +147,9 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         }
     }
     private handleMessageHookCall(args: { requestId: string; msg: KernelMessage.IIOPubMessage }) {
-        const hook = this.messageHooks.get(args.msg.header.msg_id);
+        window.console.log('Message hoook callback');
+        // tslint:disable-next-line: no-any
+        const hook = this.messageHooks.get((args.msg.parent_header as any).msg_id);
         if (hook) {
             const result = hook(args.msg);
             // tslint:disable-next-line: no-any
@@ -162,7 +164,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
             } else {
                 this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_MessageHookResponse, {
                     requestId: args.requestId,
-                    result: !result
+                    result: result === true
                 });
             }
         }

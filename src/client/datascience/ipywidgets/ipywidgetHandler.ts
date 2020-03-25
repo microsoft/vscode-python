@@ -2,6 +2,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
+import { traceInfo } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -23,6 +24,7 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
     private pendingTargetNames: string[] = [];
     private notebookIdentity: Uri | undefined;
     private notebookInitializedForIpyWidgets: boolean = false;
+    private notebook: INotebook | undefined;
 
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
@@ -53,6 +55,9 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
 
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload?: any): void {
+        if (message.includes('IPyWidgets')) {
+            traceInfo(`IPyWidget message: ${message}`);
+        }
         switch (message) {
             case InteractiveWindowMessages.NotebookIdentity:
                 this.handleMessage(message, payload, this.saveIdentity);
@@ -94,6 +99,7 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
     private async requestCommInfo(args: { requestId: string; msg: KernelMessage.ICommInfoRequestMsg['content'] }) {
         const notebook = await this.getNotebook();
         if (notebook) {
+            this.notebook = notebook;
             const result = await notebook.requestCommInfo(args.msg);
             if (result) {
                 this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_RequestCommInfo_reply, {
@@ -104,29 +110,32 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
         }
     }
 
-    private async registerMessageHook(msgId: string) {
-        const notebook = await this.getNotebook();
-        if (notebook && !this.messageHooks.has(msgId)) {
+    private registerMessageHook(msgId: string) {
+        // This has to be synchronous or we don't register the hook fast enough
+        if (this.notebook && !this.messageHooks.has(msgId)) {
             const callback = this.messageHookCallback.bind(this, msgId);
             this.messageHooks.set(msgId, callback);
-            notebook.registerMessageHook(msgId, callback);
+            this.notebook.registerMessageHook(msgId, callback);
         }
     }
 
-    private async removeMessageHook(msgId: string) {
-        const notebook = await this.getNotebook();
-        if (notebook && this.messageHooks.has(msgId)) {
+    private removeMessageHook(msgId: string) {
+        if (this.notebook && this.messageHooks.has(msgId)) {
             const callback = this.messageHooks.get(msgId);
             this.messageHooks.delete(msgId);
-            notebook.removeMessageHook(msgId, callback!);
+            this.notebook.removeMessageHook(msgId, callback!);
         }
     }
 
-    private async messageHookCallback(_msgId: string, msg: KernelMessage.IIOPubMessage): Promise<boolean> {
+    private async messageHookCallback(msgId: string, msg: KernelMessage.IIOPubMessage): Promise<boolean> {
         const promise = createDeferred<boolean>();
         const requestId = uuid();
-        this.messageHookRequests.set(requestId, promise);
-        this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_MessageHookCall, { requestId, msg });
+        if (this.messageHooks.has(msgId)) {
+            this.messageHookRequests.set(requestId, promise);
+            this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_MessageHookCall, { requestId, msg });
+        } else {
+            promise.resolve(true);
+        }
         return promise.promise;
     }
 
@@ -228,15 +237,11 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
                         requestId,
                         msg: reply
                     });
+                    future.dispose();
                 })
                 .catch(ex => {
                     this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_ShellSend_reject, { requestId, msg: ex });
                 });
-            future.onIOPub = async (msg: KernelMessage.IIOPubMessage) => {
-                const newMsg = this.serializeDataViews(msg);
-                this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub, { requestId, msg: newMsg });
-                return this.postCommMessage(newMsg as KernelMessage.ICommMsgMsg);
-            };
             future.onReply = (reply: KernelMessage.IShellMessage) => {
                 this.postMessageToWebView(IPyWidgetMessages.IPyWidgets_ShellSend_reply, { requestId, msg: reply });
             };
@@ -279,9 +284,13 @@ export class IpywidgetHandler implements IInteractiveWindowListener {
     }
 
     private async getNotebook(): Promise<INotebook | undefined> {
-        if (this.notebookIdentity) {
-            return this.notebookProvider.getOrCreateNotebook({ identity: this.notebookIdentity, getOnly: true });
+        if (this.notebookIdentity && !this.notebook) {
+            this.notebook = await this.notebookProvider.getOrCreateNotebook({
+                identity: this.notebookIdentity,
+                getOnly: true
+            });
         }
+        return this.notebook;
     }
 
     private async saveIdentity(args: INotebookIdentity) {
