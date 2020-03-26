@@ -33,4 +33,111 @@ export namespace scripts {
         }
         return [args, parse];
     }
+
+    //============================
+    // completion.py
+
+    namespace _completion {
+        export type Response = (_Response1 | _Response2) & {
+            id: number;
+        };
+        type _Response1 = {
+            // tslint:disable-next-line:no-any no-banned-terms
+            arguments: any[];
+        };
+        type _Response2 =
+            | CompletionResponse
+            | HoverResponse
+            | DefinitionResponse
+            | ReferenceResponse
+            | SymbolResponse
+            | ArgumentsResponse;
+
+        type CompletionResponse = {
+            results: AutoCompleteItem[];
+        };
+        type HoverResponse = {
+            results: HoverItem[];
+        };
+        type DefinitionResponse = {
+            results: Definition[];
+        };
+        type ReferenceResponse = {
+            results: Reference[];
+        };
+        type SymbolResponse = {
+            results: Definition[];
+        };
+        type ArgumentsResponse = {
+            results: Signature[];
+        };
+
+        type Signature = {
+            name: string;
+            docstring: string;
+            description: string;
+            paramindex: number;
+            params: Argument[];
+        };
+        type Argument = {
+            name: string;
+            value: string;
+            docstring: string;
+            description: string;
+        };
+
+        type Reference = {
+            name: string;
+            fileName: string;
+            columnIndex: number;
+            lineIndex: number;
+            moduleName: string;
+        };
+
+        type AutoCompleteItem = {
+            type: string;
+            kind: string;
+            text: string;
+            description: string;
+            raw_docstring: string;
+            rightLabel: string;
+        };
+
+        type DefinitionRange = {
+            startLine: number;
+            startColumn: number;
+            endLine: number;
+            endColumn: number;
+        };
+        type Definition = {
+            type: string;
+            kind: string;
+            text: string;
+            fileName: string;
+            container: string;
+            range: DefinitionRange;
+        };
+
+        type HoverItem = {
+            kind: string;
+            text: string;
+            description: string;
+            docstring: string;
+            signature: string;
+        };
+    }
+
+    export function completion(jediPath?: string): [string[], (out: string) => _completion.Response[]] {
+        const script = path.join(SCRIPTS_DIR, 'completion.py');
+        const args = [script];
+        if (jediPath) {
+            args.push('custom');
+            args.push(jediPath);
+        }
+
+        function parse(out: string): _completion.Response[] {
+            return out.splitLines().map(resp => JSON.parse(resp));
+        }
+        return [args, parse];
+    }
 }

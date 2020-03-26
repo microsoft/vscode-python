@@ -9,8 +9,8 @@ export class JediFactory implements Disposable {
     private jediProxyHandlers: Map<string, JediProxyHandler<ICommandResult>>;
 
     constructor(
-        private extensionRootPath: string,
         private interpreter: PythonInterpreter | undefined,
+        // This is passed through to JediProxy().
         private serviceContainer: IServiceContainer
     ) {
         this.disposables = [];
@@ -33,12 +33,7 @@ export class JediFactory implements Disposable {
         }
 
         if (!this.jediProxyHandlers.has(workspacePath!)) {
-            const jediProxy = new JediProxy(
-                this.extensionRootPath,
-                workspacePath!,
-                this.interpreter,
-                this.serviceContainer
-            );
+            const jediProxy = new JediProxy(workspacePath!, this.interpreter, this.serviceContainer);
             const jediProxyHandler = new JediProxyHandler(jediProxy);
             this.disposables.push(jediProxy, jediProxyHandler);
             this.jediProxyHandlers.set(workspacePath!, jediProxyHandler);
