@@ -42,6 +42,12 @@ export enum WebHostNotebook {
     experiment = 'WebHostNotebook - experiment'
 }
 
+// Experiment to use a local ZMQ kernel connection as opposed to starting a Jupyter server locally
+export enum LocalZMQKernel {
+    control = 'LocalZMQKernel - control',
+    experiment = 'LocalZMQKernel - experiment'
+}
+
 /**
  * Experiment to check whether to to use a terminal to generate the environment variables of activated environments.
  *

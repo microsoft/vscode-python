@@ -114,6 +114,18 @@
         "max": 100
     },
     {
+        "name": "LocalZMQKernel - experiment",
+        "salt": "LocalZMQKernel",
+        "max": 0,
+        "min": 0
+    },
+    {
+        "name": "LocalZMQKernel - control",
+        "salt": "LocalZMQKernel",
+        "min": 0,
+        "max": 100
+    },
+    {
         "name": "CollectLSRequestTiming - experiment",
         "salt": "CollectLSRequestTiming",
         "min": 0,
