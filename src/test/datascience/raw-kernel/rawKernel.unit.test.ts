@@ -5,7 +5,6 @@ import { Slot } from '@phosphor/signaling';
 import { assert, expect } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as uuid from 'uuid/v4';
-import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
 import { IJMPConnection, IJMPConnectionInfo } from '../../../client/datascience/types';
 import { MockJMPConnection } from './mockJMP';
