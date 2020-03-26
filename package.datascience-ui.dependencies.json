@@ -6,6 +6,7 @@
     "@emotion/stylis",
     "@emotion/unitless",
     "@loadable/component",
+    "@jupyter-widgets/controls",
     "@mapbox/polylabel",
     "@nteract/markdown",
     "@nteract/mathjax",
