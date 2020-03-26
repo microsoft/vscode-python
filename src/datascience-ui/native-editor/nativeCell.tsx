@@ -28,6 +28,10 @@ import { IMonacoModelContentChangeEvent } from '../react-common/monacoHelpers';
 import { AddCellLine } from './addCellLine';
 import { actionCreators } from './redux/actions';
 
+namespace CssConstants {
+    export const CellOutputWrapper = 'cell-output-wrapper';
+}
+
 interface INativeCellBaseProps {
     role?: string;
     cellVM: ICellViewModel;
@@ -669,7 +673,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const toolbar = this.props.cellVM.cell.data.cell_type === 'markdown' ? this.renderMiddleToolbar() : null;
         if (this.shouldRenderOutput()) {
             return (
-                <div className="cell-output-wrapper">
+                <div className={CssConstants.CellOutputWrapper}>
                     {toolbar}
                     <CellOutput
                         cellVM={this.props.cellVM}
@@ -703,7 +707,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private focusInOutput(): boolean {
         const focusedElement = document.activeElement as HTMLElement;
         if (focusedElement) {
-            return focusedElement.closest('.cell-output-wrapper') !== null;
+            return focusedElement.closest(`.${CssConstants.CellOutputWrapper}`) !== null;
         }
         return false;
     }
