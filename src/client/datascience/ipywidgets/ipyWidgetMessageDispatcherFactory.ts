@@ -94,7 +94,7 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
     public dispose() {
         this.disposed = true;
         while (this.disposables.length) {
-            this.disposables.shift()?.dispose();
+            this.disposables.shift()?.dispose(); // NOSONAR
         }
     }
     public create(identity: Uri): IIPyWidgetMessageDispatcher {

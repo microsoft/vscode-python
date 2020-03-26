@@ -45,7 +45,7 @@ export class BaseWebUI implements IAsyncDisposable {
     private browser?: playwright.ChromiumBrowser;
     public async dispose() {
         while (this.disposables.length) {
-            this.disposables.shift()?.dispose();
+            this.disposables.shift()?.dispose(); // NOSONAR
         }
         await this.browser?.close();
         await this.page?.close();
