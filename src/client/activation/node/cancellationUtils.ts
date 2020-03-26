@@ -10,13 +10,13 @@ import { randomBytes } from 'crypto';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
-import { CancellationId, MessageConnection } from 'vscode-jsonrpc';
 import {
     CancellationReceiverStrategy,
     CancellationSenderStrategy,
     CancellationStrategy,
     Disposable
-} from 'vscode-languageserver';
+} from 'vscode-languageclient';
+import { CancellationId, MessageConnection } from 'vscode-languageclient/node_modules/vscode-jsonrpc';
 
 function getCancellationFolderPath(folderName: string) {
     return path.join(os.tmpdir(), 'python-languageserver-cancellation', folderName);
