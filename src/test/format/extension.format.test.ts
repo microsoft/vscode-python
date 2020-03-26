@@ -47,7 +47,6 @@ suite('Formatting - General', () => {
         [autoPep8FileToFormat, blackFileToFormat, yapfFileToFormat].forEach(file => {
             fs.copySync(originalUnformattedFile, file, { overwrite: true });
         });
-        fs.ensureDirSync(path.dirname(autoPep8FileToFormat));
         formattedYapf = fs.readFileSync(yapfFormatted).toString();
         formattedAutoPep8 = fs.readFileSync(autoPep8Formatted).toString();
         formattedBlack = fs.readFileSync(blackFormatted).toString();
