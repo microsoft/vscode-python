@@ -162,6 +162,10 @@ export class JupyterNotebookBase implements INotebook {
         return this.kernelChanged.event;
     }
     private kernelChanged = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>();
+    public get onKernelRestarted(): Event<void> {
+        return this.kernelRestarted.event;
+    }
+    private readonly kernelRestarted = new EventEmitter<void>();
     private disposed = new EventEmitter<void>();
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
@@ -199,7 +203,7 @@ export class JupyterNotebookBase implements INotebook {
         return this.owner;
     }
 
-    public dispose(): Promise<void> {
+    public async dispose(): Promise<void> {
         if (this.onStatusChangedEvent) {
             this.onStatusChangedEvent.dispose();
         }
@@ -210,11 +214,11 @@ export class JupyterNotebookBase implements INotebook {
         traceInfo(`Shutting down session ${this.identity.toString()}`);
         if (!this._disposed) {
             this._disposed = true;
-            const dispose = this.session ? this.session.dispose() : undefined;
-            return dispose ? dispose : Promise.resolve();
+            if (this.session) {
+                await this.session.dispose();
+            }
         }
         this.disposed.fire();
-        return Promise.resolve();
     }
 
     public get onSessionStatusChanged(): Event<ServerStatus> {
@@ -436,7 +440,7 @@ export class JupyterNotebookBase implements INotebook {
             traceInfo('restartKernel - initialSetup');
             await this.initialize();
             traceInfo('restartKernel - initialSetup completed');
-
+            this.kernelRestarted.fire();
             return;
         }
 

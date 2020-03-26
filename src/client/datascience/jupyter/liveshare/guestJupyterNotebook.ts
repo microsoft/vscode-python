@@ -68,6 +68,7 @@ export class GuestJupyterNotebook
     public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
         IJupyterKernelSpec | LiveKernelModel
     >().event;
+    public onKernelRestarted = new EventEmitter<void>().event;
     public onDisposed = new EventEmitter<void>().event;
     private _jupyterLab?: typeof import('@jupyterlab/services');
     private responseQueue: ResponseQueue = new ResponseQueue();

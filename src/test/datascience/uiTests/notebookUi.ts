@@ -13,10 +13,19 @@ enum CellToolbarButton {
     run = 0
 }
 
+enum MainToolbarButton {
+    clearOutput = 6
+}
+
 export class NotebookEditorUI extends BaseWebUI {
     public async getCellCount(): Promise<number> {
         const items = await this.page!.$$('.cell-wrapper');
         return items.length;
+    }
+
+    public async clearOutput(): Promise<void> {
+        const runButton = await this.getMainToolbarButton(MainToolbarButton.clearOutput);
+        await runButton.click({ button: 'left' });
     }
 
     public async executeCell(cellIndex: number): Promise<void> {
@@ -50,6 +59,13 @@ export class NotebookEditorUI extends BaseWebUI {
     public async getCell(cellIndex: number): Promise<ElementHandle<Element>> {
         const items = await this.page!.$$('.cell-wrapper');
         return items[cellIndex];
+    }
+    private async getMainToolbarButton(button: MainToolbarButton): Promise<ElementHandle<Element>> {
+        const buttons = await this.page!.$$('.toolbar-menu-bar button[role=button]');
+        if (buttons.length === 0) {
+            assert.fail('Main toolbar Buttons not available');
+        }
+        return buttons[button];
     }
     private async getCellToolbar(cellIndex: number): Promise<ElementHandle<Element>> {
         const cell = await this.getCell(cellIndex);

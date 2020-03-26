@@ -38,6 +38,9 @@ export class NotebookProvider implements INotebookProvider {
     private serverPromise: Promise<INotebookServer | undefined> | undefined;
     private allowingUI = false;
     private _notebookCreated = new EventEmitter<{ identity: Uri; notebook: INotebook }>();
+    public get activeNotebooks() {
+        return [...this.notebooks.values()];
+    }
     constructor(
         @inject(ProgressReporter) private readonly progressReporter: ProgressReporter,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,

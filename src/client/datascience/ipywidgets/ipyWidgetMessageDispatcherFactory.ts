@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { IDisposable, IDisposableRegistry } from '../../common/types';
-import { INotebookProvider } from '../types';
+import { INotebook, INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcher } from './ipyWidgetMessageDispatcher';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
 
@@ -74,24 +74,29 @@ class IPyWidgetMessageDispatcherWithOldMessages implements IIPyWidgetMessageDisp
  * - Now, both ipywidget managers in both notebooks have the same data, hence are able to render the same controls.
  */
 @injectable()
-export class IPyWidgetMessageDispatcherFactory {
+export class IPyWidgetMessageDispatcherFactory implements IDisposable {
     private readonly ipywidgetMulticasters = new Map<string, IPyWidgetMessageDispatcher>();
     private readonly messages: IPyWidgetMessage[] = [];
+    private disposed = false;
+    private disposables: IDisposable[] = [];
     constructor(
         @inject(INotebookProvider) private notebookProvider: INotebookProvider,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
-        disposables.push(
-            notebookProvider.onNotebookCreated(async e => {
-                e.notebook.onDisposed(() => {
-                    const item = this.ipywidgetMulticasters.get(e.identity.fsPath);
-                    item?.dispose(); // NOSONAR
-                    this.ipywidgetMulticasters.delete(e.identity.fsPath);
-                });
-            })
+        disposables.push(this);
+        notebookProvider.onNotebookCreated(e => this.trackDisposingOfNotebook(e.notebook), this, this.disposables);
+
+        notebookProvider.activeNotebooks.forEach(nbPromise =>
+            nbPromise.then(notebook => this.trackDisposingOfNotebook(notebook)).ignoreErrors()
         );
     }
 
+    public dispose() {
+        this.disposed = true;
+        while (this.disposables.length) {
+            this.disposables.shift()?.dispose();
+        }
+    }
     public create(identity: Uri): IIPyWidgetMessageDispatcher {
         let baseDispatcher = this.ipywidgetMulticasters.get(identity.fsPath);
         if (!baseDispatcher) {
@@ -112,6 +117,20 @@ export class IPyWidgetMessageDispatcherFactory {
         );
         this.disposables.push(dispatcher);
         return dispatcher;
+    }
+    private trackDisposingOfNotebook(notebook: INotebook) {
+        if (this.disposed) {
+            return;
+        }
+        notebook.onDisposed(
+            () => {
+                const item = this.ipywidgetMulticasters.get(notebook.identity.fsPath);
+                item?.dispose(); // NOSONAR
+                this.ipywidgetMulticasters.delete(notebook.identity.fsPath);
+            },
+            this,
+            this.disposables
+        );
     }
 
     private onMessage(_message: IPyWidgetMessage) {

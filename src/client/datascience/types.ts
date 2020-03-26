@@ -114,6 +114,7 @@ export interface INotebook extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
+    onKernelRestarted: Event<void>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(
@@ -914,6 +915,11 @@ export interface INotebookProvider {
      * Fired when a notebook has been created for a given Uri/Identity
      */
     onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
+
+    /**
+     * List of all notebooks (active and ones that are being constructed).
+     */
+    activeNotebooks: Promise<INotebook>[];
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */

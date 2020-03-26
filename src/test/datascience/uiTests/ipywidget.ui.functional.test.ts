@@ -172,12 +172,18 @@ use(chaiAsPromised);
             });
         });
 
-        test('Slider Widget', async () => {
-            const { notebookUI } = await openStandardWidgetsIpynb();
+        async function openNotebookAndTestSliderWidget() {
+            const result = await openStandardWidgetsIpynb();
+            const notebookUI = result.notebookUI;
             if (!ioc.mockJupyter) {
                 await assert.eventually.isFalse(notebookUI.cellHasOutput(0));
             }
 
+            await verifySliderWidgetIsAvailableAfterExecution(notebookUI);
+
+            return result;
+        }
+        async function verifySliderWidgetIsAvailableAfterExecution(notebookUI: NotebookEditorUI) {
             await notebookUI.executeCell(0);
 
             await retryIfFail(async () => {
@@ -193,7 +199,8 @@ use(chaiAsPromised);
                 assert.include(outputHtml, 'ui-slider');
                 assert.include(outputHtml, '<div class="ui-slider');
             });
-        });
+        }
+        test('Slider Widget', openNotebookAndTestSliderWidget);
         test('Text Widget', async () => {
             const { notebookUI } = await openStandardWidgetsIpynb();
             if (!ioc.mockJupyter) {
@@ -252,6 +259,43 @@ use(chaiAsPromised);
                 if (ioc.mockJupyter) {
                     return this.skip();
                 }
+            });
+            test('Widget renderes after closing and re-opening notebook', async () => {
+                const result = await openNotebookAndTestSliderWidget();
+
+                // Closing notebooks causes it to re-open due to prompt `Do you want to save, cancel ,etc)`.
+                // Applies to old nb, just hack and disable it.
+                await result.notebookUI.page?.close();
+                await result.webViewPanel.dispose();
+
+                // Open the same notebook again and test.
+                await openNotebookAndTestSliderWidget();
+            });
+            test('Widget renderes after restarting kernel', async () => {
+                const { notebookUI, notebookEditor } = await openNotebookAndTestSliderWidget();
+
+                // Clear the output
+                await notebookUI.clearOutput();
+                await retryIfFail(async () => notebookUI.cellHasOutput(0));
+
+                // Restart the kernel.
+                await notebookEditor.restartKernel();
+
+                // Execute cell again and verify output is displayed.
+                await verifySliderWidgetIsAvailableAfterExecution(notebookUI);
+            });
+            test('Widget renderes after interrupting kernel', async () => {
+                const { notebookUI, notebookEditor } = await openNotebookAndTestSliderWidget();
+
+                // Clear the output
+                await notebookUI.clearOutput();
+                await retryIfFail(async () => notebookUI.cellHasOutput(0));
+
+                // Restart the kernel.
+                await notebookEditor.interruptKernel();
+
+                // Execute cell again and verify output is displayed.
+                await verifySliderWidgetIsAvailableAfterExecution(notebookUI);
             });
             test('Button Interaction across Cells', async () => {
                 const { notebookUI } = await openStandardWidgetsIpynb();

@@ -33,8 +33,11 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     private pendingShellMessages = new Set<string>();
 
     private readonly disposables: IDisposable[] = [];
+    private kernelRestartHandlerAttached = false;
+    private disposed = false;
     constructor(private readonly notebookProvider: INotebookProvider, public readonly notebookIdentity: Uri) {}
     public dispose() {
+        this.disposed = true;
         while (this.disposables.length) {
             const disposable = this.disposables.shift();
             disposable?.dispose(); // NOSONAR
@@ -199,9 +202,27 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 getOnly: true
             });
         }
+        if (this.notebook && !this.kernelRestartHandlerAttached) {
+            this.kernelRestartHandlerAttached = true;
+            this.disposables.push(this.notebook.onKernelRestarted(this.handleKernelRestarts, this));
+        }
         return this.notebook;
     }
-
+    /**
+     * When a kernel restarts, we need to ensure the comm targets are re-registered.
+     * This must happen before anything else is processed.
+     */
+    private async handleKernelRestarts() {
+        if (this.disposed || this.commTargetsRegistered.size === 0 || !this.notebook) {
+            return;
+        }
+        // Ensure we re-register the comm targets.
+        Array.from(this.commTargetsRegistered.keys()).forEach(targetName => {
+            this.commTargetsRegistered.set(targetName, undefined);
+            this.pendingTargetNames.add(targetName);
+        });
+        this.registerCommTargets(this.notebook);
+    }
     private async requestCommInfo(args: { requestId: string; msg: KernelMessage.ICommInfoRequestMsg['content'] }) {
         const notebook = await this.getNotebook();
         if (notebook) {

@@ -24,24 +24,8 @@ import { ServerStatus } from '../../datascience-ui/interactive-common/mainState'
 import { noop } from '../core';
 
 export class MockJupyterNotebook implements INotebook {
-    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
-        IJupyterKernelSpec | LiveKernelModel
-    >().event;
-    public onDisposed = new EventEmitter<void>().event;
-    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
-
-    constructor(private owner: INotebookServer) {
-        noop();
-    }
-
     public get server(): INotebookServer {
         return this.owner;
-    }
-
-    public registerIOPubListener(
-        _listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
-    ): void {
-        noop();
     }
 
     public get identity(): Uri {
@@ -58,15 +42,30 @@ export class MockJupyterNotebook implements INotebook {
     public get status(): ServerStatus {
         return ServerStatus.Idle;
     }
+
+    public get resource(): Resource {
+        return Uri.file('foo.py');
+    }
+    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
+        IJupyterKernelSpec | LiveKernelModel
+    >().event;
+    public onDisposed = new EventEmitter<void>().event;
+    public onKernelRestarted = new EventEmitter<void>().event;
+    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
+
+    constructor(private owner: INotebookServer) {
+        noop();
+    }
+    public registerIOPubListener(
+        _listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
+    ): void {
+        noop();
+    }
     public getGatherProvider(): IGatherProvider | undefined {
         throw new Error('Method not implemented.');
     }
     public getCellHashProvider(): ICellHashProvider | undefined {
         throw new Error('Method not implemented.');
-    }
-
-    public get resource(): Resource {
-        return Uri.file('foo.py');
     }
 
     public clear(_id: string): void {
