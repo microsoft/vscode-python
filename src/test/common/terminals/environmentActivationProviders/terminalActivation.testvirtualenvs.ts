@@ -11,8 +11,10 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import {
     PYTHON_PATH,
+    resetGlobalInterpreterPathSetting,
     restorePythonPathInWorkspaceRoot,
     setGlobalInterpreterPath,
+    setPythonPathInWorkspaceRoot,
     updateSetting,
     waitForCondition
 } from '../../../common';
@@ -102,6 +104,7 @@ suite('Activation of Environments in Terminal', () => {
         await terminalSettings.update('integrated.shell.linux', defaultShell.Linux, vscode.ConfigurationTarget.Global);
         await pythonSettings.update('condaPath', undefined, vscode.ConfigurationTarget.Workspace);
         await restorePythonPathInWorkspaceRoot();
+        await resetGlobalInterpreterPathSetting();
     }
 
     /**
@@ -143,6 +146,7 @@ suite('Activation of Environments in Terminal', () => {
             vscode.ConfigurationTarget.WorkspaceFolder
         );
         await setGlobalInterpreterPath(envPath);
+        await setPythonPathInWorkspaceRoot(envPath);
         const content = await openTerminalAndAwaitCommandContent(waitTimeForActivation, file, outputFile, 5_000);
         expect(fileSystem.arePathsSame(content, envPath)).to.equal(true, 'Environment not activated');
     }
