@@ -30,6 +30,8 @@ import { actionCreators } from './redux/actions';
 
 namespace CssConstants {
     export const CellOutputWrapper = 'cell-output-wrapper';
+    export const CellOutputWrapperClass = `.${CellOutputWrapper}`;
+    export const ImageButtonClass = '.image-button';
 }
 
 interface INativeCellBaseProps {
@@ -180,8 +182,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private onMouseClick = (ev: React.MouseEvent<HTMLDivElement>) => {
         if (ev.nativeEvent.target) {
             const elem = ev.nativeEvent.target as HTMLElement;
-            if (!elem.className.includes || !elem.className.includes('image-button')) {
-                // Not a click on an button in a toolbar, select the cell.
+            if (!elem.closest(CssConstants.ImageButtonClass) && !elem.closest(CssConstants.CellOutputWrapperClass)) {
+                // Not a click on an button in a toolbar or in output, select the cell.
                 ev.stopPropagation();
                 this.lastKeyPressed = undefined;
                 this.props.selectCell(this.cellId);
@@ -190,9 +192,12 @@ export class NativeCell extends React.Component<INativeCellProps> {
     };
 
     private onMouseDoubleClick = (ev: React.MouseEvent<HTMLDivElement>) => {
-        // When we receive double click, propagate upwards. Might change our state
-        ev.stopPropagation();
-        this.props.focusCell(this.cellId, CursorPos.Current);
+        const elem = ev.nativeEvent.target as HTMLElement;
+        if (!elem.closest(CssConstants.ImageButtonClass) && !elem.closest(CssConstants.CellOutputWrapperClass)) {
+            // When we receive double click, propagate upwards. Might change our state
+            ev.stopPropagation();
+            this.props.focusCell(this.cellId, CursorPos.Current);
+        }
     };
 
     private shouldRenderCodeEditor = (): boolean => {
@@ -707,7 +712,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private focusInOutput(): boolean {
         const focusedElement = document.activeElement as HTMLElement;
         if (focusedElement) {
-            return focusedElement.closest(`.${CssConstants.CellOutputWrapper}`) !== null;
+            return focusedElement.closest(CssConstants.CellOutputWrapperClass) !== null;
         }
         return false;
     }
