@@ -237,8 +237,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         const requestId = uuid();
         // tslint:disable-next-line: no-any
         const parentId = (msg.parent_header as any).msg_id;
-        // Don't hook comm messages. They should be free to return always.
-        if (this.messageHooks.has(parentId) && !msg.header.msg_type.includes('comm')) {
+        if (this.messageHooks.has(parentId)) {
             this.messageHookRequests.set(requestId, promise);
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_MessageHookCall, { requestId, parentId, msg });
         } else {
@@ -247,13 +246,15 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         return promise.promise;
     }
 
-    private handleMessageHookResponse(args: { requestId: string; parentId: string; result: boolean }) {
+    private handleMessageHookResponse(args: { requestId: string; parentId: string; msgType: string; result: boolean }) {
         const promise = this.messageHookRequests.get(args.requestId);
         if (promise) {
             this.messageHookRequests.delete(args.requestId);
 
             // During a shell message, make sure all messages come out.
-            promise.resolve(this.pendingShellMessages.has(args.parentId) ? true : args.result);
+            promise.resolve(
+                this.pendingShellMessages.has(args.parentId) || args.msgType.includes('comm') ? true : args.result
+            );
         }
     }
 

@@ -509,7 +509,12 @@ export class IInteractiveWindowMapping {
         parentId: string;
         msg: KernelMessage.IIOPubMessage;
     };
-    public [IPyWidgetMessages.IPyWidgets_MessageHookResponse]: { requestId: string; parentId: string; result: boolean };
+    public [IPyWidgetMessages.IPyWidgets_MessageHookResponse]: {
+        requestId: string;
+        parentId: string;
+        msgType: string;
+        result: boolean;
+    };
 
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.FinishCell]: ICell;

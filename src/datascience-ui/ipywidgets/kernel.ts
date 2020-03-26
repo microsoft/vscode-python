@@ -160,6 +160,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                     this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_MessageHookResponse, {
                         requestId: args.requestId,
                         parentId: args.parentId,
+                        msgType: args.msg.header.msg_type,
                         result: r
                     });
                 });
@@ -167,6 +168,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                 this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_MessageHookResponse, {
                     requestId: args.requestId,
                     parentId: args.parentId,
+                    msgType: args.msg.header.msg_type,
                     result: result === true
                 });
             }
@@ -175,6 +177,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
             this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_MessageHookResponse, {
                 requestId: args.requestId,
                 parentId: args.parentId,
+                msgType: args.msg.header.msg_type,
                 result: true
             });
         }
