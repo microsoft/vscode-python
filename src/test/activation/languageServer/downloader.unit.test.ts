@@ -73,12 +73,13 @@ suite('Language Server Activation - Downloader', () => {
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
-        const [uri, version] = await languageServerDownloader.getDownloadInfo(resource);
+        const [uri, version, name] = await languageServerDownloader.getDownloadInfo(resource);
 
         folderService.verifyAll();
         workspaceService.verifyAll();
         expect(uri).to.equal(pkg.uri);
         expect(version).to.equal(pkg.version.raw);
+        expect(name).to.equal('ls');
     });
 
     test('Get download info - HTTPS without resource', async () => {
@@ -97,12 +98,13 @@ suite('Language Server Activation - Downloader', () => {
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
-        const [uri, version] = await languageServerDownloader.getDownloadInfo(undefined);
+        const [uri, version, name] = await languageServerDownloader.getDownloadInfo(undefined);
 
         folderService.verifyAll();
         workspaceService.verifyAll();
         expect(uri).to.equal(pkg.uri);
         expect(version).to.equal(pkg.version.raw);
+        expect(name).to.equal('ls');
     });
 
     test('Get download info - HTTPS disabled', async () => {
@@ -121,13 +123,14 @@ suite('Language Server Activation - Downloader', () => {
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
-        const [uri, version] = await languageServerDownloader.getDownloadInfo(resource);
+        const [uri, version, name] = await languageServerDownloader.getDownloadInfo(resource);
 
         folderService.verifyAll();
         workspaceService.verifyAll();
         // tslint:disable-next-line:no-http-string
         expect(uri).to.deep.equal('http://a.b.com/x/y/z/ls.nupkg');
         expect(version).to.equal(pkg.version.raw);
+        expect(name).to.equal('ls');
     });
 
     test('Get download info - HTTP', async () => {
@@ -138,12 +141,13 @@ suite('Language Server Activation - Downloader', () => {
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
-        const [uri, version] = await languageServerDownloader.getDownloadInfo(resource);
+        const [uri, version, name] = await languageServerDownloader.getDownloadInfo(resource);
 
         folderService.verifyAll();
         workspaceService.verifyAll();
         expect(uri).to.equal(pkg.uri);
         expect(version).to.equal(pkg.version.raw);
+        expect(name).to.equal('ls');
     });
 
     test('Get download info - bogus URL', async () => {
@@ -153,12 +157,13 @@ suite('Language Server Activation - Downloader', () => {
             .returns(() => Promise.resolve(pkg))
             .verifiable(TypeMoq.Times.once());
 
-        const [uri, version] = await languageServerDownloader.getDownloadInfo(resource);
+        const [uri, version, name] = await languageServerDownloader.getDownloadInfo(resource);
 
         folderService.verifyAll();
         workspaceService.verifyAll();
         expect(uri).to.equal(pkg.uri);
         expect(version).to.equal(pkg.version.raw);
+        expect(name).to.equal('ls');
     });
 
     suite('Test LanguageServerDownloader.downloadFile', () => {
