@@ -60,8 +60,13 @@ export class PythonExecutionService implements IPythonExecutionService {
             .catch(() => false);
     }
 
-    public getExecutionInfo(args: string[]): PythonExecutionInfo {
-        return { command: this.pythonPath, args };
+    public getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo {
+        return {
+            // For vanilla environments the info is simple.
+            command: this.pythonPath,
+            args: pythonArgs ? pythonArgs : [],
+            python: [this.pythonPath]
+        };
     }
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {

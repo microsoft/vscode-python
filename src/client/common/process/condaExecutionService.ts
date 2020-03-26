@@ -8,6 +8,8 @@ import { IProcessService, PythonExecutionInfo } from './types';
 
 @injectable()
 export class CondaExecutionService extends PythonExecutionService {
+    private readonly envArgs: string[];
+    private readonly runArgs: string[];
     constructor(
         serviceContainer: IServiceContainer,
         procService: IProcessService,
@@ -16,12 +18,23 @@ export class CondaExecutionService extends PythonExecutionService {
         private readonly condaEnvironment: CondaEnvironmentInfo
     ) {
         super(serviceContainer, procService, pythonPath);
+        if (this.condaEnvironment.name === '') {
+            this.envArgs = ['-p', this.condaEnvironment.path];
+        } else {
+            this.envArgs = ['-n', this.condaEnvironment.name];
+        }
+        this.runArgs = ['run', ...this.envArgs];
     }
 
-    public getExecutionInfo(args: string[]): PythonExecutionInfo {
-        const executionArgs =
-            this.condaEnvironment.name !== '' ? ['-n', this.condaEnvironment.name] : ['-p', this.condaEnvironment.path];
-
-        return { command: this.condaFile, args: ['run', ...executionArgs, 'python', ...args] };
+    public getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo {
+        if (!pythonArgs) {
+            pythonArgs = [];
+        }
+        const condaArgs = [...this.runArgs, 'python'];
+        return {
+            command: this.condaFile,
+            args: [...condaArgs, ...pythonArgs!],
+            python: [this.condaFile, ...condaArgs]
+        };
     }
 }

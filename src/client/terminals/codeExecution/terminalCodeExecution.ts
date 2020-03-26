@@ -60,15 +60,9 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
     public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecutionInfo> {
         const pythonSettings = this.configurationService.getSettings(resource);
-        const command = pythonSettings.pythonPath;
+        const command = path.normalize(pythonSettings.pythonPath);
         const launchArgs = pythonSettings.terminal.launchArgs;
-
-        const isWindows = this.platformService.isWindows;
-
-        return {
-            command: isWindows ? command.replace(/\\/g, '/') : command,
-            args: [...launchArgs, ...args]
-        };
+        return { command, args: [...launchArgs, ...args], python: [command] };
     }
 
     // Overridden in subclasses, see djangoShellCodeExecution.ts

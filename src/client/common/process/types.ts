@@ -145,7 +145,7 @@ export interface IPythonExecutionService {
     getInterpreterInformation(): Promise<InterpreterInfomation | undefined>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
-    getExecutionInfo(args: string[]): PythonExecutionInfo;
+    getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo;
 
     execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
     execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
@@ -157,6 +157,8 @@ export interface IPythonExecutionService {
 export type PythonExecutionInfo = {
     command: string;
     args: string[];
+
+    python: string[];
 };
 /**
  * Identical to the PythonExecutionService, but with a `dispose` method.
