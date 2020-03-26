@@ -4,24 +4,13 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { CancellationToken } from 'vscode';
+import { createPromiseFromCancellation } from '../../common/cancellation';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IPersistentState, IPersistentStateFactory } from '../../common/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { IPathUtils, IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../types';
 import { IKernelFinder } from './types';
-
-const windowsPaths = new Map([
-    ['users', process.env.HOMEPATH?.substr(0, 9)],
-    ['jupyter', '\\AppData\\Roaming\\jupyter\\kernels\\'],
-    ['kernel', 'share\\jupyter\\kernels\\']
-]);
-
-const unixPaths = new Map([
-    ['home', process.env.HOME],
-    ['linuxJupyterPath', '/.local/share/jupyter/kernels/'],
-    ['macJupyterPath', '/Library/Jupyter/kernels/'],
-    ['kernel', 'share/jupyter/kernels/']
-]);
 
 // This class searches for a kernel that matches the given kernel name.
 // First it seraches on a global persistent state, then on the installed python interpreters,
@@ -29,62 +18,106 @@ const unixPaths = new Map([
 // If a kernel name is not given, it returns a default IJupyterKernelSpec created from the current interpreter.
 @injectable()
 export class KernelFinder implements IKernelFinder {
-    private state: IPersistentState<Map<string, string>>;
+    private cachedKernelSpecs: IPersistentState<Map<string, string>>;
+    private activeInterpreter: PythonInterpreter | undefined;
+
+    private kernelPaths = new Map([
+        ['winJupyterPath', '/AppData/Roaming/jupyter/kernels/'],
+        ['linuxJupyterPath', '/.local/share/jupyter/kernels/'],
+        ['macJupyterPath', '/Library/Jupyter/kernels/'],
+        ['kernel', 'share/jupyter/kernels/']
+    ]);
 
     constructor(
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IFileSystem) private file: IFileSystem,
-        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory
+        @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils
     ) {
-        this.state = this.stateFactory.createGlobalPersistentState<Map<string, string>>('cachedPaths', new Map());
+        this.cachedKernelSpecs = this.stateFactory.createGlobalPersistentState<Map<string, string>>(
+            'cachedPaths',
+            new Map()
+        );
     }
 
     public async findKernelSpec(
-        interpreterPaths: string[],
-        currentInterpreter: PythonInterpreter | undefined,
+        resource: Resource,
+        token: CancellationToken,
         kernelName?: string
     ): Promise<IJupyterKernelSpec> {
         if (kernelName) {
-            let spec = await this.findCachePath(kernelName);
+            const result = await Promise.race([
+                this.findCachePath(kernelName),
+                this.interpreterService.getInterpreters(resource).then(interpreters => {
+                    const interpreterPaths = interpreters.map(interp => interp.path);
+                    return this.findInterpreterPath(interpreterPaths, kernelName);
+                }),
+                this.findDiskPath(kernelName),
+                createPromiseFromCancellation({
+                    defaultValue: undefined,
+                    cancelAction: 'resolve',
+                    token: token
+                })
+            ]);
 
-            if (!spec) {
-                spec = await this.findInterpreterPath(interpreterPaths, kernelName);
-            }
-
-            if (!spec) {
-                spec = await this.findDiskPath(kernelName);
-            }
-
-            return spec ? spec : this.getDefaultKernelSpec(currentInterpreter);
+            return result ? result : this.getDefaultKernelSpec(resource);
         }
 
-        return this.getDefaultKernelSpec(currentInterpreter);
+        return this.getDefaultKernelSpec(resource);
     }
 
-    private async getKernelSpec(kernelPath: string, kernelName: string): Promise<IJupyterKernelSpec | undefined> {
+    public async getKernelSpecFromActiveInterpreter(
+        resource: Resource,
+        kernelName?: string
+    ): Promise<IJupyterKernelSpec | undefined> {
+        this.activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
+
+        if (this.activeInterpreter) {
+            return this.getKernelSpec(path.join(this.activeInterpreter.path, 'share/jupyter/kernels/'), kernelName);
+        }
+    }
+
+    private async getKernelSpec(kernelPath: string, kernelName?: string): Promise<IJupyterKernelSpec | undefined> {
         const kernelJSON = '\\kernel.json';
         const pathExists = await this.file.fileExists(kernelPath);
 
         if (pathExists) {
             const kernels = await this.file.getSubDirectories(kernelPath);
 
+            // If no kernel name is included, return the first kernel
+            if (!kernelName) {
+                try {
+                    return JSON.parse(
+                        await this.file.readFile(path.join(kernelPath, kernels[0], '/kernel.json'))
+                    ) as IJupyterKernelSpec;
+                } catch {
+                    return undefined;
+                }
+            }
+
             const promises = kernels.map(async kernel => {
-                const kernelSpec: IJupyterKernelSpec = JSON.parse(
-                    await this.file.readFile(path.join(kernelPath, kernel, kernelJSON))
-                );
-                this.state.value.set(path.join(kernelPath, kernel, kernelJSON), kernelSpec.display_name);
-                return kernelSpec;
+                try {
+                    const kernelSpec: IJupyterKernelSpec = JSON.parse(
+                        await this.file.readFile(path.join(kernelPath, kernel, kernelJSON))
+                    );
+                    this.cachedKernelSpecs.value.set(path.join(kernelPath, kernel), JSON.stringify(kernelSpec));
+                    return kernelSpec;
+                } catch {
+                    return undefined;
+                }
             });
 
             const specs = await Promise.all(promises);
-            return specs.find(sp => kernelName === sp.name || kernelName === sp.display_name);
+            return specs.find(sp => kernelName === sp?.name);
         }
     }
 
     private async findCachePath(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
-        for (const entry of this.state.value.entries()) {
-            if (entry[1] === kernelName) {
-                return JSON.parse(await this.file.readFile(entry[0])) as Promise<IJupyterKernelSpec>;
+        for (const entry of this.cachedKernelSpecs.value.entries()) {
+            const kernelSpec: IJupyterKernelSpec = JSON.parse(entry[1]);
+            if (kernelSpec.name === kernelName) {
+                return kernelSpec;
             }
         }
     }
@@ -94,80 +127,53 @@ export class KernelFinder implements IKernelFinder {
         kernelName: string
     ): Promise<IJupyterKernelSpec | undefined> {
         const promises = interpreterPaths.map(intPath =>
-            this.getKernelSpec(path.join(intPath, unixPaths.get('kernel')!), kernelName)
+            this.getKernelSpec(path.join(intPath, this.kernelPaths.get('kernel')!), kernelName)
         );
 
         const specs = await Promise.all(promises);
         return specs.find(sp => sp !== undefined);
     }
 
+    // Jupyter looks for kernels in these paths:
+    // https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
     private async findDiskPath(kernelName: string): Promise<IJupyterKernelSpec | undefined> {
-        // Jupyter looks for kernels in these paths:
-        // https://jupyter-client.readthedocs.io/en/stable/kernels.html#kernel-specs
-        // So we do the same
-        let spec: IJupyterKernelSpec | undefined;
-
         if (this.platformService.isWindows) {
-            // system paths
-            spec = await this.getKernelSpec(path.join('C:\\ProgramData\\jupyter\\kernels\\'), kernelName);
-            if (spec) {
-                return spec;
-            }
+            const promises = [
+                path.join(process.env.ALLUSERSPROFILE!, '\\jupyter\\kernels\\'),
+                path.join(this.pathUtils.home, this.kernelPaths.get('winJupyterPath')!)
+            ].map(kernelPath => this.getKernelSpec(kernelPath, kernelName));
 
-            // users paths
-            const userPathExists = await this.file.fileExists(windowsPaths.get('users')!);
-            if (userPathExists) {
-                const users = await this.file.getSubDirectories(windowsPaths.get('users')!);
-
-                const promises = users.map(user =>
-                    this.getKernelSpec(
-                        path.join(windowsPaths.get('users')!, user, windowsPaths.get('jupyter')!),
-                        kernelName
-                    )
-                );
-
-                const specs = await Promise.all(promises);
-                return specs.find(sp => sp !== undefined);
-            }
-            // Unix based
+            const specs = await Promise.all(promises);
+            return specs.find(sp => kernelName === sp?.name);
         } else {
-            // system paths
-            spec = await this.getKernelSpec('/usr/share/jupyter/kernels', kernelName);
-            if (spec) {
-                return spec;
-            }
+            // Unix based
+            const secondPart = this.platformService.isMac
+                ? this.kernelPaths.get('macJupyterPath')!
+                : this.kernelPaths.get('linuxJupyterPath')!;
 
-            spec = await this.getKernelSpec('/usr/local/share/jupyter/kernels', kernelName);
-            if (spec) {
-                return spec;
-            }
+            const promises = [
+                '/usr/share/jupyter/kernels',
+                '/usr/local/share/jupyter/kernels',
+                path.join(this.pathUtils.home, secondPart)
+            ].map(kernelPath => this.getKernelSpec(kernelPath, kernelName));
 
-            // users paths
-            const userPathExists = await this.file.fileExists(unixPaths.get('home')!);
-            if (userPathExists) {
-                const users = await this.file.getSubDirectories(unixPaths.get('home')!);
-
-                const promises = users.map(user => {
-                    const secondPart = this.platformService.isMac
-                        ? unixPaths.get('macJupyterPath')!
-                        : unixPaths.get('linuxJupyterPath')!;
-                    return this.getKernelSpec(path.join(unixPaths.get('home')!, user, secondPart), kernelName);
-                });
-
-                const specs = await Promise.all(promises);
-                return specs.find(sp => sp !== undefined);
-            }
+            const specs = await Promise.all(promises);
+            return specs.find(sp => kernelName === sp?.name);
         }
     }
 
-    private getDefaultKernelSpec(currentInterpreter: PythonInterpreter | undefined): IJupyterKernelSpec {
+    private async getDefaultKernelSpec(resource: Resource): Promise<IJupyterKernelSpec> {
+        if (!this.activeInterpreter) {
+            this.activeInterpreter = await this.interpreterService.getActiveInterpreter(resource);
+        }
+
         return {
-            name: currentInterpreter?.displayName ? currentInterpreter.displayName : 'Python',
+            name: this.activeInterpreter?.envName ? this.activeInterpreter.envName : 'Python 3',
             language: 'python',
-            path: currentInterpreter?.path!,
-            display_name: currentInterpreter?.displayName ? currentInterpreter.displayName : 'Python',
+            path: this.activeInterpreter?.path!,
+            display_name: this.activeInterpreter?.displayName ? this.activeInterpreter.displayName : 'Python 3',
             metadata: {},
-            argv: ['-m', 'ipykernel_launcher']
+            argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '{connection_file}']
         };
     }
 }

@@ -3,13 +3,15 @@
 'use strict';
 
 import { ChildProcess } from 'child_process';
+import { IDisposable } from 'monaco-editor';
+import { CancellationToken } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
+import { Resource } from '../../common/types';
 import { IJupyterKernelSpec } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
-    launch(interpreterUri: InterpreterUri, kernelName: string): Promise<IKernelProcess>;
+    launch(interpreterUri: InterpreterUri, token: CancellationToken, kernelName: string): Promise<IKernelProcess>;
 }
 
 export interface IKernelConnection {
@@ -27,18 +29,19 @@ export interface IKernelConnection {
 
 export const IKernelProcess = Symbol('IKernelProcess');
 
-export interface IKernelProcess {
+export interface IKernelProcess extends IDisposable {
     process: ChildProcess | undefined;
     connection: IKernelConnection | undefined;
-    dispose(): Promise<void | undefined>;
+    dispose(): void;
     launch(interpreter: InterpreterUri, kernelSpec: IJupyterKernelSpec): Promise<void>;
 }
 
 export const IKernelFinder = Symbol('IKernelFinder');
 export interface IKernelFinder {
-    findKernelSpec(
-        interpreterPaths: string[],
-        currentInterpreter: PythonInterpreter | undefined,
+    findKernelSpec(resource: Resource, token: CancellationToken, kernelName?: string): Promise<IJupyterKernelSpec>;
+
+    getKernelSpecFromActiveInterpreter(
+        resource: Resource,
         kernelName?: string
-    ): Promise<IJupyterKernelSpec>;
+    ): Promise<IJupyterKernelSpec | undefined>;
 }

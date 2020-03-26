@@ -215,8 +215,7 @@ import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { JupyterServerSelector } from '../../client/datascience/jupyter/serverSelector';
 import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFinder';
 import { KernelLauncher } from '../../client/datascience/kernel-launcher/kernelLauncher';
-import { KernelProcess } from '../../client/datascience/kernel-launcher/kernelProcess';
-import { IKernelFinder, IKernelLauncher, IKernelProcess } from '../../client/datascience/kernel-launcher/types';
+import { IKernelFinder, IKernelLauncher } from '../../client/datascience/kernel-launcher/types';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { ProgressReporter } from '../../client/datascience/progress/progressReporter';
@@ -863,7 +862,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.addSingleton<IKernelLauncher>(IKernelLauncher, KernelLauncher);
         this.serviceManager.addSingleton<IKernelFinder>(IKernelFinder, KernelFinder);
-        this.serviceManager.addSingleton<IKernelProcess>(IKernelProcess, KernelProcess);
 
         if (this.useCommandFinderForJupyterServer) {
             this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(
