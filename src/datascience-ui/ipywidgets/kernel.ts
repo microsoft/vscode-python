@@ -147,7 +147,8 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         }
     }
     private handleMessageHookCall(args: { requestId: string; parentId: string; msg: KernelMessage.IIOPubMessage }) {
-        window.console.log('Message hoook callback');
+        // tslint:disable-next-line: no-any
+        window.console.log(`Message hook callback for ${(args.msg as any).msg_type} and ${args.parentId}`);
         // tslint:disable-next-line: no-any
         const hook = this.messageHooks.get((args.msg.parent_header as any).msg_id);
         if (hook) {
@@ -169,6 +170,13 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                     result: result === true
                 });
             }
+        } else {
+            // If no hook registered, make sure not to remove messages.
+            this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_MessageHookResponse, {
+                requestId: args.requestId,
+                parentId: args.parentId,
+                result: true
+            });
         }
     }
     private handleCommInfo(reply: { requestId: string; msg: KernelMessage.ICommInfoReplyMsg }) {

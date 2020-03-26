@@ -147,9 +147,13 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         message: IPyWidgetMessages,
         payload: M[T]
     ) {
-        // tslint:disable-neinitializext-line: no-any
-        const newMessage = serializeDataViews(payload as any);
-        this._postMessageEmitter.fire({ message, payload: newMessage as any });
+        // Only serialize the message portion
+        // tslint:disable-next-line: no-any
+        const oldPayload = payload as any;
+        const newPayload = oldPayload.msg
+            ? { ...oldPayload, msg: serializeDataViews(oldPayload.msg) }
+            : serializeDataViews(oldPayload);
+        this._postMessageEmitter.fire({ message, payload: newPayload });
     }
 
     private async waitForCommMessage(msg: KernelMessage.ICommMsgMsg) {
@@ -233,7 +237,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         const requestId = uuid();
         // tslint:disable-next-line: no-any
         const parentId = (msg.parent_header as any).msg_id;
-        if (this.messageHooks.has(parentId)) {
+        // Don't hook comm messages. They should be free to return always.
+        if (this.messageHooks.has(parentId) && !msg.header.msg_type.includes('comm')) {
             this.messageHookRequests.set(requestId, promise);
             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_MessageHookCall, { requestId, parentId, msg });
         } else {

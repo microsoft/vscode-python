@@ -73,7 +73,9 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         const widget = await super.display_view(msg, view, options);
         const element = options.node ? (options.node as HTMLElement) : this.el;
         // When do we detach?
-        Widget.attach(widget, element);
+        if (element) {
+            Widget.attach(widget, element);
+        }
         return widget;
     }
     protected async loadClass(className: string, moduleName: string, moduleVersion: string): Promise<any> {
