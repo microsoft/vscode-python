@@ -5,6 +5,7 @@ import { Slot } from '@phosphor/signaling';
 import { assert, expect } from 'chai';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as uuid from 'uuid/v4';
+import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { RawKernel } from '../../../client/datascience/raw-kernel/rawKernel';
 import { IJMPConnection, IJMPConnectionInfo } from '../../../client/datascience/types';
 import { MockJMPConnection } from './mockJMP';
@@ -158,20 +159,10 @@ suite('Data Science - RawKernel', () => {
 
             // Finally an idle message
             const iopubIdleMessage = buildStatusMessage('idle', rawKernel.clientId, future.msg.header);
-
-            // Post the message
             mockJmpConnection.messageBack(iopubIdleMessage);
 
             // Last thing back is a reply message
-            const replyOptions: KernelMessage.IOptions<KernelMessage.IExecuteReplyMsg> = {
-                channel: 'shell',
-                session: rawKernel.clientId,
-                msgType: 'execute_reply',
-                content: { status: 'ok', execution_count: 1, payload: [], user_expressions: {} }
-            };
-            const replyMessage = KernelMessage.createMessage<KernelMessage.IExecuteReplyMsg>(replyOptions);
-            replyMessage.parent_header = future.msg.header;
-
+            const replyMessage = buildExecuteReplyMessage(rawKernel.clientId, future.msg.header);
             mockJmpConnection.messageBack(replyMessage);
 
             // Before we await for done we need to set up what we expect to see in our output
@@ -307,8 +298,97 @@ suite('Data Science - RawKernel', () => {
             expect((messageIn.content as any).value).to.equal('input');
             expect(messageIn.content.status).to.equal('ok');
         });
+
+        // display_id can do some special handling with messages. Basically execute_reply or
+        // display_data messages can be tagged with a display_id then updated later by a
+        // update_display_data message
+        test('rawKernel displayid check', async () => {
+            const displayId = '1';
+            await rawKernel.connect(connectInfo);
+
+            // Check our status at the start
+            expect(rawKernel.status).to.equal('unknown');
+
+            // Create a future for an execute code request
+            const code = 'print("hello world")';
+            const executeContent: KernelMessage.IExecuteRequestMsg['content'] = {
+                code
+            };
+            const future = rawKernel.requestExecute(executeContent, true, undefined);
+
+            // Next send an iopub display_data message with a displayId tag
+            const displayDataMessage = buildDisplayDataMessage(rawKernel.clientId, future.msg.header, displayId);
+            mockJmpConnection.messageBack(displayDataMessage);
+
+            // Create a second future for another execute code request
+            const code2 = 'print("hello world 2")';
+            const executeContent2: KernelMessage.IExecuteRequestMsg['content'] = {
+                code: code2
+            };
+            const future2 = rawKernel.requestExecute(executeContent2, true, undefined);
+
+            // The second future also gets a display data message with the same id
+            const displayDataMessage2 = buildDisplayDataMessage(rawKernel.clientId, future2.msg.header, displayId);
+            mockJmpConnection.messageBack(displayDataMessage2);
+
+            // Now send an iopub update_display_data with the same displayId tag
+            const uddOptions: KernelMessage.IOptions<KernelMessage.IUpdateDisplayDataMsg> = {
+                channel: 'iopub',
+                session: rawKernel.clientId,
+                msgType: 'update_display_data',
+                parentHeader: future.msg.header,
+                content: { data: {}, metadata: {}, transient: { display_id: '1' } }
+            };
+            const updateDDMessage = KernelMessage.createMessage<KernelMessage.IUpdateDisplayDataMsg>(uddOptions);
+            mockJmpConnection.messageBack(updateDDMessage);
+
+            // An idle message and a reply to finish things off for future one
+            const iopubIdleMessage = buildStatusMessage('idle', rawKernel.clientId, future.msg.header);
+            mockJmpConnection.messageBack(iopubIdleMessage);
+
+            const replyMessage = buildExecuteReplyMessage(rawKernel.clientId, future.msg.header);
+            mockJmpConnection.messageBack(replyMessage);
+
+            // An idle message and a reply to finish things off for future two
+            const iopubIdleMessage2 = buildStatusMessage('idle', rawKernel.clientId, future2.msg.header);
+            mockJmpConnection.messageBack(iopubIdleMessage2);
+
+            const replyMessage2 = buildExecuteReplyMessage(rawKernel.clientId, future2.msg.header);
+            mockJmpConnection.messageBack(replyMessage2);
+
+            // Validation here is that both futures have seen the update_display_data message
+            // not just one due to the display id
+            let futureSeen = false;
+            let future2Seen = false;
+            future.onIOPub = msg => {
+                if (msg.header.msg_id === updateDDMessage.header.msg_id) {
+                    futureSeen = true;
+                }
+            };
+
+            future2.onIOPub = msg => {
+                if (msg.header.msg_id === updateDDMessage.header.msg_id) {
+                    future2Seen = true;
+                }
+            };
+
+            await Promise.all([future.done, future2.done]);
+            expect(futureSeen).to.equal(true, 'Future did not see the update_display_data');
+            expect(future2Seen).to.equal(true, 'Future2 did not see the update_display_data');
+        });
     });
 });
+
+export function buildDisplayDataMessage(session: string, parentHeader: KernelMessage.IHeader, displayId?: string) {
+    const ddOptions: KernelMessage.IOptions<KernelMessage.IDisplayDataMsg> = {
+        channel: 'iopub',
+        session,
+        msgType: 'display_data',
+        parentHeader,
+        content: { data: {}, metadata: {}, transient: displayId ? { display_id: '1' } : undefined }
+    };
+    return KernelMessage.createMessage<KernelMessage.IDisplayDataMsg>(ddOptions);
+}
 
 export function buildStatusMessage(status: Kernel.Status, session: string, parentHeader: KernelMessage.IHeader) {
     const iopubStatusOptions: KernelMessage.IOptions<KernelMessage.IStatusMsg> = {

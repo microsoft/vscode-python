@@ -70,9 +70,13 @@ export class RawKernel implements Kernel.IKernel {
 
     public isDisposed: boolean = false;
     private jmpConnection: IJMPConnection;
+    // Message chain to handle our messages async, but in order
     private messageChain: Promise<void> = Promise.resolve();
+    // Mappings for display id tracking
     private displayIdToParentIds = new Map<string, string[]>();
     private msgIdToDisplayIds = new Map<string, string[]>();
+    // The current kernel session Id that we are working with
+    private kernelSession: String = '';
 
     private _id: string;
     private _clientId: string;
@@ -329,11 +333,44 @@ export class RawKernel implements Kernel.IKernel {
     // When a future is disposed this function is called to remove it from our
     // various tracking lists
     private futureDisposed(future: RawFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>) {
-        this.futures.delete(future.msg.header.msg_id);
+        const messageId = future.msg.header.msg_id;
+        this.futures.delete(messageId);
+
+        // Remove stored display id information.
+        const displayIds = this.msgIdToDisplayIds.get(messageId);
+        if (!displayIds) {
+            return;
+        }
+
+        displayIds.forEach(displayId => {
+            const messageIds = this.displayIdToParentIds.get(displayId);
+            if (messageIds) {
+                const index = messageIds.indexOf(messageId);
+                if (index === -1) {
+                    return;
+                }
+
+                if (messageIds.length === 1) {
+                    this.displayIdToParentIds.delete(displayId);
+                } else {
+                    messageIds.splice(index, 1);
+                    this.displayIdToParentIds.set(displayId, messageIds);
+                }
+            }
+        });
+
+        // Remove our message id from the mapping to display ids
+        this.msgIdToDisplayIds.delete(messageId);
     }
 
     // Message incoming from the JMP connection. Queue it up for processing
     private msgIn(message: KernelMessage.IMessage) {
+        // Always keep our kernel session id up to date with incoming messages
+        // on something like a restart this will update when the first message on the
+        // new session comes in we use this to check the validity of messages that we are
+        // currently handling
+        this.kernelSession = message.header.session;
+
         // Add the message onto our message chain, we want to process them async
         // but in order so use a chain like this
         this.messageChain = this.messageChain
@@ -405,6 +442,23 @@ export class RawKernel implements Kernel.IKernel {
         return false;
     }
 
+    /* 
+    Messages are handled async so there is a possibility that the kernel might be
+    disposed or restarted during handling. Throw an error here if our message that
+    we are handling is no longer valid.
+    */
+    private checkMessageValid(message: KernelMessage.IMessage) {
+        if (this.isDisposed) {
+            throw new Error('Stop message handling on diposed kernel');
+        }
+
+        // kernelSession is updated when the first message from a new kernel session comes in
+        // in this case don't keep handling the old session messages
+        if (message.header.session !== this.kernelSession) {
+            throw new Error('Stop message handling on message from old session');
+        }
+    }
+
     // Handle a new message arriving from JMP connection
     private async handleMessage(message: KernelMessage.IMessage): Promise<void> {
         // IANHU: CONVERT TO USING ONE REQUIRE?
@@ -427,7 +481,8 @@ export class RawKernel implements Kernel.IKernel {
             if (displayId) {
                 handled = await this.handleDisplayId(displayId, message);
 
-                // IANHU: CHECK ASSERT CURRENT MESSAGE? DUE TO AWAIT?
+                // After await check the validity of our message
+                this.checkMessageValid(message);
             }
         }
 
@@ -439,6 +494,9 @@ export class RawKernel implements Kernel.IKernel {
             if (parentFuture) {
                 // Let the parent future message handle it here
                 await parentFuture.handleMessage(message);
+
+                // After await check the validity of our message
+                this.checkMessageValid(message);
             } else {
                 if (message.header.session === this._clientId && message.channel !== 'iopub') {
                     // RAWKERNEL: emit unhandled
