@@ -13,11 +13,18 @@ import * as typemoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
+import { ExperimentsManager } from '../../../../client/common/experiments';
+import { InterpreterPathService } from '../../../../client/common/interpreterPathService';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../../client/common/platform/platformService';
 import { IFileSystem, IPlatformService } from '../../../../client/common/platform/types';
-import { IPersistentStateFactory, Resource } from '../../../../client/common/types';
+import {
+    IExperimentsManager,
+    IInterpreterPathService,
+    IPersistentStateFactory,
+    Resource
+} from '../../../../client/common/types';
 import { createDeferred } from '../../../../client/common/utils/async';
 import { OSType } from '../../../../client/common/utils/platform';
 import { InterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection';
@@ -46,6 +53,8 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     let virtualEnvLocator: IInterpreterLocatorService;
     let pythonPathUpdaterService: IPythonPathUpdaterServiceManager;
     let workspaceService: IWorkspaceService;
+    let experimentsManager: IExperimentsManager;
+    let interpreterPathService: IInterpreterPathService;
     class WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest extends WorkspaceVirtualEnvInterpretersAutoSelectionRule {
         public async setGlobalInterpreter(
             interpreter?: PythonInterpreter,
@@ -73,6 +82,8 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         workspaceService = mock(WorkspaceService);
         virtualEnvLocator = mock(KnownPathsService);
         pythonPathUpdaterService = mock(PythonPathUpdaterService);
+        experimentsManager = mock(ExperimentsManager);
+        interpreterPathService = mock(InterpreterPathService);
 
         when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
             instance(state)
@@ -85,7 +96,9 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             instance(workspaceService),
             instance(pythonPathUpdaterService),
             instance(pipEnvLocator),
-            instance(virtualEnvLocator)
+            instance(virtualEnvLocator),
+            instance(experimentsManager),
+            instance(interpreterPathService)
         );
     });
     test('Invoke next rule if there is no workspace', async () => {

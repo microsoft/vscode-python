@@ -7,7 +7,8 @@ import {
     clearPythonPathInWorkspaceFolder,
     IExtensionTestApi,
     PYTHON_PATH,
-    resetGlobalPythonPathSetting,
+    resetGlobalInterpreterPathSetting,
+    setGlobalInterpreterPath,
     setPythonPathInWorkspaceRoot
 } from './common';
 import { IS_SMOKE_TEST, PVSC_EXTENSION_ID_FOR_TESTS } from './constants';
@@ -24,10 +25,11 @@ process.env['VSC_PYTHON_CI_TEST'] = '1';
 
 // Ability to use custom python environments for testing
 export async function initializePython() {
-    await resetGlobalPythonPathSetting();
+    await resetGlobalInterpreterPathSetting();
     await clearPythonPathInWorkspaceFolder(dummyPythonFile);
     await clearPythonPathInWorkspaceFolder(workspace3Uri);
     await setPythonPathInWorkspaceRoot(PYTHON_PATH);
+    await setGlobalInterpreterPath(PYTHON_PATH);
 }
 
 // tslint:disable-next-line:no-any

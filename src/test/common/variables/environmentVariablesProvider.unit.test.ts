@@ -1,260 +1,322 @@
-// Copyright (c) Microsoft Corporation. All rights reserved.
-// Licensed under the MIT License.
+// tslint:disable: no-useless-files
+// // Copyright (c) Microsoft Corporation. All rights reserved.
+// // Licensed under the MIT License.
 
-'use strict';
+// 'use strict';
 
-import * as assert from 'assert';
-import * as path from 'path';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import * as typemoq from 'typemoq';
-import { ConfigurationChangeEvent, FileSystemWatcher, Uri } from 'vscode';
-import { IWorkspaceService } from '../../../client/common/application/types';
-import { WorkspaceService } from '../../../client/common/application/workspace';
-import { PythonSettings } from '../../../client/common/configSettings';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { PlatformService } from '../../../client/common/platform/platformService';
-import { IPlatformService } from '../../../client/common/platform/types';
-import { CurrentProcess } from '../../../client/common/process/currentProcess';
-import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../../client/common/types';
-import { clearCache } from '../../../client/common/utils/cacheUtils';
-import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
-import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
-import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
-import { noop } from '../../core';
+// import * as assert from 'assert';
+// import * as path from 'path';
+// import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+// import * as typemoq from 'typemoq';
+// import { ConfigurationChangeEvent, FileSystemWatcher, Uri } from 'vscode';
+// import { IWorkspaceService } from '../../../client/common/application/types';
+// import { WorkspaceService } from '../../../client/common/application/workspace';
+// import { PythonSettings } from '../../../client/common/configSettings';
+// import { ConfigurationService } from '../../../client/common/configuration/service';
+// import { PlatformService } from '../../../client/common/platform/platformService';
+// import { IPlatformService } from '../../../client/common/platform/types';
+// import { CurrentProcess } from '../../../client/common/process/currentProcess';
+// import { IConfigurationService, ICurrentProcess, IPythonSettings } from '../../../client/common/types';
+// import { sleep } from '../../../client/common/utils/async';
+// import { clearCache } from '../../../client/common/utils/cacheUtils';
+// import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
+// import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
+// import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
+// import { ServiceContainer } from '../../../client/ioc/container';
+// import { IServiceContainer } from '../../../client/ioc/types';
+// import { noop } from '../../core';
 
-// tslint:disable:no-any max-func-body-length
-suite('Multiroot Environment Variables Provider', () => {
-    let provider: EnvironmentVariablesProvider;
-    let envVarsService: IEnvironmentVariablesService;
-    let platform: IPlatformService;
-    let workspace: IWorkspaceService;
-    let configuration: IConfigurationService;
-    let currentProcess: ICurrentProcess;
-    let settings: IPythonSettings;
+// // tslint:disable:no-any max-func-body-length
+// suite('Multiroot Environment Variables Provider', () => {
+//     let provider: EnvironmentVariablesProvider;
+//     let envVarsService: IEnvironmentVariablesService;
+//     let platform: IPlatformService;
+//     let workspace: IWorkspaceService;
+//     let configuration: IConfigurationService;
+//     let currentProcess: ICurrentProcess;
+//     let settings: IPythonSettings;
+//     let serviceContainer: IServiceContainer;
 
-    setup(() => {
-        envVarsService = mock(EnvironmentVariablesService);
-        platform = mock(PlatformService);
-        workspace = mock(WorkspaceService);
-        configuration = mock(ConfigurationService);
-        currentProcess = mock(CurrentProcess);
-        settings = mock(PythonSettings);
+//     setup(() => {
+//         envVarsService = mock(EnvironmentVariablesService);
+//         platform = mock(PlatformService);
+//         workspace = mock(WorkspaceService);
+//         configuration = mock(ConfigurationService);
+//         currentProcess = mock(CurrentProcess);
+//         settings = mock(PythonSettings);
+//         serviceContainer = mock(ServiceContainer);
 
-        when(configuration.getSettings(anything())).thenReturn(instance(settings));
-        when(workspace.onDidChangeConfiguration).thenReturn(noop as any);
-        provider = new EnvironmentVariablesProvider(
-            instance(envVarsService),
-            [],
-            instance(platform),
-            instance(workspace),
-            instance(configuration),
-            instance(currentProcess)
-        );
+//         when(configuration.getSettings(anything())).thenReturn(instance(settings));
+//         when(workspace.onDidChangeConfiguration).thenReturn(noop as any);
+//         provider = new EnvironmentVariablesProvider(
+//             instance(envVarsService),
+//             [],
+//             instance(platform),
+//             instance(workspace),
+//             instance(configuration),
+//             instance(currentProcess),
+//             instance(serviceContainer)
+//         );
 
-        clearCache();
-    });
+//         clearCache();
+//     });
 
-    test('Event is fired when there are changes to settings', () => {
-        let affectedWorkspace: Uri | undefined;
-        const workspaceFolder1Uri = Uri.file('workspace1');
-        const workspaceFolder2Uri = Uri.file('workspace2');
+//     test('Event is fired when there are changes to settings', () => {
+//         let affectedWorkspace: Uri | undefined;
+//         const workspaceFolder1Uri = Uri.file('workspace1');
+//         const workspaceFolder2Uri = Uri.file('workspace2');
 
-        provider.trackedWorkspaceFolders.add(workspaceFolder1Uri.fsPath);
-        provider.trackedWorkspaceFolders.add(workspaceFolder2Uri.fsPath);
-        provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
-        const changedEvent: ConfigurationChangeEvent = {
-            affectsConfiguration(setting: string, uri?: Uri) {
-                return setting === 'python.envFile' && uri!.fsPath === workspaceFolder1Uri.fsPath;
-            }
-        };
+//         provider.trackedWorkspaceFolders.add(workspaceFolder1Uri.fsPath);
+//         provider.trackedWorkspaceFolders.add(workspaceFolder2Uri.fsPath);
+//         provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
+//         const changedEvent: ConfigurationChangeEvent = {
+//             affectsConfiguration(setting: string, uri?: Uri) {
+//                 return setting === 'python.envFile' && uri!.fsPath === workspaceFolder1Uri.fsPath;
+//             }
+//         };
 
-        provider.configurationChanged(changedEvent);
+//         provider.configurationChanged(changedEvent);
 
-        assert.ok(affectedWorkspace);
-        assert.equal(affectedWorkspace!.fsPath, workspaceFolder1Uri.fsPath);
-    });
-    test('Event is not fired when there are not changes to settings', () => {
-        let affectedWorkspace: Uri | undefined;
-        const workspaceFolderUri = Uri.file('workspace1');
+//         assert.ok(affectedWorkspace);
+//         assert.equal(affectedWorkspace!.fsPath, workspaceFolder1Uri.fsPath);
+//     });
+//     test('Event is not fired when there are not changes to settings', () => {
+//         let affectedWorkspace: Uri | undefined;
+//         const workspaceFolderUri = Uri.file('workspace1');
 
-        provider.trackedWorkspaceFolders.add(workspaceFolderUri.fsPath);
-        provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
-        const changedEvent: ConfigurationChangeEvent = {
-            affectsConfiguration(_setting: string, _uri?: Uri) {
-                return false;
-            }
-        };
+//         provider.trackedWorkspaceFolders.add(workspaceFolderUri.fsPath);
+//         provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
+//         const changedEvent: ConfigurationChangeEvent = {
+//             affectsConfiguration(_setting: string, _uri?: Uri) {
+//                 return false;
+//             }
+//         };
 
-        provider.configurationChanged(changedEvent);
+//         provider.configurationChanged(changedEvent);
 
-        assert.equal(affectedWorkspace, undefined);
-    });
-    test('Event is not fired when workspace is not tracked', () => {
-        let affectedWorkspace: Uri | undefined;
-        provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
-        const changedEvent: ConfigurationChangeEvent = {
-            affectsConfiguration(_setting: string, _uri?: Uri) {
-                return true;
-            }
-        };
+//         assert.equal(affectedWorkspace, undefined);
+//     });
+//     test('Event is not fired when workspace is not tracked', () => {
+//         let affectedWorkspace: Uri | undefined;
+//         provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
+//         const changedEvent: ConfigurationChangeEvent = {
+//             affectsConfiguration(_setting: string, _uri?: Uri) {
+//                 return true;
+//             }
+//         };
 
-        provider.configurationChanged(changedEvent);
+//         provider.configurationChanged(changedEvent);
 
-        assert.equal(affectedWorkspace, undefined);
-    });
-    [undefined, Uri.file('workspace')].forEach(workspaceUri => {
-        const workspaceTitle = workspaceUri ? '(with a workspace)' : '(without a workspace)';
-        test(`Event is fired when the environment file is modified ${workspaceTitle}`, () => {
-            let affectedWorkspace: Uri | undefined = Uri.file('dummy value');
-            const envFile = path.join('a', 'b', 'env.file');
-            const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
+//         assert.equal(affectedWorkspace, undefined);
+//     });
+//     [undefined, Uri.file('workspace')].forEach(workspaceUri => {
+//         const workspaceTitle = workspaceUri ? '(with a workspace)' : '(without a workspace)';
+//         test(`Event is fired when the environment file is modified ${workspaceTitle}`, () => {
+//             let affectedWorkspace: Uri | undefined = Uri.file('dummy value');
+//             const envFile = path.join('a', 'b', 'env.file');
+//             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
-            let onChangeHandler: undefined | ((resource?: Uri) => Function);
+//             let onChangeHandler: undefined | ((resource?: Uri) => Function);
 
-            fileSystemWatcher
-                .setup(fs => fs.onDidChange(typemoq.It.isAny()))
-                .callback(cb => (onChangeHandler = cb))
-                .verifiable(typemoq.Times.once());
-            when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
-            provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
+//             fileSystemWatcher
+//                 .setup(fs => fs.onDidChange(typemoq.It.isAny()))
+//                 .callback(cb => (onChangeHandler = cb))
+//                 .verifiable(typemoq.Times.once());
+//             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
+//             provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
 
-            provider.createFileWatcher(envFile, workspaceUri);
+//             provider.createFileWatcher(envFile, workspaceUri);
 
-            fileSystemWatcher.verifyAll();
-            assert.ok(onChangeHandler);
+//             fileSystemWatcher.verifyAll();
+//             assert.ok(onChangeHandler);
 
-            onChangeHandler!();
+//             onChangeHandler!();
 
-            assert.equal(affectedWorkspace, workspaceUri);
-        });
-        test(`Event is fired when the environment file is deleted ${workspaceTitle}`, () => {
-            let affectedWorkspace: Uri | undefined = Uri.file('dummy value');
-            const envFile = path.join('a', 'b', 'env.file');
-            const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
+//             assert.equal(affectedWorkspace, workspaceUri);
+//         });
+//         test(`Event is fired when the environment file is deleted ${workspaceTitle}`, () => {
+//             let affectedWorkspace: Uri | undefined = Uri.file('dummy value');
+//             const envFile = path.join('a', 'b', 'env.file');
+//             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
-            let onDeleted: undefined | ((resource?: Uri) => Function);
+//             let onDeleted: undefined | ((resource?: Uri) => Function);
 
-            fileSystemWatcher
-                .setup(fs => fs.onDidDelete(typemoq.It.isAny()))
-                .callback(cb => (onDeleted = cb))
-                .verifiable(typemoq.Times.once());
-            when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
-            provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
+//             fileSystemWatcher
+//                 .setup(fs => fs.onDidDelete(typemoq.It.isAny()))
+//                 .callback(cb => (onDeleted = cb))
+//                 .verifiable(typemoq.Times.once());
+//             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
+//             provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
 
-            provider.createFileWatcher(envFile, workspaceUri);
+//             provider.createFileWatcher(envFile, workspaceUri);
 
-            fileSystemWatcher.verifyAll();
-            assert.ok(onDeleted);
+//             fileSystemWatcher.verifyAll();
+//             assert.ok(onDeleted);
 
-            onDeleted!();
+//             onDeleted!();
 
-            assert.equal(affectedWorkspace, workspaceUri);
-        });
-        test(`Event is fired when the environment file is created ${workspaceTitle}`, () => {
-            let affectedWorkspace: Uri | undefined = Uri.file('dummy value');
-            const envFile = path.join('a', 'b', 'env.file');
-            const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
+//             assert.equal(affectedWorkspace, workspaceUri);
+//         });
+//         test(`Event is fired when the environment file is created ${workspaceTitle}`, () => {
+//             let affectedWorkspace: Uri | undefined = Uri.file('dummy value');
+//             const envFile = path.join('a', 'b', 'env.file');
+//             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
-            let onCreated: undefined | ((resource?: Uri) => Function);
+//             let onCreated: undefined | ((resource?: Uri) => Function);
 
-            fileSystemWatcher
-                .setup(fs => fs.onDidCreate(typemoq.It.isAny()))
-                .callback(cb => (onCreated = cb))
-                .verifiable(typemoq.Times.once());
-            when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
-            provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
+//             fileSystemWatcher
+//                 .setup(fs => fs.onDidCreate(typemoq.It.isAny()))
+//                 .callback(cb => (onCreated = cb))
+//                 .verifiable(typemoq.Times.once());
+//             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
+//             provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
 
-            provider.createFileWatcher(envFile, workspaceUri);
+//             provider.createFileWatcher(envFile, workspaceUri);
 
-            fileSystemWatcher.verifyAll();
-            assert.ok(onCreated);
+//             fileSystemWatcher.verifyAll();
+//             assert.ok(onCreated);
 
-            onCreated!();
+//             onCreated!();
 
-            assert.equal(affectedWorkspace, workspaceUri);
-        });
-        test(`File system watcher event handlers are added once ${workspaceTitle}`, () => {
-            const envFile = path.join('a', 'b', 'env.file');
-            const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
+//             assert.equal(affectedWorkspace, workspaceUri);
+//         });
+//         test(`File system watcher event handlers are added once ${workspaceTitle}`, () => {
+//             const envFile = path.join('a', 'b', 'env.file');
+//             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
-            fileSystemWatcher.setup(fs => fs.onDidChange(typemoq.It.isAny())).verifiable(typemoq.Times.once());
-            fileSystemWatcher.setup(fs => fs.onDidCreate(typemoq.It.isAny())).verifiable(typemoq.Times.once());
-            fileSystemWatcher.setup(fs => fs.onDidDelete(typemoq.It.isAny())).verifiable(typemoq.Times.once());
-            when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
+//             fileSystemWatcher.setup(fs => fs.onDidChange(typemoq.It.isAny())).verifiable(typemoq.Times.once());
+//             fileSystemWatcher.setup(fs => fs.onDidCreate(typemoq.It.isAny())).verifiable(typemoq.Times.once());
+//             fileSystemWatcher.setup(fs => fs.onDidDelete(typemoq.It.isAny())).verifiable(typemoq.Times.once());
+//             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
 
-            provider.createFileWatcher(envFile);
-            provider.createFileWatcher(envFile);
-            provider.createFileWatcher(envFile, workspaceUri);
-            provider.createFileWatcher(envFile, workspaceUri);
-            provider.createFileWatcher(envFile, workspaceUri);
+//             provider.createFileWatcher(envFile);
+//             provider.createFileWatcher(envFile);
+//             provider.createFileWatcher(envFile, workspaceUri);
+//             provider.createFileWatcher(envFile, workspaceUri);
+//             provider.createFileWatcher(envFile, workspaceUri);
 
-            fileSystemWatcher.verifyAll();
-            verify(workspace.createFileSystemWatcher(envFile)).once();
-        });
+//             fileSystemWatcher.verifyAll();
+//             verify(workspace.createFileSystemWatcher(envFile)).once();
+//         });
 
-        test(`Getting environment variables (without an envfile, without PATH in current env, without PYTHONPATH in current env) & ${workspaceTitle}`, async () => {
-            const envFile = path.join('a', 'b', 'env.file');
-            const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
-            const currentProcEnv = { SOMETHING: 'wow' };
+//         test(`Getting environment variables (without an envfile, without PATH in current env, without PYTHONPATH in current env) & ${workspaceTitle}`, async () => {
+//             const envFile = path.join('a', 'b', 'env.file');
+//             const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
+//             const currentProcEnv = { SOMETHING: 'wow' };
 
-            when(currentProcess.env).thenReturn(currentProcEnv);
-            when(settings.envFile).thenReturn(envFile);
-            when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
-            when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(undefined);
-            when(platform.pathVariableName).thenReturn('PATH');
+//             when(currentProcess.env).thenReturn(currentProcEnv);
+//             when(settings.envFile).thenReturn(envFile);
+//             when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
+//             when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(undefined);
+//             when(platform.pathVariableName).thenReturn('PATH');
 
-            const vars = await provider.getEnvironmentVariables(workspaceUri);
+//             const vars = await provider.getEnvironmentVariables(workspaceUri);
 
-            verify(currentProcess.env).atLeast(1);
-            verify(settings.envFile).atLeast(1);
-            verify(envVarsService.parseFile(envFile, currentProcEnv)).atLeast(1);
-            verify(envVarsService.mergeVariables(deepEqual(currentProcEnv), deepEqual({}))).once();
-            verify(platform.pathVariableName).atLeast(1);
-            assert.deepEqual(vars, {});
-        });
-        test(`Getting environment variables (with an envfile, without PATH in current env, without PYTHONPATH in current env) & ${workspaceTitle}`, async () => {
-            const envFile = path.join('a', 'b', 'env.file');
-            const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
-            const currentProcEnv = { SOMETHING: 'wow' };
-            const envFileVars = { MY_FILE: '1234' };
+//             verify(currentProcess.env).atLeast(1);
+//             verify(settings.envFile).atLeast(1);
+//             verify(envVarsService.parseFile(envFile, currentProcEnv)).atLeast(1);
+//             verify(envVarsService.mergeVariables(deepEqual(currentProcEnv), deepEqual({}))).once();
+//             verify(platform.pathVariableName).atLeast(1);
+//             assert.deepEqual(vars, {});
+//         });
+//         test(`Getting environment variables (with an envfile, without PATH in current env, without PYTHONPATH in current env) & ${workspaceTitle}`, async () => {
+//             const envFile = path.join('a', 'b', 'env.file');
+//             const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
+//             const currentProcEnv = { SOMETHING: 'wow' };
+//             const envFileVars = { MY_FILE: '1234' };
 
-            when(currentProcess.env).thenReturn(currentProcEnv);
-            when(settings.envFile).thenReturn(envFile);
-            when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
-            when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(envFileVars);
-            when(platform.pathVariableName).thenReturn('PATH');
+//             when(currentProcess.env).thenReturn(currentProcEnv);
+//             when(settings.envFile).thenReturn(envFile);
+//             when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
+//             when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(envFileVars);
+//             when(platform.pathVariableName).thenReturn('PATH');
 
-            const vars = await provider.getEnvironmentVariables(workspaceUri);
+//             const vars = await provider.getEnvironmentVariables(workspaceUri);
 
-            verify(currentProcess.env).atLeast(1);
-            verify(settings.envFile).atLeast(1);
-            verify(envVarsService.parseFile(envFile, currentProcEnv)).atLeast(1);
-            verify(envVarsService.mergeVariables(deepEqual(currentProcEnv), deepEqual(envFileVars))).once();
-            verify(platform.pathVariableName).atLeast(1);
-            assert.deepEqual(vars, envFileVars);
-        });
-        test(`Getting environment variables (with an envfile, with PATH in current env, with PYTHONPATH in current env) & ${workspaceTitle}`, async () => {
-            const envFile = path.join('a', 'b', 'env.file');
-            const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
-            const currentProcEnv = { SOMETHING: 'wow', PATH: 'some path value', PYTHONPATH: 'some python path value' };
-            const envFileVars = { MY_FILE: '1234' };
+//             verify(currentProcess.env).atLeast(1);
+//             verify(settings.envFile).atLeast(1);
+//             verify(envVarsService.parseFile(envFile, currentProcEnv)).atLeast(1);
+//             verify(envVarsService.mergeVariables(deepEqual(currentProcEnv), deepEqual(envFileVars))).once();
+//             verify(platform.pathVariableName).atLeast(1);
+//             assert.deepEqual(vars, envFileVars);
+//         });
+//         test(`Getting environment variables (with an envfile, with PATH in current env, with PYTHONPATH in current env) & ${workspaceTitle}`, async () => {
+//             const envFile = path.join('a', 'b', 'env.file');
+//             const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
+//             const currentProcEnv = { SOMETHING: 'wow', PATH: 'some path value', PYTHONPATH: 'some python path value' };
+//             const envFileVars = { MY_FILE: '1234' };
 
-            when(currentProcess.env).thenReturn(currentProcEnv);
-            when(settings.envFile).thenReturn(envFile);
-            when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
-            when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(envFileVars);
-            when(platform.pathVariableName).thenReturn('PATH');
+//             when(currentProcess.env).thenReturn(currentProcEnv);
+//             when(settings.envFile).thenReturn(envFile);
+//             when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
+//             when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(envFileVars);
+//             when(platform.pathVariableName).thenReturn('PATH');
 
-            const vars = await provider.getEnvironmentVariables(workspaceUri);
+//             const vars = await provider.getEnvironmentVariables(workspaceUri);
 
-            verify(currentProcess.env).atLeast(1);
-            verify(settings.envFile).atLeast(1);
-            verify(envVarsService.parseFile(envFile, currentProcEnv)).atLeast(1);
-            verify(envVarsService.mergeVariables(deepEqual(currentProcEnv), deepEqual(envFileVars))).once();
-            verify(envVarsService.appendPath(deepEqual(envFileVars), currentProcEnv.PATH)).once();
-            verify(envVarsService.appendPythonPath(deepEqual(envFileVars), currentProcEnv.PYTHONPATH)).once();
-            verify(platform.pathVariableName).atLeast(1);
-            assert.deepEqual(vars, envFileVars);
-        });
-    });
-});
+//             verify(currentProcess.env).atLeast(1);
+//             verify(settings.envFile).atLeast(1);
+//             verify(envVarsService.parseFile(envFile, currentProcEnv)).atLeast(1);
+//             verify(envVarsService.mergeVariables(deepEqual(currentProcEnv), deepEqual(envFileVars))).once();
+//             verify(envVarsService.appendPath(deepEqual(envFileVars), currentProcEnv.PATH)).once();
+//             verify(envVarsService.appendPythonPath(deepEqual(envFileVars), currentProcEnv.PYTHONPATH)).once();
+//             verify(platform.pathVariableName).atLeast(1);
+//             assert.deepEqual(vars, envFileVars);
+//         });
+
+//         test(`Getting environment variables which are already cached does not reinvoke the method ${workspaceTitle}`, async () => {
+//             const envFile = path.join('a', 'b', 'env.file');
+//             const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
+//             const currentProcEnv = { SOMETHING: 'wow' };
+
+//             when(currentProcess.env).thenReturn(currentProcEnv);
+//             when(settings.envFile).thenReturn(envFile);
+//             when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
+//             when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(undefined);
+//             when(platform.pathVariableName).thenReturn('PATH');
+
+//             const vars = await provider.getEnvironmentVariables(workspaceUri);
+
+//             assert.deepEqual(vars, {});
+
+//             await provider.getEnvironmentVariables(workspaceUri);
+
+//             // Verify that the contents of `_getEnvironmentVariables()` method are only invoked once
+//             verify(configuration.getSettings(anything())).once();
+//             assert.deepEqual(vars, {});
+//         });
+
+//         test(`Cache result must be cleared when cache expires ${workspaceTitle}`, async () => {
+//             const envFile = path.join('a', 'b', 'env.file');
+//             const workspaceFolder = workspaceUri ? { name: '', index: 0, uri: workspaceUri } : undefined;
+//             const currentProcEnv = { SOMETHING: 'wow' };
+
+//             when(currentProcess.env).thenReturn(currentProcEnv);
+//             when(settings.envFile).thenReturn(envFile);
+//             when(workspace.getWorkspaceFolder(workspaceUri)).thenReturn(workspaceFolder);
+//             when(envVarsService.parseFile(envFile, currentProcEnv)).thenResolve(undefined);
+//             when(platform.pathVariableName).thenReturn('PATH');
+
+//             provider = new EnvironmentVariablesProvider(
+//                 instance(envVarsService),
+//                 [],
+//                 instance(platform),
+//                 instance(workspace),
+//                 instance(configuration),
+//                 instance(currentProcess),
+//                 instance(serviceContainer),
+//                 100
+//             );
+//             const vars = await provider.getEnvironmentVariables(workspaceUri);
+
+//             assert.deepEqual(vars, {});
+
+//             await sleep(110);
+//             await provider.getEnvironmentVariables(workspaceUri);
+
+//             // Verify that the contents of `_getEnvironmentVariables()` method are invoked twice
+//             verify(configuration.getSettings(anything())).twice();
+//             assert.deepEqual(vars, {});
+//         });
+//     });
+// });

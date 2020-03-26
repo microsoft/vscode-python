@@ -3,7 +3,7 @@ import { Resource } from '../../common/types';
 import { PythonInterpreter } from '../contracts';
 
 export interface IPythonPathUpdaterService {
-    updatePythonPath(pythonPath: string): Promise<void>;
+    updatePythonPath(pythonPath: string | undefined): Promise<void>;
 }
 
 export const IPythonPathUpdaterServiceFactory = Symbol('IPythonPathUpdaterServiceFactory');
@@ -16,7 +16,7 @@ export interface IPythonPathUpdaterServiceFactory {
 export const IPythonPathUpdaterServiceManager = Symbol('IPythonPathUpdaterServiceManager');
 export interface IPythonPathUpdaterServiceManager {
     updatePythonPath(
-        pythonPath: string,
+        pythonPath: string | undefined,
         configTarget: ConfigurationTarget,
         trigger: 'ui' | 'shebang' | 'load',
         wkspace?: Uri
