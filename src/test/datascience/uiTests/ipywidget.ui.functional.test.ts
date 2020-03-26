@@ -263,8 +263,6 @@ use(chaiAsPromised);
             test('Widget renderes after closing and re-opening notebook', async () => {
                 const result = await openNotebookAndTestSliderWidget();
 
-                // Closing notebooks causes it to re-open due to prompt `Do you want to save, cancel ,etc)`.
-                // Applies to old nb, just hack and disable it.
                 await result.notebookUI.page?.close();
                 await result.webViewPanel.dispose();
 
