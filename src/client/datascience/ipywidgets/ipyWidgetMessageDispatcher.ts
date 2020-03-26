@@ -218,7 +218,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
         // Ensure we re-register the comm targets.
         Array.from(this.commTargetsRegistered.keys()).forEach(targetName => {
-            this.commTargetsRegistered.set(targetName, undefined);
+            this.commTargetsRegistered.delete(targetName);
             this.pendingTargetNames.add(targetName);
         });
         this.registerCommTargets(this.notebook);
