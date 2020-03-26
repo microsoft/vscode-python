@@ -650,7 +650,7 @@ export interface IEventNamePropertyMapping {
         /**
          * If there's a custom path speficied in the python.envFile workspace settings.
          */
-        customEnvPath: boolean;
+        hasCustomEnvPath: boolean;
     };
     /**
      * Telemetry Event sent when user sends code to be executed in the terminal.
