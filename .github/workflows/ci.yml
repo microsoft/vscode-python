@@ -188,10 +188,10 @@ jobs:
       matrix:
         # We're not running CI on macOS for now because it's one less matrix entry to lower the number of runners used,
         # macOS runners are expensive, and we assume that Ubuntu is enough to cover the UNIX case.
-        os: [ubuntu-latest, windows-latest]
+        os: [windows-latest]
         # Run the tests on the oldest and most recent versions of Python.
         python: [2.7, 3.8]
-        test-suite: [ts-unit, python-unit, venv, single-workspace, multi-workspace, debugger, functional]
+        test-suite: [single-workspace, functional]
     env:
       # Something in Node 12.16.0 breaks the TS debug adapter, and ubuntu-latest bundles Node 12.16.1.
       # We can remove this when we switch over to the python-based DA in https://github.com/microsoft/vscode-python/issues/7136.
