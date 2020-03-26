@@ -210,7 +210,6 @@ export class RawKernel implements Kernel.IKernel {
             const oldDispose = future.dispose.bind(future);
             future.dispose = () => {
                 this.futureDisposed(future);
-                //this.futures.delete(future.msg.header.msg_id);
                 return oldDispose();
             };
 
