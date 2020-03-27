@@ -41,12 +41,14 @@ class KernelProcess implements IKernelProcess {
         const resource = isResource(interpreter) ? interpreter : undefined;
         const pythonPath = isResource(interpreter) ? undefined : interpreter.path;
 
-        const args = kernelSpec.argv;
+        const args = [...kernelSpec.argv];
         this._connection = await this.getKernelConnection();
         await this.file.writeFile(this.connectionFile, JSON.stringify(this._connection), {
             encoding: 'utf-8',
             flag: 'w'
         });
+
+        // Inclide the conenction file in the arguments and remove the first argument which should be python
         args[4] = this.connectionFile;
         args.splice(0, 1);
 
@@ -99,18 +101,7 @@ export class KernelLauncher implements IKernelLauncher {
         token: CancellationToken,
         kernelName?: string
     ): Promise<IKernelProcess> {
-        const resource = isResource(interpreterUri) ? interpreterUri : undefined;
-        const notebookInterpreter = isResource(interpreterUri) ? undefined : interpreterUri;
-        let kernelSpec: IJupyterKernelSpec | undefined;
-
-        if (!notebookInterpreter) {
-            kernelSpec = await this.kernelFinder.getKernelSpecFromActiveInterpreter(resource, kernelName);
-        }
-
-        if (!kernelSpec) {
-            kernelSpec = await this.kernelFinder.findKernelSpec(resource, token, kernelName);
-        }
-
+        const kernelSpec = await this.kernelFinder.findKernelSpec(interpreterUri, token, kernelName);
         const kernelProcess = new KernelProcess(this.executionFactory, this.file);
         await kernelProcess.launch(interpreterUri, kernelSpec);
         return kernelProcess;
