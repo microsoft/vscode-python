@@ -4,38 +4,41 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, Event, EventEmitter } from 'vscode';
+import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from './application/types';
 import { PythonSettings } from './configSettings';
 import {
+    IDisposable,
     IDisposableRegistry,
     IInterpreterPathService,
     InspectInterpreterSettingType,
     InterpreterConfigurationScope,
     IPersistentState,
     IPersistentStateFactory,
+    IPythonSettings,
     Resource
 } from './types';
 
+export const defaultInterpreterPathSetting: keyof IPythonSettings = 'defaultInterpreterPath';
 @injectable()
 export class InterpreterPathService implements IInterpreterPathService {
-    private readonly didChangeInterpreterEmitter = new EventEmitter<InterpreterConfigurationScope>();
+    public _didChangeInterpreterEmitter = new EventEmitter<InterpreterConfigurationScope>();
     constructor(
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
+        @inject(IDisposableRegistry) disposables: IDisposable[]
     ) {
-        disposableRegistry.push(
-            workspaceService.onDidChangeConfiguration(e => {
-                if (e.affectsConfiguration('python.defaultInterpreterPath', undefined)) {
-                    this.didChangeInterpreterEmitter.fire({ uri: undefined, configTarget: ConfigurationTarget.Global });
-                }
-            })
-        );
+        disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
+    }
+
+    public async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
+        if (event.affectsConfiguration(`python.${defaultInterpreterPathSetting}`)) {
+            this._didChangeInterpreterEmitter.fire({ uri: undefined, configTarget: ConfigurationTarget.Global });
+        }
     }
 
     public inspect(resource: Resource): InspectInterpreterSettingType {
-        resource = resource ? resource : PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
+        resource = PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
         let workspaceFolderSetting: IPersistentState<string | undefined> | undefined;
         let workspaceSetting: IPersistentState<string | undefined> | undefined;
         if (resource) {
@@ -48,9 +51,8 @@ export class InterpreterPathService implements IInterpreterPathService {
                 undefined
             );
         }
-        const globalValue = this.workspaceService
-            .getConfiguration('python', resource)!
-            .get<string>('defaultInterpreterPath')!;
+        const globalValue = this.workspaceService.getConfiguration('python')!.inspect<string>('defaultInterpreterPath')!
+            .globalValue;
         return {
             globalValue,
             workspaceFolderValue: workspaceFolderSetting?.value,
@@ -59,7 +61,6 @@ export class InterpreterPathService implements IInterpreterPathService {
     }
 
     public get(resource: Resource): string {
-        resource = resource ? resource : PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
         const settings = this.inspect(resource);
         return settings.workspaceFolderValue || settings.workspaceValue || settings.globalValue || 'python';
     }
@@ -69,12 +70,15 @@ export class InterpreterPathService implements IInterpreterPathService {
         configTarget: ConfigurationTarget,
         pythonPath: string | undefined
     ): Promise<void> {
-        resource = resource ? resource : PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
+        resource = PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService).uri;
         if (configTarget === ConfigurationTarget.Global) {
             const pythonConfig = this.workspaceService.getConfiguration('python');
             await pythonConfig.update('defaultInterpreterPath', pythonPath, true);
-            this.didChangeInterpreterEmitter.fire({ uri: undefined, configTarget });
+            this._didChangeInterpreterEmitter.fire({ uri: undefined, configTarget });
             return;
+        }
+        if (!resource) {
+            throw new Error('Cannot update workspace settings as no workspace is opened');
         }
         const settingKey = this.getSettingKey(resource, configTarget);
         const persistentSetting = this.persistentStateFactory.createGlobalPersistentState<string | undefined>(
@@ -82,31 +86,25 @@ export class InterpreterPathService implements IInterpreterPathService {
             undefined
         );
         await persistentSetting.updateValue(pythonPath);
-        this.didChangeInterpreterEmitter.fire({ uri: resource, configTarget });
+        this._didChangeInterpreterEmitter.fire({ uri: resource, configTarget });
     }
 
     public get onDidChange(): Event<InterpreterConfigurationScope> {
-        return this.didChangeInterpreterEmitter.event;
+        return this._didChangeInterpreterEmitter.event;
     }
 
     public getSettingKey(
-        resource: Resource,
+        resource: Uri,
         configTarget: ConfigurationTarget.Workspace | ConfigurationTarget.WorkspaceFolder
     ): string {
         let settingKey: string;
         const folderKey = this.workspaceService.getWorkspaceFolderIdentifier(resource);
         switch (configTarget) {
             case ConfigurationTarget.WorkspaceFolder: {
-                if (!resource) {
-                    throw new Error('No resource provided');
-                }
                 settingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${folderKey}`;
                 break;
             }
             default: {
-                if (!resource) {
-                    throw new Error('No resource provided');
-                }
                 settingKey = this.workspaceService.workspaceFile
                     ? `WORKSPACE_INTERPRETER_PATH_${this.workspaceService.workspaceFile.fsPath}`
                     : // Only a single folder is opened, use fsPath of the folder as key

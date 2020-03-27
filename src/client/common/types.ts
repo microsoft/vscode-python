@@ -191,6 +191,7 @@ export interface IPythonSettings {
     readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
     readonly languageServer: LanguageServerType;
+    readonly defaultInterpreterPath: string;
 }
 export interface ISortImportSettings {
     readonly path: string;
