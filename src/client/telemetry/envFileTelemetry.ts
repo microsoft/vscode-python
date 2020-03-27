@@ -26,7 +26,13 @@ export namespace EnvFileTelemetry {
     }
 
     export function shouldSendSettingTelemetry(workspaceService: IWorkspaceService, envFileSetting?: string): boolean {
-        return envFileSetting !== defaultEnvFileSetting(workspaceService) && shouldSendTelemetry();
+        // Trick to force shouldSendTelemetry to use the stubs in the unit tests.
+        return (
+            // tslint:disable-next-line: no-unnecessary-qualifier
+            EnvFileTelemetry.shouldSendTelemetry() &&
+            // tslint:disable-next-line: no-unnecessary-qualifier
+            envFileSetting !== EnvFileTelemetry.defaultEnvFileSetting(workspaceService)
+        );
     }
 
     export function defaultEnvFileSetting(workspaceService: IWorkspaceService) {
