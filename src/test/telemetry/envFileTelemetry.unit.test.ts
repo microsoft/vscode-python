@@ -9,7 +9,7 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { EnvFileTelemetry } from '../../client/telemetry/envFileTelemetry';
 
-suite('Env file telemetry - Lorem', () => {
+suite('Env file telemetry', () => {
     const defaultEnvFileValue = 'someDefaultValue';
     let sandbox: sinon.SinonSandbox;
     let workspaceService: IWorkspaceService;
