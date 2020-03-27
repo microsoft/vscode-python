@@ -76,7 +76,7 @@ suite('Language Server Activation - ActivationManager', () => {
 
         const mockWorkspaceConfig = {
             inspect: () => ({
-                defaultValue: 'foo'
+                defaultValue: 'defaultValue'
             })
         };
 
@@ -376,7 +376,7 @@ suite('Language Server Activation - Env file telemetry', () => {
         };
         const mockWorkspaceConfig = {
             inspect: () => ({
-                defaultValue: 'foo'
+                defaultValue: 'defaultValue'
             })
         };
 
