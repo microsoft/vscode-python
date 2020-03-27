@@ -5,7 +5,7 @@
 
 import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { TextDocument, Uri } from 'vscode';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
@@ -16,6 +16,8 @@ import { ActiveResourceService } from '../../client/common/application/activeRes
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
+import { FileSystem } from '../../client/common/platform/fileSystem';
+import { IFileSystem } from '../../client/common/platform/types';
 import { IDisposable } from '../../client/common/types';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
@@ -47,6 +49,7 @@ suite('Language Server Activation - ActivationManager', () => {
     let documentManager: typemoq.IMock<IDocumentManager>;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
+    let fileSystem: IFileSystem;
     setup(() => {
         workspaceService = mock(WorkspaceService);
         activeResourceService = mock(ActiveResourceService);
@@ -56,6 +59,7 @@ suite('Language Server Activation - ActivationManager', () => {
         documentManager = typemoq.Mock.ofType<IDocumentManager>();
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
+        fileSystem = mock(FileSystem);
         managerTest = new ExtensionActivationManagerTest(
             [instance(activationService1), instance(activationService2)],
             [],
@@ -64,8 +68,18 @@ suite('Language Server Activation - ActivationManager', () => {
             autoSelection.object,
             appDiagnostics.object,
             instance(workspaceService),
+            instance(fileSystem),
             instance(activeResourceService)
         );
+
+        const mockWorkspaceConfig = {
+            inspect: () => ({
+                defaultValue: 'foo'
+            })
+        };
+
+        when(workspaceService.getConfiguration('python')).thenReturn(mockWorkspaceConfig as any);
+        when(fileSystem.fileExists(anyString())).thenResolve(false);
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {
         const disposable = typemoq.Mock.ofType<IDisposable>();
@@ -341,6 +355,7 @@ suite('Language Server Activation - activate()', () => {
     let documentManager: typemoq.IMock<IDocumentManager>;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
+    let fileSystem: IFileSystem;
     let singleActivationService: typemoq.IMock<IExtensionSingleActivationService>;
     let initialize: sinon.SinonStub<any>;
     let activateWorkspace: sinon.SinonStub<any>;
@@ -355,6 +370,7 @@ suite('Language Server Activation - activate()', () => {
         documentManager = typemoq.Mock.ofType<IDocumentManager>();
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
+        fileSystem = mock(FileSystem);
         singleActivationService = typemoq.Mock.ofType<IExtensionSingleActivationService>();
         initialize = sinon.stub(ExtensionActivationManager.prototype, 'initialize');
         initialize.resolves();
@@ -368,6 +384,7 @@ suite('Language Server Activation - activate()', () => {
             autoSelection.object,
             appDiagnostics.object,
             instance(workspaceService),
+            instance(fileSystem),
             instance(activeResourceService)
         );
     });
