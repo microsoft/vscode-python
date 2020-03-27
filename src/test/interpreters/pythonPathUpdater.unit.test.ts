@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
+import { IExperimentsManager, IInterpreterPathService } from '../../client/common/types';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 import { IPythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -11,13 +12,24 @@ import { IServiceContainer } from '../../client/ioc/types';
 suite('Python Path Settings Updater', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
+    let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
     let updaterServiceFactory: IPythonPathUpdaterServiceFactory;
     function setupMocks() {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
+        experimentsManager.setup(e => e.inExperiment(TypeMoq.It.isAny())).returns(() => false);
+        interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         serviceContainer
             .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IExperimentsManager)))
+            .returns(() => experimentsManager.object);
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterPathService)))
+            .returns(() => interpreterPathService.object);
         updaterServiceFactory = new PythonPathUpdaterServiceFactory(serviceContainer.object);
     }
     function setupConfigProvider(resource?: Uri): TypeMoq.IMock<WorkspaceConfiguration> {

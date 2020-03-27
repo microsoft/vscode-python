@@ -5,8 +5,16 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Disposable, StatusBarAlignment, StatusBarItem, Uri, WorkspaceFolder } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IPathUtils, IPythonSettings } from '../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IOutputChannel,
+    IPathUtils,
+    IPythonSettings
+} from '../../client/common/types';
+import { Interpreters } from '../../client/common/utils/localize';
 import { Architecture } from '../../client/common/utils/platform';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
@@ -49,6 +57,7 @@ suite('Interpreters Display', () => {
     let interpreterDisplay: IInterpreterDisplay;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let pathUtils: TypeMoq.IMock<IPathUtils>;
+    let output: TypeMoq.IMock<IOutputChannel>;
     let autoSelection: IInterpreterAutoSelectionService;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -63,8 +72,12 @@ suite('Interpreters Display', () => {
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
+        output = TypeMoq.Mock.ofType<IOutputChannel>();
         autoSelection = mock(InterpreterAutoSelectionService);
 
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), STANDARD_OUTPUT_CHANNEL))
+            .returns(() => output.object);
         serviceContainer
             .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
@@ -108,7 +121,7 @@ suite('Interpreters Display', () => {
             workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource))).returns(() => undefined);
         }
     }
-    test('Sattusbar must be created and have command name initialized', () => {
+    test('Statusbar must be created and have command name initialized', () => {
         statusBar.verify(s => (s.command = TypeMoq.It.isValue('python.setInterpreter')), TypeMoq.Times.once());
         expect(disposableRegistry).to.be.lengthOf.above(0);
         expect(disposableRegistry).contain(statusBar.object);
@@ -135,7 +148,36 @@ suite('Interpreters Display', () => {
 
         verify(autoSelection.autoSelectInterpreter(anything())).once();
         statusBar.verify(s => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!), TypeMoq.Times.once());
-        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(activeInterpreter.path)!), TypeMoq.Times.once());
+        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(activeInterpreter.path)!), TypeMoq.Times.atLeastOnce());
+    });
+    test('Log the output channel if displayed needs to be updated with a new interpreter', async () => {
+        const resource = Uri.file('x');
+        const workspaceFolder = Uri.file('workspace');
+        const activeInterpreter: PythonInterpreter = {
+            ...info,
+            displayName: 'Dummy_Display_Name',
+            type: InterpreterType.Unknown,
+            path: path.join('user', 'development', 'env', 'bin', 'python')
+        };
+        pathUtils
+            .setup(p => p.getDisplayName(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => activeInterpreter.path);
+        setupWorkspaceFolder(resource, workspaceFolder);
+        when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
+        interpreterService
+            .setup(i => i.getInterpreters(TypeMoq.It.isValue(workspaceFolder)))
+            .returns(() => Promise.resolve([]));
+        interpreterService
+            .setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
+            .returns(() => Promise.resolve(activeInterpreter));
+        output
+            .setup(o => o.appendLine(Interpreters.pythonInterpreterPath().format(activeInterpreter.path)))
+            .returns(() => undefined)
+            .verifiable(TypeMoq.Times.once());
+
+        await interpreterDisplay.refresh(resource);
+
+        output.verifyAll();
     });
     test('If interpreter is not identified then tooltip should point to python Path', async () => {
         const resource = Uri.file('x');
@@ -154,7 +196,7 @@ suite('Interpreters Display', () => {
 
         await interpreterDisplay.refresh(resource);
 
-        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(pythonPath)), TypeMoq.Times.once());
+        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(pythonPath)), TypeMoq.Times.atLeastOnce());
         statusBar.verify(s => (s.text = TypeMoq.It.isValue(displayName)), TypeMoq.Times.once());
     });
     test('If interpreter file does not exist then update status bar accordingly', async () => {
@@ -218,6 +260,6 @@ suite('Interpreters Display', () => {
         interpreterHelper.verifyAll();
         interpreterService.verifyAll();
         statusBar.verify(s => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!), TypeMoq.Times.once());
-        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(pythonPath)!), TypeMoq.Times.once());
+        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(pythonPath)!), TypeMoq.Times.atLeastOnce());
     });
 });

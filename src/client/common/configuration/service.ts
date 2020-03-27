@@ -7,7 +7,8 @@ import { IInterpreterAutoSeletionProxyService } from '../../interpreter/autoSele
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
-import { IConfigurationService, IPythonSettings } from '../types';
+import { DeprecatePythonPath } from '../experimentGroups';
+import { IConfigurationService, IExperimentsManager, IInterpreterPathService, IPythonSettings } from '../types';
 
 @injectable()
 export class ConfigurationService implements IConfigurationService {
@@ -19,7 +20,15 @@ export class ConfigurationService implements IConfigurationService {
         const InterpreterAutoSelectionService = this.serviceContainer.get<IInterpreterAutoSeletionProxyService>(
             IInterpreterAutoSeletionProxyService
         );
-        return PythonSettings.getInstance(resource, InterpreterAutoSelectionService, this.workspaceService);
+        const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
+        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        return PythonSettings.getInstance(
+            resource,
+            InterpreterAutoSelectionService,
+            this.workspaceService,
+            experiments,
+            interpreterPathService
+        );
     }
 
     public async updateSectionSetting(
@@ -50,9 +59,20 @@ export class ConfigurationService implements IConfigurationService {
         ) {
             return;
         }
-
-        await configSection.update(setting, value, settingsInfo.target);
-        await this.verifySetting(configSection, settingsInfo.target, setting, value);
+        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        if (section === 'python' && setting === 'pythonPath') {
+            if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
+                const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(
+                    IInterpreterPathService
+                );
+                // tslint:disable-next-line: no-any
+                await interpreterPathService.update(settingsInfo.uri, settingsInfo.target, value as any);
+            }
+            experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
+        } else {
+            await configSection.update(setting, value, settingsInfo.target);
+            await this.verifySetting(configSection, settingsInfo.target, setting, value);
+        }
     }
 
     public async updateSetting(

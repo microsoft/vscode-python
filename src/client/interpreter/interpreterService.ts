@@ -4,6 +4,7 @@ import * as path from 'path';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import '../../client/common/extensions';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { DeprecatePythonPath } from '../common/experimentGroups';
 import { traceError } from '../common/logger';
 import { getArchitectureDisplayName } from '../common/platform/registry';
 import { IFileSystem } from '../common/platform/types';
@@ -11,6 +12,8 @@ import { IPythonExecutionFactory } from '../common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
+    IExperimentsManager,
+    IInterpreterPathService,
     IPersistentState,
     IPersistentStateFactory,
     Resource
@@ -39,6 +42,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly locator: IInterpreterLocatorService;
     private readonly persistentStateFactory: IPersistentStateFactory;
     private readonly configService: IConfigurationService;
+    private readonly interpreterPathService: IInterpreterPathService;
+    private readonly experiments: IExperimentsManager;
     private readonly didChangeInterpreterEmitter = new EventEmitter<void>();
     private readonly didChangeInterpreterInformation = new EventEmitter<PythonInterpreter>();
     private readonly inMemoryCacheOfDisplayNames = new Map<string, string>();
@@ -55,6 +60,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         );
         this.persistentStateFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
+        this.experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     }
     public get hasInterpreters(): Promise<boolean> {
         return this.locator.hasInterpreters;
@@ -74,12 +81,26 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const pySettings = this.configService.getSettings();
         this.pythonPathSetting = pySettings.pythonPath;
-        const disposable = workspaceService.onDidChangeConfiguration(e => {
-            if (e.affectsConfiguration('python.pythonPath', undefined)) {
-                this.onConfigChanged();
-            }
-        });
-        disposables.push(disposable);
+        if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
+            disposables.push(
+                this.interpreterPathService.onDidChange(i => {
+                    this.onConfigChanged(i.uri);
+                })
+            );
+        } else {
+            const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
+                ? workspaceService.workspaceFolders!.map(workspace => workspace.uri)
+                : [undefined];
+            const disposable = workspaceService.onDidChangeConfiguration(e => {
+                const workspaceUriIndex = workspacesUris.findIndex(uri =>
+                    e.affectsConfiguration('python.pythonPath', uri)
+                );
+                const workspaceUri = workspaceUriIndex === -1 ? undefined : workspacesUris[workspaceUriIndex];
+                this.onConfigChanged(workspaceUri);
+            });
+            disposables.push(disposable);
+        }
+        this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
     }
 
     @captureTelemetry(EventName.PYTHON_INTERPRETER_DISCOVERY, { locator: 'all' }, true)
@@ -281,10 +302,10 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
         return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
     }
-    private onConfigChanged = () => {
+    private onConfigChanged = (resource?: Uri) => {
         // Check if we actually changed our python path
-        const pySettings = this.configService.getSettings();
-        if (this.pythonPathSetting !== pySettings.pythonPath) {
+        const pySettings = this.configService.getSettings(resource);
+        if (this.pythonPathSetting === '' || this.pythonPathSetting !== pySettings.pythonPath) {
             this.pythonPathSetting = pySettings.pythonPath;
             this.didChangeInterpreterEmitter.fire();
             const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);

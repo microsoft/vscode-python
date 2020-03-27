@@ -9,10 +9,17 @@ import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
+import { ExperimentsManager } from '../../../../client/common/experiments';
+import { InterpreterPathService } from '../../../../client/common/interpreterPathService';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
-import { IPersistentStateFactory, Resource } from '../../../../client/common/types';
+import {
+    IExperimentsManager,
+    IInterpreterPathService,
+    IPersistentStateFactory,
+    Resource
+} from '../../../../client/common/types';
 import { InterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection';
 import { NextAction } from '../../../../client/interpreter/autoSelection/rules/baseRule';
 import { SettingsInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/settings';
@@ -25,6 +32,8 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
     let fs: IFileSystem;
     let state: PersistentState<PythonInterpreter | undefined>;
     let workspaceService: IWorkspaceService;
+    let experimentsManager: IExperimentsManager;
+    let interpreterPathService: IInterpreterPathService;
     class SettingsInterpretersAutoSelectionRuleTest extends SettingsInterpretersAutoSelectionRule {
         public async onAutoSelectInterpreter(
             resource: Resource,
@@ -38,6 +47,8 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         state = mock(PersistentState);
         fs = mock(FileSystem);
         workspaceService = mock(WorkspaceService);
+        experimentsManager = mock(ExperimentsManager);
+        interpreterPathService = mock(InterpreterPathService);
 
         when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
             instance(state)
@@ -45,7 +56,9 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         rule = new SettingsInterpretersAutoSelectionRuleTest(
             instance(fs),
             instance(stateFactory),
-            instance(workspaceService)
+            instance(workspaceService),
+            instance(experimentsManager),
+            instance(interpreterPathService)
         );
     });
 
