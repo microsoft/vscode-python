@@ -22,6 +22,8 @@ import { IDisposable } from '../../client/common/types';
 import { IInterpreterAutoSelectionService } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
+import * as Telemetry from '../../client/telemetry';
+import { EventName } from '../../client/telemetry/constants';
 import { sleep } from '../core';
 
 // tslint:disable:max-func-body-length no-any
@@ -343,6 +345,103 @@ suite('Language Server Activation - ActivationManager', () => {
         disposable2.verifyAll();
 
         assert.deepEqual(Array.from(managerTest.activatedWorkspaces.keys()), ['one']);
+    });
+});
+
+suite('Language Server Activation - Env file telemetry', () => {
+    const resource = Uri.parse('a');
+    let workspaceService: IWorkspaceService;
+    let appDiagnostics: typemoq.IMock<IApplicationDiagnostics>;
+    let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
+    let interpreterService: IInterpreterService;
+    let activeResourceService: IActiveResourceService;
+    let documentManager: typemoq.IMock<IDocumentManager>;
+    let activationService1: IExtensionActivationService;
+    let fileSystem: IFileSystem;
+    let singleActivationService: typemoq.IMock<IExtensionSingleActivationService>;
+    let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
+    let managerTest: ExtensionActivationManager;
+    let sandbox: sinon.SinonSandbox;
+
+    setup(() => {
+        const mockSendTelemetryEvent = (
+            eventName: EventName,
+            _: number | undefined,
+            { hasCustomEnvPath }: { hasCustomEnvPath: boolean }
+        ) => {
+            telemetryEvent = {
+                eventName,
+                hasCustomEnvPath
+            };
+        };
+        const mockWorkspaceConfig = {
+            inspect: () => ({
+                defaultValue: 'foo'
+            })
+        };
+
+        sandbox = sinon.createSandbox();
+        const telemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent');
+        const initializeStub = sandbox.stub(ExtensionActivationManager.prototype, 'initialize');
+
+        workspaceService = mock(WorkspaceService);
+        activeResourceService = mock(ActiveResourceService);
+        appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
+        autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
+        interpreterService = mock(InterpreterService);
+        documentManager = typemoq.Mock.ofType<IDocumentManager>();
+        activationService1 = mock(LanguageServerExtensionActivationService);
+        fileSystem = mock(FileSystem);
+        singleActivationService = typemoq.Mock.ofType<IExtensionSingleActivationService>();
+
+        managerTest = new ExtensionActivationManager(
+            [instance(activationService1)],
+            [singleActivationService.object],
+            documentManager.object,
+            instance(interpreterService),
+            autoSelection.object,
+            appDiagnostics.object,
+            instance(workspaceService),
+            instance(fileSystem),
+            instance(activeResourceService)
+        );
+
+        telemetryStub.callsFake(mockSendTelemetryEvent);
+        initializeStub.resolves();
+
+        when(workspaceService.getConfiguration('python')).thenReturn(mockWorkspaceConfig as any);
+        when(activationService1.activate(anything())).thenResolve();
+        when(interpreterService.getInterpreters(resource)).thenResolve();
+        when(activeResourceService.getActiveResource()).thenReturn(resource);
+
+        autoSelection.setup(a => a.autoSelectInterpreter(resource)).returns(() => Promise.resolve());
+        appDiagnostics.setup(a => a.performPreStartupHealthCheck(resource)).returns(() => Promise.resolve());
+        singleActivationService.setup(s => s.activate()).returns(() => Promise.resolve());
+    });
+
+    teardown(() => {
+        telemetryEvent = undefined;
+        sandbox.restore();
+    });
+
+    test('Should send env file telemetry on activation if an env file exists at the default workspace location', async () => {
+        when(fileSystem.fileExists(anyString())).thenResolve(true);
+
+        await managerTest.activateWorkspace(resource);
+
+        verify(fileSystem.fileExists(anyString())).once();
+
+        assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: false });
+    });
+
+    test('Should not send env file telemetry on activation if no env file exists at the default workspace location', async () => {
+        when(fileSystem.fileExists(anyString())).thenResolve(false);
+
+        await managerTest.activateWorkspace(resource);
+
+        verify(fileSystem.fileExists(anyString())).once();
+
+        assert.deepEqual(telemetryEvent, undefined);
     });
 });
 
