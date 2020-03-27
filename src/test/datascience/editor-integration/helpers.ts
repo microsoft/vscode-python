@@ -20,36 +20,36 @@ export function createDocument(
     // Split our string on newline chars
     const inputLines = inputText.split(/\r?\n/);
 
-    document.setup(d => d.languageId).returns(() => 'python');
+    document.setup((d) => d.languageId).returns(() => 'python');
 
     // First set the metadata
     document
-        .setup(d => d.fileName)
+        .setup((d) => d.fileName)
         .returns(() => Uri.file(fileName).fsPath)
         .verifiable(times);
     document
-        .setup(d => d.version)
+        .setup((d) => d.version)
         .returns(() => fileVersion)
         .verifiable(times);
 
     // Next add the lines in
-    document.setup(d => d.lineCount).returns(() => inputLines.length);
+    document.setup((d) => d.lineCount).returns(() => inputLines.length);
 
     const textLines = inputLines.map((line, index) => {
         const textLine = TypeMoq.Mock.ofType<TextLine>();
         const testRange = new Range(index, 0, index, line.length);
-        textLine.setup(l => l.text).returns(() => line);
-        textLine.setup(l => l.range).returns(() => testRange);
-        textLine.setup(l => l.isEmptyOrWhitespace).returns(() => line.trim().length === 0);
+        textLine.setup((l) => l.text).returns(() => line);
+        textLine.setup((l) => l.range).returns(() => testRange);
+        textLine.setup((l) => l.isEmptyOrWhitespace).returns(() => line.trim().length === 0);
         return textLine;
     });
-    document.setup(d => d.lineAt(TypeMoq.It.isAnyNumber())).returns((index: number) => textLines[index].object);
+    document.setup((d) => d.lineAt(TypeMoq.It.isAnyNumber())).returns((index: number) => textLines[index].object);
 
     // Get text is a bit trickier
     if (implementGetText) {
-        document.setup(d => d.getText()).returns(() => inputText);
+        document.setup((d) => d.getText()).returns(() => inputText);
         document
-            .setup(d => d.getText(TypeMoq.It.isAny()))
+            .setup((d) => d.getText(TypeMoq.It.isAny()))
             .returns((r: Range) => {
                 let results = '';
                 if (r) {

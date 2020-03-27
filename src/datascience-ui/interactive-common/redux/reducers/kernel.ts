@@ -27,7 +27,7 @@ export namespace Kernel {
         // Set busy until kernel is restarted
         return {
             ...arg.prevState,
-            busy: true
+            busy: true,
         };
     }
 
@@ -37,7 +37,7 @@ export namespace Kernel {
         // Set busy until kernel is finished interrupting
         return {
             ...arg.prevState,
-            busy: true
+            busy: true,
         };
     }
 
@@ -50,8 +50,8 @@ export namespace Kernel {
                 kernel: {
                     localizedUri: arg.payload.data.localizedUri,
                     jupyterServerStatus: arg.payload.data.jupyterServerStatus,
-                    displayName: arg.payload.data.displayName
-                }
+                    displayName: arg.payload.data.displayName,
+                },
             };
         }
         return arg.prevState;
@@ -71,7 +71,7 @@ export namespace Kernel {
             cellVMs: newVMs,
             pendingVariableCount: 0,
             variables: [],
-            currentExecutionCount: 0
+            currentExecutionCount: 0,
         };
     }
 }

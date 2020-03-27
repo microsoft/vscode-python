@@ -33,7 +33,7 @@ suite('Interpreters - Display Progress', () => {
         },
         register(): void {
             noop();
-        }
+        },
     };
 
     test('Display loading message when refreshing interpreters for the first time', async () => {

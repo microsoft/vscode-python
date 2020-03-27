@@ -21,7 +21,7 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from './autoSelection/types';
 import { InterpreterComparer } from './configuration/interpreterComparer';
 import { InterpreterSelector } from './configuration/interpreterSelector';
@@ -31,7 +31,7 @@ import {
     IInterpreterComparer,
     IInterpreterSelector,
     IPythonPathUpdaterServiceFactory,
-    IPythonPathUpdaterServiceManager
+    IPythonPathUpdaterServiceManager,
 } from './configuration/types';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -57,7 +57,7 @@ import {
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from './contracts';
 import { InterpreterDisplay } from './display';
 import { InterpreterSelectionTip } from './display/interpreterSelectionTip';
@@ -75,7 +75,7 @@ import { CondaService } from './locators/services/condaService';
 import { CurrentPathService, PythonInPathCommandProvider } from './locators/services/currentPathService';
 import {
     GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService
+    GlobalVirtualEnvService,
 } from './locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from './locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
@@ -88,7 +88,7 @@ import { WindowsRegistryService } from './locators/services/windowsRegistryServi
 import { WindowsStoreInterpreter } from './locators/services/windowsStoreInterpreter';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService
+    WorkspaceVirtualEnvService,
 } from './locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './locators/services/workspaceVirtualEnvWatcherService';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from './locators/types';

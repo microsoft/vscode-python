@@ -27,7 +27,7 @@ function generateCodeCell(
         id: id,
         file: file,
         line: line,
-        state: CellState.init
+        state: CellState.init,
     };
 }
 
@@ -37,7 +37,7 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
         file: file,
         line: line,
         state: CellState.finished,
-        data: createMarkdownCell(code)
+        data: createMarkdownCell(code),
     };
 }
 
@@ -85,7 +85,7 @@ export function generateCells(
                     line + firstNonMarkdown,
                     uuid(),
                     magicCommandsAsComments
-                )
+                ),
             ];
         } else {
             // Just a single markdown cell
@@ -136,7 +136,7 @@ export function generateCellsFromString(source: string, settings?: IDataScienceS
                     startLine: index + 1,
                     title: results,
                     cell_type: matcher.getCellType(line),
-                    code: ''
+                    code: '',
                 });
             }
             currentCode = undefined;
@@ -151,7 +151,7 @@ export function generateCellsFromString(source: string, settings?: IDataScienceS
 
     // For each one, get its text and turn it into a cell
     return Array.prototype.concat(
-        ...starts.map(s => {
+        ...starts.map((s) => {
             return generateCells(settings, s.code, '', s.startLine, false, uuid());
         })
     );
@@ -174,7 +174,7 @@ export function generateCellRangesFromDocument(document: TextDocument, settings?
                 cells.push({
                     range: line.range,
                     title: results,
-                    cell_type: matcher.getCellType(line.text)
+                    cell_type: matcher.getCellType(line.text),
                 });
             }
         }
@@ -194,7 +194,7 @@ export function generateCellsFromDocument(document: TextDocument, settings?: IDa
 
     // For each one, get its text and turn it into a cell
     return Array.prototype.concat(
-        ...ranges.map(cr => {
+        ...ranges.map((cr) => {
             const code = document.getText(cr.range);
             return generateCells(settings, code, '', cr.range.start.line, false, uuid());
         })

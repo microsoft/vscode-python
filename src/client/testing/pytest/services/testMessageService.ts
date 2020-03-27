@@ -43,7 +43,7 @@ export class TestMessageService implements ITestMessageService {
                     provider: provider,
                     testTime: tf.testFunction.time,
                     status: status,
-                    testFilePath: tf.parentTestFile.fullPath
+                    testFilePath: tf.parentTestFile.fullPath,
                 };
                 messages.push(msg);
             } else {
@@ -67,7 +67,7 @@ export class TestMessageService implements ITestMessageService {
                     testTime: tf.testFunction.time,
                     testFilePath: testFilePath,
                     status: status,
-                    locationStack: locationStack
+                    locationStack: locationStack,
                 };
                 messages.push(msg);
             }
@@ -106,7 +106,7 @@ export class TestMessageService implements ITestMessageService {
                 );
                 const stackFrame: ILocationStackFrameDetails = {
                     location: location,
-                    lineText: file.getText(location.range)
+                    lineText: file.getText(location.range),
                 };
                 locationStack.push(stackFrame);
             }

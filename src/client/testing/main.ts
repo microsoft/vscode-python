@@ -11,7 +11,7 @@ import {
     EventEmitter,
     OutputChannel,
     TextDocument,
-    Uri
+    Uri,
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import * as constants from '../common/constants';
@@ -23,7 +23,7 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IOutputChannel,
-    Resource
+    Resource,
 } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -40,7 +40,7 @@ import {
     TestFile,
     TestFunction,
     TestStatus,
-    TestsToRun
+    TestsToRun,
 } from './common/types';
 import {
     ITestConfigurationService,
@@ -48,7 +48,7 @@ import {
     ITestManagementService,
     ITestResultDisplay,
     TestWorkspaceFolder,
-    WorkspaceTestStatus
+    WorkspaceTestStatus,
 } from './types';
 
 // tslint:disable:no-any
@@ -103,7 +103,9 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         this.registerHandlers();
         this.registerCommands();
         this.checkExperiments();
-        this.autoDiscoverTests(undefined).catch(ex => traceError('Failed to auto discover tests upon activation', ex));
+        this.autoDiscoverTests(undefined).catch((ex) =>
+            traceError('Failed to auto discover tests upon activation', ex)
+        );
         await this.registerSymbolProvider(symbolProvider);
     }
     public checkExperiments() {
@@ -134,7 +136,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         if (testManager) {
             if (!this.testManagers.has(testManager)) {
                 this.testManagers.add(testManager);
-                const handler = testManager.onDidStatusChange(e => this._onDidStatusChange.fire(e));
+                const handler = testManager.onDidStatusChange((e) => this._onDidStatusChange.fire(e));
                 this.disposableRegistry.push(handler);
             }
             return testManager;
@@ -155,7 +157,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         if (!Array.isArray(this.workspaceService.workspaceFolders)) {
             return;
         }
-        const workspaceFolderUri = this.workspaceService.workspaceFolders.find(w =>
+        const workspaceFolderUri = this.workspaceService.workspaceFolders.find((w) =>
             eventArgs.affectsConfiguration('python.testing', w.uri)
         );
         if (!workspaceFolderUri) {
@@ -183,7 +185,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         if (this.testResultDisplay) {
             this.testResultDisplay.enabled = true;
         }
-        this.autoDiscoverTests(workspaceUri).catch(ex =>
+        this.autoDiscoverTests(workspaceUri).catch((ex) =>
             traceError('Failed to auto discover tests upon activation', ex)
         );
     }
@@ -258,7 +260,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         );
         this.testResultDisplay
             .displayDiscoverStatus(discoveryPromise, quietMode)
-            .catch(ex => traceError('Python Extension: displayDiscoverStatus', ex));
+            .catch((ex) => traceError('Python Extension: displayDiscoverStatus', ex));
         await discoveryPromise;
     }
     public async stopTests(resource: Uri) {
@@ -387,7 +389,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             ITestCollectionStorageService
         );
         const tests = testCollectionStorage.getTests(testManager.workspaceFolder)!;
-        const testFiles = tests.testFiles.filter(testFile => {
+        const testFiles = tests.testFiles.filter((testFile) => {
             return testFile.fullPath === this.documentManager.activeTextEditor!.document.uri.fsPath;
         });
         if (testFiles.length < 1) {
@@ -412,7 +414,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             this.testResultDisplay = this.serviceContainer.get<ITestResultDisplay>(ITestResultDisplay);
         }
 
-        const promise = testManager.runTest(cmdSource, testsToRun, runFailedTests, debug).catch(reason => {
+        const promise = testManager.runTest(cmdSource, testsToRun, runFailedTests, debug).catch((reason) => {
             if (reason !== CANCELLATION_REASON) {
                 this.outputChannel.appendLine(`Error: ${reason}`);
             }
@@ -429,7 +431,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         );
         const event = new EventEmitter<void>();
         this.disposableRegistry.push(event);
-        const handler = this._onDidStatusChange.event(e => {
+        const handler = this._onDidStatusChange.event((e) => {
             if (e.status !== TestStatus.Discovering && e.status !== TestStatus.Running) {
                 event.fire();
             }
@@ -583,7 +585,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
                 constants.Commands.Tests_Run_Current_File,
                 (_, cmdSource: CommandSource = CommandSource.commandPalette) => this.runCurrentTestFile(cmdSource)
             ),
-            commandManager.registerCommand(constants.Commands.Tests_Discovering, noop)
+            commandManager.registerCommand(constants.Commands.Tests_Discovering, noop),
         ];
 
         disposablesRegistry.push(...disposables);
@@ -601,7 +603,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
 
         this.disposableRegistry.push(documentManager.onDidSaveTextDocument(this.onDocumentSaved.bind(this)));
         this.disposableRegistry.push(
-            this.workspaceService.onDidChangeConfiguration(e => {
+            this.workspaceService.onDidChangeConfiguration((e) => {
                 if (this.configChangedTimer) {
                     clearTimeout(this.configChangedTimer as any);
                 }
@@ -610,7 +612,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         );
         this.disposableRegistry.push(
             interpreterService.onDidChangeInterpreter(() =>
-                this.autoDiscoverTests(undefined).catch(ex =>
+                this.autoDiscoverTests(undefined).catch((ex) =>
                     traceError('Failed to auto discover tests upon changing interpreter', ex)
                 )
             )

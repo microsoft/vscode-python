@@ -12,13 +12,13 @@ import {
     cache,
     cacheResourceSpecificInterpreterData,
     makeDebounceAsyncDecorator,
-    makeDebounceDecorator
+    makeDebounceDecorator,
 } from '../../../client/common/utils/decorators';
 import { sleep } from '../../core';
 use(chaiPromise);
 
 // tslint:disable:no-any max-func-body-length no-unnecessary-class
-suite('Common Utils - Decorators', function() {
+suite('Common Utils - Decorators', function () {
     // For some reason, sometimes we have timeouts on CI.
     // Note: setTimeout and similar functions are not guaranteed to execute
     // at the precise time prescribed.
@@ -37,14 +37,14 @@ suite('Common Utils - Decorators', function() {
                             },
                             inspect: () => {
                                 return { globalValue: pythonPath };
-                            }
+                            },
                         };
                     },
                     getWorkspaceFolder: () => {
                         return;
-                    }
+                    },
                 },
-                Uri: Uri
+                Uri: Uri,
             } as any;
         }
         test('Result must be cached when using cache decorator', async () => {
@@ -306,7 +306,7 @@ suite('Common Utils - Decorators', function() {
 
             const start = getHighPrecisionTime();
             let capturedEx: Error | undefined;
-            await one.run().catch(ex => (capturedEx = ex));
+            await one.run().catch((ex) => (capturedEx = ex));
             await waitForCalls(one.timestamps, 1);
             const delay = one.timestamps[0] - start;
 
@@ -340,7 +340,7 @@ suite('Common Utils - Decorators', function() {
             expect(one.timestamps).to.have.lengthOf(one.calls.length);
             expect(errored).to.be.equal(false, "Exception raised when there shouldn't have been any");
         });
-        test('Debounce: multiple async calls when awaiting on all', async function() {
+        test('Debounce: multiple async calls when awaiting on all', async function () {
             const wait = 100;
             // tslint:disable-next-line:max-classes-per-file
             class One extends Base {

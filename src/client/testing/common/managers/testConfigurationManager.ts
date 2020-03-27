@@ -31,7 +31,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
     public async enable() {
         // Disable other test frameworks.
         await Promise.all(
-            UNIT_TEST_PRODUCTS.filter(prod => prod !== this.product).map(prod =>
+            UNIT_TEST_PRODUCTS.filter((prod) => prod !== this.product).map((prod) =>
                 this.testConfigSettingsService.disable(this.workspace, prod)
             )
         );
@@ -46,27 +46,27 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
             ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder: 'Select the directory containing the tests'
+            placeHolder: 'Select the directory containing the tests',
         };
         let items: QuickPickItem[] = subDirs
-            .map(dir => {
+            .map((dir) => {
                 const dirName = path.relative(rootDir, dir);
                 if (dirName.indexOf('.') === 0) {
                     return;
                 }
                 return {
                     label: dirName,
-                    description: ''
+                    description: '',
                 };
             })
-            .filter(item => item !== undefined)
-            .map(item => item!);
+            .filter((item) => item !== undefined)
+            .map((item) => item!);
 
         items = [{ label: '.', description: 'Root directory' }, ...items];
         items = customOptions.concat(items);
         const def = createDeferred<string>();
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        appShell.showQuickPick(items, options).then(item => {
+        appShell.showQuickPick(items, options).then((item) => {
             if (!item) {
                 this.handleCancelled(); // This will throw an exception.
                 return;
@@ -83,19 +83,19 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
             ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder: 'Select the pattern to identify test files'
+            placeHolder: 'Select the pattern to identify test files',
         };
         const items: QuickPickItem[] = [
             { label: '*test.py', description: "Python Files ending with 'test'" },
             { label: '*_test.py', description: "Python Files ending with '_test'" },
             { label: 'test*.py', description: "Python Files beginning with 'test'" },
             { label: 'test_*.py', description: "Python Files beginning with 'test_'" },
-            { label: '*test*.py', description: "Python Files containing the word 'test'" }
+            { label: '*test*.py', description: "Python Files containing the word 'test'" },
         ];
 
         const def = createDeferred<string>();
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        appShell.showQuickPick(items, options).then(item => {
+        appShell.showQuickPick(items, options).then((item) => {
             if (!item) {
                 this.handleCancelled(); // This will throw an exception.
                 return;
@@ -108,12 +108,12 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
     }
     protected getTestDirs(rootDir: string): Promise<string[]> {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        return fs.getSubDirectories(rootDir).then(subDirs => {
+        return fs.getSubDirectories(rootDir).then((subDirs) => {
             subDirs.sort();
 
             // Find out if there are any dirs with the name test and place them on the top.
-            const possibleTestDirs = subDirs.filter(dir => dir.match(/test/i));
-            const nonTestDirs = subDirs.filter(dir => possibleTestDirs.indexOf(dir) === -1);
+            const possibleTestDirs = subDirs.filter((dir) => dir.match(/test/i));
+            const nonTestDirs = subDirs.filter((dir) => possibleTestDirs.indexOf(dir) === -1);
             possibleTestDirs.push(...nonTestDirs);
 
             // The test dirs are now on top.

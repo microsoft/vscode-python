@@ -26,7 +26,7 @@ import { WindowsRegistryInterpretersAutoSelectionRule } from '../../../client/in
 import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from '../../../client/interpreter/autoSelection/rules/workspaceEnv';
 import {
     IInterpreterAutoSelectionRule,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
@@ -112,7 +112,7 @@ suite('Interpreters - Auto Selection', () => {
             currentPathInterpreter,
             systemInterpreter,
             workspaceInterpreter,
-            cachedPaths
+            cachedPaths,
         ];
         for (const service of allRules) {
             verify(service.autoSelectInterpreter(undefined)).once();

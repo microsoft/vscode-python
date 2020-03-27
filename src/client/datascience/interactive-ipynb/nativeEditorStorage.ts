@@ -63,7 +63,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         changeCount: 0,
         saveChangeCount: 0,
         cells: [],
-        notebookJson: {}
+        notebookJson: {},
     };
     private indentAmount: string = ' ';
     private debouncedWriteToStorage = debounce(this.writeToStorage.bind(this), 250);
@@ -88,10 +88,10 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     }
 
     public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {
-        edits.forEach(e => this.update({ ...e, source: 'redo' }));
+        edits.forEach((e) => this.update({ ...e, source: 'redo' }));
     }
     public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
-        edits.forEach(e => this.update({ ...e, source: 'undo' }));
+        edits.forEach((e) => this.update({ ...e, source: 'undo' }));
     }
     public save(): Promise<void> {
         return this.saveAs(this.file);
@@ -107,7 +107,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 newFile: file,
                 oldFile: this.file,
                 newDirty: false,
-                oldDirty: this.isDirty
+                oldDirty: this.isDirty,
             });
         }
     }
@@ -311,7 +311,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         const normalized = change.text.replace(/\r/g, '');
 
         // Figure out which cell we're editing.
-        const index = this.cells.findIndex(c => c.id === id);
+        const index = this.cells.findIndex((c) => c.id === id);
         if (index >= 0) {
             // This is an actual edit.
             const contents = concatMultilineStringInput(this.cells[index].data.source);
@@ -321,7 +321,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             if (contents !== newContents) {
                 const newCell = {
                     ...this.cells[index],
-                    data: { ...this.cells[index].data, source: splitMultilineString(newContents) }
+                    data: { ...this.cells[index].data, source: splitMultilineString(newContents) },
                 };
                 this._state.cells[index] = this.asCell(newCell);
                 return true;
@@ -333,15 +333,15 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     private editCell(changes: IEditorContentChange[], id: string): boolean {
         // Apply the changes to the visible cell list
         if (changes && changes.length) {
-            return changes.map(c => this.applyCellContentChange(c, id)).reduce((p, c) => p || c, false);
+            return changes.map((c) => this.applyCellContentChange(c, id)).reduce((p, c) => p || c, false);
         }
 
         return false;
     }
 
     private swapCells(firstCellId: string, secondCellId: string) {
-        const first = this.cells.findIndex(v => v.id === firstCellId);
-        const second = this.cells.findIndex(v => v.id === secondCellId);
+        const first = this.cells.findIndex((v) => v.id === firstCellId);
+        const second = this.cells.findIndex((v) => v.id === secondCellId);
         if (first >= 0 && second >= 0 && first !== second) {
             const temp = { ...this.cells[first] };
             this._state.cells[first] = this.asCell(this.cells[second]);
@@ -353,8 +353,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
 
     private modifyCells(cells: ICell[]): boolean {
         // Update these cells in our list
-        cells.forEach(c => {
-            const index = this.cells.findIndex(v => v.id === c.id);
+        cells.forEach((c) => {
+            const index = this.cells.findIndex((v) => v.id === c.id);
             this._state.cells[index] = this.asCell(c);
         });
         return true;
@@ -362,13 +362,13 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
 
     private changeCellType(cell: ICell): boolean {
         // Update the cell in our list.
-        const index = this.cells.findIndex(v => v.id === cell.id);
+        const index = this.cells.findIndex((v) => v.id === cell.id);
         this._state.cells[index] = this.asCell(cell);
         return true;
     }
 
     private removeCell(cell: ICell): boolean {
-        const index = this.cells.findIndex(c => c.id === cell.id);
+        const index = this.cells.findIndex((c) => c.id === cell.id);
         if (index >= 0) {
             this._state.cells.splice(index, 1);
             return true;
@@ -377,7 +377,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     }
 
     private clearOutputs(): boolean {
-        const newCells = this.cells.map(c =>
+        const newCells = this.cells.map((c) =>
             this.asCell({ ...c, data: { ...c.data, execution_count: null, outputs: [] } })
         );
         const result = !fastDeepEqual(newCells, this.cells);
@@ -413,7 +413,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             // Add a new spec in this case
             this._state.notebookJson.metadata.kernelspec = {
                 name: kernelSpec.name || kernelSpec.display_name || '',
-                display_name: kernelSpec.display_name || kernelSpec.name || ''
+                display_name: kernelSpec.display_name || kernelSpec.name || '',
             };
             changed = true;
         } else if (kernelSpec && this._state.notebookJson.metadata && this._state.notebookJson.metadata.kernelspec) {
@@ -468,7 +468,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             line: 0,
             file: Identifiers.EmptyFileName,
             state: CellState.finished,
-            data: createCodeCell()
+            data: createCodeCell(),
         };
     }
 
@@ -504,7 +504,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 file: Identifiers.EmptyFileName,
                 line: 0,
                 state: CellState.finished,
-                data: c
+                data: c,
             };
         });
 
@@ -544,8 +544,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                     name: 'python',
                     codemirror_mode: {
                         name: 'ipython',
-                        version: pythonNumber
-                    }
+                        version: pythonNumber,
+                    },
                 },
                 orig_nbformat: 2,
                 file_extension: '.py',
@@ -553,14 +553,14 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 name: 'python',
                 npconvert_exporter: 'python',
                 pygments_lexer: `ipython${pythonNumber}`,
-                version: pythonNumber
+                version: pythonNumber,
             };
 
             // Default notebook data.
             this._state.notebookJson = {
                 nbformat: 4,
                 nbformat_minor: 2,
-                metadata: metadata
+                metadata: metadata,
             };
         }
     }
@@ -572,7 +572,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Reuse our original json except for the cells.
         const json = {
             ...(this._state.notebookJson as nbformat.INotebookContent),
-            cells: cells.map(c => this.fixupCell(c.data))
+            cells: cells.map((c) => this.fixupCell(c.data)),
         };
         return JSON.stringify(json, null, this.indentAmount);
     }
@@ -581,7 +581,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Source is usually a single string on input. Convert back to an array
         return ({
             ...cell,
-            source: splitMultilineString(cell.source)
+            source: splitMultilineString(cell.source),
             // tslint:disable-next-line: no-any
         } as any) as nbformat.ICell; // nyc (code coverage) barfs on this so just trick it.
     }

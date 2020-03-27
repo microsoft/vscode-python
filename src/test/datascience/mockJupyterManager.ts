@@ -21,7 +21,7 @@ import {
     ExecutionResult,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    Output
+    Output,
 } from '../../client/common/process/types';
 import { IConfigurationService, IInstaller, Product } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
@@ -34,7 +34,7 @@ import {
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
-    IJupyterSessionManager
+    IJupyterSessionManager,
 } from '../../client/datascience/types';
 import { IInterpreterService, PythonInterpreter } from '../../client/interpreter/contracts';
 import { IServiceManager } from '../../client/ioc/types';
@@ -55,19 +55,19 @@ export enum SupportedCommands {
     nbconvert = 2,
     notebook = 4,
     kernelspec = 8,
-    all = 0xffff
+    all = 0xffff,
 }
 
 function createKernelSpecs(specs: { name: string; resourceDir: string }[]): Record<string, any> {
     const models: Record<string, any> = {};
-    specs.forEach(spec => {
+    specs.forEach((spec) => {
         models[spec.name] = {
             resource_dir: spec.resourceDir,
             spec: {
                 name: spec.name,
                 display_name: spec.name,
-                language: 'python'
-            }
+                language: 'python',
+            },
         };
     });
     return models;
@@ -96,20 +96,22 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     constructor(serviceManager: IServiceManager) {
         // Make our process service factory always return this item
-        this.processServiceFactory.setup(p => p.create()).returns(() => Promise.resolve(this.processService));
+        this.processServiceFactory.setup((p) => p.create()).returns(() => Promise.resolve(this.processService));
         this.productInstaller = mock(ProductInstaller);
         // Setup our interpreter service
-        this.interpreterService.setup(i => i.onDidChangeInterpreter).returns(() => this.changedInterpreterEvent.event);
         this.interpreterService
-            .setup(i => i.getActiveInterpreter(TypeMoq.It.isAny()))
+            .setup((i) => i.onDidChangeInterpreter)
+            .returns(() => this.changedInterpreterEvent.event);
+        this.interpreterService
+            .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(this.activeInterpreter));
         this.interpreterService
-            .setup(i => i.getInterpreters(TypeMoq.It.isAny()))
+            .setup((i) => i.getInterpreters(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(this.installedInterpreters));
         this.interpreterService
-            .setup(i => i.getInterpreterDetails(TypeMoq.It.isAnyString()))
-            .returns(p => {
-                const found = this.installedInterpreters.find(i => i.path === p);
+            .setup((i) => i.getInterpreterDetails(TypeMoq.It.isAnyString()))
+            .returns((p) => {
+                const found = this.installedInterpreters.find((i) => i.path === p);
                 if (found) {
                     return Promise.resolve(found);
                 }
@@ -137,7 +139,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         // tslint:disable-next-line:no-octal-literal
         this.kernelSpecs.push({
             name: '0e8519db-0895-416c-96df-fa80131ecea0',
-            dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+            dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0',
         });
 
         // Setup our default cells that happen for everything
@@ -220,7 +222,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     public setProcessDelay(timeout: number | undefined) {
         this.processService.setDelay(timeout);
-        this.pythonServices.forEach(p => p.setDelay(timeout));
+        this.pythonServices.forEach((p) => p.setDelay(timeout));
     }
 
     public addInterpreter(
@@ -235,27 +237,27 @@ export class MockJupyterManager implements IJupyterSessionManager {
         const pythonService = new MockPythonService(interpreter);
         this.pythonServices.push(pythonService);
         this.pythonExecutionFactory
-            .setup(f =>
+            .setup((f) =>
                 f.create(
-                    TypeMoq.It.is(o => {
+                    TypeMoq.It.is((o) => {
                         return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
                     })
                 )
             )
             .returns(() => Promise.resolve(pythonService));
         this.pythonExecutionFactory
-            .setup(f =>
+            .setup((f) =>
                 f.createDaemon(
-                    TypeMoq.It.is(o => {
+                    TypeMoq.It.is((o) => {
                         return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
                     })
                 )
             )
             .returns(() => Promise.resolve(pythonService));
         this.pythonExecutionFactory
-            .setup(f =>
+            .setup((f) =>
                 f.createActivatedEnvironment(
-                    TypeMoq.It.is(o => {
+                    TypeMoq.It.is((o) => {
                         return !o || JSON.stringify(o.interpreter) === JSON.stringify(interpreter);
                     })
                 )
@@ -276,7 +278,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             output_type: 'error',
             ename: message,
             evalue: message,
-            traceback: [message]
+            traceback: [message],
         };
 
         this.addCell(code, result);
@@ -287,13 +289,11 @@ export class MockJupyterManager implements IJupyterSessionManager {
         resultGenerator: (cancelToken: CancellationToken) => Promise<{ result: string; haveMore: boolean }>
     ) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
-        cells.forEach(c => {
-            const key = concatMultilineStringInput(c.data.source)
-                .replace(LineFeedRegEx, '')
-                .toLowerCase();
+        cells.forEach((c) => {
+            const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const taggedResult = {
-                    output_type: 'generator'
+                    output_type: 'generator',
                 };
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;
                 data.outputs = [...data.outputs, taggedResult];
@@ -303,7 +303,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     const result = await resultGenerator(t);
                     return {
                         result: this.createStreamResult(result.result),
-                        haveMore: result.haveMore
+                        haveMore: result.haveMore,
                     };
                 };
 
@@ -332,13 +332,11 @@ export class MockJupyterManager implements IJupyterSessionManager {
         mimeType?: string
     ) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
-        cells.forEach(c => {
-            const key = concatMultilineStringInput(c.data.source)
-                .replace(LineFeedRegEx, '')
-                .toLowerCase();
+        cells.forEach((c) => {
+            const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const taggedResult = {
-                    output_type: 'input'
+                    output_type: 'input',
                 };
                 const massagedResult = this.massageCellResult(result, mimeType);
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;
@@ -373,7 +371,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         mimeType?: string | string[]
     ) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
-        cells.forEach(c => {
+        cells.forEach((c) => {
             const cellMatcher = new CellMatcher();
             const key = cellMatcher
                 .stripFirstMarker(concatMultilineStringInput(c.data.source))
@@ -458,7 +456,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private onConfigChanged(configService: IConfigurationService) {
         const pythonPath = configService.getSettings().pythonPath;
         if (this.activeInterpreter === undefined || pythonPath !== this.activeInterpreter.path) {
-            this.activeInterpreter = this.installedInterpreters.filter(f => f.path === pythonPath)[0];
+            this.activeInterpreter = this.installedInterpreters.filter((f) => f.path === pythonPath)[0];
             if (!this.activeInterpreter) {
                 this.activeInterpreter = this.installedInterpreters[0];
             }
@@ -484,7 +482,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         return {
             output_type: 'stream',
             name: 'stdout',
-            text: str
+            text: str,
         };
     }
 
@@ -512,17 +510,17 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 output_type: 'execute_result',
                 execution_count: 1,
                 data: {},
-                metadata: {}
+                metadata: {},
             };
         } else if (mimeType && mimeType === 'clear_true') {
             return {
-                output_type: 'clear_true'
+                output_type: 'clear_true',
             };
         } else if (mimeType && mimeType === 'stream') {
             return {
                 output_type: 'stream',
                 text: result,
-                name: 'stdout'
+                name: 'stdout',
             };
         } else if (typeof result === 'string') {
             const data = {};
@@ -531,14 +529,14 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 output_type: 'execute_result',
                 execution_count: 1,
                 data: data,
-                metadata: {}
+                metadata: {},
             };
         } else if (typeof result === 'number') {
             return {
                 output_type: 'execute_result',
                 execution_count: 1,
                 data: { 'text/plain': result.toString() },
-                metadata: {}
+                metadata: {},
             };
         } else {
             return result;
@@ -553,7 +551,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         fs.writeJSONSync(filePath, {
             display_name: 'Python 3',
             language: 'python',
-            argv: [pythonPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}']
+            argv: [pythonPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
         });
         return filePath;
     }
@@ -587,13 +585,13 @@ export class MockJupyterManager implements IJupyterSessionManager {
     ) {
         const result = {
             proc,
-            out: new Observable<Output<string>>(subscriber => {
-                stderr.forEach(s => subscriber.next({ source: 'stderr', out: s }));
-                stdout.forEach(s => subscriber.next({ source: 'stderr', out: s }));
+            out: new Observable<Output<string>>((subscriber) => {
+                stderr.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
+                stdout.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
             }),
             dispose: () => {
                 noop();
-            }
+            },
         };
 
         service.addExecObservableResult(['-m', module, ...args], () => result);
@@ -619,13 +617,13 @@ export class MockJupyterManager implements IJupyterSessionManager {
         service.addExecObservableResult(file, args, () => {
             return {
                 proc: undefined,
-                out: new Observable<Output<string>>(subscriber => {
-                    stderr.forEach(s => subscriber.next({ source: 'stderr', out: s }));
-                    stdout.forEach(s => subscriber.next({ source: 'stderr', out: s }));
+                out: new Observable<Output<string>>((subscriber) => {
+                    stderr.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
+                    stdout.forEach((s) => subscriber.next({ source: 'stderr', out: s }));
                 }),
                 dispose: () => {
                     noop();
-                }
+                },
             };
         });
     }
@@ -666,7 +664,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 ['nbconvert', /.*/, '--to', 'python', '--stdout', '--template', /.*/],
                 () => {
                     return Promise.resolve({
-                        stdout: '#%%\r\nimport os\r\nos.chdir()\r\n#%%\r\na=1'
+                        stdout: '#%%\r\nimport os\r\nos.chdir()\r\n#%%\r\na=1',
                     });
                 }
             );
@@ -686,7 +684,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     '--no-browser',
                     /--notebook-dir=.*/,
                     /.*/,
-                    '--NotebookApp.iopub_data_rate_limit=10000000000.0'
+                    '--NotebookApp.iopub_data_rate_limit=10000000000.0',
                 ],
                 [],
                 notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'],
@@ -709,7 +707,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 Promise.resolve({ stdout: '1.1.1.1' })
             );
             this.setupPythonServiceExec(service, 'jupyter', ['kernelspec', 'list', '--json'], () => {
-                const kernels = this.kernelSpecs.map(k => ({ name: k.name, resourceDir: k.dir }));
+                const kernels = this.kernelSpecs.map((k) => ({ name: k.name, resourceDir: k.dir }));
                 return Promise.resolve({ stdout: JSON.stringify(createKernelSpecs(kernels)) });
             });
         } else {
@@ -736,7 +734,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 workingPython.path,
                 ['-m', 'jupyter', 'kernelspec', 'list', '--json'],
                 () => {
-                    const kernels = this.kernelSpecs.map(k => ({ name: k.name, resourceDir: k.dir }));
+                    const kernels = this.kernelSpecs.map((k) => ({ name: k.name, resourceDir: k.dir }));
                     return Promise.resolve({ stdout: JSON.stringify(createKernelSpecs(kernels)) });
                 }
             );
@@ -751,14 +749,14 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     '--name',
                     /\w+-\w+-\w+-\w+-\w+/,
                     '--display-name',
-                    `'Python Interactive'`
+                    `'Python Interactive'`,
                 ],
                 () => {
                     const spec = this.addKernelSpec(workingPython.path);
                     return Promise.resolve({
                         stdout: JSON.stringify(
                             createKernelSpecs([{ name: 'somename', resourceDir: path.dirname(spec) }])
-                        )
+                        ),
                     });
                 }
             );
@@ -788,7 +786,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     '--no-browser',
                     /--notebook-dir=.*/,
                     /.*/,
-                    '--NotebookApp.iopub_data_rate_limit=10000000000.0'
+                    '--NotebookApp.iopub_data_rate_limit=10000000000.0',
                 ],
                 [],
                 notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -802,7 +800,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     'notebook',
                     '--no-browser',
                     /--notebook-dir=.*/,
-                    '--NotebookApp.iopub_data_rate_limit=10000000000.0'
+                    '--NotebookApp.iopub_data_rate_limit=10000000000.0',
                 ],
                 [],
                 notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -813,7 +811,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 workingPython.path,
                 ['-m', 'jupyter', 'kernelspec', 'list', '--json'],
                 () => {
-                    const kernels = this.kernelSpecs.map(k => ({ name: k.name, resourceDir: k.dir }));
+                    const kernels = this.kernelSpecs.map((k) => ({ name: k.name, resourceDir: k.dir }));
                     return Promise.resolve({ stdout: JSON.stringify(createKernelSpecs(kernels)) });
                 }
             );
@@ -843,7 +841,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     '--no-browser',
                     /--notebook-dir=.*/,
                     /.*/,
-                    '--NotebookApp.iopub_data_rate_limit=10000000000.0'
+                    '--NotebookApp.iopub_data_rate_limit=10000000000.0',
                 ],
                 [],
                 notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -857,7 +855,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     'notebook',
                     '--no-browser',
                     /--notebook-dir=.*/,
-                    '--NotebookApp.iopub_data_rate_limit=10000000000.0'
+                    '--NotebookApp.iopub_data_rate_limit=10000000000.0',
                 ],
                 [],
                 notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -870,7 +868,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 ['-m', 'jupyter', 'nbconvert', /.*/, '--to', 'python', '--stdout', '--template', /.*/],
                 () => {
                     return Promise.resolve({
-                        stdout: '#%%\r\nimport os\r\nos.chdir()'
+                        stdout: '#%%\r\nimport os\r\nos.chdir()',
                     });
                 }
             );

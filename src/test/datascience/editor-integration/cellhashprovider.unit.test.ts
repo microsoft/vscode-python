@@ -12,7 +12,7 @@ import { CellHashLogger } from '../../../client/datascience/editor-integration/c
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
 import {
     InteractiveWindowMessages,
-    SysInfoReason
+    SysInfoReason,
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell, ICellHashListener, IFileHashes } from '../../../client/datascience/types';
 import { MockDocumentManager } from '../mockDocumentManager';
@@ -42,11 +42,11 @@ suite('CellHashProvider Unit Tests', () => {
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        dataScienceSettings.setup(d => d.enabled).returns(() => true);
-        pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
-        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-        debugService.setup(d => d.activeDebugSession).returns(() => undefined);
-        fileSystem.setup(d => d.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
+        dataScienceSettings.setup((d) => d.enabled).returns(() => true);
+        pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
+        configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
+        fileSystem.setup((d) => d.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
         documentManager = new MockDocumentManager();
         hashProvider = new CellHashProvider(
             documentManager,
@@ -71,10 +71,10 @@ suite('CellHashProvider Unit Tests', () => {
                 cell_type: 'code',
                 metadata: {},
                 outputs: [],
-                execution_count: 1
+                execution_count: 1,
             },
             id: '1',
-            state: CellState.init
+            state: CellState.init,
         };
         return hashLogger.preExecute(cell, false);
     }
@@ -287,8 +287,8 @@ suite('CellHashProvider Unit Tests', () => {
         // Execution count should go up, but still only have two cells.
         const hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 2, 'Wrong number of hashes');
-        const fooHash = hashes.find(h => h.file === Uri.file('foo.py').fsPath);
-        const barHash = hashes.find(h => h.file === Uri.file('bar.py').fsPath);
+        const fooHash = hashes.find((h) => h.file === Uri.file('foo.py').fsPath);
+        const barHash = hashes.find((h) => h.file === Uri.file('bar.py').fsPath);
         assert.ok(fooHash, 'No hash for foo.py');
         assert.ok(barHash, 'No hash for bar.py');
         assert.equal(fooHash!.hashes.length, 2, 'Not enough hashes found');
@@ -484,12 +484,12 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.changeDocument('foo.py', [
             {
                 range: new Range(new Position(0, 0), new Position(0, 0)),
-                newText: '#%%\r\nprint("new cell")\r\n'
+                newText: '#%%\r\nprint("new cell")\r\n',
             },
             {
                 range: new Range(new Position(0, 0), new Position(0, 0)),
-                newText: '#%%\r\nprint("new cell")\r\n'
-            }
+                newText: '#%%\r\nprint("new cell")\r\n',
+            },
         ]);
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
@@ -501,12 +501,12 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.changeDocument('foo.py', [
             {
                 range: new Range(new Position(0, 0), new Position(0, 0)),
-                newText: '#%%\r\nprint("new cell")\r\n'
+                newText: '#%%\r\nprint("new cell")\r\n',
             },
             {
                 range: new Range(new Position(0, 0), new Position(2, 0)),
-                newText: ''
-            }
+                newText: '',
+            },
         ]);
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');

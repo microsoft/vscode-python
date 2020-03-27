@@ -13,7 +13,7 @@ import { ILintMessage, LintMessageSeverity } from './types';
 const severityMapping: Record<string, LintMessageSeverity | undefined> = {
     LOW: LintMessageSeverity.Information,
     MEDIUM: LintMessageSeverity.Warning,
-    HIGH: LintMessageSeverity.Error
+    HIGH: LintMessageSeverity.Error,
 };
 
 export class Bandit extends BaseLinter {
@@ -29,7 +29,7 @@ export class Bandit extends BaseLinter {
             cancellation
         );
 
-        messages.forEach(msg => {
+        messages.forEach((msg) => {
             msg.severity = severityMapping[msg.type];
         });
         return messages;

@@ -15,7 +15,7 @@ const methodNames = [
     'setStatusBarMessage',
     // From IOutputChannel (vscode.OutputChannel):
     'appendLine',
-    'appendLine'
+    'appendLine',
 ];
 // tslint:ignore-next-line:no-suspicious-comments
 // TODO: Ideally we would not ignore any files.
@@ -26,8 +26,8 @@ class NoStringLiteralsInMessages extends baseRuleWalker.BaseRuleWalker {
     visitCallExpression(node) {
         if (!this.shouldIgnoreNode(node)) {
             node.arguments
-                .filter(arg => ts.isStringLiteral(arg) || ts.isTemplateLiteral(arg))
-                .forEach(arg => {
+                .filter((arg) => ts.isStringLiteral(arg) || ts.isTemplateLiteral(arg))
+                .forEach((arg) => {
                     this.addFailureAtNode(arg, failureMessage);
                 });
         }

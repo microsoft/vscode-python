@@ -18,7 +18,7 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService
+    TestFrameworkProductPathService,
 } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import { registerTypes } from '../../../client/common/installer/serviceRegistry';
@@ -29,7 +29,7 @@ import {
     INSIDERS_INSTALLER,
     IProductPathService,
     IProductService,
-    STABLE_INSTALLER
+    STABLE_INSTALLER,
 } from '../../../client/common/installer/types';
 import { ProductType } from '../../../client/common/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';

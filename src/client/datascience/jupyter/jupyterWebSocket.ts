@@ -21,8 +21,8 @@ export function createJupyterWebSocket(log?: boolean, cookieString?: string, all
                 co = {
                     ...co,
                     headers: {
-                        Cookie: cookieString
-                    }
+                        Cookie: cookieString,
+                    },
                 };
             }
 

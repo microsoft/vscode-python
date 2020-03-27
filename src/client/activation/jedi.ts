@@ -22,7 +22,7 @@ import {
     SignatureHelpContext,
     SymbolInformation,
     TextDocument,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 
 import { PYTHON } from '../common/constants';
@@ -100,11 +100,11 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         const testManagementService = this.serviceManager.get<ITestManagementService>(ITestManagementService);
         testManagementService
             .activate(this.symbolProvider)
-            .catch(ex => traceError('Failed to activate Unit Tests', ex));
+            .catch((ex) => traceError('Failed to activate Unit Tests', ex));
     }
 
     public deactivate() {
-        this.registrations.forEach(r => r.dispose());
+        this.registrations.forEach((r) => r.dispose());
         this.registrations = [];
     }
 
@@ -139,7 +139,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             this.registrations.push(languages.registerCodeLensProvider(this.documentSelector, this.codeLensProvider));
             const onTypeDispatcher = new OnTypeFormattingDispatcher({
                 '\n': new OnEnterFormatter(),
-                ':': new BlockFormatProviders()
+                ':': new BlockFormatProviders(),
             });
             const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
             if (onTypeTriggers) {
@@ -243,7 +243,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     }
 
     public dispose(): void {
-        this.registrations.forEach(r => r.dispose());
+        this.registrations.forEach((r) => r.dispose());
         if (this.jediFactory) {
             this.jediFactory.dispose();
         }

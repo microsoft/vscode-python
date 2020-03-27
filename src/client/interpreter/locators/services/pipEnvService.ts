@@ -56,7 +56,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
         }
 
         return this.getInterpreterFromPipenv(pipenvCwd)
-            .then(item => (item ? [item] : []))
+            .then((item) => (item ? [item] : []))
             .catch(() => []);
     }
 
@@ -76,7 +76,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             ...(details as PythonInterpreter),
             path: interpreterPath,
             type: InterpreterType.Pipenv,
-            pipEnvWorkspaceFolder: pipenvCwd
+            pipEnvWorkspaceFolder: pipenvCwd,
         };
     }
 
@@ -156,7 +156,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             const currentProc = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
             const enviromentVariableValues: Record<string, string | undefined> = {
                 LC_ALL: currentProc.env.LC_ALL,
-                LANG: currentProc.env.LANG
+                LANG: currentProc.env.LANG,
             };
             enviromentVariableValues[platformService.pathVariableName] =
                 currentProc.env[platformService.pathVariableName];

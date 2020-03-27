@@ -60,8 +60,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const images = !props.skipDefault ? [TestSvg, TestSvg, TestSvg] : [];
         const thumbnails = images.map(this.generateThumbnail);
         const sizes = images.map(this.extractSize);
-        const values = images.map(_i => undefined);
-        const ids = images.map(_i => uuid());
+        const values = images.map((_i) => undefined);
+        const ids = images.map((_i) => uuid());
 
         this.state = {
             images,
@@ -71,7 +71,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             ids,
             tool: 'pan',
             currentImage: images.length > 0 ? 0 : -1,
-            settings: this.props.testMode ? getDefaultSettings() : undefined
+            settings: this.props.testMode ? getDefaultSettings() : undefined,
         };
     }
 
@@ -145,7 +145,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const newSettingsJSON = JSON.parse(content);
         const newSettings = newSettingsJSON as IDataScienceExtraSettings;
         this.setState({
-            settings: newSettings
+            settings: newSettings,
         });
     }
 
@@ -154,7 +154,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // during testing as it will mess up the expected render count.
         if (!this.props.testMode) {
             this.setState({
-                forceDark: newDark
+                forceDark: newDark,
             });
         }
     };
@@ -236,7 +236,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             sizes: [...this.state.sizes, this.extractSize(payload)],
             values: [...this.state.values, undefined],
             ids: [...this.state.ids, uuid()],
-            currentImage: this.state.images.length
+            currentImage: this.state.images.length,
         });
     }
 
@@ -330,7 +330,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
         return {
             height,
-            width
+            width,
         };
     }
 
@@ -341,7 +341,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             newValues[this.state.currentImage] = this.currentValue;
             this.setState({
                 currentImage: index,
-                values: newValues
+                values: newValues,
             });
 
             // Reassign the current value to the new index so we track it.
@@ -369,7 +369,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     if (ctx) {
                         const waitable = createDeferred();
                         const svgBlob = new Blob([this.state.images[this.state.currentImage]], {
-                            type: 'image/svg+xml;charset=utf-8'
+                            type: 'image/svg+xml;charset=utf-8',
                         });
                         const img = new Image();
                         const url = window.URL.createObjectURL(svgBlob);
@@ -388,7 +388,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                         // Send both our image and the png.
                         this.sendMessage(PlotViewerMessages.ExportPlot, {
                             svg: this.state.images[this.state.currentImage],
-                            png
+                            png,
                         });
                     }
                 }
@@ -418,7 +418,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 sizes: this.state.sizes.filter((_v, i) => i !== oldCurrent),
                 values: this.state.values.filter((_v, i) => i !== oldCurrent),
                 thumbnails: this.state.thumbnails.filter((_v, i) => i !== oldCurrent),
-                currentImage: newCurrent
+                currentImage: newCurrent,
             });
 
             // Tell the other side too as we don't want it sending this image again

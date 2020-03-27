@@ -36,7 +36,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
 
     public dispose() {
         this.changeEventEmitter.dispose();
-        this.fileWatchers.forEach(watcher => {
+        this.fileWatchers.forEach((watcher) => {
             if (watcher) {
                 watcher.dispose();
             }
@@ -67,7 +67,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
         return this.envVarsService.parseFile(settings.envFile, this.process.env);
     }
     public configurationChanged(e: ConfigurationChangeEvent) {
-        this.trackedWorkspaceFolders.forEach(item => {
+        this.trackedWorkspaceFolders.forEach((item) => {
             const uri = item && item.length > 0 ? Uri.file(item) : undefined;
             if (e.affectsConfiguration('python.envFile', uri)) {
                 this.onEnvironmentFileChanged(uri);

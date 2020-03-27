@@ -9,7 +9,7 @@ import {
     ObservableExecutionResult,
     Output,
     ShellOptions,
-    SpawnOptions
+    SpawnOptions,
 } from '../../client/common/process/types';
 import { noop } from '../core';
 
@@ -37,14 +37,14 @@ export class MockProcessService extends EventEmitter implements IProcessService 
 
         if (valueReturned) {
             const output = value as Output<string>;
-            if (['stderr', 'stdout'].some(source => source === output.source)) {
+            if (['stderr', 'stdout'].some((source) => source === output.source)) {
                 return {
                     // tslint:disable-next-line:no-any
                     proc: {} as any,
                     out: Observable.of(output),
                     dispose: () => {
                         noop();
-                    }
+                    },
                 };
             } else {
                 return {
@@ -53,7 +53,7 @@ export class MockProcessService extends EventEmitter implements IProcessService 
                     out: value as Observable<Output<string>>,
                     dispose: () => {
                         noop();
-                    }
+                    },
                 };
             }
         } else {

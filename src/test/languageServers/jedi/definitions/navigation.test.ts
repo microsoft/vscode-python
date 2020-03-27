@@ -121,21 +121,21 @@ suite('Language Server: Definition Navigation', () => {
 
     test('Specifically imported decorator usage', async () => {
         const navigationTest = buildTest(fileUsages, new vscode.Position(7, 1), isPython2 ? [] : [fileDefinitions], [
-            new vscode.Range(2, 0, 11, 17)
+            new vscode.Range(2, 0, 11, 17),
         ]);
         await navigationTest();
     });
 
     test('Specifically imported function decorated by stdlib', async () => {
         const navigationTest = buildTest(fileUsages, new vscode.Position(14, 6), isPython2 ? [] : [fileDefinitions], [
-            new vscode.Range(21, 0, 27, 17)
+            new vscode.Range(21, 0, 27, 17),
         ]);
         await navigationTest();
     });
 
     test('Specifically imported function decorated by local decorator', async () => {
         const navigationTest = buildTest(fileUsages, new vscode.Position(15, 6), isPython2 ? [] : [fileDefinitions], [
-            new vscode.Range(14, 0, 18, 7)
+            new vscode.Range(14, 0, 18, 7),
         ]);
         await navigationTest();
     });

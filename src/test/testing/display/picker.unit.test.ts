@@ -24,9 +24,9 @@ import { createEmptyResults } from '../results';
 // tslint:disable:max-func-body-length
 
 suite('Unit Tests - Picker (execution of commands)', () => {
-    getNamesAndValues<Type>(Type).forEach(item => {
-        getNamesAndValues<CommandSource>(CommandSource).forEach(commandSource => {
-            [true, false].forEach(debug => {
+    getNamesAndValues<Type>(Type).forEach((item) => {
+        getNamesAndValues<CommandSource>(CommandSource).forEach((commandSource) => {
+            [true, false].forEach((debug) => {
                 test(`Invoking command for selection ${item.name} from ${commandSource.name} (${
                     debug ? 'Debug' : 'No debug'
                 })`, async () => {
@@ -39,8 +39,8 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                             name: 'some_name',
                             nameToRun: 'some_name_to_run',
                             time: 0,
-                            resource: workspaceUri
-                        }
+                            resource: workspaceUri,
+                        },
                     ];
                     const selection = { type: item.value, fn: { testFunction }, fns: testFunctions };
 
@@ -192,8 +192,8 @@ suite('Testing - TestDisplay', () => {
         collectedTests.testFiles = [
             {
                 fullPath: fullpath ? fullpath : 'path/to/testfile',
-                ...anything()
-            }
+                ...anything(),
+            },
         ];
         return collectedTests;
     }
@@ -220,7 +220,7 @@ suite('Testing - TestDisplay', () => {
                 return [{ ...anything() }];
             }
             const functions: TestFunction[] = [];
-            testfunctions.forEach(fn => functions.push(fn));
+            testfunctions.forEach((fn) => functions.push(fn));
             return functions;
         }
 

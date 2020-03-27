@@ -44,7 +44,7 @@ class IPyWidgetMessageDispatcherWithOldMessages implements IIPyWidgetMessageDisp
     private raisePostMessage(message: IPyWidgetMessage) {
         // Send all of the old messages the notebook may not have received.
         // Also send them in the same order.
-        this.oldMessages.forEach(oldMessage => {
+        this.oldMessages.forEach((oldMessage) => {
             this._postMessageEmitter.fire(oldMessage);
         });
         this.oldMessages = [];
@@ -84,10 +84,10 @@ export class IPyWidgetMessageDispatcherFactory implements IDisposable {
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
         disposables.push(this);
-        notebookProvider.onNotebookCreated(e => this.trackDisposingOfNotebook(e.notebook), this, this.disposables);
+        notebookProvider.onNotebookCreated((e) => this.trackDisposingOfNotebook(e.notebook), this, this.disposables);
 
-        notebookProvider.activeNotebooks.forEach(nbPromise =>
-            nbPromise.then(notebook => this.trackDisposingOfNotebook(notebook)).ignoreErrors()
+        notebookProvider.activeNotebooks.forEach((nbPromise) =>
+            nbPromise.then((notebook) => this.trackDisposingOfNotebook(notebook)).ignoreErrors()
         );
     }
 

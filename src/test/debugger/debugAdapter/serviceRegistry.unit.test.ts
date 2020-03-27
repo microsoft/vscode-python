@@ -20,7 +20,7 @@ import {
     IDebugStreamProvider,
     IProtocolLogger,
     IProtocolMessageWriter,
-    IProtocolParser
+    IProtocolParser,
 } from '../../../client/debugger/debugAdapter/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';

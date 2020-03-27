@@ -11,7 +11,7 @@ import {
     Selection,
     TextDocument,
     TextEditor,
-    TextEditorRevealType
+    TextEditorRevealType,
 } from 'vscode';
 
 import { IDocumentManager } from '../../common/application/types';
@@ -95,7 +95,7 @@ export class CodeWatcher implements ICodeWatcher {
     @captureTelemetry(Telemetry.RunAllCells)
     public async runAllCells() {
         const runCellCommands = this.codeLenses.filter(
-            c =>
+            (c) =>
                 c.command &&
                 c.command.command === Commands.RunCell &&
                 c.command.arguments &&
@@ -151,9 +151,9 @@ export class CodeWatcher implements ICodeWatcher {
     // Run all cells up to the cell containing this start line and character
     @captureTelemetry(Telemetry.RunAllCellsAbove)
     public async runAllCellsAbove(stopLine: number, stopCharacter: number) {
-        const runCellCommands = this.codeLenses.filter(c => c.command && c.command.command === Commands.RunCell);
+        const runCellCommands = this.codeLenses.filter((c) => c.command && c.command.command === Commands.RunCell);
         let leftCount = runCellCommands.findIndex(
-            c => c.range.start.line >= stopLine && c.range.start.character >= stopCharacter
+            (c) => c.range.start.line >= stopLine && c.range.start.character >= stopCharacter
         );
         if (leftCount < 0) {
             leftCount = runCellCommands.length;
@@ -189,9 +189,9 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunCellAndAllBelow)
     public async runCellAndAllBelow(startLine: number, startCharacter: number) {
-        const runCellCommands = this.codeLenses.filter(c => c.command && c.command.command === Commands.RunCell);
+        const runCellCommands = this.codeLenses.filter((c) => c.command && c.command.command === Commands.RunCell);
         const index = runCellCommands.findIndex(
-            c => c.range.start.line >= startLine && c.range.start.character >= startCharacter
+            (c) => c.range.start.line >= startLine && c.range.start.character >= startCharacter
         );
         let leftCount = index > 0 ? runCellCommands.length - index : runCellCommands.length;
 
@@ -308,7 +308,7 @@ export class CodeWatcher implements ICodeWatcher {
         const editor = this.documentManager.activeTextEditor;
         const cellDelineator = this.getDefaultCellMarker(editor?.document.uri);
         if (editor) {
-            editor.edit(editBuilder => {
+            editor.edit((editBuilder) => {
                 editBuilder.insert(new Position(editor.document.lineCount, 0), `\n\n${cellDelineator}\n`);
             });
 
@@ -328,7 +328,7 @@ export class CodeWatcher implements ICodeWatcher {
         const cellDelineator = this.getDefaultCellMarker(editor.document.uri);
 
         if (editor) {
-            editor.edit(editBuilder => {
+            editor.edit((editBuilder) => {
                 let lastCell = true;
 
                 for (let i = editor.selection.end.line + 1; i < editor.document.lineCount; i += 1) {
@@ -453,13 +453,13 @@ export class CodeWatcher implements ICodeWatcher {
 
     private getCurrentCellLens(pos: Position): CodeLens | undefined {
         return this.codeLenses.find(
-            l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell
+            (l) => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell
         );
     }
 
     private getNextCellLens(pos: Position): CodeLens | undefined {
         const currentIndex = this.codeLenses.findIndex(
-            l => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell
+            (l) => l.range.contains(pos) && l.command !== undefined && l.command.command === Commands.RunCell
         );
         if (currentIndex >= 0) {
             return this.codeLenses.find(
@@ -484,7 +484,7 @@ export class CodeWatcher implements ICodeWatcher {
         const newPosition = new Position(currentRange.end.line + 3, 0); // +3 to account for the added spaces and to position after the new mark
 
         if (editor) {
-            editor.edit(editBuilder => {
+            editor.edit((editBuilder) => {
                 editBuilder.insert(
                     new Position(currentRange.end.line + 1, 0),
                     `\n\n${this.getDefaultCellMarker(editor.document.uri)}\n`

@@ -9,24 +9,24 @@ import { IApplicationDiagnostics } from '../types';
 import { ApplicationDiagnostics } from './applicationDiagnostics';
 import {
     EnvironmentPathVariableDiagnosticsService,
-    EnvironmentPathVariableDiagnosticsServiceId
+    EnvironmentPathVariableDiagnosticsServiceId,
 } from './checks/envPathVariable';
 import {
     InvalidLaunchJsonDebuggerService,
-    InvalidLaunchJsonDebuggerServiceId
+    InvalidLaunchJsonDebuggerServiceId,
 } from './checks/invalidLaunchJsonDebugger';
 import {
     InvalidPythonPathInDebuggerService,
-    InvalidPythonPathInDebuggerServiceId
+    InvalidPythonPathInDebuggerServiceId,
 } from './checks/invalidPythonPathInDebugger';
 import { LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId } from './checks/lsNotSupported';
 import {
     InvalidMacPythonInterpreterService,
-    InvalidMacPythonInterpreterServiceId
+    InvalidMacPythonInterpreterServiceId,
 } from './checks/macPythonInterpreter';
 import {
     PowerShellActivationHackDiagnosticsService,
-    PowerShellActivationHackDiagnosticsServiceId
+    PowerShellActivationHackDiagnosticsServiceId,
 } from './checks/powerShellActivation';
 import { InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId } from './checks/pythonInterpreter';
 import { DiagnosticsCommandFactory } from './commands/factory';
@@ -35,7 +35,7 @@ import { DiagnosticFilterService } from './filter';
 import {
     DiagnosticCommandPromptHandlerService,
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from './promptHandler';
 import { IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService } from './types';
 

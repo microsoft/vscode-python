@@ -56,7 +56,7 @@ import {
     WorkspaceEdit,
     WorkspaceFolder,
     WorkspaceFolderPickOptions,
-    WorkspaceFoldersChangeEvent
+    WorkspaceFoldersChangeEvent,
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 

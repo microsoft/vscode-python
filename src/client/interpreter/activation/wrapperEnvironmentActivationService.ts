@@ -14,7 +14,7 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IExtensionContext,
-    Resource
+    Resource,
 } from '../../common/types';
 import { createDeferredFromPromise } from '../../common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -67,7 +67,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         let key: string;
         [key, interpreter] = await Promise.all([
             this.getCacheKey(resource, interpreter),
-            interpreter || (await this.interpreterService.getActiveInterpreter(undefined))
+            interpreter || (await this.interpreterService.getActiveInterpreter(undefined)),
         ]);
 
         const procCacheKey = `Process${key}`;
@@ -118,8 +118,8 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
 
             // What ever result we get back, store that in file (cache it for other VSC sessions).
             promise
-                .then(env => this.writeDataToCacheFile(cacheKey, { env }))
-                .catch(ex => traceError('Failed to write Env Vars to disc', ex));
+                .then((env) => this.writeDataToCacheFile(cacheKey, { env }))
+                .catch((ex) => traceError('Failed to write Env Vars to disc', ex));
         }
 
         return this.cachePerResourceAndInterpreter.get(cacheKey)!;
@@ -136,7 +136,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         }
         return this.fs
             .readFile(cacheFile)
-            .then(data => JSON.parse(data) as EnvVariablesInCachedFile)
+            .then((data) => JSON.parse(data) as EnvVariablesInCachedFile)
             .catch(() => undefined);
     }
     /**
@@ -179,11 +179,11 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
 
         return this.terminalActivation
             .getActivatedEnvironmentVariables(resource, interpreter, allowExceptions)
-            .then(vars => {
+            .then((vars) => {
                 // If no variables in terminal, then revert to old approach.
                 return vars || fallback;
             })
-            .catch(ex => {
+            .catch((ex) => {
                 // Swallow exceptions when using terminal env and revert to using old approach.
                 traceError('Failed to get variables using Terminal Service', ex);
                 return fallback;
@@ -201,7 +201,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         // Get the custom environment variables as a string (if any errors, ignore and use empty string).
         const customEnvVariables = await this.envVarsProvider
             .getCustomEnvironmentVariables(resource)
-            .then(item => (item ? JSON.stringify(item) : ''))
+            .then((item) => (item ? JSON.stringify(item) : ''))
             .catch(() => '');
 
         return this.crypto.createHash(

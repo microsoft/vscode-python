@@ -24,16 +24,16 @@ export class TestDiscoveryService implements ITestDiscoveryService {
         if (testDirectories.length === 0) {
             const opts = {
                 ...options,
-                args
+                args,
             };
             return this.discoverTestsInTestDirectory(opts);
         }
         const results = await Promise.all(
-            testDirectories.map(testDir => {
+            testDirectories.map((testDir) => {
                 // Add test directory as a positional argument.
                 const opts = {
                     ...options,
-                    args: [...args, testDir]
+                    args: [...args, testDir],
                 };
                 return this.discoverTestsInTestDirectory(opts);
             })

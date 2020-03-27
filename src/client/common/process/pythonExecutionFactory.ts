@@ -27,7 +27,7 @@ import {
     IProcessServiceFactory,
     IPythonDaemonExecutionService,
     IPythonExecutionFactory,
-    IPythonExecutionService
+    IPythonExecutionService,
 } from './types';
 import { WindowsStorePythonProcess } from './windowsStorePythonProcess';
 
@@ -78,7 +78,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             allowEnvironmentFetchExceptions: true,
             interpreter: interpreter,
             resource: options.resource,
-            bypassCondaExecution: true
+            bypassCondaExecution: true,
         });
         // No daemon support in Python 2.7.
         if (interpreter?.version && interpreter.version.major < 3) {
@@ -90,7 +90,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const start = async () => {
             const [activatedProc, activatedEnvVars] = await Promise.all([
                 activatedProcPromise,
-                this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true)
+                this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true),
             ]);
 
             const daemon = new PythonDaemonExecutionServicePool(
@@ -111,7 +111,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             promise = start();
             this.daemonsPerPythonService.set(daemonPoolKey, promise);
         }
-        return promise.catch(ex => {
+        return promise.catch((ex) => {
             // Ok, we failed to create the daemon (or failed to start).
             // What ever the cause, we need to log this & give a standard IPythonExecutionService
             traceError('Failed to create the daemon service, defaulting to activated environment', ex);
@@ -132,7 +132,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         if (!hasEnvVars) {
             return this.create({
                 resource: options.resource,
-                pythonPath: options.interpreter ? options.interpreter.path : undefined
+                pythonPath: options.interpreter ? options.interpreter.path : undefined,
             });
         }
         const pythonPath = options.interpreter
@@ -159,7 +159,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             this.condaService.getCondaVersion(),
             this.condaService.getCondaEnvironment(pythonPath),
             this.condaService.getCondaFile(),
-            processServicePromise
+            processServicePromise,
         ]);
 
         if (condaVersion && gte(condaVersion, CONDA_RUN_VERSION) && condaEnvironment && condaFile && procService) {

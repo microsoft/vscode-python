@@ -14,7 +14,7 @@ import {
     ITokenizer,
     TextRange,
     TokenizerMode,
-    TokenType
+    TokenType,
 } from './types';
 
 enum QuoteType {
@@ -22,7 +22,7 @@ enum QuoteType {
     Single,
     Double,
     TripleSingle,
-    TripleDouble
+    TripleDouble,
 }
 
 class Token extends TextRange implements IToken {
@@ -416,10 +416,7 @@ export class Tokenizer implements ITokenizer {
         }
 
         if (this.cs.lookAhead(2) === Char.SingleQuote || this.cs.lookAhead(2) === Char.DoubleQuote) {
-            const prefix = this.cs
-                .getText()
-                .substr(this.cs.position, 2)
-                .toLowerCase();
+            const prefix = this.cs.getText().substr(this.cs.position, 2).toLowerCase();
             switch (prefix) {
                 case 'rf':
                 case 'ur':

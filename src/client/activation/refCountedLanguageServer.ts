@@ -18,7 +18,7 @@ import {
     SymbolInformation,
     TextDocument,
     TextDocumentContentChangeEvent,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 
 import { Resource } from '../common/types';

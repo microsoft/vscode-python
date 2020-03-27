@@ -26,7 +26,7 @@ import {
     IFileHashes,
     IJupyterDebugger,
     INotebook,
-    ISourceMapRequest
+    ISourceMapRequest,
 } from '../types';
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
@@ -124,7 +124,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Make sure that we have an active debugging session at this point
         if (this.debugService.activeDebugSession) {
             await Promise.all(
-                hashes.map(fileHash => {
+                hashes.map((fileHash) => {
                     return this.debugService.activeDebugSession!.customRequest(
                         'setPydevdSourceMap',
                         this.buildSourceMap(fileHash)
@@ -272,12 +272,12 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private buildSourceMap(fileHash: IFileHashes): ISourceMapRequest {
         const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.file }, pydevdSourceMaps: [] };
 
-        sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map(cellHash => {
+        sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map((cellHash) => {
             return {
                 line: cellHash.line,
                 endLine: cellHash.endLine,
                 runtimeSource: { path: `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>` },
-                runtimeLine: cellHash.runtimeLine
+                runtimeLine: cellHash.runtimeLine,
             };
         });
 
@@ -340,7 +340,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                     patch,
                     build: [],
                     prerelease: [],
-                    raw: `${major}.${minor}.${patch}`
+                    raw: `${major}.${minor}.${patch}`,
                 };
             }
         }
@@ -419,7 +419,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                         type: 'python',
                         port: parseInt(debugInfoMatch[2], 10),
                         host: debugInfoMatch[1],
-                        justMyCode: settings.datascience.debugJustMyCode
+                        justMyCode: settings.datascience.debugJustMyCode,
                     };
                     if (local) {
                         return localConfig;
@@ -429,9 +429,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                             pathMappings: [
                                 {
                                     localRoot: this.workspace.rootPath,
-                                    remoteRoot: '.'
-                                }
-                            ]
+                                    remoteRoot: '.',
+                                },
+                            ],
                         };
                     }
                 }

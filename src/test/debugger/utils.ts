@@ -22,7 +22,7 @@ const debuggerType = DebuggerTypeName;
  * @returns {DebugClient}
  */
 export async function createDebugAdapter(): Promise<DebugClient> {
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     const debugClient = new DebugClient(process.env.NODE_PATH || 'node', testAdapterFilePath, debuggerType);
     debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
     await debugClient.start();
@@ -55,7 +55,7 @@ export async function validateVariablesInFrame(
     const variables = await debugClient.variablesRequest({ variablesReference });
 
     for (const expectedVariable of expectedVariables) {
-        const variable = variables.body.variables.find(item => item.name === expectedVariable.name)!;
+        const variable = variables.body.variables.find((item) => item.name === expectedVariable.name)!;
         expect(variable).to.be.not.equal('undefined', `variable '${expectedVariable.name}' is undefined`);
         expect(variable.type).to.be.equal(expectedVariable.type);
         expect(variable.value).to.be.equal(expectedVariable.value);
@@ -85,7 +85,7 @@ export async function hitHttpBreakpoint(
     await debugClient.setBreakpointsRequest({
         lines: [breakpointLocation.line],
         breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
-        source: { path: breakpointLocation.path }
+        source: { path: breakpointLocation.path },
     });
 
     // Make the request, we want the breakpoint to be hit.

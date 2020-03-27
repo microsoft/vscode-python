@@ -9,7 +9,7 @@ import {
     ITestCollectionStorageService,
     TestFunction,
     Tests,
-    TestSuite
+    TestSuite,
 } from './../types';
 
 @injectable()
@@ -42,14 +42,14 @@ export class TestCollectionStorageService implements ITestCollectionStorageServi
         if (!tests) {
             return;
         }
-        return tests.testFunctions.find(f => f.testFunction === func);
+        return tests.testFunctions.find((f) => f.testFunction === func);
     }
     public findFlattendTestSuite(resource: Uri, suite: TestSuite): FlattenedTestSuite | undefined {
         const tests = this.getTests(resource);
         if (!tests) {
             return;
         }
-        return tests.testSuites.find(f => f.testSuite === suite);
+        return tests.testSuites.find((f) => f.testSuite === suite);
     }
     public dispose() {
         this.testsIndexedByWorkspaceUri.clear();

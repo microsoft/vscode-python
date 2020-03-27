@@ -6,7 +6,7 @@ import {
     InterpreterInfomation,
     IPythonExecutionService,
     ObservableExecutionResult,
-    SpawnOptions
+    SpawnOptions,
 } from '../../client/common/process/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { MockProcessService } from './mockProcessService';

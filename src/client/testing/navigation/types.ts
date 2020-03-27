@@ -15,7 +15,7 @@ export type NavigableItem = TestFile | TestFunction | TestSuite;
 export enum NavigableItemType {
     testFile = 'testFile',
     testFunction = 'testFunction',
-    testSuite = 'testSuite'
+    testSuite = 'testSuite',
 }
 
 export const ITestCodeNavigator = Symbol('ITestCodeNavigator');

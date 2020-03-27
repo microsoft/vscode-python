@@ -13,7 +13,7 @@ import {
     IMultiStepInput,
     IMultiStepInputFactory,
     InputStep,
-    IQuickPickParameters
+    IQuickPickParameters,
 } from '../../common/utils/multiStepInput';
 import { captureTelemetry } from '../../telemetry';
 import { getSavedUriList } from '../common';
@@ -56,7 +56,7 @@ export class JupyterServerSelector {
             items: this.getUriPickList(allowLocal),
             title: allowLocal
                 ? DataScience.jupyterSelectURIQuickPickTitle()
-                : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly()
+                : DataScience.jupyterSelectURIQuickPickTitleRemoteOnly(),
         });
         if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
@@ -81,7 +81,7 @@ export class JupyterServerSelector {
             title: DataScience.jupyterSelectURIPrompt(),
             value: initialValue || defaultUri,
             validate: this.validateSelectJupyterURI,
-            prompt: ''
+            prompt: '',
         });
 
         if (uri) {
@@ -148,19 +148,19 @@ export class JupyterServerSelector {
             items.push({
                 label: this.remoteLabel,
                 detail: DataScience.jupyterSelectURIRemoteDetail(),
-                newChoice: true
+                newChoice: true,
             });
         }
 
         // Get our list of recent server connections and display that as well
         const savedURIList = getSavedUriList(this.globalState);
-        savedURIList.forEach(uriItem => {
+        savedURIList.forEach((uriItem) => {
             if (uriItem.uri) {
                 const uriDate = new Date(uriItem.time);
                 items.push({
                     label: uriItem.uri,
                     detail: DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()),
-                    newChoice: false
+                    newChoice: false,
                 });
             }
         });

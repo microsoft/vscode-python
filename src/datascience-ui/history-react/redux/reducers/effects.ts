@@ -16,12 +16,12 @@ import { Creation } from './creation';
 export namespace Effects {
     export function expandAll(arg: InteractiveReducerArg): IMainState {
         if (arg.prevState.settings?.showCellInputCode) {
-            const newVMs = arg.prevState.cellVMs.map(c =>
+            const newVMs = arg.prevState.cellVMs.map((c) =>
                 Creation.alterCellVM({ ...c }, arg.prevState.settings, true, true)
             );
             return {
                 ...arg.prevState,
-                cellVMs: newVMs
+                cellVMs: newVMs,
             };
         }
         return arg.prevState;
@@ -29,12 +29,12 @@ export namespace Effects {
 
     export function collapseAll(arg: InteractiveReducerArg): IMainState {
         if (arg.prevState.settings?.showCellInputCode) {
-            const newVMs = arg.prevState.cellVMs.map(c =>
+            const newVMs = arg.prevState.cellVMs.map((c) =>
                 Creation.alterCellVM({ ...c }, arg.prevState.settings, true, false)
             );
             return {
                 ...arg.prevState,
-                cellVMs: newVMs
+                cellVMs: newVMs,
             };
         }
         return arg.prevState;
@@ -43,12 +43,12 @@ export namespace Effects {
     export function toggleInputBlock(arg: InteractiveReducerArg<ICellAction>): IMainState {
         if (arg.payload.data.cellId) {
             const newVMs = [...arg.prevState.cellVMs];
-            const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+            const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
             const oldVM = arg.prevState.cellVMs[index];
             newVMs[index] = Creation.alterCellVM({ ...oldVM }, arg.prevState.settings, true, !oldVM.inputBlockOpen);
             return {
                 ...arg.prevState,
-                cellVMs: newVMs
+                cellVMs: newVMs,
             };
         }
         return arg.prevState;
@@ -81,7 +81,7 @@ export namespace Effects {
         // Update our input cell state if the user changed this setting
         let newVMs = arg.prevState.cellVMs;
         if (newSettings.showCellInputCode !== arg.prevState.settings?.showCellInputCode) {
-            newVMs = arg.prevState.cellVMs.map(c =>
+            newVMs = arg.prevState.cellVMs.map((c) =>
                 Creation.alterCellVM(
                     c,
                     newSettings,
@@ -98,14 +98,14 @@ export namespace Effects {
             editorOptions: newEditorOptions,
             font: {
                 size: newFontSize,
-                family: newFontFamily
-            }
+                family: newFontFamily,
+            },
         };
     }
 
     export function scrollToCell(arg: InteractiveReducerArg<IScrollToCell>): IMainState {
         // Up the scroll count on the necessary cell
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.id);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.id);
         if (index >= 0) {
             const newVMs = [...arg.prevState.cellVMs];
 
@@ -113,7 +113,7 @@ export namespace Effects {
             newVMs[index] = { ...newVMs[index], scrollCount: newVMs[index].scrollCount + 1 };
             return {
                 ...arg.prevState,
-                cellVMs: newVMs
+                cellVMs: newVMs,
             };
         }
 
@@ -123,7 +123,7 @@ export namespace Effects {
     export function scrolled(arg: InteractiveReducerArg<IScrollAction>): IMainState {
         return {
             ...arg.prevState,
-            isAtBottom: arg.payload.data.isAtBottom
+            isAtBottom: arg.payload.data.isAtBottom,
         };
     }
 
@@ -137,16 +137,16 @@ export namespace Effects {
                 ...arg.prevState,
                 editCellVM: {
                     ...arg.prevState.editCellVM,
-                    focused: true
-                }
+                    focused: true,
+                },
             };
         } else if (arg.prevState.editCellVM) {
             return {
                 ...arg.prevState,
                 editCellVM: {
                     ...arg.prevState.editCellVM,
-                    focused: false
-                }
+                    focused: false,
+                },
             };
         }
 
@@ -163,8 +163,8 @@ export namespace Effects {
                 ...arg.prevState,
                 editCellVM: {
                     ...arg.prevState.editCellVM,
-                    focused: false
-                }
+                    focused: false,
+                },
             };
         }
 

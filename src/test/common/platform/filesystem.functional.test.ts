@@ -19,7 +19,7 @@ import {
     OSX,
     SUPPORTS_SOCKETS,
     SUPPORTS_SYMLINKS,
-    WINDOWS
+    WINDOWS,
 } from './utils';
 
 // tslint:disable:no-require-imports no-var-requires
@@ -42,7 +42,7 @@ suite('FileSystem - raw', () => {
     });
 
     suite('lstat', () => {
-        test('for symlinks, gives the link info', async function() {
+        test('for symlinks, gives the link info', async function () {
             if (!SUPPORTS_SYMLINKS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -78,7 +78,7 @@ suite('FileSystem - raw', () => {
     });
 
     suite('chmod (non-Windows)', () => {
-        suiteSetup(function() {
+        suiteSetup(function () {
             // On Windows, chmod won't have any effect on the file itself.
             if (WINDOWS) {
                 // tslint:disable-next-line:no-invalid-this
@@ -190,7 +190,7 @@ suite('FileSystem - raw', () => {
             expect(stat).to.deep.equal(expected);
         });
 
-        test('for symlinks, gives the linked info', async function() {
+        test('for symlinks, gives the linked info', async function () {
             if (!SUPPORTS_SYMLINKS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -257,7 +257,7 @@ suite('FileSystem - raw', () => {
     });
 
     suite('createWriteStream', () => {
-        setup(function() {
+        setup(function () {
             if (OSX) {
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO(GH-10031) This appears to be producing
@@ -295,7 +295,7 @@ suite('FileSystem - raw', () => {
             await assertDoesNotExist(filename);
             const data = 'line1\nline2\n';
 
-            await writeToStream(filename, s => s.write(data));
+            await writeToStream(filename, (s) => s.write(data));
 
             await assertFileText(filename, data);
         });
@@ -304,7 +304,7 @@ suite('FileSystem - raw', () => {
             const filename = await fix.resolve('x/y/z/spam.py');
             const data = '... 😁 ...';
 
-            await writeToStream(filename, s => s.write(data));
+            await writeToStream(filename, (s) => s.write(data));
 
             await assertFileText(filename, data);
         });
@@ -313,7 +313,7 @@ suite('FileSystem - raw', () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const data = 'line1\nline2\n';
 
-            await writeToStream(filename, s => s.write(data));
+            await writeToStream(filename, (s) => s.write(data));
 
             await assertFileText(filename, data);
         });
@@ -402,7 +402,7 @@ suite('FileSystem - utils', () => {
                 await fix.createFile('x/y/z/spam.py'),
                 await fix.createFile('x/y/z/spam.pyc'),
                 await fix.createFile('x/y/z/spam.so'),
-                await fix.createDirectory('x/y/z/spam.data')
+                await fix.createDirectory('x/y/z/spam.data'),
             ];
             // non-matches
             await fix.createFile('x/spam.py');
@@ -449,7 +449,7 @@ suite('FileSystem - utils', () => {
             expect(exists).to.equal(true);
         });
 
-        test('symlink', async function() {
+        test('symlink', async function () {
             if (!SUPPORTS_SYMLINKS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -466,7 +466,7 @@ suite('FileSystem - utils', () => {
             expect(exists).to.equal(true);
         });
 
-        test('unknown', async function() {
+        test('unknown', async function () {
             if (!SUPPORTS_SOCKETS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -544,7 +544,7 @@ suite('FileSystem', () => {
         });
 
         suite('chmod (non-Windows)', () => {
-            suiteSetup(function() {
+            suiteSetup(function () {
                 // On Windows, chmod won't have any effect on the file itself.
                 if (WINDOWS) {
                     // tslint:disable-next-line:no-invalid-this
@@ -673,7 +673,7 @@ suite('FileSystem', () => {
                     await fix.createFile('x/y/z/spam.py'),
                     await fix.createFile('x/y/z/spam.pyc'),
                     await fix.createFile('x/y/z/spam.so'),
-                    await fix.createDirectory('x/y/z/spam.data')
+                    await fix.createDirectory('x/y/z/spam.data'),
                 ];
                 // non-matches
                 await fix.createFile('x/spam.py');
@@ -723,7 +723,7 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(true);
             });
 
-            test('symlink', async function() {
+            test('symlink', async function () {
                 if (!SUPPORTS_SYMLINKS) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();
@@ -740,7 +740,7 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(true);
             });
 
-            test('unknown', async function() {
+            test('unknown', async function () {
                 if (!SUPPORTS_SOCKETS) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();

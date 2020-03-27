@@ -4,7 +4,7 @@
 
 import {
     IInteractiveWindowMapping,
-    InteractiveWindowMessages
+    InteractiveWindowMessages,
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
 import {
@@ -18,7 +18,7 @@ import {
     ILinkClickAction,
     IOpenSettingsAction,
     IScrollAction,
-    IShowDataViewerAction
+    IShowDataViewerAction,
 } from '../../interactive-common/redux/reducers/types';
 import { IMonacoModelContentChangeEvent } from '../../react-common/monacoHelpers';
 
@@ -66,7 +66,7 @@ export const actionCreators = {
             forward: e.forward,
             reverse: e.reverse,
             id: cellId,
-            code: e.model.getValue()
+            code: e.model.getValue(),
         }),
     submitInput: (code: string, cellId: string): CommonAction<ICodeAction> =>
         createIncomingActionWithPayload(CommonActionType.SUBMIT_INPUT, { code, cellId }),
@@ -98,6 +98,6 @@ export const actionCreators = {
             sortColumn: 'name',
             sortAscending: true,
             startIndex,
-            pageSize
-        })
+            pageSize,
+        }),
 };

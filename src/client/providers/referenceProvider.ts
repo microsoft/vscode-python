@@ -12,7 +12,7 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
         if (data && data.references.length > 0) {
             // tslint:disable-next-line:no-unnecessary-local-variable
             const references = data.references
-                .filter(ref => {
+                .filter((ref) => {
                     if (
                         !ref ||
                         typeof ref.columnIndex !== 'number' ||
@@ -26,7 +26,7 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
                     }
                     return true;
                 })
-                .map(ref => {
+                .map((ref) => {
                     const definitionResource = vscode.Uri.file(ref.fileName);
                     const range = new vscode.Range(ref.lineIndex, ref.columnIndex, ref.lineIndex, ref.columnIndex);
 
@@ -62,7 +62,7 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
             command: proxy.CommandType.Usages,
             fileName: filename,
             columnIndex: columnIndex,
-            lineIndex: position.line
+            lineIndex: position.line,
         };
 
         if (document.isDirty) {

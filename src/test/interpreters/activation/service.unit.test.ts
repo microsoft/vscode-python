@@ -33,7 +33,7 @@ const defaultShells = {
     [OSType.Windows]: 'cmd',
     [OSType.OSX]: 'bash',
     [OSType.Linux]: 'bash',
-    [OSType.Unknown]: undefined
+    [OSType.Unknown]: undefined,
 };
 
 // tslint:disable:no-unnecessary-override no-any max-func-body-length
@@ -55,7 +55,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64
+        architecture: Architecture.x64,
     };
 
     function initSetup() {
@@ -86,8 +86,8 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
     }
 
-    [undefined, Uri.parse('a')].forEach(resource =>
-        [undefined, pythonInterpreter].forEach(interpreter => {
+    [undefined, Uri.parse('a')].forEach((resource) =>
+        [undefined, pythonInterpreter].forEach((interpreter) => {
             suite(title(resource, interpreter), () => {
                 setup(initSetup);
                 test('Unknown os will return empty variables', async () => {
@@ -98,9 +98,9 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                     expect(env).to.equal(undefined, 'Should not have any variables');
                 });
 
-                const osTypes = getNamesAndValues<OSType>(OSType).filter(osType => osType.value !== OSType.Unknown);
+                const osTypes = getNamesAndValues<OSType>(OSType).filter((osType) => osType.value !== OSType.Unknown);
 
-                osTypes.forEach(osType => {
+                osTypes.forEach((osType) => {
                     suite(osType.name, () => {
                         setup(initSetup);
                         test('getEnvironmentActivationShellCommands will be invoked', async () => {
@@ -177,7 +177,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                                 env: envVars,
                                 timeout: 30000,
                                 maxBuffer: 1000 * 1000,
-                                throwOnStdErr: false
+                                throwOnStdErr: false,
                             });
                         });
                         test('Use current process variables if there are no custom variables', async () => {
@@ -212,7 +212,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                                 shell: expectedShell,
                                 timeout: 30000,
                                 maxBuffer: 1000 * 1000,
-                                throwOnStdErr: false
+                                throwOnStdErr: false,
                             });
                         });
                         test('Error must be swallowed when activation fails', async () => {
@@ -279,9 +279,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
 
                             expect(env).to.deep.equal(varsFromEnv);
                             // All same objects.
-                            expect(env)
-                                .to.equal(env2)
-                                .to.equal(env3);
+                            expect(env).to.equal(env2).to.equal(env3);
 
                             // All methods invoked only once.
                             verify(

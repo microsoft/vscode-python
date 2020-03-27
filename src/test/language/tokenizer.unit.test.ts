@@ -400,7 +400,7 @@ suite('Language.Tokenizer', () => {
             2,
             1,
             2,
-            2
+            2,
         ];
         assert.equal(tokens.count, lengths.length);
         for (let i = 0; i < tokens.count; i += 1) {
@@ -414,14 +414,14 @@ suite('Language.Tokenizer', () => {
         }
     });
 
-    [-1, 10].forEach(start => {
+    [-1, 10].forEach((start) => {
         test(`Exceptions: out-of-range start = ${start}`, () => {
             assert.throws(() => {
                 new Tokenizer().tokenize('', start, 0, TokenizerMode.Full);
             }, new Error('Invalid range start'));
         });
     });
-    [-1, 10].forEach(length => {
+    [-1, 10].forEach((length) => {
         test(`Exceptions: out-of-range length = ${length}`, () => {
             assert.throws(() => {
                 new Tokenizer().tokenize('abc', 1, length, TokenizerMode.Full);
@@ -438,8 +438,8 @@ suite('Language.Tokenizer', () => {
         [',', TokenType.Comma],
         [':', TokenType.Colon],
         [';', TokenType.Semicolon],
-        ['.', TokenType.Operator]
-    ].forEach(pair => {
+        ['.', TokenType.Operator],
+    ].forEach((pair) => {
         const text: string = pair[0] as string;
         const expected = pair[1];
         test(`Character tokens: ${text}`, () => {
@@ -461,8 +461,8 @@ suite('Language.Tokenizer', () => {
         ['-0b1', TokenType.Number],
         ['-0B1', TokenType.Number],
         ['-0o1', TokenType.Number],
-        ['-0O1', TokenType.Number]
-    ].forEach(pair => {
+        ['-0O1', TokenType.Number],
+    ].forEach((pair) => {
         const text: string = pair[0] as string;
         const expected = pair[1];
         test(`Possible numbers: ${text}`, () => {
@@ -477,8 +477,8 @@ suite('Language.Tokenizer', () => {
         [',-1', TokenType.Number],
         [':+1', TokenType.Number],
         [';+1', TokenType.Number],
-        ['=+1', TokenType.Number]
-    ].forEach(pair => {
+        ['=+1', TokenType.Number],
+    ].forEach((pair) => {
         const text: string = pair[0] as string;
         const expected = pair[1];
         test(`Numbers after braces or operators: ${text}`, () => {

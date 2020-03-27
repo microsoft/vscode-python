@@ -22,11 +22,11 @@ const config = {
     mode: 'production',
     target: 'node',
     entry: {
-        extension: './src/client/extension.ts'
+        extension: './src/client/extension.ts',
     },
     devtool: 'source-map',
     node: {
-        __dirname: false
+        __dirname: false,
     },
     module: {
         rules: [
@@ -35,31 +35,31 @@ const config = {
                 test: /@jupyterlab[\\\/]services[\\\/].*js$/,
                 use: [
                     {
-                        loader: path.join(__dirname, 'loaders', 'fixNodeFetch.js')
-                    }
-                ]
+                        loader: path.join(__dirname, 'loaders', 'fixNodeFetch.js'),
+                    },
+                ],
             },
             {
                 test: /\.ts$/,
                 use: [
                     {
-                        loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js')
-                    }
-                ]
+                        loader: path.join(__dirname, 'loaders', 'externalizeDependencies.js'),
+                    },
+                ],
             },
             {
                 test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: 'ts-loader'
-                    }
-                ]
+                        loader: 'ts-loader',
+                    },
+                ],
             },
             { enforce: 'post', test: /unicode-properties[\/\\]index.js$/, loader: 'transform-loader?brfs' },
             { enforce: 'post', test: /fontkit[\/\\]index.js$/, loader: 'transform-loader?brfs' },
-            { enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: 'transform-loader?brfs' }
-        ]
+            { enforce: 'post', test: /linebreak[\/\\]src[\/\\]linebreaker.js/, loader: 'transform-loader?brfs' },
+        ],
     },
     // Packages listed in externals keeps webpack from trying to package them.
     // The ppaPackageList variable is set to non-empty if the build pipeline has been
@@ -74,10 +74,10 @@ const config = {
                     copy: [
                         { source: './node_modules/fontkit/*.trie', destination: './out/client/node_modules' },
                         { source: './node_modules/pdfkit/js/data/*.*', destination: './out/client/node_modules/data' },
-                        { source: './node_modules/pdfkit/js/pdfkit.js', destination: './out/client/node_modules/' }
-                    ]
-                }
-            ]
+                        { source: './node_modules/pdfkit/js/pdfkit.js', destination: './out/client/node_modules/' },
+                    ],
+                },
+            ],
         }),
         // ZMQ requires prebuilds to be in our node_modules directory. So recreate the ZMQ structure.
         // However we don't webpack to manage this, so it was part of the excluded modules. Delete it from there
@@ -86,24 +86,24 @@ const config = {
         new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.js' }]),
         new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.node' }]),
         new copyWebpackPlugin([{ from: './node_modules/zeromq/**/*.json' }]),
-        new copyWebpackPlugin([{ from: './node_modules/node-gyp-build/**/*' }])
+        new copyWebpackPlugin([{ from: './node_modules/node-gyp-build/**/*' }]),
     ],
     resolve: {
         alias: {
             // Pointing pdfkit to a dummy js file so webpack doesn't fall over.
             // Since pdfkit has been externalized (it gets updated with the valid code by copying the pdfkit files
             // into the right destination).
-            pdfkit: path.resolve(__dirname, 'pdfkit.js')
+            pdfkit: path.resolve(__dirname, 'pdfkit.js'),
         },
         extensions: ['.ts', '.js'],
-        plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })]
+        plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })],
     },
     output: {
         filename: '[name].js',
         path: path.resolve(constants.ExtensionRootDir, 'out', 'client'),
         libraryTarget: 'commonjs2',
-        devtoolModuleFilenameTemplate: '../../[resource-path]'
-    }
+        devtoolModuleFilenameTemplate: '../../[resource-path]',
+    },
 };
 // tslint:disable-next-line:no-default-export
 exports.default = config;

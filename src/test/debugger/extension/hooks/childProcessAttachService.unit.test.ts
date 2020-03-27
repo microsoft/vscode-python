@@ -38,7 +38,7 @@ suite('Debug - Attach to Child Process', () => {
         const args: LaunchRequestArguments | AttachRequestArguments = {
             request: 'launch',
             type: 'python',
-            name: ''
+            name: '',
         };
         const data: ChildProcessLaunchData = {
             rootProcessId: 1,
@@ -49,8 +49,8 @@ suite('Debug - Attach to Child Process', () => {
                 seq: 1,
                 type: 'python',
                 arguments: args,
-                command: 'request'
-            }
+                command: 'request',
+            },
         };
         const session: any = {};
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
@@ -63,7 +63,7 @@ suite('Debug - Attach to Child Process', () => {
         const args: LaunchRequestArguments | AttachRequestArguments = {
             request: 'launch',
             type: 'python',
-            name: ''
+            name: '',
         };
         const data: ChildProcessLaunchData = {
             rootProcessId: 1,
@@ -74,8 +74,8 @@ suite('Debug - Attach to Child Process', () => {
                 seq: 1,
                 type: 'python',
                 arguments: args,
-                command: 'request'
-            }
+                command: 'request',
+            },
         };
 
         const session: any = {};
@@ -98,7 +98,7 @@ suite('Debug - Attach to Child Process', () => {
             request: 'launch',
             type: 'python',
             name: '',
-            workspaceFolder: rightWorkspaceFolder.uri.fsPath
+            workspaceFolder: rightWorkspaceFolder.uri.fsPath,
         };
         const data: ChildProcessLaunchData = {
             rootProcessId: 1,
@@ -109,8 +109,8 @@ suite('Debug - Attach to Child Process', () => {
                 seq: 1,
                 type: 'python',
                 arguments: args,
-                command: 'request'
-            }
+                command: 'request',
+            },
         };
 
         const session: any = {};
@@ -133,7 +133,7 @@ suite('Debug - Attach to Child Process', () => {
             request: 'launch',
             type: 'python',
             name: '',
-            workspaceFolder: rightWorkspaceFolder.uri.fsPath
+            workspaceFolder: rightWorkspaceFolder.uri.fsPath,
         };
         const data: ChildProcessLaunchData = {
             rootProcessId: 1,
@@ -144,8 +144,8 @@ suite('Debug - Attach to Child Process', () => {
                 seq: 1,
                 type: 'python',
                 arguments: args,
-                command: 'request'
-            }
+                command: 'request',
+            },
         };
 
         const session: any = {};
@@ -163,7 +163,7 @@ suite('Debug - Attach to Child Process', () => {
         const args: LaunchRequestArguments | AttachRequestArguments = {
             request: 'launch',
             type: 'python',
-            name: ''
+            name: '',
         };
         const data: ChildProcessLaunchData = {
             rootProcessId: 1,
@@ -174,8 +174,8 @@ suite('Debug - Attach to Child Process', () => {
                 seq: 1,
                 type: 'python',
                 arguments: args,
-                command: 'request'
-            }
+                command: 'request',
+            },
         };
 
         const debugConfig = JSON.parse(JSON.stringify(args));
@@ -201,7 +201,7 @@ suite('Debug - Attach to Child Process', () => {
         const data: AttachRequestArguments = {
             type: 'python',
             request: 'attach',
-            name: ''
+            name: '',
         };
         const session: any = {};
         const debugConfig = JSON.parse(JSON.stringify(data));
@@ -223,7 +223,7 @@ suite('Debug - Attach to Child Process', () => {
             request: 'attach',
             type: 'python',
             name: '',
-            host: '123.123.123.123'
+            host: '123.123.123.123',
         };
         const data: ChildProcessLaunchData = {
             rootProcessId: 1,
@@ -234,8 +234,8 @@ suite('Debug - Attach to Child Process', () => {
                 seq: 1,
                 type: 'python',
                 arguments: args,
-                command: 'request'
-            }
+                command: 'request',
+            },
         };
 
         const debugConfig = JSON.parse(JSON.stringify(args));
@@ -264,7 +264,7 @@ suite('Debug - Attach to Child Process', () => {
             name: '',
             pythonPath: '',
             args: [],
-            envFile: ''
+            envFile: '',
         };
 
         attachService.fixPathMappings(args);
@@ -281,7 +281,7 @@ suite('Debug - Attach to Child Process', () => {
             pythonPath: '',
             args: [],
             envFile: '',
-            pathMappings: pathMappings
+            pathMappings: pathMappings,
         };
 
         attachService.fixPathMappings(args);
@@ -297,7 +297,7 @@ suite('Debug - Attach to Child Process', () => {
             workspaceFolder: __dirname,
             pythonPath: '',
             args: [],
-            envFile: ''
+            envFile: '',
         };
 
         attachService.fixPathMappings(args);
@@ -314,7 +314,7 @@ suite('Debug - Attach to Child Process', () => {
             workspaceFolder: __dirname,
             pythonPath: '',
             args: [],
-            envFile: ''
+            envFile: '',
         };
 
         attachService.fixPathMappings(args);
@@ -332,7 +332,7 @@ suite('Debug - Attach to Child Process', () => {
             workspaceFolder: __dirname,
             pythonPath: '',
             args: [],
-            envFile: ''
+            envFile: '',
         };
 
         attachService.fixPathMappings(args);

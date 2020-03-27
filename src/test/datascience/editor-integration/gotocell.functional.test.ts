@@ -19,7 +19,7 @@ import {
     IDataScienceCodeLensProvider,
     IInteractiveWindowListener,
     IJupyterExecution,
-    INotebook
+    INotebook,
 } from '../../../client/datascience/types';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { MockDocumentManager } from '../mockDocumentManager';
@@ -91,7 +91,7 @@ suite('DataScience gotocell tests', () => {
                 skipUsingDefaultConfig: !useDefaultConfig,
                 workingDir: testDir,
                 purpose: purpose ? purpose : Identifiers.HistoryPurpose,
-                allowUI: () => false
+                allowUI: () => false,
             });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
@@ -130,7 +130,7 @@ suite('DataScience gotocell tests', () => {
 
     function addDocument(cells: { code: string; result: any; cellType?: string }[], filePath: string) {
         let docText = '';
-        cells.forEach(c => {
+        cells.forEach((c) => {
             addMockData(c.code, c.result, c.cellType);
             docText = docText.concat(c.code, '\n');
         });
@@ -158,7 +158,7 @@ suite('DataScience gotocell tests', () => {
         const codeLenses = getCodeLenses();
         assert.ok(codeLenses && codeLenses.length > 0, 'No cell code lenses found');
         if (codeLenses.length) {
-            const runLens = codeLenses.filter(c => c.command && c.command.command === Commands.RunCell);
+            const runLens = codeLenses.filter((c) => c.command && c.command.command === Commands.RunCell);
             assert.ok(runLens && runLens.length > pos, 'No run cell code lenses found');
             const codeLens = runLens[pos];
             const code = doc.getText(codeLens.range);
@@ -179,7 +179,7 @@ suite('DataScience gotocell tests', () => {
 
         // There should be one with the ScrollTo command
         const scrollTo = codeLenses.find(
-            c => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine
+            (c) => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine
         );
         assert.equal(scrollTo, undefined, 'Goto cell code lens should not be found');
     }
@@ -190,7 +190,7 @@ suite('DataScience gotocell tests', () => {
 
         // There should be one with the ScrollTo command
         const scrollTo = codeLenses.find(
-            c => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine
+            (c) => c.command && c.command.command === Commands.ScrollToCell && c.range.start.line === startLine
         );
         assert.ok(scrollTo, 'Goto cell code lens not found');
 
@@ -208,16 +208,16 @@ suite('DataScience gotocell tests', () => {
             [
                 {
                     code: `#%%\na=1\na`,
-                    result: 1
+                    result: 1,
                 },
                 {
                     code: `#%%\na+=1\na`,
-                    result: 2
+                    result: 2,
                 },
                 {
                     code: `#%%\na+=4\na`,
-                    result: 6
-                }
+                    result: 6,
+                },
             ],
             path.join(srcDirectory(), 'foo.py')
         );
@@ -227,7 +227,7 @@ suite('DataScience gotocell tests', () => {
 
         // Verify we don't have a goto
         const codeLenses = getCodeLenses();
-        const scrollTo = codeLenses.find(c => c.command && c.command.command === Commands.ScrollToCell);
+        const scrollTo = codeLenses.find((c) => c.command && c.command.command === Commands.ScrollToCell);
         assert.equal(scrollTo, undefined, 'Goto cell code lens should not be found');
 
         // Execute the first cell
@@ -243,20 +243,20 @@ suite('DataScience gotocell tests', () => {
             [
                 {
                     code: `#%%\na=1\na`,
-                    result: 1
+                    result: 1,
                 },
                 {
                     code: `#%%\na+=1\na`,
-                    result: 2
+                    result: 2,
                 },
                 {
                     code: `#%%\na+=4\na`,
-                    result: 6
+                    result: 6,
                 },
                 {
                     code: `#%%\n`,
-                    result: undefined
-                }
+                    result: undefined,
+                },
             ],
             filePath
         );

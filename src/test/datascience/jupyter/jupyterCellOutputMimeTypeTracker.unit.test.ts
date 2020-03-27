@@ -28,12 +28,12 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
         public static telemetrySent: [string, Record<string, string>][] = [];
         public static expectHashes(props: {}[]) {
             const mimeTypeTelemetry = Reporter.telemetrySent.filter(
-                item => item[0] === Telemetry.HashedCellOutputMimeType
+                (item) => item[0] === Telemetry.HashedCellOutputMimeType
             );
             expect(mimeTypeTelemetry).to.be.lengthOf(props.length, 'Incorrect number of telemetry messages sent');
 
             expect(mimeTypeTelemetry).to.deep.equal(
-                props.map(prop => [Telemetry.HashedCellOutputMimeType, prop]),
+                props.map((prop) => [Telemetry.HashedCellOutputMimeType, prop]),
                 'Contents in telemetry do not match'
             );
         }
@@ -86,12 +86,12 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
                 source: '',
                 execution_count: 1,
                 metadata: {},
-                outputs
+                outputs,
             },
             file: new Date().getTime().toString(),
             id: new Date().getTime().toString(),
             line: 1,
-            state: CellState.init
+            state: CellState.init,
         };
     }
     function generateTextOutput(output_type: string) {
@@ -113,9 +113,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
         return { data: { 'application/vnd.plotly.v1+json': '', 'text/html': '' }, output_type };
     }
     function generateTelemetry(mimeType: string) {
-        const hashedName = sha256()
-            .update(mimeType)
-            .digest('hex');
+        const hashedName = sha256().update(mimeType).digest('hex');
 
         const lowerMimeType = mimeType.toLowerCase();
         return {
@@ -132,7 +130,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
             hasVega: lowerMimeType.includes('vega').toString(),
             hasWidget: lowerMimeType.includes('widget').toString(),
             hasJupyter: lowerMimeType.includes('jupyter').toString(),
-            hasVnd: lowerMimeType.includes('vnd').toString()
+            hasVnd: lowerMimeType.includes('vnd').toString(),
         };
     }
     test('Send telemetry for cell with streamed output', async () => {
@@ -189,9 +187,9 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
             await fakeTimer.wait();
             Reporter.expectHashes([]);
         });
-        [CellState.editing, CellState.error, CellState.executing].forEach(cellState => {
+        [CellState.editing, CellState.error, CellState.executing].forEach((cellState) => {
             const cellStateValues = getNamesAndValues(CellState);
-            test(`If cell state is '${cellStateValues.find(item => item.value === cellState)?.name}'`, async () => {
+            test(`If cell state is '${cellStateValues.find((item) => item.value === cellState)?.name}'`, async () => {
                 const cellTextOutput = generateCellWithOutput([generateStreamedOutput()]);
                 cellTextOutput.state = cellState;
 
@@ -208,12 +206,12 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
             generateTelemetry('text/html'),
             generateTelemetry('application/svg+xml'),
             generateTelemetry('application/vnd.plotly.v1+json'),
-            generateTelemetry('stream')
+            generateTelemetry('stream'),
         ];
         const cell1 = generateCellWithOutput([
             generateTextOutput('display_data'),
             generateSvgOutput('update_display_data'),
-            generatePlotlyWithTextOutput('execute_result')
+            generatePlotlyWithTextOutput('execute_result'),
         ]);
         const cell2 = generateCellWithOutput([generateErrorOutput()]);
         const cell3 = generateCellWithOutput([]);
@@ -224,7 +222,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
         await fakeTimer.wait();
         Reporter.expectHashes(expectedTelemetry);
     });
-    ['display_data', 'update_display_data', 'execute_result'].forEach(outputType => {
+    ['display_data', 'update_display_data', 'execute_result'].forEach((outputType) => {
         suite(`Send Telemetry for Output Type = ${outputType}`, () => {
             test('MimeType text/html', async () => {
                 const expectedTelemetry = generateTelemetry('text/html');
@@ -259,7 +257,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
                 const expectedTelemetry = generateTelemetry('text/html');
                 const cellTextOutput = generateCellWithOutput([
                     generateTextOutput(outputType),
-                    generateTextOutput(outputType)
+                    generateTextOutput(outputType),
                 ]);
 
                 emitNotebookEvent([cellTextOutput, cellTextOutput]);

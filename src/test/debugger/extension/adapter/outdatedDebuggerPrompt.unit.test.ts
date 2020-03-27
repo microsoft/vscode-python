@@ -38,14 +38,14 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         seq: 1,
         type: 'event',
         event: 'output',
-        body: { category: 'telemetry', output: 'ptvsd', data: { packageVersion: '4.3.2' } }
+        body: { category: 'telemetry', output: 'ptvsd', data: { packageVersion: '4.3.2' } },
     };
 
     const debugpyOutputEvent: DebugProtocol.OutputEvent = {
         seq: 1,
         type: 'event',
         event: 'output',
-        body: { category: 'telemetry', output: 'debugpy', data: { packageVersion: '1.0.0' } }
+        body: { category: 'telemetry', output: 'debugpy', data: { packageVersion: '1.0.0' } },
     };
 
     setup(() => {
@@ -58,7 +58,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         const configurationService = mock(ConfigurationService);
         const fs = mock(FileSystem);
         when(configurationService.getSettings(undefined)).thenReturn(({
-            experiments: { enabled: true }
+            experiments: { enabled: true },
             // tslint:disable-next-line: no-any
         } as any) as IPythonSettings);
         experimentsManager = new ExperimentsManager(
@@ -92,13 +92,13 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
             configuration: {
                 name: '',
                 request: 'launch',
-                type: 'python'
+                type: 'python',
             },
             id: 'test1',
             name: 'python',
             type: 'python',
             workspaceFolder,
-            customRequest: () => Promise.resolve()
+            customRequest: () => Promise.resolve(),
         };
     }
 
@@ -174,24 +174,24 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         command: 'runInTerminal',
         arguments: {
             cwd: '',
-            args: ['']
-        }
+            args: [''],
+        },
     };
     const someEvent: DebugProtocol.ContinuedEvent = {
         seq: 1,
         type: 'event',
         event: 'continued',
-        body: { threadId: 1, allThreadsContinued: true }
+        body: { threadId: 1, allThreadsContinued: true },
     };
     // Notice that this is stdout, not telemetry event.
     const someOutputEvent: DebugProtocol.OutputEvent = {
         seq: 1,
         type: 'event',
         event: 'output',
-        body: { category: 'stdout', output: 'ptvsd' }
+        body: { category: 'stdout', output: 'ptvsd' },
     };
 
-    [someRequest, someEvent, someOutputEvent].forEach(message => {
+    [someRequest, someEvent, someOutputEvent].forEach((message) => {
         test(`Don't show prompt when in new debugger experiment and debugger telemetry event: ${JSON.stringify(
             message
         )}`, async () => {

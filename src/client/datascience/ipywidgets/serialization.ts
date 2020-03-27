@@ -46,7 +46,7 @@ export function serializeDataViews(msg: KernelMessage.IIOPubMessage): KernelMess
                 ...item,
                 byteLength: item.byteLength,
                 byteOffset: item.byteOffset,
-                buffer
+                buffer,
                 // tslint:disable-next-line: no-any
             } as any); // NOSONAR
         } else {
@@ -57,6 +57,6 @@ export function serializeDataViews(msg: KernelMessage.IIOPubMessage): KernelMess
 
     return {
         ...msg,
-        buffers: newBufferView
+        buffers: newBufferView,
     };
 }

@@ -17,7 +17,7 @@ const defaultOSShells = {
     [OSType.Linux]: TerminalShellType.bash,
     [OSType.OSX]: TerminalShellType.bash,
     [OSType.Windows]: TerminalShellType.commandPrompt,
-    [OSType.Unknown]: TerminalShellType.other
+    [OSType.Unknown]: TerminalShellType.other,
 };
 
 @injectable()
@@ -45,7 +45,7 @@ export class ShellDetector {
             shellIdentificationSource: 'default',
             terminalProvided: !!terminal,
             hasCustomShell: undefined,
-            hasShellInEnv: undefined
+            hasShellInEnv: undefined,
         };
 
         // Sort in order of priority and then identify the shell.

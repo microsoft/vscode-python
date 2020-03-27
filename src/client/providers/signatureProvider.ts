@@ -8,7 +8,7 @@ import {
     SignatureHelp,
     SignatureHelpProvider,
     SignatureInformation,
-    TextDocument
+    TextDocument,
 } from 'vscode';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { captureTelemetry } from '../telemetry';
@@ -19,7 +19,7 @@ import { isPositionInsideStringOrComment } from './providerUtilities';
 const DOCSTRING_PARAM_PATTERNS = [
     '\\s*:type\\s*PARAMNAME:\\s*([^\\n, ]+)', // Sphinx
     '\\s*:param\\s*(\\w?)\\s*PARAMNAME:[^\\n]+', // Sphinx param with type
-    '\\s*@type\\s*PARAMNAME:\\s*([^\\n, ]+)' // Epydoc
+    '\\s*@type\\s*PARAMNAME:\\s*([^\\n, ]+)', // Epydoc
 ];
 
 /**
@@ -33,7 +33,7 @@ function extractParamDocString(paramName: string, docString: string): string {
     // In docstring the '*' is escaped with a backslash
     paramName = paramName.replace(new RegExp('\\*', 'g'), '\\\\\\*');
 
-    DOCSTRING_PARAM_PATTERNS.forEach(pattern => {
+    DOCSTRING_PARAM_PATTERNS.forEach((pattern) => {
         if (paramDocString.length > 0) {
             return;
         }
@@ -60,7 +60,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
             const signature = new SignatureHelp();
             signature.activeSignature = 0;
 
-            data.definitions.forEach(def => {
+            data.definitions.forEach((def) => {
                 signature.activeParameter = def.paramindex;
                 // Don't display the documentation, as vs code doesn't format the documentation.
                 // i.e. line feeds are not respected, long content is stripped.
@@ -77,7 +77,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
                     documentation = docLines.join(EOL).trim();
                 } else {
                     if (def.params && def.params.length > 0) {
-                        label = `${def.name}(${def.params.map(p => p.name).join(', ')})`;
+                        label = `${def.name}(${def.params.map((p) => p.name).join(', ')})`;
                         documentation = def.docstring;
                     } else {
                         label = def.description;
@@ -89,18 +89,18 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
                 const sig = <SignatureInformation>{
                     label,
                     documentation,
-                    parameters: []
+                    parameters: [],
                 };
 
                 if (def.params && def.params.length) {
-                    sig.parameters = def.params.map(arg => {
+                    sig.parameters = def.params.map((arg) => {
                         if (arg.docstring.length === 0) {
                             arg.docstring = extractParamDocString(arg.name, def.docstring);
                         }
                         // tslint:disable-next-line:no-object-literal-type-assertion
                         return <ParameterInformation>{
                             documentation: arg.docstring.length > 0 ? arg.docstring : arg.description,
-                            label: arg.name.trim()
+                            label: arg.name.trim(),
                         };
                     });
                 }
@@ -127,12 +127,12 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
             fileName: document.fileName,
             columnIndex: position.character,
             lineIndex: position.line,
-            source: document.getText()
+            source: document.getText(),
         };
         return this.jediFactory
             .getJediProxyHandler<proxy.IArgumentsResult>(document.uri)
             .sendCommand(cmd, token)
-            .then(data => {
+            .then((data) => {
                 return data ? PythonSignatureProvider.parseData(data) : new SignatureHelp();
             });
     }

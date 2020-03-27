@@ -17,7 +17,7 @@ import {
     TextEditorViewColumnChangeEvent,
     Uri,
     ViewColumn,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 
 import { IDocumentManager } from '../../client/common/application/types';
@@ -99,21 +99,21 @@ export class MockDocumentManager implements IDocumentManager {
     }
 
     public changeDocument(file: string, changes: { range: Range; newText: string }[]) {
-        const doc = this.textDocuments.find(d => d.uri.fsPath === Uri.file(file).fsPath) as MockDocument;
+        const doc = this.textDocuments.find((d) => d.uri.fsPath === Uri.file(file).fsPath) as MockDocument;
         if (doc) {
-            const contentChanges = changes.map(c => {
+            const contentChanges = changes.map((c) => {
                 const startOffset = doc.offsetAt(c.range.start);
                 const endOffset = doc.offsetAt(c.range.end);
                 return {
                     range: c.range,
                     rangeOffset: startOffset,
                     rangeLength: endOffset - startOffset,
-                    text: c.newText
+                    text: c.newText,
                 };
             });
             const ev: TextDocumentChangeEvent = {
                 document: doc,
-                contentChanges
+                contentChanges,
             };
             // Changes are applied to the doc before it's sent.
             ev.contentChanges.forEach(doc.edit.bind(doc));

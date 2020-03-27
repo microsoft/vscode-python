@@ -19,7 +19,7 @@ import {
     injectCode,
     mountWebView,
     simulateKey,
-    waitForMessage
+    waitForMessage,
 } from './testHelpers';
 
 // tslint:disable: no-any
@@ -70,7 +70,7 @@ export function runMountedTest(
     testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, context: Mocha.Context) => Promise<void>,
     getIOC: () => DataScienceIocContainer
 ) {
-    test(name, async function() {
+    test(name, async function () {
         const ioc = getIOC();
         const wrapper = await setupWebview(ioc);
         if (wrapper) {

@@ -34,7 +34,7 @@ suite('DataScience Error Handler Unit Tests', () => {
 
     test('Default error', async () => {
         applicationShell
-            .setup(app => app.showErrorMessage(typemoq.It.isAny()))
+            .setup((app) => app.showErrorMessage(typemoq.It.isAny()))
             .returns(() => Promise.resolve(message))
             .verifiable(typemoq.Times.once());
 
@@ -46,7 +46,7 @@ suite('DataScience Error Handler Unit Tests', () => {
 
     test('Jupyter Self Certificates Error', async () => {
         applicationShell
-            .setup(app => app.showErrorMessage(typemoq.It.isAny()))
+            .setup((app) => app.showErrorMessage(typemoq.It.isAny()))
             .returns(() => Promise.resolve(message))
             .verifiable(typemoq.Times.never());
 
@@ -58,7 +58,7 @@ suite('DataScience Error Handler Unit Tests', () => {
 
     test('Jupyter Install Error', async () => {
         applicationShell
-            .setup(app =>
+            .setup((app) =>
                 app.showInformationMessage(
                     typemoq.It.isAny(),
                     typemoq.It.isValue(localize.DataScience.jupyterInstall()),
@@ -75,19 +75,19 @@ suite('DataScience Error Handler Unit Tests', () => {
                 displayName: 'Pip',
                 priority: 0,
                 isSupported: () => Promise.resolve(true),
-                installModule: () => Promise.resolve()
+                installModule: () => Promise.resolve(),
             },
             {
                 name: 'Conda',
                 displayName: 'Conda',
                 priority: 0,
                 isSupported: () => Promise.resolve(true),
-                installModule: () => Promise.resolve()
-            }
+                installModule: () => Promise.resolve(),
+            },
         ];
 
         channels
-            .setup(ch => ch.getInstallationChannels())
+            .setup((ch) => ch.getInstallationChannels())
             .returns(() => Promise.resolve(installers))
             .verifiable(typemoq.Times.once());
 
@@ -100,7 +100,7 @@ suite('DataScience Error Handler Unit Tests', () => {
 
     test('ZMQ Install Error', async () => {
         applicationShell
-            .setup(app =>
+            .setup((app) =>
                 app.showErrorMessage(typemoq.It.isAny(), typemoq.It.isValue(localize.DataScience.selectNewServer()))
             )
             .returns(() => Promise.resolve(localize.DataScience.selectNewServer()))

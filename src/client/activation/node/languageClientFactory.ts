@@ -40,8 +40,8 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
             debug: {
                 module: modulePath,
                 transport: TransportKind.ipc,
-                options: debugOptions
-            }
+                options: debugOptions,
+            },
         };
         const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');
         return new vscodeLanguageClient.LanguageClient(

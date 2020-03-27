@@ -36,7 +36,7 @@ export const SUPPORTS_SOCKETS = (() => {
     }
     const tmp = tmpMod.dirSync({
         prefix: 'pyvsc-test-',
-        unsafeCleanup: true // for non-empty dir
+        unsafeCleanup: true, // for non-empty dir
     });
     const filename = path.join(tmp.name, 'test.sock');
     try {
@@ -169,7 +169,7 @@ export class FSFixture extends CleanupFixture {
     public async createSocket(relname: string): Promise<string> {
         const srv = this.ensureSocketServer();
         const filename = await this.resolve(relname);
-        await new Promise(resolve => srv!.listen(filename, 0, resolve));
+        await new Promise((resolve) => srv!.listen(filename, 0, resolve));
         return filename;
     }
 
@@ -210,7 +210,7 @@ export class FSFixture extends CleanupFixture {
 
         const tempDir = tmpMod.dirSync({
             prefix: 'pyvsc-fs-tests-',
-            unsafeCleanup: true
+            unsafeCleanup: true,
         });
         this.tempDir = tempDir.name;
 
@@ -242,7 +242,7 @@ export class FSFixture extends CleanupFixture {
         this.sockServer = srv;
         this.addCleanup(async () => {
             try {
-                await new Promise(resolve => srv.close(resolve));
+                await new Promise((resolve) => srv.close(resolve));
             } catch (err) {
                 console.log(`failure while closing socket server: ${err}`);
             }

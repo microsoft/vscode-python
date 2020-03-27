@@ -19,7 +19,7 @@ import { IExtensionSingleActivationService } from './types';
 // persistent state names, exported to make use of in testing
 export enum extensionSurveyStateKeys {
     doNotShowAgain = 'doNotShowExtensionSurveyAgain',
-    disableSurveyForTime = 'doNotShowExtensionSurveyUntilTime'
+    disableSurveyForTime = 'doNotShowExtensionSurveyUntilTime',
 }
 
 const timeToDisableSurveyFor = 1000 * 60 * 60 * 24 * 7 * 12; // 12 weeks
@@ -82,11 +82,11 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         const telemetrySelections: ['Yes', 'Maybe later', 'Do not show again'] = [
             'Yes',
             'Maybe later',
-            'Do not show again'
+            'Do not show again',
         ];
         const selection = await this.appShell.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts);
         sendTelemetryEvent(EventName.EXTENSION_SURVEY_PROMPT, undefined, {
-            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined,
         });
         if (!selection) {
             return;
@@ -114,7 +114,7 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
             o: encodeURIComponent(this.platformService.osType), // platform
             v: encodeURIComponent(this.appEnvironment.vscodeVersion),
             e: encodeURIComponent(this.appEnvironment.packageJson.version), // extension version
-            m: encodeURIComponent(this.appEnvironment.machineId)
+            m: encodeURIComponent(this.appEnvironment.machineId),
         });
         const url = `https://aka.ms/AA5rjx5?${query}`;
         this.browserService.launch(url);

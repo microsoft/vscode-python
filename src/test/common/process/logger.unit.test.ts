@@ -29,7 +29,7 @@ suite('ProcessLogger suite', () => {
     setup(() => {
         outputResult = '';
         outputChannel
-            .setup(o => o.appendLine(TypeMoq.It.isAnyString()))
+            .setup((o) => o.appendLine(TypeMoq.It.isAnyString()))
             .returns((s: string) => (outputResult += `${s}\n`));
     });
 
@@ -45,7 +45,7 @@ suite('ProcessLogger suite', () => {
         const expectedResult = `> test --foo --bar\n${Logging.currentWorkingDirectory()} ${options.cwd}\n`;
         expect(outputResult).to.equal(expectedResult, 'Output string is incorrect - String built incorrectly');
 
-        outputChannel.verify(o => o.appendLine(TypeMoq.It.isAnyString()), TypeMoq.Times.exactly(2));
+        outputChannel.verify((o) => o.appendLine(TypeMoq.It.isAnyString()), TypeMoq.Times.exactly(2));
     });
 
     test('Logger adds quotes around arguments if they contain spaces', async () => {

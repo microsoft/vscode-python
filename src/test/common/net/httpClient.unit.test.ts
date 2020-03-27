@@ -27,14 +27,14 @@ suite('Http Client', () => {
         workSpaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         config
-            .setup(c => c.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isValue('')))
+            .setup((c) => c.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isValue('')))
             .returns(() => proxy)
             .verifiable(TypeMoq.Times.once());
         workSpaceService
-            .setup(w => w.getConfiguration(TypeMoq.It.isValue('http')))
+            .setup((w) => w.getConfiguration(TypeMoq.It.isValue('http')))
             .returns(() => config.object)
             .verifiable(TypeMoq.Times.once());
-        container.setup(a => a.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workSpaceService.object);
+        container.setup((a) => a.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workSpaceService.object);
 
         httpClient = new HttpClient(container.object);
     });
@@ -51,19 +51,19 @@ suite('Http Client', () => {
             {
                 name: 'Throw error if request returns with download error',
                 returnedArgs: ['downloadError', { statusCode: 201 }, undefined],
-                expectedErrorMessage: 'downloadError'
+                expectedErrorMessage: 'downloadError',
             },
             {
                 name: 'Throw error if request does not return with status code 200',
                 returnedArgs: [undefined, { statusCode: 201, statusMessage: 'wrongStatus' }, undefined],
-                expectedErrorMessage: 'Failed with status 201, wrongStatus, Uri downloadUri'
+                expectedErrorMessage: 'Failed with status 201, wrongStatus, Uri downloadUri',
             },
             {
                 name: 'If strict is set to true, and parsing fails, throw error',
                 returnedArgs: [undefined, { statusCode: 200 }, '[{ "strictJSON" : true,, }]'],
-                strict: true
-            }
-        ].forEach(async testParams => {
+                strict: true,
+            },
+        ].forEach(async (testParams) => {
             test(testParams.name, async () => {
                 const requestMock = (_uri: any, _requestOptions: any, callBackFn: Function) =>
                     callBackFn(...testParams.returnedArgs);
@@ -95,21 +95,21 @@ suite('Http Client', () => {
                     "If strict is set to false, and jsonc parsing returns error codes, then log errors and don't throw, return json",
                 returnedArgs: [undefined, { statusCode: 200 }, '[{ "strictJSON" : false,, }]'],
                 strict: false,
-                expectedJSON: [{ strictJSON: false }]
+                expectedJSON: [{ strictJSON: false }],
             },
             {
                 name: 'Return expected json if strict is set to true and parsing is successful',
                 returnedArgs: [undefined, { statusCode: 200 }, '[{ "strictJSON" : true }]'],
                 strict: true,
-                expectedJSON: [{ strictJSON: true }]
+                expectedJSON: [{ strictJSON: true }],
             },
             {
                 name: 'Return expected json if strict is set to false and parsing is successful',
                 returnedArgs: [undefined, { statusCode: 200 }, '[{ //Comment \n "strictJSON" : false }]'],
                 strict: false,
-                expectedJSON: [{ strictJSON: false }]
-            }
-        ].forEach(async testParams => {
+                expectedJSON: [{ strictJSON: false }],
+            },
+        ].forEach(async (testParams) => {
             test(testParams.name, async () => {
                 const requestMock = (_uri: any, _requestOptions: any, callBackFn: Function) =>
                     callBackFn(...testParams.returnedArgs);

@@ -23,7 +23,7 @@ import {
     TestFolder,
     TestFunction,
     Tests,
-    TestSuite
+    TestSuite,
 } from '../../../client/testing/common/types';
 import { TestTreeViewProvider } from '../../../client/testing/explorer/testTreeViewProvider';
 import { ITestManagementService } from '../../../client/testing/types';
@@ -45,7 +45,7 @@ export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []
         name: folderPath,
         nameToRun: folderPath,
         testFiles: testFiles,
-        time: 0
+        time: 0,
     };
 
     return folder;
@@ -65,7 +65,7 @@ export function getMockTestFile(
         fullPath: join(__dirname, filePath),
         functions: testFunctions,
         suites: testSuites,
-        xmlName: filePath.replace(/\//g, '.')
+        xmlName: filePath.replace(/\//g, '.'),
     };
 
     return testFile;
@@ -91,7 +91,7 @@ export function getMockTestSuite(
         nameToRun: suiteNameToRun,
         suites: subSuites,
         time: 0,
-        xmlName: suiteNameToRun.replace(/\//g, '.').replace(/\:\:/g, ':')
+        xmlName: suiteNameToRun.replace(/\//g, '.').replace(/\:\:/g, ':'),
     };
     return testSuite;
 }
@@ -105,7 +105,7 @@ export function getMockTestFunction(fnNameToRun: string): TestFunction {
         resource: Uri.file(__filename),
         name: fnName,
         nameToRun: fnNameToRun,
-        time: 0
+        time: 0,
     };
 
     return fn;
@@ -143,10 +143,10 @@ export function getTestHelperInstance(): TestsHelper {
     const serviceContainerMoq = typemoq.Mock.ofType<IServiceContainer>();
 
     serviceContainerMoq
-        .setup(a => a.get(typemoq.It.isValue(IApplicationShell), typemoq.It.isAny()))
+        .setup((a) => a.get(typemoq.It.isValue(IApplicationShell), typemoq.It.isAny()))
         .returns(() => appShellMoq.object);
     serviceContainerMoq
-        .setup(a => a.get(typemoq.It.isValue(ICommandManager), typemoq.It.isAny()))
+        .setup((a) => a.get(typemoq.It.isValue(ICommandManager), typemoq.It.isAny()))
         .returns(() => commMgrMoq.object);
 
     return new TestsHelper(new TestFlatteningVisitor(), serviceContainerMoq.object);
@@ -175,7 +175,7 @@ export function createMockTestStorageService(testData?: Tests): typemoq.IMock<IT
         testData = createMockTestsData();
     }
 
-    testStoreMoq.setup(t => t.getTests(typemoq.It.isAny())).returns(() => testData);
+    testStoreMoq.setup((t) => t.getTests(typemoq.It.isAny())).returns(() => testData);
 
     return testStoreMoq;
 }
@@ -187,7 +187,9 @@ export function createMockTestStorageService(testData?: Tests): typemoq.IMock<IT
  */
 export function createMockUnitTestMgmtService(): typemoq.IMock<ITestManagementService> {
     const unitTestMgmtSrvMoq = typemoq.Mock.ofType<ITestManagementService>();
-    unitTestMgmtSrvMoq.setup(u => u.onDidStatusChange(typemoq.It.isAny())).returns(() => new ExplorerTestsDisposable());
+    unitTestMgmtSrvMoq
+        .setup((u) => u.onDidStatusChange(typemoq.It.isAny()))
+        .returns(() => new ExplorerTestsDisposable());
     return unitTestMgmtSrvMoq;
 }
 
@@ -210,7 +212,7 @@ export function createMockWorkspaceService(): typemoq.IMock<IWorkspaceService> {
             return 0;
         }
     }
-    workspcSrvMoq.setup(w => w.workspaceFolders).returns(() => [new ExplorerTestsWorkspaceFolder()]);
+    workspcSrvMoq.setup((w) => w.workspaceFolders).returns(() => [new ExplorerTestsWorkspaceFolder()]);
     return workspcSrvMoq;
 }
 
@@ -246,7 +248,7 @@ export function createMockTestExplorer(
     }
 
     const dispRegMoq = typemoq.Mock.ofType<IDisposableRegistry>();
-    dispRegMoq.setup(d => d.push(typemoq.It.isAny()));
+    dispRegMoq.setup((d) => d.push(typemoq.It.isAny()));
 
     return new TestTreeViewProvider(
         testStore,

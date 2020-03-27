@@ -18,7 +18,7 @@ import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
-    ITerminalAutoActivation
+    ITerminalAutoActivation,
 } from '../../../client/terminals/types';
 
 suite('Common Terminal Service Registry', () => {

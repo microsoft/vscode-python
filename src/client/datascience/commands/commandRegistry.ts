@@ -15,7 +15,7 @@ import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
-    INotebookEditorProvider
+    INotebookEditorProvider,
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { KernelSwitcherCommand } from './kernelSwitcher';
@@ -76,7 +76,7 @@ export class CommandRegistry implements IDisposable {
         }
     }
     public dispose() {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
     private registerCommand<
         E extends keyof ICommandNameArgumentTypeMapping,
@@ -88,7 +88,7 @@ export class CommandRegistry implements IDisposable {
     }
 
     private getCodeWatcher(file: string): ICodeWatcher | undefined {
-        const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === file);
+        const possibleDocuments = this.documentManager.textDocuments.filter((d) => d.fileName === file);
         if (possibleDocuments && possibleDocuments.length === 1) {
             return this.dataScienceCodeLensProvider.getCodeWatcher(possibleDocuments[0]);
         } else if (possibleDocuments && possibleDocuments.length > 1) {

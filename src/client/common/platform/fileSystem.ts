@@ -26,7 +26,7 @@ import {
     ITempFileSystem,
     ReadStream,
     TemporaryFile,
-    WriteStream
+    WriteStream,
 } from './types';
 
 const ENCODING: string = 'utf8';
@@ -57,7 +57,7 @@ export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
         // for now we round to the nearest integer.
         // See: https://github.com/microsoft/vscode/issues/84526
         ctime: Math.round(old.ctimeMs),
-        mtime: Math.round(old.mtimeMs)
+        mtime: Math.round(old.mtimeMs),
     };
 }
 
@@ -228,7 +228,7 @@ export class RawFileSystem implements IRawFileSystem {
         // See: https://github.com/microsoft/vscode/issues/84177
         await this.vscfs.stat(vscode.Uri.file(this.paths.dirname(dest)));
         await this.vscfs.copy(srcURI, destURI, {
-            overwrite: true
+            overwrite: true,
         });
     }
 
@@ -236,7 +236,7 @@ export class RawFileSystem implements IRawFileSystem {
         const uri = vscode.Uri.file(filename);
         return this.vscfs.delete(uri, {
             recursive: false,
-            useTrash: false
+            useTrash: false,
         });
     }
 
@@ -250,7 +250,7 @@ export class RawFileSystem implements IRawFileSystem {
         }
         return this.vscfs.delete(uri, {
             recursive: true,
-            useTrash: false
+            useTrash: false,
         });
     }
 
@@ -263,7 +263,7 @@ export class RawFileSystem implements IRawFileSystem {
         await this.vscfs.stat(uri);
         return this.vscfs.delete(uri, {
             recursive: true,
-            useTrash: false
+            useTrash: false,
         });
     }
 
@@ -456,7 +456,7 @@ export class FileSystemUtils implements IFileSystemUtils {
         let found: string[];
         if (cwd) {
             const options = {
-                cwd: cwd
+                cwd: cwd,
             };
             found = await this.globFiles(globPattern, options);
         } else {

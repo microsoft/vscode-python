@@ -19,7 +19,7 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService
+    TestFrameworkProductPathService,
 } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductService } from '../../../client/common/installer/types';
@@ -32,7 +32,7 @@ import {
     IWorkspaceSymbolSettings,
     ModuleNamePurpose,
     Product,
-    ProductType
+    ProductType,
 } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IFormatterHelper } from '../../../client/formatters/types';
@@ -43,8 +43,8 @@ import { ITestsHelper } from '../../../client/testing/common/types';
 use(chaiAsPromised);
 
 suite('Product Path', () => {
-    [undefined, Uri.file('resource')].forEach(resource => {
-        getNamesAndValues<Product>(Product).forEach(product => {
+    [undefined, Uri.file('resource')].forEach((resource) => {
+        getNamesAndValues<Product>(Product).forEach((product) => {
             class TestBaseProductPathsService extends BaseProductPathsService {
                 public getExecutableNameFromSettings(_: Product, _resource?: Uri): string {
                     return '';
@@ -68,21 +68,21 @@ suite('Product Path', () => {
                     TypeMoq.Mock.ofType<OutputChannel>().object
                 );
                 const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-                pythonSettings.setup(p => p.formatting).returns(() => formattingSettings.object);
-                pythonSettings.setup(p => p.testing).returns(() => unitTestSettings.object);
-                pythonSettings.setup(p => p.workspaceSymbols).returns(() => workspaceSymnbolSettings.object);
+                pythonSettings.setup((p) => p.formatting).returns(() => formattingSettings.object);
+                pythonSettings.setup((p) => p.testing).returns(() => unitTestSettings.object);
+                pythonSettings.setup((p) => p.workspaceSymbols).returns(() => workspaceSymnbolSettings.object);
                 configService
-                    .setup(s => s.getSettings(TypeMoq.It.isValue(resource)))
+                    .setup((s) => s.getSettings(TypeMoq.It.isValue(resource)))
                     .returns(() => pythonSettings.object);
                 serviceContainer
-                    .setup(s => s.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
+                    .setup((s) => s.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
                     .returns(() => configService.object);
                 serviceContainer
-                    .setup(s => s.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny()))
+                    .setup((s) => s.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny()))
                     .returns(() => productInstaller);
 
                 serviceContainer
-                    .setup(c => c.get(TypeMoq.It.isValue(IProductService), TypeMoq.It.isAny()))
+                    .setup((c) => c.get(TypeMoq.It.isValue(IProductService), TypeMoq.It.isAny()))
                     .returns(() => new ProductService());
             });
 
@@ -148,18 +148,18 @@ suite('Product Path', () => {
                         const formatterHelper = TypeMoq.Mock.ofType<IFormatterHelper>();
                         const expectedPath = 'Some Path';
                         serviceContainer
-                            .setup(s => s.get(TypeMoq.It.isValue(IFormatterHelper), TypeMoq.It.isAny()))
+                            .setup((s) => s.get(TypeMoq.It.isValue(IFormatterHelper), TypeMoq.It.isAny()))
                             .returns(() => formatterHelper.object);
                         formattingSettings
-                            .setup(f => f.autopep8Path)
+                            .setup((f) => f.autopep8Path)
                             .returns(() => expectedPath)
                             .verifiable(TypeMoq.Times.atLeastOnce());
                         formatterHelper
-                            .setup(f => f.getSettingsPropertyNames(TypeMoq.It.isValue(product.value)))
+                            .setup((f) => f.getSettingsPropertyNames(TypeMoq.It.isValue(product.value)))
                             .returns(() => {
                                 return {
                                     pathName: 'autopep8Path',
-                                    argsName: 'autopep8Args'
+                                    argsName: 'autopep8Args',
                                 };
                             })
                             .verifiable(TypeMoq.Times.once());
@@ -180,14 +180,14 @@ suite('Product Path', () => {
                         const linterInfo = TypeMoq.Mock.ofType<ILinterInfo>();
                         const expectedPath = 'Some Path';
                         serviceContainer
-                            .setup(s => s.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
+                            .setup((s) => s.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
                             .returns(() => linterManager.object);
                         linterInfo
-                            .setup(l => l.pathName(TypeMoq.It.isValue(resource)))
+                            .setup((l) => l.pathName(TypeMoq.It.isValue(resource)))
                             .returns(() => expectedPath)
                             .verifiable(TypeMoq.Times.once());
                         linterManager
-                            .setup(l => l.getLinterInfo(TypeMoq.It.isValue(product.value)))
+                            .setup((l) => l.getLinterInfo(TypeMoq.It.isValue(product.value)))
                             .returns(() => linterInfo.object)
                             .verifiable(TypeMoq.Times.once());
 
@@ -220,7 +220,7 @@ suite('Product Path', () => {
                         const productPathService = new CTagsProductPathService(serviceContainer.object);
                         const expectedPath = 'Some Path';
                         workspaceSymnbolSettings
-                            .setup(w => w.ctagsPath)
+                            .setup((w) => w.ctagsPath)
                             .returns(() => expectedPath)
                             .verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -238,20 +238,20 @@ suite('Product Path', () => {
                         const testHelper = TypeMoq.Mock.ofType<ITestsHelper>();
                         const expectedPath = 'Some Path';
                         serviceContainer
-                            .setup(s => s.get(TypeMoq.It.isValue(ITestsHelper), TypeMoq.It.isAny()))
+                            .setup((s) => s.get(TypeMoq.It.isValue(ITestsHelper), TypeMoq.It.isAny()))
                             .returns(() => testHelper.object);
                         testHelper
-                            .setup(t => t.getSettingsPropertyNames(TypeMoq.It.isValue(product.value)))
+                            .setup((t) => t.getSettingsPropertyNames(TypeMoq.It.isValue(product.value)))
                             .returns(() => {
                                 return {
                                     argsName: 'autoTestDiscoverOnSaveEnabled',
                                     enabledName: 'autoTestDiscoverOnSaveEnabled',
-                                    pathName: 'nosetestPath'
+                                    pathName: 'nosetestPath',
                                 };
                             })
                             .verifiable(TypeMoq.Times.once());
                         unitTestSettings
-                            .setup(u => u.nosetestPath)
+                            .setup((u) => u.nosetestPath)
                             .returns(() => expectedPath)
                             .verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -266,15 +266,15 @@ suite('Product Path', () => {
                         const productPathService = new TestFrameworkProductPathService(serviceContainer.object);
                         const testHelper = TypeMoq.Mock.ofType<ITestsHelper>();
                         serviceContainer
-                            .setup(s => s.get(TypeMoq.It.isValue(ITestsHelper), TypeMoq.It.isAny()))
+                            .setup((s) => s.get(TypeMoq.It.isValue(ITestsHelper), TypeMoq.It.isAny()))
                             .returns(() => testHelper.object);
                         testHelper
-                            .setup(t => t.getSettingsPropertyNames(TypeMoq.It.isValue(product.value)))
+                            .setup((t) => t.getSettingsPropertyNames(TypeMoq.It.isValue(product.value)))
                             .returns(() => {
                                 return {
                                     argsName: 'autoTestDiscoverOnSaveEnabled',
                                     enabledName: 'autoTestDiscoverOnSaveEnabled',
-                                    pathName: undefined
+                                    pathName: undefined,
                                 };
                             })
                             .verifiable(TypeMoq.Times.once());

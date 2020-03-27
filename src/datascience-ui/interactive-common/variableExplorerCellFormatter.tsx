@@ -9,7 +9,7 @@ export enum CellStyle {
     variable = 'variable',
     type = 'type',
     string = 'string',
-    numeric = 'numeric'
+    numeric = 'numeric',
 }
 
 interface IVariableExplorerCellFormatterProps {

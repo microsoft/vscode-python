@@ -7,7 +7,7 @@ import {
     createEmptyCell,
     CursorPos,
     extractInputText,
-    ICellViewModel
+    ICellViewModel,
 } from '../../datascience-ui/interactive-common/mainState';
 import { defaultDataScienceSettings } from './helpers';
 
@@ -20,11 +20,11 @@ suite('Data Science MainState', () => {
                 ...cvm.cell,
                 data: {
                     ...cvm.cell.data,
-                    source: newCode
-                }
+                    source: newCode,
+                },
             },
             inputBlockText: newCode,
-            runDuringDebug: debugging
+            runDuringDebug: debugging,
         };
 
         // Typecast so that the build works. ICell.MetaData doesn't like reassigning
@@ -46,7 +46,7 @@ suite('Data Science MainState', () => {
             selected: false,
             scrollCount: 0,
             cursorPos: CursorPos.Current,
-            hasBeenRun: false
+            hasBeenRun: false,
         };
         assert.equal(extractInputText(cloneVM(cvm, '# %%\na=1'), settings), 'a=1', 'Cell marker not removed');
         assert.equal(

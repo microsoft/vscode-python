@@ -13,7 +13,7 @@ import {
     CompletionItemProvider,
     Position,
     SnippetString,
-    TextDocument
+    TextDocument,
 } from 'vscode';
 import { IExtensionSingleActivationService } from '../../../../activation/types';
 import { ILanguageService } from '../../../../common/application/types';
@@ -23,7 +23,7 @@ import { DebugConfigStrings } from '../../../../common/utils/localize';
 const configurationNodeName = 'configurations';
 enum JsonLanguages {
     json = 'json',
-    jsonWithComments = 'jsonc'
+    jsonWithComments = 'jsonc',
 }
 
 @injectable()
@@ -54,15 +54,15 @@ export class LaunchJsonCompletionProvider implements CompletionItemProvider, IEx
                 command: {
                     command: 'python.SelectAndInsertDebugConfiguration',
                     title: DebugConfigStrings.launchJsonCompletions.description(),
-                    arguments: [document, position, token]
+                    arguments: [document, position, token],
                 },
                 documentation: DebugConfigStrings.launchJsonCompletions.description(),
                 sortText: 'AAAA',
                 preselect: true,
                 kind: CompletionItemKind.Enum,
                 label: DebugConfigStrings.launchJsonCompletions.label(),
-                insertText: new SnippetString()
-            }
+                insertText: new SnippetString(),
+            },
         ];
     }
     public canProvideCompletions(document: TextDocument, position: Position) {

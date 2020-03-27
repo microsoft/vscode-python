@@ -33,7 +33,7 @@ suite('Configuration Service', () => {
             dispose(): Promise<void> {
                 disposed = true;
                 return Promise.resolve();
-            }
+            },
         };
         asyncRegistry.push(disposable);
         await asyncRegistry.dispose();

@@ -116,7 +116,7 @@ export namespace Creation {
                     newDirty: true,
                     cell: cellVM.cell,
                     fullText: extractInputText(cellVM, result.settings),
-                    currentText: cellVM.inputBlockText
+                    currentText: cellVM.inputBlockText,
                 });
             }
 
@@ -146,12 +146,12 @@ export namespace Creation {
         return {
             ...arg.prevState,
             cellVMs: [],
-            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs)
+            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
         };
     }
 
     export function deleteCell(arg: InteractiveReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0 && arg.payload.data.cellId) {
             // Send messages to other side to indicate the delete
             postActionToExtension(arg, InteractiveWindowMessages.UpdateModel, {
@@ -160,14 +160,14 @@ export namespace Creation {
                 index,
                 oldDirty: arg.prevState.dirty,
                 newDirty: true,
-                cell: arg.prevState.cellVMs[index].cell
+                cell: arg.prevState.cellVMs[index].cell,
             });
 
             const newVMs = arg.prevState.cellVMs.filter((_c, i) => i !== index);
             return {
                 ...arg.prevState,
                 cellVMs: newVMs,
-                undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs)
+                undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
             };
         }
 
@@ -180,7 +180,7 @@ export namespace Creation {
             cellVMs: [],
             undoStack: [],
             redoStack: [],
-            editCellVM: undefined
+            editCellVM: undefined,
         };
     }
 }

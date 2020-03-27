@@ -12,7 +12,7 @@ import {
     IDataScienceSettings,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings
+    IPythonSettings,
 } from '../../client/common/types';
 import { Telemetry } from '../../client/datascience/constants';
 import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../client/datascience/shiftEnterBanner';
@@ -68,7 +68,7 @@ suite('Interactive Shift Enter Banner', () => {
 
         expect(Reporter.eventNames).to.deep.equal([
             Telemetry.ShiftEnterBannerShown,
-            Telemetry.EnableInteractiveShiftEnter
+            Telemetry.EnableInteractiveShiftEnter,
         ]);
     });
 
@@ -113,7 +113,7 @@ suite('Interactive Shift Enter Banner', () => {
 
         expect(Reporter.eventNames).to.deep.equal([
             Telemetry.ShiftEnterBannerShown,
-            Telemetry.DisableInteractiveShiftEnter
+            Telemetry.DisableInteractiveShiftEnter,
         ]);
     });
 });
@@ -133,9 +133,9 @@ function loadBanner(
     // Config persist state
     const persistService: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
     const enabledState: typemoq.IMock<IPersistentState<boolean>> = typemoq.Mock.ofType<IPersistentState<boolean>>();
-    enabledState.setup(a => a.value).returns(() => stateEnabled);
+    enabledState.setup((a) => a.value).returns(() => stateEnabled);
     persistService
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(
                 typemoq.It.isValue(InteractiveShiftEnterStateKeys.ShowBanner),
                 typemoq.It.isValue(true)
@@ -145,7 +145,7 @@ function loadBanner(
             return enabledState.object;
         });
     persistService
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(
                 typemoq.It.isValue(InteractiveShiftEnterStateKeys.ShowBanner),
                 typemoq.It.isValue(false)
@@ -158,14 +158,14 @@ function loadBanner(
     // Config settings
     const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
     const dataScienceSettings = typemoq.Mock.ofType<IDataScienceSettings>();
-    dataScienceSettings.setup(d => d.enabled).returns(() => true);
-    dataScienceSettings.setup(d => d.sendSelectionToInteractiveWindow).returns(() => false);
-    pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
-    config.setup(c => c.getSettings(typemoq.It.isAny())).returns(() => pythonSettings.object);
+    dataScienceSettings.setup((d) => d.enabled).returns(() => true);
+    dataScienceSettings.setup((d) => d.sendSelectionToInteractiveWindow).returns(() => false);
+    pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
+    config.setup((c) => c.getSettings(typemoq.It.isAny())).returns(() => pythonSettings.object);
 
     // Config Jupyter
     jupyterExecution
-        .setup(j => j.isNotebookSupported())
+        .setup((j) => j.isNotebookSupported())
         .returns(() => {
             return Promise.resolve(jupyterFound);
         })
@@ -176,13 +176,13 @@ function loadBanner(
 
     // Config AppShell
     appShell
-        .setup(a => a.showInformationMessage(typemoq.It.isAny(), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
+        .setup((a) => a.showInformationMessage(typemoq.It.isAny(), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
         .returns(() => Promise.resolve(questionResponse))
         .verifiable(bannerShown ? typemoq.Times.once() : typemoq.Times.never());
 
     // Config settings
     config
-        .setup(c =>
+        .setup((c) =>
             c.updateSetting(
                 typemoq.It.isValue('dataScience.sendSelectionToInteractiveWindow'),
                 typemoq.It.isAny(),

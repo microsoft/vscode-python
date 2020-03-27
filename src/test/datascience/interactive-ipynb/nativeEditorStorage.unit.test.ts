@@ -13,7 +13,7 @@ import {
     EventEmitter,
     TextEditor,
     Uri,
-    WorkspaceConfiguration
+    WorkspaceConfiguration,
 } from 'vscode';
 
 import { DocumentManager } from '../../../client/common/application/documentManager';
@@ -21,7 +21,7 @@ import {
     IDocumentManager,
     IWebPanelMessageListener,
     IWebPanelProvider,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../../client/common/application/types';
 import { WebPanel } from '../../../client/common/application/webPanels/webPanel';
 import { WebPanelProvider } from '../../../client/common/application/webPanels/webPanelProvider';
@@ -34,7 +34,7 @@ import { IConfigurationService, ICryptoUtils, IDisposable, IExtensionContext } f
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import {
     IEditorContentChange,
-    InteractiveWindowMessages
+    InteractiveWindowMessages,
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditorStorage } from '../../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -293,7 +293,7 @@ suite('Data Science - Native Editor Storage', () => {
         const settingsChangedEvent = new EventEmitter<void>();
 
         context
-            .setup(c => c.globalStoragePath)
+            .setup((c) => c.globalStoragePath)
             .returns(() => path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'WorkspaceDir'));
 
         when(settings.onDidChange).thenReturn(settingsChangedEvent.event);
@@ -338,7 +338,7 @@ suite('Data Science - Native Editor Storage', () => {
         lastWriteFileValue = baseFile;
         wroteToFileEvent = new EventEmitter<string>();
         fileSystem
-            .setup(f => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((f) => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns((a1, a2) => {
                 if (a1.includes(`${testIndex}.ipynb`)) {
                     lastWriteFileValue = a2;
@@ -347,8 +347,8 @@ suite('Data Science - Native Editor Storage', () => {
                 return Promise.resolve();
             });
         fileSystem
-            .setup(f => f.readFile(typemoq.It.isAny()))
-            .returns(_a1 => {
+            .setup((f) => f.readFile(typemoq.It.isAny()))
+            .returns((_a1) => {
                 return Promise.resolve(lastWriteFileValue);
             });
 
@@ -365,7 +365,7 @@ suite('Data Science - Native Editor Storage', () => {
     teardown(() => {
         globalMemento.clear();
         sinon.reset();
-        disposables.forEach(d => d.dispose());
+        disposables.forEach((d) => d.dispose());
     });
 
     function insertCell(index: number, code: string) {
@@ -375,7 +375,7 @@ suite('Data Science - Native Editor Storage', () => {
             oldDirty: storage.isDirty,
             newDirty: true,
             cell: createEmptyCell(code, 1),
-            index
+            index,
         });
     }
 
@@ -386,7 +386,7 @@ suite('Data Science - Native Editor Storage', () => {
             oldDirty: storage.isDirty,
             newDirty: true,
             firstCellId: first,
-            secondCellId: second
+            secondCellId: second,
         });
     }
 
@@ -398,7 +398,7 @@ suite('Data Science - Native Editor Storage', () => {
             newDirty: true,
             forward: changes,
             reverse: changes,
-            id: cell.id
+            id: cell.id,
         });
     }
 
@@ -409,7 +409,7 @@ suite('Data Science - Native Editor Storage', () => {
             oldDirty: storage.isDirty,
             newDirty: true,
             index,
-            cell
+            cell,
         });
     }
 
@@ -420,7 +420,7 @@ suite('Data Science - Native Editor Storage', () => {
             oldDirty: storage.isDirty,
             newDirty: true,
             oldCells: storage.cells,
-            newCellId: '1'
+            newCellId: '1',
         });
     }
 
@@ -452,16 +452,16 @@ suite('Data Science - Native Editor Storage', () => {
                         startLineNumber: 2,
                         startColumn: 1,
                         endLineNumber: 2,
-                        endColumn: 1
+                        endColumn: 1,
                     },
                     rangeOffset: 4,
                     rangeLength: 0,
                     text: 'a',
                     position: {
                         lineNumber: 1,
-                        column: 1
-                    }
-                }
+                        column: 1,
+                    },
+                },
             ],
             storage.cells[1],
             'a'
@@ -501,7 +501,7 @@ suite('Data Science - Native Editor Storage', () => {
     test('Opening file with global storage but no global file will still open with old contents', async () => {
         // This test is really for making sure when a user upgrades to a new extension, we still have their old storage
         const file = Uri.parse('file:///foo.ipynb');
-        fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
+        fileSystem.setup((f) => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
 
         // Initially nothing in memento
         expect(globalMemento.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
@@ -510,7 +510,7 @@ suite('Data Science - Native Editor Storage', () => {
         // Put the regular file into the global storage
         await globalMemento.update(`notebook-storage-${file.toString()}`, {
             contents: differentFile,
-            lastModifiedTimeMs: Date.now()
+            lastModifiedTimeMs: Date.now(),
         });
         await storage.load(file);
 
@@ -524,7 +524,7 @@ suite('Data Science - Native Editor Storage', () => {
 
         // This test is really for making sure when a user upgrades to a new extension, we still have their old storage
         const file = Uri.parse('file:///foo.ipynb');
-        fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
+        fileSystem.setup((f) => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
 
         // Initially nothing in memento
         expect(globalMemento.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
@@ -533,13 +533,13 @@ suite('Data Science - Native Editor Storage', () => {
         // Put the regular file into the global storage
         await globalMemento.update(`notebook-storage-${file.toString()}`, {
             contents: differentFile,
-            lastModifiedTimeMs: Date.now()
+            lastModifiedTimeMs: Date.now(),
         });
 
         // Put another file into the global storage
         await globalMemento.update(`notebook-storage-file::///bar.ipynb`, {
             contents: differentFile,
-            lastModifiedTimeMs: Date.now()
+            lastModifiedTimeMs: Date.now(),
         });
 
         await storage.load(file);

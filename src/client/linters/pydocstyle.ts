@@ -16,7 +16,7 @@ export class PyDocStyle extends BaseLinter {
     protected async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
         const messages = await this.run([document.uri.fsPath], document, cancellation);
         // All messages in pep8 are treated as warnings for now.
-        messages.forEach(msg => {
+        messages.forEach((msg) => {
             msg.severity = LintMessageSeverity.Warning;
         });
 
@@ -31,7 +31,7 @@ export class PyDocStyle extends BaseLinter {
         // So we have two lines per message, hence we need to take lines in pairs.
         const maxLines = this.pythonSettings.linting.maxNumberOfProblems * 2;
         // First line is almost always empty.
-        const oldOutputLines = outputLines.filter(line => line.length > 0);
+        const oldOutputLines = outputLines.filter((line) => line.length > 0);
         outputLines = [];
         for (let counter = 0; counter < oldOutputLines.length / 2; counter += 1) {
             outputLines.push(oldOutputLines[2 * counter] + oldOutputLines[2 * counter + 1]);
@@ -40,7 +40,7 @@ export class PyDocStyle extends BaseLinter {
         return (
             outputLines
                 .filter((value, index) => index < maxLines && value.indexOf(':') >= 0)
-                .map(line => {
+                .map((line) => {
                     // Windows will have a : after the drive letter (e.g. c:\).
                     if (IS_WINDOWS) {
                         return line.substring(line.indexOf(`${baseFileName}:`) + baseFileName.length + 1).trim();
@@ -49,7 +49,7 @@ export class PyDocStyle extends BaseLinter {
                 })
                 // Iterate through the lines (skipping the messages).
                 // So, just iterate the response in pairs.
-                .map(line => {
+                .map((line) => {
                     try {
                         if (line.trim().length === 0) {
                             return;
@@ -70,15 +70,15 @@ export class PyDocStyle extends BaseLinter {
                             column: sourceStart,
                             line: lineNumber,
                             type: '',
-                            provider: this.info.id
+                            provider: this.info.id,
                         } as ILintMessage;
                     } catch (ex) {
                         traceError(`Failed to parse pydocstyle line '${line}'`, ex);
                         return;
                     }
                 })
-                .filter(item => item !== undefined)
-                .map(item => item!)
+                .filter((item) => item !== undefined)
+                .map((item) => item!)
         );
     }
 }

@@ -68,7 +68,7 @@ export class NotebookStarter implements Disposable {
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDirPromise = this.generateTempDir();
-            tempDirPromise.then(dir => this.disposables.push(dir)).ignoreErrors();
+            tempDirPromise.then((dir) => this.disposables.push(dir)).ignoreErrors();
             // Before starting the notebook process, make sure we generate a kernel spec
             const args = await this.generateArguments(useDefaultConfig, customCommandLine, tempDirPromise);
 
@@ -84,15 +84,15 @@ export class NotebookStarter implements Disposable {
                 this.jupyterInterpreterService.startNotebook(args || [], {
                     throwOnStdErr: false,
                     encoding: 'utf8',
-                    token: cancelToken
+                    token: cancelToken,
                 }),
-                tempDirPromise
+                tempDirPromise,
             ]);
 
             // Watch for premature exits
             if (launchResult.proc) {
                 launchResult.proc.on('exit', (c: number | null) => (exitCode = c));
-                launchResult.out.subscribe(out => this.jupyterOutputChannel.append(out.out));
+                launchResult.out.subscribe((out) => this.jupyterOutputChannel.append(out.out));
             }
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
@@ -120,8 +120,8 @@ export class NotebookStarter implements Disposable {
                 createPromiseFromCancellation({
                     cancelAction: 'reject',
                     defaultValue: new CancellationError(),
-                    token: cancelToken
-                })
+                    token: cancelToken,
+                }),
             ]);
 
             if (connection instanceof CancellationError) {
@@ -253,7 +253,7 @@ export class NotebookStarter implements Disposable {
             args.push('127.0.0.1');
 
             // Now see if we need --allow-root.
-            return new Promise(resolve => {
+            return new Promise((resolve) => {
                 cp.exec('id', { encoding: 'utf-8' }, (_, stdout: string | Buffer) => {
                     if (stdout && stdout.toString().includes('(root)')) {
                         args.push('--allow-root');
@@ -284,7 +284,7 @@ export class NotebookStarter implements Disposable {
                         count += 1;
                     }
                 }
-            }
+            },
         };
     }
 }

@@ -41,7 +41,7 @@ export class ClassicComm implements Kernel.IComm {
             onReply: noop,
             onStdin: noop,
             done: deferred.promise,
-            msg: shellMessage
+            msg: shellMessage,
         };
         // tslint:disable-next-line: no-any
         const future = (reply as any) as Kernel.IShellFuture;
@@ -60,7 +60,7 @@ export class ClassicComm implements Kernel.IComm {
             requestId,
             buffers: serializeDataViews(buffers),
             targetName,
-            msgType
+            msgType,
         });
 
         // ipywidgets will use this as a promise (ifuture).
@@ -72,11 +72,11 @@ export class ClassicComm implements Kernel.IComm {
         _metadata?: JSONObject,
         _buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined
     ): Kernel.IShellFuture {
-        this.registeredFutures.forEach(item => this.callbackManager.unregisterFuture(item));
+        this.registeredFutures.forEach((item) => this.callbackManager.unregisterFuture(item));
         throw new Error('VSCPython.IClassicComm.Close method not implemented!');
     }
     public dispose(): void {
-        this.registeredFutures.forEach(item => this.callbackManager.unregisterFuture(item));
+        this.registeredFutures.forEach((item) => this.callbackManager.unregisterFuture(item));
     }
     // tslint:disable-next-line: no-any
     public send(
@@ -97,7 +97,7 @@ export class ClassicComm implements Kernel.IComm {
             onReply: noop,
             onStdin: noop,
             done: deferred.promise,
-            msg: shellMessage
+            msg: shellMessage,
         };
         // tslint:disable-next-line: no-any
         const future = (reply as any) as Kernel.IShellFuture;
@@ -118,7 +118,7 @@ export class ClassicComm implements Kernel.IComm {
             disposeOnDone,
             buffers: serializeDataViews(buffers),
             targetName,
-            msgType
+            msgType,
         });
 
         // ipywidgets will use this as a promise (ifuture).

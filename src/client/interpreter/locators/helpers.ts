@@ -15,7 +15,7 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, fs: IF
         const subDirs = await fs.listdir(pathToCheck);
         return subDirs
             .map(([filename, _ft]) => filename)
-            .filter(fileName => CheckPythonInterpreterRegEx.test(path.basename(fileName)));
+            .filter((fileName) => CheckPythonInterpreterRegEx.test(path.basename(fileName)));
     } catch (err) {
         traceError('Python Extension (lookForInterpretersInDirectory.fs.listdir):', err);
         return [] as string[];
@@ -30,16 +30,16 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
     ) {}
     public async mergeInterpreters(interpreters: PythonInterpreter[]): Promise<PythonInterpreter[]> {
         const items = interpreters
-            .map(item => {
+            .map((item) => {
                 return { ...item };
             })
-            .map(item => {
+            .map((item) => {
                 item.path = path.normalize(item.path);
                 return item;
             })
             .reduce<PythonInterpreter[]>((accumulator, current) => {
                 const currentVersion = current && current.version ? current.version.raw : undefined;
-                const existingItem = accumulator.find(item => {
+                const existingItem = accumulator.find((item) => {
                     // If same version and same base path, then ignore.
                     // Could be Python 3.6 with path = python.exe, and Python 3.6 and path = python3.exe.
                     if (
@@ -68,7 +68,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                         'sysPrefix',
                         'architecture',
                         'sysVersion',
-                        'version'
+                        'version',
                     ];
                     for (const prop of props) {
                         if (!existingItem[prop] && current[prop]) {
@@ -81,7 +81,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
             }, []);
         // This stuff needs to be fast.
         await Promise.all(
-            items.map(async item => {
+            items.map(async (item) => {
                 const info = await this.pipEnvServiceHelper.getPipEnvInfo(item.path);
                 if (info) {
                     item.type = InterpreterType.Pipenv;

@@ -12,7 +12,7 @@ import {
     IDebugLauncherScriptProvider,
     IRemoteDebugLauncherScriptProvider,
     LocalDebugOptions,
-    RemoteDebugOptions
+    RemoteDebugOptions,
 } from '../types';
 
 const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_launcher.py');
@@ -28,7 +28,7 @@ export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvid
             '--host',
             options.host,
             '--port',
-            options.port.toString()
+            options.port.toString(),
         ];
     }
 }
@@ -58,7 +58,7 @@ export class RemoteDebuggerExternalLauncherScriptProvider implements IRemoteDebu
             '--host',
             options.host,
             '--port',
-            options.port.toString()
+            options.port.toString(),
         ].concat(waitArgs);
     }
 }

@@ -20,7 +20,7 @@ import {
     TestFile,
     TestFolder,
     Tests,
-    TestStatus
+    TestStatus,
 } from '../../../client/testing/common/types';
 import { TestTreeItem } from '../../../client/testing/explorer/testTreeViewItem';
 import { TestTreeViewProvider } from '../../../client/testing/explorer/testTreeViewProvider';
@@ -33,7 +33,7 @@ import {
     getMockTestFile,
     getMockTestFolder,
     getMockTestFunction,
-    getMockTestSuite
+    getMockTestSuite,
 } from './explorerTestData';
 
 // tslint:disable:no-any
@@ -153,7 +153,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
 
             let testData = originalTestData;
             const testStoreMoq = typemoq.Mock.ofType<ITestCollectionStorageService>();
-            testStoreMoq.setup(a => a.getTests(typemoq.It.isAny())).returns(() => testData);
+            testStoreMoq.setup((a) => a.getTests(typemoq.It.isAny())).returns(() => testData);
 
             const testTreeProvider = createMockTestTreeProvider(testStoreMoq.object);
 
@@ -210,7 +210,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
 
             let testData = originalTestData;
             const testStoreMoq = typemoq.Mock.ofType<ITestCollectionStorageService>();
-            testStoreMoq.setup(a => a.getTests(typemoq.It.isAny())).returns(() => testData);
+            testStoreMoq.setup((a) => a.getTests(typemoq.It.isAny())).returns(() => testData);
 
             const testTreeProvider = createMockTestTreeProvider(testStoreMoq.object);
 
@@ -260,7 +260,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
 
             let testData = originalTestData;
             const testStoreMoq = typemoq.Mock.ofType<ITestCollectionStorageService>();
-            testStoreMoq.setup(a => a.getTests(typemoq.It.isAny())).returns(() => testData);
+            testStoreMoq.setup((a) => a.getTests(typemoq.It.isAny())).returns(() => testData);
 
             const testTreeProvider = createMockTestTreeProvider(testStoreMoq.object);
 
@@ -432,9 +432,9 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                     isUnitTest: false,
                     isInstance: false,
                     xmlName: 'test_ham',
-                    time: 0
+                    time: 0,
                 },
-                time: 0
+                time: 0,
             };
             file.functions.push(func2);
             const func3 = getMockTestFunction(`${file.name}::test_ham[3-4]`);
@@ -459,9 +459,9 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                     isUnitTest: false,
                     isInstance: false,
                     xmlName: 'test_bar',
-                    time: 0
+                    time: 0,
                 },
-                time: 0
+                time: 0,
             };
             suite.functions.push(func5);
             // Set up the tests data.
@@ -477,7 +477,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 await testExplorer.getTreeItem(file),
                 await testExplorer.getTreeItem(suite),
                 await testExplorer.getTreeItem(func2.subtestParent.asSuite),
-                await testExplorer.getTreeItem(func5.subtestParent.asSuite)
+                await testExplorer.getTreeItem(func5.subtestParent.asSuite),
             ];
 
             expect(items).to.deep.equal([
@@ -489,7 +489,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 new TestTreeItem(file.resource, file),
                 new TestTreeItem(suite.resource, suite),
                 new TestTreeItem(resource, func2.subtestParent.asSuite),
-                new TestTreeItem(resource, func5.subtestParent.asSuite)
+                new TestTreeItem(resource, func5.subtestParent.asSuite),
             ]);
         });
 
@@ -515,9 +515,9 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                     isUnitTest: false,
                     isInstance: false,
                     xmlName: 'test_ham',
-                    time: 0
+                    time: 0,
                 },
-                time: 0
+                time: 0,
             };
             file.functions.push(func2);
             const func3 = getMockTestFunction(`${file.name}::test_ham[3-4]`);
@@ -542,9 +542,9 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                     isUnitTest: false,
                     isInstance: false,
                     xmlName: 'test_bar',
-                    time: 0
+                    time: 0,
                 },
-                time: 0
+                time: 0,
             };
             suite.functions.push(func5);
             // Set up the tests data.
@@ -560,7 +560,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 await testExplorer.getParent(suite),
                 await testExplorer.getParent(func2.subtestParent.asSuite),
                 await testExplorer.getParent(func3.subtestParent.asSuite),
-                await testExplorer.getParent(func5.subtestParent.asSuite)
+                await testExplorer.getParent(func5.subtestParent.asSuite),
             ];
 
             expect(parents).to.deep.equal([
@@ -572,7 +572,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 file,
                 file,
                 file,
-                suite
+                suite,
             ]);
         });
         test('Children for subtests are correct', async () => {
@@ -597,9 +597,9 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                     isUnitTest: false,
                     isInstance: false,
                     xmlName: 'test_ham',
-                    time: 0
+                    time: 0,
                 },
-                time: 0
+                time: 0,
             };
             file.functions.push(func2);
             const func3 = getMockTestFunction(`${file.name}::test_ham[3-4]`);
@@ -624,9 +624,9 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                     isUnitTest: false,
                     isInstance: false,
                     xmlName: 'test_bar',
-                    time: 0
+                    time: 0,
                 },
-                time: 0
+                time: 0,
             };
             suite.functions.push(func5);
             // Set up the tests data.
@@ -643,7 +643,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 await testExplorer.getChildren(suite),
                 await testExplorer.getChildren(func2.subtestParent.asSuite),
                 await testExplorer.getChildren(func3.subtestParent.asSuite),
-                await testExplorer.getChildren(func5.subtestParent.asSuite)
+                await testExplorer.getChildren(func5.subtestParent.asSuite),
             ];
 
             expect(childrens).to.deep.equal([
@@ -656,7 +656,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 [func4, func5.subtestParent.asSuite],
                 [func2, func3],
                 [func2, func3],
-                [func5]
+                [func5],
             ]);
             test('Get children will discover only once', async () => {
                 const commandManager = mock(CommandManager);
@@ -722,7 +722,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 time: 0,
                 resource: Uri.file(__filename),
                 xmlName: '',
-                nameToRun: ''
+                nameToRun: '',
             };
 
             const node = await testTreeProvider.getTreeItem(element);
@@ -756,7 +756,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 time: 0,
                 resource: Uri.file(__filename),
                 xmlName: '',
-                nameToRun: ''
+                nameToRun: '',
             };
 
             const node = await testTreeProvider.getTreeItem(element);
@@ -784,7 +784,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 resource: Uri.file(__filename),
                 time: 0,
                 testFiles: [],
-                folders: []
+                folders: [],
             };
 
             testTreeProvider.getParent = () => Promise.resolve(parentFolder);
@@ -797,7 +797,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 time: 0,
                 resource: Uri.file(__filename),
                 xmlName: '',
-                nameToRun: ''
+                nameToRun: '',
             };
 
             const node = await testTreeProvider.getTreeItem(element);
@@ -835,7 +835,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 nameToRun: 'child',
                 testFiles: [],
                 time: 0,
-                resource: Uri.file(__filename)
+                resource: Uri.file(__filename),
             };
             const tests: Tests = {
                 rootTestFolders: [folder1],
@@ -843,7 +843,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 testFiles: [],
                 testFunctions: [],
                 testFolders: [],
-                testSuites: []
+                testSuites: [],
             };
             const children = treeProvider.getRootNodes(tests);
 
@@ -861,7 +861,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 resource: Uri.file('file'),
                 suites: [],
                 time: 0,
-                xmlName: 'file'
+                xmlName: 'file',
             };
             const file2: TestFile = {
                 fullPath: path.join(rootFolderPath, 'file2'),
@@ -871,7 +871,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 resource: Uri.file('file2'),
                 suites: [],
                 time: 0,
-                xmlName: 'file2'
+                xmlName: 'file2',
             };
             const file3: TestFile = {
                 fullPath: path.join(child1FolderPath, 'file1'),
@@ -881,7 +881,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 resource: Uri.file('file3'),
                 suites: [],
                 time: 0,
-                xmlName: 'file3'
+                xmlName: 'file3',
             };
             const child2Folder: TestFolder = {
                 folders: [],
@@ -889,7 +889,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 nameToRun: 'child3',
                 testFiles: [],
                 time: 0,
-                resource: Uri.file(__filename)
+                resource: Uri.file(__filename),
             };
             const child1Folder: TestFolder = {
                 folders: [child2Folder],
@@ -897,7 +897,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 nameToRun: 'child2',
                 testFiles: [file3],
                 time: 0,
-                resource: Uri.file(__filename)
+                resource: Uri.file(__filename),
             };
             const rootFolder: TestFolder = {
                 folders: [child1Folder],
@@ -905,7 +905,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 nameToRun: 'child',
                 testFiles: [file1, file2],
                 time: 0,
-                resource: Uri.file(__filename)
+                resource: Uri.file(__filename),
             };
             const tests: Tests = {
                 rootTestFolders: [rootFolder],
@@ -913,7 +913,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 testFiles: [file1, file2, file3],
                 testFunctions: [],
                 testFolders: [rootFolder, child1Folder, child2Folder],
-                testSuites: []
+                testSuites: [],
             };
             const children = treeProvider.getRootNodes(tests);
 
@@ -932,7 +932,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 resource: Uri.file('file'),
                 suites: [],
                 time: 0,
-                xmlName: 'file'
+                xmlName: 'file',
             };
             const file2: TestFile = {
                 fullPath: path.join(child3FolderPath, 'file2'),
@@ -942,7 +942,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 resource: Uri.file('file2'),
                 suites: [],
                 time: 0,
-                xmlName: 'file2'
+                xmlName: 'file2',
             };
             const file3: TestFile = {
                 fullPath: path.join(child3FolderPath, 'file3'),
@@ -952,7 +952,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 resource: Uri.file('file3'),
                 suites: [],
                 time: 0,
-                xmlName: 'file3'
+                xmlName: 'file3',
             };
             const child2Folder: TestFolder = {
                 folders: [],
@@ -960,7 +960,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 nameToRun: 'child3',
                 testFiles: [file2],
                 time: 0,
-                resource: Uri.file(__filename)
+                resource: Uri.file(__filename),
             };
             const child1Folder: TestFolder = {
                 folders: [child2Folder],
@@ -968,7 +968,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 nameToRun: 'child2',
                 testFiles: [file1],
                 time: 0,
-                resource: Uri.file(__filename)
+                resource: Uri.file(__filename),
             };
             const child3Folder: TestFolder = {
                 folders: [],
@@ -976,7 +976,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 nameToRun: 'child',
                 testFiles: [file3],
                 time: 0,
-                resource: Uri.file(__filename)
+                resource: Uri.file(__filename),
             };
             const tests: Tests = {
                 rootTestFolders: [child1Folder, child3Folder],
@@ -984,7 +984,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
                 testFiles: [file1, file2, file3],
                 testFunctions: [],
                 testFolders: [child3Folder, child1Folder, child2Folder],
-                testSuites: []
+                testSuites: [],
             };
             const children = treeProvider.getRootNodes(tests);
 

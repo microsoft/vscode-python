@@ -83,5 +83,5 @@ export const reducerMap: Partial<INativeEditorActionMapping> = {
     [CssMessages.GetMonacoThemeResponse]: CommonEffects.monacoThemeChange,
     [InteractiveWindowMessages.UpdateModel]: Creation.handleUpdate,
     [InteractiveWindowMessages.UpdateKernel]: Kernel.updateStatus,
-    [SharedMessages.LocInit]: CommonEffects.handleLocInit
+    [SharedMessages.LocInit]: CommonEffects.handleLocInit,
 };

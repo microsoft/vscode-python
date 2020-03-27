@@ -15,5 +15,5 @@ export enum DiagnosticCodes {
     NoCurrentlySelectedPythonInterpreterDiagnostic = 'InvalidPythonInterpreterDiagnostic',
     LSNotSupportedDiagnostic = 'LSNotSupportedDiagnostic',
     JustMyCodeDiagnostic = 'JustMyCodeDiagnostic',
-    ConsoleTypeDiagnostic = 'ConsoleTypeDiagnostic'
+    ConsoleTypeDiagnostic = 'ConsoleTypeDiagnostic',
 }

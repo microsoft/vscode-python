@@ -14,7 +14,7 @@ import {
     ExtensionInsidersWeeklyChannelRule,
     frequencyForDailyInsidersCheck,
     frequencyForWeeklyInsidersCheck,
-    lastLookUpTimeKey
+    lastLookUpTimeKey,
 } from '../../../client/common/insidersBuild/downloadChannelRules';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
@@ -46,7 +46,7 @@ suite('Download channel rules - ExtensionInsidersDailyChannelRule', () => {
 
     test('If insiders channel rule is new, update look up time and return installer for insiders build', async () => {
         lastLookUpTime
-            .setup(l => l.updateValue(TypeMoq.It.isAnyNumber()))
+            .setup((l) => l.updateValue(TypeMoq.It.isAnyNumber()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         const result = await insidersDailyChannelRule.shouldLookForInsidersBuild(true);
@@ -56,11 +56,11 @@ suite('Download channel rules - ExtensionInsidersDailyChannelRule', () => {
     suite('If insiders channel rule is not new', async () => {
         test('Update look up time and return installer for insiders build if looking for insiders the first time', async () => {
             lastLookUpTime
-                .setup(l => l.updateValue(TypeMoq.It.isAnyNumber()))
+                .setup((l) => l.updateValue(TypeMoq.It.isAnyNumber()))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             lastLookUpTime
-                .setup(l => l.value)
+                .setup((l) => l.value)
                 .returns(() => -1)
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersDailyChannelRule.shouldLookForInsidersBuild(false);
@@ -69,11 +69,11 @@ suite('Download channel rules - ExtensionInsidersDailyChannelRule', () => {
         });
         test('Update look up time and return installer for insiders build if looking for insiders after 24 hrs of last lookup time', async () => {
             lastLookUpTime
-                .setup(l => l.updateValue(TypeMoq.It.isAnyNumber()))
+                .setup((l) => l.updateValue(TypeMoq.It.isAnyNumber()))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             lastLookUpTime
-                .setup(l => l.value)
+                .setup((l) => l.value)
                 .returns(() => Date.now() - 2 * frequencyForDailyInsidersCheck) // Looking after 2 days
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersDailyChannelRule.shouldLookForInsidersBuild(false);
@@ -82,11 +82,11 @@ suite('Download channel rules - ExtensionInsidersDailyChannelRule', () => {
         });
         test('Do not update look up time or return any installer if looking for insiders within 24 hrs of last lookup time', async () => {
             lastLookUpTime
-                .setup(l => l.updateValue(TypeMoq.It.isAnyNumber()))
+                .setup((l) => l.updateValue(TypeMoq.It.isAnyNumber()))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.never());
             lastLookUpTime
-                .setup(l => l.value)
+                .setup((l) => l.value)
                 .returns(() => Date.now() - frequencyForDailyInsidersCheck / 2) // Looking after half a day
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersDailyChannelRule.shouldLookForInsidersBuild(false);
@@ -111,7 +111,7 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
 
     test('If insiders channel rule is new, update look up time and return installer for insiders build', async () => {
         lastLookUpTime
-            .setup(l => l.updateValue(TypeMoq.It.isAnyNumber()))
+            .setup((l) => l.updateValue(TypeMoq.It.isAnyNumber()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         const result = await insidersWeeklyChannelRule.shouldLookForInsidersBuild(true);
@@ -121,11 +121,11 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
     suite('If insiders channel rule is not new', async () => {
         test('Update look up time and return installer for insiders build if looking for insiders the first time', async () => {
             lastLookUpTime
-                .setup(l => l.updateValue(TypeMoq.It.isAnyNumber()))
+                .setup((l) => l.updateValue(TypeMoq.It.isAnyNumber()))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             lastLookUpTime
-                .setup(l => l.value)
+                .setup((l) => l.value)
                 .returns(() => -1)
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersWeeklyChannelRule.shouldLookForInsidersBuild(false);
@@ -134,11 +134,11 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
         });
         test('Update look up time and return installer for insiders build if looking for insiders after a week of last lookup time', async () => {
             lastLookUpTime
-                .setup(l => l.updateValue(TypeMoq.It.isAnyNumber()))
+                .setup((l) => l.updateValue(TypeMoq.It.isAnyNumber()))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             lastLookUpTime
-                .setup(l => l.value)
+                .setup((l) => l.value)
                 .returns(() => Date.now() - 2 * frequencyForWeeklyInsidersCheck) // Looking after 2 weeks
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersWeeklyChannelRule.shouldLookForInsidersBuild(false);
@@ -147,11 +147,11 @@ suite('Download channel rules - ExtensionInsidersWeeklyChannelRule', () => {
         });
         test('Do not update look up time or return any installer if looking for insiders within one week of last lookup time', async () => {
             lastLookUpTime
-                .setup(l => l.updateValue(TypeMoq.It.isAnyNumber()))
+                .setup((l) => l.updateValue(TypeMoq.It.isAnyNumber()))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.never());
             lastLookUpTime
-                .setup(l => l.value)
+                .setup((l) => l.value)
                 .returns(() => Date.now() - frequencyForWeeklyInsidersCheck / 2) // Looking after half a week
                 .verifiable(TypeMoq.Times.atLeastOnce());
             const result = await insidersWeeklyChannelRule.shouldLookForInsidersBuild(false);

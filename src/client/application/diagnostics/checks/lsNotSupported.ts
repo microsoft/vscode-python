@@ -62,13 +62,13 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
                 prompt: 'More Info',
                 command: commandFactory.createCommand(diagnostic, {
                     type: 'launch',
-                    options: 'https://aka.ms/pythonlsrequirements'
-                })
+                    options: 'https://aka.ms/pythonlsrequirements',
+                }),
             },
             {
                 prompt: 'Do not show again',
-                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
-            }
+                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
+            },
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });

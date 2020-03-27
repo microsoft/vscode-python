@@ -24,7 +24,7 @@ enum Button {
     ClearAllOutput = 6,
     VariableExplorer = 7,
     Save = 8,
-    Export = 9
+    Export = 9,
 }
 suite('DataScience Native Toolbar', () => {
     const noopAny: any = noop;
@@ -52,7 +52,7 @@ suite('DataScience Native Toolbar', () => {
             selectionFocusedInfo: {},
             sendCommand: noopAny,
             toggleVariableExplorer: sinon.stub(),
-            variablesVisible: false
+            variablesVisible: false,
         };
     });
     function mountToolbar() {
@@ -167,7 +167,7 @@ suite('DataScience Native Toolbar', () => {
         });
     });
     suite('Restart & Interrupt Kernel', () => {
-        getNamesAndValues<ServerStatus>(ServerStatus).forEach(status => {
+        getNamesAndValues<ServerStatus>(ServerStatus).forEach((status) => {
             // Should always be disabled if busy.
             test(`If Kernel status is ${status.name} and busy, both are disabled`, () => {
                 props.kernel.jupyterServerStatus = status.name as any;

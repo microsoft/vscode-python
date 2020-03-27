@@ -13,14 +13,14 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService
+    TestFrameworkProductPathService,
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import {
     IInstallationChannelManager,
     IModuleInstaller,
     IProductPathService,
-    IProductService
+    IProductService,
 } from '../../client/common/installer/types';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -38,7 +38,7 @@ import {
     IsWindows,
     ModuleNamePurpose,
     Product,
-    ProductType
+    ProductType,
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { getNamesAndValues } from '../../client/common/utils/enum';
@@ -167,7 +167,7 @@ suite('Installer', () => {
         await installer.isInstalled(product, resource);
         await checkInstalledDef.promise;
     }
-    getNamesAndValues<Product>(Product).forEach(prod => {
+    getNamesAndValues<Product>(Product).forEach((prod) => {
         test(`Ensure isInstalled for Product: '${prod.name}' executes the right command`, async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,
@@ -199,9 +199,9 @@ suite('Installer', () => {
         const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
         const checkInstalledDef = createDeferred<boolean>();
         const moduleInstallers = ioc.serviceContainer.getAll<MockModuleInstaller>(IModuleInstaller);
-        const moduleInstallerOne = moduleInstallers.find(item => item.displayName === 'two')!;
+        const moduleInstallerOne = moduleInstallers.find((item) => item.displayName === 'two')!;
 
-        moduleInstallerOne.on('installModule', moduleName => {
+        moduleInstallerOne.on('installModule', (moduleName) => {
             const installName = installer.translateProductToModuleName(product, ModuleNamePurpose.install);
             if (installName === moduleName) {
                 checkInstalledDef.resolve();
@@ -210,7 +210,7 @@ suite('Installer', () => {
         await installer.install(product);
         await checkInstalledDef.promise;
     }
-    getNamesAndValues<Product>(Product).forEach(prod => {
+    getNamesAndValues<Product>(Product).forEach((prod) => {
         test(`Ensure install for Product: '${prod.name}' executes the right command in IModuleInstaller`, async () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(
                 IModuleInstaller,

@@ -12,13 +12,13 @@ import { getRandomBetween } from '../common/utils/random';
 
 // persistent state names, exported to make use of in testing
 export enum ProposeLSStateKeys {
-    ShowBanner = 'ProposeLSBanner'
+    ShowBanner = 'ProposeLSBanner',
 }
 
 enum ProposeLSLabelIndex {
     Yes,
     No,
-    Later
+    Later,
 }
 
 /*

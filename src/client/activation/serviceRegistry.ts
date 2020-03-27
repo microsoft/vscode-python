@@ -9,7 +9,7 @@ import {
     BANNER_NAME_INTERACTIVE_SHIFTENTER,
     BANNER_NAME_LS_SURVEY,
     BANNER_NAME_PROPOSE_LS,
-    IPythonExtensionBanner
+    IPythonExtensionBanner,
 } from '../common/types';
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
@@ -33,7 +33,7 @@ import { DotNetLanguageServerFolderService } from './languageServer/languageServ
 import {
     BetaDotNetLanguageServerPackageRepository,
     DailyDotNetLanguageServerPackageRepository,
-    StableDotNetLanguageServerPackageRepository
+    StableDotNetLanguageServerPackageRepository,
 } from './languageServer/languageServerPackageRepository';
 import { DotNetLanguageServerPackageService } from './languageServer/languageServerPackageService';
 import { DotNetLanguageServerProxy } from './languageServer/languageServerProxy';
@@ -46,7 +46,7 @@ import { NodeLanguageServerFolderService } from './node/languageServerFolderServ
 import {
     BetaNodeLanguageServerPackageRepository,
     DailyNodeLanguageServerPackageRepository,
-    StableNodeLanguageServerPackageRepository
+    StableNodeLanguageServerPackageRepository,
 } from './node/languageServerPackageRepository';
 import { NodeLanguageServerPackageService } from './node/languageServerPackageService';
 import { NodeLanguageServerProxy } from './node/languageServerProxy';
@@ -70,7 +70,7 @@ import {
     ILanguageServerPackageService,
     ILanguageServerProxy,
     IPlatformData,
-    LanguageServerType
+    LanguageServerType,
 } from './types';
 
 // tslint:disable-next-line: max-func-body-length

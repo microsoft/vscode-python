@@ -48,7 +48,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     public render() {
         const dynamicFont: React.CSSProperties = {
             fontSize: this.props.font.size,
-            fontFamily: this.props.font.family
+            fontFamily: this.props.font.family,
         };
 
         const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
@@ -295,7 +295,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             scrollToBottom: this.scrollDiv,
             scrollBeyondLastLine: this.props.settings
                 ? this.props.settings.extraSettings.editor.scrollBeyondLastLine
-                : false
+                : false,
         };
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
@@ -310,7 +310,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
-            executionCount: this.props.currentExecutionCount
+            executionCount: this.props.currentExecutionCount,
         };
     };
 

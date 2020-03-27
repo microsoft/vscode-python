@@ -40,7 +40,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
             module: 'pyramid.scripts.pserve',
             args: [iniPath || defaultIni],
             pyramid: true,
-            jinja: true
+            jinja: true,
         };
 
         if (!iniPath) {
@@ -48,7 +48,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
                 title: DebugConfigStrings.pyramid.enterDevelopmentIniPath.title(),
                 value: defaultIni,
                 prompt: DebugConfigStrings.pyramid.enterDevelopmentIniPath.prompt(),
-                validate: value => this.validateIniPath(state ? state.folder : undefined, defaultIni, value)
+                validate: (value) => this.validateIniPath(state ? state.folder : undefined, defaultIni, value),
             });
             if (selectedIniPath) {
                 manuallyEnteredAValue = true;
@@ -59,7 +59,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.launchPyramid,
             autoDetectedPyramidIniPath: !!iniPath,
-            manuallyEnteredAValue
+            manuallyEnteredAValue,
         });
         Object.assign(state.config, config);
     }
@@ -79,12 +79,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
         if (selected !== defaultValue && !(await this.fs.fileExists(resolvedPath))) {
             return error;
         }
-        if (
-            !resolvedPath
-                .trim()
-                .toLowerCase()
-                .endsWith('.ini')
-        ) {
+        if (!resolvedPath.trim().toLowerCase().endsWith('.ini')) {
             return error;
         }
     }

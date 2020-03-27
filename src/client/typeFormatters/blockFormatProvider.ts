@@ -4,7 +4,7 @@ import {
     OnTypeFormattingEditProvider,
     Position,
     TextDocument,
-    TextEdit
+    TextEdit,
 } from 'vscode';
 import { CodeBlockFormatProvider } from './codeBlockFormatProvider';
 import {
@@ -19,7 +19,7 @@ import {
     FOR_IN_REGEX,
     IF_REGEX,
     TRY_REGEX,
-    WHILE_REGEX
+    WHILE_REGEX,
 } from './contracts';
 
 export class BlockFormatProviders implements OnTypeFormattingEditProvider {
@@ -35,7 +35,7 @@ export class BlockFormatProviders implements OnTypeFormattingEditProvider {
             ASYNC_FOR_IN_REGEX,
             WHILE_REGEX,
             TRY_REGEX,
-            EXCEPT_REGEX
+            EXCEPT_REGEX,
         ];
         this.providers.push(new CodeBlockFormatProvider(ELSE_REGEX, elseParentBlocks, boundaryBlocks));
 
@@ -70,7 +70,7 @@ export class BlockFormatProviders implements OnTypeFormattingEditProvider {
         }
 
         const currentLineText = currentLine.text;
-        const provider = this.providers.find(p => p.canProvideEdits(currentLineText));
+        const provider = this.providers.find((p) => p.canProvideEdits(currentLineText));
         if (provider) {
             return provider.provideEdits(document, position, ch, options, currentLine);
         }

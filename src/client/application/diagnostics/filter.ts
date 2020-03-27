@@ -10,7 +10,7 @@ import { DiagnosticScope, IDiagnosticFilterService } from './types';
 
 export enum FilterKeys {
     GlobalDiagnosticFilter = 'GLOBAL_DIAGNOSTICS_FILTER',
-    WorkspaceDiagnosticFilter = 'WORKSPACE_DIAGNOSTICS_FILTER'
+    WorkspaceDiagnosticFilter = 'WORKSPACE_DIAGNOSTICS_FILTER',
 }
 
 @injectable()

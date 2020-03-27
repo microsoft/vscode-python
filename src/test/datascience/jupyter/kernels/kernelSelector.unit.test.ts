@@ -40,7 +40,7 @@ suite('Data Science - KernelSelector', () => {
         dispose: async () => noop(),
         language: PYTHON_LANGUAGE,
         name: 'SomeName',
-        path: 'somePath'
+        path: 'somePath',
     };
     const interpreter: PythonInterpreter = {
         displayName: 'Something',
@@ -48,7 +48,7 @@ suite('Data Science - KernelSelector', () => {
         path: 'somePath',
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Conda
+        type: InterpreterType.Conda,
     };
 
     setup(() => {
@@ -126,7 +126,7 @@ suite('Data Science - KernelSelector', () => {
             ).thenResolve([]);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({
-                selection: { kernelSpec }
+                selection: { kernelSpec },
                 // tslint:disable-next-line: no-any
             } as any);
 
@@ -159,7 +159,7 @@ suite('Data Science - KernelSelector', () => {
                     id: 'id1',
                     display_name: '1',
                     // tslint:disable-next-line: no-any
-                    session: {} as any
+                    session: {} as any,
                 },
                 {
                     lastActivityTime: new Date(),
@@ -168,7 +168,7 @@ suite('Data Science - KernelSelector', () => {
                     id: 'id2',
                     display_name: '2',
                     // tslint:disable-next-line: no-any
-                    session: {} as any
+                    session: {} as any,
                 },
                 {
                     lastActivityTime: new Date(),
@@ -177,7 +177,7 @@ suite('Data Science - KernelSelector', () => {
                     id: 'id3',
                     display_name: '3',
                     // tslint:disable-next-line: no-any
-                    session: {} as any
+                    session: {} as any,
                 },
                 {
                     lastActivityTime: new Date(),
@@ -186,13 +186,13 @@ suite('Data Science - KernelSelector', () => {
                     id: 'id4',
                     display_name: '4',
                     // tslint:disable-next-line: no-any
-                    session: {} as any
-                }
+                    session: {} as any,
+                },
             ];
-            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
+            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map((kernelModel) => {
                 return {
                     label: '',
-                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
+                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined },
                 };
             });
 
@@ -227,7 +227,7 @@ suite('Data Science - KernelSelector', () => {
             const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
             assert.deepEqual(
                 suggestions,
-                quickPickItems.filter(item => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || ''))
+                quickPickItems.filter((item) => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || ''))
             );
         });
         test('Should hide kernel from local sessions', async () => {
@@ -239,7 +239,7 @@ suite('Data Science - KernelSelector', () => {
                     id: 'id1',
                     display_name: '1',
                     // tslint:disable-next-line: no-any
-                    session: {} as any
+                    session: {} as any,
                 },
                 {
                     lastActivityTime: new Date(),
@@ -248,7 +248,7 @@ suite('Data Science - KernelSelector', () => {
                     id: 'id2',
                     display_name: '2',
                     // tslint:disable-next-line: no-any
-                    session: {} as any
+                    session: {} as any,
                 },
                 {
                     lastActivityTime: new Date(),
@@ -257,7 +257,7 @@ suite('Data Science - KernelSelector', () => {
                     id: 'id3',
                     display_name: '3',
                     // tslint:disable-next-line: no-any
-                    session: {} as any
+                    session: {} as any,
                 },
                 {
                     lastActivityTime: new Date(),
@@ -266,13 +266,13 @@ suite('Data Science - KernelSelector', () => {
                     id: 'id4',
                     display_name: '4',
                     // tslint:disable-next-line: no-any
-                    session: {} as any
-                }
+                    session: {} as any,
+                },
             ];
-            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
+            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map((kernelModel) => {
                 return {
                     label: '',
-                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
+                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined },
                 };
             });
 
@@ -303,7 +303,7 @@ suite('Data Science - KernelSelector', () => {
             const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
             assert.deepEqual(
                 suggestions,
-                quickPickItems.filter(item => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || ''))
+                quickPickItems.filter((item) => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || ''))
             );
         });
     });
@@ -318,7 +318,7 @@ suite('Data Science - KernelSelector', () => {
             ).thenResolve([]);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({
-                selection: { kernelSpec }
+                selection: { kernelSpec },
                 // tslint:disable-next-line: no-any
             } as any);
 
@@ -352,7 +352,7 @@ suite('Data Science - KernelSelector', () => {
                 appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())
             ).thenResolve();
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({
-                selection: { interpreter, kernelSpec }
+                selection: { interpreter, kernelSpec },
                 // tslint:disable-next-line: no-any
             } as any);
 
@@ -392,7 +392,7 @@ suite('Data Science - KernelSelector', () => {
                 appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())
             ).thenResolve();
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({
-                selection: { interpreter, kernelSpec }
+                selection: { interpreter, kernelSpec },
                 // tslint:disable-next-line: no-any
             } as any);
 
@@ -431,7 +431,7 @@ suite('Data Science - KernelSelector', () => {
                 appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())
             ).thenResolve();
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({
-                selection: { interpreter, kernelSpec }
+                selection: { interpreter, kernelSpec },
                 // tslint:disable-next-line: no-any
             } as any);
 
@@ -478,13 +478,13 @@ suite('Data Science - KernelSelector', () => {
         setup(() => {
             nbMetadataKernelSpec = {
                 display_name: interpreter.displayName!,
-                name: kernelSpec.name
+                name: kernelSpec.name,
             };
             nbMetadata = {
                 // tslint:disable-next-line: no-any
                 kernelspec: nbMetadataKernelSpec as any,
                 orig_nbformat: 4,
-                language_info: { name: PYTHON_LANGUAGE }
+                language_info: { name: PYTHON_LANGUAGE },
             };
             selectLocalKernelStub = sinon.stub(KernelSelector.prototype, 'selectLocalKernel');
             selectLocalKernelStub.resolves({ kernelSpec, interpreter });
@@ -630,15 +630,15 @@ suite('Data Science - KernelSelector', () => {
                     display_name: 'foo',
                     language: 'CSharp',
                     path: '/foo/dotnet',
-                    argv: []
+                    argv: [],
                 },
                 {
                     name: 'foo',
                     display_name: 'foo',
                     language: 'Python',
                     path: '/foo/python',
-                    argv: []
-                }
+                    argv: [],
+                },
             ]);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.searchAndRegisterKernel(interpreter, anything(), anything())).thenResolve(kernelSpec);
@@ -676,22 +676,22 @@ suite('Data Science - KernelSelector', () => {
                     display_name: 'foo',
                     language: 'CSharp',
                     path: '/foo/dotnet',
-                    argv: []
+                    argv: [],
                 },
                 {
                     name: 'foo',
                     display_name: 'zip',
                     language: 'Python',
                     path: '/foo/python',
-                    argv: []
+                    argv: [],
                 },
                 {
                     name: 'foo',
                     display_name: 'foo',
                     language: 'Python',
                     path: '/foo/python',
-                    argv: []
-                }
+                    argv: [],
+                },
             ]);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
@@ -701,7 +701,7 @@ suite('Data Science - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForRemoteConnection(undefined, instance(sessionManager), {
                 orig_nbformat: 4,
-                kernelspec: { display_name: 'foo', name: 'foo' }
+                kernelspec: { display_name: 'foo', name: 'foo' },
             });
 
             assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
@@ -728,22 +728,22 @@ suite('Data Science - KernelSelector', () => {
                     display_name: 'fod',
                     language: 'CSharp',
                     path: '/foo/dotnet',
-                    argv: []
+                    argv: [],
                 },
                 {
                     name: 'python2',
                     display_name: 'zip',
                     language: 'Python',
                     path: '/foo/python',
-                    argv: []
+                    argv: [],
                 },
                 {
                     name: 'python3',
                     display_name: 'foo',
                     language: 'Python',
                     path: '/foo/python',
-                    argv: []
-                }
+                    argv: [],
+                },
             ]);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
@@ -753,7 +753,7 @@ suite('Data Science - KernelSelector', () => {
 
             const kernel = await kernelSelector.getKernelForRemoteConnection(undefined, instance(sessionManager), {
                 orig_nbformat: 4,
-                kernelspec: { display_name: 'foo', name: 'foo' }
+                kernelspec: { display_name: 'foo', name: 'foo' },
             });
 
             assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');

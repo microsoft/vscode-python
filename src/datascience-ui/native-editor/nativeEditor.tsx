@@ -70,7 +70,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     public render() {
         const dynamicFont: React.CSSProperties = {
             fontSize: this.props.font.size,
-            fontFamily: this.props.font.family
+            fontFamily: this.props.font.family,
         };
 
         // If in test mode, update our count. Use this to determine how many renders a normal update takes.
@@ -155,7 +155,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             scrollToBottom: this.scrollDiv,
             scrollBeyondLastLine: this.props.settings
                 ? this.props.settings.extraSettings.editor.scrollBeyondLastLine
-                : false
+                : false,
         };
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
@@ -170,7 +170,7 @@ ${buildSettingsCss(this.props.settings)}`}</style>
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
             fontSize: this.props.font.size,
-            executionCount: this.props.currentExecutionCount
+            executionCount: this.props.currentExecutionCount,
         };
     };
 

@@ -82,7 +82,7 @@ function getWordAtPosFast(
             return {
                 word: match[0],
                 startColumn: textOffset + 1 + matchIndex,
-                endColumn: textOffset + 1 + wordDefinition.lastIndex
+                endColumn: textOffset + 1 + wordDefinition.lastIndex,
             };
         }
         match = wordDefinition.exec(text);
@@ -115,7 +115,7 @@ function getWordAtPosSlow(
             return {
                 word: match[0],
                 startColumn: textOffset + 1 + matchIndex,
-                endColumn: textOffset + 1 + wordDefinition.lastIndex
+                endColumn: textOffset + 1 + wordDefinition.lastIndex,
             };
         }
         match = wordDefinition.exec(text);

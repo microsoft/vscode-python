@@ -26,7 +26,7 @@ import { TestMessageService } from '../../../client/testing/pytest/services/test
 import {
     ILocationStackFrameDetails,
     IPythonTestMessage,
-    PythonTestMessageSeverity
+    PythonTestMessageSeverity,
 } from '../../../client/testing/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../../initialize';
@@ -46,7 +46,7 @@ const PYTEST_RESULTS_PATH = path.join(
     'results'
 );
 
-const filterdTestScenarios = testScenarios.filter(ts => {
+const filterdTestScenarios = testScenarios.filter((ts) => {
     return !ts.shouldRunFailed;
 });
 
@@ -123,17 +123,17 @@ async function getExpectedLocationStackFromTestDetails(
         // Stack should include the class furthest down the chain from the file that was executed.
         locationStack.push({
             location: new vscode.Location(testFileUri, testDetails.classDefRange!),
-            lineText: testDetails.simpleClassName!
+            lineText: testDetails.simpleClassName!,
         });
     }
     locationStack.push({
         location: new vscode.Location(expectedSourceTestFileUri, testDetails.testDefRange!),
-        lineText: testDetails.sourceTestName
+        lineText: testDetails.sourceTestName,
     });
     if (testDetails.status !== TestStatus.Skipped) {
         locationStack.push({
             location: new vscode.Location(expectedSourceTestFileUri, testDetails.issueRange!),
-            lineText: testDetails.issueLineText!
+            lineText: testDetails.issueLineText!,
         });
     }
     return locationStack;
@@ -164,7 +164,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
         );
     }
     // Build tests for the test data that is relevant for this platform.
-    filterdTestScenarios.forEach(scenario => {
+    filterdTestScenarios.forEach((scenario) => {
         suite(scenario.scenarioName, async () => {
             let testMessages: IPythonTestMessage[];
             suiteSetup(async () => {
@@ -174,14 +174,14 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 const testVisitor = typeMoq.Mock.ofType<ITestVisitor>();
                 const outChannel = typeMoq.Mock.ofType<vscode.OutputChannel>();
                 const cancelToken = typeMoq.Mock.ofType<vscode.CancellationToken>();
-                cancelToken.setup(c => c.isCancellationRequested).returns(() => false);
+                cancelToken.setup((c) => c.isCancellationRequested).returns(() => false);
                 const options: TestDiscoveryOptions = {
                     args: [],
                     cwd: UNITTEST_TEST_FILES_PATH,
                     ignoreCache: true,
                     outChannel: outChannel.object,
                     token: cancelToken.object,
-                    workspaceFolder: vscode.Uri.file(__dirname)
+                    workspaceFolder: vscode.Uri.file(__dirname),
                 };
                 // Setup the parser.
                 const workspaceService = ioc.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -210,7 +210,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 await ioc.dispose();
                 await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
             });
-            scenario.testDetails!.forEach(td => {
+            scenario.testDetails!.forEach((td) => {
                 suite(td.nameToRun, () => {
                     let testMessage: IPythonTestMessage;
                     let expectedMessage: IPythonTestMessage;
@@ -232,9 +232,9 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                             testTime: 0,
                             status: td.status,
                             locationStack: expectedLocationStack,
-                            testFilePath: path.join(UNITTEST_TEST_FILES_PATH, td.fileName)
+                            testFilePath: path.join(UNITTEST_TEST_FILES_PATH, td.fileName),
                         };
-                        testMessage = testMessages.find(tm => tm.code === td.nameToRun)!;
+                        testMessage = testMessages.find((tm) => tm.code === td.nameToRun)!;
                     });
                     test('Message', async () => {
                         await testMessageProperties(testMessage, expectedMessage, td.imported, td.status);

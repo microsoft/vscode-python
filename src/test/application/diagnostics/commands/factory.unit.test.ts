@@ -24,7 +24,7 @@ suite('Application Diagnostics - Commands Factory', () => {
 
         const command = commandFactory.createCommand(diagnostic.object, {
             type: 'ignore',
-            options: DiagnosticScope.Global
+            options: DiagnosticScope.Global,
         });
         expect(command).to.be.instanceOf(IgnoreDiagnosticCommand);
     });

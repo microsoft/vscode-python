@@ -16,11 +16,11 @@ export class CodeActionProviderService implements IExtensionSingleActivationServ
         const documentSelector: vscodeTypes.DocumentFilter = {
             scheme: 'file',
             language: 'jsonc',
-            pattern: '**/launch.json'
+            pattern: '**/launch.json',
         };
         this.disposableRegistry.push(
             vscode.languages.registerCodeActionsProvider(documentSelector, new LaunchJsonCodeActionProvider(), {
-                providedCodeActionKinds: [vscode.CodeActionKind.QuickFix]
+                providedCodeActionKinds: [vscode.CodeActionKind.QuickFix],
             })
         );
     }

@@ -24,7 +24,7 @@ import {
     IProcessLogger,
     IProcessService,
     IProcessServiceFactory,
-    IPythonExecutionService
+    IPythonExecutionService,
 } from '../../../client/common/process/types';
 import { WindowsStorePythonProcess } from '../../../client/common/process/windowsStorePythonProcess';
 import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
@@ -35,7 +35,7 @@ import {
     ICondaService,
     IInterpreterService,
     InterpreterType,
-    PythonInterpreter
+    PythonInterpreter,
 } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
@@ -51,7 +51,7 @@ const pythonInterpreter: PythonInterpreter = {
     sysVersion: '1.0.0.0',
     sysPrefix: 'Python',
     type: InterpreterType.Unknown,
-    architecture: Architecture.x64
+    architecture: Architecture.x64,
 };
 
 function title(resource?: Uri, interpreter?: PythonInterpreter) {
@@ -78,8 +78,8 @@ suite('Process - PythonExecutionFactory', () => {
         { resource: undefined, interpreter: undefined },
         { resource: undefined, interpreter: pythonInterpreter },
         { resource: Uri.parse('x'), interpreter: undefined },
-        { resource: Uri.parse('x'), interpreter: pythonInterpreter }
-    ].forEach(item => {
+        { resource: Uri.parse('x'), interpreter: pythonInterpreter },
+    ].forEach((item) => {
         const resource = item.resource;
         const interpreter = item.interpreter;
         suite(title(resource, interpreter), () => {
@@ -107,7 +107,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = typemoq.Mock.ofType<IProcessService>();
                 processService
-                    .setup(p =>
+                    .setup((p) =>
                         p.on('exec', () => {
                             return;
                         })
@@ -116,7 +116,7 @@ suite('Process - PythonExecutionFactory', () => {
                 processService.setup((p: any) => p.then).returns(() => undefined);
                 interpreterService = mock(InterpreterService);
                 when(interpreterService.getInterpreterDetails(anything())).thenResolve({
-                    version: { major: 3 }
+                    version: { major: 3 },
                 } as any);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
@@ -196,7 +196,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
@@ -227,7 +227,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(service).instanceOf(WindowsStorePythonProcess);
             });
 
-            test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function() {
+            test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
@@ -241,7 +241,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
                 when(condaService.getCondaEnvironment(pythonPath)).thenResolve({
                     name: 'foo',
-                    path: 'path/to/foo/env'
+                    path: 'path/to/foo/env',
                 });
                 when(condaService.getCondaFile()).thenResolve('conda');
 
@@ -255,7 +255,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(service).instanceOf(CondaExecutionService);
             });
 
-            test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function() {
+            test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
@@ -277,7 +277,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(service).instanceOf(PythonExecutionService);
             });
 
-            test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function() {
+            test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
@@ -287,13 +287,13 @@ suite('Process - PythonExecutionFactory', () => {
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
                 when(condaService.getCondaEnvironment(anyString())).thenResolve({
                     name: 'foo',
-                    path: 'path/to/foo/env'
+                    path: 'path/to/foo/env',
                 });
                 when(condaService.getCondaFile()).thenResolve('conda');
 
@@ -311,7 +311,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(service).instanceOf(CondaExecutionService);
             });
 
-            test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function() {
+            test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
@@ -325,7 +325,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
@@ -348,7 +348,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const pythonPath = 'path/to/python';
                 when(condaService.getCondaEnvironment(pythonPath)).thenResolve({
                     name: 'foo',
-                    path: 'path/to/foo/env'
+                    path: 'path/to/foo/env',
                 });
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
                 when(condaService.getCondaFile()).thenResolve('conda');
@@ -366,7 +366,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(processFactory.create(resource)).thenResolve(processService.object);
                 when(condaService.getCondaEnvironment(pythonPath)).thenResolve({
                     name: 'foo',
-                    path: 'path/to/foo/env'
+                    path: 'path/to/foo/env',
                 });
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
                 when(condaService.getCondaFile()).thenResolve('conda');
@@ -413,7 +413,7 @@ suite('Process - PythonExecutionFactory', () => {
             test('Create Daemon Service an invoke initialize', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
@@ -430,13 +430,13 @@ suite('Process - PythonExecutionFactory', () => {
             test('Do not create Daemon Service for Python 2.7', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
                 reset(interpreterService);
                 when(interpreterService.getInterpreterDetails(anything())).thenResolve({
-                    version: parse('2.7.14')
+                    version: parse('2.7.14'),
                 } as any);
                 factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);
 
@@ -451,7 +451,7 @@ suite('Process - PythonExecutionFactory', () => {
             test('Create Daemon Service should return the same daemon when created one after another', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
@@ -468,7 +468,7 @@ suite('Process - PythonExecutionFactory', () => {
             test('Create Daemon Service should return two different daemons (if python path is different)', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
@@ -487,7 +487,7 @@ suite('Process - PythonExecutionFactory', () => {
             test('Create Daemon Service should return the same daemon when created in parallel', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
@@ -498,7 +498,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const [daemon1, daemon2] = await Promise.all([
                     factory.createDaemon({ resource, pythonPath: item.interpreter?.path }),
-                    factory.createDaemon({ resource, pythonPath: item.interpreter?.path })
+                    factory.createDaemon({ resource, pythonPath: item.interpreter?.path }),
                 ]);
 
                 expect(daemon1).to.equal(daemon2);
@@ -507,7 +507,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const pythonSettings = mock(PythonSettings);
                 const pythonExecService = ({ dummy: 1 } as any) as IPythonExecutionService;
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({
-                    x: '1'
+                    x: '1',
                 });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));

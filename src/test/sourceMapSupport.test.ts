@@ -18,7 +18,7 @@ suite('Source Map Support', () => {
         const stubInfo = {
             configValueRetrieved: false,
             configValueUpdated: false,
-            messageDisplayed: false
+            messageDisplayed: false,
         };
         const vscode = {
             workspace: {
@@ -39,24 +39,24 @@ suite('Source Map Support', () => {
                             ) {
                                 stubInfo.configValueUpdated = true;
                             }
-                        }
+                        },
                     };
-                }
+                },
             },
             window: {
                 showWarningMessage: () => {
                     stubInfo.messageDisplayed = true;
                     return Promise.resolve(selectDisableButton ? Diagnostics.disableSourceMaps() : undefined);
-                }
+                },
             },
-            ConfigurationTarget: ConfigurationTarget
+            ConfigurationTarget: ConfigurationTarget,
         };
         return { stubInfo, vscode };
     }
 
     const disposables: Disposable[] = [];
     teardown(() => {
-        disposables.forEach(disposable => {
+        disposables.forEach((disposable) => {
             try {
                 disposable.dispose();
             } catch {
@@ -70,7 +70,7 @@ suite('Source Map Support', () => {
         disposables.push(jsFile);
         const mapFile = `${jsFile.filePath}.map`;
         disposables.push({
-            dispose: () => fs.unlinkSync(mapFile)
+            dispose: () => fs.unlinkSync(mapFile),
         });
         await fileSystem.writeFile(mapFile, 'ABC');
         expect(await fileSystem.fileExists(mapFile)).to.be.true;

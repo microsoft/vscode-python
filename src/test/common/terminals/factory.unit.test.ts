@@ -25,29 +25,29 @@ suite('Terminal Service Factory', () => {
         const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
         fs = TypeMoq.Mock.ofType<IFileSystem>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
             .returns(() => interpreterService.object);
         disposables = [];
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
             .returns(() => disposables);
         const terminalHelper = TypeMoq.Mock.ofType<ITerminalHelper>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(ITerminalHelper), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(ITerminalHelper), TypeMoq.It.isAny()))
             .returns(() => terminalHelper.object);
         const terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(ITerminalManager), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(ITerminalManager), TypeMoq.It.isAny()))
             .returns(() => terminalManager.object);
         factory = new TerminalServiceFactory(serviceContainer.object, fs.object, interpreterService.object);
 
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
             .returns(() => workspaceService.object);
     });
     teardown(() => {
-        disposables.forEach(disposable => {
+        disposables.forEach((disposable) => {
             if (disposable) {
                 disposable.dispose();
             }
@@ -109,18 +109,18 @@ suite('Terminal Service Factory', () => {
         const workspaceUriA = Uri.file('A');
         const workspaceUriB = Uri.file('B');
         const workspaceFolderA = TypeMoq.Mock.ofType<WorkspaceFolder>();
-        workspaceFolderA.setup(w => w.uri).returns(() => workspaceUriA);
+        workspaceFolderA.setup((w) => w.uri).returns(() => workspaceUriA);
         const workspaceFolderB = TypeMoq.Mock.ofType<WorkspaceFolder>();
-        workspaceFolderB.setup(w => w.uri).returns(() => workspaceUriB);
+        workspaceFolderB.setup((w) => w.uri).returns(() => workspaceUriB);
 
         workspaceService
-            .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(file1A)))
+            .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(file1A)))
             .returns(() => workspaceFolderA.object);
         workspaceService
-            .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(file2A)))
+            .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(file2A)))
             .returns(() => workspaceFolderA.object);
         workspaceService
-            .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(fileB)))
+            .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(fileB)))
             .returns(() => workspaceFolderB.object);
 
         const terminalForFile1A = factory.getTerminalService(file1A) as SynchronousTerminalService;

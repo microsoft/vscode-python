@@ -10,7 +10,7 @@ import {
     IDisposable,
     IExperimentsManager,
     IPythonExtensionBanner,
-    Resource
+    Resource,
 } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { PythonInterpreter } from '../../interpreter/contracts';
@@ -23,7 +23,7 @@ import {
     ILanguageServerFolderService,
     ILanguageServerManager,
     ILanguageServerProxy,
-    LanguageServerType
+    LanguageServerType,
 } from '../types';
 
 @injectable()
@@ -48,7 +48,7 @@ export class NodeLanguageServerManager implements ILanguageServerManager {
         if (this.languageProxy) {
             this.languageProxy.dispose();
         }
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
 
     public get languageProxy() {

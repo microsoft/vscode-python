@@ -30,14 +30,14 @@ export class DebugStreamProvider implements IDebugStreamProvider {
         if (debugPort > 0) {
             // This section is what allows VS Code extension developers to attach to the current debugger.
             // Used in scenarios where extension developers would like to debug the debugger.
-            debugSocket = new Promise<Socket>(resolve => {
+            debugSocket = new Promise<Socket>((resolve) => {
                 // start as a server, and print to console in VS Code debugger for extension developer.
                 // Do not print this out when running unit tests.
                 if (!isTestExecution()) {
                     // tslint:disable-next-line: no-console
                     console.error(`waiting for debug protocol on port ${debugPort}`);
                 }
-                this.server = createServer(socket => {
+                this.server = createServer((socket) => {
                     if (!isTestExecution()) {
                         // tslint:disable-next-line: no-console
                         console.error('>> accepted connection from client');
@@ -58,7 +58,7 @@ export class DebugStreamProvider implements IDebugStreamProvider {
 
         let debugPort = 0;
         const args = currentProcess.argv.slice(2);
-        args.forEach(val => {
+        args.forEach((val) => {
             const portMatch = /^--server=(\d{4,5})$/.exec(val);
             if (portMatch) {
                 debugPort = parseInt(portMatch[1], 10);

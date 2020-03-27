@@ -27,7 +27,7 @@ export function serializeDataViews(buffers: undefined | (ArrayBuffer | ArrayBuff
                 ...item,
                 byteLength: item.byteLength,
                 byteOffset: item.byteOffset,
-                buffer
+                buffer,
                 // tslint:disable-next-line: no-any
             } as any);
         } else {

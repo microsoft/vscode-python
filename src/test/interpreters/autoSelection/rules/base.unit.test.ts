@@ -19,7 +19,7 @@ import { BaseRuleService, NextAction } from '../../../../client/interpreter/auto
 import { CurrentPathInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/currentPath';
 import {
     AutoSelectionRule,
-    IInterpreterAutoSelectionService
+    IInterpreterAutoSelectionService,
 } from '../../../../client/interpreter/autoSelection/types';
 import { PythonInterpreter } from '../../../../client/interpreter/contracts';
 

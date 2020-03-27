@@ -10,7 +10,7 @@ import {
     IInterpreterHelper,
     InterpreterType,
     IVirtualEnvironmentsSearchPathProvider,
-    PythonInterpreter
+    PythonInterpreter,
 } from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { lookForInterpretersInDirectory } from '../helpers';
@@ -41,21 +41,23 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
     private async suggestionsFromKnownVenvs(resource?: Uri) {
         const searchPaths = await this.searchPathsProvider.getSearchPaths(resource);
         return Promise.all(
-            searchPaths.map(dir => this.lookForInterpretersInVenvs(dir, resource))
-        ).then(listOfInterpreters => flatten(listOfInterpreters));
+            searchPaths.map((dir) => this.lookForInterpretersInVenvs(dir, resource))
+        ).then((listOfInterpreters) => flatten(listOfInterpreters));
     }
     private async lookForInterpretersInVenvs(pathToCheck: string, resource?: Uri) {
         return this.fileSystem
             .getSubDirectories(pathToCheck)
-            .then(subDirs => Promise.all(this.getProspectiveDirectoriesForLookup(subDirs)))
-            .then(dirs => dirs.filter(dir => dir.length > 0))
-            .then(dirs => Promise.all(dirs.map(d => lookForInterpretersInDirectory(d, this.fileSystem))))
-            .then(pathsWithInterpreters => flatten(pathsWithInterpreters))
-            .then(interpreters =>
-                Promise.all(interpreters.map(interpreter => this.getVirtualEnvDetails(interpreter, resource)))
+            .then((subDirs) => Promise.all(this.getProspectiveDirectoriesForLookup(subDirs)))
+            .then((dirs) => dirs.filter((dir) => dir.length > 0))
+            .then((dirs) => Promise.all(dirs.map((d) => lookForInterpretersInDirectory(d, this.fileSystem))))
+            .then((pathsWithInterpreters) => flatten(pathsWithInterpreters))
+            .then((interpreters) =>
+                Promise.all(interpreters.map((interpreter) => this.getVirtualEnvDetails(interpreter, resource)))
             )
-            .then(interpreters => interpreters.filter(interpreter => !!interpreter).map(interpreter => interpreter!))
-            .catch(err => {
+            .then((interpreters) =>
+                interpreters.filter((interpreter) => !!interpreter).map((interpreter) => interpreter!)
+            )
+            .catch((err) => {
                 traceError('Python Extension (lookForInterpretersInVenvs):', err);
                 // Ignore exceptions.
                 return [] as PythonInterpreter[];
@@ -64,17 +66,17 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
     private getProspectiveDirectoriesForLookup(subDirs: string[]) {
         const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
         const dirToLookFor = platform.virtualEnvBinName;
-        return subDirs.map(subDir =>
+        return subDirs.map((subDir) =>
             this.fileSystem
                 .getSubDirectories(subDir)
-                .then(dirs => {
-                    const scriptOrBinDirs = dirs.filter(dir => {
+                .then((dirs) => {
+                    const scriptOrBinDirs = dirs.filter((dir) => {
                         const folderName = path.basename(dir);
                         return this.fileSystem.arePathsSame(folderName, dirToLookFor);
                     });
                     return scriptOrBinDirs.length === 1 ? scriptOrBinDirs[0] : '';
                 })
-                .catch(err => {
+                .catch((err) => {
                     traceError('Python Extension (getProspectiveDirectoriesForLookup):', err);
                     // Ignore exceptions.
                     return '';
@@ -85,7 +87,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
         return Promise.all([
             this.helper.getInterpreterInformation(interpreter),
             this.virtualEnvMgr.getEnvironmentName(interpreter, resource),
-            this.virtualEnvMgr.getEnvironmentType(interpreter, resource)
+            this.virtualEnvMgr.getEnvironmentType(interpreter, resource),
         ]).then(([details, virtualEnvName, type]) => {
             if (!details) {
                 return;
@@ -94,7 +96,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             return {
                 ...(details as PythonInterpreter),
                 envName: virtualEnvName,
-                type: type! as InterpreterType
+                type: type! as InterpreterType,
             };
         });
     }

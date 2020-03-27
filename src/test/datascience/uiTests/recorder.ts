@@ -50,7 +50,7 @@ export class TestRecorder {
         }
         const messages = JSON.stringify(this.messages, undefined, 4);
         await fs.writeFile(this.file, messages, {
-            encoding: 'utf8'
+            encoding: 'utf8',
         });
     }
     private initialize() {
@@ -76,7 +76,7 @@ export class TestRecorder {
             this.messages.push({ payload: message, type: 'fromUI' });
         } else {
             // Find the message from the recorded list.
-            const index = this.messages.findIndex(item => {
+            const index = this.messages.findIndex((item) => {
                 if (item.type === 'fromUI' && item.payload.type === message.type) {
                     return true;
                 }
@@ -88,7 +88,7 @@ export class TestRecorder {
     }
     private sendMessageToUIUntilNextUIRequest() {
         // Now send all messages till the next request.
-        const nextRequestIndex = this.messages.findIndex(item => item.type === 'fromUI');
+        const nextRequestIndex = this.messages.findIndex((item) => item.type === 'fromUI');
         if (nextRequestIndex === 0 || this.messages.length === 0) {
             return;
         }

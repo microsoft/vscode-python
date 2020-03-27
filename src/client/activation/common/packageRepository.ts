@@ -13,7 +13,7 @@ export const azureCDNBlobStorageAccount = 'https://pvsc.azureedge.net';
 export enum LanguageServerDownloadChannel {
     stable = 'stable',
     beta = 'beta',
-    daily = 'daily'
+    daily = 'daily',
 }
 
 @injectable()

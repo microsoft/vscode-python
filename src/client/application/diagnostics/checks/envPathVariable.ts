@@ -70,16 +70,16 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
         const commandFactory = this.serviceContainer.get<IDiagnosticsCommandFactory>(IDiagnosticsCommandFactory);
         const options = [
             {
-                prompt: 'Ignore'
+                prompt: 'Ignore',
             },
             {
                 prompt: 'Always Ignore',
-                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
+                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
             },
             {
                 prompt: 'More Info',
-                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/Niq35h' })
-            }
+                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/Niq35h' }),
+            },
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });
@@ -89,6 +89,6 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
         const pathValue = currentProc.env[this.platform.pathVariableName];
         const pathSeparator = this.serviceContainer.get<IPathUtils>(IPathUtils).delimiter;
         const paths = (pathValue || '').split(pathSeparator);
-        return paths.filter(item => item.indexOf('"') >= 0).length > 0;
+        return paths.filter((item) => item.indexOf('"') >= 0).length > 0;
     }
 }

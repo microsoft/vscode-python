@@ -42,7 +42,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
     teardown(() => {
         sandbox.restore();
     });
-    [Uri.file(__filename), undefined].forEach(resource => {
+    [Uri.file(__filename), undefined].forEach((resource) => {
         const resourceTitle = resource ? '(with a resource)' : '(without a resource)';
 
         test(`activate method invokes UpdateTestSettings ${resourceTitle}`, async () => {
@@ -83,7 +83,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
             assert.deepEqual(files, []);
             verify(workspace.getWorkspaceFolder(resource)).once();
         });
-        test(`When there is a workspace folder, then return the user settings file & workspace file ${resourceTitle}`, async function() {
+        test(`When there is a workspace folder, then return the user settings file & workspace file ${resourceTitle}`, async function () {
             if (!resource) {
                 return this.skip();
             }
@@ -95,7 +95,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
             assert.deepEqual(files, ['user.json', path.join(Uri.file('folder1').fsPath, '.vscode', 'settings.json')]);
             verify(workspace.getWorkspaceFolder(resource)).once();
         });
-        test(`When there is a workspace folder & no user file, then workspace file ${resourceTitle}`, async function() {
+        test(`When there is a workspace folder & no user file, then workspace file ${resourceTitle}`, async function () {
             if (!resource) {
                 return this.skip();
             }
@@ -119,7 +119,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
         test(`Filter files based on whether they need to be fixed ${resourceTitle}`, async () => {
             const getSettingsFiles = sandbox.stub(UpdateTestSettingService.prototype, 'getSettingsFiles');
             const filterFiles = sandbox.stub(UpdateTestSettingService.prototype, 'doesFileNeedToBeFixed');
-            filterFiles.callsFake(file => Promise.resolve(file === 'file_a' || file === 'file_c'));
+            filterFiles.callsFake((file) => Promise.resolve(file === 'file_a' || file === 'file_c'));
             getSettingsFiles.returns(['file_a', 'file_b', 'file_c', 'file_d']);
 
             diagnosticService = new UpdateTestSettingService(instance(fs), instance(appEnv), instance(workspace));
@@ -133,24 +133,24 @@ suite('Application Diagnostics - Check Test Settings', () => {
         {
             testTitle: 'Should fix file if contents contains python.unitTest.',
             expectedValue: true,
-            contents: '{"python.pythonPath":"1234", "python.unitTest.unitTestArgs":[]}'
+            contents: '{"python.pythonPath":"1234", "python.unitTest.unitTestArgs":[]}',
         },
         {
             testTitle: 'Should fix file if contents contains python.pyTest.',
             expectedValue: true,
-            contents: '{"python.pythonPath":"1234", "python.pyTestArgs":[]}'
+            contents: '{"python.pythonPath":"1234", "python.pyTestArgs":[]}',
         },
         {
             testTitle: 'Should fix file if contents contains python.pyTest. & python.unitTest.',
             expectedValue: true,
-            contents: '{"python.pythonPath":"1234", "python.testing.pyTestArgs":[], "python.unitTest.unitTestArgs":[]}'
+            contents: '{"python.pythonPath":"1234", "python.testing.pyTestArgs":[], "python.unitTest.unitTestArgs":[]}',
         },
         {
             testTitle: 'Should not fix file if contents does not contain python.unitTest. and python.pyTest',
             expectedValue: false,
-            contents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[]}'
-        }
-    ].forEach(item => {
+            contents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[]}',
+        },
+    ].forEach((item) => {
         test(item.testTitle, async () => {
             when(fs.readFile(__filename)).thenResolve(item.contents);
 
@@ -173,40 +173,40 @@ suite('Application Diagnostics - Check Test Settings', () => {
         {
             testTitle: 'Should replace python.unitTest.',
             contents: '{"python.pythonPath":"1234", "python.unitTest.unitTestArgs":[]}',
-            expectedContents: '{"python.pythonPath":"1234", "python.testing.unitTestArgs":[]}'
+            expectedContents: '{"python.pythonPath":"1234", "python.testing.unitTestArgs":[]}',
         },
         {
             testTitle: 'Should replace python.unitTest.pyTest.',
             contents:
                 '{"python.pythonPath":"1234", "python.unitTest.pyTestArgs":[], "python.unitTest.pyTestArgs":[], "python.unitTest.pyTestPath":[]}',
             expectedContents:
-                '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
+                '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
         },
         {
             testTitle: 'Should replace python.testing.pyTest.',
             contents:
                 '{"python.pythonPath":"1234", "python.testing.pyTestArgs":[], "python.testing.pyTestArgs":[], "python.testing.pyTestPath":[]}',
             expectedContents:
-                '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
+                '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
         },
         {
             testTitle: 'Should not make any changes to the file',
             contents:
                 '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.unitTest.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
             expectedContents:
-                '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
+                '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
         },
         {
             testTitle: 'Should replace python.jediEnabled.',
             expectedContents: '{"python.jediEnabled": false}',
-            contents: '{"python.languageServer": "microsoft"}'
+            contents: '{"python.languageServer": "microsoft"}',
         },
         {
             testTitle: 'Should replace python.jediEnabled.',
             expectedContents: '{"python.jediEnabled": true}',
-            contents: '{"python.languageServer": "jedi"}'
-        }
-    ].forEach(item => {
+            contents: '{"python.languageServer": "jedi"}',
+        },
+    ].forEach((item) => {
         test(item.testTitle, async () => {
             when(fs.readFile(__filename)).thenResolve(item.contents);
             when(fs.writeFile(__filename, anything())).thenResolve();

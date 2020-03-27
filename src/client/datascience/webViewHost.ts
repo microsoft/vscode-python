@@ -186,15 +186,15 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                     verticalScrollbarSize: this.getValue(editor, 'scrollbar.verticalScrollbarSize', 14),
                     horizontalScrollbarSize: this.getValue(editor, 'scrollbar.horizontalScrollbarSize', 10),
                     fontSize: this.getValue(editor, 'fontSize', 14),
-                    fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace")
+                    fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace"),
                 },
-                theme: theme
+                theme: theme,
             },
             intellisenseOptions: {
                 quickSuggestions: {
                     other: this.getValue(editor, 'quickSuggestions.other', true),
                     comments: this.getValue(editor, 'quickSuggestions.comments', false),
-                    strings: this.getValue(editor, 'quickSuggestions.strings', false)
+                    strings: this.getValue(editor, 'quickSuggestions.strings', false),
                 },
                 acceptSuggestionOnEnter: this.getValue(editor, 'acceptSuggestionOnEnter', 'on'),
                 quickSuggestionsDelay: this.getValue(editor, 'quickSuggestionsDelay', 10),
@@ -203,8 +203,8 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 suggestLocalityBonus: this.getValue(editor, 'suggest.localityBonus', true),
                 suggestSelection: this.getValue(editor, 'suggestSelection', 'recentlyUsed'),
                 wordBasedSuggestions: this.getValue(editor, 'wordBasedSuggestions', true),
-                parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true)
-            }
+                parameterHintsEnabled: this.getValue(editor, 'parameterHints.enabled', true),
+            },
         };
     }
 
@@ -262,7 +262,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 settings,
                 startHttpServer: false,
                 cwd,
-                webViewPanel
+                webViewPanel,
             });
 
             traceInfo('Web view created.');
@@ -317,7 +317,7 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         return this.postMessageInternal(CssMessages.GetCssResponse, {
             css,
             theme: settings.extraSettings.theme,
-            knownDark: isDark
+            knownDark: isDark,
         });
     }
 

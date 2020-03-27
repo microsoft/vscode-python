@@ -16,7 +16,7 @@ import {
     CommandSource,
     NOSETEST_PROVIDER,
     PYTEST_PROVIDER,
-    UNITTEST_PROVIDER
+    UNITTEST_PROVIDER,
 } from '../../client/testing/common/constants';
 import { TestRunner } from '../../client/testing/common/runner';
 import {
@@ -25,7 +25,7 @@ import {
     ITestMessageService,
     ITestRunner,
     IXUnitParser,
-    TestProvider
+    TestProvider,
 } from '../../client/testing/common/types';
 import { XUnitParser } from '../../client/testing/common/xUnitParser';
 import { ArgumentsService as NoseTestArgumentsService } from '../../client/testing/nosetest/services/argsService';
@@ -48,7 +48,7 @@ const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 suite('Unit Tests - debugging', () => {
     let ioc: UnitTestIocContainer;
     const configTarget = IS_MULTI_ROOT_TEST ? ConfigurationTarget.WorkspaceFolder : ConfigurationTarget.Workspace;
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(TEST_TIMEOUT * 2);
         // Test discovery is where the delay is, hence give 10 seconds (as we discover tests at least twice in each test).
@@ -56,10 +56,10 @@ suite('Unit Tests - debugging', () => {
         await Promise.all([
             updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
             updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
-            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget)
+            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget),
         ]);
     });
-    setup(async function() {
+    setup(async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(TEST_TIMEOUT * 2); // This hook requires more timeout as we're deleting files as well
         await deleteDirectory(path.join(testFilesPath, '.cache'));
@@ -71,7 +71,7 @@ suite('Unit Tests - debugging', () => {
         await Promise.all([
             updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
             updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
-            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget)
+            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget),
         ]);
     });
 
@@ -128,17 +128,17 @@ suite('Unit Tests - debugging', () => {
         // This promise should never resolve nor reject.
         runningPromise
             .then(() => deferred.reject("Debugger stopped when it shouldn't have"))
-            .catch(error => deferred.reject(error));
+            .catch((error) => deferred.reject(error));
 
         mockDebugLauncher.launched
-            .then(launched => {
+            .then((launched) => {
                 if (launched) {
                     deferred.resolve('');
                 } else {
                     deferred.reject('Debugger not launched');
                 }
             })
-            .catch(error => deferred.reject(error));
+            .catch((error) => deferred.reject(error));
 
         await deferred.promise;
     }
@@ -226,14 +226,14 @@ suite('Unit Tests - debugging', () => {
             // tslint:disable-next-line:no-unsafe-any
             .then(() => deferred.resolve(''))
             // tslint:disable-next-line:no-unsafe-any
-            .catch(ex => deferred.reject(ex));
+            .catch((ex) => deferred.reject(ex));
 
         // This promise should never resolve nor reject.
         runningPromise
             .then(() => "Debugger stopped when it shouldn't have")
             .catch(() => "Debugger crashed when it shouldn't have")
             // tslint:disable-next-line: no-floating-promises
-            .then(error => {
+            .then((error) => {
                 deferred.reject(error);
             });
 

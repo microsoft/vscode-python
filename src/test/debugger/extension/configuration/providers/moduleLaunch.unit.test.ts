@@ -33,7 +33,7 @@ suite('Debugging - Configuration Provider Module', () => {
             name: DebugConfigStrings.module.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: DebugConfigStrings.module.snippet.default()
+            module: DebugConfigStrings.module.snippet.default(),
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -51,7 +51,7 @@ suite('Debugging - Configuration Provider Module', () => {
             name: DebugConfigStrings.module.snippet.name(),
             type: DebuggerTypeName,
             request: 'launch',
-            module: 'hello'
+            module: 'hello',
         };
 
         expect(state.config).to.be.deep.equal(config);

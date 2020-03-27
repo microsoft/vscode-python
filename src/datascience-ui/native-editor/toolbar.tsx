@@ -10,7 +10,7 @@ import {
     IFont,
     IServerState,
     SelectionAndFocusedInfo,
-    ServerStatus
+    ServerStatus,
 } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
 import { Image, ImageName } from '../react-common/image';
@@ -50,7 +50,7 @@ function mapStateToProps(state: IStore): INativeEditorDataProps {
         ...state.main,
         cellCount: state.main.cellVMs.length,
         selectionFocusedInfo: getSelectedAndFocusedInfo(state.main),
-        variablesVisible: state.variables.visible
+        variablesVisible: state.variables.visible,
     };
 }
 

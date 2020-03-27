@@ -21,7 +21,7 @@ export class LocalDebugClientV2 extends LocalDebugClient {
         return this.launcherScriptProvider.getLauncherArgs({
             host: 'localhost',
             port: debugPort,
-            customDebugger: this.args.customDebugger
+            customDebugger: this.args.customDebugger,
         });
     }
     protected buildStandardArguments() {

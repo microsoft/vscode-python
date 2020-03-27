@@ -72,7 +72,7 @@ export class PoetryInstaller extends ModuleInstaller {
         }
         return {
             args,
-            execPath
+            execPath,
         };
     }
 }

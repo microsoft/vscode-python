@@ -32,7 +32,7 @@ export class TemporaryFileSystem implements ITempFileSystem {
     // Create a new temp file with the given filename suffix.
     public createFile(suffix: string): Promise<TemporaryFile> {
         const opts = {
-            postfix: suffix
+            postfix: suffix,
         };
         return new Promise<TemporaryFile>((resolve, reject) => {
             this.raw.file(opts, (err, filename, _fd, cleanUp) => {
@@ -41,7 +41,7 @@ export class TemporaryFileSystem implements ITempFileSystem {
                 }
                 resolve({
                     filePath: filename,
-                    dispose: cleanUp
+                    dispose: cleanUp,
                 });
             });
         });

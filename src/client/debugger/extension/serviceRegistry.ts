@@ -31,7 +31,7 @@ import { LaunchDebugConfigurationExperiment } from './configuration/resolvers/la
 import {
     IDebugConfigurationProviderFactory,
     IDebugConfigurationResolver,
-    ILaunchDebugConfigurationResolverExperiment
+    ILaunchDebugConfigurationResolverExperiment,
 } from './configuration/types';
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from './hooks/childProcessAttachService';
@@ -43,7 +43,7 @@ import {
     IDebugConfigurationService,
     IDebuggerBanner,
     IDebugSessionLoggingFactory,
-    IOutdatedDebuggerPromptFactory
+    IOutdatedDebuggerPromptFactory,
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {

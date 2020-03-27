@@ -52,7 +52,7 @@ function generateDefaultState(
             isAtBottom: true,
             font: {
                 size: 14,
-                family: "Consolas, 'Courier New', monospace"
+                family: "Consolas, 'Courier New', monospace",
             },
             codeTheme: Identifiers.GeneratedThemeName,
             focusPending: 0,
@@ -61,10 +61,10 @@ function generateDefaultState(
             kernel: {
                 displayName: getLocString('DataScience.noKernel', 'No Kernel'),
                 localizedUri: getLocString('DataScience.serverNotStarted', 'Not Started'),
-                jupyterServerStatus: ServerStatus.NotStarted
+                jupyterServerStatus: ServerStatus.NotStarted,
             },
             settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
-            editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined
+            editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined,
         };
     }
 }
@@ -84,7 +84,7 @@ function generateMainReducer<M>(
 }
 
 function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
-    return store => next => action => {
+    return (store) => (next) => (action) => {
         const prevState = store.getState();
         const res = next(action);
         const afterState = store.getState();
@@ -110,7 +110,7 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
                 cellCount: afterState.main.cellVMs.length,
                 undoCount: afterState.main.undoStack.length,
                 redoCount: afterState.main.redoStack.length,
-                selectedCell: currentSelection.selectedCellId
+                selectedCell: currentSelection.selectedCellId,
             });
         }
         return res;
@@ -125,7 +125,7 @@ function createTestLogger() {
         const logFilePath = path.isAbsolute(logFileEnv) ? logFileEnv : path.join(EXTENSION_ROOT_DIR, logFileEnv);
         log4js.configure({
             appenders: { reduxLogger: { type: 'file', filename: logFilePath } },
-            categories: { default: { appenders: ['reduxLogger'], level: 'debug' } }
+            categories: { default: { appenders: ['reduxLogger'], level: 'debug' } },
         });
         return log4js.getLogger();
     }
@@ -135,7 +135,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
     // Make sure all dynamic imports are loaded.
     const transformPromise = forceLoad();
 
-    return store => next => action => {
+    return (store) => (next) => (action) => {
         const prevState = store.getState();
         const res = next(action);
         const afterState = store.getState();
@@ -189,17 +189,17 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
 
         // Special case for rendering complete
         const prevFinished = prevState.main.cellVMs
-            .filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-            .map(c => c.cell.id);
+            .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+            .map((c) => c.cell.id);
         const afterFinished = afterState.main.cellVMs
-            .filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-            .map(c => c.cell.id);
+            .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+            .map((c) => c.cell.id);
         if (
             afterFinished.length > prevFinished.length ||
             (afterFinished.length !== prevFinished.length &&
                 afterState.main.cellVMs.length !== prevState.main.cellVMs.length)
         ) {
-            const diff = afterFinished.filter(r => prevFinished.indexOf(r) < 0);
+            const diff = afterFinished.filter((r) => prevFinished.indexOf(r) < 0);
             // Send async so happens after the render is actually finished.
             sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
         }
@@ -231,7 +231,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     const actionsWithLargePayload = [
         InteractiveWindowMessages.LoadOnigasmAssemblyResponse,
         CssMessages.GetCssResponse,
-        InteractiveWindowMessages.LoadTmLanguageResponse
+        InteractiveWindowMessages.LoadTmLanguageResponse,
     ];
     const logger = createLogger({
         // tslint:disable-next-line: no-any
@@ -265,7 +265,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
             }
             return action;
         },
-        logger: testMode ? createTestLogger() : window.console
+        logger: testMode ? createTestLogger() : window.console,
     });
     // On CI we might want to disable logging, as its a big wall of text.
     // TO disable that add the variable `VSC_PYTHON_DS_NO_REDUX_LOGGING=1`
@@ -302,7 +302,7 @@ export interface IMainWithVariables extends IMainState {
 /**
  * Middleware that will ensure all actions have `messageDirection` property.
  */
-const addMessageDirectionMiddleware: Redux.Middleware = _store => next => (action: Redux.AnyAction) => {
+const addMessageDirectionMiddleware: Redux.Middleware = (_store) => (next) => (action: Redux.AnyAction) => {
     if (isAllowedAction(action)) {
         // Ensure all dispatched messages have been flagged as `incoming`.
         const payload: BaseReduxActionPayload<{}> = action.payload || {};
@@ -339,7 +339,7 @@ export function createStore<M>(
         main: mainReducer,
         variables: variableReducer,
         monaco: monacoReducer,
-        post: postOfficeReducer
+        post: postOfficeReducer,
     });
 
     // Create our middleware
@@ -371,7 +371,7 @@ export function createStore<M>(
                 store.dispatch({ type: message, payload: basePayload });
             }
             return true;
-        }
+        },
     });
 
     return store;

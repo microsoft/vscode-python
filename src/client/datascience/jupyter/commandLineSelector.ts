@@ -14,7 +14,7 @@ import {
     IMultiStepInput,
     IMultiStepInputFactory,
     InputStep,
-    IQuickPickParameters
+    IQuickPickParameters,
 } from '../../common/utils/multiStepInput';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
@@ -62,7 +62,7 @@ export class JupyterCommandLineSelector {
         const item = await input.showQuickPick<QuickPickItem, IQuickPickParameters<QuickPickItem>>({
             placeholder: DataScience.jupyterCommandLineQuickPickPlaceholder(),
             items: this.getPickList(),
-            title: DataScience.jupyterCommandLineQuickPickTitle()
+            title: DataScience.jupyterCommandLineQuickPickTitle(),
         });
         if (item.label === this.defaultLabel) {
             await this.setJupyterCommandLine('');
@@ -80,7 +80,7 @@ export class JupyterCommandLineSelector {
             title: DataScience.jupyterCommandLinePrompt(),
             value: this.configuration.getSettings(file).datascience.jupyterCommandLineArguments.join(' '),
             validate: this.validate,
-            prompt: ''
+            prompt: '',
         });
 
         if (result) {

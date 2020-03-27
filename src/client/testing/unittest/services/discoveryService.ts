@@ -32,7 +32,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
             cwd: options.cwd,
             workspaceFolder: options.workspaceFolder,
             token: options.token,
-            outChannel: options.outChannel
+            outChannel: options.outChannel,
         };
 
         const data = await this.runner.run(UNITTEST_PROVIDER, runOptions);
@@ -62,7 +62,7 @@ for suite in suites._tests:
         return {
             ...options,
             startDirectory: this.getStartDirectory(options),
-            pattern: this.getTestPattern(options)
+            pattern: this.getTestPattern(options),
         };
     }
     private getStartDirectory(options: TestDiscoveryOptions) {

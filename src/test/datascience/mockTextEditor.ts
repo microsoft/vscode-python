@@ -14,7 +14,7 @@ import {
     TextEditorEdit,
     TextEditorOptions,
     TextEditorRevealType,
-    ViewColumn
+    ViewColumn,
 } from 'vscode';
 
 import { noop } from '../../client/common/utils/misc';
@@ -28,8 +28,8 @@ class MockEditorEdit implements TextEditorEdit {
         this._documentManager.changeDocument(this._document.fileName, [
             {
                 range: location as Range,
-                newText: value
-            }
+                newText: value,
+            },
         ]);
     }
 
@@ -37,8 +37,8 @@ class MockEditorEdit implements TextEditorEdit {
         this._documentManager.changeDocument(this._document.fileName, [
             {
                 range: new Range(location, location),
-                newText: value
-            }
+                newText: value,
+            },
         ]);
     }
     public delete(_location: Selection | Range): void {
@@ -75,7 +75,7 @@ export class MockEditor implements TextEditor {
         callback: (editBuilder: TextEditorEdit) => void,
         _options?: { undoStopBefore: boolean; undoStopAfter: boolean } | undefined
     ): Thenable<boolean> {
-        return new Promise(r => {
+        return new Promise((r) => {
             const editor = new MockEditorEdit(this._documentManager, this._document);
             callback(editor);
             r(true);

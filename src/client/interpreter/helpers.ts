@@ -19,8 +19,8 @@ export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
     }
     const lines = stdout
         .split(/\r?\n/g)
-        .map(line => line.trim())
-        .filter(line => line.length > 0);
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
     return lines.length > 0 ? lines[0] : '';
 }
 
@@ -60,8 +60,8 @@ export class InterpreterHelper implements IInterpreterHelper {
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>> {
         const fileHash = await this.hashProviderFactory
             .create({ pythonPath })
-            .then(provider => provider.getInterpreterHash(pythonPath))
-            .catch(ex => {
+            .then((provider) => provider.getInterpreterHash(pythonPath))
+            .catch((ex) => {
                 traceError(`Failed to create File hash for interpreter ${pythonPath}`, ex);
                 return '';
             });
@@ -86,7 +86,7 @@ export class InterpreterHelper implements IInterpreterHelper {
             }
             const details = {
                 ...info,
-                fileHash
+                fileHash,
             };
             await store.updateValue(details);
             return details;

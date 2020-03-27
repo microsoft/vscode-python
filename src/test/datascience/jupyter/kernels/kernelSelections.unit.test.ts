@@ -32,12 +32,12 @@ suite('Data Science - KernelSelections', () => {
     const activePython1KernelModel = {
         lastActivityTime: new Date(2011, 11, 10, 12, 15, 0, 0),
         numberOfConnections: 10,
-        name: 'py1'
+        name: 'py1',
     };
     const activeJuliaKernelModel = {
         lastActivityTime: new Date(2001, 1, 1, 12, 15, 0, 0),
         numberOfConnections: 10,
-        name: 'julia'
+        name: 'julia',
     };
     const python1KernelSpecModel = {
         argv: [],
@@ -45,7 +45,7 @@ suite('Data Science - KernelSelections', () => {
         language: PYTHON_LANGUAGE,
         name: 'py1',
         path: 'somePath',
-        metadata: {}
+        metadata: {},
     };
     const python3KernelSpecModel = {
         argv: [],
@@ -53,7 +53,7 @@ suite('Data Science - KernelSelections', () => {
         language: PYTHON_LANGUAGE,
         name: 'py3',
         path: 'somePath3',
-        metadata: {}
+        metadata: {},
     };
     const juliaKernelSpecModel = {
         argv: [],
@@ -61,7 +61,7 @@ suite('Data Science - KernelSelections', () => {
         language: 'julia',
         name: 'julia',
         path: 'j',
-        metadata: {}
+        metadata: {},
     };
     const rKernelSpecModel = { argv: [], display_name: 'R', language: 'r', name: 'r', path: 'r', metadata: {} };
 
@@ -69,7 +69,7 @@ suite('Data Science - KernelSelections', () => {
         python1KernelSpecModel,
         python3KernelSpecModel,
         juliaKernelSpecModel,
-        rKernelSpecModel
+        rKernelSpecModel,
     ];
 
     const allInterpreters: IInterpreterQuickPickItem[] = [
@@ -81,11 +81,11 @@ suite('Data Science - KernelSelections', () => {
                 sysPrefix: '',
                 sysVersion: '',
                 type: InterpreterType.Conda,
-                displayName: 'Hello1'
+                displayName: 'Hello1',
             },
             path: 'p1',
             detail: '<user friendly path>',
-            description: ''
+            description: '',
         },
         {
             label: 'Hello1',
@@ -95,11 +95,11 @@ suite('Data Science - KernelSelections', () => {
                 sysPrefix: '',
                 sysVersion: '',
                 type: InterpreterType.Conda,
-                displayName: 'Hello2'
+                displayName: 'Hello2',
             },
             path: 'p1',
             detail: '<user friendly path>',
-            description: ''
+            description: '',
         },
         {
             label: 'Hello1',
@@ -109,12 +109,12 @@ suite('Data Science - KernelSelections', () => {
                 sysPrefix: '',
                 sysVersion: '',
                 type: InterpreterType.Conda,
-                displayName: 'Hello3'
+                displayName: 'Hello3',
             },
             path: 'p1',
             detail: '<user friendly path>',
-            description: ''
-        }
+            description: '',
+        },
     ];
 
     setup(() => {
@@ -147,14 +147,14 @@ suite('Data Science - KernelSelections', () => {
     });
     test('Should return a list with the proper details in the quick pick for remote connections (excluding non-python kernels)', async () => {
         const activeKernels: IJupyterKernel[] = [activePython1KernelModel, activeJuliaKernelModel];
-        const sessions = activeKernels.map(item => {
+        const sessions = activeKernels.map((item) => {
             return {
                 id: 'sessionId',
                 name: 'someSession',
                 // tslint:disable-next-line: no-any
                 kernel: item as any,
                 type: '',
-                path: ''
+                path: '',
             };
         });
         when(kernelService.getKernelSpecs(instance(sessionManager), anything())).thenResolve([]);
@@ -181,18 +181,18 @@ suite('Data Science - KernelSelections', () => {
                             // tslint:disable-next-line: no-any
                             kernel: activeKernels[0] as any,
                             type: '',
-                            path: ''
+                            path: '',
                             // tslint:disable-next-line: no-any
-                        } as any
+                        } as any,
                     },
-                    kernelSpec: undefined
+                    kernelSpec: undefined,
                 },
                 detail: '<user friendly path>',
                 description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
                     activePython1KernelModel.lastActivityTime.toLocaleString(),
                     activePython1KernelModel.numberOfConnections.toString()
-                )
-            }
+                ),
+            },
         ];
         expectedItems.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
@@ -215,21 +215,21 @@ suite('Data Science - KernelSelections', () => {
         // - selection = kernel model + kernel spec
         // - description = last activity and # of connections.
         const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(
-            item => {
+            (item) => {
                 return {
                     label: item.display_name,
                     detail: '<user friendly path>',
-                    selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
+                    selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item },
                 };
             }
         );
-        const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map(item => {
+        const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map((item) => {
             return {
                 ...item,
                 label: item.label,
                 detail: '<user friendly path>',
                 description: '',
-                selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
+                selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined },
             };
         });
         const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];

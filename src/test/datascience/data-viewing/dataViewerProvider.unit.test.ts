@@ -35,7 +35,7 @@ suite('Data Science - DataViewerProvider', () => {
             supportsDataExplorer: true,
             truncated: false,
             type: '',
-            value: ''
+            value: '',
         };
         interpreter = {
             architecture: Architecture.Unknown,
@@ -44,7 +44,7 @@ suite('Data Science - DataViewerProvider', () => {
             sysPrefix: '',
             sysVersion: '',
             type: InterpreterType.Unknown,
-            version: new SemVer('3.3.3')
+            version: new SemVer('3.3.3'),
         };
         notebook = mock(JupyterNotebookBase);
         serviceContainer = mock(ServiceContainer);

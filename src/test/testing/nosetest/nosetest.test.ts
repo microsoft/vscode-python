@@ -23,7 +23,7 @@ const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
 );
 const filesToDelete = [
     path.join(UNITTEST_TEST_FILES_PATH, '.noseids'),
-    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')
+    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids'),
 ];
 
 // tslint:disable-next-line:max-func-body-length
@@ -34,7 +34,7 @@ suite('Unit Tests - nose - discovery against actual python process', () => {
         : vscode.ConfigurationTarget.Workspace;
 
     suiteSetup(async () => {
-        filesToDelete.forEach(file => {
+        filesToDelete.forEach((file) => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
             }
@@ -44,7 +44,7 @@ suite('Unit Tests - nose - discovery against actual python process', () => {
     });
     suiteTeardown(async () => {
         await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
-        filesToDelete.forEach(file => {
+        filesToDelete.forEach((file) => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
             }

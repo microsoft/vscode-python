@@ -4,14 +4,14 @@
 import { Reducer } from 'redux';
 import {
     IInteractiveWindowMapping,
-    InteractiveWindowMessages
+    InteractiveWindowMessages,
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import {
     ICell,
     IJupyterVariable,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse
+    IJupyterVariablesResponse,
 } from '../../../../client/datascience/types';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 import { postActionToExtension } from '../helpers';
@@ -47,18 +47,18 @@ function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVari
         sortColumn: arg.payload.data.sortColumn,
         startIndex: arg.payload.data.startIndex,
         sortAscending: arg.payload.data.sortAscending,
-        pageSize: arg.payload.data.pageSize
+        pageSize: arg.payload.data.pageSize,
     });
     return {
         ...arg.prevState,
-        pageSize: Math.max(arg.prevState.pageSize, arg.payload.data.pageSize)
+        pageSize: Math.max(arg.prevState.pageSize, arg.payload.data.pageSize),
     };
 }
 
 function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
     const newState: IVariableState = {
         ...arg.prevState,
-        visible: !arg.prevState.visible
+        visible: !arg.prevState.visible,
     };
 
     postActionToExtension(arg, InteractiveWindowMessages.VariableExplorerToggle, newState.visible);
@@ -75,9 +75,9 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
                     sortColumn: 'name',
                     sortAscending: true,
                     startIndex: 0,
-                    pageSize: arg.prevState.pageSize
-                }
-            }
+                    pageSize: arg.prevState.pageSize,
+                },
+            },
         });
     } else {
         return newState;
@@ -104,7 +104,7 @@ function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVa
         return {
             ...arg.prevState,
             currentExecutionCount: response.executionCount,
-            variables
+            variables,
         };
     } else if (response.executionCount === arg.prevState.currentExecutionCount) {
         // This is a response for a page in an already existing list.
@@ -123,7 +123,7 @@ function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVa
 
         return {
             ...arg.prevState,
-            variables
+            variables,
         };
     }
 
@@ -141,14 +141,14 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
                 sortColumn: 'name',
                 sortAscending: true,
                 startIndex: 0,
-                pageSize: arg.prevState.pageSize
-            }
-        }
+                pageSize: arg.prevState.pageSize,
+            },
+        },
     });
     return {
         ...result,
         currentExecutionCount: 0,
-        variables: []
+        variables: [],
     };
 }
 
@@ -168,14 +168,14 @@ function handleFinishCell(arg: VariableReducerArg<ICell>): IVariableState {
                     sortColumn: 'name',
                     sortAscending: true,
                     startIndex: 0,
-                    pageSize: arg.prevState.pageSize
-                }
-            }
+                    pageSize: arg.prevState.pageSize,
+                },
+            },
         });
     }
     return {
         ...arg.prevState,
-        currentExecutionCount: executionCount ? executionCount : arg.prevState.currentExecutionCount
+        currentExecutionCount: executionCount ? executionCount : arg.prevState.currentExecutionCount,
     };
 }
 
@@ -192,7 +192,7 @@ const reducerMap: Partial<VariableActionMapping> = {
     [InteractiveWindowMessages.FinishCell]: handleFinishCell,
     [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: toggleVariableExplorer,
     [CommonActionType.GET_VARIABLE_DATA]: handleRequest,
-    [InteractiveWindowMessages.GetVariablesResponse]: handleResponse
+    [InteractiveWindowMessages.GetVariablesResponse]: handleResponse,
 };
 
 export function generateVariableReducer(): Reducer<IVariableState, QueuableAction<Partial<VariableActionMapping>>> {
@@ -203,7 +203,7 @@ export function generateVariableReducer(): Reducer<IVariableState, QueuableActio
         visible: false,
         sortAscending: true,
         sortColumn: 'name',
-        pageSize: 5
+        pageSize: 5,
     };
 
     // Then combine that with our map of state change message to reducer

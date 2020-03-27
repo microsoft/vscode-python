@@ -19,7 +19,7 @@ import {
     SymbolInformation,
     TextDocument,
     TextDocumentContentChangeEvent,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 
 import { ILanguageServer } from '../../client/activation/types';
@@ -131,7 +131,7 @@ export class MockLanguageServer implements ILanguageServer {
     }
 
     private applyChanges(changes: TextDocumentContentChangeEvent[]) {
-        changes.forEach(c => {
+        changes.forEach((c) => {
             const before = this.contents.substr(0, c.rangeOffset);
             const after = this.contents.substr(c.rangeOffset + c.rangeLength);
             this.contents = `${before}${c.text}${after}`;

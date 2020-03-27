@@ -4,7 +4,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import { IConfigurationService, IPathUtils, Resource } from '../../common/types';
@@ -13,7 +13,7 @@ import {
     IInterpreterComparer,
     IInterpreterQuickPickItem,
     IInterpreterSelector,
-    IPythonPathUpdaterServiceManager
+    IPythonPathUpdaterServiceManager,
 } from './types';
 
 @injectable()
@@ -34,7 +34,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         @inject(ICommandManager) private readonly commandManager: ICommandManager
     ) {}
     public dispose() {
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach((disposable) => disposable.dispose());
     }
 
     public initialize() {
@@ -49,7 +49,7 @@ export class InterpreterSelector implements IInterpreterSelector {
     public async getSuggestions(resource: Resource) {
         const interpreters = await this.interpreterManager.getInterpreters(resource);
         interpreters.sort(this.interpreterComparer.compare.bind(this.interpreterComparer));
-        return Promise.all(interpreters.map(item => this.suggestionToQuickPickItem(item, resource)));
+        return Promise.all(interpreters.map((item) => this.suggestionToQuickPickItem(item, resource)));
     }
     protected async suggestionToQuickPickItem(
         suggestion: PythonInterpreter,
@@ -62,7 +62,7 @@ export class InterpreterSelector implements IInterpreterSelector {
             label: suggestion.displayName!,
             detail: `${cachedPrefix}${detail}`,
             path: suggestion.path,
-            interpreter: suggestion
+            interpreter: suggestion,
         };
     }
 
@@ -89,7 +89,7 @@ export class InterpreterSelector implements IInterpreterSelector {
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: `current: ${currentPythonPath}`
+            placeHolder: `current: ${currentPythonPath}`,
         };
 
         const selection = await this.applicationShell.showQuickPick(suggestions, quickPickOptions);
@@ -148,13 +148,13 @@ export class InterpreterSelector implements IInterpreterSelector {
         if (this.workspaceService.workspaceFolders.length === 1) {
             return {
                 folderUri: this.workspaceService.workspaceFolders[0].uri,
-                configTarget: ConfigurationTarget.WorkspaceFolder
+                configTarget: ConfigurationTarget.WorkspaceFolder,
             };
         }
 
         // Ok we have multiple workspaces, get the user to pick a folder.
         const workspaceFolder = await this.applicationShell.showWorkspaceFolderPick({
-            placeHolder: 'Select the workspace to set the interpreter'
+            placeHolder: 'Select the workspace to set the interpreter',
         });
         return workspaceFolder
             ? { folderUri: workspaceFolder.uri, configTarget: ConfigurationTarget.WorkspaceFolder }

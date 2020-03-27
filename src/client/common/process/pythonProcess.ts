@@ -19,7 +19,7 @@ import {
     ObservableExecutionResult,
     PythonExecutionInfo,
     PythonVersionInfo,
-    SpawnOptions
+    SpawnOptions,
 } from './types';
 
 @injectable()
@@ -50,7 +50,7 @@ export class PythonExecutionService implements IPythonExecutionService {
         }
 
         const { command, args } = this.getExecutionInfo(['-c', 'import sys;print(sys.executable)']);
-        return this.procService.exec(command, args, { throwOnStdErr: true }).then(output => output.stdout.trim());
+        return this.procService.exec(command, args, { throwOnStdErr: true }).then((output) => output.stdout.trim());
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         const { command, args } = this.getExecutionInfo(['-c', `import ${moduleName}`]);
@@ -148,7 +148,7 @@ export class PythonExecutionService implements IPythonExecutionService {
                 path: this.pythonPath,
                 version: parsePythonVersion(versionValue),
                 sysVersion: json.sysVersion,
-                sysPrefix: json.sysPrefix
+                sysPrefix: json.sysPrefix,
             };
         } catch (ex) {
             traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);

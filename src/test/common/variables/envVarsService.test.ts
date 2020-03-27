@@ -76,7 +76,7 @@ suite('Environment Variables Service', () => {
 
         test('Simple variable substitution is supported', async () => {
             const vars = await variablesService.parseFile(path.join(envFilesFolderPath, '.env6'), {
-                BINDIR: '/usr/bin'
+                BINDIR: '/usr/bin',
             });
 
             expect(vars).to.not.equal(undefined, 'Variables is undefiend');

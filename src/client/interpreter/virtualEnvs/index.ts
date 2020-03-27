@@ -66,7 +66,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
     }
     public async isVenvEnvironment(pythonPath: string) {
         const dir = path.dirname(pythonPath);
-        const pyEnvCfgFiles = PYENVFILES.map(file => path.join(dir, file));
+        const pyEnvCfgFiles = PYENVFILES.map((file) => path.join(dir, file));
         for (const file of pyEnvCfgFiles) {
             if (await this.fs.fileExists(file)) {
                 return true;
@@ -115,8 +115,8 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
     public async isVirtualEnvironment(pythonPath: string) {
         const provider = this.getTerminalActivationProviderForVirtualEnvs();
         const shells = getNamesAndValues<TerminalShellType>(TerminalShellType)
-            .filter(shell => provider.isShellSupported(shell.value))
-            .map(shell => shell.value);
+            .filter((shell) => provider.isShellSupported(shell.value))
+            .map((shell) => shell.value);
 
         for (const shell of shells) {
             const cmds = await provider.getActivationCommandsForInterpreter!(pythonPath, shell);

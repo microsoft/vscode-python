@@ -38,7 +38,7 @@ export class DotNetDownloadedLanguageClientFactory implements ILanguageClientFac
         const options = { stdio: 'pipe', env };
         const serverOptions: ServerOptions = {
             run: { command: serverModule, args: [], options },
-            debug: { command: serverModule, args: ['--debug'], options }
+            debug: { command: serverModule, args: ['--debug'], options },
         };
         const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');
         return new vscodeLanguageClient.LanguageClient(
@@ -67,7 +67,7 @@ export class DotNetSimpleLanguageClientFactory implements ILanguageClientFactory
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, this.platformData.engineDllName);
         const serverOptions: ServerOptions = {
             run: { command: dotNetCommand, args: [serverModule], options },
-            debug: { command: dotNetCommand, args: [serverModule, '--debug'], options }
+            debug: { command: dotNetCommand, args: [serverModule, '--debug'], options },
         };
         const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');
         return new vscodeLanguageClient.LanguageClient(

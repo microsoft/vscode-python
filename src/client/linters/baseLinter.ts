@@ -60,7 +60,7 @@ export function parseLine(
         column: isNaN(match.column) || match.column <= 0 ? 0 : match.column - colOffset,
         line: match.line,
         type: match.type,
-        provider: linterID
+        provider: linterID,
     };
 }
 
@@ -176,7 +176,7 @@ export abstract class BaseLinter implements ILinter {
         } else {
             this.errorHandler
                 .handleError(error, resource, execInfo)
-                .catch(ex => traceError('Error in errorHandler.handleError', ex))
+                .catch((ex) => traceError('Error in errorHandler.handleError', ex))
                 .ignoreErrors();
         }
     }

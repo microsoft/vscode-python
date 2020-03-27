@@ -30,8 +30,8 @@ suite('Linting - MyPy', () => {
                     column: 0,
                     line: 10,
                     type: 'error',
-                    provider: 'mypy'
-                } as ILintMessage
+                    provider: 'mypy',
+                } as ILintMessage,
             ],
             [
                 lines[2],
@@ -41,8 +41,8 @@ suite('Linting - MyPy', () => {
                     column: 0,
                     line: 11,
                     type: 'error',
-                    provider: 'mypy'
-                } as ILintMessage
+                    provider: 'mypy',
+                } as ILintMessage,
             ],
             [
                 lines[3],
@@ -52,9 +52,9 @@ suite('Linting - MyPy', () => {
                     column: 21,
                     line: 12,
                     type: 'error',
-                    provider: 'mypy'
-                } as ILintMessage
-            ]
+                    provider: 'mypy',
+                } as ILintMessage,
+            ],
         ];
         for (const [line, expected] of tests) {
             const msg = parseLine(line, REGEX, 'mypy');

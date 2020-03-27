@@ -13,7 +13,7 @@ import {
     IXUnitParser,
     LaunchOptions,
     TestRunOptions,
-    Tests
+    Tests,
 } from '../common/types';
 import { IArgumentsHelper, IArgumentsService, ITestManagerRunner } from '../types';
 
@@ -39,16 +39,16 @@ export class TestManagerRunner implements ITestManagerRunner {
     ): Promise<Tests> {
         let testPaths: string[] = [];
         if (options.testsToRun && options.testsToRun.testFolder) {
-            testPaths = testPaths.concat(options.testsToRun.testFolder.map(f => f.nameToRun));
+            testPaths = testPaths.concat(options.testsToRun.testFolder.map((f) => f.nameToRun));
         }
         if (options.testsToRun && options.testsToRun.testFile) {
-            testPaths = testPaths.concat(options.testsToRun.testFile.map(f => f.nameToRun));
+            testPaths = testPaths.concat(options.testsToRun.testFile.map((f) => f.nameToRun));
         }
         if (options.testsToRun && options.testsToRun.testSuite) {
-            testPaths = testPaths.concat(options.testsToRun.testSuite.map(f => f.nameToRun));
+            testPaths = testPaths.concat(options.testsToRun.testSuite.map((f) => f.nameToRun));
         }
         if (options.testsToRun && options.testsToRun.testFunction) {
-            testPaths = testPaths.concat(options.testsToRun.testFunction.map(f => f.nameToRun));
+            testPaths = testPaths.concat(options.testsToRun.testFunction.map((f) => f.nameToRun));
         }
 
         let deleteJUnitXmlFile: Function = noop;
@@ -74,7 +74,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                     args: debuggerArgs,
                     token: options.token,
                     outChannel: options.outChannel,
-                    testProvider: PYTEST_PROVIDER
+                    testProvider: PYTEST_PROVIDER,
                 };
                 await debugLauncher.launchDebugger(launchOptions);
             } else {
@@ -83,7 +83,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                     cwd: options.cwd,
                     outChannel: options.outChannel,
                     token: options.token,
-                    workspaceFolder: options.workspaceFolder
+                    workspaceFolder: options.workspaceFolder,
                 };
                 await this.testRunner.run(PYTEST_PROVIDER, runOptions);
             }

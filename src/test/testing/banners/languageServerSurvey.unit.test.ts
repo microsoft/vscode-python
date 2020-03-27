@@ -13,7 +13,7 @@ import { IApplicationShell } from '../../../client/common/application/types';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import {
     LanguageServerSurveyBanner,
-    LSSurveyStateKeys
+    LSSurveyStateKeys,
 } from '../../../client/languageServices/languageServerSurveyBanner';
 
 suite('Language Server Survey Banner', () => {
@@ -48,7 +48,7 @@ suite('Language Server Survey Banner', () => {
     });
     test('Do not show banner when it is disabled', () => {
         appShell
-            .setup(a =>
+            .setup((a) =>
                 a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
             )
             .verifiable(typemoq.Times.never());
@@ -90,7 +90,7 @@ suite('Language Server Survey Banner', () => {
         '0.0.1234567890',
         '1234567890.0.1',
         '1.0.1-alpha+2',
-        '22.4.999-rc.6'
+        '22.4.999-rc.6',
     ];
     languageServerVersions.forEach(async (languageServerVersion: string) => {
         test(`Survey URL is as expected for Language Server version '${languageServerVersion}'.`, async () => {
@@ -107,13 +107,13 @@ suite('Language Server Survey Banner', () => {
 
             const lsFolder: FolderVersionPair = {
                 path: '/some/path',
-                version: new SemVer(languageServerVersion, true)
+                version: new SemVer(languageServerVersion, true),
             };
             // language service will get asked for the current Language
             // Server directory installed. This in turn will give the tested
             // code the version via the .version member of lsFolder.
             lsService
-                .setup(f => f.getCurrentLanguageServerDirectory())
+                .setup((f) => f.getCurrentLanguageServerDirectory())
                 .returns(() => {
                     return Promise.resolve(lsFolder);
                 })
@@ -125,7 +125,7 @@ suite('Language Server Survey Banner', () => {
             // to launch.
             let receivedUri: string = '';
             browser
-                .setup(b =>
+                .setup((b) =>
                     b.launch(
                         typemoq.It.is((a: string) => {
                             receivedUri = a;
@@ -178,52 +178,52 @@ function preparePopup(
         IPersistentState<number>
     >();
     enabledValState
-        .setup(a => a.updateValue(typemoq.It.isValue(true)))
+        .setup((a) => a.updateValue(typemoq.It.isValue(true)))
         .returns(() => {
             enabledValue = true;
             return Promise.resolve();
         });
     enabledValState
-        .setup(a => a.updateValue(typemoq.It.isValue(false)))
+        .setup((a) => a.updateValue(typemoq.It.isValue(false)))
         .returns(() => {
             enabledValue = false;
             return Promise.resolve();
         });
 
     attemptCountState
-        .setup(a => a.updateValue(typemoq.It.isAnyNumber()))
+        .setup((a) => a.updateValue(typemoq.It.isAnyNumber()))
         .returns(() => {
             attemptCounter += 1;
             return Promise.resolve();
         });
 
     completionCountState
-        .setup(a => a.updateValue(typemoq.It.isAnyNumber()))
+        .setup((a) => a.updateValue(typemoq.It.isAnyNumber()))
         .returns(() => {
             completionsCount += 1;
             return Promise.resolve();
         });
 
-    enabledValState.setup(a => a.value).returns(() => enabledValue);
-    attemptCountState.setup(a => a.value).returns(() => attemptCounter);
-    completionCountState.setup(a => a.value).returns(() => completionsCount);
+    enabledValState.setup((a) => a.value).returns(() => enabledValue);
+    attemptCountState.setup((a) => a.value).returns(() => attemptCounter);
+    completionCountState.setup((a) => a.value).returns(() => completionsCount);
 
     myfactory
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(typemoq.It.isValue(LSSurveyStateKeys.ShowBanner), typemoq.It.isValue(true))
         )
         .returns(() => {
             return enabledValState.object;
         });
     myfactory
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(typemoq.It.isValue(LSSurveyStateKeys.ShowBanner), typemoq.It.isValue(false))
         )
         .returns(() => {
             return enabledValState.object;
         });
     myfactory
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(
                 typemoq.It.isValue(LSSurveyStateKeys.ShowAttemptCounter),
                 typemoq.It.isAnyNumber()
@@ -233,7 +233,7 @@ function preparePopup(
             return attemptCountState.object;
         });
     myfactory
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(
                 typemoq.It.isValue(LSSurveyStateKeys.ShowAfterCompletionCount),
                 typemoq.It.isAnyNumber()

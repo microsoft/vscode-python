@@ -87,7 +87,7 @@ export enum TokenType {
     OpenBracket,
     CloseBracket,
     OpenCurly,
-    CloseCurly
+    CloseCurly,
 }
 
 export interface IToken extends ITextRange {
@@ -96,7 +96,7 @@ export interface IToken extends ITextRange {
 
 export enum TokenizerMode {
     CommentsAndStrings,
-    Full
+    Full,
 }
 
 export interface ITokenizer {

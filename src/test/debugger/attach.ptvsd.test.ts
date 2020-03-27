@@ -23,7 +23,7 @@ import { PythonDebugConfigurationService } from '../../client/debugger/extension
 import { AttachConfigurationResolver } from '../../client/debugger/extension/configuration/resolvers/attach';
 import {
     IDebugConfigurationProviderFactory,
-    IDebugConfigurationResolver
+    IDebugConfigurationResolver,
 } from '../../client/debugger/extension/configuration/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -44,7 +44,7 @@ suite('Debugging - Attach Debugger', () => {
     let debugClient: DebugClient;
     let proc: ChildProcess;
 
-    setup(async function() {
+    setup(async function () {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
@@ -79,10 +79,10 @@ suite('Debugging - Attach Debugger', () => {
             '--wait',
             '--port',
             `${port}`,
-            fileToDebug.fileToCommandArgument()
+            fileToDebug.fileToCommandArgument(),
         ];
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
-        const exited = new Promise(resolve => proc.once('close', resolve));
+        const exited = new Promise((resolve) => proc.once('close', resolve));
         await sleep(3000);
 
         // Send initialize, attach
@@ -93,7 +93,7 @@ suite('Debugging - Attach Debugger', () => {
             supportsRunInTerminalRequest: true,
             pathFormat: 'path',
             supportsVariableType: true,
-            supportsVariablePaging: true
+            supportsVariablePaging: true,
         });
         const options: AttachRequestArguments & DebugConfiguration = {
             name: 'attach',
@@ -104,18 +104,20 @@ suite('Debugging - Attach Debugger', () => {
             port: port,
             host: 'localhost',
             logToFile: false,
-            debugOptions: [DebugOptions.RedirectOutput]
+            debugOptions: [DebugOptions.RedirectOutput],
         };
         const platformService = TypeMoq.Mock.ofType<IPlatformService>();
-        platformService.setup(p => p.isWindows).returns(() => isLocalHostWindows);
+        platformService.setup((p) => p.isWindows).returns(() => isLocalHostWindows);
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer.setup(c => c.get(IPlatformService, TypeMoq.It.isAny())).returns(() => platformService.object);
+        serviceContainer
+            .setup((c) => c.get(IPlatformService, TypeMoq.It.isAny()))
+            .returns(() => platformService.object);
 
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
-        experiments.setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => true);
+        experiments.setup((e) => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => true);
 
         const launchResolver = TypeMoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
         const attachResolver = new AttachConfigurationResolver(
@@ -148,7 +150,7 @@ suite('Debugging - Attach Debugger', () => {
         const breakpointPromise = debugClient.setBreakpointsRequest({
             lines: [breakpointLocation.line],
             breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
-            source: { path: breakpointLocation.path }
+            source: { path: breakpointLocation.path },
         });
         const exceptionBreakpointPromise = debugClient.setExceptionBreakpointsRequest({ filters: [] });
         const breakpointStoppedPromise = debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
@@ -160,13 +162,13 @@ suite('Debugging - Attach Debugger', () => {
             debugClient.threadsRequest(),
             stdOutPromise,
             stdErrPromise,
-            breakpointStoppedPromise
+            breakpointStoppedPromise,
         ]);
 
         await continueDebugging(debugClient);
         await exited;
     }
-    test('Confirm we are able to attach to a running program', async function() {
+    test('Confirm we are able to attach to a running program', async function () {
         // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
         this.skip();

@@ -78,28 +78,28 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
                     diagnostic,
                     invoke: async (): Promise<void> => {
                         sendTelemetryEvent(EventName.DIAGNOSTICS_ACTION, undefined, {
-                            action: 'switchToCommandPrompt'
+                            action: 'switchToCommandPrompt',
                         });
-                        useCommandPromptAsDefaultShell(currentProcess, configurationService).catch(ex =>
+                        useCommandPromptAsDefaultShell(currentProcess, configurationService).catch((ex) =>
                             traceError('Use Command Prompt as default shell', ex)
                         );
-                    }
-                }
+                    },
+                },
             },
             {
-                prompt: 'Ignore'
+                prompt: 'Ignore',
             },
             {
                 prompt: 'Always Ignore',
-                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global })
+                command: commandFactory.createCommand(diagnostic, { type: 'ignore', options: DiagnosticScope.Global }),
             },
             {
                 prompt: 'More Info',
                 command: commandFactory.createCommand(diagnostic, {
                     type: 'launch',
-                    options: 'https://aka.ms/CondaPwsh'
-                })
-            }
+                    options: 'https://aka.ms/CondaPwsh',
+                }),
+            },
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts: options });

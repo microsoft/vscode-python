@@ -141,7 +141,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             module: 'pyramid.scripts.pserve',
             args: ['xyz.ini'],
             pyramid: true,
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -162,7 +162,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             module: 'pyramid.scripts.pserve',
             args: ['hello'],
             pyramid: true,
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -186,7 +186,7 @@ suite('Debugging - Configuration Provider Pyramid', () => {
             module: 'pyramid.scripts.pserve',
             args: [defaultIni],
             pyramid: true,
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);

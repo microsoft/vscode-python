@@ -79,19 +79,19 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
             borderColor: new vscode.ThemeColor('peekView.border'),
             borderWidth: '2px 0px 0px 0px',
             borderStyle: 'solid',
-            isWholeLine: true
+            isWholeLine: true,
         });
         this.activeCellBottom = this.documentManager.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('peekView.border'),
             borderWidth: '0px 0px 1px 0px',
             borderStyle: 'solid',
-            isWholeLine: true
+            isWholeLine: true,
         });
         this.cellSeparatorType = this.documentManager.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('editor.lineHighlightBorder'),
             borderWidth: '1px 0px 0px 0px',
             borderStyle: 'solid',
-            isWholeLine: true
+            isWholeLine: true,
         });
     }
 
@@ -110,7 +110,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
                 const cells = generateCellRangesFromDocument(editor.document, settings);
 
                 // Find the range for our active cell.
-                const currentRange = cells.map(c => c.range).filter(r => r.contains(editor.selection.anchor));
+                const currentRange = cells.map((c) => c.range).filter((r) => r.contains(editor.selection.anchor));
                 const rangeTop =
                     currentRange.length > 0 ? [new vscode.Range(currentRange[0].start, currentRange[0].start)] : [];
                 const rangeBottom =
@@ -119,7 +119,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
                 editor.setDecorations(this.activeCellBottom, rangeBottom);
 
                 // Find the start range for the rest
-                const startRanges = cells.map(c => new vscode.Range(c.range.start, c.range.start));
+                const startRanges = cells.map((c) => new vscode.Range(c.range.start, c.range.start));
                 editor.setDecorations(this.cellSeparatorType, startRanges);
             } else {
                 editor.setDecorations(this.activeCellTop, []);

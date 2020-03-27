@@ -6,7 +6,7 @@ import { isNotInstalledError } from '../../client/common/helpers';
 
 // Defines a Mocha test suite to group tests of similar kind together
 suite('helpers', () => {
-    test('isNotInstalledError', done => {
+    test('isNotInstalledError', (done) => {
         const error = new Error('something is not installed');
         assert.equal(isNotInstalledError(error), false, 'Standard error');
 

@@ -36,5 +36,5 @@ class TrimmedOutputMessageComponent extends React.PureComponent<ITrimmedOutputMe
 }
 
 export const TrimmedOutputMessage = connect(undefined, {
-    openSettings: () => actionCreators.openSettings('python.dataScience.textOutputLimit')
+    openSettings: () => actionCreators.openSettings('python.dataScience.textOutputLimit'),
 })(TrimmedOutputMessageComponent);

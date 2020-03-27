@@ -49,7 +49,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                     await terminalService.sendCommand(pythonPath, args, token);
                 } else if (settings.globalModuleInstallation) {
                     const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-                    if (await fs.isDirReadonly(path.dirname(pythonPath)).catch(_err => true)) {
+                    if (await fs.isDirReadonly(path.dirname(pythonPath)).catch((_err) => true)) {
                         this.elevatedInstall(pythonPath, args);
                     } else {
                         await terminalService.sendCommand(pythonPath, args, token);
@@ -70,7 +70,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             const options: ProgressOptions = {
                 location: ProgressLocation.Notification,
                 cancellable: true,
-                title: Products.installingModule().format(name)
+                title: Products.installingModule().format(name),
             };
             await shell.withProgress(options, async (_, token: CancellationToken) =>
                 install(wrapCancellationTokens(token, cancel))
@@ -83,7 +83,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
 
     protected elevatedInstall(execPath: string, args: string[]) {
         const options = {
-            name: 'VS Code Python'
+            name: 'VS Code Python',
         };
         const outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
@@ -112,7 +112,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
     }
     protected abstract getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo>;
     private async processInstallArgs(args: string[], resource?: InterpreterUri): Promise<string[]> {
-        const indexOfPylint = args.findIndex(arg => arg.toUpperCase() === 'PYLINT');
+        const indexOfPylint = args.findIndex((arg) => arg.toUpperCase() === 'PYLINT');
         if (indexOfPylint === -1) {
             return args;
         }

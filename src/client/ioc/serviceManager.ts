@@ -17,16 +17,13 @@ export class ServiceManager implements IServiceManager {
         bindings?: symbol[]
     ): void {
         if (name) {
-            this.container
-                .bind<T>(serviceIdentifier)
-                .to(constructor)
-                .whenTargetNamed(name);
+            this.container.bind<T>(serviceIdentifier).to(constructor).whenTargetNamed(name);
         } else {
             this.container.bind<T>(serviceIdentifier).to(constructor);
         }
 
         if (bindings) {
-            bindings.forEach(binding => {
+            bindings.forEach((binding) => {
                 this.addBinding(serviceIdentifier, binding);
             });
         }
@@ -50,20 +47,13 @@ export class ServiceManager implements IServiceManager {
         bindings?: symbol[]
     ): void {
         if (name) {
-            this.container
-                .bind<T>(serviceIdentifier)
-                .to(constructor)
-                .inSingletonScope()
-                .whenTargetNamed(name);
+            this.container.bind<T>(serviceIdentifier).to(constructor).inSingletonScope().whenTargetNamed(name);
         } else {
-            this.container
-                .bind<T>(serviceIdentifier)
-                .to(constructor)
-                .inSingletonScope();
+            this.container.bind<T>(serviceIdentifier).to(constructor).inSingletonScope();
         }
 
         if (bindings) {
-            bindings.forEach(binding => {
+            bindings.forEach((binding) => {
                 this.addBinding(serviceIdentifier, binding);
             });
         }
@@ -75,10 +65,7 @@ export class ServiceManager implements IServiceManager {
         name?: string | number | symbol | undefined
     ): void {
         if (name) {
-            this.container
-                .bind<T>(serviceIdentifier)
-                .toConstantValue(instance)
-                .whenTargetNamed(name);
+            this.container.bind<T>(serviceIdentifier).toConstantValue(instance).whenTargetNamed(name);
         } else {
             this.container.bind<T>(serviceIdentifier).toConstantValue(instance);
         }
@@ -98,10 +85,7 @@ export class ServiceManager implements IServiceManager {
         name?: string | number | symbol
     ): void {
         if (name) {
-            this.container
-                .rebind<T>(serviceIdentifier)
-                .to(constructor)
-                .whenTargetNamed(name);
+            this.container.rebind<T>(serviceIdentifier).to(constructor).whenTargetNamed(name);
         } else {
             this.container.rebind<T>(serviceIdentifier).to(constructor);
         }
@@ -113,10 +97,7 @@ export class ServiceManager implements IServiceManager {
         name?: string | number | symbol
     ): void {
         if (name) {
-            this.container
-                .rebind<T>(serviceIdentifier)
-                .toConstantValue(instance)
-                .whenTargetNamed(name);
+            this.container.rebind<T>(serviceIdentifier).toConstantValue(instance).whenTargetNamed(name);
         } else {
             this.container.rebind<T>(serviceIdentifier).toConstantValue(instance);
         }

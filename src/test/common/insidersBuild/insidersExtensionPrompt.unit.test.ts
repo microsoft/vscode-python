@@ -13,7 +13,7 @@ import { IApplicationShell, ICommandManager } from '../../../client/common/appli
 import { ExtensionChannelService } from '../../../client/common/insidersBuild/downloadChannelService';
 import {
     InsidersExtensionPrompt,
-    insidersPromptStateKey
+    insidersPromptStateKey,
 } from '../../../client/common/insidersBuild/insidersExtensionPrompt';
 import { ExtensionChannel, IExtensionChannelService } from '../../../client/common/insidersBuild/types';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
@@ -49,7 +49,7 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            DataScienceSurveyBanner.bannerLabelNo()
+            DataScienceSurveyBanner.bannerLabelNo(),
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
             ExtensionChannels.yesDaily() as any
@@ -57,7 +57,7 @@ suite('Insiders Extension prompt', () => {
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(ExtensionChannel.daily)).thenResolve();
         hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
+            .setup((u) => u.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         await insidersPrompt.promptToInstallInsiders();
@@ -71,7 +71,7 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            DataScienceSurveyBanner.bannerLabelNo()
+            DataScienceSurveyBanner.bannerLabelNo(),
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
             ExtensionChannels.yesWeekly() as any
@@ -79,7 +79,7 @@ suite('Insiders Extension prompt', () => {
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(ExtensionChannel.weekly)).thenResolve();
         hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
+            .setup((u) => u.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         await insidersPrompt.promptToInstallInsiders();
@@ -93,7 +93,7 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            DataScienceSurveyBanner.bannerLabelNo()
+            DataScienceSurveyBanner.bannerLabelNo(),
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
             DataScienceSurveyBanner.bannerLabelNo() as any
@@ -101,7 +101,7 @@ suite('Insiders Extension prompt', () => {
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(anything())).thenResolve();
         hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
+            .setup((u) => u.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         await insidersPrompt.promptToInstallInsiders();
@@ -115,7 +115,7 @@ suite('Insiders Extension prompt', () => {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            DataScienceSurveyBanner.bannerLabelNo()
+            DataScienceSurveyBanner.bannerLabelNo(),
         ];
         when(appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts)).thenResolve(
             undefined as any
@@ -123,7 +123,7 @@ suite('Insiders Extension prompt', () => {
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(anything())).thenResolve();
         hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
+            .setup((u) => u.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         await insidersPrompt.promptToInstallInsiders();

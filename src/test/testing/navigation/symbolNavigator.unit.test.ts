@@ -13,12 +13,12 @@ import {
     SymbolInformation,
     SymbolKind,
     TextDocument,
-    Uri
+    Uri,
 } from 'vscode';
 import {
     ExecutionResult,
     IPythonExecutionFactory,
-    IPythonExecutionService
+    IPythonExecutionService,
 } from '../../../client/common/process/types';
 import { IDocumentSymbolProvider } from '../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
@@ -44,14 +44,14 @@ suite('Unit Tests - Navigation Command Handler', () => {
         pythonService.setup((x: any) => x.then).returns(() => undefined);
 
         pythonExecFactory
-            .setup(factory => factory.create(typemoq.It.isAny()))
+            .setup((factory) => factory.create(typemoq.It.isAny()))
             .returns(async () => pythonService.object);
 
         doc = typemoq.Mock.ofType<TextDocument>();
         token = new CancellationTokenSource().token;
     });
     test('Ensure no symbols are returned when file has not been saved', async () => {
-        doc.setup(d => d.isUntitled)
+        doc.setup((d) => d.isUntitled)
             .returns(() => true)
             .verifiable(typemoq.Times.once());
 
@@ -62,18 +62,18 @@ suite('Unit Tests - Navigation Command Handler', () => {
         doc.verifyAll();
     });
     test('Ensure no symbols are returned when there are errors in running the code', async () => {
-        doc.setup(d => d.isUntitled)
+        doc.setup((d) => d.isUntitled)
             .returns(() => false)
             .verifiable(typemoq.Times.once());
-        doc.setup(d => d.isDirty)
+        doc.setup((d) => d.isDirty)
             .returns(() => false)
             .verifiable(typemoq.Times.once());
-        doc.setup(d => d.uri)
+        doc.setup((d) => d.uri)
             .returns(() => Uri.file(__filename))
             .verifiable(typemoq.Times.atLeastOnce());
 
         pythonService
-            .setup(service => service.exec(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((service) => service.exec(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(async () => {
                 return { stdout: '' };
             });
@@ -88,20 +88,20 @@ suite('Unit Tests - Navigation Command Handler', () => {
         const docUri = Uri.file(__filename);
         const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'symbolProvider.py'), docUri.fsPath];
         const proc: ExecutionResult<string> = {
-            stdout: JSON.stringify({ classes: [], methods: [], functions: [] })
+            stdout: JSON.stringify({ classes: [], methods: [], functions: [] }),
         };
-        doc.setup(d => d.isUntitled)
+        doc.setup((d) => d.isUntitled)
             .returns(() => false)
             .verifiable(typemoq.Times.once());
-        doc.setup(d => d.isDirty)
+        doc.setup((d) => d.isDirty)
             .returns(() => false)
             .verifiable(typemoq.Times.once());
-        doc.setup(d => d.uri)
+        doc.setup((d) => d.uri)
             .returns(() => docUri)
             .verifiable(typemoq.Times.atLeastOnce());
 
         pythonService
-            .setup(service => service.exec(typemoq.It.isValue(args), typemoq.It.isAny()))
+            .setup((service) => service.exec(typemoq.It.isValue(args), typemoq.It.isAny()))
             .returns(async () => proc)
             .verifiable(typemoq.Times.once());
 
@@ -122,39 +122,39 @@ suite('Unit Tests - Navigation Command Handler', () => {
                         namespace: '1',
                         name: 'one',
                         kind: SymbolKind.Class,
-                        range: { start: { line: 1, character: 2 }, end: { line: 3, character: 4 } }
-                    }
+                        range: { start: { line: 1, character: 2 }, end: { line: 3, character: 4 } },
+                    },
                 ],
                 methods: [
                     {
                         namespace: '2',
                         name: 'two',
                         kind: SymbolKind.Class,
-                        range: { start: { line: 5, character: 6 }, end: { line: 7, character: 8 } }
-                    }
+                        range: { start: { line: 5, character: 6 }, end: { line: 7, character: 8 } },
+                    },
                 ],
                 functions: [
                     {
                         namespace: '3',
                         name: 'three',
                         kind: SymbolKind.Class,
-                        range: { start: { line: 9, character: 10 }, end: { line: 11, character: 12 } }
-                    }
-                ]
-            })
+                        range: { start: { line: 9, character: 10 }, end: { line: 11, character: 12 } },
+                    },
+                ],
+            }),
         };
-        doc.setup(d => d.isUntitled)
+        doc.setup((d) => d.isUntitled)
             .returns(() => false)
             .verifiable(typemoq.Times.once());
-        doc.setup(d => d.isDirty)
+        doc.setup((d) => d.isDirty)
             .returns(() => false)
             .verifiable(typemoq.Times.once());
-        doc.setup(d => d.uri)
+        doc.setup((d) => d.uri)
             .returns(() => docUri)
             .verifiable(typemoq.Times.atLeastOnce());
 
         pythonService
-            .setup(service => service.exec(typemoq.It.isValue(args), typemoq.It.isAny()))
+            .setup((service) => service.exec(typemoq.It.isValue(args), typemoq.It.isAny()))
             .returns(async () => proc)
             .verifiable(typemoq.Times.once());
 

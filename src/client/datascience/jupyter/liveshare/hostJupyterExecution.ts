@@ -12,7 +12,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IOutputChannel
+    IOutputChannel,
 } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
@@ -152,10 +152,10 @@ export class HostJupyterExecution
                     hostName: connectionInfo.hostName,
                     localLaunch: false,
                     localProcExitCode: undefined,
-                    disconnected: _l => {
+                    disconnected: (_l) => {
                         return { dispose: noop };
                     },
-                    dispose: noop
+                    dispose: noop,
                 };
             }
         }

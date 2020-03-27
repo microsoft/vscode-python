@@ -11,7 +11,7 @@ import {
     BANNER_NAME_DS_SURVEY,
     IBrowserService,
     IPersistentStateFactory,
-    IPythonExtensionBanner
+    IPythonExtensionBanner,
 } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
@@ -21,12 +21,12 @@ import { IInteractiveWindowListener, INotebookEditorProvider } from './types';
 export enum DSSurveyStateKeys {
     ShowBanner = 'ShowDSSurveyBanner',
     OpenNotebookCount = 'DS_OpenNotebookCount',
-    ExecutionCount = 'DS_ExecutionCount'
+    ExecutionCount = 'DS_ExecutionCount',
 }
 
 enum DSSurveyLabelIndex {
     Yes,
-    No
+    No,
 }
 
 const NotebookOpenThreshold = 5;
@@ -77,7 +77,7 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
     private bannerMessage: string = localize.DataScienceSurveyBanner.bannerMessage();
     private bannerLabels: string[] = [
         localize.DataScienceSurveyBanner.bannerLabelYes(),
-        localize.DataScienceSurveyBanner.bannerLabelNo()
+        localize.DataScienceSurveyBanner.bannerLabelNo(),
     ];
     private readonly surveyLink: string;
 

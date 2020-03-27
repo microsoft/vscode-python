@@ -15,7 +15,7 @@ import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
-    ITerminalAutoActivation
+    ITerminalAutoActivation,
 } from '../../client/terminals/types';
 
 suite('Terminal - Service Registry', () => {
@@ -28,25 +28,25 @@ suite('Terminal - Service Registry', () => {
             [IExtensionSingleActivationService, ExtensionActivationForTerminalActivation],
             [ICodeExecutionService, ReplProvider, 'repl'],
             [ITerminalAutoActivation, TerminalAutoActivation],
-            [ICodeExecutionService, TerminalCodeExecutionProvider, 'standard']
-        ].forEach(args => {
+            [ICodeExecutionService, TerminalCodeExecutionProvider, 'standard'],
+        ].forEach((args) => {
             if (args.length === 2) {
                 services
-                    .setup(s =>
+                    .setup((s) =>
                         s.addSingleton(
                             // tslint:disable-next-line:no-any
                             typemoq.It.isValue(args[0] as any),
-                            typemoq.It.is(value => args[1] === value)
+                            typemoq.It.is((value) => args[1] === value)
                         )
                     )
                     .verifiable(typemoq.Times.once());
             } else {
                 services
-                    .setup(s =>
+                    .setup((s) =>
                         s.addSingleton(
                             // tslint:disable-next-line:no-any
                             typemoq.It.isValue(args[0] as any),
-                            typemoq.It.is(value => args[1] === value),
+                            typemoq.It.is((value) => args[1] === value),
                             // tslint:disable-next-line:no-any
                             typemoq.It.isValue(args[2] as any)
                         )

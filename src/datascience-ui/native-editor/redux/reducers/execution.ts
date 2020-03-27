@@ -12,7 +12,7 @@ import {
     CursorPos,
     getSelectedAndFocusedInfo,
     ICellViewModel,
-    IMainState
+    IMainState,
 } from '../../../interactive-common/mainState';
 import { postActionToExtension, queueIncomingActionWithPayload } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
@@ -21,7 +21,7 @@ import {
     CommonActionType,
     ICellAction,
     IChangeCellTypeAction,
-    IExecuteAction
+    IExecuteAction,
 } from '../../../interactive-common/redux/reducers/types';
 import { NativeEditorReducerArg } from '../mapping';
 import { Effects } from './effects';
@@ -35,8 +35,8 @@ export namespace Execution {
     ): IMainState {
         const newVMs = [...prevState.cellVMs];
         const cellIdsToExecute: string[] = [];
-        cellIds.forEach(cellId => {
-            const index = prevState.cellVMs.findIndex(cell => cell.cell.id === cellId);
+        cellIds.forEach((cellId) => {
+            const index = prevState.cellVMs.findIndex((cell) => cell.cell.id === cellId);
             if (index === -1) {
                 return;
             }
@@ -49,7 +49,7 @@ export namespace Execution {
                 clonedCell.outputs = [];
                 newVMs[index] = Helpers.asCellViewModel({
                     ...orig,
-                    cell: { ...orig.cell, state: CellState.executing, data: clonedCell }
+                    cell: { ...orig.cell, state: CellState.executing, data: clonedCell },
                 });
                 cellIdsToExecute.push(orig.cell.id);
             }
@@ -59,21 +59,21 @@ export namespace Execution {
         if (cellIdsToExecute.length > 0) {
             // Send a message if a code cell
             postActionToExtension(originalArg, InteractiveWindowMessages.ReExecuteCells, {
-                cellIds: cellIdsToExecute
+                cellIds: cellIdsToExecute,
             });
         }
 
         return {
             ...prevState,
-            cellVMs: newVMs
+            cellVMs: newVMs,
         };
     }
 
     export function executeAbove(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index > 0) {
             // Get all cellIds until `index`.
-            const cellIds = arg.prevState.cellVMs.slice(0, index).map(cellVm => cellVm.cell.id);
+            const cellIds = arg.prevState.cellVMs.slice(0, index).map((cellVm) => cellVm.cell.id);
             return executeRange(arg.prevState, cellIds, arg);
         }
         return arg.prevState;
@@ -82,24 +82,24 @@ export namespace Execution {
     export function executeCellAndAdvance(arg: NativeEditorReducerArg<IExecuteAction>): IMainState {
         queueIncomingActionWithPayload(arg, CommonActionType.EXECUTE_CELL, {
             cellId: arg.payload.data.cellId,
-            moveOp: arg.payload.data.moveOp
+            moveOp: arg.payload.data.moveOp,
         });
         if (arg.payload.data.moveOp === 'add') {
             const newCellId = uuid();
             queueIncomingActionWithPayload(arg, CommonActionType.INSERT_BELOW, {
                 cellId: arg.payload.data.cellId,
-                newCellId
+                newCellId,
             });
             queueIncomingActionWithPayload(arg, CommonActionType.FOCUS_CELL, {
                 cellId: newCellId,
-                cursorPos: CursorPos.Current
+                cursorPos: CursorPos.Current,
             });
         }
         return arg.prevState;
     }
 
     export function executeCell(arg: NativeEditorReducerArg<IExecuteAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0 && arg.payload.data.cellId) {
             // Start executing this cell.
             const executeResult = executeRange(arg.prevState, [arg.payload.data.cellId], arg);
@@ -112,16 +112,16 @@ export namespace Execution {
                         {
                             ...arg,
                             prevState: {
-                                ...executeResult
+                                ...executeResult,
                             },
                             payload: {
                                 ...arg.payload,
                                 data: {
                                     ...arg.payload.data,
                                     cellId: arg.prevState.cellVMs[index + 1].cell.id,
-                                    cursorPos: CursorPos.Current
-                                }
-                            }
+                                    cursorPos: CursorPos.Current,
+                                },
+                            },
                         },
                         // Select the next cell, but do not set focus to it.
                         false
@@ -136,10 +136,10 @@ export namespace Execution {
     }
 
     export function executeCellAndBelow(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             // Get all cellIds starting from `index`.
-            const cellIds = arg.prevState.cellVMs.slice(index).map(cellVm => cellVm.cell.id);
+            const cellIds = arg.prevState.cellVMs.slice(index).map((cellVm) => cellVm.cell.id);
             return executeRange(arg.prevState, cellIds, arg);
         }
         return arg.prevState;
@@ -147,7 +147,7 @@ export namespace Execution {
 
     export function executeAllCells(arg: NativeEditorReducerArg): IMainState {
         if (arg.prevState.cellVMs.length > 0) {
-            const cellIds = arg.prevState.cellVMs.map(cellVm => cellVm.cell.id);
+            const cellIds = arg.prevState.cellVMs.map((cellVm) => cellVm.cell.id);
             return executeRange(arg.prevState, cellIds, arg);
         }
         return arg.prevState;
@@ -156,7 +156,7 @@ export namespace Execution {
     export function executeSelectedCell(arg: NativeEditorReducerArg): IMainState {
         // This is the same thing as executing the selected cell
         const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === selectionInfo.selectedCellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === selectionInfo.selectedCellId);
         if (selectionInfo.selectedCellId && index >= 0) {
             return executeCell({
                 ...arg,
@@ -164,9 +164,9 @@ export namespace Execution {
                     ...arg.payload,
                     data: {
                         cellId: selectionInfo.selectedCellId,
-                        moveOp: 'none'
-                    }
-                }
+                        moveOp: 'none',
+                    },
+                },
             });
         }
 
@@ -174,10 +174,10 @@ export namespace Execution {
     }
 
     export function clearAllOutputs(arg: NativeEditorReducerArg): IMainState {
-        const newList = arg.prevState.cellVMs.map(cellVM => {
+        const newList = arg.prevState.cellVMs.map((cellVM) => {
             return Helpers.asCellViewModel({
                 ...cellVM,
-                cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } }
+                cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } },
             });
         });
 
@@ -185,12 +185,12 @@ export namespace Execution {
 
         return {
             ...arg.prevState,
-            cellVMs: newList
+            cellVMs: newList,
         };
     }
 
     export function changeCellType(arg: NativeEditorReducerArg<IChangeCellTypeAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             const cellVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];
@@ -200,15 +200,15 @@ export namespace Execution {
                 ...current,
                 cell: {
                     ...current.cell,
-                    data: newNotebookCell
-                }
+                    data: newNotebookCell,
+                },
             };
             cellVMs[index] = newCell;
             Transfer.changeCellType(arg, cellVMs[index].cell);
 
             return {
                 ...arg.prevState,
-                cellVMs
+                cellVMs,
             };
         }
 
@@ -227,7 +227,7 @@ export namespace Execution {
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true
+                skipNextScroll: true,
             };
         }
 
@@ -246,7 +246,7 @@ export namespace Execution {
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true
+                skipNextScroll: true,
             };
         }
 

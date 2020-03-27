@@ -11,7 +11,7 @@ import {
     TestDiscoveryOptions,
     TestRunOptions,
     Tests,
-    TestsToRun
+    TestsToRun,
 } from '../common/types';
 import { IArgumentsService, IPythonTestMessage, ITestManagerRunner, TestFilter } from '../types';
 
@@ -41,7 +41,7 @@ export class TestManager extends BaseTestManager {
             args,
             token: this.testDiscoveryCancellationToken!,
             ignoreCache,
-            outChannel: this.outputChannel
+            outChannel: this.outputChannel,
         };
     }
     public async runTestImpl(
@@ -76,7 +76,7 @@ export class TestManager extends BaseTestManager {
             testsToRun,
             debug,
             token: this.testRunnerCancellationToken!,
-            outChannel: this.outputChannel
+            outChannel: this.outputChannel,
         };
         const testResults = await this.runner.runTest(this.testResultsService, options, this);
         const messages: IPythonTestMessage[] = await this.testMessageService.getFilteredTestMessages(

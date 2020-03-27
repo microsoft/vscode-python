@@ -38,14 +38,14 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
             request: 'launch',
             program: program || defaultProgram,
             args: ['runserver', '--noreload'],
-            django: true
+            django: true,
         };
         if (!program) {
             const selectedProgram = await input.showInputBox({
                 title: DebugConfigStrings.django.enterManagePyPath.title(),
                 value: defaultProgram,
                 prompt: DebugConfigStrings.django.enterManagePyPath.prompt(),
-                validate: value => this.validateManagePy(state.folder, defaultProgram, value)
+                validate: (value) => this.validateManagePy(state.folder, defaultProgram, value),
             });
             if (selectedProgram) {
                 manuallyEnteredAValue = true;
@@ -56,7 +56,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.launchDjango,
             autoDetectedDjangoManagePyPath: !!program,
-            manuallyEnteredAValue
+            manuallyEnteredAValue,
         });
         Object.assign(state.config, config);
     }
@@ -73,12 +73,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
         if (selected !== defaultValue && !(await this.fs.fileExists(resolvedPath))) {
             return error;
         }
-        if (
-            !resolvedPath
-                .trim()
-                .toLowerCase()
-                .endsWith('.py')
-        ) {
+        if (!resolvedPath.trim().toLowerCase().endsWith('.py')) {
             return error;
         }
         return;

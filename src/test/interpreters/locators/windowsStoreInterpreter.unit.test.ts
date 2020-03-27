@@ -47,7 +47,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\Microsoft\\WindowsApps\\Something\\Python.exe',
         'C:\\Microsoft\\WindowsApps\\Python.exe',
         'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-        'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe'
+        'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
     ];
     for (const interpreter of windowsStoreInterpreters) {
         test(`${interpreter} must be identified as a windows store interpter`, () => {
@@ -93,7 +93,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\Program Files\\Python\\python.exe',
         'C:\\Program Files\\Microsoft\\Python\\python.exe',
         '..\\apps\\Python.exe',
-        'C:\\Apps\\Python.exe'
+        'C:\\Apps\\Python.exe',
     ];
     for (const interpreter of nonWindowsStoreInterpreters) {
         test(`${interpreter} must not be identified as a windows store interpter`, () => {
@@ -125,7 +125,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
         'C:\\Program Files\\WindowsApps\\Something\\Python.exe',
         'C:\\Program Files\\WindowsApps\\Python.exe',
         'C:\\Microsoft\\WindowsApps\\PythonSoftwareFoundation\\Python.exe',
-        'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe'
+        'C:\\microsoft\\WindowsApps\\PythonSoftwareFoundation\\Something\\Python.exe',
     ];
     for (const interpreter of windowsStoreHiddenInterpreters) {
         test(`${interpreter} must be identified as a windows store (hidden) interpter`, () => {
@@ -150,7 +150,7 @@ suite('Interpreters - Windows Store Interpreter', () => {
     }
     const nonWindowsStoreHiddenInterpreters = [
         'C:\\Microsofts\\WindowsApps\\Something\\Python.exe',
-        'C:\\Microsoft\\WindowsAppss\\Python.exe'
+        'C:\\Microsoft\\WindowsAppss\\Python.exe',
     ];
     for (const interpreter of nonWindowsStoreHiddenInterpreters) {
         test(`${interpreter} must not be identified as a windows store (hidden) interpter`, () => {

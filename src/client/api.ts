@@ -48,7 +48,7 @@ export function buildApi(
 
     const api = {
         // 'ready' will propagate the exception, but we must log it here first.
-        ready: ready.catch(ex => {
+        ready: ready.catch((ex) => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),
@@ -69,10 +69,10 @@ export function buildApi(
                 return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({
                     host,
                     port,
-                    waitUntilDebuggerAttaches
+                    waitUntilDebuggerAttaches,
                 });
-            }
-        }
+            },
+        },
     };
 
     // In test environment return the DI Container.

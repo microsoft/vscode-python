@@ -52,22 +52,22 @@ suite('Telemetry', () => {
         {
             testName: 'Returns true when globalValue is set to false',
             settings: { globalValue: false },
-            expectedResult: true
+            expectedResult: true,
         },
         {
             testName: 'Returns false otherwise',
             settings: {},
-            expectedResult: false
-        }
+            expectedResult: false,
+        },
     ];
 
     suite('Function isTelemetryDisabled()', () => {
-        testsForisTelemetryDisabled.forEach(testParams => {
+        testsForisTelemetryDisabled.forEach((testParams) => {
             test(testParams.testName, async () => {
                 const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                 when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
                 workspaceConfig
-                    .setup(c => c.inspect<string>('enableTelemetry'))
+                    .setup((c) => c.inspect<string>('enableTelemetry'))
                     .returns(() => testParams.settings as any)
                     .verifiable(TypeMoq.Times.once());
 
@@ -119,7 +119,7 @@ suite('Telemetry', () => {
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
 
         const expectedErrorProperties = {
-            originalEventName: eventName
+            originalEventName: eventName,
         };
 
         expect(Reporter.eventName).to.deep.equal(['ERROR', eventName]);
@@ -149,7 +149,7 @@ suite('Telemetry', () => {
             `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`,
             'at runCallback (timers.js:789:20)',
             'at tryOnImmediate (timers.js:751:5)',
-            'at processImmediate [as _immediateCallback] (timers.js:722:5)'
+            'at processImmediate [as _immediateCallback] (timers.js:722:5)',
         ].join('\n\t');
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
@@ -161,7 +161,7 @@ suite('Telemetry', () => {
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
 
         const expectedErrorProperties = {
-            originalEventName: eventName
+            originalEventName: eventName,
         };
 
         const stackTrace = Reporter.properties[0].stackTrace;
@@ -188,7 +188,7 @@ suite('Telemetry', () => {
             'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5',
             'at runCallback <hidden>/timers.js:789:20',
             'at tryOnImmediate <hidden>/timers.js:751:5',
-            'at processImmediate [as _immediateCallback] <hidden>/timers.js:722:5'
+            'at processImmediate [as _immediateCallback] <hidden>/timers.js:722:5',
         ].join('\n\t');
 
         expect(stackTrace).to.be.equal(expectedStack);
@@ -202,7 +202,7 @@ suite('Telemetry', () => {
             'at callFn (c:/one/two/user/node_modules/mocha/lib/runnable.js:372:21)',
             'at Test.Runnable.run (/usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.js:364:7)',
             'at Runner.runTest (\\wowwee/node_modules/mocha/lib/runner.js:455:10)',
-            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`
+            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`,
         ].join('\n\t');
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
@@ -214,7 +214,7 @@ suite('Telemetry', () => {
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
 
         const expectedErrorProperties = {
-            originalEventName: eventName
+            originalEventName: eventName,
         };
 
         const stackTrace = Reporter.properties[0].stackTrace;
@@ -230,7 +230,7 @@ suite('Telemetry', () => {
             'at callFn <hidden>/runnable.js:372:21',
             'at Test.Runnable.run <hidden>/runnable.js:364:7',
             'at Runner.runTest <hidden>/runner.js:455:10',
-            'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5'
+            'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5',
         ].join('\n\t');
 
         expect(stackTrace).to.be.equal(expectedStack);
@@ -244,7 +244,7 @@ suite('Telemetry', () => {
             'at callFn (c:/one/two/user/node_modules/mocha/lib/runnable.js:372:21)',
             'at Test./usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.run (/usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.js:364:7)',
             'at Runner.runTest (\\wowwee/node_modules/mocha/lib/runner.js:455:10)',
-            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`
+            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`,
         ].join('\n\t');
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
@@ -256,7 +256,7 @@ suite('Telemetry', () => {
         sendTelemetryEvent(eventName as any, measures, properties as any, error);
 
         const expectedErrorProperties = {
-            originalEventName: eventName
+            originalEventName: eventName,
         };
 
         const stackTrace = Reporter.properties[0].stackTrace;
@@ -272,7 +272,7 @@ suite('Telemetry', () => {
             'at callFn <hidden>/runnable.js:372:21',
             'at <hidden>.run <hidden>/runnable.js:364:7',
             'at Runner.runTest <hidden>/runner.js:455:10',
-            'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5'
+            'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5',
         ].join('\n\t');
 
         expect(stackTrace).to.be.equal(expectedStack);

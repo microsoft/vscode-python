@@ -11,7 +11,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonExecutionService,
-    ObservableExecutionResult
+    ObservableExecutionResult,
 } from '../../../common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
@@ -39,7 +39,7 @@ class ProcessJupyterCommand implements IJupyterCommand {
         this.requiredArgs = args;
         this.launcherPromise = processServiceFactory.create();
         this.activationHelper = activationHelper;
-        this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch(_e => undefined);
+        this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch((_e) => undefined);
     }
 
     public interpreter(): Promise<PythonInterpreter | undefined> {
@@ -83,27 +83,20 @@ class InterpreterJupyterCommand implements IJupyterCommand {
         isActiveInterpreter: boolean
     ) {
         this.interpreterPromise = Promise.resolve(this._interpreter);
-        this.pythonLauncher = this.interpreterPromise.then(async interpreter => {
+        this.pythonLauncher = this.interpreterPromise.then(async (interpreter) => {
             // Create a daemon only if the interpreter is the same as the current interpreter.
             // We don't want too many daemons (we don't want one for each of the users interpreter on their machine).
             if (isActiveInterpreter) {
                 const svc = await pythonExecutionFactory.createDaemon({
                     daemonModule: PythonDaemonModule,
-                    pythonPath: interpreter!.path
+                    pythonPath: interpreter!.path,
                 });
 
                 // If we're using this command to start notebook, then ensure the daemon can start a notebook inside it.
                 if (
                     (moduleName.toLowerCase() === 'jupyter' &&
-                        args
-                            .join(' ')
-                            .toLowerCase()
-                            .startsWith('-m jupyter notebook')) ||
-                    (moduleName.toLowerCase() === 'notebook' &&
-                        args
-                            .join(' ')
-                            .toLowerCase()
-                            .startsWith('-m notebook'))
+                        args.join(' ').toLowerCase().startsWith('-m jupyter notebook')) ||
+                    (moduleName.toLowerCase() === 'notebook' && args.join(' ').toLowerCase().startsWith('-m notebook'))
                 ) {
                     try {
                         const output = await svc.exec(
@@ -113,7 +106,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
                                     'pythonFiles',
                                     'vscode_datascience_helpers',
                                     'jupyter_nbInstalled.py'
-                                )
+                                ),
                             ],
                             {}
                         );
@@ -127,7 +120,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
             }
             return pythonExecutionFactory.createActivatedEnvironment({
                 interpreter: this._interpreter,
-                bypassCondaExecution: true
+                bypassCondaExecution: true,
             });
         });
     }
@@ -268,7 +261,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
         const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
             interpreter,
-            bypassCondaExecution: true
+            bypassCondaExecution: true,
         });
         return activatedEnv.exec(
             [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getJupyterKernels.py')],
@@ -279,7 +272,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
         const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
             interpreter,
-            bypassCondaExecution: true
+            bypassCondaExecution: true,
         });
         return activatedEnv.exec(
             [
@@ -288,7 +281,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
                     'pythonFiles',
                     'vscode_datascience_helpers',
                     'getJupyterKernelspecVersion.py'
-                )
+                ),
             ],
             { ...options, throwOnStdErr: true }
         );

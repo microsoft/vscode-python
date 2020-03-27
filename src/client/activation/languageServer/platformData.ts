@@ -11,13 +11,13 @@ export enum PlatformName {
     Windows32Bit = 'win-x86',
     Windows64Bit = 'win-x64',
     Mac64Bit = 'osx-x64',
-    Linux64Bit = 'linux-x64'
+    Linux64Bit = 'linux-x64',
 }
 
 export enum PlatformLSExecutables {
     Windows = 'Microsoft.Python.LanguageServer.exe',
     MacOS = 'Microsoft.Python.LanguageServer',
-    Linux = 'Microsoft.Python.LanguageServer'
+    Linux = 'Microsoft.Python.LanguageServer',
 }
 
 @injectable()

@@ -47,7 +47,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
             await this._terminalService!.show();
             return;
         }
-        this.replActive = new Promise<boolean>(async resolve => {
+        this.replActive = new Promise<boolean>(async (resolve) => {
             const replCommandArgs = await this.getExecutableInfo(resource);
             await this.getTerminalService(resource).sendCommand(replCommandArgs.command, replCommandArgs.args);
 
@@ -67,7 +67,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
         return {
             command: isWindows ? command.replace(/\\/g, '/') : command,
-            args: [...launchArgs, ...args]
+            args: [...launchArgs, ...args],
         };
     }
 

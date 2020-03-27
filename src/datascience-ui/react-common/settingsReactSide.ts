@@ -44,15 +44,15 @@ export function getDefaultSettings() {
                 verticalScrollbarSize: 14,
                 horizontalScrollbarSize: 14,
                 fontSize: 14,
-                fontFamily: "Consolas, 'Courier New', monospace"
+                fontFamily: "Consolas, 'Courier New', monospace",
             },
-            theme: 'Default Dark+'
+            theme: 'Default Dark+',
         },
         intellisenseOptions: {
             quickSuggestions: {
                 other: true,
                 comments: false,
-                strings: false
+                strings: false,
             },
             acceptSuggestionOnEnter: 'on',
             quickSuggestionsDelay: 10,
@@ -61,12 +61,12 @@ export function getDefaultSettings() {
             suggestLocalityBonus: true,
             suggestSelection: 'recentlyUsed',
             wordBasedSuggestions: true,
-            parameterHintsEnabled: true
+            parameterHintsEnabled: true,
         },
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],
-        jupyterCommandLineArguments: []
+        jupyterCommandLineArguments: [],
     };
 
     return result;
@@ -81,19 +81,19 @@ export function computeEditorOptions(settings: IDataScienceExtraSettings): monac
             quickSuggestions: {
                 other: intellisenseOptions.quickSuggestions.other,
                 comments: intellisenseOptions.quickSuggestions.comments,
-                strings: intellisenseOptions.quickSuggestions.strings
+                strings: intellisenseOptions.quickSuggestions.strings,
             },
             acceptSuggestionOnEnter: intellisenseOptions.acceptSuggestionOnEnter,
             quickSuggestionsDelay: intellisenseOptions.quickSuggestionsDelay,
             suggestOnTriggerCharacters: intellisenseOptions.suggestOnTriggerCharacters,
             tabCompletion: intellisenseOptions.tabCompletion,
             suggest: {
-                localityBonus: intellisenseOptions.suggestLocalityBonus
+                localityBonus: intellisenseOptions.suggestLocalityBonus,
             },
             suggestSelection: intellisenseOptions.suggestSelection,
             wordBasedSuggestions: intellisenseOptions.wordBasedSuggestions,
             parameterHints: {
-                enabled: intellisenseOptions.parameterHintsEnabled
+                enabled: intellisenseOptions.parameterHintsEnabled,
             },
             cursorStyle: extraSettings.editor.cursor,
             cursorBlinking: extraSettings.editor.cursorBlink,
@@ -101,7 +101,7 @@ export function computeEditorOptions(settings: IDataScienceExtraSettings): monac
             autoClosingQuotes: extraSettings.editor.autoClosingQuotes as any,
             autoIndent: extraSettings.editor.autoIndent as any,
             autoSurround: extraSettings.editor.autoSurround as any,
-            fontLigatures: extraSettings.editor.fontLigatures
+            fontLigatures: extraSettings.editor.fontLigatures,
         };
     }
 

@@ -15,7 +15,7 @@ import { noop } from '../../client/common/utils/misc';
 import { deserializeDataViews } from '../../client/common/utils/serializers';
 import {
     IInteractiveWindowMapping,
-    IPyWidgetMessages
+    IPyWidgetMessages,
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ProxyKernel } from './kernel';
 import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, IMessageSender } from './types';
@@ -161,7 +161,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
     public registerPostOffice(): void {
         // Process all messages sequentially.
         this.messages
-            .concatMap(async msg => {
+            .concatMap(async (msg) => {
                 this.restoreBuffers(msg.payload);
                 await this.proxyKernel.handleMessageAsync(msg.type, msg.payload);
                 await this.handleMessageAsync(msg.type, msg.payload);

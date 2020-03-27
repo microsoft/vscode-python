@@ -23,7 +23,7 @@ export function generateTestData(_numberOfRows: number): ITestData {
         { id: 'Survived', name: 'Survived', field: 'Survived', type: 'bool' },
         { id: 'Pclass', name: 'Pclass', field: 'Pclass', type: 'integer' },
         { id: 'Embarked', name: 'Embarked', field: 'Embarked', type: 'string' },
-        { id: 'Sex', name: 'Sex', field: 'Sex', type: 'string' }
+        { id: 'Sex', name: 'Sex', field: 'Sex', type: 'string' },
     ];
 
     const keys = ['PassengerId'];
@@ -34,9 +34,9 @@ export function generateTestData(_numberOfRows: number): ITestData {
         columns,
         primaryKeys: keys,
         rows,
-        loadingRows: titanicData.map(_t => {
+        loadingRows: titanicData.map((_t) => {
             return {};
-        })
+        }),
     };
 }
 
@@ -53,7 +53,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -67,7 +67,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -81,7 +81,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -95,7 +95,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -109,7 +109,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -123,7 +123,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -137,7 +137,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -151,7 +151,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -165,7 +165,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -179,7 +179,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -193,7 +193,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -207,7 +207,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -221,7 +221,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -235,7 +235,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -249,7 +249,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -263,7 +263,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 4,
@@ -277,7 +277,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -291,7 +291,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -305,7 +305,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -319,7 +319,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -333,7 +333,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -347,7 +347,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -361,7 +361,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -375,7 +375,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -389,7 +389,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -403,7 +403,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -417,7 +417,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -431,7 +431,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -445,7 +445,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -459,7 +459,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -473,7 +473,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -487,7 +487,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -501,7 +501,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -515,7 +515,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -529,7 +529,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -543,7 +543,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -557,7 +557,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -571,7 +571,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -585,7 +585,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -599,7 +599,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -613,7 +613,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -627,7 +627,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -641,7 +641,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -655,7 +655,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -669,7 +669,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -683,7 +683,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -697,7 +697,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -711,7 +711,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 2,
@@ -725,7 +725,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -739,7 +739,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 4,
@@ -753,7 +753,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -767,7 +767,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -781,7 +781,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -795,7 +795,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -809,7 +809,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -823,7 +823,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -837,7 +837,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -851,7 +851,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -865,7 +865,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 5,
@@ -879,7 +879,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -893,7 +893,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -907,7 +907,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: null,
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -921,7 +921,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -935,7 +935,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -949,7 +949,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -963,7 +963,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -977,7 +977,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -991,7 +991,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 4,
@@ -1005,7 +1005,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 2,
@@ -1019,7 +1019,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1033,7 +1033,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 5,
@@ -1047,7 +1047,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1061,7 +1061,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -1075,7 +1075,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1089,7 +1089,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1103,7 +1103,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1117,7 +1117,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1131,7 +1131,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1145,7 +1145,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1159,7 +1159,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1173,7 +1173,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1187,7 +1187,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1201,7 +1201,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1215,7 +1215,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1229,7 +1229,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 3,
@@ -1243,7 +1243,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -1257,7 +1257,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1271,7 +1271,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -1285,7 +1285,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1299,7 +1299,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1313,7 +1313,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1327,7 +1327,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -1341,7 +1341,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -1355,7 +1355,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1369,7 +1369,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1383,7 +1383,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1397,7 +1397,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1411,7 +1411,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1425,7 +1425,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -1439,7 +1439,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1453,7 +1453,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1467,7 +1467,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1481,7 +1481,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1495,7 +1495,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -1509,7 +1509,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1523,7 +1523,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1537,7 +1537,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1551,7 +1551,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1565,7 +1565,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -1579,7 +1579,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1593,7 +1593,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -1607,7 +1607,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1621,7 +1621,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -1635,7 +1635,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1649,7 +1649,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1663,7 +1663,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1677,7 +1677,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -1691,7 +1691,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1705,7 +1705,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 4,
@@ -1719,7 +1719,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 2,
@@ -1733,7 +1733,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1747,7 +1747,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -1761,7 +1761,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1775,7 +1775,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1789,7 +1789,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -1803,7 +1803,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1817,7 +1817,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1831,7 +1831,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -1845,7 +1845,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1859,7 +1859,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1873,7 +1873,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1887,7 +1887,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -1901,7 +1901,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -1915,7 +1915,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -1929,7 +1929,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1943,7 +1943,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1957,7 +1957,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -1971,7 +1971,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1985,7 +1985,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -1999,7 +1999,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2013,7 +2013,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2027,7 +2027,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -2041,7 +2041,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2055,7 +2055,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2069,7 +2069,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -2083,7 +2083,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2097,7 +2097,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -2111,7 +2111,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2125,7 +2125,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2139,7 +2139,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2153,7 +2153,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -2167,7 +2167,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2181,7 +2181,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2195,7 +2195,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2209,7 +2209,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2223,7 +2223,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2237,7 +2237,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2251,7 +2251,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2265,7 +2265,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 8,
@@ -2279,7 +2279,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2293,7 +2293,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2307,7 +2307,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2321,7 +2321,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2335,7 +2335,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 4,
@@ -2349,7 +2349,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2363,7 +2363,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2377,7 +2377,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -2391,7 +2391,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2405,7 +2405,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2419,7 +2419,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2433,7 +2433,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 4,
@@ -2447,7 +2447,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -2461,7 +2461,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2475,7 +2475,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2489,7 +2489,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -2503,7 +2503,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -2517,7 +2517,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2531,7 +2531,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2545,7 +2545,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2559,7 +2559,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 8,
@@ -2573,7 +2573,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2587,7 +2587,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 4,
@@ -2601,7 +2601,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -2615,7 +2615,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2629,7 +2629,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2643,7 +2643,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -2657,7 +2657,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2671,7 +2671,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -2685,7 +2685,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2699,7 +2699,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2713,7 +2713,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2727,7 +2727,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -2741,7 +2741,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -2755,7 +2755,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2769,7 +2769,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2783,7 +2783,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2797,7 +2797,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2811,7 +2811,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2825,7 +2825,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2839,7 +2839,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2853,7 +2853,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 8,
@@ -2867,7 +2867,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2881,7 +2881,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2895,7 +2895,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2909,7 +2909,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2923,7 +2923,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -2937,7 +2937,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2951,7 +2951,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2965,7 +2965,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -2979,7 +2979,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -2993,7 +2993,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3007,7 +3007,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3021,7 +3021,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3035,7 +3035,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -3049,7 +3049,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -3063,7 +3063,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3077,7 +3077,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -3091,7 +3091,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3105,7 +3105,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3119,7 +3119,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3133,7 +3133,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3147,7 +3147,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3161,7 +3161,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3175,7 +3175,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -3189,7 +3189,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3203,7 +3203,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3217,7 +3217,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3231,7 +3231,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3245,7 +3245,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -3259,7 +3259,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -3273,7 +3273,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3287,7 +3287,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3301,7 +3301,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 4,
@@ -3315,7 +3315,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3329,7 +3329,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3343,7 +3343,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -3357,7 +3357,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3371,7 +3371,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3385,7 +3385,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3399,7 +3399,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -3413,7 +3413,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -3427,7 +3427,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3441,7 +3441,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3455,7 +3455,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3469,7 +3469,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -3483,7 +3483,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3497,7 +3497,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3511,7 +3511,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -3525,7 +3525,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -3539,7 +3539,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3553,7 +3553,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -3567,7 +3567,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3581,7 +3581,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -3595,7 +3595,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3609,7 +3609,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3623,7 +3623,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3637,7 +3637,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3651,7 +3651,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3665,7 +3665,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3679,7 +3679,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3693,7 +3693,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 4,
@@ -3707,7 +3707,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -3721,7 +3721,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3735,7 +3735,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3749,7 +3749,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3763,7 +3763,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 4,
@@ -3777,7 +3777,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -3791,7 +3791,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3805,7 +3805,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3819,7 +3819,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3833,7 +3833,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3847,7 +3847,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3861,7 +3861,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3875,7 +3875,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3889,7 +3889,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -3903,7 +3903,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3917,7 +3917,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3931,7 +3931,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 4,
@@ -3945,7 +3945,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -3959,7 +3959,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -3973,7 +3973,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -3987,7 +3987,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4001,7 +4001,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4015,7 +4015,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4029,7 +4029,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4043,7 +4043,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4057,7 +4057,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4071,7 +4071,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4085,7 +4085,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4099,7 +4099,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4113,7 +4113,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -4127,7 +4127,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4141,7 +4141,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4155,7 +4155,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4169,7 +4169,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4183,7 +4183,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4197,7 +4197,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -4211,7 +4211,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4225,7 +4225,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4239,7 +4239,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4253,7 +4253,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 2,
@@ -4267,7 +4267,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4281,7 +4281,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4295,7 +4295,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4309,7 +4309,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -4323,7 +4323,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4337,7 +4337,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -4351,7 +4351,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -4365,7 +4365,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4379,7 +4379,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4393,7 +4393,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 2,
@@ -4407,7 +4407,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -4421,7 +4421,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4435,7 +4435,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -4449,7 +4449,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4463,7 +4463,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -4477,7 +4477,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4491,7 +4491,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4505,7 +4505,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -4519,7 +4519,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4533,7 +4533,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4547,7 +4547,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4561,7 +4561,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -4575,7 +4575,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 8,
@@ -4589,7 +4589,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4603,7 +4603,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4617,7 +4617,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4631,7 +4631,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -4645,7 +4645,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4659,7 +4659,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 2,
@@ -4673,7 +4673,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4687,7 +4687,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4701,7 +4701,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -4715,7 +4715,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -4729,7 +4729,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4743,7 +4743,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -4757,7 +4757,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4771,7 +4771,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4785,7 +4785,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4799,7 +4799,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -4813,7 +4813,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -4827,7 +4827,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4841,7 +4841,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4855,7 +4855,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4869,7 +4869,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4883,7 +4883,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -4897,7 +4897,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -4911,7 +4911,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -4925,7 +4925,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4939,7 +4939,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4953,7 +4953,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -4967,7 +4967,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -4981,7 +4981,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -4995,7 +4995,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5009,7 +5009,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5023,7 +5023,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5037,7 +5037,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5051,7 +5051,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5065,7 +5065,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5079,7 +5079,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -5093,7 +5093,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -5107,7 +5107,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5121,7 +5121,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5135,7 +5135,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -5149,7 +5149,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5163,7 +5163,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -5177,7 +5177,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5191,7 +5191,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5205,7 +5205,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5219,7 +5219,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -5233,7 +5233,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -5247,7 +5247,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5261,7 +5261,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5275,7 +5275,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -5289,7 +5289,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -5303,7 +5303,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5317,7 +5317,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5331,7 +5331,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5345,7 +5345,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5359,7 +5359,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5373,7 +5373,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5387,7 +5387,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5401,7 +5401,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -5415,7 +5415,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5429,7 +5429,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5443,7 +5443,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 5,
@@ -5457,7 +5457,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5471,7 +5471,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5485,7 +5485,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5499,7 +5499,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -5513,7 +5513,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5527,7 +5527,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -5541,7 +5541,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -5555,7 +5555,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5569,7 +5569,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5583,7 +5583,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5597,7 +5597,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5611,7 +5611,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5625,7 +5625,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5639,7 +5639,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5653,7 +5653,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5667,7 +5667,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -5681,7 +5681,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -5695,7 +5695,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5709,7 +5709,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -5723,7 +5723,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5737,7 +5737,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -5751,7 +5751,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5765,7 +5765,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -5779,7 +5779,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5793,7 +5793,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5807,7 +5807,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -5821,7 +5821,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5835,7 +5835,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5849,7 +5849,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5863,7 +5863,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -5877,7 +5877,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5891,7 +5891,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5905,7 +5905,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5919,7 +5919,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -5933,7 +5933,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5947,7 +5947,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -5961,7 +5961,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -5975,7 +5975,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -5989,7 +5989,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6003,7 +6003,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6017,7 +6017,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6031,7 +6031,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6045,7 +6045,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6059,7 +6059,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6073,7 +6073,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6087,7 +6087,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -6101,7 +6101,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6115,7 +6115,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6129,7 +6129,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6143,7 +6143,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 2,
@@ -6157,7 +6157,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 2,
@@ -6171,7 +6171,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -6185,7 +6185,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6199,7 +6199,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6213,7 +6213,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6227,7 +6227,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6241,7 +6241,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6255,7 +6255,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6269,7 +6269,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6283,7 +6283,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6297,7 +6297,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6311,7 +6311,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -6325,7 +6325,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6339,7 +6339,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6353,7 +6353,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6367,7 +6367,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6381,7 +6381,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6395,7 +6395,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6409,7 +6409,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6423,7 +6423,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6437,7 +6437,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6451,7 +6451,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6465,7 +6465,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6479,7 +6479,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6493,7 +6493,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6507,7 +6507,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6521,7 +6521,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6535,7 +6535,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6549,7 +6549,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6563,7 +6563,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6577,7 +6577,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6591,7 +6591,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6605,7 +6605,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -6619,7 +6619,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6633,7 +6633,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6647,7 +6647,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6661,7 +6661,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6675,7 +6675,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6689,7 +6689,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6703,7 +6703,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6717,7 +6717,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6731,7 +6731,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6745,7 +6745,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6759,7 +6759,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 5,
@@ -6773,7 +6773,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6787,7 +6787,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6801,7 +6801,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6815,7 +6815,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -6829,7 +6829,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -6843,7 +6843,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -6857,7 +6857,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -6871,7 +6871,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6885,7 +6885,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6899,7 +6899,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6913,7 +6913,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6927,7 +6927,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6941,7 +6941,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6955,7 +6955,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6969,7 +6969,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -6983,7 +6983,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -6997,7 +6997,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7011,7 +7011,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -7025,7 +7025,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7039,7 +7039,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7053,7 +7053,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7067,7 +7067,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7081,7 +7081,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7095,7 +7095,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7109,7 +7109,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -7123,7 +7123,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7137,7 +7137,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7151,7 +7151,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7165,7 +7165,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7179,7 +7179,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7193,7 +7193,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7207,7 +7207,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7221,7 +7221,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -7235,7 +7235,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7249,7 +7249,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7263,7 +7263,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7277,7 +7277,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7291,7 +7291,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -7305,7 +7305,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7319,7 +7319,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7333,7 +7333,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7347,7 +7347,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7361,7 +7361,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7375,7 +7375,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7389,7 +7389,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7403,7 +7403,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7417,7 +7417,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7431,7 +7431,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7445,7 +7445,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -7459,7 +7459,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -7473,7 +7473,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7487,7 +7487,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -7501,7 +7501,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7515,7 +7515,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7529,7 +7529,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7543,7 +7543,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7557,7 +7557,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7571,7 +7571,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7585,7 +7585,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7599,7 +7599,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7613,7 +7613,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 4,
@@ -7627,7 +7627,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 4,
@@ -7641,7 +7641,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -7655,7 +7655,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -7669,7 +7669,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7683,7 +7683,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -7697,7 +7697,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7711,7 +7711,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -7725,7 +7725,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -7739,7 +7739,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7753,7 +7753,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7767,7 +7767,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7781,7 +7781,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7795,7 +7795,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7809,7 +7809,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7823,7 +7823,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -7837,7 +7837,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7851,7 +7851,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -7865,7 +7865,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -7879,7 +7879,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -7893,7 +7893,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7907,7 +7907,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7921,7 +7921,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7935,7 +7935,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7949,7 +7949,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 2,
@@ -7963,7 +7963,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7977,7 +7977,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -7991,7 +7991,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8005,7 +8005,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8019,7 +8019,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8033,7 +8033,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -8047,7 +8047,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8061,7 +8061,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8075,7 +8075,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8089,7 +8089,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8103,7 +8103,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8117,7 +8117,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -8131,7 +8131,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -8145,7 +8145,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8159,7 +8159,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8173,7 +8173,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -8187,7 +8187,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8201,7 +8201,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8215,7 +8215,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8229,7 +8229,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8243,7 +8243,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8257,7 +8257,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8271,7 +8271,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8285,7 +8285,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8299,7 +8299,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8313,7 +8313,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8327,7 +8327,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8341,7 +8341,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8355,7 +8355,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -8369,7 +8369,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8383,7 +8383,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8397,7 +8397,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8411,7 +8411,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8425,7 +8425,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8439,7 +8439,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -8453,7 +8453,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8467,7 +8467,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8481,7 +8481,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8495,7 +8495,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8509,7 +8509,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8523,7 +8523,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8537,7 +8537,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8551,7 +8551,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8565,7 +8565,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8579,7 +8579,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -8593,7 +8593,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8607,7 +8607,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8621,7 +8621,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8635,7 +8635,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8649,7 +8649,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8663,7 +8663,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -8677,7 +8677,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8691,7 +8691,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 2,
@@ -8705,7 +8705,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8719,7 +8719,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8733,7 +8733,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8747,7 +8747,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8761,7 +8761,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8775,7 +8775,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8789,7 +8789,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8803,7 +8803,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8817,7 +8817,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8831,7 +8831,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8845,7 +8845,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8859,7 +8859,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8873,7 +8873,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8887,7 +8887,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8901,7 +8901,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8915,7 +8915,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -8929,7 +8929,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8943,7 +8943,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -8957,7 +8957,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -8971,7 +8971,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -8985,7 +8985,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -8999,7 +8999,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9013,7 +9013,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9027,7 +9027,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 3,
@@ -9041,7 +9041,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -9055,7 +9055,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -9069,7 +9069,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -9083,7 +9083,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9097,7 +9097,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9111,7 +9111,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9125,7 +9125,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9139,7 +9139,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -9153,7 +9153,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9167,7 +9167,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -9181,7 +9181,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9195,7 +9195,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -9209,7 +9209,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 2,
@@ -9223,7 +9223,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9237,7 +9237,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -9251,7 +9251,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -9265,7 +9265,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9279,7 +9279,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -9293,7 +9293,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9307,7 +9307,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9321,7 +9321,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9335,7 +9335,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -9349,7 +9349,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -9363,7 +9363,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9377,7 +9377,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9391,7 +9391,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9405,7 +9405,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -9419,7 +9419,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -9433,7 +9433,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -9447,7 +9447,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9461,7 +9461,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9475,7 +9475,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9489,7 +9489,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9503,7 +9503,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9517,7 +9517,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9531,7 +9531,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -9545,7 +9545,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -9559,7 +9559,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9573,7 +9573,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -9587,7 +9587,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9601,7 +9601,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 5,
@@ -9615,7 +9615,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -9629,7 +9629,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -9643,7 +9643,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 4,
@@ -9657,7 +9657,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9671,7 +9671,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9685,7 +9685,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9699,7 +9699,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -9713,7 +9713,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9727,7 +9727,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -9741,7 +9741,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9755,7 +9755,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9769,7 +9769,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9783,7 +9783,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9797,7 +9797,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9811,7 +9811,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -9825,7 +9825,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9839,7 +9839,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -9853,7 +9853,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -9867,7 +9867,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9881,7 +9881,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -9895,7 +9895,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -9909,7 +9909,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9923,7 +9923,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9937,7 +9937,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -9951,7 +9951,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9965,7 +9965,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -9979,7 +9979,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -9993,7 +9993,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10007,7 +10007,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10021,7 +10021,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10035,7 +10035,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10049,7 +10049,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10063,7 +10063,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10077,7 +10077,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10091,7 +10091,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10105,7 +10105,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10119,7 +10119,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10133,7 +10133,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -10147,7 +10147,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10161,7 +10161,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10175,7 +10175,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10189,7 +10189,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10203,7 +10203,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -10217,7 +10217,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10231,7 +10231,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -10245,7 +10245,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10259,7 +10259,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10273,7 +10273,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10287,7 +10287,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10301,7 +10301,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10315,7 +10315,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10329,7 +10329,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10343,7 +10343,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10357,7 +10357,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10371,7 +10371,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10385,7 +10385,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10399,7 +10399,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10413,7 +10413,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10427,7 +10427,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -10441,7 +10441,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -10455,7 +10455,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10469,7 +10469,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10483,7 +10483,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10497,7 +10497,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10511,7 +10511,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -10525,7 +10525,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10539,7 +10539,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10553,7 +10553,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10567,7 +10567,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10581,7 +10581,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10595,7 +10595,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10609,7 +10609,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -10623,7 +10623,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10637,7 +10637,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10651,7 +10651,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10665,7 +10665,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10679,7 +10679,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10693,7 +10693,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10707,7 +10707,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10721,7 +10721,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10735,7 +10735,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10749,7 +10749,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10763,7 +10763,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10777,7 +10777,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10791,7 +10791,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -10805,7 +10805,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10819,7 +10819,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10833,7 +10833,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10847,7 +10847,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10861,7 +10861,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10875,7 +10875,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -10889,7 +10889,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10903,7 +10903,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10917,7 +10917,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10931,7 +10931,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10945,7 +10945,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -10959,7 +10959,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -10973,7 +10973,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -10987,7 +10987,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11001,7 +11001,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -11015,7 +11015,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11029,7 +11029,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11043,7 +11043,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11057,7 +11057,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 4,
@@ -11071,7 +11071,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -11085,7 +11085,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11099,7 +11099,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11113,7 +11113,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11127,7 +11127,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 8,
@@ -11141,7 +11141,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11155,7 +11155,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11169,7 +11169,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11183,7 +11183,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11197,7 +11197,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11211,7 +11211,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11225,7 +11225,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -11239,7 +11239,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11253,7 +11253,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -11267,7 +11267,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -11281,7 +11281,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11295,7 +11295,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11309,7 +11309,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11323,7 +11323,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11337,7 +11337,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11351,7 +11351,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11365,7 +11365,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -11379,7 +11379,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11393,7 +11393,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11407,7 +11407,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11421,7 +11421,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 4,
@@ -11435,7 +11435,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11449,7 +11449,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11463,7 +11463,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11477,7 +11477,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -11491,7 +11491,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11505,7 +11505,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 3,
@@ -11519,7 +11519,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -11533,7 +11533,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11547,7 +11547,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11561,7 +11561,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11575,7 +11575,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 4,
@@ -11589,7 +11589,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11603,7 +11603,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11617,7 +11617,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11631,7 +11631,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11645,7 +11645,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11659,7 +11659,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: null,
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -11673,7 +11673,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -11687,7 +11687,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11701,7 +11701,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11715,7 +11715,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11729,7 +11729,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -11743,7 +11743,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11757,7 +11757,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11771,7 +11771,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11785,7 +11785,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11799,7 +11799,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11813,7 +11813,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11827,7 +11827,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11841,7 +11841,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11855,7 +11855,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11869,7 +11869,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11883,7 +11883,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 8,
@@ -11897,7 +11897,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11911,7 +11911,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11925,7 +11925,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -11939,7 +11939,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 4,
@@ -11953,7 +11953,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -11967,7 +11967,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -11981,7 +11981,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -11995,7 +11995,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -12009,7 +12009,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12023,7 +12023,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -12037,7 +12037,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12051,7 +12051,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12065,7 +12065,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12079,7 +12079,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 2,
@@ -12093,7 +12093,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -12107,7 +12107,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12121,7 +12121,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 8,
@@ -12135,7 +12135,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12149,7 +12149,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12163,7 +12163,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -12177,7 +12177,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12191,7 +12191,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12205,7 +12205,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -12219,7 +12219,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12233,7 +12233,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -12247,7 +12247,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12261,7 +12261,7 @@ const titanicData = [
         Survived: false,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12275,7 +12275,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 1,
@@ -12289,7 +12289,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12303,7 +12303,7 @@ const titanicData = [
         Survived: true,
         Pclass: 3,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12317,7 +12317,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12331,7 +12331,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12345,7 +12345,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12359,7 +12359,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12373,7 +12373,7 @@ const titanicData = [
         Survived: true,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12387,7 +12387,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12401,7 +12401,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12415,7 +12415,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12429,7 +12429,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12443,7 +12443,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12457,7 +12457,7 @@ const titanicData = [
         Survived: false,
         Pclass: 2,
         Embarked: 'S',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12471,7 +12471,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 1,
@@ -12485,7 +12485,7 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'S',
-        Sex: 'female'
+        Sex: 'female',
     },
     {
         SibSp: 0,
@@ -12499,7 +12499,7 @@ const titanicData = [
         Survived: true,
         Pclass: 1,
         Embarked: 'C',
-        Sex: 'male'
+        Sex: 'male',
     },
     {
         SibSp: 0,
@@ -12513,6 +12513,6 @@ const titanicData = [
         Survived: false,
         Pclass: 3,
         Embarked: 'Q',
-        Sex: 'male'
-    }
+        Sex: 'male',
+    },
 ];

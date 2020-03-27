@@ -16,7 +16,7 @@ import {
     Output,
     ShellOptions,
     SpawnOptions,
-    StdErrError
+    StdErrError,
 } from './types';
 
 // tslint:disable:no-any
@@ -47,7 +47,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
     }
     public dispose() {
         this.removeAllListeners();
-        this.processesToKill.forEach(p => {
+        this.processesToKill.forEach((p) => {
             try {
                 p.dispose();
             } catch {
@@ -63,18 +63,18 @@ export class ProcessService extends EventEmitter implements IProcessService {
         let procExited = false;
         const disposable: IDisposable = {
             // tslint:disable-next-line: no-function-expression
-            dispose: function() {
+            dispose: function () {
                 if (proc && !proc.killed && !procExited) {
                     ProcessService.kill(proc.pid);
                 }
                 if (proc) {
                     proc.unref();
                 }
-            }
+            },
         };
         this.processesToKill.add(disposable);
 
-        const output = new Observable<Output<string>>(subscriber => {
+        const output = new Observable<Output<string>>((subscriber) => {
             const disposables: IDisposable[] = [];
 
             const on = (ee: NodeJS.EventEmitter, name: string, fn: Function) => {
@@ -108,17 +108,17 @@ export class ProcessService extends EventEmitter implements IProcessService {
             proc.once('close', () => {
                 procExited = true;
                 subscriber.complete();
-                disposables.forEach(d => d.dispose());
+                disposables.forEach((d) => d.dispose());
             });
             proc.once('exit', () => {
                 procExited = true;
                 subscriber.complete();
-                disposables.forEach(d => d.dispose());
+                disposables.forEach((d) => d.dispose());
             });
-            proc.once('error', ex => {
+            proc.once('error', (ex) => {
                 procExited = true;
                 subscriber.error(ex);
-                disposables.forEach(d => d.dispose());
+                disposables.forEach((d) => d.dispose());
             });
         });
 
@@ -127,7 +127,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
         return {
             proc,
             out: output,
-            dispose: disposable.dispose
+            dispose: disposable.dispose,
         };
     }
     public exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
@@ -140,7 +140,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 if (!proc.killed && !deferred.completed) {
                     proc.kill();
                 }
-            }
+            },
         };
         this.processesToKill.add(disposable);
         const disposables: IDisposable[] = [];
@@ -178,11 +178,11 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 const stdout = this.decoder.decode(stdoutBuffers, encoding);
                 deferred.resolve({ stdout, stderr });
             }
-            disposables.forEach(d => d.dispose());
+            disposables.forEach((d) => d.dispose());
         });
-        proc.once('error', ex => {
+        proc.once('error', (ex) => {
             deferred.reject(ex);
-            disposables.forEach(d => d.dispose());
+            disposables.forEach((d) => d.dispose());
         });
 
         this.emit('exec', file, args, options);
@@ -209,7 +209,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
                     if (!proc.killed) {
                         proc.kill();
                     }
-                }
+                },
             };
             this.processesToKill.add(disposable);
         });

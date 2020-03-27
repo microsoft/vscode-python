@@ -27,7 +27,7 @@ import {
     TextDocument,
     TextEdit,
     Uri,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 import {
     HandleDiagnosticsSignature,
@@ -50,7 +50,7 @@ import {
     ProvideWorkspaceSymbolsSignature,
     ResolveCodeLensSignature,
     ResolveCompletionItemSignature,
-    ResolveDocumentLinkSignature
+    ResolveDocumentLinkSignature,
 } from 'vscode-languageclient';
 
 import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/declaration';
@@ -372,11 +372,11 @@ export class LanguageClientMiddleware implements Middleware {
 
 function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: number) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function(_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
 
         // tslint:disable-next-line:no-any
-        descriptor.value = function(this: LanguageClientMiddleware, ...args: any[]) {
+        descriptor.value = function (this: LanguageClientMiddleware, ...args: any[]) {
             const eventName = this.eventName;
             if (!eventName) {
                 return originalMethod.apply(this, args);
@@ -403,7 +403,7 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
 
             const properties = {
                 lsVersion: this.serverVersion || 'unknown',
-                method: method
+                method: method,
             };
 
             const stopWatch = new StopWatch();

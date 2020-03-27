@@ -10,7 +10,7 @@ import {
     Position,
     ProviderResult,
     TextDocument,
-    TextEdit
+    TextEdit,
 } from 'vscode';
 
 export class OnTypeFormattingDispatcher implements OnTypeFormattingEditProvider {
@@ -45,7 +45,7 @@ export class OnTypeFormattingDispatcher implements OnTypeFormattingEditProvider 
         if (first) {
             return {
                 first: first,
-                more: keys
+                more: keys,
             };
         }
 

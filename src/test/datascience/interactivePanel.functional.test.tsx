@@ -42,8 +42,8 @@ suite('DataScience Interactive Panel', () => {
                         execution_count: 0,
                         metadata: {},
                         outputs: [{ data: '', execution_count: 1, metadata: {}, output_type: 'text' }],
-                        source: ''
-                    }
+                        source: '',
+                    },
                 },
                 cursorPos: CursorPos.Current,
                 editable: true,
@@ -55,7 +55,7 @@ suite('DataScience Interactive Panel', () => {
                 inputBlockShow: true,
                 inputBlockText: '',
                 scrollCount: 0,
-                selected: false
+                selected: false,
             },
             editorLoaded: noopAny,
             editorUnmounted: noopAny,
@@ -96,10 +96,10 @@ suite('DataScience Interactive Panel', () => {
                 sortAscending: true,
                 sortColumn: '',
                 variables: [],
-                visible: true
+                visible: true,
             },
             editorOptions: {},
-            settings: { showCellInputCode: true, allowInput: true, extraSettings: { editor: {} } } as any
+            settings: { showCellInputCode: true, allowInput: true, extraSettings: { editor: {} } } as any,
         };
     });
     test('Input Cell is displayed', () => {

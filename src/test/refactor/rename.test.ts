@@ -36,49 +36,51 @@ suite('Refactor Rename', () => {
         cursorStyle: TextEditorCursorStyle.Line,
         insertSpaces: true,
         lineNumbers: TextEditorLineNumbersStyle.Off,
-        tabSize: 4
+        tabSize: 4,
     };
     let pythonSettings: typeMoq.IMock<IPythonSettings>;
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     suiteSetup(initialize);
     setup(async () => {
         pythonSettings = typeMoq.Mock.ofType<IPythonSettings>();
-        pythonSettings.setup(p => p.pythonPath).returns(() => PYTHON_PATH);
+        pythonSettings.setup((p) => p.pythonPath).returns(() => PYTHON_PATH);
         const configService = typeMoq.Mock.ofType<IConfigurationService>();
-        configService.setup(c => c.getSettings(typeMoq.It.isAny())).returns(() => pythonSettings.object);
+        configService.setup((c) => c.getSettings(typeMoq.It.isAny())).returns(() => pythonSettings.object);
         const condaService = typeMoq.Mock.ofType<ICondaService>();
         const processServiceFactory = typeMoq.Mock.ofType<IProcessServiceFactory>();
         processServiceFactory
-            .setup(p => p.create(typeMoq.It.isAny()))
+            .setup((p) => p.create(typeMoq.It.isAny()))
             .returns(() => Promise.resolve(new ProcessService(new BufferDecoder())));
         const interpreterService = typeMoq.Mock.ofType<IInterpreterService>();
-        interpreterService.setup(i => i.hasInterpreters).returns(() => Promise.resolve(true));
+        interpreterService.setup((i) => i.hasInterpreters).returns(() => Promise.resolve(true));
         const envActivationService = typeMoq.Mock.ofType<IEnvironmentActivationService>();
         envActivationService
-            .setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny()))
+            .setup((e) => e.getActivatedEnvironmentVariables(typeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined));
         envActivationService
-            .setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((e) => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined));
         envActivationService
-            .setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((e) =>
+                e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())
+            )
             .returns(() => Promise.resolve(undefined));
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IConfigurationService), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IConfigurationService), typeMoq.It.isAny()))
             .returns(() => configService.object);
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IProcessServiceFactory), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IProcessServiceFactory), typeMoq.It.isAny()))
             .returns(() => processServiceFactory.object);
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IInterpreterService), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IInterpreterService), typeMoq.It.isAny()))
             .returns(() => interpreterService.object);
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
             .returns(() => envActivationService.object);
         const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
             .returns(
                 () =>
                     new PythonExecutionFactory(
@@ -93,12 +95,12 @@ suite('Refactor Rename', () => {
             );
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();
         processLogger
-            .setup(p => p.logProcess(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((p) => p.logProcess(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => {
                 return;
             });
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny()))
             .returns(() => processLogger.object);
         await initializeTest();
     });

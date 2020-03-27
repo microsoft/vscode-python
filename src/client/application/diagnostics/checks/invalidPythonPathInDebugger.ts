@@ -24,12 +24,12 @@ import {
     IDiagnostic,
     IDiagnosticCommand,
     IDiagnosticHandlerService,
-    IInvalidPythonPathInDebuggerService
+    IInvalidPythonPathInDebuggerService,
 } from '../types';
 
 const messages = {
     [DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic]: Diagnostics.invalidPythonPathInDebuggerSettings(),
-    [DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic]: Diagnostics.invalidPythonPathInDebuggerLaunch()
+    [DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic]: Diagnostics.invalidPythonPathInDebuggerLaunch(),
 };
 
 export class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
@@ -63,7 +63,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         super(
             [
                 DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
-                DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic
+                DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic,
             ],
             serviceContainer,
             disposableRegistry,
@@ -88,18 +88,18 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                 new InvalidPythonPathInDebuggerDiagnostic(
                     DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic,
                     resource
-                )
+                ),
             ])
-                .catch(ex => traceError('Failed to handle invalid python path in launch.json debugger', ex))
+                .catch((ex) => traceError('Failed to handle invalid python path in launch.json debugger', ex))
                 .ignoreErrors();
         } else {
             this.handle([
                 new InvalidPythonPathInDebuggerDiagnostic(
                     DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
                     resource
-                )
+                ),
             ])
-                .catch(ex => traceError('Failed to handle invalid python path in settings.json debugger', ex))
+                .catch((ex) => traceError('Failed to handle invalid python path in settings.json debugger', ex))
                 .ignoreErrors();
         }
         return false;
@@ -126,9 +126,9 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                         prompt: 'Select Python Interpreter',
                         command: this.commandFactory.createCommand(diagnostic, {
                             type: 'executeVSCCommand',
-                            options: 'python.setInterpreter'
-                        })
-                    }
+                            options: 'python.setInterpreter',
+                        }),
+                    },
                 ];
             }
             case DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic: {
@@ -141,9 +141,9 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                                 const launchJson = this.getLaunchJsonFile(workspc.workspaceFolders![0]);
                                 const doc = await this.documentManager.openTextDocument(launchJson);
                                 await this.documentManager.showTextDocument(doc);
-                            }
-                        }
-                    }
+                            },
+                        },
+                    },
                 ];
             }
             default: {

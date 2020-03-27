@@ -93,7 +93,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
 
             const stopWatch = new StopWatch();
             this.getInterpretersImplementation(resource)
-                .then(async items => {
+                .then(async (items) => {
                     await this.cacheInterpreters(items, resource);
                     traceVerbose(
                         `Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`
@@ -101,11 +101,11 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                     traceVerbose(`Interpreters returned by ${this.name} are ${JSON.stringify(items)}`);
                     sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
                         locator: this.name,
-                        interpreters: Array.isArray(items) ? items.length : 0
+                        interpreters: Array.isArray(items) ? items.length : 0,
                     });
                     deferred!.resolve(items);
                 })
-                .catch(ex => {
+                .catch((ex) => {
                     sendTelemetryEvent(
                         EventName.PYTHON_INTERPRETER_DISCOVERY,
                         stopWatch.elapsedTime,
@@ -118,8 +118,8 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             this.locating.fire(deferred.promise);
         }
         deferred.promise
-            .then(items => this._hasInterpreters.resolve(items.length > 0))
-            .catch(_ => this._hasInterpreters.resolve(false));
+            .then((items) => this._hasInterpreters.resolve(items.length > 0))
+            .catch((_) => this._hasInterpreters.resolve(false));
 
         if (deferred.completed) {
             return deferred.promise;
@@ -135,7 +135,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         this.handlersAddedToResource.add(cacheKey);
         const watchers = await this.getInterpreterWatchers(resource);
         const disposableRegisry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
-        watchers.forEach(watcher => {
+        watchers.forEach((watcher) => {
             watcher.onDidCreate(
                 () => {
                     traceVerbose(`Interpreter Watcher change handler for ${this.cacheKeyPrefix}`);
@@ -166,10 +166,10 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         if (!Array.isArray(persistence.value)) {
             return;
         }
-        return persistence.value.map(item => {
+        return persistence.value.map((item) => {
             return {
                 ...item,
-                cachedEntry: true
+                cachedEntry: true,
             };
         });
     }

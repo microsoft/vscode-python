@@ -44,7 +44,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
         return debugManager
             .startDebugging(workspaceFolder, launchArgs)
-            .then(noop, ex => traceError('Failed to start debugging tests', ex));
+            .then(noop, (ex) => traceError('Failed to start debugging tests', ex));
     }
     public async readAllDebugConfigs(workspaceFolder: WorkspaceFolder): Promise<DebugConfiguration[]> {
         const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
@@ -90,7 +90,7 @@ export class DebugLauncher implements ITestDebugLauncher {
                 name: 'Debug Unit Test',
                 type: 'python',
                 request: 'test',
-                subProcess: true
+                subProcess: true,
             };
         }
         if (!debugConfig.rules) {
@@ -98,7 +98,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
         debugConfig.rules.push({
             path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'),
-            include: false
+            include: false,
         });
         this.applyDefaults(debugConfig!, workspaceFolder, configSettings);
 
@@ -175,7 +175,7 @@ export class DebugLauncher implements ITestDebugLauncher {
 
     private fixArgs(args: string[], testProvider: TestProvider): string[] {
         if (testProvider === 'unittest') {
-            return args.filter(item => item !== '--debug');
+            return args.filter((item) => item !== '--debug');
         } else {
             return args;
         }

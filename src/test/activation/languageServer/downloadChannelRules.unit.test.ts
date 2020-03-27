@@ -10,13 +10,13 @@ import * as typeMoq from 'typemoq';
 import {
     DownloadBetaChannelRule,
     DownloadDailyChannelRule,
-    DownloadStableChannelRule
+    DownloadStableChannelRule,
 } from '../../../client/activation/common/downloadChannelRules';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Language Server Download Channel Rules', () => {
-    [undefined, path.join('a', 'b')].forEach(currentFolderPath => {
+    [undefined, path.join('a', 'b')].forEach((currentFolderPath) => {
         const currentFolder = currentFolderPath ? { path: currentFolderPath, version: new SemVer('0.0.0') } : undefined;
         const testSuffix = ` (${currentFolderPath ? 'with' : 'without'} an existing Language Server Folder`;
 
@@ -44,19 +44,19 @@ suite('Language Server Download Channel Rules', () => {
                 stateFactory = typeMoq.Mock.ofType<IPersistentStateFactory>();
                 state = typeMoq.Mock.ofType<IPersistentState<Boolean>>();
                 stateFactory
-                    .setup(s =>
+                    .setup((s) =>
                         s.createGlobalPersistentState(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())
                     )
                     .returns(() => state.object)
                     .verifiable(typeMoq.Times.once());
 
                 serviceContainer
-                    .setup(c => c.get(typeMoq.It.isValue(IPersistentStateFactory)))
+                    .setup((c) => c.get(typeMoq.It.isValue(IPersistentStateFactory)))
                     .returns(() => stateFactory.object);
             });
             function setupStateValue(value: boolean) {
                 state
-                    .setup(s => s.value)
+                    .setup((s) => s.value)
                     .returns(() => value)
                     .verifiable(typeMoq.Times.atLeastOnce());
             }

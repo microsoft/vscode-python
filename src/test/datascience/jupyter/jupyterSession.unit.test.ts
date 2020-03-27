@@ -6,7 +6,7 @@ import {
     KernelMessage,
     ServerConnection,
     Session,
-    SessionManager
+    SessionManager,
 } from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
 import { DefaultSession } from '@jupyterlab/services/lib/session/default';
@@ -92,7 +92,7 @@ suite('Data Science - JupyterSession', () => {
         // tslint:disable-next-line: no-any
         when(contentsManager.newUntitled(deepEqual({ type: 'notebook' }))).thenResolve({ path: nbFile } as any);
         when(sessionManager.startNew(anything())).thenResolve(instance(session));
-        kernelSpec.setup(k => k.name).returns(() => 'some name');
+        kernelSpec.setup((k) => k.name).returns(() => 'some name');
 
         await jupyterSession.connect();
 
@@ -127,7 +127,7 @@ suite('Data Science - JupyterSession', () => {
         });
         suite('Shutdown', () => {
             test('Remote', async () => {
-                connection.setup(c => c.localLaunch).returns(() => false);
+                connection.setup((c) => c.localLaunch).returns(() => false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(contentsManager.delete(anything())).thenResolve();
 
@@ -137,7 +137,7 @@ suite('Data Science - JupyterSession', () => {
                 verify(contentsManager.delete(anything())).once();
             });
             test('Remote sessions', async () => {
-                connection.setup(c => c.localLaunch).returns(() => true);
+                connection.setup((c) => c.localLaunch).returns(() => true);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(contentsManager.delete(anything())).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
@@ -156,7 +156,7 @@ suite('Data Science - JupyterSession', () => {
             test('Local', async () => {
                 verify(statusChangedSignal.connect(anything())).once();
 
-                connection.setup(c => c.localLaunch).returns(() => true);
+                connection.setup((c) => c.localLaunch).returns(() => true);
                 when(session.isRemoteSession).thenReturn(false);
                 when(session.isDisposed).thenReturn(false);
                 when(session.shutdown()).thenResolve();
@@ -199,20 +199,20 @@ suite('Data Science - JupyterSession', () => {
                 numberOfConnections: 1,
                 session: {
                     statusChanged: {
-                        connect: noop
+                        connect: noop,
                     },
                     kernelChanged: {
-                        connect: noop
+                        connect: noop,
                     },
                     kernel: {
                         status: 'idle',
-                        restart: () => (restartCount = restartCount + 1)
+                        restart: () => (restartCount = restartCount + 1),
                     },
                     shutdown: () => Promise.resolve(),
-                    isRemoteSession: false
+                    isRemoteSession: false,
                     // tslint:disable-next-line: no-any
                 } as any,
-                id: 'liveKernel'
+                id: 'liveKernel',
             };
             let remoteSession: ISession;
             let remoteKernel: Kernel.IKernelConnection;
@@ -313,7 +313,7 @@ suite('Data Science - JupyterSession', () => {
                     display_name: 'new kernel',
                     language: 'python',
                     name: 'newkernel',
-                    path: 'path'
+                    path: 'path',
                 };
 
                 await jupyterSession.changeKernel(newKernel, 10000);
@@ -343,7 +343,7 @@ suite('Data Science - JupyterSession', () => {
 
                 test('Restart should create a new session & kill old session', async () => {
                     const oldSessionShutDown = createDeferred();
-                    connection.setup(c => c.localLaunch).returns(() => true);
+                    connection.setup((c) => c.localLaunch).returns(() => true);
                     when(session.isRemoteSession).thenReturn(false);
                     when(session.isDisposed).thenReturn(false);
                     when(session.shutdown()).thenCall(() => {

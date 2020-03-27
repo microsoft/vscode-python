@@ -15,7 +15,7 @@ import {
     RenameProvider,
     SignatureHelpProvider,
     TextDocument,
-    TextDocumentContentChangeEvent
+    TextDocumentContentChangeEvent,
 } from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { NugetPackage } from '../common/nuget/types';
@@ -67,7 +67,7 @@ export enum LanguageServerType {
     Jedi = 'Jedi',
     Microsoft = 'Microsoft',
     Node = 'Node',
-    None = 'None'
+    None = 'None',
 }
 
 // tslint:disable-next-line: interface-name
@@ -140,7 +140,7 @@ export interface ILanguageServerCompatibilityService {
 export enum LanguageClientFactory {
     base = 'base',
     simple = 'simple',
-    downloaded = 'downloaded'
+    downloaded = 'downloaded',
 }
 export const ILanguageClientFactory = Symbol('ILanguageClientFactory');
 export interface ILanguageClientFactory {
@@ -195,7 +195,7 @@ export enum PlatformName {
     Windows32Bit = 'win-x86',
     Windows64Bit = 'win-x64',
     Mac64Bit = 'osx-x64',
-    Linux64Bit = 'linux-x64'
+    Linux64Bit = 'linux-x64',
 }
 export const IPlatformData = Symbol('IPlatformData');
 export interface IPlatformData {

@@ -32,6 +32,6 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         runStartupCommands: '',
         debugJustMyCode: true,
         variableQueries: [],
-        jupyterCommandLineArguments: []
+        jupyterCommandLineArguments: [],
     };
 }

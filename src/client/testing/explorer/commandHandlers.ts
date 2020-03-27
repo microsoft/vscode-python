@@ -22,7 +22,7 @@ type NavigationCommands =
 const testNavigationCommandMapping: { [key: string]: NavigationCommands } = {
     [TestDataItemType.file]: Commands.navigateToTestFile,
     [TestDataItemType.function]: Commands.navigateToTestFunction,
-    [TestDataItemType.suite]: Commands.navigateToTestSuite
+    [TestDataItemType.suite]: Commands.navigateToTestSuite,
 };
 
 @injectable()
@@ -40,7 +40,7 @@ export class TestExplorerCommandHandler implements ITestExplorerCommandHandler {
         );
     }
     public dispose(): void {
-        this.disposables.forEach(item => item.dispose());
+        this.disposables.forEach((item) => item.dispose());
     }
     @swallowExceptions('Run test node')
     @traceDecorators.error('Run test node failed')

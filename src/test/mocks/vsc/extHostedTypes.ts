@@ -27,7 +27,7 @@ export namespace vscMockExtHostedTypes {
 
     export class Disposable {
         static from(...disposables: { dispose(): any }[]): Disposable {
-            return new Disposable(function() {
+            return new Disposable(function () {
                 if (disposables) {
                     for (let disposable of disposables) {
                         if (disposable && typeof disposable.dispose === 'function') {
@@ -436,14 +436,14 @@ export namespace vscMockExtHostedTypes {
                 start: this.start,
                 end: this.end,
                 active: this.active,
-                anchor: this.anchor
+                anchor: this.anchor,
             };
         }
     }
 
     export enum EndOfLine {
         LF = 1,
-        CRLF = 2
+        CRLF = 2,
     }
 
     export class TextEdit {
@@ -524,7 +524,7 @@ export namespace vscMockExtHostedTypes {
             return {
                 range: this.range,
                 newText: this.newText,
-                newEol: this._newEol
+                newEol: this._newEol,
             };
         }
     }
@@ -614,7 +614,7 @@ export namespace vscMockExtHostedTypes {
 
         entries(): [vscUri.URI, TextEdit[]][] {
             const res: [vscUri.URI, TextEdit[]][] = [];
-            this._textEdits.forEach(value => res.push([value.uri, value.edits]));
+            this._textEdits.forEach((value) => res.push([value.uri, value.edits]));
             return res.slice();
         }
 
@@ -737,14 +737,14 @@ export namespace vscMockExtHostedTypes {
     }
 
     export enum DiagnosticTag {
-        Unnecessary = 1
+        Unnecessary = 1,
     }
 
     export enum DiagnosticSeverity {
         Hint = 3,
         Information = 2,
         Warning = 1,
-        Error = 0
+        Error = 0,
     }
 
     export class Location {
@@ -779,7 +779,7 @@ export namespace vscMockExtHostedTypes {
         toJSON(): any {
             return {
                 uri: this.uri,
-                range: this.range
+                range: this.range,
             };
         }
     }
@@ -830,7 +830,7 @@ export namespace vscMockExtHostedTypes {
                 message: this.message,
                 range: this.range,
                 source: this.source,
-                code: this.code
+                code: this.code,
             };
         }
     }
@@ -861,7 +861,7 @@ export namespace vscMockExtHostedTypes {
     export enum DocumentHighlightKind {
         Text = 0,
         Read = 1,
-        Write = 2
+        Write = 2,
     }
 
     export class DocumentHighlight {
@@ -876,7 +876,7 @@ export namespace vscMockExtHostedTypes {
         toJSON(): any {
             return {
                 range: this.range,
-                kind: DocumentHighlightKind[this.kind]
+                kind: DocumentHighlightKind[this.kind],
             };
         }
     }
@@ -907,7 +907,7 @@ export namespace vscMockExtHostedTypes {
         Struct = 22,
         Event = 23,
         Operator = 24,
-        TypeParameter = 25
+        TypeParameter = 25,
     }
 
     export class SymbolInformation {
@@ -948,7 +948,7 @@ export namespace vscMockExtHostedTypes {
                 name: this.name,
                 kind: SymbolKind[this.kind],
                 location: this.location,
-                containerName: this.containerName
+                containerName: this.containerName,
             };
         }
     }
@@ -966,7 +966,7 @@ export namespace vscMockExtHostedTypes {
 
     export enum CodeActionTrigger {
         Automatic = 1,
-        Manual = 2
+        Manual = 2,
     }
 
     export class CodeAction {
@@ -1093,7 +1093,7 @@ export namespace vscMockExtHostedTypes {
     export enum CompletionTriggerKind {
         Invoke = 0,
         TriggerCharacter = 1,
-        TriggerForIncompleteCompletions = 2
+        TriggerForIncompleteCompletions = 2,
     }
 
     export interface CompletionContext {
@@ -1126,11 +1126,11 @@ export namespace vscMockExtHostedTypes {
         Struct = 21,
         Event = 22,
         Operator = 23,
-        TypeParameter = 24
+        TypeParameter = 24,
     }
 
     export enum CompletionItemTag {
-        Deprecated = 1
+        Deprecated = 1,
     }
 
     export interface CompletionItemLabel {
@@ -1175,7 +1175,7 @@ export namespace vscMockExtHostedTypes {
                 filterText: this.filterText,
                 preselect: this.preselect,
                 insertText: this.insertText,
-                textEdit: this.textEdit
+                textEdit: this.textEdit,
             };
         }
     }
@@ -1202,37 +1202,37 @@ export namespace vscMockExtHostedTypes {
         Six = 6,
         Seven = 7,
         Eight = 8,
-        Nine = 9
+        Nine = 9,
     }
 
     export enum StatusBarAlignment {
         Left = 1,
-        Right = 2
+        Right = 2,
     }
 
     export enum TextEditorLineNumbersStyle {
         Off = 0,
         On = 1,
-        Relative = 2
+        Relative = 2,
     }
 
     export enum TextDocumentSaveReason {
         Manual = 1,
         AfterDelay = 2,
-        FocusOut = 3
+        FocusOut = 3,
     }
 
     export enum TextEditorRevealType {
         Default = 0,
         InCenter = 1,
         InCenterIfOutsideViewport = 2,
-        AtTop = 3
+        AtTop = 3,
     }
 
     export enum TextEditorSelectionChangeKind {
         Keyboard = 1,
         Mouse = 2,
-        Command = 3
+        Command = 3,
     }
 
     /**
@@ -1254,7 +1254,7 @@ export namespace vscMockExtHostedTypes {
         /**
          * TrackedRangeStickiness.GrowsOnlyWhenTypingAfter
          */
-        ClosedOpen = 3
+        ClosedOpen = 3,
     }
 
     export namespace TextEditorSelectionChangeKind {
@@ -1337,13 +1337,13 @@ export namespace vscMockExtHostedTypes {
     export enum ColorFormat {
         RGB = 0,
         HEX = 1,
-        HSL = 2
+        HSL = 2,
     }
 
     export enum SourceControlInputBoxValidationType {
         Error = 0,
         Warning = 1,
-        Information = 2
+        Information = 2,
     }
 
     export enum TaskRevealKind {
@@ -1351,7 +1351,7 @@ export namespace vscMockExtHostedTypes {
 
         Silent = 2,
 
-        Never = 3
+        Never = 3,
     }
 
     export enum TaskPanelKind {
@@ -1359,7 +1359,7 @@ export namespace vscMockExtHostedTypes {
 
         Dedicated = 2,
 
-        New = 3
+        New = 3,
     }
 
     export class TaskGroup implements vscode.TaskGroup {
@@ -1583,12 +1583,12 @@ export namespace vscMockExtHostedTypes {
     export enum ShellQuoting {
         Escape = 1,
         Strong = 2,
-        Weak = 3
+        Weak = 3,
     }
 
     export enum TaskScope {
         Global = 1,
-        Workspace = 2
+        Workspace = 2,
     }
 
     export class Task implements vscode.Task {
@@ -1689,17 +1689,17 @@ export namespace vscMockExtHostedTypes {
             if (this._execution instanceof ProcessExecution) {
                 this._definition = {
                     type: Task.ProcessType,
-                    id: this._execution.computeId()
+                    id: this._execution.computeId(),
                 };
             } else if (this._execution instanceof ShellExecution) {
                 this._definition = {
                     type: Task.ShellType,
-                    id: this._execution.computeId()
+                    id: this._execution.computeId(),
                 };
             } else {
                 this._definition = {
                     type: Task.EmptyType,
-                    id: generateUuid()
+                    id: generateUuid(),
                 };
             }
         }
@@ -1838,7 +1838,7 @@ export namespace vscMockExtHostedTypes {
     export enum ProgressLocation {
         SourceControl = 1,
         Window = 10,
-        Notification = 15
+        Notification = 15,
     }
 
     export class TreeItem {
@@ -1866,7 +1866,7 @@ export namespace vscMockExtHostedTypes {
     export enum TreeItemCollapsibleState {
         None = 0,
         Collapsed = 1,
-        Expanded = 2
+        Expanded = 2,
     }
 
     export class ThemeIcon {
@@ -1893,7 +1893,7 @@ export namespace vscMockExtHostedTypes {
 
         Workspace = 2,
 
-        WorkspaceFolder = 3
+        WorkspaceFolder = 3,
     }
 
     export class RelativePattern implements IRelativePattern {
@@ -2004,7 +2004,7 @@ export namespace vscMockExtHostedTypes {
         Warning = 4,
         Error = 5,
         Critical = 6,
-        Off = 7
+        Off = 7,
     }
 
     //#region file api
@@ -2012,7 +2012,7 @@ export namespace vscMockExtHostedTypes {
     export enum FileChangeType {
         Changed = 1,
         Created = 2,
-        Deleted = 3
+        Deleted = 3,
     }
 
     export class FileSystemError extends Error {
@@ -2073,7 +2073,7 @@ export namespace vscMockExtHostedTypes {
     export enum FoldingRangeKind {
         Comment = 1,
         Imports = 2,
-        Region = 3
+        Region = 3,
     }
 
     //#endregion
@@ -2086,7 +2086,7 @@ export namespace vscMockExtHostedTypes {
         /**
          * Determines an item is expanded
          */
-        Expanded = 1
+        Expanded = 1,
     }
 
     export class QuickInputButtons {

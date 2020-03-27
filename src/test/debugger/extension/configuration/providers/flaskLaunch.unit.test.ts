@@ -67,10 +67,10 @@ suite('Debugging - Configuration Provider Flask', () => {
             env: {
                 FLASK_APP: 'xyz.py',
                 FLASK_ENV: 'development',
-                FLASK_DEBUG: '0'
+                FLASK_DEBUG: '0',
             },
             args: ['run', '--no-debugger', '--no-reload'],
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -92,10 +92,10 @@ suite('Debugging - Configuration Provider Flask', () => {
             env: {
                 FLASK_APP: 'hello',
                 FLASK_ENV: 'development',
-                FLASK_DEBUG: '0'
+                FLASK_DEBUG: '0',
             },
             args: ['run', '--no-debugger', '--no-reload'],
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -117,10 +117,10 @@ suite('Debugging - Configuration Provider Flask', () => {
             env: {
                 FLASK_APP: 'app.py',
                 FLASK_ENV: 'development',
-                FLASK_DEBUG: '0'
+                FLASK_DEBUG: '0',
             },
             args: ['run', '--no-debugger', '--no-reload'],
-            jinja: true
+            jinja: true,
         };
 
         expect(state.config).to.be.deep.equal(config);

@@ -26,7 +26,7 @@ import { KernelService } from '../../../../client/datascience/jupyter/kernels/ke
 import {
     IJupyterKernelSpec,
     IJupyterSessionManager,
-    IJupyterSubCommandExecutionService
+    IJupyterSubCommandExecutionService,
 } from '../../../../client/datascience/types';
 import { EnvironmentActivationService } from '../../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
@@ -74,7 +74,7 @@ suite('Data Science - KernelService', () => {
     test('Should not return a matching spec from a session for a given kernelspec', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
             { argv: [], language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
-            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
+            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} },
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
 
@@ -89,14 +89,14 @@ suite('Data Science - KernelService', () => {
     test('Should not return a matching spec from a session for a given interpeter', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
             { argv: [], language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
-            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
+            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} },
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
         const interpreter: PythonInterpreter = {
             path: 'some Path',
             displayName: 'Hello World',
             envName: 'Hello',
-            type: InterpreterType.Conda
+            type: InterpreterType.Conda,
             // tslint:disable-next-line: no-any
         } as any;
 
@@ -119,7 +119,7 @@ suite('Data Science - KernelService', () => {
             path: 'some Path',
             displayName: 'Hello World',
             envName: 'Hello',
-            type: InterpreterType.Conda
+            type: InterpreterType.Conda,
             // tslint:disable-next-line: no-any
         } as any;
 
@@ -130,7 +130,7 @@ suite('Data Science - KernelService', () => {
     test('Should return a matching spec from a session for a given kernelspec', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
             { argv: [], language: PYTHON_LANGUAGE, name: '1', path: 'Path1', display_name: 'Disp1', metadata: {} },
-            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: 'Path2', display_name: 'Disp2', metadata: {} }
+            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: 'Path2', display_name: 'Disp2', metadata: {} },
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
 
@@ -155,7 +155,7 @@ suite('Data Science - KernelService', () => {
                 name: '2',
                 path: 'Path2',
                 display_name: 'Disp2',
-                metadata: { interpreter: { path: 'myPath2' } }
+                metadata: { interpreter: { path: 'myPath2' } },
             },
             {
                 argv: [],
@@ -163,8 +163,8 @@ suite('Data Science - KernelService', () => {
                 name: '3',
                 path: 'Path3',
                 display_name: 'Disp3',
-                metadata: { interpreter: { path: 'myPath3' } }
-            }
+                metadata: { interpreter: { path: 'myPath3' } },
+            },
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
         when(fs.arePathsSame('myPath2', 'myPath2')).thenReturn(true);
@@ -174,7 +174,7 @@ suite('Data Science - KernelService', () => {
             sysPrefix: 'xyz',
             type: InterpreterType.Conda,
             sysVersion: '',
-            architecture: Architecture.Unknown
+            architecture: Architecture.Unknown,
         };
 
         const matchingKernel = await kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager));
@@ -196,7 +196,7 @@ suite('Data Science - KernelService', () => {
                     display_name: 'disp1',
                     language: PYTHON_LANGUAGE,
                     resources: {},
-                    metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } }
+                    metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } },
                 },
                 path.join('dir1', 'kernel.json')
             ),
@@ -207,10 +207,10 @@ suite('Data Science - KernelService', () => {
                     display_name: 'disp2',
                     language: PYTHON_LANGUAGE,
                     resources: {},
-                    metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } }
+                    metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } },
                 },
                 path.join('dir2', 'kernel.json')
-            )
+            ),
         ];
         when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve(kernelSpecs);
         const matchingKernel = await kernelService.findMatchingKernelSpec(
@@ -234,7 +234,7 @@ suite('Data Science - KernelService', () => {
                     display_name: 'disp1',
                     language: PYTHON_LANGUAGE,
                     resources: {},
-                    metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } }
+                    metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } },
                 },
                 path.join('dir1', 'kernel.json')
             ),
@@ -245,10 +245,10 @@ suite('Data Science - KernelService', () => {
                     display_name: 'disp2',
                     language: PYTHON_LANGUAGE,
                     resources: {},
-                    metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } }
+                    metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } },
                 },
                 path.join('dir2', 'kernel.json')
-            )
+            ),
         ];
         when(jupyterInterpreterExecutionService.getKernelSpecs(anything())).thenResolve(kernelSpecs);
         when(fs.arePathsSame('Some Path2', 'Some Path2')).thenReturn(true);
@@ -259,7 +259,7 @@ suite('Data Science - KernelService', () => {
             sysPrefix: 'xyz',
             type: InterpreterType.Conda,
             sysVersion: '',
-            architecture: Architecture.Unknown
+            architecture: Architecture.Unknown,
         };
 
         const matchingKernel = await kernelService.findMatchingKernelSpec(interpreter, undefined);
@@ -285,7 +285,7 @@ suite('Data Science - KernelService', () => {
             sysPrefix: '',
             sysVersion: '',
             type: InterpreterType.Conda,
-            displayName: 'Hello'
+            displayName: 'Hello',
         };
         // Marked as readonly, to ensure we do not update this in tests.
         const kernelSpecModel: Readonly<Kernel.ISpecModel> = {
@@ -299,9 +299,9 @@ suite('Data Science - KernelService', () => {
                 something: '1',
                 interpreter: {
                     path: interpreter.path,
-                    type: interpreter.type
-                }
-            }
+                    type: interpreter.type,
+                },
+            },
         };
         const userKernelSpecModel: Readonly<Kernel.ISpecModel> = {
             argv: ['python', '-m', 'ipykernel'],
@@ -311,8 +311,8 @@ suite('Data Science - KernelService', () => {
             resources: {},
             env: {},
             metadata: {
-                something: '1'
-            }
+                something: '1',
+            },
         };
         const kernelJsonFile = path.join('someFile', 'kernel.json');
 
@@ -330,7 +330,7 @@ suite('Data Science - KernelService', () => {
                 path: '',
                 sysPrefix: '',
                 sysVersion: '',
-                type: InterpreterType.Conda
+                type: InterpreterType.Conda,
             };
 
             const promise = kernelService.registerKernel(invalidInterpreter);
@@ -356,7 +356,7 @@ suite('Data Science - KernelService', () => {
                 '--name',
                 kernelName,
                 '--display-name',
-                interpreter.displayName
+                interpreter.displayName,
             ]);
             await assert.isRejected(
                 promise,
@@ -385,7 +385,7 @@ suite('Data Science - KernelService', () => {
                 '--name',
                 kernelName,
                 '--display-name',
-                interpreter.displayName
+                interpreter.displayName,
             ]);
             await assert.isRejected(
                 promise,

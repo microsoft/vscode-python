@@ -15,7 +15,7 @@ import {
     BANNER_NAME_INTERACTIVE_SHIFTENTER,
     IDisposableRegistry,
     IPythonExtensionBanner,
-    Resource
+    Resource,
 } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
@@ -42,14 +42,14 @@ export class CodeExecutionManager implements ICodeExecutionManager {
     }
 
     public registerCommands() {
-        [Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon].forEach(cmd => {
+        [Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon].forEach((cmd) => {
             this.disposableRegistry.push(
                 this.commandManager.registerCommand(
                     // tslint:disable-next-line:no-any
                     cmd as any,
                     async (file: Resource) => {
                         const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
-                        await this.executeFileInTerminal(file, trigger).catch(ex =>
+                        await this.executeFileInTerminal(file, trigger).catch((ex) =>
                             traceError('Failed to execute file in terminal', ex)
                         );
                     }

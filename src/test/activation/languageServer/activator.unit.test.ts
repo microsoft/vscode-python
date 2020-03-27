@@ -13,7 +13,7 @@ import { DotNetLanguageServerManager } from '../../../client/activation/language
 import {
     ILanguageServerDownloader,
     ILanguageServerFolderService,
-    ILanguageServerManager
+    ILanguageServerManager,
 } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';

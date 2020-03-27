@@ -12,7 +12,7 @@ import {
     workspace,
     WorkspaceConfiguration,
     WorkspaceFolder,
-    WorkspaceFoldersChangeEvent
+    WorkspaceFoldersChangeEvent,
 } from 'vscode';
 import { Resource } from '../types';
 import { IWorkspaceService } from './types';

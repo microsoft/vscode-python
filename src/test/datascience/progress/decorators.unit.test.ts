@@ -8,7 +8,7 @@ import { createDeferred } from '../../../client/common/utils/async';
 import {
     disposeRegisteredReporters,
     registerReporter,
-    reportAction
+    reportAction,
 } from '../../../client/datascience/progress/decorator';
 import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { IProgressReporter, ReportableAction } from '../../../client/datascience/progress/types';

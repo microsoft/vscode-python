@@ -29,43 +29,43 @@ suite('Linting - LintingEngine', () => {
 
         const docManager = TypeMoq.Mock.ofType<IDocumentManager>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IDocumentManager), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IDocumentManager), TypeMoq.It.isAny()))
             .returns(() => docManager.object);
 
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
             .returns(() => workspaceService.object);
 
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
             .returns(() => fileSystem.object);
 
         lintSettings = TypeMoq.Mock.ofType<ILintingSettings>();
         settings = TypeMoq.Mock.ofType<IPythonSettings>();
 
         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
-        configService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-        configService.setup(x => x.isTestExecution()).returns(() => true);
+        configService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+        configService.setup((x) => x.isTestExecution()).returns(() => true);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
             .returns(() => configService.object);
 
         const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
             .returns(() => outputChannel.object);
 
         lintManager = TypeMoq.Mock.ofType<ILinterManager>();
-        lintManager.setup(x => x.isLintingEnabled(TypeMoq.It.isAny())).returns(async () => true);
+        lintManager.setup((x) => x.isLintingEnabled(TypeMoq.It.isAny())).returns(async () => true);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
             .returns(() => lintManager.object);
 
         lintingEngine = new LintingEngine(serviceContainer.object);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(ILintingEngine), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(ILintingEngine), TypeMoq.It.isAny()))
             .returns(() => lintingEngine);
     });
 
@@ -75,7 +75,7 @@ suite('Linting - LintingEngine', () => {
             lintingEngine.lintDocument(doc, 'auto').ignoreErrors();
         } catch {
             lintManager.verify(
-                l => l.isLintingEnabled(TypeMoq.It.isAny(), TypeMoq.It.isValue(doc.uri)),
+                (l) => l.isLintingEnabled(TypeMoq.It.isAny(), TypeMoq.It.isValue(doc.uri)),
                 TypeMoq.Times.once()
             );
         }
@@ -86,7 +86,7 @@ suite('Linting - LintingEngine', () => {
             lintingEngine.lintDocument(doc, 'auto').ignoreErrors();
         } catch {
             lintManager.verify(
-                l =>
+                (l) =>
                     l.createLinter(
                         TypeMoq.It.isAny(),
                         TypeMoq.It.isAny(),
@@ -102,7 +102,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, true, ['a*.py']);
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never()
         );
     });
@@ -111,7 +111,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('a.ts', 'typescript', true);
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never()
         );
     });
@@ -120,7 +120,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'git');
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never()
         );
     });
@@ -128,7 +128,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'showModifications');
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never()
         );
     });
@@ -136,7 +136,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('a1.py', PYTHON_LANGUAGE, false, [], 'svn');
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never()
         );
     });
@@ -145,7 +145,7 @@ suite('Linting - LintingEngine', () => {
         const doc = mockTextDocument('file.py', PYTHON_LANGUAGE, false, []);
         await lintingEngine.lintDocument(doc, 'auto');
         lintManager.verify(
-            l => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+            (l) => l.createLinter(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.never()
         );
     });
@@ -157,19 +157,19 @@ suite('Linting - LintingEngine', () => {
         ignorePattern: string[] = [],
         scheme?: string
     ): TextDocument {
-        fileSystem.setup(x => x.fileExists(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(exists));
+        fileSystem.setup((x) => x.fileExists(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(exists));
 
-        lintSettings.setup(l => l.ignorePatterns).returns(() => ignorePattern);
-        settings.setup(x => x.linting).returns(() => lintSettings.object);
+        lintSettings.setup((l) => l.ignorePatterns).returns(() => ignorePattern);
+        settings.setup((x) => x.linting).returns(() => lintSettings.object);
 
         const doc = TypeMoq.Mock.ofType<TextDocument>();
         if (scheme) {
-            doc.setup(d => d.uri).returns(() => Uri.parse(`${scheme}:${fileName}`));
+            doc.setup((d) => d.uri).returns(() => Uri.parse(`${scheme}:${fileName}`));
         } else {
-            doc.setup(d => d.uri).returns(() => Uri.file(fileName));
+            doc.setup((d) => d.uri).returns(() => Uri.file(fileName));
         }
-        doc.setup(d => d.fileName).returns(() => fileName);
-        doc.setup(d => d.languageId).returns(() => language);
+        doc.setup((d) => d.fileName).returns(() => fileName);
+        doc.setup((d) => d.languageId).returns(() => language);
         return doc.object;
     }
 });

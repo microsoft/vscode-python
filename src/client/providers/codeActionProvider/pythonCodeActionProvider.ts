@@ -15,7 +15,7 @@ export class PythonCodeActionProvider implements vscode.CodeActionProvider {
         const sortImports = new vscode.CodeAction('Sort imports', vscode.CodeActionKind.SourceOrganizeImports);
         sortImports.command = {
             title: 'Sort imports',
-            command: 'python.sortImports'
+            command: 'python.sortImports',
         };
 
         return [sortImports];

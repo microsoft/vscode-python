@@ -9,7 +9,7 @@ import { IServiceContainer } from '../../ioc/types';
 import {
     BetaLanguageServerPackageRepository,
     DailyLanguageServerPackageRepository,
-    StableLanguageServerPackageRepository
+    StableLanguageServerPackageRepository,
 } from '../common/packageRepository';
 
 @injectable()

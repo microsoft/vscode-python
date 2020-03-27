@@ -7,7 +7,7 @@ import {
     DefaultWordPattern,
     ensureValidWordDefinition,
     getWordAtText,
-    regExpLeadsToEndlessLoop
+    regExpLeadsToEndlessLoop,
 } from '../../client/datascience/interactive-common/intellisense/wordHelper';
 
 class MockLine implements TextLine {

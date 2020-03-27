@@ -17,7 +17,7 @@ import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelec
 
 export enum NextAction {
     runNextRule = 'runNextRule',
-    exit = 'exit'
+    exit = 'exit',
 }
 
 @injectable()

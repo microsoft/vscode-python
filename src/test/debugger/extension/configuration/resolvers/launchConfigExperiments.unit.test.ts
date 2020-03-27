@@ -70,7 +70,7 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
         const fs = mock(FileSystem);
 
         when(configurationService.getSettings(undefined)).thenReturn(({
-            experiments: { enabled: true }
+            experiments: { enabled: true },
             // tslint:disable-next-line: no-any
         } as any) as IPythonSettings);
         experimentsManager = new ExperimentsManager(
@@ -113,27 +113,27 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
                         : DebugAdapterNewPtvsd.control,
                 salt: 'DebugAdapterDescriptorFactory',
                 min: 0,
-                max: 0
+                max: 0,
             },
             {
                 name: testConfig.reloadExperiment === 'experiment' ? WebAppReload.experiment : WebAppReload.control,
                 salt: 'DebugAdapterDescriptorFactory',
                 min: 0,
-                max: 0
-            }
+                max: 0,
+            },
         ];
     }
 
     function createTestConfigurations() {
         const testConfigs: TestConfiguration[] = [];
-        newDebuggerExperiment.forEach(newDbgExp => {
-            reloadExperiment.forEach(reloadExp => {
-                subProcessValues.forEach(subProcessValue => {
-                    noReloadSwitches.forEach(noReloadSwitch => {
-                        webFramework.forEach(framework => {
+        newDebuggerExperiment.forEach((newDbgExp) => {
+            reloadExperiment.forEach((reloadExp) => {
+                subProcessValues.forEach((subProcessValue) => {
+                    noReloadSwitches.forEach((noReloadSwitch) => {
+                        webFramework.forEach((framework) => {
                             const usingReloadSwitch = ['run', noReloadSwitch, '--other-switch'];
                             const withoutUsingReloadSwitch = ['run', '--other-switch'];
-                            [usingReloadSwitch, withoutUsingReloadSwitch].forEach(args => {
+                            [usingReloadSwitch, withoutUsingReloadSwitch].forEach((args) => {
                                 testConfigs.push({
                                     newDebuggerExperiment: newDbgExp,
                                     reloadExperiment: reloadExp,
@@ -141,7 +141,7 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
                                     args: args,
                                     framework: framework,
                                     withoutReloadArgs: ['run', '--other-switch'],
-                                    withReloadArgs: ['run', noReloadSwitch, '--other-switch']
+                                    withReloadArgs: ['run', noReloadSwitch, '--other-switch'],
                                 });
                             });
                         });
@@ -185,7 +185,7 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
                 name: '',
                 envFile: '',
                 type: DebuggerTypeName,
-                subProcess: testConfig.subProcess
+                subProcess: testConfig.subProcess,
             };
             const expectedConfig: LaunchRequestArguments = {
                 pythonPath: '',
@@ -194,7 +194,7 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
                 name: '',
                 envFile: '',
                 type: DebuggerTypeName,
-                subProcess: subProcModified ? true : testConfig.subProcess
+                subProcess: subProcModified ? true : testConfig.subProcess,
             };
 
             // Add web framework flag to configuration
@@ -218,7 +218,7 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
                         expectedEvents.push(EventName.PYTHON_WEB_APP_RELOAD);
                         expectedProperties.push({
                             subProcessModified: `${subProcModified}`,
-                            argsModified: `${argsModified}`
+                            argsModified: `${argsModified}`,
                         });
                     } else {
                         // Don't add any event

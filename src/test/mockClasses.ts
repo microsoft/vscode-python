@@ -4,7 +4,7 @@ import {
     ILintingSettings,
     IMypyCategorySeverity,
     IPycodestyleCategorySeverity,
-    IPylintCategorySeverity
+    IPylintCategorySeverity,
 } from '../client/common/types';
 
 export class MockOutputChannel implements vscode.OutputChannel {

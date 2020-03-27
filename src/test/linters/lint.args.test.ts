@@ -18,11 +18,11 @@ import {
     IInstaller,
     ILintingSettings,
     IOutputChannel,
-    IPythonSettings
+    IPythonSettings,
 } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -42,11 +42,11 @@ import { initialize } from '../initialize';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 
 suite('Linting - Arguments', () => {
-    [undefined, path.join('users', 'dev_user')].forEach(workspaceUri => {
+    [undefined, path.join('users', 'dev_user')].forEach((workspaceUri) => {
         [
             Uri.file(path.join('users', 'dev_user', 'development path to', 'one.py')),
-            Uri.file(path.join('users', 'dev_user', 'development', 'one.py'))
-        ].forEach(fileUri => {
+            Uri.file(path.join('users', 'dev_user', 'development', 'one.py')),
+        ].forEach((fileUri) => {
             suite(
                 `File path ${fileUri.fsPath.indexOf(' ') > 0 ? 'with' : 'without'} spaces and ${
                     workspaceUri ? 'without' : 'with'
@@ -72,10 +72,10 @@ suite('Linting - Arguments', () => {
                         outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
 
                         const fs = TypeMoq.Mock.ofType<IFileSystem>();
-                        fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(
+                        fs.setup((x) => x.fileExists(TypeMoq.It.isAny())).returns(
                             () => new Promise<boolean>((resolve, _reject) => resolve(true))
                         );
-                        fs.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(
+                        fs.setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(
                             () => true
                         );
                         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fs.object);
@@ -102,14 +102,14 @@ suite('Linting - Arguments', () => {
                         serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, docManager.object);
 
                         const lintSettings = TypeMoq.Mock.ofType<ILintingSettings>();
-                        lintSettings.setup(x => x.enabled).returns(() => true);
-                        lintSettings.setup(x => x.lintOnSave).returns(() => true);
+                        lintSettings.setup((x) => x.enabled).returns(() => true);
+                        lintSettings.setup((x) => x.lintOnSave).returns(() => true);
 
                         settings = TypeMoq.Mock.ofType<IPythonSettings>();
-                        settings.setup(x => x.linting).returns(() => lintSettings.object);
+                        settings.setup((x) => x.linting).returns(() => lintSettings.object);
 
                         configService = TypeMoq.Mock.ofType<IConfigurationService>();
-                        configService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+                        configService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
                         serviceManager.addSingletonInstance<IConfigurationService>(
                             IConfigurationService,
                             configService.object
@@ -120,7 +120,7 @@ suite('Linting - Arguments', () => {
                             : undefined;
                         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
                         workspaceService
-                            .setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny()))
+                            .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny()))
                             .returns(() => workspaceFolder);
                         serviceManager.addSingletonInstance<IWorkspaceService>(
                             IWorkspaceService,
@@ -139,7 +139,7 @@ suite('Linting - Arguments', () => {
                     });
 
                     async function testLinter(linter: BaseLinter, expectedArgs: string[]) {
-                        document.setup(d => d.uri).returns(() => fileUri);
+                        document.setup((d) => d.uri).returns(() => fileUri);
 
                         let invoked = false;
                         (linter as any).run = (args: string[]) => {
@@ -185,7 +185,7 @@ suite('Linting - Arguments', () => {
                     });
                     test('Pylint', async () => {
                         const linter = new Pylint(outputChannel.object, serviceContainer);
-                        document.setup(d => d.uri).returns(() => fileUri);
+                        document.setup((d) => d.uri).returns(() => fileUri);
 
                         let invoked = false;
                         (linter as any).run = (args: any[], _doc: any, _token: any) => {
@@ -205,7 +205,7 @@ suite('Linting - Arguments', () => {
                             '{line},0,{severity},{test_id}:{msg}',
                             '-n',
                             '-1',
-                            fileUri.fsPath
+                            fileUri.fsPath,
                         ];
                         await testLinter(linter, expectedArgs);
                     });

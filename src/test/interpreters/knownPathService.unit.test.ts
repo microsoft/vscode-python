@@ -27,13 +27,13 @@ suite('Interpreters Known Paths', () => {
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(ICurrentProcess), TypeMoq.It.isAny()))
             .returns(() => currentProcess.object);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
             .returns(() => platformService.object);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IPathUtils), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IPathUtils), TypeMoq.It.isAny()))
             .returns(() => pathUtils.object);
 
         knownSearchPaths = new KnownSearchPathsForInterpreters(serviceContainer.object);
@@ -42,16 +42,16 @@ suite('Interpreters Known Paths', () => {
     test('Ensure known list of paths are returned', async () => {
         const pathDelimiter = 'X';
         const pathsInPATHVar = [path.join('a', 'b', 'c'), '', path.join('1', '2'), '3'];
-        pathUtils.setup(p => p.delimiter).returns(() => pathDelimiter);
-        platformService.setup(p => p.isWindows).returns(() => true);
-        platformService.setup(p => p.pathVariableName).returns(() => 'PATH');
+        pathUtils.setup((p) => p.delimiter).returns(() => pathDelimiter);
+        platformService.setup((p) => p.isWindows).returns(() => true);
+        platformService.setup((p) => p.pathVariableName).returns(() => 'PATH');
         currentProcess
-            .setup(p => p.env)
+            .setup((p) => p.env)
             .returns(() => {
                 return { PATH: pathsInPATHVar.join(pathDelimiter) };
             });
 
-        const expectedPaths = [...pathsInPATHVar].filter(item => item.length > 0);
+        const expectedPaths = [...pathsInPATHVar].filter((item) => item.length > 0);
 
         const paths = knownSearchPaths.getSearchPaths();
 
@@ -61,18 +61,18 @@ suite('Interpreters Known Paths', () => {
     test('Ensure known list of paths are returned on non-windows', async () => {
         const homeDir = '/users/peter Smith';
         const pathDelimiter = 'X';
-        pathUtils.setup(p => p.delimiter).returns(() => pathDelimiter);
-        pathUtils.setup(p => p.home).returns(() => homeDir);
-        platformService.setup(p => p.isWindows).returns(() => false);
-        platformService.setup(p => p.pathVariableName).returns(() => 'PATH');
+        pathUtils.setup((p) => p.delimiter).returns(() => pathDelimiter);
+        pathUtils.setup((p) => p.home).returns(() => homeDir);
+        platformService.setup((p) => p.isWindows).returns(() => false);
+        platformService.setup((p) => p.pathVariableName).returns(() => 'PATH');
         currentProcess
-            .setup(p => p.env)
+            .setup((p) => p.env)
             .returns(() => {
                 return { PATH: '' };
             });
 
         const expectedPaths: string[] = [];
-        ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach(p => {
+        ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach((p) => {
             expectedPaths.push(p);
             expectedPaths.push(path.join(homeDir, p));
         });
@@ -89,18 +89,18 @@ suite('Interpreters Known Paths', () => {
         const homeDir = '/users/peter Smith';
         const pathDelimiter = 'X';
         const pathsInPATHVar = [path.join('a', 'b', 'c'), '', path.join('1', '2'), '3'];
-        pathUtils.setup(p => p.delimiter).returns(() => pathDelimiter);
-        pathUtils.setup(p => p.home).returns(() => homeDir);
-        platformService.setup(p => p.isWindows).returns(() => false);
-        platformService.setup(p => p.pathVariableName).returns(() => 'PATH');
+        pathUtils.setup((p) => p.delimiter).returns(() => pathDelimiter);
+        pathUtils.setup((p) => p.home).returns(() => homeDir);
+        platformService.setup((p) => p.isWindows).returns(() => false);
+        platformService.setup((p) => p.pathVariableName).returns(() => 'PATH');
         currentProcess
-            .setup(p => p.env)
+            .setup((p) => p.env)
             .returns(() => {
                 return { PATH: pathsInPATHVar.join(pathDelimiter) };
             });
 
-        const expectedPaths = [...pathsInPATHVar].filter(item => item.length > 0);
-        ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach(p => {
+        const expectedPaths = [...pathsInPATHVar].filter((item) => item.length > 0);
+        ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach((p) => {
             expectedPaths.push(p);
             expectedPaths.push(path.join(homeDir, p));
         });

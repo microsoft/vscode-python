@@ -13,7 +13,7 @@ import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IPythonExecutionFactory,
     IPythonExecutionService,
-    SpawnOptions
+    SpawnOptions,
 } from '../../../../client/common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { TestDiscoveredTestParser } from '../../../../client/testing/common/services/discoveredTestParser';
@@ -42,7 +42,7 @@ suite('Unit Tests - Common Discovery', () => {
             workspaceFolder: Uri.file(__dirname),
             ignoreCache: false,
             token: new CancellationTokenSource().token,
-            outChannel: new MockOutputChannel('Test')
+            outChannel: new MockOutputChannel('Test'),
         };
         const discoveredTests: DiscoveredTests[] = [{ hello: 1 } as any];
         const parsedResult = ({ done: true } as any) as Tests;
@@ -61,26 +61,26 @@ suite('Unit Tests - Common Discovery', () => {
             workspaceFolder: Uri.file(__dirname),
             ignoreCache: false,
             token: new CancellationTokenSource().token,
-            outChannel: new MockOutputChannel('Test')
+            outChannel: new MockOutputChannel('Test'),
         };
         const discoveredTests = '[1]';
         const execService = typemoq.Mock.ofType<IPythonExecutionService>();
         execService.setup((e: any) => e.then).returns(() => undefined);
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
-            resource: options.workspaceFolder
+            resource: options.workspaceFolder,
         };
         const pythonFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'testing_tools', 'run_adapter.py');
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
-            throwOnStdErr: true
+            throwOnStdErr: true,
         };
 
         when(executionFactory.createActivatedEnvironment(deepEqual(creationOptions))).thenResolve(execService.object);
         const executionResult = { stdout: discoveredTests };
         execService
-            .setup(e => e.exec(typemoq.It.isValue([pythonFile, ...options.args]), typemoq.It.isValue(spawnOptions)))
+            .setup((e) => e.exec(typemoq.It.isValue([pythonFile, ...options.args]), typemoq.It.isValue(spawnOptions)))
             .returns(() => Promise.resolve(executionResult));
 
         const result = await discovery.exec(options);

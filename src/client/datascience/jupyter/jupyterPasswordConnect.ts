@@ -95,7 +95,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         return this.appShell.showInputBox({
             prompt: localize.DataScience.jupyterSelectPasswordPrompt(),
             ignoreFocusOut: true,
-            password: true
+            password: true,
         });
     }
 
@@ -111,7 +111,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             this.addAllowUnauthorized(url, allowUnauthorized, {
                 method: 'get',
                 redirect: 'manual',
-                headers: { Connection: 'keep-alive' }
+                headers: { Connection: 'keep-alive' },
             })
         );
 
@@ -150,10 +150,10 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                 headers: {
                     Cookie: `_xsrf=${xsrfCookie}`,
                     Connection: 'keep-alive',
-                    'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                    'content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
                 },
                 body: postParams.toString(),
-                redirect: 'manual'
+                redirect: 'manual',
             })
         );
 
@@ -177,7 +177,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         const cookies: string | null = response.headers.get('set-cookie');
 
         if (cookies) {
-            cookies.split(';').forEach(value => {
+            cookies.split(';').forEach((value) => {
                 const cookieKey = value.substring(0, value.indexOf('='));
                 const cookieVal = value.substring(value.indexOf('=') + 1);
                 cookieList.set(cookieKey, cookieVal);

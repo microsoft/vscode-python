@@ -13,7 +13,7 @@ const NEEDS_INDENT = [
     /^break$/,
     /^continue$/,
     /^raise$/, // only re-raise
-    /^return\b/
+    /^return\b/,
 ];
 const INDENT_ON_ENTER = [
     // block-beginning statements
@@ -30,7 +30,7 @@ const INDENT_ON_ENTER = [
     /^for\b/,
     /^if\b/,
     /^elif\b/,
-    /^else\b/
+    /^else\b/,
 ];
 const DEDENT_ON_ENTER = [
     // block-ending statements
@@ -39,7 +39,7 @@ const DEDENT_ON_ENTER = [
     /^break$/,
     /^continue$/,
     /^raise\b/,
-    /^pass\b/
+    /^pass\b/,
 ];
 
 function isMember(line: string, regexes: RegExp[]): boolean {
@@ -197,8 +197,8 @@ suite('Language Configuration', () => {
             // bogus
             '',
             ' ',
-            '  '
-        ].forEach(base => {
+            '  ',
+        ].forEach((base) => {
             [
                 ['', '', '', ''],
                 // leading
@@ -214,8 +214,8 @@ suite('Language Configuration', () => {
                 // trailing
                 ['', '', '', ' '],
                 ['', '', '', '# a comment'],
-                ['', '', '', ' # ...']
-            ].forEach(whitespace => {
+                ['', '', '', ' # ...'],
+            ].forEach((whitespace) => {
                 const [leading, postKeyword, preColon, trailing] = whitespace;
                 const [_example, invalid, ignored] = resolveExample(base, leading, postKeyword, preColon, trailing);
                 if (ignored) {

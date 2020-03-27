@@ -70,7 +70,7 @@ export enum InterpreterType {
     Pipenv = 'PipEnv',
     Pyenv = 'Pyenv',
     Venv = 'Venv',
-    WindowsStore = 'WindowsStore'
+    WindowsStore = 'WindowsStore',
 }
 export type PythonInterpreter = InterpreterInfomation & {
     companyDisplayName?: string;

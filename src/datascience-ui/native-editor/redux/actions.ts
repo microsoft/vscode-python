@@ -5,7 +5,7 @@ import * as uuid from 'uuid/v4';
 import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages,
-    NativeCommandType
+    NativeCommandType,
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
 import { CursorPos } from '../../interactive-common/mainState';
@@ -21,7 +21,7 @@ import {
     ILinkClickAction,
     IOpenSettingsAction,
     ISendCommandAction,
-    IShowDataViewerAction
+    IShowDataViewerAction,
 } from '../../interactive-common/redux/reducers/types';
 import { IMonacoModelContentChangeEvent } from '../../react-common/monacoHelpers';
 
@@ -46,12 +46,12 @@ export const actionCreators = {
     insertAbove: (cellId: string | undefined) =>
         createIncomingActionWithPayload(CommonActionType.INSERT_ABOVE_AND_FOCUS_NEW_CELL, {
             cellId,
-            newCellId: uuid()
+            newCellId: uuid(),
         }),
     insertBelow: (cellId: string | undefined) =>
         createIncomingActionWithPayload(CommonActionType.INSERT_BELOW_AND_FOCUS_NEW_CELL, {
             cellId,
-            newCellId: uuid()
+            newCellId: uuid(),
         }),
     executeCell: (cellId: string, moveOp: 'add' | 'select' | 'none') =>
         createIncomingActionWithPayload(CommonActionType.EXECUTE_CELL_AND_ADVANCE, { cellId, moveOp }),
@@ -101,7 +101,7 @@ export const actionCreators = {
             forward: e.forward,
             reverse: e.reverse,
             id: cellId,
-            code: e.model.getValue()
+            code: e.model.getValue(),
         }),
     linkClick: (href: string): CommonAction<ILinkClickAction> =>
         createIncomingActionWithPayload(CommonActionType.LINK_CLICK, { href }),
@@ -127,6 +127,6 @@ export const actionCreators = {
             sortColumn: 'name',
             sortAscending: true,
             startIndex,
-            pageSize
-        })
+            pageSize,
+        }),
 };

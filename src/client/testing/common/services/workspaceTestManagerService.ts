@@ -7,7 +7,7 @@ import {
     ITestManagerService,
     ITestManagerServiceFactory,
     IWorkspaceTestManagerService,
-    UnitTestProduct
+    UnitTestProduct,
 } from './../types';
 
 @injectable()
@@ -21,7 +21,7 @@ export class WorkspaceTestManagerService implements IWorkspaceTestManagerService
         disposables.push(this);
     }
     public dispose() {
-        this.workspaceTestManagers.forEach(info => info.dispose());
+        this.workspaceTestManagers.forEach((info) => info.dispose());
     }
     public getTestManager(resource: Uri): ITestManager | undefined {
         const wkspace = this.getWorkspace(resource);

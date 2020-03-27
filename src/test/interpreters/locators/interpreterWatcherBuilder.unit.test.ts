@@ -42,7 +42,7 @@ suite('Interpreters - Watcher Builder', () => {
         const [item1, item2, item3] = await Promise.all([
             builder.getWorkspaceVirtualEnvInterpreterWatcher(undefined),
             builder.getWorkspaceVirtualEnvInterpreterWatcher(undefined),
-            builder.getWorkspaceVirtualEnvInterpreterWatcher(undefined)
+            builder.getWorkspaceVirtualEnvInterpreterWatcher(undefined),
         ]);
 
         expect(item1).to.be.equal(watcher, 'invalid');

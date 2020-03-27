@@ -51,7 +51,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         return this.didChange.event;
     }
     public dispose(): void {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
         this.didChange.dispose();
     }
     // tslint:disable-next-line: max-func-body-length
@@ -95,11 +95,11 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         const vars = await this.envVarsProvider.getEnvironmentVariables();
         this.envPythonPath = vars.PYTHONPATH || '';
         if (this.envPythonPath !== '') {
-            const paths = this.envPythonPath.split(this.pathUtils.delimiter).filter(item => item.trim().length > 0);
+            const paths = this.envPythonPath.split(this.pathUtils.delimiter).filter((item) => item.trim().length > 0);
             searchPaths.push(...paths);
         }
 
-        searchPaths = searchPaths.map(p => path.normalize(p));
+        searchPaths = searchPaths.map((p) => path.normalize(p));
 
         this.excludedFiles = this.getExcludedFiles();
         this.typeshedPaths = this.getTypeshedPaths();
@@ -111,20 +111,20 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
             documentSelector,
             workspaceFolder,
             synchronize: {
-                configurationSection: PYTHON_LANGUAGE
+                configurationSection: PYTHON_LANGUAGE,
             },
             outputChannel: this.output,
             revealOutputChannelOn: RevealOutputChannelOn.Never,
             initializationOptions: {
                 interpreter: {
-                    properties
+                    properties,
                 },
                 displayOptions: {
                     preferredFormat: 'markdown',
                     trimDocumentationLines: false,
                     maxDocumentationLineLength: 0,
                     trimDocumentationText: false,
-                    maxDocumentationTextLength: 0
+                    maxDocumentationTextLength: 0,
                 },
                 searchPaths,
                 typeStubSearchPaths: this.typeshedPaths,
@@ -133,14 +133,14 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 testEnvironment: isTestExecution(),
                 analysisUpdates: true,
                 traceLogging: true, // Max level, let LS decide through settings actual level of logging.
-                asyncStartup: true
-            }
+                asyncStartup: true,
+            },
         };
     }
     protected getDocumentSelector(workspaceFolder?: WorkspaceFolder): DocumentSelector {
         const documentSelector: DocumentFilter[] = [
             { scheme: 'file', language: PYTHON_LANGUAGE },
-            { scheme: 'untitled', language: PYTHON_LANGUAGE }
+            { scheme: 'untitled', language: PYTHON_LANGUAGE },
         ];
         // Set the document selector only when in a multi-root workspace scenario.
         if (
@@ -166,15 +166,15 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         const states = this.workspace.getConfiguration(setting);
         if (states) {
             Object.keys(states)
-                .filter(k => (k.indexOf('*') >= 0 || k.indexOf('/') >= 0) && states[k])
-                .forEach(p => list.push(p));
+                .filter((k) => (k.indexOf('*') >= 0 || k.indexOf('/') >= 0) && states[k])
+                .forEach((p) => list.push(p));
         }
     }
     protected getPythonExcludeSection(list: string[]): void {
         const pythonSettings = this.configuration.getSettings(this.resource);
         const paths = pythonSettings && pythonSettings.linting ? pythonSettings.linting.ignorePatterns : undefined;
         if (paths && Array.isArray(paths)) {
-            paths.filter(p => p && p.length > 0).forEach(p => list.push(p));
+            paths.filter((p) => p && p.length > 0).forEach((p) => list.push(p));
         }
     }
     protected getTypeshedPaths(): string[] {

@@ -9,7 +9,7 @@ import {
     IInterpreterHelper,
     IKnownSearchPathsForInterpreters,
     InterpreterType,
-    PythonInterpreter
+    PythonInterpreter,
 } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -49,12 +49,16 @@ export class KnownPathsService extends CacheableLocatorService {
      * Return the located interpreters.
      */
     private suggestionsFromKnownPaths() {
-        const promises = this.knownSearchPaths.getSearchPaths().map(dir => this.getInterpretersInDirectory(dir));
+        const promises = this.knownSearchPaths.getSearchPaths().map((dir) => this.getInterpretersInDirectory(dir));
         return Promise.all<string[]>(promises)
-            .then(listOfInterpreters => flatten(listOfInterpreters))
-            .then(interpreters => interpreters.filter(item => item.length > 0))
-            .then(interpreters => Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter))))
-            .then(interpreters => interpreters.filter(interpreter => !!interpreter).map(interpreter => interpreter!));
+            .then((listOfInterpreters) => flatten(listOfInterpreters))
+            .then((interpreters) => interpreters.filter((item) => item.length > 0))
+            .then((interpreters) =>
+                Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter)))
+            )
+            .then((interpreters) =>
+                interpreters.filter((interpreter) => !!interpreter).map((interpreter) => interpreter!)
+            );
     }
 
     /**
@@ -69,7 +73,7 @@ export class KnownPathsService extends CacheableLocatorService {
         return {
             ...(details as PythonInterpreter),
             path: interpreter,
-            type: InterpreterType.Unknown
+            type: InterpreterType.Unknown,
         };
     }
 
@@ -80,7 +84,7 @@ export class KnownPathsService extends CacheableLocatorService {
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         return fs
             .directoryExists(dir)
-            .then(exists => (exists ? lookForInterpretersInDirectory(dir, fs) : Promise.resolve<string[]>([])));
+            .then((exists) => (exists ? lookForInterpretersInDirectory(dir, fs) : Promise.resolve<string[]>([])));
     }
 }
 
@@ -96,11 +100,11 @@ export class KnownSearchPathsForInterpreters implements IKnownSearchPathsForInte
         const pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
 
         const searchPaths = currentProcess.env[platformService.pathVariableName]!.split(pathUtils.delimiter)
-            .map(p => p.trim())
-            .filter(p => p.length > 0);
+            .map((p) => p.trim())
+            .filter((p) => p.length > 0);
 
         if (!platformService.isWindows) {
-            ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach(p => {
+            ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach((p) => {
                 searchPaths.push(p);
                 searchPaths.push(path.join(pathUtils.home, p));
             });

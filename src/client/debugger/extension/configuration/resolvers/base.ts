@@ -125,8 +125,8 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             pathMappings = [
                 {
                     localRoot: defaultLocalRoot,
-                    remoteRoot: defaultRemoteRoot
-                }
+                    remoteRoot: defaultRemoteRoot,
+                },
             ];
         } else {
             // Expand ${workspaceFolder} variable first if necessary.
@@ -134,7 +134,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             pathMappings = pathMappings.map(({ localRoot: mappedLocalRoot, remoteRoot }) => ({
                 localRoot: systemVariables.resolveAny(mappedLocalRoot),
                 // TODO: Apply to remoteRoot too?
-                remoteRoot
+                remoteRoot,
             }));
         }
 
@@ -180,7 +180,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration>
             watson: name.toLowerCase().indexOf('watson') >= 0,
             pyspark: name.toLowerCase().indexOf('pyspark') >= 0,
             gevent: name.toLowerCase().indexOf('gevent') >= 0,
-            scrapy: moduleName.toLowerCase() === 'scrapy'
+            scrapy: moduleName.toLowerCase() === 'scrapy',
         };
         sendTelemetryEvent(EventName.DEBUGGER, undefined, telemetryProps);
     }

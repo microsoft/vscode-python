@@ -17,7 +17,7 @@ import {
     ITestDiscoveryService,
     ITestsHelper,
     TestDiscoveryOptions,
-    Tests
+    Tests,
 } from '../../../../client/testing/common/types';
 import { ArgumentsService } from '../../../../client/testing/pytest/services/argsService';
 import { TestDiscoveryService } from '../../../../client/testing/pytest/services/discoveryService';
@@ -56,7 +56,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
         const args = ['1', '2', '3'];
         const discoveredTests = ('Hello World' as any) as Tests;
@@ -75,12 +75,12 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
         const args = ['1', '2', '3'];
         discoveryService.buildTestCollectionArgs = () => args;
         const directories = ['a', 'b'];
-        discoveryService.discoverTestsInTestDirectory = async opts => {
+        discoveryService.discoverTestsInTestDirectory = async (opts) => {
             const dir = opts.args[opts.args.length - 1];
             if (dir === 'a') {
                 return ('Result A' as any) as Tests;
@@ -107,7 +107,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: false,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
 
         const filteredArgs = options.args;
@@ -126,7 +126,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
 
         const filteredArgs = options.args;
@@ -145,7 +145,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
 
         const filteredArgs = options.args;
@@ -164,7 +164,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
-            workspaceFolder: Uri.file(__dirname)
+            workspaceFolder: Uri.file(__dirname),
         };
         const expectedDiscoveryArgs = ['discover', 'pytest', '--', ...options.args];
         const discoveryOptions = { ...options };

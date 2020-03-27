@@ -18,33 +18,35 @@ suite('Terminal Environment Activation (bash)', () => {
     [
         'usr/bin/python',
         'usr/bin/env with spaces/env more/python',
-        'c:\\users\\windows paths\\conda\\python.exe'
-    ].forEach(pythonPath => {
+        'c:\\users\\windows paths\\conda\\python.exe',
+    ].forEach((pythonPath) => {
         const hasSpaces = pythonPath.indexOf(' ') > 0;
         const suiteTitle = hasSpaces
             ? 'and there are spaces in the script file (pythonpath),'
             : 'and there are no spaces in the script file (pythonpath),';
         suite(suiteTitle, () => {
             ['activate', 'activate.sh', 'activate.csh', 'activate.fish', 'activate.bat', 'Activate.ps1'].forEach(
-                scriptFileName => {
+                (scriptFileName) => {
                     suite(`and script file is ${scriptFileName}`, () => {
                         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
                         let fileSystem: TypeMoq.IMock<IFileSystem>;
                         setup(() => {
                             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-                            serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fileSystem.object);
+                            serviceContainer.setup((c) => c.get(IFileSystem)).returns(() => fileSystem.object);
 
                             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+                                .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
                                 .returns(() => configService.object);
                             const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-                            settings.setup(s => s.pythonPath).returns(() => pythonPath);
-                            configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+                            settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+                            configService
+                                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+                                .returns(() => settings.object);
                         });
 
-                        getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
+                        getNamesAndValues<TerminalShellType>(TerminalShellType).forEach((shellType) => {
                             let isScriptFileSupported = false;
                             switch (shellType.value) {
                                 case TerminalShellType.zsh:
@@ -103,7 +105,7 @@ suite('Terminal Environment Activation (bash)', () => {
 
                                 const pathToScriptFile = path.join(path.dirname(pythonPath), scriptFileName);
                                 fileSystem
-                                    .setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
+                                    .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
                                     .returns(() => Promise.resolve(true));
                                 const command = await bash.getActivationCommands(undefined, shellType.value);
 

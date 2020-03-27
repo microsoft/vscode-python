@@ -15,7 +15,7 @@ import { IntellisenseProvider } from '../../client/datascience/interactive-commo
 import {
     IEditorContentChange,
     IInteractiveWindowMapping,
-    InteractiveWindowMessages
+    InteractiveWindowMessages,
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, INotebookProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
@@ -65,8 +65,8 @@ suite('Data Science Intellisense Unit Tests', () => {
         notebookProvider = TypeMoq.Mock.ofType<INotebookProvider>();
 
         pythonSettings.jediEnabled = false;
-        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
-        workspaceService.setup(w => w.rootPath).returns(() => '/foo/bar');
+        configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
+        workspaceService.setup((w) => w.rootPath).returns(() => '/foo/bar');
 
         intellisenseProvider = new IntellisenseProvider(
             workspaceService.object,
@@ -97,7 +97,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             newDirty: true,
             fullText: code,
             currentText: code,
-            cell
+            cell,
         });
         cells.splice(cells.length - 1, 0, cell);
         return result;
@@ -113,7 +113,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             getPositionAt: (o: number) => {
                 const p = doc.positionAt(o);
                 return { lineNumber: p.line + 1, column: p.character + 1 };
-            }
+            },
         };
     }
 
@@ -126,7 +126,7 @@ suite('Data Science Intellisense Unit Tests', () => {
     ) {
         const reverse = {
             ...generateReverseChange(oldText, generateModel(doc), change),
-            position: { lineNumber: 1, column: 1 }
+            position: { lineNumber: 1, column: 1 },
         };
         return sendMessage(InteractiveWindowMessages.UpdateModel, {
             source,
@@ -135,7 +135,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             newDirty: true,
             forward: [change],
             reverse: [reverse],
-            id
+            id,
         });
     }
 
@@ -151,15 +151,15 @@ suite('Data Science Intellisense Unit Tests', () => {
                 startLineNumber: 1,
                 startColumn: 1,
                 endLineNumber: oldSplit.length,
-                endColumn: oldSplit[oldSplit.length - 1].length + 1
+                endColumn: oldSplit[oldSplit.length - 1].length + 1,
             },
             rangeOffset: 0,
             rangeLength: oldCode.length,
             text: newCode,
             position: {
                 column: 1,
-                lineNumber: 1
-            }
+                lineNumber: 1,
+            },
         };
         return sendUpdate(id, oldCode, getDocument(), change, source);
     }
@@ -173,15 +173,15 @@ suite('Data Science Intellisense Unit Tests', () => {
                 startLineNumber: line,
                 startColumn: pos,
                 endLineNumber: line,
-                endColumn: pos
+                endColumn: pos,
             },
             rangeOffset: offset,
             rangeLength: 0,
             text: code,
             position: {
                 column: 1,
-                lineNumber: 1
-            }
+                lineNumber: 1,
+            },
         };
         return sendMessage(InteractiveWindowMessages.UpdateModel, {
             source: 'user',
@@ -190,7 +190,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             newDirty: true,
             forward: [change],
             reverse: [change],
-            id: cells[cells.length - 1].id
+            id: cells[cells.length - 1].id,
         });
     }
 
@@ -203,15 +203,15 @@ suite('Data Science Intellisense Unit Tests', () => {
                 startLineNumber: line,
                 startColumn: startPos,
                 endLineNumber: line,
-                endColumn: endPos
+                endColumn: endPos,
             },
             rangeOffset: startPos,
             rangeLength: length,
             text: '',
             position: {
                 column: 1,
-                lineNumber: 1
-            }
+                lineNumber: 1,
+            },
         };
         return sendUpdate(cells[cells.length - 1].id, '', getDocument(), change);
     }
@@ -222,7 +222,7 @@ suite('Data Science Intellisense Unit Tests', () => {
         source: 'user' | 'undo' | 'redo' = 'user'
     ): Promise<number> {
         if (cell) {
-            let index = cells.findIndex(c => c.id === cell.id);
+            let index = cells.findIndex((c) => c.id === cell.id);
             if (index < 0) {
                 index = oldIndex;
             } else {
@@ -234,7 +234,7 @@ suite('Data Science Intellisense Unit Tests', () => {
                 oldDirty: false,
                 newDirty: true,
                 cell,
-                index
+                index,
             });
             return index;
         }
@@ -248,7 +248,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             oldDirty: false,
             newDirty: true,
             oldCells,
-            newCellId: uuid()
+            newCellId: uuid(),
         });
     }
 
@@ -259,7 +259,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             oldDirty: false,
             newDirty: true,
             firstCellId: id1,
-            secondCellId: id2
+            secondCellId: id2,
         });
     }
 
@@ -272,9 +272,9 @@ suite('Data Science Intellisense Unit Tests', () => {
     ): Promise<void> {
         const cell = createEmptyCell(id, null);
         cell.data.source = code;
-        const index = codeCellAbove ? cells.findIndex(c => c.id === codeCellAbove) : end ? cells.length : 0;
+        const index = codeCellAbove ? cells.findIndex((c) => c.id === codeCellAbove) : end ? cells.length : 0;
         if (source === 'undo') {
-            cells = cells.filter(c => c.id !== id);
+            cells = cells.filter((c) => c.id !== id);
         } else {
             cells.splice(index, 0, cell);
         }
@@ -285,7 +285,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             newDirty: true,
             codeCellAboveId: codeCellAbove,
             cell,
-            index
+            index,
         });
     }
 
@@ -422,13 +422,13 @@ suite('Data Science Intellisense Unit Tests', () => {
         await addCode('y', 1, 2, 1);
         await addCode('s', 1, 3, 2);
         expect(getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set after edit');
-        await removeCell(cells.find(c => c.id === '1'));
+        await removeCell(cells.find((c) => c.id === '1'));
         expect(getDocumentContents()).to.be.eq('import sys\nsys', 'Removing a cell broken');
         await addCell('import sys', '2');
         expect(getDocumentContents()).to.be.eq('import sys\nimport sys\nsys', 'Adding a cell broken');
         await addCell('import bar', '3');
         expect(getDocumentContents()).to.be.eq('import sys\nimport sys\nimport bar\nsys', 'Adding a cell broken');
-        await removeCell(cells.find(c => c.id === '1'));
+        await removeCell(cells.find((c) => c.id === '1'));
         expect(getDocumentContents()).to.be.eq('import sys\nimport sys\nimport bar\nsys', 'Removing a cell broken');
     });
 
@@ -525,7 +525,7 @@ df
 df
 `;
         expect(getDocumentContents()).to.be.eq(afterInsert2, 'Insert2 cell failed');
-        await removeCell(cells.find(c => c.id === '7'));
+        await removeCell(cells.find((c) => c.id === '7'));
         expect(getDocumentContents()).to.be.eq(afterInsert, 'Remove 2 cell failed');
         await swapCells('0', '2');
         const afterSwap = `foo
@@ -591,7 +591,7 @@ c
         expect(getDocumentContents()).to.be.eq('', 'Remove all failed');
         await removeAllCells('undo', oldCells);
         expect(getDocumentContents()).to.be.eq(startContent, 'Remove all undo failed');
-        const cell = cells.find(c => c.id === '1');
+        const cell = cells.find((c) => c.id === '1');
         const oldIndex = await removeCell(cell);
         const afterRemove = `a=1
 a

@@ -30,7 +30,7 @@ import {
     ILanguageService,
     ILiveShareApi,
     ITerminalManager,
-    IWorkspaceService
+    IWorkspaceService,
 } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { AsyncDisposableRegistry } from './asyncDisposableRegistry';
@@ -42,7 +42,7 @@ import { FeatureDeprecationManager } from './featureDeprecationManager';
 import {
     ExtensionInsidersDailyChannelRule,
     ExtensionInsidersOffChannelRule,
-    ExtensionInsidersWeeklyChannelRule
+    ExtensionInsidersWeeklyChannelRule,
 } from './insidersBuild/downloadChannelRules';
 import { ExtensionChannelService } from './insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from './insidersBuild/insidersExtensionPrompt';
@@ -51,7 +51,7 @@ import {
     ExtensionChannel,
     IExtensionChannelRule,
     IExtensionChannelService,
-    IInsiderExtensionPrompt
+    IInsiderExtensionPrompt,
 } from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
 import { BrowserService } from './net/browser';
@@ -85,7 +85,7 @@ import {
     ITerminalActivator,
     ITerminalHelper,
     ITerminalServiceFactory,
-    TerminalActivationProviders
+    TerminalActivationProviders,
 } from './terminal/types';
 import {
     IAsyncDisposableRegistry,
@@ -101,7 +101,7 @@ import {
     IPathUtils,
     IPersistentStateFactory,
     IRandom,
-    IsWindows
+    IsWindows,
 } from './types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from './utils/multiStepInput';
 import { Random } from './utils/random';

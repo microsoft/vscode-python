@@ -101,7 +101,7 @@ export class KernelSelector {
             session,
             cancelToken
         );
-        suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
+        suggestions = suggestions.filter((item) => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(
             resource,
             stopWatch,
@@ -132,7 +132,7 @@ export class KernelSelector {
             session,
             cancelToken
         );
-        suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
+        suggestions = suggestions.filter((item) => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(
             resource,
             stopWatch,
@@ -165,7 +165,7 @@ export class KernelSelector {
         const telemetryProps: IEventNamePropertyMapping[Telemetry.FindKernelForLocalConnection] = {
             kernelSpecFound: false,
             interpreterFound: false,
-            promptedToSelect: false
+            promptedToSelect: false,
         };
         // When this method is called, we know we've started a local jupyter server.
         // Lets pre-warm the list of local kernels.
@@ -251,7 +251,7 @@ export class KernelSelector {
     ): Promise<KernelSpecInterpreter> {
         const [interpreter, specs] = await Promise.all([
             this.interpreterService.getActiveInterpreter(resource),
-            this.kernelService.getKernelSpecs(sessionManager, cancelToken)
+            this.kernelService.getKernelSpecs(sessionManager, cancelToken),
         ]);
         let bestMatch: IJupyterKernelSpec | undefined;
         let bestScore = 0;
@@ -297,7 +297,7 @@ export class KernelSelector {
 
         return {
             kernelSpec: bestMatch,
-            interpreter: interpreter
+            interpreter: interpreter,
         };
     }
     private async selectKernel(
@@ -330,7 +330,7 @@ export class KernelSelector {
             );
         } else if (selection.selection.kernelModel) {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
-                language: this.computeLanguage(selection.selection.kernelModel.language)
+                language: this.computeLanguage(selection.selection.kernelModel.language),
             });
             // tslint:disable-next-line: no-any
             const interpreter = selection.selection.kernelModel
@@ -339,11 +339,11 @@ export class KernelSelector {
             return {
                 kernelSpec: selection.selection.kernelSpec,
                 interpreter,
-                kernelModel: selection.selection.kernelModel
+                kernelModel: selection.selection.kernelModel,
             };
         } else if (selection.selection.kernelSpec) {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel, undefined, {
-                language: this.computeLanguage(selection.selection.kernelSpec.language)
+                language: this.computeLanguage(selection.selection.kernelSpec.language),
             });
             const interpreter = selection.selection.kernelSpec
                 ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken)

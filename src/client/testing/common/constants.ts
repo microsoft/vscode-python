@@ -7,7 +7,7 @@ export enum CommandSource {
     ui = 'ui',
     codelens = 'codelens',
     commandPalette = 'commandpalette',
-    testExplorer = 'testExplorer'
+    testExplorer = 'testExplorer',
 }
 export const TEST_OUTPUT_CHANNEL = 'TEST_OUTPUT_CHANNEL';
 
@@ -20,5 +20,5 @@ export enum Icons {
     discovering = 'discovering-tests.svg',
     passed = 'status-ok.svg',
     failed = 'status-error.svg',
-    unknown = 'status-unknown.svg'
+    unknown = 'status-unknown.svg',
 }

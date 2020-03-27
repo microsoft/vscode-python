@@ -13,7 +13,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    ILiveShareTestingApi
+    ILiveShareTestingApi,
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Commands } from '../../client/datascience/constants';
@@ -23,7 +23,7 @@ import {
     IDataScienceCommandListener,
     IInteractiveWindow,
     IInteractiveWindowProvider,
-    IJupyterExecution
+    IJupyterExecution,
 } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
@@ -73,20 +73,20 @@ suite('DataScience LiveShare tests', () => {
         const dummyDisposable = {
             dispose: () => {
                 return;
-            }
+            },
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(e => (lastErrorMessage = e));
+        appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => (lastErrorMessage = e));
         appShell
-            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(''));
         appShell
-            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
         appShell
-            .setup(a => a.showSaveDialog(TypeMoq.It.isAny()))
+            .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(Uri.file('test.ipynb')));
-        appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+        appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
 
         result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
@@ -143,7 +143,7 @@ suite('DataScience LiveShare tests', () => {
             // Wait for all of the renders to go through. Guest may have been shutdown by now.
             await Promise.all([
                 hostRenderPromise,
-                isSessionStarted(vsls.Role.Guest) ? guestRenderPromise : Promise.resolve()
+                isSessionStarted(vsls.Role.Guest) ? guestRenderPromise : Promise.resolve(),
             ]);
         }
         return container.wrapper!;
@@ -204,7 +204,7 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
-    test('Host & Guest Simple', async function() {
+    test('Host & Guest Simple', async function () {
         // tslint:disable-next-line: no-invalid-this
         return this.skip();
         // Should only need mock data in host
@@ -225,7 +225,7 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
-    test('Host starts LiveShare after starting Jupyter', async function() {
+    test('Host starts LiveShare after starting Jupyter', async function () {
         // tslint:disable-next-line: no-invalid-this
         return this.skip();
         addMockData(hostContainer!, 'a=1\na', 1);
@@ -264,7 +264,7 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
-    test('Host startup and guest restart', async function() {
+    test('Host startup and guest restart', async function () {
         // tslint:disable-next-line: no-invalid-this
         return this.skip();
         // Should only need mock data in host
@@ -303,7 +303,7 @@ suite('DataScience LiveShare tests', () => {
         const version = 1;
         const inputText = '#%%\na=1\na';
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
-        document.setup(doc => doc.getText(TypeMoq.It.isAny())).returns(() => inputText);
+        document.setup((doc) => doc.getText(TypeMoq.It.isAny())).returns(() => inputText);
 
         const codeWatcher = guestContainer!.get<ICodeWatcher>(ICodeWatcher);
         codeWatcher.setDocument(document.object);
@@ -329,19 +329,19 @@ suite('DataScience LiveShare tests', () => {
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         guestContainer!.serviceManager.rebindInstance<IFileSystem>(IFileSystem, fileSystem.object);
         fileSystem
-            .setup(f => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((f) => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_f, c) => {
                 outputContents = c.toString();
                 return Promise.resolve();
             });
-        fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
-        fileSystem.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
-        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
+        fileSystem.setup((f) => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
+        fileSystem.setup((f) => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
+        fileSystem.setup((f) => f.directoryExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
 
         // Need to register commands as our extension isn't actually loading.
         const listeners = guestContainer!.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
         const guestCommandManager = guestContainer!.get<ICommandManager>(ICommandManager);
-        listeners.forEach(f => f.register(guestCommandManager));
+        listeners.forEach((f) => f.register(guestCommandManager));
 
         // Start both the host and the guest
         await startSession(vsls.Role.Host);

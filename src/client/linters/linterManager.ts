@@ -50,7 +50,7 @@ export class LinterManager implements ILinterManager {
             new LinterInfo(Product.pycodestyle, 'pycodestyle', this.configService),
             new LinterInfo(Product.prospector, 'prospector', this.configService),
             new LinterInfo(Product.pydocstyle, 'pydocstyle', this.configService),
-            new LinterInfo(Product.pylama, 'pylama', this.configService)
+            new LinterInfo(Product.pylama, 'pylama', this.configService),
         ];
     }
 
@@ -80,14 +80,14 @@ export class LinterManager implements ILinterManager {
         if (!silent) {
             await this.enableUnconfiguredLinters(resource);
         }
-        return this.linters.filter(x => x.isEnabled(resource));
+        return this.linters.filter((x) => x.isEnabled(resource));
     }
 
     public async setActiveLintersAsync(products: Product[], resource?: Uri): Promise<void> {
         // ensure we only allow valid linters to be set, otherwise leave things alone.
         // filter out any invalid products:
-        const validProducts = products.filter(product => {
-            const foundIndex = this.linters.findIndex(validLinter => validLinter.product === product);
+        const validProducts = products.filter((product) => {
+            const foundIndex = this.linters.findIndex((validLinter) => validLinter.product === product);
             return foundIndex !== -1;
         });
 
@@ -98,7 +98,7 @@ export class LinterManager implements ILinterManager {
                 await x.enableAsync(false, resource);
             }
             if (products.length > 0) {
-                const toActivate = this.linters.filter(x => products.findIndex(p => x.product === p) >= 0);
+                const toActivate = this.linters.filter((x) => products.findIndex((p) => x.product === p) >= 0);
                 for (const x of toActivate) {
                     await x.enableAsync(true, resource);
                 }
@@ -154,7 +154,7 @@ export class LinterManager implements ILinterManager {
         this.checkedForInstalledLinters.add(workspaceKey);
 
         // only check & ask the user if they'd like to enable pylint
-        const pylintInfo = this.linters.find(linter => linter.id === 'pylint');
+        const pylintInfo = this.linters.find((linter) => linter.id === 'pylint');
         const activator = this.serviceContainer.get<IAvailableLinterActivator>(IAvailableLinterActivator);
         await activator.promptIfLinterAvailable(pylintInfo!, resource);
     }

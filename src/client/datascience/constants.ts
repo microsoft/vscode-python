@@ -26,7 +26,7 @@ export const KnownNotebookLanguages: string[] = [
     'haskell',
     'bash',
     'cling',
-    'sas'
+    'sas',
 ];
 
 export namespace Commands {
@@ -287,7 +287,7 @@ export enum Telemetry {
     GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
     GatheredNotebookSaved = 'DATASCIENCE.GATHERED_NOTEBOOK_SAVED',
     GatherQualityReport = 'DS_INTERNAL.GATHER_QUALITY_REPORT',
-    ZMQNotSupported = 'DATASCIENCE.ZMQ_NATIVE_BINARIES_NOT_LOADING'
+    ZMQNotSupported = 'DATASCIENCE.ZMQ_NATIVE_BINARIES_NOT_LOADING',
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -314,7 +314,7 @@ export enum NativeKeyboardCommandTelemetry {
     ToggleOutput = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_OUTPUT',
     ToggleVariableExplorer = 'DATASCIENCE.NATIVE.KEYBOARD.TOGGLE_VARIABLE_EXPLORER',
     Undo = 'DATASCIENCE.NATIVE.KEYBOARD.UNDO',
-    Unfocus = 'DATASCIENCE.NATIVE.KEYBOARD.UNFOCUS'
+    Unfocus = 'DATASCIENCE.NATIVE.KEYBOARD.UNFOCUS',
 }
 
 export let NativeKeyboardCommandTelemetryLookup: { [id: number]: NativeKeyboardCommandTelemetry } = {};
@@ -348,7 +348,7 @@ export enum NativeMouseCommandTelemetry {
     ToggleOutput = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_OUTPUT',
     ToggleVariableExplorer = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER',
     Undo = 'DATASCIENCE.NATIVE.MOUSE.UNDO',
-    Unfocus = 'DATASCIENCE.NATIVE.MOUSE.UNFOCUS'
+    Unfocus = 'DATASCIENCE.NATIVE.MOUSE.UNFOCUS',
 }
 
 export let NativeMouseCommandTelemetryLookup: { [id: number]: NativeMouseCommandTelemetry } = {};
@@ -375,7 +375,7 @@ export namespace Settings {
     export const DefaultVariableQuery: IVariableQuery = {
         language: PYTHON_LANGUAGE,
         query: '_rwho_ls = %who_ls\nprint(_rwho_ls)',
-        parseExpr: "'(\\w+)'"
+        parseExpr: "'(\\w+)'",
     };
 }
 
@@ -402,7 +402,7 @@ export namespace CodeSnippits {
         '\tprint(os.getcwd())',
         'except:',
         '\tpass',
-        ''
+        '',
     ];
     export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
     export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
@@ -417,7 +417,7 @@ export namespace CodeSnippits {
 export enum JupyterCommands {
     NotebookCommand = 'notebook',
     ConvertCommand = 'nbconvert',
-    KernelSpecCommand = 'kernelspec'
+    KernelSpecCommand = 'kernelspec',
 }
 
 export namespace LiveShare {

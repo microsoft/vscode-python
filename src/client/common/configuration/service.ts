@@ -31,7 +31,7 @@ export class ConfigurationService implements IConfigurationService {
     ): Promise<void> {
         const defaultSetting = {
             uri: resource,
-            target: configTarget || ConfigurationTarget.WorkspaceFolder
+            target: configTarget || ConfigurationTarget.WorkspaceFolder,
         };
         let settingsInfo = defaultSetting;
         if (section === 'python' && configTarget !== ConfigurationTarget.Global) {
@@ -94,7 +94,7 @@ export class ConfigurationService implements IConfigurationService {
                     }
                 }
                 // Wait for settings to get refreshed.
-                await new Promise(resolve => setTimeout(resolve, 250));
+                await new Promise((resolve) => setTimeout(resolve, 250));
                 retries += 1;
             } while (retries < 20);
         }

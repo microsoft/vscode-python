@@ -6,7 +6,7 @@ import {
     IEditorContentChange,
     InteractiveWindowMessages,
     IShowDataViewer,
-    NativeCommandType
+    NativeCommandType,
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import { IJupyterVariablesRequest } from '../../../../client/datascience/types';
@@ -75,7 +75,7 @@ export enum CommonActionType {
     TOGGLE_OUTPUT = 'action.toggle_output',
     TOGGLE_VARIABLE_EXPLORER = 'action.toggle_variable_explorer',
     UNFOCUS_CELL = 'action.unfocus_cell',
-    UNMOUNT = 'action.unmount'
+    UNMOUNT = 'action.unmount',
 }
 
 export type CommonActionTypeMapping = {

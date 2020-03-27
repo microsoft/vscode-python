@@ -15,7 +15,7 @@ export const ProgressBar = (props: IEmptyRowsProps) => {
     const percent = (props.current / props.total) * 100;
     const percentText = `${Math.round(percent)}%`;
     const style: React.CSSProperties = {
-        width: percentText
+        width: percentText,
     };
     const message = getLocString('DataScience.fetchingDataViewer', 'Fetching data ...');
 

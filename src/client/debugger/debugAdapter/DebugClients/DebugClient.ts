@@ -9,7 +9,7 @@ import { IServiceContainer } from '../../../ioc/types';
 export enum DebugType {
     Local,
     Remote,
-    RunLocal
+    RunLocal,
 }
 export abstract class DebugClient<T> extends EventEmitter {
     protected debugSession: DebugSession;

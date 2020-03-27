@@ -19,7 +19,7 @@ export enum PersistentStateKeys {
     ShowBanner = 'ShowBanner',
     DebuggerLaunchCounter = 'DebuggerLaunchCounter',
     DebuggerLaunchThresholdCounter = 'DebuggerLaunchThresholdCounter',
-    UserSelected = 'DebuggerUserSelected'
+    UserSelected = 'DebuggerUserSelected',
 }
 
 @injectable()
@@ -128,7 +128,7 @@ export class DebuggerBanner implements IDebuggerBanner {
     private async passedThreshold(): Promise<boolean> {
         const [threshold, debuggerCounter] = await Promise.all([
             this.getDebuggerLaunchThresholdCounter(),
-            this.getGetDebuggerLaunchCounter()
+            this.getGetDebuggerLaunchCounter(),
         ]);
         return debuggerCounter >= threshold;
     }
@@ -163,9 +163,9 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     private addCallback() {
         const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
-        const disposable = debuggerService.onDidTerminateDebugSession(async e => {
+        const disposable = debuggerService.onDidTerminateDebugSession(async (e) => {
             if (e.type === DebuggerTypeName) {
-                await this.onDidTerminateDebugSession().catch(ex => traceError('Error in debugger Banner', ex));
+                await this.onDidTerminateDebugSession().catch((ex) => traceError('Error in debugger Banner', ex));
             }
         });
         this.serviceContainer.get<Disposable[]>(IDisposableRegistry).push(disposable);

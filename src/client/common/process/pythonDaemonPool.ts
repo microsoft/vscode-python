@@ -7,7 +7,7 @@ import {
     MessageConnection,
     RequestType,
     StreamMessageReader,
-    StreamMessageWriter
+    StreamMessageWriter,
 } from 'vscode-jsonrpc';
 
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -28,7 +28,7 @@ import {
     IPythonExecutionService,
     ObservableExecutionResult,
     PythonExecutionInfo,
-    SpawnOptions
+    SpawnOptions,
 } from './types';
 
 type DaemonType = 'StandardDaemon' | 'ObservableDaemon';
@@ -74,13 +74,13 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         const promises = Promise.all(
             [
                 // tslint:disable-next-line: prefer-array-literal
-                ...new Array(this.options.daemonCount ?? 2).keys()
+                ...new Array(this.options.daemonCount ?? 2).keys(),
             ].map(() => this.addDaemonService('StandardDaemon'))
         );
         const promises2 = Promise.all(
             [
                 // tslint:disable-next-line: prefer-array-literal
-                ...new Array(this.options.observableDaemonCount ?? 1).keys()
+                ...new Array(this.options.observableDaemonCount ?? 1).keys(),
             ].map(() => this.addDaemonService('ObservableDaemon'))
         );
 
@@ -91,22 +91,22 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         const msg = { args: ['GetPythonVersion'] };
-        return this.wrapCall(daemon => daemon.getInterpreterInformation(), msg);
+        return this.wrapCall((daemon) => daemon.getInterpreterInformation(), msg);
     }
     public async getExecutablePath(): Promise<string> {
         const msg = { args: ['getExecutablePath'] };
-        return this.wrapCall(daemon => daemon.getExecutablePath(), msg);
+        return this.wrapCall((daemon) => daemon.getExecutablePath(), msg);
     }
     public getExecutionInfo(args: string[]): PythonExecutionInfo {
         return this.pythonExecutionService.getExecutionInfo(args);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         const msg = { args: ['-m', moduleName] };
-        return this.wrapCall(daemon => daemon.isModuleInstalled(moduleName), msg);
+        return this.wrapCall((daemon) => daemon.isModuleInstalled(moduleName), msg);
     }
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const msg = { args, options };
-        return this.wrapCall(daemon => daemon.exec(args, options), msg);
+        return this.wrapCall((daemon) => daemon.exec(args, options), msg);
     }
     public async execModule(
         moduleName: string,
@@ -114,11 +114,11 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
         const msg = { args: ['-m', moduleName].concat(args), options };
-        return this.wrapCall(daemon => daemon.execModule(moduleName, args, options), msg);
+        return this.wrapCall((daemon) => daemon.execModule(moduleName, args, options), msg);
     }
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const msg = { args, options };
-        return this.wrapObservableCall(daemon => daemon.execObservable(args, options), msg);
+        return this.wrapObservableCall((daemon) => daemon.execObservable(args, options), msg);
     }
     public execModuleObservable(
         moduleName: string,
@@ -126,7 +126,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         options: SpawnOptions
     ): ObservableExecutionResult<string> {
         const msg = { args: ['-m', moduleName].concat(args), options };
-        return this.wrapObservableCall(daemon => daemon.execModuleObservable(moduleName, args, options), msg);
+        return this.wrapObservableCall((daemon) => daemon.execModuleObservable(moduleName, args, options), msg);
     }
     /**
      * Protected so we can override for testing purposes.
@@ -163,7 +163,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
             data = typeof data === 'string' ? data : data.toString('utf8');
             stdError += data;
         });
-        daemonProc.proc.on('error', ex => (procEndEx = ex));
+        daemonProc.proc.on('error', (ex) => (procEndEx = ex));
 
         try {
             await this.testDaemon(connection);

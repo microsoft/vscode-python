@@ -44,7 +44,7 @@ export namespace vscMock {
             return ({
                 dispose: () => {
                     this.emitter.removeListener('evt', bound);
-                }
+                },
             } as any) as Disposable;
         };
     }
@@ -114,7 +114,7 @@ export namespace vscMock {
         Struct = 21,
         Event = 22,
         Operator = 23,
-        TypeParameter = 24
+        TypeParameter = 24,
     }
     export enum SymbolKind {
         File = 0,
@@ -142,13 +142,13 @@ export namespace vscMock {
         Struct = 22,
         Event = 23,
         Operator = 24,
-        TypeParameter = 25
+        TypeParameter = 25,
     }
     export enum IndentAction {
         None = 0,
         Indent = 1,
         IndentOutdent = 2,
-        Outdent = 3
+        Outdent = 3,
     }
 
     export class CodeActionKind {
@@ -205,6 +205,6 @@ export namespace vscMock {
         Unknown = 0,
         File = 1,
         Directory = 2,
-        SymbolicLink = 64
+        SymbolicLink = 64,
     }
 }

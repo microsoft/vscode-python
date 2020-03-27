@@ -14,7 +14,7 @@ import {
     restorePythonPathInWorkspaceRoot,
     setPythonPathInWorkspaceRoot,
     updateSetting,
-    waitForCondition
+    waitForCondition,
 } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
 import { sleep } from '../../../core';
@@ -49,7 +49,7 @@ suite('Activation of Environments in Terminal', () => {
     const defaultShell = {
         Windows: '',
         Linux: '',
-        MacOS: ''
+        MacOS: '',
     };
     let terminalSettings: any;
     let pythonSettings: any;

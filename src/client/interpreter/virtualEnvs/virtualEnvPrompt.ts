@@ -17,7 +17,7 @@ import {
     IInterpreterLocatorService,
     IInterpreterWatcherBuilder,
     PythonInterpreter,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../contracts';
 
 const doNotDisplayPromptStateKey = 'MESSAGE_KEY_FOR_VIRTUAL_ENV';
@@ -69,7 +69,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         const prompts = [
             InteractiveShiftEnterBanner.bannerLabelYes(),
             InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain()
+            Common.doNotShowAgain(),
         ];
         const telemetrySelections: ['Yes', 'No', 'Ignore'] = ['Yes', 'No', 'Ignore'];
         const selection = await this.appShell.showInformationMessage(
@@ -77,7 +77,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
             ...prompts
         );
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, {
-            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined,
         });
         if (!selection) {
             return;

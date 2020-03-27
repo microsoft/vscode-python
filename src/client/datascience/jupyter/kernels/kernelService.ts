@@ -100,7 +100,7 @@ export class KernelService {
     ): Promise<IJupyterKernelSpec | undefined> {
         const specs = await this.getKernelSpecs(sessionManager, cancelToken);
         if (isInterpreter(option)) {
-            return specs.find(item => {
+            return specs.find((item) => {
                 if (item.language.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()) {
                     return false;
                 }
@@ -111,7 +111,7 @@ export class KernelService {
             });
         } else {
             return specs.find(
-                item =>
+                (item) =>
                     item.language === PYTHON_LANGUAGE &&
                     item.display_name === option.display_name &&
                     item.name === option.name
@@ -185,7 +185,7 @@ export class KernelService {
 
             // Find an interpreter that matches the
             const allInterpreters = await allInterpretersPromise;
-            const found = allInterpreters.find(item => item.version?.major === majorVersion);
+            const found = allInterpreters.find((item) => item.version?.major === majorVersion);
 
             // If we cannot find a matching one, then use the current interpreter.
             if (found) {
@@ -209,7 +209,7 @@ export class KernelService {
                 return;
             }
 
-            const found = allInterpreters.find(item => item.displayName === kernelSpec.display_name);
+            const found = allInterpreters.find((item) => item.displayName === kernelSpec.display_name);
 
             if (found) {
                 traceVerbose(
@@ -274,7 +274,7 @@ export class KernelService {
         const execServicePromise = this.execFactory.createActivatedEnvironment({
             interpreter,
             allowEnvironmentFetchExceptions: true,
-            bypassCondaExecution: true
+            bypassCondaExecution: true,
         });
         // Swallow errors if we get out of here and not resolve this.
         execServicePromise.ignoreErrors();
@@ -307,7 +307,7 @@ export class KernelService {
             {
                 throwOnStdErr: true,
                 encoding: 'utf8',
-                token: cancelToken
+                token: cancelToken,
             }
         );
         if (Cancellation.isCanceled(cancelToken)) {
@@ -338,7 +338,7 @@ export class KernelService {
         }
         if (!kernel) {
             // Possible user doesn't have kernelspec installed.
-            kernel = await this.getKernelSpecFromStdOut(output.stdout).catch(ex => {
+            kernel = await this.getKernelSpecFromStdOut(output.stdout).catch((ex) => {
                 traceError('Failed to get kernelspec from stdout', ex);
                 return undefined;
             });
@@ -395,7 +395,7 @@ export class KernelService {
                     .getActivatedEnvironmentVariables(undefined, interpreter, true)
                     .catch(noop)
                     // tslint:disable-next-line: no-any
-                    .then(env => (env || {}) as any);
+                    .then((env) => (env || {}) as any);
                 if (Cancellation.isCanceled(cancelToken)) {
                     return;
                 }
@@ -418,7 +418,7 @@ export class KernelService {
                 // Update the kernel.json with our new stuff.
                 await this.fileSystem.writeFile(specedKernel.specFile, JSON.stringify(specModel, undefined, 2), {
                     flag: 'w',
-                    encoding: 'utf8'
+                    encoding: 'utf8',
                 });
             }
 
@@ -446,14 +446,14 @@ export class KernelService {
             return [];
         }
         const specs: IJupyterKernelSpec[] = await enumerator;
-        const result = specs.filter(item => !!item);
+        const result = specs.filter((item) => !!item);
 
         // Send telemetry on this enumeration.
-        const anyPython = result.find(k => k.language === 'python') !== undefined;
+        const anyPython = result.find((k) => k.language === 'python') !== undefined;
         sendTelemetryEvent(Telemetry.KernelEnumeration, undefined, {
             count: result.length,
             isPython: anyPython,
-            source: sessionManager ? 'connection' : 'cli'
+            source: sessionManager ? 'connection' : 'cli',
         });
 
         return result;

@@ -39,14 +39,14 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
         path: '',
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Conda
+        type: InterpreterType.Conda,
     };
 
     // tslint:disable-next-line: max-func-body-length
-    [undefined, Uri.file('some Resource')].forEach(resource => {
+    [undefined, Uri.file('some Resource')].forEach((resource) => {
         // tslint:disable-next-line: max-func-body-length
-        [undefined, mockInterpreter].forEach(interpreter => {
-            [undefined, path.join('a')].forEach(storagePath => {
+        [undefined, mockInterpreter].forEach((interpreter) => {
+            [undefined, path.join('a')].forEach((storagePath) => {
                 // tslint:disable-next-line: max-func-body-length
                 suite(resource ? 'With an extension storagepath' : 'Without an extension storagepath', () => {
                     suite(resource ? 'With a resource' : 'Without a resource', () => {
@@ -63,14 +63,14 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                             const extContext: IExtensionContext = {
                                 get storagePath() {
                                     return storagePath;
-                                }
+                                },
                                 // tslint:disable-next-line: no-any
                             } as any;
-                            when(crypto.createHash(anything(), anything(), anything())).thenCall(value => value);
+                            when(crypto.createHash(anything(), anything(), anything())).thenCall((value) => value);
                             when(experiment.inExperiment(anything())).thenReturn(true);
-                            when(envVarsProvider.getCustomEnvironmentVariables(anything())).thenCall(value =>
+                            when(envVarsProvider.getCustomEnvironmentVariables(anything())).thenCall((value) =>
                                 Promise.resolve({
-                                    key: (value || {}).toString()
+                                    key: (value || {}).toString(),
                                 })
                             );
                             when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(onDidChangeEnvVars.event);
@@ -268,7 +268,7 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                     path: 'New',
                                     sysPrefix: '',
                                     sysVersion: '',
-                                    type: InterpreterType.Pipenv
+                                    type: InterpreterType.Pipenv,
                                 };
                                 when(
                                     termActivation.getActivatedEnvironmentVariables(
@@ -297,7 +297,7 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                     procActivation.getActivatedEnvironmentVariables(anything(), anything(), anything())
                                 ).thrice();
                             });
-                            test('Use variables from file cache', async function() {
+                            test('Use variables from file cache', async function () {
                                 if (!storagePath) {
                                     // tslint:disable-next-line: no-invalid-this
                                     return this.skip();

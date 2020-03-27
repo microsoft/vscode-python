@@ -38,7 +38,7 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
             hideFromUser,
             interpreter,
             resource,
-            title
+            title,
         };
         const id = this.getTerminalId(terminalTitle, resource, interpreter);
         if (!this.terminalServices.has(id)) {

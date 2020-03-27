@@ -15,7 +15,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import {
     IInterpreterWatcher,
     IInterpreterWatcherBuilder,
-    IVirtualEnvironmentsSearchPathProvider
+    IVirtualEnvironmentsSearchPathProvider,
 } from '../../contracts';
 import { BaseVirtualEnvService } from './baseVirtualEnvService';
 

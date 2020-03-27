@@ -36,7 +36,7 @@ import {
     IPathUtils,
     IPersistentStateFactory,
     IsWindows,
-    WORKSPACE_MEMENTO
+    WORKSPACE_MEMENTO,
 } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { OSType } from '../../../client/common/utils/platform';
@@ -45,7 +45,7 @@ import { EnvironmentActivationService } from '../../../client/interpreter/activa
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../../client/interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
@@ -76,7 +76,7 @@ suite('PythonExecutableService', () => {
     let configService: IConfigurationService;
     let pythonExecFactory: IPythonExecutionFactory;
 
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -173,13 +173,13 @@ suite('PythonExecutableService', () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
             cwd: path.dirname(workspace4PyFile.fsPath),
-            throwOnStdErr: true
+            throwOnStdErr: true,
         });
 
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
     });
 
-    test('Importing with a valid PYTHONPATH from .env file should succeed', async function() {
+    test('Importing with a valid PYTHONPATH from .env file should succeed', async function () {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2547.
         if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
@@ -191,7 +191,7 @@ suite('PythonExecutableService', () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
             cwd: path.dirname(workspace4PyFile.fsPath),
-            throwOnStdErr: true
+            throwOnStdErr: true,
         });
 
         await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);
@@ -221,7 +221,7 @@ suite('PythonExecutableService', () => {
         if (await fs.pathExists(pythonPath)) {
             expectedExecutablePath = pythonPath;
         } else {
-            expectedExecutablePath = await new Promise<string>(resolve => {
+            expectedExecutablePath = await new Promise<string>((resolve) => {
                 execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_error, stdout, _stdErr) => {
                     resolve(stdout.trim());
                 });

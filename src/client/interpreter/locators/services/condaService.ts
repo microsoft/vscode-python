@@ -16,7 +16,7 @@ import {
     IInterpreterLocatorService,
     InterpreterType,
     PythonInterpreter,
-    WINDOWS_REGISTRY_SERVICE
+    WINDOWS_REGISTRY_SERVICE,
 } from '../../contracts';
 import { CondaHelper } from './condaHelper';
 
@@ -31,7 +31,7 @@ const condaGlobPathsForLinuxMac = [
     untildify('~/opt/*conda*/bin/conda'),
     '/opt/*conda*/bin/conda',
     '/usr/share/*conda*/bin/conda',
-    untildify('~/*conda*/bin/conda')
+    untildify('~/*conda*/bin/conda'),
 ];
 
 export const CondaLocationsGlob = `{${condaGlobPathsForLinuxMac.join(',')}}`;
@@ -43,7 +43,7 @@ const condaGlobPathsForWindows = [
     untildify('~/[Mm]iniconda*/Scripts/conda.exe'),
     untildify('~/[Aa]naconda*/Scripts/conda.exe'),
     untildify('~/AppData/Local/Continuum/[Mm]iniconda*/Scripts/conda.exe'),
-    untildify('~/AppData/Local/Continuum/[Aa]naconda*/Scripts/conda.exe')
+    untildify('~/AppData/Local/Continuum/[Aa]naconda*/Scripts/conda.exe'),
 ];
 
 // format for glob processing:
@@ -109,7 +109,7 @@ export class CondaService implements ICondaService {
             return this.isAvailable;
         }
         return this.getCondaVersion()
-            .then(version => (this.isAvailable = version !== undefined))
+            .then((version) => (this.isAvailable = version !== undefined))
             .catch(() => (this.isAvailable = false));
     }
 
@@ -129,8 +129,8 @@ export class CondaService implements ICondaService {
             versionString = info.conda_version;
         } else {
             const stdOut = await this.getCondaFile()
-                .then(condaFile => processService.exec(condaFile, ['--version'], {}))
-                .then(result => result.stdout.trim())
+                .then((condaFile) => processService.exec(condaFile, ['--version'], {}))
+                .then((result) => result.stdout.trim())
                 .catch<string | undefined>(() => undefined);
 
             versionString = stdOut && stdOut.startsWith('conda ') ? stdOut.substring('conda '.length).trim() : stdOut;
@@ -154,7 +154,7 @@ export class CondaService implements ICondaService {
         const processService = await this.processServiceFactory.create();
         return processService
             .exec('conda', ['--version'])
-            .then(output => output.stdout.length > 0)
+            .then((output) => output.stdout.length > 0)
             .catch(() => false);
     }
 
@@ -167,7 +167,7 @@ export class CondaService implements ICondaService {
         try {
             const condaFile = await this.getCondaFile();
             const processService = await this.processServiceFactory.create();
-            const condaInfo = await processService.exec(condaFile, ['info', '--json']).then(output => output.stdout);
+            const condaInfo = await processService.exec(condaFile, ['info', '--json']).then((output) => output.stdout);
 
             return JSON.parse(condaInfo) as CondaInfo;
         } catch (ex) {
@@ -209,12 +209,12 @@ export class CondaService implements ICondaService {
 
         // From the list of conda environments find this dir.
         let matchingEnvs = Array.isArray(environments)
-            ? environments.filter(item => this.fileSystem.arePathsSame(item.path, interpreterPathToMatch))
+            ? environments.filter((item) => this.fileSystem.arePathsSame(item.path, interpreterPathToMatch))
             : [];
         if (matchingEnvs.length === 0) {
             environments = await this.getCondaEnvironments(true);
             matchingEnvs = Array.isArray(environments)
-                ? environments.filter(item => this.fileSystem.arePathsSame(item.path, interpreterPathToMatch))
+                ? environments.filter((item) => this.fileSystem.arePathsSame(item.path, interpreterPathToMatch))
                 : [];
         }
 
@@ -243,7 +243,7 @@ export class CondaService implements ICondaService {
         try {
             const condaFile = await this.getCondaFile();
             const processService = await this.processServiceFactory.create();
-            let envInfo = await processService.exec(condaFile, ['env', 'list']).then(output => output.stdout);
+            let envInfo = await processService.exec(condaFile, ['env', 'list']).then((output) => output.stdout);
             traceVerbose(`Conda Env List ${envInfo}}`);
             if (!envInfo) {
                 traceVerbose('Conda env list failure, attempting path additions.');
@@ -258,7 +258,7 @@ export class CondaService implements ICondaService {
                 traceVerbose(`Attempting new path for conda env list: ${newEnv.PATH}`);
                 envInfo = await processService
                     .exec(condaFile, ['env', 'list'], { env: newEnv })
-                    .then(output => output.stdout);
+                    .then((output) => output.stdout);
             }
             const environments = this.condaHelper.parseCondaEnvironmentNames(envInfo);
             await globalPersistence.updateValue({ data: environments });
@@ -357,9 +357,9 @@ export class CondaService implements ICondaService {
     }
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
-            ? this.workspaceService.workspaceFolders!.map(workspace => workspace.uri)
+            ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
             : [undefined];
-        if (workspacesUris.findIndex(uri => event.affectsConfiguration('python.condaPath', uri)) === -1) {
+        if (workspacesUris.findIndex((uri) => event.affectsConfiguration('python.condaPath', uri)) === -1) {
             return;
         }
         this.condaFile = undefined;
@@ -403,14 +403,14 @@ export class CondaService implements ICondaService {
      */
     private async getCondaFileFromKnownLocations(): Promise<string> {
         const globPattern = this.platform.isWindows ? CondaLocationsGlobWin : CondaLocationsGlob;
-        const condaFiles = await this.fileSystem.search(globPattern).catch<string[]>(failReason => {
+        const condaFiles = await this.fileSystem.search(globPattern).catch<string[]>((failReason) => {
             traceWarning(
                 'Default conda location search failed.',
                 `Searching for default install locations for conda results in error: ${failReason}`
             );
             return [];
         });
-        const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);
+        const validCondaFiles = condaFiles.filter((condaPath) => condaPath.length > 0);
         return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];
     }
 }

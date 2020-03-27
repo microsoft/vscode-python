@@ -18,7 +18,7 @@ import {
     IOutputChannel,
     IPycodestyleCategorySeverity,
     IPylintCategorySeverity,
-    IPythonSettings
+    IPythonSettings,
 } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
@@ -28,7 +28,7 @@ import { ILinter, ILinterManager, ILintMessage, LinterId } from '../../client/li
 export function newMockDocument(filename: string): TypeMoq.IMock<TextDocument> {
     const uri = Uri.file(filename);
     const doc = TypeMoq.Mock.ofType<TextDocument>(undefined, TypeMoq.MockBehavior.Strict);
-    doc.setup(s => s.uri).returns(() => uri);
+    doc.setup((s) => s.uri).returns(() => uri);
     return doc;
 }
 
@@ -116,7 +116,7 @@ export class LintingSettings {
         this.flake8CategorySeverity = {
             E: DiagnosticSeverity.Error,
             W: DiagnosticSeverity.Warning,
-            F: DiagnosticSeverity.Warning
+            F: DiagnosticSeverity.Warning,
         };
 
         this.mypyEnabled = false;
@@ -124,7 +124,7 @@ export class LintingSettings {
         this.mypyArgs = [];
         this.mypyCategorySeverity = {
             error: DiagnosticSeverity.Error,
-            note: DiagnosticSeverity.Hint
+            note: DiagnosticSeverity.Hint,
         };
 
         this.banditEnabled = false;
@@ -136,7 +136,7 @@ export class LintingSettings {
         this.pycodestyleArgs = [];
         this.pycodestyleCategorySeverity = {
             E: DiagnosticSeverity.Error,
-            W: DiagnosticSeverity.Warning
+            W: DiagnosticSeverity.Warning,
         };
 
         this.pylamaEnabled = false;
@@ -159,7 +159,7 @@ export class LintingSettings {
             error: DiagnosticSeverity.Error,
             fatal: DiagnosticSeverity.Error,
             refactor: DiagnosticSeverity.Hint,
-            warning: DiagnosticSeverity.Warning
+            warning: DiagnosticSeverity.Warning,
         };
         this.pylintUseMinimalCheckers = false;
     }
@@ -208,25 +208,25 @@ export class BaseTestFixture {
         this.appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
 
         this.serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
             .returns(() => filesystem);
         this.serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
             .returns(() => this.workspaceService.object);
         this.serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny()))
             .returns(() => this.installer.object);
         this.serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
             .returns(() => platformService);
         this.serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IPythonToolExecutionService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IPythonToolExecutionService), TypeMoq.It.isAny()))
             .returns(() => pythonToolExecService);
         this.serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IPythonExecutionFactory), TypeMoq.It.isAny()))
             .returns(() => pythonExecFactory);
         this.serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny()))
             .returns(() => this.appShell.object);
         this.initServices();
 
@@ -239,10 +239,10 @@ export class BaseTestFixture {
         this.lintingSettings = new LintingSettings();
 
         this.serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
             .returns(() => this.configService.object);
-        this.configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => this.pythonSettings.object);
-        this.pythonSettings.setup(s => s.linting).returns(() => this.lintingSettings);
+        this.configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => this.pythonSettings.object);
+        this.pythonSettings.setup((s) => s.linting).returns(() => this.lintingSettings);
         this.initConfig(ignoreConfigUpdates);
 
         // data
@@ -250,7 +250,7 @@ export class BaseTestFixture {
         this.outputChannel = TypeMoq.Mock.ofType<IOutputChannel>(undefined, TypeMoq.MockBehavior.Strict);
 
         this.serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isAny()))
             .returns(() => this.outputChannel.object);
         this.initData();
 
@@ -263,7 +263,7 @@ export class BaseTestFixture {
 
         this.linterManager = new LinterManager(this.serviceContainer.object, this.workspaceService.object!);
         this.serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(ILinterManager), TypeMoq.It.isAny()))
             .returns(() => this.linterManager);
     }
 
@@ -291,19 +291,21 @@ export class BaseTestFixture {
 
     private initServices(): void {
         const workspaceFolder = TypeMoq.Mock.ofType<WorkspaceFolder>(undefined, TypeMoq.MockBehavior.Strict);
-        workspaceFolder.setup(f => f.uri).returns(() => Uri.file(this.workspaceDir));
+        workspaceFolder.setup((f) => f.uri).returns(() => Uri.file(this.workspaceDir));
         this.workspaceService
-            .setup(s => s.getWorkspaceFolder(TypeMoq.It.isAny()))
+            .setup((s) => s.getWorkspaceFolder(TypeMoq.It.isAny()))
             .returns(() => workspaceFolder.object);
 
         this.appShell
-            .setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((a) => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined));
     }
 
     private initConfig(ignoreUpdates = false): void {
         this.configService
-            .setup(c => c.updateSetting(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((c) =>
+                c.updateSetting(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+            )
             .callback((setting, value) => {
                 if (ignoreUpdates) {
                     return;
@@ -316,13 +318,13 @@ export class BaseTestFixture {
             })
             .returns(() => Promise.resolve(undefined));
 
-        this.pythonSettings.setup(s => s.jediEnabled).returns(() => true);
+        this.pythonSettings.setup((s) => s.jediEnabled).returns(() => true);
     }
 
     private initData(): void {
         this.outputChannel
-            .setup(o => o.appendLine(TypeMoq.It.isAny()))
-            .callback(line => {
+            .setup((o) => o.appendLine(TypeMoq.It.isAny()))
+            .callback((line) => {
                 if (this.output === '') {
                     this.output = line;
                 } else {
@@ -330,10 +332,10 @@ export class BaseTestFixture {
                 }
             });
         this.outputChannel
-            .setup(o => o.append(TypeMoq.It.isAny()))
-            .callback(data => {
+            .setup((o) => o.append(TypeMoq.It.isAny()))
+            .callback((data) => {
                 this.output += data;
             });
-        this.outputChannel.setup(o => o.show());
+        this.outputChannel.setup((o) => o.show());
     }
 }

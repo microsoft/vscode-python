@@ -9,7 +9,7 @@ import {
     Diagnostic,
     Range,
     TextDocument,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 
 /**
@@ -18,8 +18,8 @@ import {
 export class LaunchJsonCodeActionProvider implements CodeActionProvider {
     public provideCodeActions(document: TextDocument, _: Range, context: CodeActionContext): CodeAction[] {
         return context.diagnostics
-            .filter(diagnostic => diagnostic.message === 'Incorrect type. Expected "string".')
-            .map(diagnostic => this.createFix(document, diagnostic));
+            .filter((diagnostic) => diagnostic.message === 'Incorrect type. Expected "string".')
+            .map((diagnostic) => this.createFix(document, diagnostic));
     }
 
     private createFix(document: TextDocument, diagnostic: Diagnostic): CodeAction {

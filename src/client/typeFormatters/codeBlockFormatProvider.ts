@@ -31,11 +31,11 @@ export class CodeBlockFormatProvider {
 
             // Oops, we've reached a boundary (like the function or class definition)
             // Get out of here
-            if (this.boundaryRegExps.some(value => value.test(prevLineText))) {
+            if (this.boundaryRegExps.some((value) => value.test(prevLineText))) {
                 return [];
             }
 
-            const blockRegEx = this.previousBlockRegExps.find(value => value.test(prevLineText));
+            const blockRegEx = this.previousBlockRegExps.find((value) => value.test(prevLineText));
             if (!blockRegEx) {
                 continue;
             }
@@ -64,7 +64,7 @@ export class CodeBlockFormatProvider {
 
                 return [
                     TextEdit.delete(new Range(startDeletePosition, endDeletePosition)),
-                    TextEdit.insert(startDeletePosition, prefixOfPreviousBlock)
+                    TextEdit.insert(startDeletePosition, prefixOfPreviousBlock),
                 ];
             }
         }

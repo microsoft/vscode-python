@@ -9,7 +9,7 @@ import {
     IConfigurationService,
     IDataScienceSettings,
     IDisposableRegistry,
-    IPythonSettings
+    IPythonSettings,
 } from '../../../client/common/types';
 import { GatherProvider } from '../../../client/datascience/gather/gather';
 import { ICell as IVscCell } from '../../../client/datascience/types';
@@ -27,8 +27,8 @@ suite('DataScience code gathering unit tests', () => {
                 cell_type: 'code',
                 outputs: [],
                 metadata: {},
-                execution_count: 1
-            }
+                execution_count: 1,
+            },
         },
         {
             id: '7243c0aa-cf06-4b2f-b557-2d1dcedda943',
@@ -40,8 +40,8 @@ suite('DataScience code gathering unit tests', () => {
                 cell_type: 'code',
                 outputs: [],
                 metadata: {},
-                execution_count: 2
-            }
+                execution_count: 2,
+            },
         },
         {
             id: 'c510bfd2-5ab5-4879-b877-8d993983c822',
@@ -53,8 +53,8 @@ suite('DataScience code gathering unit tests', () => {
                 cell_type: 'code',
                 outputs: [],
                 metadata: {},
-                execution_count: 3
-            }
+                execution_count: 3,
+            },
         },
         {
             id: '4e227548-1337-4894-991a-8f9a92523897',
@@ -66,8 +66,8 @@ suite('DataScience code gathering unit tests', () => {
                 cell_type: 'code',
                 outputs: [],
                 metadata: {},
-                execution_count: 4
-            }
+                execution_count: 4,
+            },
         },
         {
             id: '5912d201-dca5-4e5b-ab8a-7ce383e86bbb',
@@ -79,9 +79,9 @@ suite('DataScience code gathering unit tests', () => {
                 cell_type: 'code',
                 outputs: [],
                 metadata: {},
-                execution_count: 5
-            }
-        }
+                execution_count: 5,
+            },
+        },
     ];
 
     const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -94,51 +94,51 @@ suite('DataScience code gathering unit tests', () => {
         {
             objectName: 'df',
             functionName: 'head',
-            doesNotModify: ['OBJECT']
+            doesNotModify: ['OBJECT'],
         },
         {
             objectName: 'df',
             functionName: 'tail',
-            doesNotModify: ['OBJECT']
+            doesNotModify: ['OBJECT'],
         },
         {
             objectName: 'df',
             functionName: 'describe',
-            doesNotModify: ['OBJECT']
+            doesNotModify: ['OBJECT'],
         },
         {
             functionName: 'print',
-            doesNotModify: ['ARGUMENTS']
+            doesNotModify: ['ARGUMENTS'],
         },
         {
             functionName: 'KMeans',
-            doesNotModify: ['ARGUMENTS']
+            doesNotModify: ['ARGUMENTS'],
         },
         {
             functionName: 'scatter',
-            doesNotModify: ['ARGUMENTS']
+            doesNotModify: ['ARGUMENTS'],
         },
         {
             functionName: 'fit',
-            doesNotModify: ['ARGUMENTS']
+            doesNotModify: ['ARGUMENTS'],
         },
         {
             functionName: 'sum',
-            doesNotModify: ['ARGUMENTS']
+            doesNotModify: ['ARGUMENTS'],
         },
         {
             functionName: 'len',
-            doesNotModify: ['ARGUMENTS']
-        }
+            doesNotModify: ['ARGUMENTS'],
+        },
     ];
 
-    dataScienceSettings.setup(d => d.gatherRules).returns(() => gatherRules);
-    dataScienceSettings.setup(d => d.enabled).returns(() => true);
-    dataScienceSettings.setup(d => d.defaultCellMarker).returns(() => '# %%');
-    pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
-    configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+    dataScienceSettings.setup((d) => d.gatherRules).returns(() => gatherRules);
+    dataScienceSettings.setup((d) => d.enabled).returns(() => true);
+    dataScienceSettings.setup((d) => d.defaultCellMarker).returns(() => '# %%');
+    pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
+    configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
     appShell
-        .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+        .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
         .returns(() => Promise.resolve(''));
     const gatherProvider = new GatherProvider(
         configurationService.object,

@@ -19,7 +19,7 @@ import {
     ITestCodeNavigator,
     ITestCodeNavigatorCommandHandler,
     ITestNavigatorHelper,
-    NavigableItemType
+    NavigableItemType,
 } from '../../../client/testing/navigation/types';
 
 use(chaisAsPromised);

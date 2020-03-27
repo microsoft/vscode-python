@@ -25,7 +25,7 @@ import {
     PIPENV_SERVICE,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../client/interpreter/contracts';
 import { PythonInterpreterLocatorService } from '../../../client/interpreter/locators';
 import { IInterpreterFilter } from '../../../client/interpreter/locators/types';
@@ -42,14 +42,16 @@ suite('Interpreters - Locators Index', () => {
         platformSvc = TypeMoq.Mock.ofType<IPlatformService>();
         helper = TypeMoq.Mock.ofType<IInterpreterLocatorHelper>();
         filter = TypeMoq.Mock.ofType<IInterpreterFilter>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformSvc.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorHelper))).returns(() => helper.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry))).returns(() => []);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformSvc.object);
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorHelper)))
+            .returns(() => helper.object);
 
         locator = new PythonInterpreterLocatorService(serviceContainer.object, filter.object);
     });
-    [undefined, Uri.file('Something')].forEach(resource => {
-        getNamesAndValues<OSType>(OSType).forEach(osType => {
+    [undefined, Uri.file('Something')].forEach((resource) => {
+        getNamesAndValues<OSType>(OSType).forEach((osType) => {
             if (osType.value === OSType.Unknown) {
                 return;
             }
@@ -59,10 +61,10 @@ suite('Interpreters - Locators Index', () => {
                 if (osType.value === OSType.Windows) {
                     locatorsTypes.push(WINDOWS_REGISTRY_SERVICE);
                 }
-                platformSvc.setup(p => p.osType).returns(() => osType.value);
-                platformSvc.setup(p => p.isWindows).returns(() => osType.value === OSType.Windows);
-                platformSvc.setup(p => p.isLinux).returns(() => osType.value === OSType.Linux);
-                platformSvc.setup(p => p.isMac).returns(() => osType.value === OSType.OSX);
+                platformSvc.setup((p) => p.osType).returns(() => osType.value);
+                platformSvc.setup((p) => p.isWindows).returns(() => osType.value === OSType.Windows);
+                platformSvc.setup((p) => p.isLinux).returns(() => osType.value === OSType.Linux);
+                platformSvc.setup((p) => p.isMac).returns(() => osType.value === OSType.OSX);
 
                 locatorsTypes.push(CONDA_ENV_SERVICE);
                 locatorsTypes.push(CONDA_ENV_FILE_SERVICE);
@@ -72,7 +74,7 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(KNOWN_PATH_SERVICE);
                 locatorsTypes.push(CURRENT_PATH_SERVICE);
 
-                const locatorsWithInterpreters = locatorsTypes.map(typeName => {
+                const locatorsWithInterpreters = locatorsTypes.map((typeName) => {
                     const interpreter: PythonInterpreter = {
                         architecture: Architecture.Unknown,
                         displayName: typeName,
@@ -80,38 +82,40 @@ suite('Interpreters - Locators Index', () => {
                         sysPrefix: typeName,
                         sysVersion: typeName,
                         type: InterpreterType.Unknown,
-                        version: new SemVer('0.0.0-alpha')
+                        version: new SemVer('0.0.0-alpha'),
                     };
 
                     const typeLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
                     typeLocator
-                        .setup(l => l.hasInterpreters)
+                        .setup((l) => l.hasInterpreters)
                         .returns(() => Promise.resolve(true))
                         .verifiable(TypeMoq.Times.once());
                     typeLocator
-                        .setup(l => l.getInterpreters(TypeMoq.It.isValue(resource)))
+                        .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
                         .returns(() => Promise.resolve([interpreter]))
                         .verifiable(TypeMoq.Times.once());
 
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName)))
+                        .setup((c) =>
+                            c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName))
+                        )
                         .returns(() => typeLocator.object);
 
                     return {
                         type: typeName,
                         locator: typeLocator,
-                        interpreters: [interpreter]
+                        interpreters: [interpreter],
                     };
                 });
 
                 helper
-                    .setup(h => h.mergeInterpreters(TypeMoq.It.isAny()))
-                    .returns(() => Promise.resolve(locatorsWithInterpreters.map(item => item.interpreters[0])))
+                    .setup((h) => h.mergeInterpreters(TypeMoq.It.isAny()))
+                    .returns(() => Promise.resolve(locatorsWithInterpreters.map((item) => item.interpreters[0])))
                     .verifiable(TypeMoq.Times.once());
 
                 await locator.getInterpreters(resource);
 
-                locatorsWithInterpreters.forEach(item => item.locator.verifyAll());
+                locatorsWithInterpreters.forEach((item) => item.locator.verifyAll());
                 helper.verifyAll();
             });
             test(`Interpreter Sources are sorted correctly and merged ${testSuffix}`, async () => {
@@ -119,10 +123,10 @@ suite('Interpreters - Locators Index', () => {
                 if (osType.value === OSType.Windows) {
                     locatorsTypes.push(WINDOWS_REGISTRY_SERVICE);
                 }
-                platformSvc.setup(p => p.osType).returns(() => osType.value);
-                platformSvc.setup(p => p.isWindows).returns(() => osType.value === OSType.Windows);
-                platformSvc.setup(p => p.isLinux).returns(() => osType.value === OSType.Linux);
-                platformSvc.setup(p => p.isMac).returns(() => osType.value === OSType.OSX);
+                platformSvc.setup((p) => p.osType).returns(() => osType.value);
+                platformSvc.setup((p) => p.isWindows).returns(() => osType.value === OSType.Windows);
+                platformSvc.setup((p) => p.isLinux).returns(() => osType.value === OSType.Linux);
+                platformSvc.setup((p) => p.isMac).returns(() => osType.value === OSType.OSX);
 
                 locatorsTypes.push(CONDA_ENV_SERVICE);
                 locatorsTypes.push(CONDA_ENV_FILE_SERVICE);
@@ -132,7 +136,7 @@ suite('Interpreters - Locators Index', () => {
                 locatorsTypes.push(KNOWN_PATH_SERVICE);
                 locatorsTypes.push(CURRENT_PATH_SERVICE);
 
-                const locatorsWithInterpreters = locatorsTypes.map(typeName => {
+                const locatorsWithInterpreters = locatorsTypes.map((typeName) => {
                     const interpreter: PythonInterpreter = {
                         architecture: Architecture.Unknown,
                         displayName: typeName,
@@ -140,39 +144,41 @@ suite('Interpreters - Locators Index', () => {
                         sysPrefix: typeName,
                         sysVersion: typeName,
                         type: InterpreterType.Unknown,
-                        version: new SemVer('0.0.0-alpha')
+                        version: new SemVer('0.0.0-alpha'),
                     };
 
                     const typeLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
                     typeLocator
-                        .setup(l => l.hasInterpreters)
+                        .setup((l) => l.hasInterpreters)
                         .returns(() => Promise.resolve(true))
                         .verifiable(TypeMoq.Times.once());
                     typeLocator
-                        .setup(l => l.getInterpreters(TypeMoq.It.isValue(resource)))
+                        .setup((l) => l.getInterpreters(TypeMoq.It.isValue(resource)))
                         .returns(() => Promise.resolve([interpreter]))
                         .verifiable(TypeMoq.Times.once());
 
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName)))
+                        .setup((c) =>
+                            c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName))
+                        )
                         .returns(() => typeLocator.object);
 
                     return {
                         type: typeName,
                         locator: typeLocator,
-                        interpreters: [interpreter]
+                        interpreters: [interpreter],
                     };
                 });
 
-                const expectedInterpreters = locatorsWithInterpreters.map(item => item.interpreters[0]);
+                const expectedInterpreters = locatorsWithInterpreters.map((item) => item.interpreters[0]);
                 helper
-                    .setup(h => h.mergeInterpreters(TypeMoq.It.isAny()))
+                    .setup((h) => h.mergeInterpreters(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(expectedInterpreters))
                     .verifiable(TypeMoq.Times.once());
 
                 const interpreters = await locator.getInterpreters(resource);
 
-                locatorsWithInterpreters.forEach(item => item.locator.verifyAll());
+                locatorsWithInterpreters.forEach((item) => item.locator.verifyAll());
                 helper.verifyAll();
                 expect(interpreters).to.be.lengthOf(locatorsTypes.length);
                 expect(interpreters).to.be.deep.equal(expectedInterpreters);

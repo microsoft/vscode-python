@@ -17,7 +17,7 @@ import {
     FSFixture,
     SUPPORTS_SOCKETS,
     SUPPORTS_SYMLINKS,
-    WINDOWS
+    WINDOWS,
 } from './utils';
 
 // Note: all functional tests that do not trigger the VS Code "fs" API
@@ -57,7 +57,7 @@ suite('FileSystem - raw', () => {
             expect(stat).to.deep.equal(expected);
         });
 
-        test('for symlinks, gets the info for the linked file', async function() {
+        test('for symlinks, gets the info for the linked file', async function () {
             if (!SUPPORTS_SYMLINKS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -72,7 +72,7 @@ suite('FileSystem - raw', () => {
             expect(stat).to.deep.equal(expected);
         });
 
-        test('gets the info for a socket', async function() {
+        test('gets the info for a socket', async function () {
             if (!SUPPORTS_SOCKETS) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
@@ -122,7 +122,7 @@ suite('FileSystem - raw', () => {
             await assertDoesNotExist(source);
         });
 
-        test('rename symlink', async function() {
+        test('rename symlink', async function () {
             if (!SUPPORTS_SYMLINKS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -170,7 +170,7 @@ suite('FileSystem - raw', () => {
             await assertDoesNotExist(source);
         });
 
-        test('move symlink', async function() {
+        test('move symlink', async function () {
             if (!SUPPORTS_SYMLINKS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -469,7 +469,7 @@ suite('FileSystem - raw', () => {
     });
 
     suite('listdir', () => {
-        test('mixed', async function() {
+        test('mixed', async function () {
             // https://github.com/microsoft/vscode-python/issues/10240
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
@@ -485,7 +485,7 @@ suite('FileSystem - raw', () => {
                 [script, FileType.File],
                 [file3, FileType.File],
                 [file2, FileType.File],
-                [subdir, FileType.Directory]
+                [subdir, FileType.Directory],
             ];
             if (SUPPORTS_SYMLINKS) {
                 // a symlink to a file (source not directly in listed dir)
@@ -675,7 +675,7 @@ suite('FileSystem - utils', () => {
             expect(exists).to.equal(false);
         });
 
-        test('symlinks are followed', async function() {
+        test('symlinks are followed', async function () {
             if (!SUPPORTS_SYMLINKS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -700,7 +700,7 @@ suite('FileSystem - utils', () => {
             expect(exists).to.equal(false);
         });
 
-        test('matches (type: unknown)', async function() {
+        test('matches (type: unknown)', async function () {
             if (!SUPPORTS_SOCKETS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -738,7 +738,7 @@ suite('FileSystem - utils', () => {
             expect(exists).to.equal(false);
         });
 
-        test('symlink', async function() {
+        test('symlink', async function () {
             if (!SUPPORTS_SYMLINKS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -752,7 +752,7 @@ suite('FileSystem - utils', () => {
             expect(exists).to.equal(true);
         });
 
-        test('unknown', async function() {
+        test('unknown', async function () {
             if (!SUPPORTS_SOCKETS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -764,7 +764,7 @@ suite('FileSystem - utils', () => {
             expect(exists).to.equal(false);
         });
 
-        test('failure in stat()', async function() {
+        test('failure in stat()', async function () {
             if (WINDOWS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -801,7 +801,7 @@ suite('FileSystem - utils', () => {
             expect(exists).to.equal(false);
         });
 
-        test('symlink', async function() {
+        test('symlink', async function () {
             if (!SUPPORTS_SYMLINKS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -815,7 +815,7 @@ suite('FileSystem - utils', () => {
             expect(exists).to.equal(true);
         });
 
-        test('unknown', async function() {
+        test('unknown', async function () {
             if (!SUPPORTS_SOCKETS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -827,7 +827,7 @@ suite('FileSystem - utils', () => {
             expect(exists).to.equal(false);
         });
 
-        test('failure in stat()', async function() {
+        test('failure in stat()', async function () {
             if (WINDOWS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -859,7 +859,7 @@ suite('FileSystem - utils', () => {
 
                 expect(entries.sort()).to.deep.equal([
                     [file, FileType.File],
-                    [subdir, FileType.Directory]
+                    [subdir, FileType.Directory],
                 ]);
             });
         });
@@ -883,7 +883,7 @@ suite('FileSystem - utils', () => {
 
     suite('isDirReadonly', () => {
         suite('non-Windows', () => {
-            suiteSetup(function() {
+            suiteSetup(function () {
                 if (WINDOWS) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();
@@ -952,7 +952,7 @@ suite('FileSystem', () => {
                 expect(stat).to.deep.equal(expected);
             });
 
-            test('for symlinks, gets the info for the linked file', async function() {
+            test('for symlinks, gets the info for the linked file', async function () {
                 if (!SUPPORTS_SYMLINKS) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();
@@ -967,7 +967,7 @@ suite('FileSystem', () => {
                 expect(stat).to.deep.equal(expected);
             });
 
-            test('gets the info for a socket', async function() {
+            test('gets the info for a socket', async function () {
                 if (!SUPPORTS_SOCKETS) {
                     // tslint:disable-next-line:no-invalid-this
                     return this.skip();
@@ -1024,7 +1024,7 @@ suite('FileSystem', () => {
 
                     expect(entries.sort()).to.deep.equal([
                         [file, FileType.File],
-                        [subdir, FileType.Directory]
+                        [subdir, FileType.Directory],
                     ]);
                 });
             });
@@ -1112,7 +1112,7 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(false);
             });
 
-            test('symlink', async function() {
+            test('symlink', async function () {
                 if (!SUPPORTS_SYMLINKS) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();
@@ -1126,7 +1126,7 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(true);
             });
 
-            test('unknown', async function() {
+            test('unknown', async function () {
                 if (!SUPPORTS_SOCKETS) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();
@@ -1156,7 +1156,7 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(false);
             });
 
-            test('symlink', async function() {
+            test('symlink', async function () {
                 if (!SUPPORTS_SYMLINKS) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();
@@ -1170,7 +1170,7 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(true);
             });
 
-            test('unknown', async function() {
+            test('unknown', async function () {
                 if (!SUPPORTS_SOCKETS) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();
@@ -1189,7 +1189,7 @@ suite('FileSystem', () => {
                 const dirname = await fix.createDirectory('x/y/z/scripts');
                 const expected = [
                     await fix.createDirectory('x/y/z/scripts/w'), // subdir1
-                    await fix.createDirectory('x/y/z/scripts/v') // subdir2
+                    await fix.createDirectory('x/y/z/scripts/v'), // subdir2
                 ];
                 if (SUPPORTS_SYMLINKS) {
                     // a symlink to a directory (source is outside listed dir)
@@ -1230,7 +1230,7 @@ suite('FileSystem', () => {
                 const expected = [
                     await fix.createFile('x/y/z/scripts/spam.py'), // file1
                     await fix.createFile('x/y/z/scripts/eggs.py'), // file2
-                    await fix.createFile('x/y/z/scripts/data.json') // file3
+                    await fix.createFile('x/y/z/scripts/data.json'), // file3
                 ];
                 if (SUPPORTS_SYMLINKS) {
                     const symlinkFileSource = await fix.createFile('x/info.py');
@@ -1262,7 +1262,7 @@ suite('FileSystem', () => {
 
         suite('isDirReadonly', () => {
             suite('non-Windows', () => {
-                suiteSetup(function() {
+                suiteSetup(function () {
                     if (WINDOWS) {
                         // tslint:disable-next-line:no-invalid-this
                         this.skip();

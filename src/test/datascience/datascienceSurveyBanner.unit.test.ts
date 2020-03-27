@@ -43,7 +43,7 @@ suite('Data Science Survey Banner', () => {
         const expectedUri: string = targetUri;
         let receivedUri: string = '';
         browser
-            .setup(b =>
+            .setup((b) =>
                 b.launch(
                     typemoq.It.is((a: string) => {
                         receivedUri = a;
@@ -75,7 +75,7 @@ suite('Data Science Survey Banner', () => {
         const expectedUri: string = targetUri;
         let receivedUri: string = '';
         browser
-            .setup(b =>
+            .setup((b) =>
                 b.launch(
                     typemoq.It.is((a: string) => {
                         receivedUri = a;
@@ -96,7 +96,7 @@ suite('Data Science Survey Banner', () => {
 
     test('Do not show data science banner when it is disabled', () => {
         appShell
-            .setup(a =>
+            .setup((a) =>
                 a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
             )
             .verifiable(typemoq.Times.never());
@@ -115,7 +115,7 @@ suite('Data Science Survey Banner', () => {
     });
     test('Do not show data science banner if we have not hit our execution count or our notebook count', () => {
         appShell
-            .setup(a =>
+            .setup((a) =>
                 a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no))
             )
             .verifiable(typemoq.Times.never());
@@ -152,51 +152,51 @@ function preparePopup(
     const openedEventEmitter = new EventEmitter<INotebookEditor>();
     when(provider.onDidOpenNotebookEditor).thenReturn(openedEventEmitter.event);
     enabledValState
-        .setup(a => a.updateValue(typemoq.It.isValue(true)))
+        .setup((a) => a.updateValue(typemoq.It.isValue(true)))
         .returns(() => {
             enabledValue = true;
             return Promise.resolve();
         });
     enabledValState
-        .setup(a => a.updateValue(typemoq.It.isValue(false)))
+        .setup((a) => a.updateValue(typemoq.It.isValue(false)))
         .returns(() => {
             enabledValue = false;
             return Promise.resolve();
         });
 
     executionCountState
-        .setup(a => a.updateValue(typemoq.It.isAnyNumber()))
+        .setup((a) => a.updateValue(typemoq.It.isAnyNumber()))
         .returns(() => {
             executionCount += 1;
             return Promise.resolve();
         });
     openCountState
-        .setup(a => a.updateValue(typemoq.It.isAnyNumber()))
-        .returns(v => {
+        .setup((a) => a.updateValue(typemoq.It.isAnyNumber()))
+        .returns((v) => {
             openCount = v;
             return Promise.resolve();
         });
 
-    enabledValState.setup(a => a.value).returns(() => enabledValue);
-    executionCountState.setup(a => a.value).returns(() => executionCount);
-    openCountState.setup(a => a.value).returns(() => openCount);
+    enabledValState.setup((a) => a.value).returns(() => enabledValue);
+    executionCountState.setup((a) => a.value).returns(() => executionCount);
+    openCountState.setup((a) => a.value).returns(() => openCount);
 
     myfactory
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(typemoq.It.isValue(DSSurveyStateKeys.ShowBanner), typemoq.It.isValue(true))
         )
         .returns(() => {
             return enabledValState.object;
         });
     myfactory
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(typemoq.It.isValue(DSSurveyStateKeys.ShowBanner), typemoq.It.isValue(false))
         )
         .returns(() => {
             return enabledValState.object;
         });
     myfactory
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(
                 typemoq.It.isValue(DSSurveyStateKeys.ExecutionCount),
                 typemoq.It.isAnyNumber()
@@ -206,7 +206,7 @@ function preparePopup(
             return executionCountState.object;
         });
     myfactory
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(
                 typemoq.It.isValue(DSSurveyStateKeys.OpenNotebookCount),
                 typemoq.It.isAnyNumber()

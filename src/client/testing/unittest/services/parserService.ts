@@ -11,7 +11,7 @@ import {
     TestFunction,
     Tests,
     TestStatus,
-    UnitTestParserOptions
+    UnitTestParserOptions,
 } from '../../common/types';
 
 @injectable()
@@ -31,7 +31,7 @@ export class TestsParser implements ITestsParser {
         let startedCollecting = false;
         return content
             .split(/\r?\n/g)
-            .map(line => {
+            .map((line) => {
                 if (!startedCollecting) {
                     if (line === 'start') {
                         startedCollecting = true;
@@ -40,11 +40,11 @@ export class TestsParser implements ITestsParser {
                 }
                 return line.trim();
             })
-            .filter(line => line.length > 0);
+            .filter((line) => line.length > 0);
     }
     private parseTestIds(workspaceDirectory: string, testsDirectory: string, testIds: string[]): Tests {
         const testFiles: TestFile[] = [];
-        testIds.forEach(testId => this.addTestId(testsDirectory, testId, testFiles));
+        testIds.forEach((testId) => this.addTestId(testsDirectory, testId, testFiles));
 
         return this.testsHelper.flattenTestFiles(testFiles, workspaceDirectory);
     }
@@ -76,7 +76,7 @@ export class TestsParser implements ITestsParser {
         const resource = Uri.file(rootDirectory);
 
         // Check if we already have this test file
-        let testFile = testFiles.find(test => test.fullPath === filePath);
+        let testFile = testFiles.find((test) => test.fullPath === filePath);
         if (!testFile) {
             testFile = {
                 resource,
@@ -87,14 +87,14 @@ export class TestsParser implements ITestsParser {
                 nameToRun: moduleName,
                 xmlName: '',
                 status: TestStatus.Idle,
-                time: 0
+                time: 0,
             };
             testFiles.push(testFile);
         }
 
         // Check if we already have this suite
         // nameToRun = testId - method name
-        let testSuite = testFile.suites.find(cls => cls.nameToRun === suiteToRun);
+        let testSuite = testFile.suites.find((cls) => cls.nameToRun === suiteToRun);
         if (!testSuite) {
             testSuite = {
                 resource,
@@ -106,7 +106,7 @@ export class TestsParser implements ITestsParser {
                 nameToRun: suiteToRun,
                 xmlName: '',
                 status: TestStatus.Idle,
-                time: 0
+                time: 0,
             };
             testFile.suites.push(testSuite!);
         }
@@ -116,7 +116,7 @@ export class TestsParser implements ITestsParser {
             name: functionName,
             nameToRun: testId,
             status: TestStatus.Idle,
-            time: 0
+            time: 0,
         };
 
         testSuite!.functions.push(testFunction);

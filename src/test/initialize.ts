@@ -8,7 +8,7 @@ import {
     IExtensionTestApi,
     PYTHON_PATH,
     resetGlobalPythonPathSetting,
-    setPythonPathInWorkspaceRoot
+    setPythonPathInWorkspaceRoot,
 } from './common';
 import { IS_SMOKE_TEST, PVSC_EXTENSION_ID_FOR_TESTS } from './constants';
 
@@ -73,7 +73,7 @@ export async function closeActiveWindows(): Promise<void> {
                 clearTimeout(timer);
                 resolve();
             },
-            ex => {
+            (ex) => {
                 clearTimeout(timer);
                 reject(ex);
             }

@@ -26,7 +26,7 @@ export class WebPanelServer {
         this.app.use(Cors());
         this.app.use(compress());
         this.app.use(logger());
-        this.app.use(async ctx => {
+        this.app.use(async (ctx) => {
             try {
                 // Either token is passed or cookie exists, otherwise insecure connection
                 if (ctx.query.token) {
@@ -76,7 +76,7 @@ export class WebPanelServer {
         if (!state) {
             state = {
                 cwd: ctx.query.cwd,
-                outDir: ctx.query.rootPath
+                outDir: ctx.query.rootPath,
             };
             this.state.set(id, state);
         }

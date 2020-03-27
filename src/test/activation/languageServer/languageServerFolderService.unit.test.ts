@@ -29,14 +29,14 @@ suite('Language Server Folder Service', () => {
         let getCurrentLanguageServerDirectory: sinon.SinonStub<any>;
         const currentLSDirectory = {
             path: 'path/to/currentLSDirectoryName',
-            version: new semver.SemVer('1.2.3')
+            version: new semver.SemVer('1.2.3'),
         };
         let languageServerPackageService: TypeMoq.IMock<ILanguageServerPackageService>;
         setup(() => {
             languageServerPackageService = TypeMoq.Mock.ofType<ILanguageServerPackageService>();
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             serviceContainer
-                .setup(s => s.get<ILanguageServerPackageService>(ILanguageServerPackageService))
+                .setup((s) => s.get<ILanguageServerPackageService>(ILanguageServerPackageService))
                 .returns(() => languageServerPackageService.object);
         });
         teardown(() => {
@@ -66,7 +66,7 @@ suite('Language Server Folder Service', () => {
             );
             shouldLookForNewLS.resolves(true);
             languageServerPackageService
-                .setup(l => l.getLatestNugetPackageVersion(resource))
+                .setup((l) => l.getLatestNugetPackageVersion(resource))
                 // tslint:disable-next-line: no-any
                 .returns(() => Promise.resolve(undefined) as any);
             getCurrentLanguageServerDirectory = sinon.stub(
@@ -88,10 +88,10 @@ suite('Language Server Folder Service', () => {
             const nugetPackage = {
                 package: 'packageName',
                 version: new semver.SemVer('1.1.3'),
-                uri: 'nugetUri'
+                uri: 'nugetUri',
             };
             languageServerPackageService
-                .setup(l => l.getLatestNugetPackageVersion(resource))
+                .setup((l) => l.getLatestNugetPackageVersion(resource))
                 .returns(() => Promise.resolve(nugetPackage));
             getCurrentLanguageServerDirectory = sinon.stub(
                 DotNetLanguageServerFolderService.prototype,
@@ -112,10 +112,10 @@ suite('Language Server Folder Service', () => {
             const nugetPackage = {
                 package: 'packageName',
                 version: new semver.SemVer('1.3.2'),
-                uri: 'nugetUri'
+                uri: 'nugetUri',
             };
             languageServerPackageService
-                .setup(l => l.getLatestNugetPackageVersion(resource, '0.0.0'))
+                .setup((l) => l.getLatestNugetPackageVersion(resource, '0.0.0'))
                 .returns(() => Promise.resolve(nugetPackage));
             getCurrentLanguageServerDirectory = sinon.stub(
                 DotNetLanguageServerFolderService.prototype,
@@ -134,7 +134,7 @@ suite('Language Server Folder Service', () => {
         let downloadChannelRule: TypeMoq.IMock<IDownloadChannelRule>;
         const currentLSDirectory = {
             path: 'path/to/currentLSDirectoryName',
-            version: new semver.SemVer('1.2.3')
+            version: new semver.SemVer('1.2.3'),
         };
         setup(() => {
             configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -142,25 +142,25 @@ suite('Language Server Folder Service', () => {
             downloadChannelRule = TypeMoq.Mock.ofType<IDownloadChannelRule>();
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             serviceContainer
-                .setup(s => s.get<IConfigurationService>(IConfigurationService))
+                .setup((s) => s.get<IConfigurationService>(IConfigurationService))
                 .returns(() => configurationService.object);
             serviceContainer
-                .setup(s => s.get<IDownloadChannelRule>(IDownloadChannelRule, 'beta'))
+                .setup((s) => s.get<IDownloadChannelRule>(IDownloadChannelRule, 'beta'))
                 .returns(() => downloadChannelRule.object);
             serviceContainer
-                .setup(s => s.get<ILanguageServerPackageService>(ILanguageServerPackageService))
+                .setup((s) => s.get<ILanguageServerPackageService>(ILanguageServerPackageService))
                 .returns(() => lsPackageService.object);
-            lsPackageService.setup(l => l.getLanguageServerDownloadChannel()).returns(() => 'beta');
+            lsPackageService.setup((l) => l.getLanguageServerDownloadChannel()).returns(() => 'beta');
             languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);
         });
 
         test('Returns false if current folder is provided and setting `python.downloadLanguageServer` is set to false', async () => {
             const settings = {
                 downloadLanguageServer: false,
-                autoUpdateLanguageServer: true
+                autoUpdateLanguageServer: true,
             };
             configurationService
-                .setup(c => c.getSettings())
+                .setup((c) => c.getSettings())
                 // tslint:disable-next-line: no-any
                 .returns(() => settings as any);
             const result = await languageServerFolderService.shouldLookForNewLanguageServer(currentLSDirectory);
@@ -170,10 +170,10 @@ suite('Language Server Folder Service', () => {
         test('Returns false if current folder is provided and setting `python.autoUpdateLanguageServer` is set to false', async () => {
             const settings = {
                 downloadLanguageServer: true,
-                autoUpdateLanguageServer: false
+                autoUpdateLanguageServer: false,
             };
             configurationService
-                .setup(c => c.getSettings())
+                .setup((c) => c.getSettings())
                 // tslint:disable-next-line: no-any
                 .returns(() => settings as any);
             const result = await languageServerFolderService.shouldLookForNewLanguageServer(currentLSDirectory);
@@ -183,14 +183,14 @@ suite('Language Server Folder Service', () => {
         test('Returns whatever the rule to infer LS returns otherwise', async () => {
             const settings = {
                 downloadLanguageServer: true,
-                autoUpdateLanguageServer: false
+                autoUpdateLanguageServer: false,
             };
             configurationService
-                .setup(c => c.getSettings())
+                .setup((c) => c.getSettings())
                 // tslint:disable-next-line: no-any
                 .returns(() => settings as any);
             downloadChannelRule
-                .setup(d => d.shouldLookForNewLanguageServer(undefined))
+                .setup((d) => d.shouldLookForNewLanguageServer(undefined))
                 .returns(() => Promise.resolve(true))
                 .verifiable(TypeMoq.Times.once());
             const result = await languageServerFolderService.shouldLookForNewLanguageServer();
@@ -207,22 +207,22 @@ suite('Language Server Folder Service', () => {
             fs = TypeMoq.Mock.ofType<IFileSystem>();
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             serviceContainer
-                .setup(s => s.get<IConfigurationService>(IConfigurationService))
+                .setup((s) => s.get<IConfigurationService>(IConfigurationService))
                 .returns(() => configurationService.object);
-            serviceContainer.setup(s => s.get<IFileSystem>(IFileSystem)).returns(() => fs.object);
+            serviceContainer.setup((s) => s.get<IFileSystem>(IFileSystem)).returns(() => fs.object);
             languageServerFolderService = new DotNetLanguageServerFolderService(serviceContainer.object);
         });
 
         test('Returns the expected LS directory if setting `python.downloadLanguageServer` is set to false', async () => {
             const settings = {
-                downloadLanguageServer: false
+                downloadLanguageServer: false,
             };
             const expectedLSDirectory = {
                 path: 'languageServer',
-                version: new semver.SemVer('0.0.0')
+                version: new semver.SemVer('0.0.0'),
             };
             configurationService
-                .setup(c => c.getSettings())
+                .setup((c) => c.getSettings())
                 // tslint:disable-next-line: no-any
                 .returns(() => settings as any);
             const result = await languageServerFolderService.getCurrentLanguageServerDirectory();
@@ -231,38 +231,38 @@ suite('Language Server Folder Service', () => {
 
         test('Returns `undefined` if no LS directory exists', async () => {
             const settings = {
-                downloadLanguageServer: true
+                downloadLanguageServer: true,
             };
             const directories = ['path/to/directory1', 'path/to/directory2'];
             configurationService
-                .setup(c => c.getSettings())
+                .setup((c) => c.getSettings())
                 // tslint:disable-next-line: no-any
                 .returns(() => settings as any);
-            fs.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve(directories));
+            fs.setup((f) => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve(directories));
             const result = await languageServerFolderService.getCurrentLanguageServerDirectory();
             assert.deepEqual(result, undefined);
         });
 
         test('Returns the LS directory with highest version if multiple LS directories exists', async () => {
             const settings = {
-                downloadLanguageServer: true
+                downloadLanguageServer: true,
             };
             const directories = [
                 'path/to/languageServer',
                 'path/to/languageServer.0.9.3',
                 'path/to/languageServer.1.0.7',
                 'path/to/languageServer.1.2.3',
-                'path/to/languageServer.1.2.3.5'
+                'path/to/languageServer.1.2.3.5',
             ];
             const expectedLSDirectory = {
                 path: 'path/to/languageServer.1.2.3',
-                version: semver.parse('1.2.3', true)!
+                version: semver.parse('1.2.3', true)!,
             };
             configurationService
-                .setup(c => c.getSettings())
+                .setup((c) => c.getSettings())
                 // tslint:disable-next-line: no-any
                 .returns(() => settings as any);
-            fs.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve(directories));
+            fs.setup((f) => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve(directories));
             const result = await languageServerFolderService.getCurrentLanguageServerDirectory();
             assert.deepEqual(result, expectedLSDirectory);
         });

@@ -13,7 +13,7 @@ import {
     Position,
     SnippetString,
     TextDocument,
-    Uri
+    Uri,
 } from 'vscode';
 import { LanguageService } from '../../../../../client/common/application/languageService';
 import { ILanguageService } from '../../../../../client/common/application/types';
@@ -41,18 +41,18 @@ suite('Debugging - launch.json Completion Provider', () => {
     test('Cannot provide completions for non launch.json files', () => {
         const document = typemoq.Mock.ofType<TextDocument>();
         const position = new Position(0, 0);
-        document.setup(doc => doc.uri).returns(() => Uri.file(__filename));
+        document.setup((doc) => doc.uri).returns(() => Uri.file(__filename));
         assert.equal(completionProvider.canProvideCompletions(document.object, position), false);
 
         document.reset();
-        document.setup(doc => doc.uri).returns(() => Uri.file('settings.json'));
+        document.setup((doc) => doc.uri).returns(() => Uri.file('settings.json'));
         assert.equal(completionProvider.canProvideCompletions(document.object, position), false);
     });
     function testCanProvideCompletions(position: Position, offset: number, json: string, expectedValue: boolean) {
         const document = typemoq.Mock.ofType<TextDocument>();
-        document.setup(doc => doc.getText(typemoq.It.isAny())).returns(() => json);
-        document.setup(doc => doc.uri).returns(() => Uri.file('launch.json'));
-        document.setup(doc => doc.offsetAt(typemoq.It.isAny())).returns(() => offset);
+        document.setup((doc) => doc.getText(typemoq.It.isAny())).returns(() => json);
+        document.setup((doc) => doc.uri).returns(() => Uri.file('launch.json'));
+        document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => offset);
         const canProvideCompletions = completionProvider.canProvideCompletions(document.object, position);
         assert.equal(canProvideCompletions, expectedValue);
     }
@@ -83,7 +83,7 @@ suite('Debugging - launch.json Completion Provider', () => {
     });
     test('No Completions for non launch.json', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
-        document.setup(doc => doc.uri).returns(() => Uri.file('settings.json'));
+        document.setup((doc) => doc.uri).returns(() => Uri.file('settings.json'));
         const token = new CancellationTokenSource().token;
         const position = new Position(0, 0);
 
@@ -93,7 +93,7 @@ suite('Debugging - launch.json Completion Provider', () => {
     });
     test('No Completions for files ending with launch.json', async () => {
         const document = typemoq.Mock.ofType<TextDocument>();
-        document.setup(doc => doc.uri).returns(() => Uri.file('x-launch.json'));
+        document.setup((doc) => doc.uri).returns(() => Uri.file('x-launch.json'));
         const token = new CancellationTokenSource().token;
         const position = new Position(0, 0);
 
@@ -110,9 +110,9 @@ suite('Debugging - launch.json Completion Provider', () => {
 }`;
 
         const document = typemoq.Mock.ofType<TextDocument>();
-        document.setup(doc => doc.getText(typemoq.It.isAny())).returns(() => json);
-        document.setup(doc => doc.uri).returns(() => Uri.file('launch.json'));
-        document.setup(doc => doc.offsetAt(typemoq.It.isAny())).returns(() => json.indexOf('# Cursor Position'));
+        document.setup((doc) => doc.getText(typemoq.It.isAny())).returns(() => json);
+        document.setup((doc) => doc.uri).returns(() => Uri.file('launch.json'));
+        document.setup((doc) => doc.offsetAt(typemoq.It.isAny())).returns(() => json.indexOf('# Cursor Position'));
         const position = new Position(0, 0);
         const token = new CancellationTokenSource().token;
 
@@ -124,14 +124,14 @@ suite('Debugging - launch.json Completion Provider', () => {
             command: {
                 command: 'python.SelectAndInsertDebugConfiguration',
                 title: DebugConfigStrings.launchJsonCompletions.description(),
-                arguments: [document.object, position, token]
+                arguments: [document.object, position, token],
             },
             documentation: DebugConfigStrings.launchJsonCompletions.description(),
             sortText: 'AAAA',
             preselect: true,
             kind: CompletionItemKind.Enum,
             label: DebugConfigStrings.launchJsonCompletions.label(),
-            insertText: new SnippetString()
+            insertText: new SnippetString(),
         };
 
         assert.deepEqual(completions[0], expectedCompletionItem);

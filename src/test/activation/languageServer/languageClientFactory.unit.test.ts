@@ -15,7 +15,7 @@ import { LanguageClientOptions, ServerOptions } from 'vscode-languageclient';
 import {
     DotNetDownloadedLanguageClientFactory,
     DotNetLanguageClientFactory,
-    DotNetSimpleLanguageClientFactory
+    DotNetSimpleLanguageClientFactory,
 } from '../../../client/activation/languageServer/languageClientFactory';
 import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { PlatformData } from '../../../client/activation/languageServer/platformData';
@@ -109,7 +109,7 @@ suite('Language Server - LanguageClient Factory', () => {
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, engineDllName);
         const expectedServerOptions = {
             run: { command: serverModule, args: [], options: { stdio: 'pipe', env: { FOO: 'bar' } } },
-            debug: { command: serverModule, args: ['--debug'], options: { stdio: 'pipe', env: { FOO: 'bar' } } }
+            debug: { command: serverModule, args: ['--debug'], options: { stdio: 'pipe', env: { FOO: 'bar' } } },
         };
         rewiremock.enable();
 
@@ -153,8 +153,8 @@ suite('Language Server - LanguageClient Factory', () => {
             debug: {
                 command: dotNetCommand,
                 args: [serverModule, '--debug'],
-                options: { stdio: 'pipe', env: { FOO: 'bar' } }
-            }
+                options: { stdio: 'pipe', env: { FOO: 'bar' } },
+            },
         };
         rewiremock.enable();
 

@@ -62,7 +62,7 @@ const OptionsWithArguments = [
     '--numprocesses',
     '--rsyncdir',
     '--rsyncignore',
-    '--tx'
+    '--tx',
 ];
 
 const OptionsWithoutArguments = [
@@ -126,7 +126,7 @@ const OptionsWithoutArguments = [
     '--looponfail',
     '--trace',
     '--tx',
-    '-d'
+    '-d',
 ];
 
 @injectable()
@@ -138,7 +138,7 @@ export class ArgumentsService implements IArgumentsService {
     public getKnownOptions(): { withArgs: string[]; withoutArgs: string[] } {
         return {
             withArgs: OptionsWithArguments,
-            withoutArgs: OptionsWithoutArguments
+            withoutArgs: OptionsWithoutArguments,
         };
     }
     public getOptionValue(args: string[], option: string): string | string[] | undefined {
@@ -152,7 +152,7 @@ export class ArgumentsService implements IArgumentsService {
         // So if we want to run a specific test, then remove positional args.
         let removePositionalArgs = false;
         if (Array.isArray(argumentToRemoveOrFilter)) {
-            argumentToRemoveOrFilter.forEach(item => {
+            argumentToRemoveOrFilter.forEach((item) => {
                 if (OptionsWithArguments.indexOf(item) >= 0) {
                     optionsWithArgsToRemove.push(item);
                 }
@@ -197,7 +197,7 @@ export class ArgumentsService implements IArgumentsService {
                             '--setup-only',
                             '--setup-show',
                             '--setup-plan',
-                            '--trace'
+                            '--trace',
                         ]
                     );
                     optionsWithArgsToRemove.push(
@@ -219,7 +219,7 @@ export class ArgumentsService implements IArgumentsService {
                             '--result-log',
                             '-W',
                             '--pythonwarnings',
-                            '--log-*'
+                            '--log-*',
                         ]
                     );
                     removePositionalArgs = true;
@@ -241,7 +241,7 @@ export class ArgumentsService implements IArgumentsService {
                             '--failed-first',
                             '--nf',
                             '--new-first',
-                            '--trace'
+                            '--trace',
                         ]
                     );
                     optionsWithArgsToRemove.push(...['-k', '-m', '--lfnf', '--last-failed-no-failures']);
@@ -261,7 +261,7 @@ export class ArgumentsService implements IArgumentsService {
                 OptionsWithArguments,
                 OptionsWithoutArguments
             );
-            filteredArgs = filteredArgs.filter(item => positionalArgs.indexOf(item) === -1);
+            filteredArgs = filteredArgs.filter((item) => positionalArgs.indexOf(item) === -1);
         }
         return this.helper.filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);
     }
@@ -277,6 +277,6 @@ export class ArgumentsService implements IArgumentsService {
         // Positional args in pytest are files or directories.
         // Remove files from the args, and what's left are test directories.
         // If users enter test modules/methods, then its not supported.
-        return positionalArgs.filter(arg => !arg.toUpperCase().endsWith('.PY'));
+        return positionalArgs.filter((arg) => !arg.toUpperCase().endsWith('.PY'));
     }
 }

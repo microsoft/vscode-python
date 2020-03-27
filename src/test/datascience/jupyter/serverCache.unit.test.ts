@@ -50,7 +50,7 @@ suite('Data Science - ServerCache', () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: []
+            jupyterCommandLineArguments: [],
         };
         when(configService.getSettings(anything())).thenReturn(pythonSettings);
         serverCache = new ServerCache(instance(configService), instance(workspaceService), instance(fileSystem));
@@ -59,7 +59,7 @@ suite('Data Science - ServerCache', () => {
     test('Cache works on second get', async () => {
         const options: INotebookServerOptions = {
             purpose: 'test',
-            allowUI: () => false
+            allowUI: () => false,
         };
         const func = () => {
             return Promise.resolve(server);
@@ -78,7 +78,7 @@ suite('Data Science - ServerCache', () => {
         };
         const options: INotebookServerOptions = {
             purpose: 'test',
-            allowUI: callback
+            allowUI: callback,
         };
         serverCache
             .getOrCreate(async (_o, t) => {

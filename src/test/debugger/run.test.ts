@@ -18,11 +18,11 @@ const debugFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'py
 const debuggerType = DebuggerTypeName;
 suite('Run without Debugging', () => {
     let debugClient: DebugClient;
-    setup(async function() {
+    setup(async function () {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         debugClient = await createDebugAdapter();
     });
     teardown(async () => {
@@ -54,7 +54,7 @@ suite('Run without Debugging', () => {
             logToFile: false,
             type: debuggerType,
             name: '',
-            request: 'launch'
+            request: 'launch',
         };
     }
 
@@ -63,7 +63,7 @@ suite('Run without Debugging', () => {
             debugClient.configurationSequence(),
             debugClient.launch(buildLaunchArgs('simplePrint.py', false)),
             debugClient.waitForEvent('initialized'),
-            debugClient.waitForEvent('terminated')
+            debugClient.waitForEvent('terminated'),
         ]);
     });
     test('test stderr output for Python', async () => {
@@ -72,7 +72,7 @@ suite('Run without Debugging', () => {
             debugClient.launch(buildLaunchArgs('stdErrOutput.py', false)),
             debugClient.waitForEvent('initialized'),
             debugClient.assertOutput('stderr', 'error output'),
-            debugClient.waitForEvent('terminated')
+            debugClient.waitForEvent('terminated'),
         ]);
     });
     test('Test stdout output', async () => {
@@ -81,7 +81,7 @@ suite('Run without Debugging', () => {
             debugClient.launch(buildLaunchArgs('stdOutOutput.py', false)),
             debugClient.waitForEvent('initialized'),
             debugClient.assertOutput('stdout', 'normal output'),
-            debugClient.waitForEvent('terminated')
+            debugClient.waitForEvent('terminated'),
         ]);
     });
 });

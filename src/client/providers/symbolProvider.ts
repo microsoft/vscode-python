@@ -9,7 +9,7 @@ import {
     SymbolInformation,
     SymbolKind,
     TextDocument,
-    Uri
+    Uri,
 } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { IFileSystem } from '../common/platform/types';
@@ -132,7 +132,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
                 command: proxy.CommandType.Symbols,
                 fileName: filename,
                 columnIndex: 0,
-                lineIndex: 0
+                lineIndex: 0,
             };
 
             if (document.isDirty) {
@@ -142,9 +142,9 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
             this.jediFactory
                 .getJediProxyHandler<proxy.ISymbolResult>(document.uri)
                 .sendCommand(cmd, token)
-                .then(data => this.parseData(document, data))
-                .then(items => deferred.resolve(items))
-                .catch(ex => deferred.reject(ex));
+                .then((data) => this.parseData(document, data))
+                .then((items) => deferred.resolve(items))
+                .catch((ex) => deferred.reject(ex));
         }, this.debounceTimeoutMs);
 
         token.onCancellationRequested(() => {
@@ -183,8 +183,8 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
 
     private parseData(document: TextDocument, data?: proxy.ISymbolResult): SymbolInformation[] {
         if (data) {
-            const symbols = data.definitions.filter(sym => this.fs.arePathsSame(sym.fileName, document.fileName));
-            return symbols.map(sym => {
+            const symbols = data.definitions.filter((sym) => this.fs.arePathsSame(sym.fileName, document.fileName));
+            return symbols.map((sym) => {
                 const symbol = sym.kind;
                 const range = new Range(
                     sym.range.startLine,

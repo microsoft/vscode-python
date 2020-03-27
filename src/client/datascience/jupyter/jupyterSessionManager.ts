@@ -16,7 +16,7 @@ import {
     IJupyterPasswordConnect,
     IJupyterPasswordConnectInfo,
     IJupyterSession,
-    IJupyterSessionManager
+    IJupyterSessionManager,
 } from '../types';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
@@ -106,15 +106,15 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // Remove duplicates.
         const dup = new Set<string>();
         return models
-            .map(m => {
+            .map((m) => {
                 return {
                     id: m.id,
                     name: m.name,
                     lastActivityTime: m.last_activity ? new Date(Date.parse(m.last_activity.toString())) : new Date(),
-                    numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0
+                    numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0,
                 };
             })
-            .filter(item => {
+            .filter((item) => {
                 if (dup.has(item.id)) {
                     return false;
                 }
@@ -164,7 +164,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                     ? this.sessionManager.specs.kernelspecs
                     : {};
             const keys = Object.keys(kernelspecs);
-            return keys.map(k => {
+            return keys.map((k) => {
                 const spec = kernelspecs[k];
                 return new JupyterKernelSpec(spec) as IJupyterKernelSpec;
             });
@@ -192,7 +192,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             baseUrl: connInfo.baseUrl,
             appUrl: '',
             // A web socket is required to allow token authentication
-            wsUrl: connInfo.baseUrl.replace('http', 'ws')
+            wsUrl: connInfo.baseUrl.replace('http', 'ws'),
         };
 
         // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
@@ -244,7 +244,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 cookieString,
                 allowUnauthorized
                 // tslint:disable-next-line:no-any
-            ) as any
+            ) as any,
         };
 
         return ServerConnection.makeSettings(serverSettings);

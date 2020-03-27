@@ -17,7 +17,7 @@ import {
     IJupyterKernelSpec,
     IJupyterVariable,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse
+    IJupyterVariablesResponse,
 } from '../types';
 import { BaseReduxActionPayload } from './types';
 
@@ -100,7 +100,7 @@ export enum InteractiveWindowMessages {
     SelectJupyterServer = 'select_jupyter_server',
     UpdateModel = 'update_model',
     ReceivedUpdateModel = 'received_update_model',
-    OpenSettings = 'open_settings'
+    OpenSettings = 'open_settings',
 }
 
 export enum IPyWidgetMessages {
@@ -120,7 +120,7 @@ export enum IPyWidgetMessages {
     IPyWidgets_RegisterMessageHook = 'IPyWidgets_RegisterMessageHook',
     IPyWidgets_RemoveMessageHook = 'IPyWidgets_RemoveMessageHook',
     IPyWidgets_MessageHookCall = 'IPyWidgets_MessageHookCall',
-    IPyWidgets_MessageHookResponse = 'IPyWidgets_MessageHookResponse'
+    IPyWidgets_MessageHookResponse = 'IPyWidgets_MessageHookResponse',
 }
 export enum NativeCommandType {
     AddToEnd = 0,
@@ -149,7 +149,7 @@ export enum NativeCommandType {
     ToggleOutput,
     ToggleVariableExplorer,
     Undo,
-    Unfocus
+    Unfocus,
 }
 
 // These are the messages that will mirror'd to guest/hosts in
@@ -157,7 +157,7 @@ export enum NativeCommandType {
 export const InteractiveWindowRemoteMessages: string[] = [
     InteractiveWindowMessages.AddedSysInfo.toString(),
     InteractiveWindowMessages.RemoteAddCode.toString(),
-    InteractiveWindowMessages.RemoteReexecuteCode.toString()
+    InteractiveWindowMessages.RemoteReexecuteCode.toString(),
 ];
 
 export interface IGotoCode {
@@ -174,7 +174,7 @@ export enum SysInfoReason {
     Restart,
     Interrupt,
     New,
-    Connect
+    Connect,
 }
 
 export interface IAddedSysInfo {

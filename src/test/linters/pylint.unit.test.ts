@@ -32,11 +32,13 @@ suite('Pylint - Function hasConfigurationFile()', () => {
 
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
+            .returns(() => platformService.object);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         fileSystem
-            .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .returns((a, b) => a === b);
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -50,13 +52,13 @@ suite('Pylint - Function hasConfigurationFile()', () => {
         }
     });
 
-    pylintrcFiles.forEach(pylintrcFile => {
+    pylintrcFiles.forEach((pylintrcFile) => {
         test(`If ${pylintrcFile} exists in the current working directory, return true`, async () => {
             fileSystem
-                .setup(x => x.fileExists(path.join(folder, pylintrc)))
+                .setup((x) => x.fileExists(path.join(folder, pylintrc)))
                 .returns(() => Promise.resolve(pylintrc === pylintrcFile));
             fileSystem
-                .setup(x => x.fileExists(path.join(folder, dotPylintrc)))
+                .setup((x) => x.fileExists(path.join(folder, dotPylintrc)))
                 .returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
             const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
             expect(hasConfig).to.equal(true, 'Should return true');
@@ -64,27 +66,27 @@ suite('Pylint - Function hasConfigurationFile()', () => {
 
         test(`If the current working directory is in a Python module, Pylint searches up the hierarchy of Python modules until it finds a ${pylintrcFile} file. And if ${pylintrcFile} exists, return true`, async () => {
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c', 'd'), '__init__.py')))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a', 'b', 'c', 'd'), '__init__.py')))
                 .returns(() => Promise.resolve(true))
                 .verifiable(TypeMoq.Times.once());
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c', 'd'), pylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a', 'b', 'c', 'd'), pylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.atLeastOnce());
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c', 'd'), dotPylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a', 'b', 'c', 'd'), dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.atLeastOnce());
 
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), '__init__.py')))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), '__init__.py')))
                 .returns(() => Promise.resolve(true))
                 .verifiable(TypeMoq.Times.once());
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), pylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), pylintrc)))
                 .returns(() => Promise.resolve(pylintrc === pylintrcFile));
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), dotPylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), dotPylintrc)))
                 .returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
             const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
             expect(hasConfig).to.equal(true, 'Should return true');
@@ -94,17 +96,17 @@ suite('Pylint - Function hasConfigurationFile()', () => {
 
         test(`If ${pylintrcFile} exists in the home directory, return true`, async () => {
             const home = os.homedir();
-            fileSystem.setup(x => x.fileExists(path.join(folder, pylintrc))).returns(() => Promise.resolve(false));
-            fileSystem.setup(x => x.fileExists(path.join(folder, dotPylintrc))).returns(() => Promise.resolve(false));
+            fileSystem.setup((x) => x.fileExists(path.join(folder, pylintrc))).returns(() => Promise.resolve(false));
+            fileSystem.setup((x) => x.fileExists(path.join(folder, dotPylintrc))).returns(() => Promise.resolve(false));
             fileSystem
-                .setup(x => x.fileExists(path.join(folder, '__init__.py')))
+                .setup((x) => x.fileExists(path.join(folder, '__init__.py')))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.once());
             fileSystem
-                .setup(x => x.fileExists(path.join(home, '.config', pylintrc)))
+                .setup((x) => x.fileExists(path.join(home, '.config', pylintrc)))
                 .returns(() => Promise.resolve(pylintrc === pylintrcFile));
             fileSystem
-                .setup(x => x.fileExists(path.join(home, dotPylintrc)))
+                .setup((x) => x.fileExists(path.join(home, dotPylintrc)))
                 .returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
             const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
             expect(hasConfig).to.equal(true, 'Should return true');
@@ -113,34 +115,34 @@ suite('Pylint - Function hasConfigurationFile()', () => {
         });
     });
 
-    test('If /etc/pylintrc exists in non-Windows platform, return true', async function() {
+    test('If /etc/pylintrc exists in non-Windows platform, return true', async function () {
         if (new PlatformService().isWindows) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
         const home = os.homedir();
         fileSystem
-            .setup(x => x.fileExists(path.join(folder, pylintrc)))
+            .setup((x) => x.fileExists(path.join(folder, pylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         fileSystem
-            .setup(x => x.fileExists(path.join(folder, dotPylintrc)))
+            .setup((x) => x.fileExists(path.join(folder, dotPylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         fileSystem
-            .setup(x => x.fileExists(path.join(folder, '__init__.py')))
+            .setup((x) => x.fileExists(path.join(folder, '__init__.py')))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         fileSystem
-            .setup(x => x.fileExists(path.join(home, '.config', pylintrc)))
+            .setup((x) => x.fileExists(path.join(home, '.config', pylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         fileSystem
-            .setup(x => x.fileExists(path.join(home, dotPylintrc)))
+            .setup((x) => x.fileExists(path.join(home, dotPylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
-        platformService.setup(x => x.isWindows).returns(() => false);
-        fileSystem.setup(x => x.fileExists(path.join('/etc', pylintrc))).returns(() => Promise.resolve(true));
+        platformService.setup((x) => x.isWindows).returns(() => false);
+        fileSystem.setup((x) => x.fileExists(path.join('/etc', pylintrc))).returns(() => Promise.resolve(true));
         const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
         expect(hasConfig).to.equal(true, 'Should return true');
         fileSystem.verifyAll();
@@ -150,31 +152,31 @@ suite('Pylint - Function hasConfigurationFile()', () => {
     test('If none of the pylintrc configuration files exist anywhere, return false', async () => {
         const home = os.homedir();
         fileSystem
-            .setup(x => x.fileExists(path.join(folder, pylintrc)))
+            .setup((x) => x.fileExists(path.join(folder, pylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         fileSystem
-            .setup(x => x.fileExists(path.join(folder, dotPylintrc)))
+            .setup((x) => x.fileExists(path.join(folder, dotPylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         fileSystem
-            .setup(x => x.fileExists(path.join(folder, '__init__.py')))
+            .setup((x) => x.fileExists(path.join(folder, '__init__.py')))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         fileSystem
-            .setup(x => x.fileExists(path.join(home, '.config', pylintrc)))
+            .setup((x) => x.fileExists(path.join(home, '.config', pylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         fileSystem
-            .setup(x => x.fileExists(path.join(home, dotPylintrc)))
+            .setup((x) => x.fileExists(path.join(home, dotPylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         platformService
-            .setup(x => x.isWindows)
+            .setup((x) => x.isWindows)
             .returns(() => false)
             .verifiable(TypeMoq.Times.once());
         fileSystem
-            .setup(x => x.fileExists(path.join('/etc', pylintrc)))
+            .setup((x) => x.fileExists(path.join('/etc', pylintrc)))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
         const hasConfig = await Pylint.hasConfigurationFile(fileSystem.object, folder, platformService.object);
@@ -200,11 +202,13 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
 
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
+            .returns(() => platformService.object);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         fileSystem
-            .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .returns((a, b) => a === b);
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
@@ -217,27 +221,27 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
         const rootPathItems = ['user', 'a'];
         const folderPathItems = ['b', 'c']; // full folder path will be prefixed by root path
         let rootPath = '';
-        rootPathItems.forEach(item => {
+        rootPathItems.forEach((item) => {
             rootPath = path.join(rootPath, item);
             fileSystem
-                .setup(x => x.fileExists(path.join(rootPath, pylintrc)))
+                .setup((x) => x.fileExists(path.join(rootPath, pylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.never());
             fileSystem
-                .setup(x => x.fileExists(path.join(rootPath, dotPylintrc)))
+                .setup((x) => x.fileExists(path.join(rootPath, dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.never());
         });
         let relativeFolderPath = '';
-        folderPathItems.forEach(item => {
+        folderPathItems.forEach((item) => {
             relativeFolderPath = path.join(relativeFolderPath, item);
             const absoluteFolderPath = path.join(rootPath, relativeFolderPath);
             fileSystem
-                .setup(x => x.fileExists(path.join(absoluteFolderPath, pylintrc)))
+                .setup((x) => x.fileExists(path.join(absoluteFolderPath, pylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.once());
             fileSystem
-                .setup(x => x.fileExists(path.join(absoluteFolderPath, dotPylintrc)))
+                .setup((x) => x.fileExists(path.join(absoluteFolderPath, dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.once());
         });
@@ -247,42 +251,42 @@ suite('Pylint - Function hasConfigurationFileInWorkspace()', () => {
         fileSystem.verifyAll();
     });
 
-    [pylintrc, dotPylintrc].forEach(pylintrcFile => {
+    [pylintrc, dotPylintrc].forEach((pylintrcFile) => {
         test(`If ${pylintrcFile} exists while traversing up to the workspace root, return true`, async () => {
             const folder = path.join('user', 'a', 'b', 'c');
             const root = path.join('user', 'a');
 
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), pylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), pylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.once());
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), dotPylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a', 'b', 'c'), dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.once());
 
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), pylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a', 'b'), pylintrc)))
                 .returns(() => Promise.resolve(pylintrc === pylintrcFile));
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a', 'b'), dotPylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a', 'b'), dotPylintrc)))
                 .returns(() => Promise.resolve(dotPylintrc === pylintrcFile));
 
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a'), pylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a'), pylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.never());
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user', 'a'), dotPylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user', 'a'), dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.never());
 
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user'), dotPylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user'), dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.never());
             fileSystem
-                .setup(x => x.fileExists(path.join(path.join('user'), dotPylintrc)))
+                .setup((x) => x.fileExists(path.join(path.join('user'), dotPylintrc)))
                 .returns(() => Promise.resolve(false))
                 .verifiable(TypeMoq.Times.never());
 
@@ -321,16 +325,16 @@ suite('Pylint - Function runLinter()', () => {
             ',E1101,E1102,E1111,E1120,E1121,E1123,E1124,E1125,E1126,E1127' +
             ',E1128,E1129,E1130,E1131,E1132,E1133,E1134,E1135,E1136,E1137' +
             ',E1138,E1139,E1200,E1201,E1205,E1206,E1300,E1301,E1302,E1303' +
-            ',E1304,E1305,E1306,E1310,E1700,E1701'
+            ',E1304,E1305,E1306,E1310,E1700,E1701',
     ];
     const doc = {
-        uri: vscode.Uri.file('path/to/doc')
+        uri: vscode.Uri.file('path/to/doc'),
     };
     const args = [
         "--msg-template='{line},{column},{category},{symbol}:{msg}'",
         '--reports=n',
         '--output-format=text',
-        doc.uri.fsPath
+        doc.uri.fsPath,
     ];
     const original_hasConfigurationFileInWorkspace = Pylint.hasConfigurationFileInWorkspace;
     const original_hasConfigurationFile = Pylint.hasConfigurationFile;
@@ -370,20 +374,22 @@ suite('Pylint - Function runLinter()', () => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         manager = TypeMoq.Mock.ofType<ILinterManager>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILinterManager))).returns(() => manager.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ILinterManager))).returns(() => manager.object);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
             .returns(() => configService.object);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
+        serviceContainer
+            .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
+            .returns(() => platformService.object);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         fileSystem
-            .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .returns((a, b) => a === b);
-        manager.setup(m => m.getLinterInfo(TypeMoq.It.isAny())).returns(() => undefined as any);
+        manager.setup((m) => m.getLinterInfo(TypeMoq.It.isAny())).returns(() => undefined as any);
     });
 
     teardown(() => {
@@ -395,11 +401,11 @@ suite('Pylint - Function runLinter()', () => {
     test('Use minimal checkers if a) setting to use minimal checkers is true, b) there are no custom arguments and c) there is no pylintrc file next to the file or at the workspace root and above', async () => {
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: true
-            }
+                pylintUseMinimalCheckers: true,
+            },
         };
-        configService.setup(c => c.getSettings(doc.uri)).returns(() => settings as any);
-        _info.setup(info => info.linterArgs(doc.uri)).returns(() => []);
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
         Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
         Pylint.hasConfigurationFile = () => Promise.resolve(false);
         run = sinon.stub(PylintTest.prototype, 'run');
@@ -416,11 +422,11 @@ suite('Pylint - Function runLinter()', () => {
     test('Do not use minimal checkers if setting to use minimal checkers is false', async () => {
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: false
-            }
+                pylintUseMinimalCheckers: false,
+            },
         };
-        configService.setup(c => c.getSettings(doc.uri)).returns(() => settings as any);
-        _info.setup(info => info.linterArgs(doc.uri)).returns(() => []);
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
         Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
         Pylint.hasConfigurationFile = () => Promise.resolve(false);
         run = sinon.stub(PylintTest.prototype, 'run');
@@ -437,11 +443,11 @@ suite('Pylint - Function runLinter()', () => {
     test('Do not use minimal checkers if there are custom arguments', async () => {
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: true
-            }
+                pylintUseMinimalCheckers: true,
+            },
         };
-        configService.setup(c => c.getSettings(doc.uri)).returns(() => settings as any);
-        _info.setup(info => info.linterArgs(doc.uri)).returns(() => ['customArg1', 'customArg2']);
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => ['customArg1', 'customArg2']);
         Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
         Pylint.hasConfigurationFile = () => Promise.resolve(false);
         run = sinon.stub(PylintTest.prototype, 'run');
@@ -458,11 +464,11 @@ suite('Pylint - Function runLinter()', () => {
     test('Do not use minimal checkers if there is a pylintrc file in the current working directory or when traversing the workspace up to its root (hasConfigurationFileInWorkspace() returns true)', async () => {
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: true
-            }
+                pylintUseMinimalCheckers: true,
+            },
         };
-        configService.setup(c => c.getSettings(doc.uri)).returns(() => settings as any);
-        _info.setup(info => info.linterArgs(doc.uri)).returns(() => []);
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
         Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(true); // This implies method hasConfigurationFileInWorkspace() returns true
         Pylint.hasConfigurationFile = () => Promise.resolve(false);
         run = sinon.stub(PylintTest.prototype, 'run');
@@ -479,11 +485,11 @@ suite('Pylint - Function runLinter()', () => {
     test('Do not use minimal checkers if a pylintrc file exists in the process, in the current working directory or up in the hierarchy tree (hasConfigurationFile() returns true)', async () => {
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: true
-            }
+                pylintUseMinimalCheckers: true,
+            },
         };
-        configService.setup(c => c.getSettings(doc.uri)).returns(() => settings as any);
-        _info.setup(info => info.linterArgs(doc.uri)).returns(() => []);
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
         Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
         Pylint.hasConfigurationFile = () => Promise.resolve(true); // This implies method hasConfigurationFile() returns true
         run = sinon.stub(PylintTest.prototype, 'run');
@@ -500,22 +506,22 @@ suite('Pylint - Function runLinter()', () => {
     test('Message returned by runLinter() is as expected', async () => {
         const message = [
             {
-                type: 'messageType'
-            }
+                type: 'messageType',
+            },
         ];
         const expectedResult = [
             {
                 type: 'messageType',
-                severity: 'LintMessageSeverity'
-            }
+                severity: 'LintMessageSeverity',
+            },
         ];
         const settings = {
             linting: {
-                pylintUseMinimalCheckers: true
-            }
+                pylintUseMinimalCheckers: true,
+            },
         };
-        configService.setup(c => c.getSettings(doc.uri)).returns(() => settings as any);
-        _info.setup(info => info.linterArgs(doc.uri)).returns(() => []);
+        configService.setup((c) => c.getSettings(doc.uri)).returns(() => settings as any);
+        _info.setup((info) => info.linterArgs(doc.uri)).returns(() => []);
         Pylint.hasConfigurationFileInWorkspace = () => Promise.resolve(false);
         Pylint.hasConfigurationFile = () => Promise.resolve(false);
         run = sinon.stub(PylintTest.prototype, 'run');

@@ -16,7 +16,7 @@ import {
     MessageConnection,
     RequestType,
     StreamMessageReader,
-    StreamMessageWriter
+    StreamMessageWriter,
 } from 'vscode-jsonrpc';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
@@ -53,7 +53,7 @@ suite('Daemon', () => {
                 .trim();
         }
     });
-    setup(async function() {
+    setup(async function () {
         if (isPythonVersion('2.7')) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
@@ -80,7 +80,7 @@ suite('Daemon', () => {
             connection.dispose();
         }
         pythonDaemon.dispose();
-        disposables.forEach(item => item.dispose());
+        disposables.forEach((item) => item.dispose());
         disposables = [];
     });
 
@@ -126,7 +126,7 @@ suite('Daemon', () => {
             path: fullyQualifiedPythonPath,
             version: parsePythonVersion(versionValue),
             sysVersion: json.sysVersion,
-            sysPrefix: json.sysPrefix
+            sysPrefix: json.sysPrefix,
         };
 
         const version = await pythonDaemon.getInterpreterInformation();
@@ -265,10 +265,10 @@ suite('Daemon', () => {
         const output = pythonDaemon.execObservable([fileToExecute], {});
         const outputsReceived: string[] = [];
         await new Promise((resolve, reject) => {
-            output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
+            output.out.subscribe((out) => outputsReceived.push(out.out.trim()), reject, resolve);
         });
         assert.deepEqual(
-            outputsReceived.filter(item => item.length > 0),
+            outputsReceived.filter((item) => item.length > 0),
             ['0', '1', '2', '3', '4']
         );
     }).timeout(10_000);
@@ -292,7 +292,7 @@ suite('Daemon', () => {
         const output = pythonDaemon.execObservable([fileToExecute], { throwOnStdErr: true });
         const outputsReceived: string[] = [];
         const promise = new Promise((resolve, reject) => {
-            output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
+            output.out.subscribe((out) => outputsReceived.push(out.out.trim()), reject, resolve);
         });
         await expect(promise).to.eventually.be.rejectedWith('KABOOM');
     }).timeout(3_000);

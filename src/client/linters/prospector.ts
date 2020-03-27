@@ -46,7 +46,7 @@ export class Prospector extends BaseLinter {
         }
         return parsedData.messages
             .filter((_value, index) => index <= this.pythonSettings.linting.maxNumberOfProblems)
-            .map(msg => {
+            .map((msg) => {
                 const lineNumber = msg.location.line === null || isNaN(msg.location.line) ? 1 : msg.location.line;
 
                 return {
@@ -55,7 +55,7 @@ export class Prospector extends BaseLinter {
                     column: msg.location.character,
                     line: lineNumber,
                     type: msg.code,
-                    provider: `${this.info.id} - ${msg.source}`
+                    provider: `${this.info.id} - ${msg.source}`,
                 };
             });
     }

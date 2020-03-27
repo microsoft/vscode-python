@@ -19,14 +19,14 @@ suite('Interpreters display version', () => {
         // tslint:disable-next-line:no-any
         processService.setup((p: any) => p.then).returns(() => undefined);
 
-        processFactory.setup(p => p.create()).returns(() => Promise.resolve(processService.object));
+        processFactory.setup((p) => p.create()).returns(() => Promise.resolve(processService.object));
         interpreterVersionService = new InterpreterVersionService(processFactory.object);
     });
     test('Must return the Python Version', async () => {
         const pythonPath = path.join('a', 'b', 'python');
         const pythonVersion = 'Output from the Procecss';
         processService
-            .setup(p => p.exec(typeMoq.It.isValue(pythonPath), typeMoq.It.isValue(['--version']), typeMoq.It.isAny()))
+            .setup((p) => p.exec(typeMoq.It.isValue(pythonPath), typeMoq.It.isValue(['--version']), typeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: pythonVersion }))
             .verifiable(typeMoq.Times.once());
 
@@ -36,7 +36,7 @@ suite('Interpreters display version', () => {
     test('Must return the default value when Python path is invalid', async () => {
         const pythonPath = path.join('a', 'b', 'python');
         processService
-            .setup(p => p.exec(typeMoq.It.isValue(pythonPath), typeMoq.It.isValue(['--version']), typeMoq.It.isAny()))
+            .setup((p) => p.exec(typeMoq.It.isValue(pythonPath), typeMoq.It.isValue(['--version']), typeMoq.It.isAny()))
             .returns(() => Promise.reject({}))
             .verifiable(typeMoq.Times.once());
 
@@ -47,7 +47,7 @@ suite('Interpreters display version', () => {
         const pythonPath = path.join('a', 'b', 'python');
         const pipVersion = '1.2.3';
         processService
-            .setup(p =>
+            .setup((p) =>
                 p.exec(
                     typeMoq.It.isValue(pythonPath),
                     typeMoq.It.isValue(['-m', 'pip', '--version']),
@@ -63,7 +63,7 @@ suite('Interpreters display version', () => {
     test('Must throw an exception when pip version cannot be determined', async () => {
         const pythonPath = path.join('a', 'b', 'python');
         processService
-            .setup(p =>
+            .setup((p) =>
                 p.exec(
                     typeMoq.It.isValue(pythonPath),
                     typeMoq.It.isValue(['-m', 'pip', '--version']),

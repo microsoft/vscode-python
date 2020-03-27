@@ -126,7 +126,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         if (localRoot && remoteRoot) {
             pathMappings.push({
                 localRoot: localRoot,
-                remoteRoot: remoteRoot
+                remoteRoot: remoteRoot,
             });
         }
         // If attaching to local host, then always map local root and remote roots.

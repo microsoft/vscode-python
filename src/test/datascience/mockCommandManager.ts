@@ -20,7 +20,7 @@ export class MockCommandManager implements ICommandManager {
         return {
             dispose: () => {
                 noop();
-            }
+            },
         };
     }
 

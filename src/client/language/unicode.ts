@@ -15,7 +15,7 @@ export enum UnicodeCategory {
     NonSpacingMark,
     SpacingCombiningMark,
     DecimalDigitNumber,
-    ConnectorPunctuation
+    ConnectorPunctuation,
 }
 
 export function getUnicodeCategory(ch: number): UnicodeCategory {

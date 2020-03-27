@@ -10,7 +10,7 @@ import {
     Event,
     EventEmitter,
     Uri,
-    WorkspaceConfiguration
+    WorkspaceConfiguration,
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import '../common/extensions';
@@ -34,7 +34,7 @@ import {
     ITerminalSettings,
     ITestingSettings,
     IWorkspaceSymbolSettings,
-    Resource
+    Resource,
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
@@ -109,7 +109,7 @@ export class PythonSettings implements IPythonSettings {
             const config = workspace.getConfiguration('editor', resource ? resource : (null as any));
             const formatOnType = config ? config.get('formatOnType', false) : false;
             sendTelemetryEvent(EventName.COMPLETION_ADD_BRACKETS, undefined, {
-                enabled: settings.autoComplete ? settings.autoComplete.addBrackets : false
+                enabled: settings.autoComplete ? settings.autoComplete.addBrackets : false,
             });
             sendTelemetryEvent(EventName.FORMAT_ON_TYPE, undefined, { enabled: formatOnType });
         }
@@ -140,12 +140,12 @@ export class PythonSettings implements IPythonSettings {
             throw new Error('Dispose can only be called from unit tests');
         }
         // tslint:disable-next-line:no-void-expression
-        PythonSettings.pythonSettings.forEach(item => item && item.dispose());
+        PythonSettings.pythonSettings.forEach((item) => item && item.dispose());
         PythonSettings.pythonSettings.clear();
     }
     public dispose() {
         // tslint:disable-next-line:no-unsafe-any
-        this.disposables.forEach(disposable => disposable && disposable.dispose());
+        this.disposables.forEach((disposable) => disposable && disposable.dispose());
         this.disposables = [];
     }
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
@@ -274,11 +274,11 @@ export class PythonSettings implements IPythonSettings {
                       error: DiagnosticSeverity.Error,
                       fatal: DiagnosticSeverity.Error,
                       refactor: DiagnosticSeverity.Hint,
-                      warning: DiagnosticSeverity.Warning
+                      warning: DiagnosticSeverity.Warning,
                   },
                   pycodestyleCategorySeverity: {
                       E: DiagnosticSeverity.Error,
-                      W: DiagnosticSeverity.Warning
+                      W: DiagnosticSeverity.Warning,
                   },
                   flake8CategorySeverity: {
                       E: DiagnosticSeverity.Error,
@@ -286,13 +286,13 @@ export class PythonSettings implements IPythonSettings {
                       // Per http://flake8.pycqa.org/en/latest/glossary.html#term-error-code
                       // 'F' does not mean 'fatal as in PyLint but rather 'pyflakes' such as
                       // unused imports, variables, etc.
-                      F: DiagnosticSeverity.Warning
+                      F: DiagnosticSeverity.Warning,
                   },
                   mypyCategorySeverity: {
                       error: DiagnosticSeverity.Error,
-                      note: DiagnosticSeverity.Hint
+                      note: DiagnosticSeverity.Hint,
                   },
-                  pylintUseMinimalCheckers: false
+                  pylintUseMinimalCheckers: false,
               };
         this.linting.pylintPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylintPath), workspaceRoot);
         this.linting.flake8Path = getAbsolutePath(systemVariables.resolveAny(this.linting.flake8Path), workspaceRoot);
@@ -329,7 +329,7 @@ export class PythonSettings implements IPythonSettings {
                   blackArgs: [],
                   blackPath: 'black',
                   yapfArgs: [],
-                  yapfPath: 'yapf'
+                  yapfPath: 'yapf',
               };
         this.formatting.autopep8Path = getAbsolutePath(
             systemVariables.resolveAny(this.formatting.autopep8Path),
@@ -357,7 +357,7 @@ export class PythonSettings implements IPythonSettings {
                   extraPaths: [],
                   addBrackets: false,
                   showAdvancedMembers: false,
-                  typeshedPaths: []
+                  typeshedPaths: [],
               };
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
@@ -381,7 +381,7 @@ export class PythonSettings implements IPythonSettings {
                   exclusionPatterns: [],
                   rebuildOnFileSave: true,
                   rebuildOnStart: true,
-                  tagFilePath: path.join(workspaceRoot, 'tags')
+                  tagFilePath: path.join(workspaceRoot, 'tags'),
               };
         this.workspaceSymbols.tagFilePath = getAbsolutePath(
             systemVariables.resolveAny(this.workspaceSymbols.tagFilePath),
@@ -408,7 +408,7 @@ export class PythonSettings implements IPythonSettings {
                     unittestEnabled: false,
                     nosetestPath: 'nosetests',
                     pytestPath: 'pytest',
-                    autoTestDiscoverOnSaveEnabled: true
+                    autoTestDiscoverOnSaveEnabled: true,
                 } as ITestingSettings;
             }
         }
@@ -427,7 +427,7 @@ export class PythonSettings implements IPythonSettings {
                   pytestPath: 'pytest',
                   unittestArgs: [],
                   unittestEnabled: false,
-                  autoTestDiscoverOnSaveEnabled: true
+                  autoTestDiscoverOnSaveEnabled: true,
               };
         this.testing.pytestPath = getAbsolutePath(systemVariables.resolveAny(this.testing.pytestPath), workspaceRoot);
         this.testing.nosetestPath = getAbsolutePath(
@@ -439,9 +439,9 @@ export class PythonSettings implements IPythonSettings {
         }
 
         // Resolve any variables found in the test arguments.
-        this.testing.nosetestArgs = this.testing.nosetestArgs.map(arg => systemVariables.resolveAny(arg));
-        this.testing.pytestArgs = this.testing.pytestArgs.map(arg => systemVariables.resolveAny(arg));
-        this.testing.unittestArgs = this.testing.unittestArgs.map(arg => systemVariables.resolveAny(arg));
+        this.testing.nosetestArgs = this.testing.nosetestArgs.map((arg) => systemVariables.resolveAny(arg));
+        this.testing.pytestArgs = this.testing.pytestArgs.map((arg) => systemVariables.resolveAny(arg));
+        this.testing.unittestArgs = this.testing.unittestArgs.map((arg) => systemVariables.resolveAny(arg));
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const terminalSettings = systemVariables.resolveAny(pythonSettings.get<ITerminalSettings>('terminal'))!;
@@ -462,7 +462,7 @@ export class PythonSettings implements IPythonSettings {
                   executeInFileDir: true,
                   launchArgs: [],
                   activateEnvironment: true,
-                  activateEnvInCurrentTerminal: false
+                  activateEnvInCurrentTerminal: false,
               };
 
         const experiments = systemVariables.resolveAny(pythonSettings.get<IExperiments>('experiments'))!;
@@ -476,7 +476,7 @@ export class PythonSettings implements IPythonSettings {
             : {
                   enabled: true,
                   optInto: [],
-                  optOutFrom: []
+                  optOutFrom: [],
               };
 
         const dataScienceSettings = systemVariables.resolveAny(
@@ -511,9 +511,9 @@ export class PythonSettings implements IPythonSettings {
     }
     protected onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
-        const workspaceKeys = this.workspace.workspaceFolders!.map(workspaceFolder => workspaceFolder.uri.fsPath);
+        const workspaceKeys = this.workspace.workspaceFolders!.map((workspaceFolder) => workspaceFolder.uri.fsPath);
         const activatedWkspcKeys = Array.from(PythonSettings.pythonSettings.keys());
-        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
+        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter((item) => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
             for (const folder of activatedWkspcFoldersRemoved) {
                 PythonSettings.pythonSettings.delete(folder);

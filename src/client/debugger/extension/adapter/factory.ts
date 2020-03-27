@@ -10,7 +10,7 @@ import {
     DebugAdapterExecutable,
     DebugAdapterServer,
     DebugSession,
-    WorkspaceFolder
+    WorkspaceFolder,
 } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
 import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
@@ -82,15 +82,15 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                     sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
                     return new DebugAdapterExecutable(pythonPath, [
                         path.join(debuggerPathToUse, 'wheels', 'debugpy', 'adapter'),
-                        ...logArgs
+                        ...logArgs,
                     ]);
                 } else {
                     sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, {
-                        usingWheels: false
+                        usingWheels: false,
                     });
                     return new DebugAdapterExecutable(pythonPath, [
                         path.join(debuggerPathToUse, 'no_wheels', 'debugpy', 'adapter'),
-                        ...logArgs
+                        ...logArgs,
                     ]);
                 }
             }

@@ -9,7 +9,7 @@ import {
     ICommandManager,
     ICustomEditorService,
     IDocumentManager,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../common/application/types';
 import { JUPYTER_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
@@ -22,7 +22,7 @@ import { NativeEditorProvider } from './nativeEditorProvider';
 @injectable()
 export class NativeEditorProviderOld extends NativeEditorProvider {
     public get activeEditor(): INotebookEditor | undefined {
-        const active = [...this.activeEditors.entries()].find(e => e[1].active);
+        const active = [...this.activeEditors.entries()].find((e) => e[1].active);
         if (active) {
             return active[1];
         }
@@ -82,7 +82,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         // host, so postpone till after the ctor is finished.
         setTimeout(() => {
             if (this.documentManager.textDocuments && this.documentManager.textDocuments.forEach) {
-                this.documentManager.textDocuments.forEach(doc => this.openNotebookAndCloseEditor(doc, false));
+                this.documentManager.textDocuments.forEach((doc) => this.openNotebookAndCloseEditor(doc, false));
             }
         }, 0);
     }
@@ -94,7 +94,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.customDocuments.set(file.fsPath, {
                 uri: file,
                 viewType: NativeEditorProvider.customEditorViewType,
-                onDidDispose: new EventEmitter<void>().event
+                onDidDispose: new EventEmitter<void>().event,
             });
         }
 
@@ -221,7 +221,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
         // Possible we have a git diff view (with two editors git and file scheme), and we open the file view
         // on the side (different view column).
         const gitSchemeEditor = this.documentManager.visibleTextEditors.find(
-            editorUri =>
+            (editorUri) =>
                 editorUri.document.uri.scheme === 'git' &&
                 this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath)
         );
@@ -232,7 +232,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
 
         // Look for other editors with the same file name that have a scheme of file/git and same viewcolumn.
         const fileSchemeEditor = this.documentManager.visibleTextEditors.find(
-            editorUri =>
+            (editorUri) =>
                 (editorUri.document.uri.scheme === 'file' || editorUri.document.uri.scheme === 'git') &&
                 editorUri !== gitSchemeEditor &&
                 this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&

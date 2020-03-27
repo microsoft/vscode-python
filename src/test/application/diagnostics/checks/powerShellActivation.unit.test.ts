@@ -11,7 +11,7 @@ import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/ap
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import {
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
     DiagnosticScope,
@@ -19,7 +19,7 @@ import {
     IDiagnosticCommand,
     IDiagnosticFilterService,
     IDiagnosticHandlerService,
-    IDiagnosticsService
+    IDiagnosticsService,
 } from '../../../../client/application/diagnostics/types';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../../client/common/application/types';
 import { IPlatformService } from '../../../../client/common/platform/types';
@@ -42,12 +42,14 @@ suite('Application Diagnostics - PowerShell Activation', () => {
     setup(() => {
         const serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         platformService = typemoq.Mock.ofType<IPlatformService>();
-        platformService.setup(p => p.pathVariableName).returns(() => pathVariableName);
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+        platformService.setup((p) => p.pathVariableName).returns(() => pathVariableName);
+        serviceContainer
+            .setup((s) => s.get(typemoq.It.isValue(IPlatformService)))
+            .returns(() => platformService.object);
 
         messageHandler = typemoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
         serviceContainer
-            .setup(s =>
+            .setup((s) =>
                 s.get(
                     typemoq.It.isValue(IDiagnosticHandlerService),
                     typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)
@@ -56,33 +58,33 @@ suite('Application Diagnostics - PowerShell Activation', () => {
             .returns(() => messageHandler.object);
 
         appEnv = typemoq.Mock.ofType<IApplicationEnvironment>();
-        appEnv.setup(a => a.extensionName).returns(() => extensionName);
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationEnvironment))).returns(() => appEnv.object);
+        appEnv.setup((a) => a.extensionName).returns(() => extensionName);
+        serviceContainer.setup((s) => s.get(typemoq.It.isValue(IApplicationEnvironment))).returns(() => appEnv.object);
 
         filterService = typemoq.Mock.ofType<IDiagnosticFilterService>();
         serviceContainer
-            .setup(s => s.get(typemoq.It.isValue(IDiagnosticFilterService)))
+            .setup((s) => s.get(typemoq.It.isValue(IDiagnosticFilterService)))
             .returns(() => filterService.object);
 
         commandFactory = typemoq.Mock.ofType<IDiagnosticsCommandFactory>();
         serviceContainer
-            .setup(s => s.get(typemoq.It.isValue(IDiagnosticsCommandFactory)))
+            .setup((s) => s.get(typemoq.It.isValue(IDiagnosticsCommandFactory)))
             .returns(() => commandFactory.object);
 
         const currentProc = typemoq.Mock.ofType<ICurrentProcess>();
         procEnv = typemoq.Mock.ofType<EnvironmentVariables>();
-        currentProc.setup(p => p.env).returns(() => procEnv.object);
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(ICurrentProcess))).returns(() => currentProc.object);
+        currentProc.setup((p) => p.env).returns(() => procEnv.object);
+        serviceContainer.setup((s) => s.get(typemoq.It.isValue(ICurrentProcess))).returns(() => currentProc.object);
 
         const pathUtils = typemoq.Mock.ofType<IPathUtils>();
-        pathUtils.setup(p => p.delimiter).returns(() => pathDelimiter);
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
+        pathUtils.setup((p) => p.delimiter).returns(() => pathDelimiter);
+        serviceContainer.setup((s) => s.get(typemoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
 
         const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
         serviceContainer
-            .setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
+            .setup((s) => s.get(typemoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
-        workspaceService.setup(w => w.getWorkspaceFolder(typemoq.It.isAny())).returns(() => undefined);
+        workspaceService.setup((w) => w.getWorkspaceFolder(typemoq.It.isAny())).returns(() => undefined);
 
         diagnosticService = new (class extends PowerShellActivationHackDiagnosticsService {
             public _clear() {
@@ -97,7 +99,7 @@ suite('Application Diagnostics - PowerShell Activation', () => {
     test('Can handle PowerShell diagnostics', async () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
         diagnostic
-            .setup(d => d.code)
+            .setup((d) => d.code)
             .returns(() => DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic)
             .verifiable(typemoq.Times.atLeastOnce());
 
@@ -108,7 +110,7 @@ suite('Application Diagnostics - PowerShell Activation', () => {
     test('Can not handle non-EnvPathVariable diagnostics', async () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
         diagnostic
-            .setup(d => d.code)
+            .setup((d) => d.code)
             .returns(() => 'Something Else' as any)
             .verifiable(typemoq.Times.atLeastOnce());
 
@@ -124,17 +126,17 @@ suite('Application Diagnostics - PowerShell Activation', () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
         let options: MessageCommandPrompt | undefined;
         diagnostic
-            .setup(d => d.code)
+            .setup((d) => d.code)
             .returns(() => DiagnosticCodes.EnvironmentActivationInPowerShellWithBatchFilesNotSupportedDiagnostic)
             .verifiable(typemoq.Times.atLeastOnce());
         const alwaysIgnoreCommand = typemoq.Mock.ofType<IDiagnosticCommand>();
         commandFactory
-            .setup(f =>
+            .setup((f) =>
                 f.createCommand(
                     typemoq.It.isAny(),
                     typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({
                         type: 'ignore',
-                        options: DiagnosticScope.Global
+                        options: DiagnosticScope.Global,
                     })
                 )
             )
@@ -142,7 +144,7 @@ suite('Application Diagnostics - PowerShell Activation', () => {
             .verifiable(typemoq.Times.once());
         const launchBrowserCommand = typemoq.Mock.ofType<IDiagnosticCommand>();
         commandFactory
-            .setup(f =>
+            .setup((f) =>
                 f.createCommand(
                     typemoq.It.isAny(),
                     typemoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' })
@@ -151,7 +153,7 @@ suite('Application Diagnostics - PowerShell Activation', () => {
             .returns(() => launchBrowserCommand.object)
             .verifiable(typemoq.Times.once());
         messageHandler
-            .setup(m => m.handle(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((m) => m.handle(typemoq.It.isAny(), typemoq.It.isAny()))
             .callback((_, opts: MessageCommandPrompt) => (options = opts))
             .verifiable(typemoq.Times.once());
 

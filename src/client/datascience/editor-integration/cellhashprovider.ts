@@ -21,7 +21,7 @@ import {
     ICellHashListener,
     ICellHashProvider,
     IFileHashes,
-    IInteractiveWindowListener
+    IInteractiveWindowListener,
 } from '../types';
 
 interface IRangedCellHash extends ICellHash {
@@ -92,13 +92,13 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
 
     public getHashes(): IFileHashes[] {
         return [...this.hashes.entries()]
-            .map(e => {
+            .map((e) => {
                 return {
                     file: e[0],
-                    hashes: e[1].filter(h => !h.deleted)
+                    hashes: e[1].filter((h) => !h.deleted),
                 };
             })
-            .filter(e => e.hashes.length > 0);
+            .filter((e) => e.hashes.length > 0);
     }
 
     public async preExecute(cell: ICell, silent: boolean): Promise<void> {
@@ -106,7 +106,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             if (!silent) {
                 // Don't log empty cells
                 const stripped = this.extractExecutableLines(cell);
-                if (stripped.length > 0 && stripped.find(s => s.trim().length > 0)) {
+                if (stripped.length > 0 && stripped.find((s) => s.trim().length > 0)) {
                     // When the user adds new code, we know the execution count is increasing
                     this.executionCount += 1;
 
@@ -140,7 +140,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
     public async addCellHash(cell: ICell, expectedCount: number): Promise<void> {
         // Find the text document that matches. We need more information than
         // the add code gives us
-        const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, cell.file));
+        const doc = this.documentManager.textDocuments.find((d) => this.fileSystem.arePathsSame(d.fileName, cell.file));
         if (doc) {
             // Compute the code that will really be sent to jupyter
             const lines = splitMultilineString(cell.data.source);
@@ -191,11 +191,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             const realCode = doc.getText(new Range(new Position(cell.line, 0), endLine.rangeIncludingLineBreak.end));
 
             const hash: IRangedCellHash = {
-                hash: hashjs
-                    .sha1()
-                    .update(hashedCode)
-                    .digest('hex')
-                    .substr(0, 12),
+                hash: hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12),
                 line: line.lineNumber + 1,
                 endLine: endLine.lineNumber + 1,
                 executionCount: expectedCount,
@@ -205,7 +201,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 code: hashedCode,
                 realCode,
                 runtimeLine,
-                id: cell.id
+                id: cell.id,
             };
 
             traceInfo(`Adding hash for ${expectedCount} = ${hash.hash} with ${stripped.length} lines`);
@@ -238,7 +234,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             // Tell listeners we have new hashes.
             if (this.listeners) {
                 const hashes = this.getHashes();
-                await Promise.all(this.listeners.map(l => l.hashesUpdated(hashes)));
+                await Promise.all(this.listeners.map((l) => l.hashesUpdated(hashes)));
 
                 // Then fire our event
                 this.updateEventEmitter.fire();
@@ -260,7 +256,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         if (perFile) {
             // Apply the content changes to the file's cells.
             const docText = e.document.getText();
-            e.contentChanges.forEach(c => {
+            e.contentChanges.forEach((c) => {
                 this.handleContentChange(docText, c, perFile);
             });
         }
@@ -274,7 +270,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
         // Compute the inclusive offset that is changed by the cell.
         const endChangedOffset = c.rangeLength <= 0 ? c.rangeOffset : c.rangeOffset + c.rangeLength - 1;
 
-        hashes.forEach(h => {
+        hashes.forEach((h) => {
             // See how this existing cell compares to the change
             if (h.endOffset < c.rangeOffset) {
                 // No change. This cell is entirely before the change

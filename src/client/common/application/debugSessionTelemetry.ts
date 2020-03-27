@@ -53,7 +53,7 @@ class TelemetryTracker implements DebugAdapterTracker {
         }
         const telemetryProps = {
             trigger: this.trigger,
-            console: this.console
+            console: this.console,
         };
         sendTelemetryEvent(eventName, this.timer.elapsedTime, telemetryProps);
     }

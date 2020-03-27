@@ -30,11 +30,11 @@ const fileToDebug = path.join(
     'remoteDebugger-start-with-ptvsd-nowait.py'
 );
 
-suite('Debugging - Capabilities', function() {
+suite('Debugging - Capabilities', function () {
     this.timeout(30000);
     let disposables: { dispose?: Function; destroy?: Function }[];
     let proc: ChildProcess;
-    setup(function() {
+    setup(function () {
         // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
         this.skip();
@@ -44,7 +44,7 @@ suite('Debugging - Capabilities', function() {
         disposables = [];
     });
     teardown(() => {
-        disposables.forEach(disposable => {
+        disposables.forEach((disposable) => {
             try {
                 disposable.dispose!();
             } catch {
@@ -79,9 +79,9 @@ suite('Debugging - Capabilities', function() {
 
             public getInitializeResponseFromDebugAdapter() {
                 let initializeResponse = {
-                    body: {}
+                    body: {},
                 } as DebugProtocol.InitializeResponse;
-                this.sendResponse = resp => (initializeResponse = resp);
+                this.sendResponse = (resp) => (initializeResponse = resp);
 
                 this.initializeRequest(initializeResponse, { supportsRunInTerminalRequest: true, adapterID: '' });
                 return initializeResponse;
@@ -100,7 +100,7 @@ suite('Debugging - Capabilities', function() {
         env.PYTHONPATH = PTVSD_PATH;
         proc = spawn(PYTHON_PATH, ['-m', 'ptvsd', '--host', 'localhost', '--wait', '--port', `${port}`, fileToDebug], {
             cwd: path.dirname(fileToDebug),
-            env
+            env,
         });
         await sleep(3000);
 
@@ -112,7 +112,7 @@ suite('Debugging - Capabilities', function() {
         const protocolParser = new ProtocolParser();
         protocolParser.connect(socket!);
         disposables.push(protocolParser);
-        const actualResponsePromise = new Promise<DebugProtocol.InitializeResponse>(resolve =>
+        const actualResponsePromise = new Promise<DebugProtocol.InitializeResponse>((resolve) =>
             protocolParser.once('response_initialize', resolve)
         );
         protocolWriter.write(socket, initializeRequest);
@@ -125,14 +125,14 @@ suite('Debugging - Capabilities', function() {
             port: port,
             host: 'localhost',
             logToFile: false,
-            debugOptions: []
+            debugOptions: [],
         });
-        const attached = new Promise(resolve => protocolParser.once('response_attach', resolve));
+        const attached = new Promise((resolve) => protocolParser.once('response_attach', resolve));
         protocolWriter.write(socket, attachRequest);
         await attached;
 
         const configRequest: DebugProtocol.ConfigurationDoneRequest = createRequest('configurationDone', {});
-        const configured = new Promise(resolve => protocolParser.once('response_configurationDone', resolve));
+        const configured = new Promise((resolve) => protocolParser.once('response_configurationDone', resolve));
         protocolWriter.write(socket, configRequest);
         await configured;
 

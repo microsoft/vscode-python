@@ -28,7 +28,7 @@ export class SourceMapSupport {
         require('source-map-support').install();
         const localize = require('./common/utils/localize') as typeof import('./common/utils/localize');
         const disable = localize.Diagnostics.disableSourceMaps();
-        this.vscode.window.showWarningMessage(localize.Diagnostics.warnSourceMaps(), disable).then(selection => {
+        this.vscode.window.showWarningMessage(localize.Diagnostics.warnSourceMaps(), disable).then((selection) => {
             if (selection === disable) {
                 this.disable().ignoreErrors();
             }
@@ -55,7 +55,7 @@ export class SourceMapSupport {
         );
         await Promise.all([
             this.enableSourceMap(enable, extensionSourceFile),
-            this.enableSourceMap(enable, debuggerSourceFile)
+            this.enableSourceMap(enable, debuggerSourceFile),
         ]);
     }
     protected async enableSourceMap(enable: boolean, sourceFile: string) {
@@ -80,7 +80,7 @@ export function initialize(vscode: VSCode = require('vscode')) {
         new SourceMapSupport(vscode).disable().ignoreErrors();
         return;
     }
-    new SourceMapSupport(vscode).initialize().catch(_ex => {
+    new SourceMapSupport(vscode).initialize().catch((_ex) => {
         traceError('Failed to initialize source map support in extension');
     });
 }

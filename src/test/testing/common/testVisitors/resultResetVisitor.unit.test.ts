@@ -23,7 +23,7 @@ suite('Result reset visitor', async () => {
             status: TestStatus.Fail,
             functionsDidNotRun: 12,
             functionsPassed: 1,
-            functionsFailed: 5
+            functionsFailed: 5,
         };
         const expectedTestFunction = {
             passed: undefined,
@@ -33,7 +33,7 @@ suite('Result reset visitor', async () => {
             status: TestStatus.Unknown,
             functionsDidNotRun: 0,
             functionsPassed: 0,
-            functionsFailed: 0
+            functionsFailed: 0,
         };
         // tslint:disable-next-line: no-any
         resultResetVisitor.visitTestFunction(testFunction as any);
@@ -48,7 +48,7 @@ suite('Result reset visitor', async () => {
             status: TestStatus.Fail,
             functionsDidNotRun: 12,
             functionsPassed: 1,
-            functionsFailed: 5
+            functionsFailed: 5,
         };
         const expectedTestSuite = {
             passed: undefined,
@@ -56,7 +56,7 @@ suite('Result reset visitor', async () => {
             status: TestStatus.Unknown,
             functionsDidNotRun: 0,
             functionsPassed: 0,
-            functionsFailed: 0
+            functionsFailed: 0,
         };
         // tslint:disable-next-line: no-any
         resultResetVisitor.visitTestSuite(testSuite as any);
@@ -71,7 +71,7 @@ suite('Result reset visitor', async () => {
             status: TestStatus.Fail,
             functionsDidNotRun: 12,
             functionsPassed: 1,
-            functionsFailed: 5
+            functionsFailed: 5,
         };
         const expectedTestFile = {
             passed: undefined,
@@ -79,7 +79,7 @@ suite('Result reset visitor', async () => {
             status: TestStatus.Unknown,
             functionsDidNotRun: 0,
             functionsPassed: 0,
-            functionsFailed: 0
+            functionsFailed: 0,
         };
         // tslint:disable-next-line: no-any
         resultResetVisitor.visitTestFile(testFile as any);
@@ -94,7 +94,7 @@ suite('Result reset visitor', async () => {
             status: TestStatus.Fail,
             functionsDidNotRun: 12,
             functionsPassed: 1,
-            functionsFailed: 5
+            functionsFailed: 5,
         };
         const expectedTestFolder = {
             passed: undefined,
@@ -102,7 +102,7 @@ suite('Result reset visitor', async () => {
             status: TestStatus.Unknown,
             functionsDidNotRun: 0,
             functionsPassed: 0,
-            functionsFailed: 0
+            functionsFailed: 0,
         };
         // tslint:disable-next-line: no-any
         resultResetVisitor.visitTestFolder(testFolder as any);

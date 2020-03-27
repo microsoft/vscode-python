@@ -15,7 +15,7 @@ import {
     ITestConfigSettingsService,
     ITestConfigurationManager,
     ITestConfigurationManagerFactory,
-    ITestConfigurationService
+    ITestConfigurationService,
 } from './types';
 
 @injectable()
@@ -57,27 +57,27 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 label: 'unittest',
                 product: Product.unittest,
                 description: 'Standard Python test framework',
-                detail: 'https://docs.python.org/3/library/unittest.html'
+                detail: 'https://docs.python.org/3/library/unittest.html',
             },
             {
                 label: 'pytest',
                 product: Product.pytest,
                 description: 'pytest framework',
                 // tslint:disable-next-line:no-http-string
-                detail: 'http://docs.pytest.org/'
+                detail: 'http://docs.pytest.org/',
             },
             {
                 label: 'nose',
                 product: Product.nosetest,
                 description: 'nose framework',
-                detail: 'https://nose.readthedocs.io/'
-            }
+                detail: 'https://nose.readthedocs.io/',
+            },
         ];
         const options = {
             ignoreFocusOut: true,
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder: placeHolderMessage
+            placeHolder: placeHolderMessage,
         };
         const selectedTestRunner = await this.appShell.showQuickPick(items, options);
         // tslint:disable-next-line:prefer-type-cast
@@ -102,7 +102,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
             () => {
                 return configMgr.enable();
             },
-            reason => {
+            (reason) => {
                 return configMgr.enable().then(() => Promise.reject(reason));
             }
         );
@@ -116,7 +116,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
     ) {
         const telemetryProps: TestConfiguringTelemetry = {
             trigger: trigger,
-            failed: false
+            failed: false,
         };
         try {
             const selectedTestRunner = await this.selectTestRunner(messageToDisplay);
@@ -139,7 +139,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 await configMgr
                     .configure(wkspace)
                     .then(() => this._enableTest(wkspace, configMgr))
-                    .catch(reason => {
+                    .catch((reason) => {
                         return this._enableTest(wkspace, configMgr).then(() => Promise.reject(reason));
                     });
             }

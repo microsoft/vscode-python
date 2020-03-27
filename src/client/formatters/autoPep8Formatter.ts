@@ -37,7 +37,7 @@ export class AutoPep8Formatter extends BaseFormatter {
         sendTelemetryWhenDone(EventName.FORMAT, promise, stopWatch, {
             tool: 'autopep8',
             hasCustomArgs,
-            formatSelection
+            formatSelection,
         });
         return promise;
     }

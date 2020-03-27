@@ -12,7 +12,7 @@ import { Architecture, OSType } from '../utils/platform';
 
 export enum RegistryHive {
     HKCU,
-    HKLM
+    HKLM,
 }
 
 export const IRegistry = Symbol('IRegistry');

@@ -22,8 +22,8 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
                 uri: textDocument.uri.toString(),
                 languageId: 'PYTHON',
                 version: textDocument.version,
-                text: textDocument.getText()
-            }
+                text: textDocument.getText(),
+            },
         };
     }
 
@@ -34,16 +34,16 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
             return {
                 textDocument: {
                     uri: arg.uri.toString(),
-                    version: arg.version
+                    version: arg.version,
                 },
-                contentChanges: [{ text: arg.getText() }]
+                contentChanges: [{ text: arg.getText() }],
             };
         } else if (this.isTextDocumentChangeEvent(arg)) {
             const document = arg.document;
             return {
                 textDocument: {
                     uri: document.uri.toString(),
-                    version: document.version
+                    version: document.version,
                 },
                 contentChanges: arg.contentChanges.map(
                     (change): proto.TextDocumentContentChangeEvent => {
@@ -51,13 +51,13 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
                         return {
                             range: {
                                 start: { line: range.start.line, character: range.start.character },
-                                end: { line: range.end.line, character: range.end.character }
+                                end: { line: range.end.line, character: range.end.character },
                             },
                             rangeLength: change.rangeLength,
-                            text: change.text
+                            text: change.text,
                         };
                     }
-                )
+                ),
             };
         } else {
             throw Error('Unsupported text document change parameter');
@@ -81,12 +81,12 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     ): proto.TextDocumentPositionParams {
         return {
             textDocument: {
-                uri: _textDocument.uri.fsPath
+                uri: _textDocument.uri.fsPath,
             },
             position: {
                 line: _position.line,
-                character: _position.character
-            }
+                character: _position.character,
+            },
         };
     }
     public asCompletionParams(
@@ -97,16 +97,16 @@ export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
         const triggerKind = _context.triggerKind as number;
         return {
             textDocument: {
-                uri: _textDocument.uri.fsPath
+                uri: _textDocument.uri.fsPath,
             },
             position: {
                 line: _position.line,
-                character: _position.character
+                character: _position.character,
             },
             context: {
                 triggerCharacter: _context.triggerCharacter,
-                triggerKind: triggerKind as proto.CompletionTriggerKind
-            }
+                triggerKind: triggerKind as proto.CompletionTriggerKind,
+            },
         };
     }
     public asWorkerPosition(_position: code.Position): proto.Position {

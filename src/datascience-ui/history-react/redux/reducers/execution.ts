@@ -30,7 +30,7 @@ export namespace Execution {
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true
+                skipNextScroll: true,
             };
         }
 
@@ -49,7 +49,7 @@ export namespace Execution {
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true
+                skipNextScroll: true,
             };
         }
 
@@ -59,14 +59,14 @@ export namespace Execution {
     export function startDebugging(arg: InteractiveReducerArg): IMainState {
         return {
             ...arg.prevState,
-            debugging: true
+            debugging: true,
         };
     }
 
     export function stopDebugging(arg: InteractiveReducerArg): IMainState {
         return {
             ...arg.prevState,
-            debugging: false
+            debugging: false,
         };
     }
 
@@ -111,7 +111,7 @@ export namespace Execution {
             if (newCell.cell.state !== CellState.finished) {
                 postActionToExtension(arg, InteractiveWindowMessages.SubmitNewCell, {
                     code: arg.payload.data.code,
-                    id: newCell.cell.id
+                    id: newCell.cell.id,
                 });
             }
 
@@ -122,7 +122,7 @@ export namespace Execution {
                 cellVMs: [...arg.prevState.cellVMs, newCell],
                 undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
                 skipNextScroll: false,
-                submittedText: true
+                submittedText: true,
             };
         }
         return arg.prevState;

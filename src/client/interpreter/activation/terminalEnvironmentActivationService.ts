@@ -56,7 +56,7 @@ export class TerminalEnvironmentActivationService implements IEnvironmentActivat
             hideFromUser: true,
             interpreter,
             resource,
-            title: `${interpreter?.displayName}${new Date().getTime()}`
+            title: `${interpreter?.displayName}${new Date().getTime()}`,
         });
 
         const command = interpreter?.path || 'python';

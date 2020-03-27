@@ -42,7 +42,7 @@ namespace vscErrors {
         FILE_EXISTS,
         IS_DIR,
         NOT_DIR,
-        NO_PERM
+        NO_PERM,
     ];
     function errorMatches(err: Error, expectedName: string): boolean | undefined {
         if (!known.includes(err.name)) {

@@ -28,7 +28,7 @@ export class FormatterHelper implements IFormatterHelper {
         const id = this.translateToId(formatter);
         return {
             argsName: `${id}Args` as keyof IFormattingSettings,
-            pathName: `${id}Path` as keyof IFormattingSettings
+            pathName: `${id}Path` as keyof IFormattingSettings,
         };
     }
     public getExecutionInfo(formatter: Product, customArgs: string[], resource?: Uri): ExecutionInfo {

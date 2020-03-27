@@ -8,7 +8,7 @@ import {
     DebugSession,
     Event,
     EventEmitter,
-    ProviderResult
+    ProviderResult,
 } from 'vscode';
 
 import { IDebugService } from '../common/application/types';

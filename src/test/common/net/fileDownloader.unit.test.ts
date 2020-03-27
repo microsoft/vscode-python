@@ -122,9 +122,7 @@ suite('File Downloader', () => {
         });
         test('Error is throw for http Status !== 200', async () => {
             // When downloading a uri, throw status 500 error.
-            nock('https://python.extension')
-                .get('/package.json')
-                .reply(500);
+            nock('https://python.extension').get('/package.json').reply(500);
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
             when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));
@@ -186,7 +184,7 @@ suite('File Downloader', () => {
                 .reply(200, () => [
                     200,
                     new DelayedReadMemoryStream(1024 * totalKb, 5, 1024 * 10),
-                    { 'content-length': 1024 * totalKb }
+                    { 'content-length': 1024 * totalKb },
                 ]);
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
@@ -253,7 +251,7 @@ suite('File Downloader', () => {
             await fileDownloader.downloadFile('file to download', {
                 progressMessagePrefix: '',
                 extension: '.pdf',
-                outputChannel: outputChannel
+                outputChannel: outputChannel,
             });
 
             verify(outputChannel.appendLine(Http.downloadingFile().format('file to download')));

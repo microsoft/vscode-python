@@ -72,7 +72,7 @@ suite('Debugging - Adapter Factory', () => {
         sysPrefix: '',
         sysVersion: '',
         type: InterpreterType.Unknown,
-        version: new SemVer('3.7.4-test')
+        version: new SemVer('3.7.4-test'),
     };
     const python36Path = path.join('path', 'to', 'active', 'interpreter');
     const interpreterPython36Details = {
@@ -81,7 +81,7 @@ suite('Debugging - Adapter Factory', () => {
         sysPrefix: '',
         sysVersion: '',
         type: InterpreterType.Unknown,
-        version: new SemVer('3.6.8-test')
+        version: new SemVer('3.6.8-test'),
     };
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
     const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
@@ -112,7 +112,7 @@ suite('Debugging - Adapter Factory', () => {
         const configurationService = mock(ConfigurationService);
         const fs = mock(FileSystem);
         when(configurationService.getSettings(undefined)).thenReturn(({
-            experiments: { enabled: true }
+            experiments: { enabled: true },
             // tslint:disable-next-line: no-any
         } as any) as IPythonSettings);
         experimentsManager = new ExperimentsManager(
@@ -157,7 +157,7 @@ suite('Debugging - Adapter Factory', () => {
             name: 'python',
             type: 'python',
             workspaceFolder,
-            customRequest: () => Promise.resolve()
+            customRequest: () => Promise.resolve(),
         };
     }
 
@@ -250,7 +250,7 @@ suite('Debugging - Adapter Factory', () => {
             port: undefined,
             processId: undefined,
             listen: undefined,
-            connect: undefined
+            connect: undefined,
         });
 
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
@@ -328,7 +328,7 @@ suite('Debugging - Adapter Factory', () => {
         const debugExecutable = new DebugAdapterExecutable(pythonPath, [
             ptvsdAdapterPathWithWheels,
             '--log-dir',
-            EXTENSION_ROOT_DIR
+            EXTENSION_ROOT_DIR,
         ]);
 
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
@@ -343,7 +343,7 @@ suite('Debugging - Adapter Factory', () => {
         const debugExecutable = new DebugAdapterExecutable(python36Path, [
             ptvsdAdapterPathWithoutWheels,
             '--log-dir',
-            EXTENSION_ROOT_DIR
+            EXTENSION_ROOT_DIR,
         ]);
 
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
@@ -406,14 +406,14 @@ suite('Debugging - Adapter Factory', () => {
     test('Send experiment group telemetry if inside the wheels experiment, with active interpreter Python 3.7', async () => {
         const session = createSession({});
         when(spiedInstance.userExperiments).thenReturn([
-            { name: DebugAdapterNewPtvsd.experiment, salt: DebugAdapterNewPtvsd.experiment, min: 0, max: 0 }
+            { name: DebugAdapterNewPtvsd.experiment, salt: DebugAdapterNewPtvsd.experiment, min: 0, max: 0 },
         ]);
 
         await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
         assert.deepEqual(Reporter.eventNames, [
             EventName.PYTHON_EXPERIMENTS,
-            EventName.DEBUG_ADAPTER_USING_WHEELS_PATH
+            EventName.DEBUG_ADAPTER_USING_WHEELS_PATH,
         ]);
         assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterNewPtvsd.experiment }, { usingWheels: 'true' }]);
     });
@@ -421,7 +421,7 @@ suite('Debugging - Adapter Factory', () => {
     test('Send experiment group telemetry if inside the wheels experiment, with active interpreter not Python 3.7', async () => {
         const session = createSession({});
         when(spiedInstance.userExperiments).thenReturn([
-            { name: DebugAdapterNewPtvsd.experiment, salt: DebugAdapterNewPtvsd.experiment, min: 0, max: 0 }
+            { name: DebugAdapterNewPtvsd.experiment, salt: DebugAdapterNewPtvsd.experiment, min: 0, max: 0 },
         ]);
         when(interpreterService.getInterpreters(anything())).thenResolve([interpreterPython36Details]);
         when(interpreterService.getInterpreterDetails(python36Path)).thenResolve(interpreterPython36Details);
@@ -430,7 +430,7 @@ suite('Debugging - Adapter Factory', () => {
 
         assert.deepEqual(Reporter.eventNames, [
             EventName.PYTHON_EXPERIMENTS,
-            EventName.DEBUG_ADAPTER_USING_WHEELS_PATH
+            EventName.DEBUG_ADAPTER_USING_WHEELS_PATH,
         ]);
         assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterNewPtvsd.experiment }, { usingWheels: 'false' }]);
     });
@@ -438,7 +438,7 @@ suite('Debugging - Adapter Factory', () => {
     test('Send attach to local process telemetry if inside the DA experiment and attaching to a local process', async () => {
         const session = createSession({ request: 'attach', processId: 1234 });
         when(spiedInstance.userExperiments).thenReturn([
-            { name: DebugAdapterNewPtvsd.experiment, salt: DebugAdapterNewPtvsd.experiment, min: 0, max: 0 }
+            { name: DebugAdapterNewPtvsd.experiment, salt: DebugAdapterNewPtvsd.experiment, min: 0, max: 0 },
         ]);
 
         await factory.createDebugAdapterDescriptor(session, nodeExecutable);
@@ -449,7 +449,7 @@ suite('Debugging - Adapter Factory', () => {
     test('Send control group telemetry if inside the DA experiment control group', async () => {
         const session = createSession({});
         when(spiedInstance.userExperiments).thenReturn([
-            { name: DebugAdapterNewPtvsd.control, salt: DebugAdapterNewPtvsd.control, min: 0, max: 0 }
+            { name: DebugAdapterNewPtvsd.control, salt: DebugAdapterNewPtvsd.control, min: 0, max: 0 },
         ]);
 
         await factory.createDebugAdapterDescriptor(session, nodeExecutable);
@@ -483,7 +483,7 @@ suite('Debugging - Adapter Factory', () => {
         const remoteDebugOptions = {
             waitUntilDebuggerAttaches: true,
             host: 'host',
-            port: 999
+            port: 999,
         };
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
@@ -493,7 +493,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(args, [
             '--listen',
             `${remoteDebugOptions.host}:${remoteDebugOptions.port}`,
-            '--wait-for-client'
+            '--wait-for-client',
         ]);
     });
 
@@ -501,7 +501,7 @@ suite('Debugging - Adapter Factory', () => {
         const remoteDebugOptions = {
             waitUntilDebuggerAttaches: true,
             host: 'host',
-            port: 999
+            port: 999,
         };
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(false);
 
@@ -513,7 +513,7 @@ suite('Debugging - Adapter Factory', () => {
             remoteDebugOptions.host,
             '--port',
             remoteDebugOptions.port.toString(),
-            '--wait'
+            '--wait',
         ]);
     });
 
@@ -521,7 +521,7 @@ suite('Debugging - Adapter Factory', () => {
         const remoteDebugOptions = {
             waitUntilDebuggerAttaches: false,
             host: 'host',
-            port: 999
+            port: 999,
         };
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(false);
 

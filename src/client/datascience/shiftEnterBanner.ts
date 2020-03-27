@@ -14,12 +14,12 @@ import { Telemetry } from './constants';
 import { IJupyterExecution } from './types';
 
 export enum InteractiveShiftEnterStateKeys {
-    ShowBanner = 'InteractiveShiftEnterBanner'
+    ShowBanner = 'InteractiveShiftEnterBanner',
 }
 
 enum InteractiveShiftEnterLabelIndex {
     Yes,
-    No
+    No,
 }
 
 // Create a banner to ask users if they want to send shift-enter to the interactive window or not
@@ -30,7 +30,7 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
     private bannerMessage: string = localize.InteractiveShiftEnterBanner.bannerMessage();
     private bannerLabels: string[] = [
         localize.InteractiveShiftEnterBanner.bannerLabelYes(),
-        localize.InteractiveShiftEnterBanner.bannerLabelNo()
+        localize.InteractiveShiftEnterBanner.bannerLabelNo(),
     ];
 
     constructor(

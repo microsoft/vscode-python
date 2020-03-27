@@ -15,7 +15,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IOutputChannel,
-    Resource
+    Resource,
 } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -26,7 +26,7 @@ import {
     IJupyterSessionManagerFactory,
     INotebook,
     INotebookServer,
-    INotebookServerLaunchInfo
+    INotebookServerLaunchInfo,
 } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';

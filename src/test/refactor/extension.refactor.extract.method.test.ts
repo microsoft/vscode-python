@@ -14,7 +14,7 @@ import {
     TextEditorOptions,
     Uri,
     window,
-    workspace
+    workspace,
 } from 'vscode';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
@@ -63,7 +63,7 @@ suite('Method Extraction', () => {
         cursorStyle: TextEditorCursorStyle.Line,
         insertSpaces: true,
         lineNumbers: TextEditorLineNumbersStyle.Off,
-        tabSize: 4
+        tabSize: 4,
     };
     let refactorTargetFile = '';
     let ioc: UnitTestIocContainer;
@@ -126,9 +126,9 @@ suite('Method Extraction', () => {
             const textEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
             assert.equal(response.results.length, 1, 'Invalid number of items in response');
             assert.equal(textEdits.length, expectedTextEdits.length, 'Invalid number of Text Edits');
-            textEdits.forEach(edit => {
+            textEdits.forEach((edit) => {
                 const foundEdit = expectedTextEdits.filter(
-                    item => item.newText === edit.newText && item.range.isEqual(edit.range)
+                    (item) => item.newText === edit.newText && item.range.isEqual(edit.range)
                 );
                 assert.equal(foundEdit.length, 1, 'Edit not found');
             });

@@ -20,7 +20,7 @@ suite('Source Map Support', () => {
         const stubInfo = {
             configValueRetrieved: false,
             configValueUpdated: false,
-            messageDisplayed: false
+            messageDisplayed: false,
         };
         const vscode = {
             workspace: {
@@ -42,17 +42,17 @@ suite('Source Map Support', () => {
                             ) {
                                 stubInfo.configValueUpdated = true;
                             }
-                        }
+                        },
                     };
-                }
+                },
             },
             window: {
                 showWarningMessage: () => {
                     stubInfo.messageDisplayed = true;
                     return Promise.resolve(selectDisableButton ? Diagnostics.disableSourceMaps() : undefined);
-                }
+                },
             },
-            ConfigurationTarget: ConfigurationTarget
+            ConfigurationTarget: ConfigurationTarget,
         };
         return { stubInfo, vscode };
     }
@@ -60,7 +60,7 @@ suite('Source Map Support', () => {
     const disposables: Disposable[] = [];
     teardown(() => {
         rewiremock.disable();
-        disposables.forEach(disposable => {
+        disposables.forEach((disposable) => {
             try {
                 disposable.dispose();
             } catch {

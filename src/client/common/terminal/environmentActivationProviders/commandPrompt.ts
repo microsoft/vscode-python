@@ -50,7 +50,7 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
         const powerShellFiles = [
             'Activate.ps1',
             path.join('Scripts', 'Activate.ps1'),
-            path.join('scripts', 'Activate.ps1')
+            path.join('scripts', 'Activate.ps1'),
         ];
         if (targetShell === TerminalShellType.commandPrompt) {
             return batchFiles.concat(powerShellFiles);

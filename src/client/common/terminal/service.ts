@@ -15,7 +15,7 @@ import {
     ITerminalHelper,
     ITerminalService,
     TerminalCreationOptions,
-    TerminalShellType
+    TerminalShellType,
 } from './types';
 
 @injectable()
@@ -72,17 +72,17 @@ export class TerminalService implements ITerminalService, Disposable {
         this.terminal = this.terminalManager.createTerminal({
             name: this.options?.title || 'Python',
             env: this.options?.env,
-            hideFromUser: this.options?.hideFromUser
+            hideFromUser: this.options?.hideFromUser,
         });
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         await this.terminalActivator.activateEnvironmentInTerminal(this.terminal!, {
             resource: this.options?.resource,
             preserveFocus,
             interpreter: this.options?.interpreter,
-            hideFromUser: this.options?.hideFromUser
+            hideFromUser: this.options?.hideFromUser,
         });
 
         if (!this.options?.hideFromUser) {
@@ -112,7 +112,7 @@ export class TerminalService implements ITerminalService, Disposable {
         captureTelemetry(EventName.TERMINAL_CREATE, {
             terminal: this.terminalShellType,
             pythonVersion,
-            interpreterType
+            interpreterType,
         });
     }
 }

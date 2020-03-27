@@ -7,7 +7,7 @@ const uint64be = require('uint64be');
 enum DataType {
     string,
     int32,
-    int64
+    int64,
 }
 
 export class SocketStream {

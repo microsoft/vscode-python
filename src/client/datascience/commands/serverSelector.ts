@@ -26,6 +26,6 @@ export class JupyterServerSelectorCommand implements IDisposable {
         );
     }
     public dispose() {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
 }

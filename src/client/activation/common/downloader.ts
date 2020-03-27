@@ -20,7 +20,7 @@ import {
     ILanguageServerDownloader,
     ILanguageServerFolderService,
     ILanguageServerOutputChannel,
-    IPlatformData
+    IPlatformData,
 } from '../types';
 
 // tslint:disable:no-require-imports no-any
@@ -43,7 +43,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     }
 
     public async getDownloadInfo(resource: Resource) {
-        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource).then(item => item!);
+        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource).then((item) => item!);
 
         let uri = info.uri;
         if (uri.startsWith('https:')) {
@@ -86,7 +86,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
                 success,
                 lsVersion,
                 usedSSL,
-                lsName
+                lsName,
             });
         }
 
@@ -109,7 +109,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED, timer.elapsedTime, {
                 success,
                 lsVersion,
-                lsName
+                lsName,
             });
             await this.fs.deleteFile(localTempFilePath);
         }
@@ -127,9 +127,9 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         const downloadOptions = {
             extension: downloadFileExtension,
             outputChannel: this.output,
-            progressMessagePrefix: title
+            progressMessagePrefix: title,
         };
-        return this.fileDownloader.downloadFile(uri, downloadOptions).then(file => {
+        return this.fileDownloader.downloadFile(uri, downloadOptions).then((file) => {
             this.output.appendLine(LanguageService.extractionCompletedOutputMessage());
             return file;
         });
@@ -143,14 +143,14 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         const title = 'Extracting files... ';
         await window.withProgress(
             {
-                location: ProgressLocation.Window
+                location: ProgressLocation.Window,
             },
-            progress => {
+            (progress) => {
                 // tslint:disable-next-line:no-require-imports no-var-requires
                 const StreamZip = require('node-stream-zip');
                 const zip = new StreamZip({
                     file: tempFilePath,
-                    storeEntries: true
+                    storeEntries: true,
                 });
 
                 let totalFiles = 0;

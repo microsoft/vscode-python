@@ -30,7 +30,7 @@ import {
     window,
     WindowState,
     WorkspaceFolder,
-    WorkspaceFolderPickOptions
+    WorkspaceFolderPickOptions,
 } from 'vscode';
 import { IApplicationShell } from './types';
 

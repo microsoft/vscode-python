@@ -18,7 +18,7 @@ import {
     SignatureHelpContext,
     SymbolInformation,
     TextDocument,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 import { Resource } from '../../common/types';
 import { PythonInterpreter } from '../../interpreter/contracts';

@@ -829,113 +829,113 @@ export namespace DataScience {
 export namespace DebugConfigStrings {
     export const selectConfiguration = {
         title: localize('debug.selectConfigurationTitle'),
-        placeholder: localize('debug.selectConfigurationPlaceholder')
+        placeholder: localize('debug.selectConfigurationPlaceholder'),
     };
     export const launchJsonCompletions = {
         label: localize('debug.launchJsonConfigurationsCompletionLabel'),
-        description: localize('debug.launchJsonConfigurationsCompletionDescription')
+        description: localize('debug.launchJsonConfigurationsCompletionDescription'),
     };
 
     export namespace file {
         export const snippet = {
-            name: localize('python.snippet.launch.standard.label')
+            name: localize('python.snippet.launch.standard.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.debugFileConfigurationLabel'),
-            description: localize('debug.debugFileConfigurationDescription')
+            description: localize('debug.debugFileConfigurationDescription'),
         };
     }
     export namespace module {
         export const snippet = {
             name: localize('python.snippet.launch.module.label'),
-            default: localize('python.snippet.launch.module.default')
+            default: localize('python.snippet.launch.module.default'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.debugModuleConfigurationLabel'),
-            description: localize('debug.debugModuleConfigurationDescription')
+            description: localize('debug.debugModuleConfigurationDescription'),
         };
         export const enterModule = {
             title: localize('debug.moduleEnterModuleTitle'),
             prompt: localize('debug.moduleEnterModulePrompt'),
             default: localize('debug.moduleEnterModuleDefault'),
-            invalid: localize('debug.moduleEnterModuleInvalidNameError')
+            invalid: localize('debug.moduleEnterModuleInvalidNameError'),
         };
     }
     export namespace attach {
         export const snippet = {
-            name: localize('python.snippet.launch.attach.label')
+            name: localize('python.snippet.launch.attach.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.remoteAttachConfigurationLabel'),
-            description: localize('debug.remoteAttachConfigurationDescription')
+            description: localize('debug.remoteAttachConfigurationDescription'),
         };
         export const enterRemoteHost = {
             title: localize('debug.attachRemoteHostTitle'),
             prompt: localize('debug.attachRemoteHostPrompt'),
-            invalid: localize('debug.attachRemoteHostValidationError')
+            invalid: localize('debug.attachRemoteHostValidationError'),
         };
         export const enterRemotePort = {
             title: localize('debug.attachRemotePortTitle'),
             prompt: localize('debug.attachRemotePortPrompt'),
-            invalid: localize('debug.attachRemotePortValidationError')
+            invalid: localize('debug.attachRemotePortValidationError'),
         };
     }
     export namespace attachPid {
         export const snippet = {
-            name: localize('python.snippet.launch.attachpid.label')
+            name: localize('python.snippet.launch.attachpid.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.attachPidConfigurationLabel'),
-            description: localize('debug.attachPidConfigurationDescription')
+            description: localize('debug.attachPidConfigurationDescription'),
         };
     }
     export namespace django {
         export const snippet = {
-            name: localize('python.snippet.launch.django.label')
+            name: localize('python.snippet.launch.django.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.debugDjangoConfigurationLabel'),
-            description: localize('debug.debugDjangoConfigurationDescription')
+            description: localize('debug.debugDjangoConfigurationDescription'),
         };
         export const enterManagePyPath = {
             title: localize('debug.djangoEnterManagePyPathTitle'),
             prompt: localize('debug.djangoEnterManagePyPathPrompt'),
-            invalid: localize('debug.djangoEnterManagePyPathInvalidFilePathError')
+            invalid: localize('debug.djangoEnterManagePyPathInvalidFilePathError'),
         };
     }
     export namespace flask {
         export const snippet = {
-            name: localize('python.snippet.launch.flask.label')
+            name: localize('python.snippet.launch.flask.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.debugFlaskConfigurationLabel'),
-            description: localize('debug.debugFlaskConfigurationDescription')
+            description: localize('debug.debugFlaskConfigurationDescription'),
         };
         export const enterAppPathOrNamePath = {
             title: localize('debug.flaskEnterAppPathOrNamePathTitle'),
             prompt: localize('debug.flaskEnterAppPathOrNamePathPrompt'),
-            invalid: localize('debug.flaskEnterAppPathOrNamePathInvalidNameError')
+            invalid: localize('debug.flaskEnterAppPathOrNamePathInvalidNameError'),
         };
     }
     export namespace pyramid {
         export const snippet = {
-            name: localize('python.snippet.launch.pyramid.label')
+            name: localize('python.snippet.launch.pyramid.label'),
         };
         // tslint:disable-next-line:no-shadowed-variable
         export const selectConfiguration = {
             label: localize('debug.debugPyramidConfigurationLabel'),
-            description: localize('debug.debugPyramidConfigurationDescription')
+            description: localize('debug.debugPyramidConfigurationDescription'),
         };
         export const enterDevelopmentIniPath = {
             title: localize('debug.pyramidEnterDevelopmentIniPathTitle'),
             prompt: localize('debug.pyramidEnterDevelopmentIniPathPrompt'),
-            invalid: localize('debug.pyramidEnterDevelopmentIniPathInvalidFilePathError')
+            invalid: localize('debug.pyramidEnterDevelopmentIniPathInvalidFilePathError'),
         };
     }
 }

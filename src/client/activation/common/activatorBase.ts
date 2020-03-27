@@ -20,7 +20,7 @@ import {
     SymbolInformation,
     TextDocument,
     TextDocumentContentChangeEvent,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient';
 
@@ -35,7 +35,7 @@ import {
     ILanguageServerActivator,
     ILanguageServerDownloader,
     ILanguageServerFolderService,
-    ILanguageServerManager
+    ILanguageServerManager,
 } from '../types';
 
 /**
@@ -195,7 +195,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
             const args: vscodeLanguageClient.RenameParams = {
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
                 position: languageClient.code2ProtocolConverter.asPosition(position),
-                newName
+                newName,
             };
             const result = await languageClient.sendRequest(vscodeLanguageClient.RenameRequest.type, args, token);
             if (result) {
@@ -213,7 +213,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         if (languageClient) {
             const args: vscodeLanguageClient.TextDocumentPositionParams = {
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
-                position: languageClient.code2ProtocolConverter.asPosition(position)
+                position: languageClient.code2ProtocolConverter.asPosition(position),
             };
             const result = await languageClient.sendRequest(vscodeLanguageClient.DefinitionRequest.type, args, token);
             if (result) {
@@ -231,7 +231,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         if (languageClient) {
             const args: vscodeLanguageClient.TextDocumentPositionParams = {
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
-                position: languageClient.code2ProtocolConverter.asPosition(position)
+                position: languageClient.code2ProtocolConverter.asPosition(position),
             };
             const result = await languageClient.sendRequest(vscodeLanguageClient.HoverRequest.type, args, token);
             if (result) {
@@ -251,12 +251,12 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
             const args: vscodeLanguageClient.ReferenceParams = {
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
                 position: languageClient.code2ProtocolConverter.asPosition(position),
-                context
+                context,
             };
             const result = await languageClient.sendRequest(vscodeLanguageClient.ReferencesRequest.type, args, token);
             if (result) {
                 // Remove undefined part.
-                return result.map(l => {
+                return result.map((l) => {
                     const r = languageClient!.protocol2CodeConverter.asLocation(l);
                     return r!;
                 });
@@ -271,7 +271,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         const languageClient = this.getLanguageClient();
         if (languageClient) {
             const args: vscodeLanguageClient.CodeLensParams = {
-                textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document)
+                textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
             };
             const result = await languageClient.sendRequest(vscodeLanguageClient.CodeLensRequest.type, args, token);
             if (result) {
@@ -303,7 +303,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         const languageClient = this.getLanguageClient();
         if (languageClient) {
             const args: vscodeLanguageClient.DocumentSymbolParams = {
-                textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document)
+                textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
             };
             const result = await languageClient.sendRequest(
                 vscodeLanguageClient.DocumentSymbolRequest.type,
@@ -335,7 +335,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         if (languageClient) {
             const args: vscodeLanguageClient.TextDocumentPositionParams = {
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
-                position: languageClient.code2ProtocolConverter.asPosition(position)
+                position: languageClient.code2ProtocolConverter.asPosition(position),
             };
             const result = await languageClient.sendRequest(
                 vscodeLanguageClient.SignatureHelpRequest.type,

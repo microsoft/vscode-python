@@ -106,7 +106,7 @@ export class JupyterImporter implements INotebookImporter {
                     line: 0,
                     state: CellState.finished,
                     data: c,
-                    type: 'preview'
+                    type: 'preview',
                 };
             });
         }

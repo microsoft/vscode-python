@@ -9,12 +9,12 @@
 // tslint:disable:no-var-requires no-require-imports no-any no-function-expression
 const Module = require('module');
 
-(function() {
+(function () {
     const origRequire = Module.prototype.require;
     const _require = (context: any, filepath: any) => {
         return origRequire.call(context, filepath);
     };
-    Module.prototype.require = function(filepath: string) {
+    Module.prototype.require = function (filepath: string) {
         if (filepath === 'canvas') {
             try {
                 // Make sure we aren't inside of vscode. The nodejs version of Canvas won't match. At least sometimes.
@@ -296,7 +296,7 @@ export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-http-string
     const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', {
         pretendToBeVisual: true,
-        url: 'http://localhost'
+        url: 'http://localhost',
     });
     const { window } = dom;
 
@@ -317,7 +317,7 @@ export function setUpDomEnvironment() {
     }
 
     // tslint:disable-next-line: no-function-expression
-    window.HTMLCanvasElement.prototype.toDataURL = function() {
+    window.HTMLCanvasElement.prototype.toDataURL = function () {
         return '';
     };
 
@@ -332,7 +332,7 @@ export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-string-literal no-any
     (global as any)['navigator'] = {
         userAgent: 'node.js',
-        platform: 'node'
+        platform: 'node',
     };
     (global as any)['Event'] = window.Event;
     (global as any)['KeyboardEvent'] = window.KeyboardEvent;
@@ -353,7 +353,7 @@ export function setUpDomEnvironment() {
         setEnd: (_endNode: any, _endOffset: any) => noop(),
         setStart: (_startNode: any, _startOffset: any) => noop(),
         getBoundingClientRect: () => null,
-        getClientRects: () => []
+        getClientRects: () => [],
     });
 
     // Another special case. CodeMirror needs selection
@@ -385,7 +385,7 @@ export function setUpDomEnvironment() {
         selectAllChildren: (_parentNode: Node) => noop(),
         setBaseAndExtent: (_baseNode: Node, _baseOffset: number, _extentNode: Node, _extentOffset: number) => noop(),
         setPosition: (_parentNode: Node, _offset: number) => noop(),
-        toString: () => '{Selection}'
+        toString: () => '{Selection}',
     };
 
     // For Jupyter server to load correctly. It expects the window object to not be defined
@@ -409,7 +409,7 @@ export function setUpDomEnvironment() {
     const configurationRegex = /.*(\\|\/)node_modules(\\|\/)monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)browser(\\|\/)config(\\|\/)configuration\.js/g;
     const _oldLoader = require.extensions['.js'];
     // tslint:disable-next-line:no-function-expression
-    require.extensions['.js'] = function(mod: any, filename) {
+    require.extensions['.js'] = function (mod: any, filename) {
         if (configurationRegex.test(filename)) {
             let content = require('fs').readFileSync(filename, 'utf8');
             content += 'export function getCSSBasedConfiguration() { return CSSBasedConfiguration.INSTANCE; };\n';
@@ -432,7 +432,7 @@ export function setupTranspile() {
 }
 
 function copyProps(src: any, target: any) {
-    const props = Object.getOwnPropertyNames(src).filter(prop => typeof target[prop] === undefined);
+    const props = Object.getOwnPropertyNames(src).filter((prop) => typeof target[prop] === undefined);
     props.forEach((p: string) => {
         target[p] = src[p];
     });
@@ -596,7 +596,7 @@ const keyMap: { [key: string]: { code: number; shift: boolean } } = {
     '~': { code: 192, shift: true },
     ' ': { code: 32, shift: false },
     '\n': { code: 13, shift: false },
-    '\r': { code: 0, shift: false } // remove \r from the text.
+    '\r': { code: 0, shift: false }, // remove \r from the text.
 };
 
 export function createMessageEvent(data: any): MessageEvent {

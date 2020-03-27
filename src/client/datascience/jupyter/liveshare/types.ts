@@ -10,7 +10,7 @@ import { ICell } from '../../types';
 
 export enum ServerResponseType {
     ExecuteObservable,
-    Exception
+    Exception,
 }
 
 export interface IServerResponse {

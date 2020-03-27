@@ -26,7 +26,7 @@ export class FileLaunchDebugConfigurationProvider implements IDebugConfiguration
             request: 'launch',
             // tslint:disable-next-line:no-invalid-template-strings
             program: '${file}',
-            console: 'integratedTerminal'
+            console: 'integratedTerminal',
         };
         Object.assign(state.config, config);
     }

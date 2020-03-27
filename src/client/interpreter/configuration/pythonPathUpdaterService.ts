@@ -42,7 +42,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             traceError(reason);
         }
         // do not wait for this to complete
-        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath).catch(ex =>
+        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath).catch((ex) =>
             traceError('Python Extension: sendTelemetry', ex)
         );
     }
@@ -54,7 +54,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
     ) {
         const telemtryProperties: PythonInterpreterTelemetry = {
             failed,
-            trigger
+            trigger,
         };
         if (!failed) {
             const processService = await this.executionFactory.create({ pythonPath });
@@ -63,7 +63,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
                 .catch<InterpreterInfomation | undefined>(() => undefined);
             const pipVersionPromise = this.interpreterVersionService
                 .getPipVersion(pythonPath)
-                .then(value => (value.length === 0 ? undefined : value))
+                .then((value) => (value.length === 0 ? undefined : value))
                 .catch<string>(() => '');
             const [info, pipVersion] = await Promise.all([infoPromise, pipVersionPromise]);
             if (info && info.version) {

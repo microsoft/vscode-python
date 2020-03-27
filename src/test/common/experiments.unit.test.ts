@@ -22,7 +22,7 @@ import {
     ExperimentsManager,
     experimentStorageKey,
     isDownloadedStorageValidKey,
-    oldExperimentSalts
+    oldExperimentSalts,
 } from '../../client/common/experiments';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
@@ -34,7 +34,7 @@ import {
     IHttpClient,
     IOutputChannel,
     IPersistentState,
-    IPersistentStateFactory
+    IPersistentStateFactory,
 } from '../../client/common/types';
 import { createDeferred, createDeferredFromPromise } from '../../client/common/utils/async';
 import { sleep } from '../common';
@@ -70,8 +70,8 @@ suite('A/B experiments', () => {
         experiments = TypeMoq.Mock.ofType<IExperiments>();
         const settings = mock(PythonSettings);
         when(settings.experiments).thenReturn(experiments.object);
-        experiments.setup(e => e.optInto).returns(() => []);
-        experiments.setup(e => e.optOutFrom).returns(() => []);
+        experiments.setup((e) => e.optInto).returns(() => []);
+        experiments.setup((e) => e.optOutFrom).returns(() => []);
         when(configurationService.getSettings(undefined)).thenReturn(instance(settings));
         fs = mock(FileSystem);
         when(
@@ -119,7 +119,7 @@ suite('A/B experiments', () => {
 
     test('Initializing experiments does not download experiments if storage is valid and contains experiments', async () => {
         isDownloadedStorageValid
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
 
@@ -131,15 +131,15 @@ suite('A/B experiments', () => {
     test('If storage has expired, initializing experiments downloads the experiments, but does not store them if they are invalid or incomplete', async () => {
         const abExperiments = [{ name: 'experiment1', salt: 'salt', max: 100 }];
         isDownloadedStorageValid
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => false)
             .verifiable(TypeMoq.Times.once());
         isDownloadedStorageValid
-            .setup(n => n.updateValue(true))
+            .setup((n) => n.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(abExperiments))
+            .setup((n) => n.updateValue(abExperiments))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -151,15 +151,15 @@ suite('A/B experiments', () => {
 
     test('If storage has expired, initializing experiments downloads the experiments, and stores them if they are valid', async () => {
         isDownloadedStorageValid
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => false)
             .verifiable(TypeMoq.Times.once());
         isDownloadedStorageValid
-            .setup(n => n.updateValue(true))
+            .setup((n) => n.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
+            .setup((n) => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
 
@@ -170,15 +170,15 @@ suite('A/B experiments', () => {
 
     test('If downloading experiments fails with error, the storage is left as it is', async () => {
         isDownloadedStorageValid
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => false)
             .verifiable(TypeMoq.Times.once());
         isDownloadedStorageValid
-            .setup(n => n.updateValue(true))
+            .setup((n) => n.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(anything()))
+            .setup((n) => n.updateValue(anything()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -194,11 +194,11 @@ suite('A/B experiments', () => {
 
         when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
         workspaceConfig
-            .setup(c => c.inspect<boolean>('enableTelemetry'))
+            .setup((c) => c.inspect<boolean>('enableTelemetry'))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.never());
 
@@ -219,13 +219,13 @@ suite('A/B experiments', () => {
         const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         const settings = {};
         experiments
-            .setup(e => e.enabled)
+            .setup((e) => e.enabled)
             .returns(() => enabled)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
         when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
         workspaceConfig
-            .setup(c => c.inspect<boolean>('enableTelemetry'))
+            .setup((c) => c.inspect<boolean>('enableTelemetry'))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
 
@@ -257,7 +257,7 @@ suite('A/B experiments', () => {
         const sendTelemetry = sinon.stub(ExperimentsManager.prototype, 'sendTelemetryIfInExperiment');
         sendTelemetry.callsFake((_: string) => noop());
         experiments
-            .setup(e => e.enabled)
+            .setup((e) => e.enabled)
             .returns(() => enabled)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -309,7 +309,7 @@ suite('A/B experiments', () => {
 
         when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
         workspaceConfig
-            .setup(c => c.inspect<boolean>('enableTelemetry'))
+            .setup((c) => c.inspect<boolean>('enableTelemetry'))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
 
@@ -349,7 +349,7 @@ suite('A/B experiments', () => {
 
         when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
         workspaceConfig
-            .setup(c => c.inspect<boolean>('enableTelemetry'))
+            .setup((c) => c.inspect<boolean>('enableTelemetry'))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
 
@@ -370,15 +370,15 @@ suite('A/B experiments', () => {
 
     test('Ensure experiment storage is updated to contain the latest downloaded experiments', async () => {
         downloadedExperimentsStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])
             .verifiable(TypeMoq.Times.atLeastOnce());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(undefined))
+            .setup((n) => n.updateValue(undefined))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         experimentStorage
-            .setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
+            .setup((n) => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
 
@@ -406,20 +406,20 @@ suite('A/B experiments', () => {
         );
 
         downloadedExperimentsStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(undefined))
+            .setup((n) => n.updateValue(undefined))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
         experimentStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => [{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }])
             .verifiable(TypeMoq.Times.once());
         experimentStorage
-            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .setup((n) => n.updateValue(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -448,16 +448,16 @@ suite('A/B experiments', () => {
         );
 
         downloadedExperimentsStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(undefined))
+            .setup((n) => n.updateValue(undefined))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
         experimentStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
 
@@ -485,11 +485,11 @@ suite('A/B experiments', () => {
             instance(configurationService)
         );
         downloadedExperimentsStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(undefined))
+            .setup((n) => n.updateValue(undefined))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -504,11 +504,11 @@ suite('A/B experiments', () => {
         when(fs.readFile(anything())).thenResolve(fileContent);
 
         experimentStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         experimentStorage
-            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .setup((n) => n.updateValue(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -537,11 +537,11 @@ suite('A/B experiments', () => {
             instance(configurationService)
         );
         downloadedExperimentsStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(undefined))
+            .setup((n) => n.updateValue(undefined))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
 
@@ -556,11 +556,11 @@ suite('A/B experiments', () => {
         when(fs.readFile(anything())).thenResolve(fileContent);
 
         experimentStorage
-            .setup(n => n.value)
+            .setup((n) => n.value)
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         experimentStorage
-            .setup(n => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
+            .setup((n) => n.updateValue([{ name: 'experiment1', salt: 'salt', min: 90, max: 100 }]))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
 
@@ -594,11 +594,11 @@ suite('A/B experiments', () => {
             });
             test('If checking the existence of config file fails', async () => {
                 downloadedExperimentsStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 downloadedExperimentsStorage
-                    .setup(n => n.updateValue(undefined))
+                    .setup((n) => n.updateValue(undefined))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -607,11 +607,11 @@ suite('A/B experiments', () => {
                 when(fs.readFile(anything())).thenResolve('fileContent');
 
                 experimentStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 experimentStorage
-                    .setup(n => n.updateValue(TypeMoq.It.isAny()))
+                    .setup((n) => n.updateValue(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -625,11 +625,11 @@ suite('A/B experiments', () => {
 
             test('If reading config file fails', async () => {
                 downloadedExperimentsStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 downloadedExperimentsStorage
-                    .setup(n => n.updateValue(undefined))
+                    .setup((n) => n.updateValue(undefined))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -638,11 +638,11 @@ suite('A/B experiments', () => {
                 when(fs.readFile(anything())).thenThrow(error);
 
                 experimentStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 experimentStorage
-                    .setup(n => n.updateValue(TypeMoq.It.isAny()))
+                    .setup((n) => n.updateValue(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -656,11 +656,11 @@ suite('A/B experiments', () => {
 
             test('If config file does not exist', async () => {
                 downloadedExperimentsStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 downloadedExperimentsStorage
-                    .setup(n => n.updateValue(undefined))
+                    .setup((n) => n.updateValue(undefined))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -668,11 +668,11 @@ suite('A/B experiments', () => {
                 when(fs.readFile(anything())).thenResolve('fileContent');
 
                 experimentStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 experimentStorage
-                    .setup(n => n.updateValue(TypeMoq.It.isAny()))
+                    .setup((n) => n.updateValue(TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -686,11 +686,11 @@ suite('A/B experiments', () => {
 
             test('If parsing file or updating storage fails', async () => {
                 downloadedExperimentsStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 downloadedExperimentsStorage
-                    .setup(n => n.updateValue(undefined))
+                    .setup((n) => n.updateValue(undefined))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.never());
 
@@ -705,11 +705,11 @@ suite('A/B experiments', () => {
                 when(fs.readFile(anything())).thenResolve(fileContent);
 
                 experimentStorage
-                    .setup(n => n.value)
+                    .setup((n) => n.value)
                     .returns(() => undefined)
                     .verifiable(TypeMoq.Times.once());
                 experimentStorage
-                    .setup(n => n.updateValue(TypeMoq.It.isAny()))
+                    .setup((n) => n.updateValue(TypeMoq.It.isAny()))
                     .returns(() => Promise.reject(error))
                     .verifiable(TypeMoq.Times.once());
 
@@ -729,9 +729,9 @@ suite('A/B experiments', () => {
             experimentName: 'imaginary experiment',
             userExperiments: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName:
@@ -739,13 +739,13 @@ suite('A/B experiments', () => {
             experimentName: 'experiment1',
             userExperiments: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: true
-        }
+            expectedResult: true,
+        },
     ];
 
-    testsForInExperiment.forEach(testParams => {
+    testsForInExperiment.forEach((testParams) => {
         test(testParams.testName, async () => {
             expManager.userExperiments = testParams.userExperiments;
             expect(expManager.inExperiment(testParams.experimentName)).to.equal(
@@ -760,34 +760,34 @@ suite('A/B experiments', () => {
         {
             testName: 'Returns true if hash modulo output is in range',
             hash: 1181,
-            expectedResult: true
+            expectedResult: true,
         },
         {
             testName: 'Returns false if hash modulo is less than min',
             hash: 967,
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'Returns false if hash modulo is more than max',
             hash: 3297,
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If checking if user is in range fails with error, throw error',
             hash: 3297,
             error: true,
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If machine ID is bogus, throw error',
             hash: 3297,
             machineIdError: true,
-            expectedResult: false
-        }
+            expectedResult: false,
+        },
     ];
 
     suite('Function IsUserInRange()', () => {
-        testsForIsUserInRange.forEach(testParams => {
+        testsForIsUserInRange.forEach((testParams) => {
             test(testParams.testName, async () => {
                 when(appEnvironment.machineId).thenReturn('101');
                 if (testParams.machineIdError) {
@@ -828,7 +828,7 @@ suite('A/B experiments', () => {
                 'ShowExtensionSurveyPrompt',
                 'ShowPlayIcon',
                 'AlwaysDisplayTestExplorer',
-                'LS'
+                'LS',
             ];
             assert.deepEqual(expectedOldExperimentSalts, oldExperimentSalts);
         });
@@ -838,37 +838,37 @@ suite('A/B experiments', () => {
         {
             testName: 'User experiments list is empty if experiment storage value is not an array',
             experimentStorageValue: undefined,
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName: 'User experiments list is empty if experiment storage value is an empty array',
             experimentStorageValue: [],
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName:
                 'User experiments list does not contain any experiments if user has requested to opt out of all experiments',
             experimentStorageValue: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 },
             ],
             hash: 8187,
             experimentsOptedOutFrom: ['All'],
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName:
                 'User experiments list contains all experiments if user has requested to opt into all experiments',
             experimentStorageValue: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 },
             ],
             hash: 8187,
             experimentsOptedInto: ['All'],
             expectedResult: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
-            ]
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 },
+            ],
         },
         {
             testName:
@@ -876,68 +876,68 @@ suite('A/B experiments', () => {
             experimentStorageValue: [{ name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 }],
             hash: 8187,
             experimentsOptedInto: ['experiment2 - control'],
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName:
                 'User experiments list contains the experiment if user has requested to opt out of a control group but user is in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 },
             ],
             hash: 8187,
             experimentsOptedOutFrom: ['experiment1 - control'],
-            expectedResult: [{ name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 }]
+            expectedResult: [{ name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 }],
         },
         {
             testName:
                 'User experiments list does not contains the experiment if user has opted out of experiment even though user is in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
             hash: 8187,
             experimentsOptedOutFrom: ['experiment1'],
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName:
                 'User experiments list contains the experiment if user has opted into the experiment even though user is not in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
             hash: 8187,
             experimentsOptedInto: ['experiment1'],
-            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]
+            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }],
         },
         {
             testName:
                 'User experiments list does not contain the experiment if user has both opted in and out of an experiment',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
             hash: 8187,
             experimentsOptedInto: ['experiment1'],
             experimentsOptedOutFrom: ['experiment1'],
-            expectedResult: []
+            expectedResult: [],
         },
         {
             testName: 'Otherwise user experiments list contains the experiment if user is in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
             hash: 8187,
-            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]
-        }
+            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }],
+        },
     ];
 
     suite('Function populateUserExperiments', async () => {
-        testsForPopulateUserExperiments.forEach(testParams => {
+        testsForPopulateUserExperiments.forEach((testParams) => {
             test(testParams.testName, async () => {
-                experimentStorage.setup(n => n.value).returns(() => testParams.experimentStorageValue);
+                experimentStorage.setup((n) => n.value).returns(() => testParams.experimentStorageValue);
                 when(appEnvironment.machineId).thenReturn('101');
                 if (testParams.hash) {
                     when(crypto.createHash(anything(), 'number', anything())).thenReturn(testParams.hash);
@@ -958,52 +958,52 @@ suite('A/B experiments', () => {
         {
             testName: 'If experiments are not an array, return false',
             experiments: undefined,
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If any experiment have `min` field missing, return false',
             experiments: [
                 { name: 'experiment1', salt: 'salt', max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If any experiment have `max` field missing, return false',
             experiments: [
                 { name: 'experiment1', salt: 'salt', min: 79 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If any experiment have `salt` field missing, return false',
             experiments: [
                 { name: 'experiment1', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If any experiment have `name` field missing, return false',
             experiments: [
                 { salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: false
+            expectedResult: false,
         },
         {
             testName: 'If all experiments contain all the fields in type `ABExperiment`, return true',
             experiments: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
             ],
-            expectedResult: true
-        }
+            expectedResult: true,
+        },
     ];
 
     suite('Function areExperimentsValid()', () => {
-        testsForAreExperimentsValid.forEach(testParams => {
+        testsForAreExperimentsValid.forEach((testParams) => {
             test(testParams.testName, () => {
                 expect(expManager.areExperimentsValid(testParams.experiments as any)).to.equal(
                     testParams.expectedResult
@@ -1087,19 +1087,19 @@ suite('A/B experiments', () => {
 
     test('If storage as parameter is passed in as argument to function downloadAndStoreExperiments(), download experiments into that storage', async () => {
         downloadedExperimentsStorage
-            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .setup((n) => n.updateValue(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.never());
         experimentStorage
-            .setup(n => n.updateValue(TypeMoq.It.isAny()))
+            .setup((n) => n.updateValue(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         isDownloadedStorageValid
-            .setup(n => n.updateValue(true))
+            .setup((n) => n.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         when(httpClient.getJSON(configUri, false)).thenResolve([
-            { name: 'experiment1', salt: 'salt', min: 90, max: 100 }
+            { name: 'experiment1', salt: 'salt', min: 90, max: 100 },
         ]);
 
         await expManager.downloadAndStoreExperiments(experimentStorage.object);

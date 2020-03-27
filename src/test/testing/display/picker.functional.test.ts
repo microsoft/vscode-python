@@ -33,8 +33,8 @@ suite('Testing - TestDisplay', () => {
         collectedTests.testFiles = [
             {
                 fullPath: fullpath ? fullpath : 'path/to/testfile',
-                ...anything()
-            }
+                ...anything(),
+            },
         ];
         return collectedTests;
     }
@@ -56,12 +56,12 @@ suite('Testing - TestDisplay', () => {
         const paths: { [key: string]: any } = {
             match: {
                 fullPath: '/path/to/testfile',
-                fileName: '/path/to/testfile'
+                fileName: '/path/to/testfile',
             },
             mismatch: {
                 fullPath: '/path/to/testfile',
-                fileName: '/testfile/to/path'
-            }
+                fileName: '/testfile/to/path',
+            },
         };
         let tests: Tests;
 
@@ -70,7 +70,7 @@ suite('Testing - TestDisplay', () => {
                 return [{ ...anything() }];
             }
             const functions: TestFunction[] = [];
-            testfunctions.forEach(fn => functions.push(fn));
+            testfunctions.forEach((fn) => functions.push(fn));
             return functions;
         }
 
@@ -111,7 +111,7 @@ suite('Testing - TestDisplay', () => {
             verify(mockedAppShell.showQuickPick(anything(), anything())).never();
         });
 
-        test(`Test that clicking a codelens on parametrized tests opens a dropdown picker on windows (#8627)`, function() {
+        test(`Test that clicking a codelens on parametrized tests opens a dropdown picker on windows (#8627)`, function () {
             if (process.platform !== 'win32') {
                 // tslint:disable-next-line: no-invalid-this
                 this.skip();

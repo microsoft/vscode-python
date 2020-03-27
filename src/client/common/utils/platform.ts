@@ -6,13 +6,13 @@
 export enum Architecture {
     Unknown = 1,
     x86 = 2,
-    x64 = 3
+    x64 = 3,
 }
 export enum OSType {
     Unknown = 'Unknown',
     Windows = 'Windows',
     OSX = 'OSX',
-    Linux = 'Linux'
+    Linux = 'Linux',
 }
 
 // Return the OS type for the given platform string.

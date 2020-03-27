@@ -15,7 +15,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
@@ -40,7 +40,7 @@ suite('Workspace symbols main', () => {
     const mockDisposable = {
         dispose: () => {
             return;
-        }
+        },
     };
     const ctagsPath = 'CTAG_PATH';
     const observable = {
@@ -48,8 +48,8 @@ suite('Workspace symbols main', () => {
             subscribe: (cb: (out: Output<string>) => void, _errorCb: any, done: Function) => {
                 cb({ source: 'stdout', out: '' });
                 done();
-            }
-        }
+            },
+        },
     };
 
     let outputChannel: IOutputChannel;
@@ -118,7 +118,7 @@ suite('Workspace symbols main', () => {
     test('Should not rebuild on start if the setting is disabled', () => {
         when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
         when(configurationService.getSettings(anything())).thenReturn({
-            workspaceSymbols: { rebuildOnStart: false }
+            workspaceSymbols: { rebuildOnStart: false },
         } as any);
 
         workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
@@ -129,7 +129,7 @@ suite('Workspace symbols main', () => {
     test("Should not rebuild on start if we don't have a workspace folder", () => {
         when(workspaceService.workspaceFolders).thenReturn([]);
         when(configurationService.getSettings(anything())).thenReturn({
-            workspaceSymbols: { rebuildOnStart: false }
+            workspaceSymbols: { rebuildOnStart: false },
         } as any);
 
         workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
@@ -145,8 +145,8 @@ suite('Workspace symbols main', () => {
                 enabled: true,
                 exclusionPatterns: [],
                 rebuildOnStart: true,
-                tagFilePath: 'foo'
-            }
+                tagFilePath: 'foo',
+            },
         } as any);
 
         workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
@@ -164,8 +164,8 @@ suite('Workspace symbols main', () => {
                 enabled: true,
                 exclusionPatterns: [],
                 rebuildOnFileSave: true,
-                tagFilePath: 'foo'
-            }
+                tagFilePath: 'foo',
+            },
         } as any);
 
         workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
@@ -185,8 +185,8 @@ suite('Workspace symbols main', () => {
                 enabled: true,
                 exclusionPatterns: [],
                 rebuildOnFileSave: true,
-                tagFilePath: 'foo'
-            }
+                tagFilePath: 'foo',
+            },
         } as any);
         reset(commandManager);
         when(commandManager.registerCommand(anything(), anything())).thenCall((commandID, cb) => {
@@ -215,8 +215,8 @@ suite('Workspace symbols main', () => {
                 enabled: true,
                 exclusionPatterns: [],
                 rebuildOnFileSave: false,
-                tagFilePath: 'foo'
-            }
+                tagFilePath: 'foo',
+            },
         } as any);
 
         workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));

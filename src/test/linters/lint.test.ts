@@ -13,7 +13,7 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService
+    TestFrameworkProductPathService,
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
@@ -34,7 +34,7 @@ suite('Linting Settings', () => {
     let linterManager: ILinterManager;
     let configService: IConfigurationService;
 
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         // These tests are still consistently failing during teardown.
         // See gh-4326.
         // tslint:disable-next-line:no-invalid-this
@@ -103,7 +103,7 @@ suite('Linting Settings', () => {
         await configService.updateSetting('linting.lintOnSave', false, rootWorkspaceUri, target);
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
 
-        linterManager.getAllLinterInfos().forEach(async x => {
+        linterManager.getAllLinterInfos().forEach(async (x) => {
             const settingKey = `linting.${x.enabledSettingName}`;
             await configService.updateSetting(settingKey, false, rootWorkspaceUri, target);
         });
@@ -132,7 +132,7 @@ suite('Linting Settings', () => {
 
             // tslint:disable-next-line:no-any
             assert.equal((settings.linting as any)[`${Product[product]}Enabled`], true, 'mismatch');
-            linterManager.getAllLinterInfos().forEach(async x => {
+            linterManager.getAllLinterInfos().forEach(async (x) => {
                 if (x.product !== product) {
                     // tslint:disable-next-line:no-any
                     assert.equal((settings.linting as any)[x.enabledSettingName], false, 'mismatch');

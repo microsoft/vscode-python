@@ -17,7 +17,7 @@ import {
     IInterpreterLocatorService,
     PIPENV_SERVICE,
     PythonInterpreter,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../contracts';
 import { AutoSelectionRule, IInterpreterAutoSelectionService } from '../types';
 import { BaseRuleService, NextAction } from './baseRule';
@@ -102,7 +102,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
                 ? workspaceFolder.uri.fsPath.toUpperCase()
                 : workspaceFolder.uri.fsPath;
 
-        return interpreters.filter(interpreter => {
+        return interpreters.filter((interpreter) => {
             const fsPath = Uri.file(interpreter.path).fsPath;
             const fsPathToCompare = this.platform.osType === OSType.Windows ? fsPath.toUpperCase() : fsPath;
             return fsPathToCompare.startsWith(workspacePath);

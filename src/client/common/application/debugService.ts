@@ -15,7 +15,7 @@ import {
     DebugSessionCustomEvent,
     Disposable,
     Event,
-    WorkspaceFolder
+    WorkspaceFolder,
 } from 'vscode';
 import { IDebugService } from './types';
 

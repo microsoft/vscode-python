@@ -37,7 +37,7 @@ suite('DataScience Error Handler Functional Tests', () => {
     function modifyContainer(): DataScienceIocContainer {
         const jupyterExecution = TypeMoq.Mock.ofType<IJupyterExecution>();
 
-        jupyterExecution.setup(jup => jup.getUsableJupyterPython()).returns(() => Promise.resolve(undefined));
+        jupyterExecution.setup((jup) => jup.getUsableJupyterPython()).returns(() => Promise.resolve(undefined));
         ioc.serviceManager.rebindInstance<IJupyterExecution>(IJupyterExecution, jupyterExecution.object);
 
         ioc.createWebView(() => mountConnectedMainPanel('interactive'), vsls.Role.None);
@@ -53,18 +53,18 @@ suite('DataScience Error Handler Functional Tests', () => {
                     displayName: 'Pip',
                     priority: 0,
                     isSupported: () => Promise.resolve(true),
-                    installModule: () => Promise.resolve()
+                    installModule: () => Promise.resolve(),
                 },
                 {
                     name: 'Conda',
                     displayName: 'Conda',
                     priority: 0,
                     isSupported: () => Promise.resolve(true),
-                    installModule: () => Promise.resolve()
-                }
+                    installModule: () => Promise.resolve(),
+                },
             ];
             channels
-                .setup(ch => ch.getInstallationChannels())
+                .setup((ch) => ch.getInstallationChannels())
                 .returns(() => Promise.resolve(installers))
                 .verifiable(TypeMoq.Times.once());
 

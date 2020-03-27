@@ -78,7 +78,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const [items1, items2, items3] = await Promise.all([
                 locator.getInterpreters(),
                 locator.getInterpreters(),
-                locator.getInterpreters()
+                locator.getInterpreters(),
             ]);
             expect(items1).to.be.deep.equal(expectedInterpreters);
             expect(items2).to.be.deep.equal(expectedInterpreters);
@@ -145,7 +145,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const [items1, items2, items3] = await Promise.all([
                 locator.getInterpreters(),
                 locator.getInterpreters(),
-                locator.getInterpreters()
+                locator.getInterpreters(),
             ]);
             expect(items1).to.be.deep.equal(expectedInterpreters);
             expect(items2).to.be.deep.equal(expectedInterpreters);
@@ -160,7 +160,7 @@ suite('Interpreters - Cacheable Locator Service', () => {
             const [items4, items5, items6] = await Promise.all([
                 locator.getInterpreters(),
                 locator.getInterpreters(),
-                locator.getInterpreters()
+                locator.getInterpreters(),
             ]);
             expect(items4).to.be.deep.equal(expectedInterpreters);
             expect(items5).to.be.deep.equal(expectedInterpreters);

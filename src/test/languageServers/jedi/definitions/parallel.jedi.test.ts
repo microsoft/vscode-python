@@ -41,7 +41,7 @@ suite('Code, Hover Definition and Intellisense (Jedi)', () => {
             position
         );
 
-        assert.equal(list!.items.filter(item => item.label === 'api_version').length, 1, 'api_version not found');
+        assert.equal(list!.items.filter((item) => item.label === 'api_version').length, 1, 'api_version not found');
 
         assert.equal(codeDef!.length, 1, 'Definition length is incorrect');
         const expectedPath = IS_WINDOWS ? fileOne.toUpperCase() : fileOne;

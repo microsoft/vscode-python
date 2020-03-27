@@ -10,7 +10,7 @@ import {
     IMultiStepInput,
     IMultiStepInputFactory,
     InputStep,
-    IQuickPickParameters
+    IQuickPickParameters,
 } from '../../../common/utils/multiStepInput';
 import { AttachRequestArguments, DebugConfigurationArguments, LaunchRequestArguments } from '../../types';
 import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationService } from '../types';
@@ -85,38 +85,38 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             {
                 label: DebugConfigStrings.file.selectConfiguration.label(),
                 type: DebugConfigurationType.launchFile,
-                description: DebugConfigStrings.file.selectConfiguration.description()
+                description: DebugConfigStrings.file.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.module.selectConfiguration.label(),
                 type: DebugConfigurationType.launchModule,
-                description: DebugConfigStrings.module.selectConfiguration.description()
+                description: DebugConfigStrings.module.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.attach.selectConfiguration.label(),
                 type: DebugConfigurationType.remoteAttach,
-                description: DebugConfigStrings.attach.selectConfiguration.description()
+                description: DebugConfigStrings.attach.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.attachPid.selectConfiguration.label(),
                 type: DebugConfigurationType.pidAttach,
-                description: DebugConfigStrings.attachPid.selectConfiguration.description()
+                description: DebugConfigStrings.attachPid.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.django.selectConfiguration.label(),
                 type: DebugConfigurationType.launchDjango,
-                description: DebugConfigStrings.django.selectConfiguration.description()
+                description: DebugConfigStrings.django.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.flask.selectConfiguration.label(),
                 type: DebugConfigurationType.launchFlask,
-                description: DebugConfigStrings.flask.selectConfiguration.description()
+                description: DebugConfigStrings.flask.selectConfiguration.description(),
             },
             {
                 label: DebugConfigStrings.pyramid.selectConfiguration.label(),
                 type: DebugConfigurationType.launchPyramid,
-                description: DebugConfigStrings.pyramid.selectConfiguration.description()
-            }
+                description: DebugConfigStrings.pyramid.selectConfiguration.description(),
+            },
         ];
         state.config = {};
         const pick = await input.showQuickPick<
@@ -126,7 +126,7 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             title: DebugConfigStrings.selectConfiguration.title(),
             placeholder: DebugConfigStrings.selectConfiguration.placeholder(),
             activeItem: items[0],
-            items: items
+            items: items,
         });
         if (pick) {
             const provider = this.providerFactory.create(pick.type);

@@ -34,7 +34,7 @@ suite('Data Science - DataViewerDependencyService', () => {
             sysPrefix: '',
             sysVersion: '',
             type: InterpreterType.Unknown,
-            version: new SemVer('3.3.3')
+            version: new SemVer('3.3.3'),
         };
         pythonExecService = mock(PythonExecutionService);
         installer = mock(ProductInstaller);

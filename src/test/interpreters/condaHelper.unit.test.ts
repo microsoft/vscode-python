@@ -13,7 +13,7 @@ suite('Interpreters display name from Conda Environments', () => {
     });
     test('Must return at least Python Version', () => {
         const info: CondaInfo = {
-            python_version: '3.6.1.final.10'
+            python_version: '3.6.1.final.10',
         };
         const displayName = condaHelper.getDisplayName(info);
         assert.equal(displayName, AnacondaDisplayName, 'Incorrect display name');
@@ -21,7 +21,7 @@ suite('Interpreters display name from Conda Environments', () => {
     test('Must return info without first part if not a python version', () => {
         const info: CondaInfo = {
             'sys.version':
-                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
+                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
         const displayName = condaHelper.getDisplayName(info);
         assert.equal(displayName, 'Anaconda 4.4.0 (64-bit)', 'Incorrect display name');
@@ -30,7 +30,7 @@ suite('Interpreters display name from Conda Environments', () => {
         const info: CondaInfo = {
             python_version: '3.6.1.final.10',
             'sys.version':
-                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
+                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
         const displayName = condaHelper.getDisplayName(info);
         assert.equal(displayName, 'Anaconda 4.4.0 (64-bit)', 'Incorrect display name');
@@ -38,7 +38,7 @@ suite('Interpreters display name from Conda Environments', () => {
     test('Must include Ananconda name if Company name not found', () => {
         const info: CondaInfo = {
             python_version: '3.6.1.final.10',
-            'sys.version': '3.6.1 |4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
+            'sys.version': '3.6.1 |4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
         };
         const displayName = condaHelper.getDisplayName(info);
         assert.equal(displayName, `4.4.0 (64-bit) : ${AnacondaDisplayName}`, 'Incorrect display name');
@@ -61,7 +61,7 @@ three3                   /Users/donjayamanne/anaconda3/envs/three
             { name: 'two2 2', path: '/Users/donjayamanne/anaconda3/envs/two 2' },
             { name: 'three3', path: '/Users/donjayamanne/anaconda3/envs/three' },
             { name: '', path: '/Users/donjayamanne/anaconda3/envs/four' },
-            { name: '', path: '/Users/donjayamanne/anaconda3/envs/five 5' }
+            { name: '', path: '/Users/donjayamanne/anaconda3/envs/five 5' },
         ];
 
         const list = condaHelper.parseCondaEnvironmentNames(environments);

@@ -7,7 +7,7 @@ import {
     OnTypeFormattingEditProvider,
     Position,
     TextDocument,
-    TextEdit
+    TextEdit,
 } from 'vscode';
 import { LineFormatter } from '../formatters/lineFormatter';
 import { TokenizerMode, TokenType } from '../language/types';

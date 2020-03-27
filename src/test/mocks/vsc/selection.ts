@@ -41,7 +41,7 @@ export namespace vscMockSelection {
         /**
          * The selection starts below where it ends.
          */
-        RTL
+        RTL,
     }
 
     /**

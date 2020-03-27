@@ -25,7 +25,7 @@ import {
     IExperimentsManager,
     IExtensionContext,
     IFeatureDeprecationManager,
-    IOutputChannel
+    IOutputChannel,
 } from './common/types';
 import { OutputChannelNames } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
@@ -42,7 +42,7 @@ import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
     IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
-    IInterpreterService
+    IInterpreterService,
 } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -164,7 +164,7 @@ async function activateLegacy(
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     interpreterManager
         .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
-        .catch(ex => traceError('Python Extension: interpreterManager.refresh', ex));
+        .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
 
     // Activate data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);
@@ -192,11 +192,11 @@ async function activateLegacy(
 
     context.subscriptions.push(
         languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {
-            providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports]
+            providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports],
         })
     );
 
-    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach(debugConfigProvider => {
+    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach((debugConfigProvider) => {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider));
     });
 

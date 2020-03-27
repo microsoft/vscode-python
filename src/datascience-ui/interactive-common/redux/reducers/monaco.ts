@@ -10,7 +10,7 @@ import {
     IProvideCompletionItemsResponse,
     IProvideHoverResponse,
     IProvideSignatureHelpResponse,
-    IResolveCompletionItemResponse
+    IResolveCompletionItemResponse,
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../../client/datascience/interactive-common/types';
 import { CssMessages } from '../../../../client/datascience/messages';
@@ -61,7 +61,7 @@ function handleStarted<T>(arg: MonacoReducerArg<T>): IMonacoState {
             ...arg.prevState,
             intellisenseProvider: new IntellisenseProvider(
                 arg.prevState.postOffice.sendMessage.bind(arg.prevState.postOffice)
-            )
+            ),
         };
     }
 
@@ -69,7 +69,7 @@ function handleStarted<T>(arg: MonacoReducerArg<T>): IMonacoState {
 }
 
 function finishTokenizer<T>(buffer: ArrayBuffer, tmJson: string, arg: MonacoReducerArg<T>) {
-    initializeTokenizer(buffer, tmJson, e => {
+    initializeTokenizer(buffer, tmJson, (e) => {
         if (e) {
             logMessage(`ERROR from onigasm: ${e}`);
         }
@@ -96,7 +96,7 @@ function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState 
     // Make sure we start the intellisense provider
     return {
         ...arg.prevState,
-        onigasmData: typedArray.buffer
+        onigasmData: typedArray.buffer,
     };
 }
 
@@ -108,7 +108,7 @@ function handleLoadTmLanguageResponse(arg: MonacoReducerArg<string>): IMonacoSta
 
     return {
         ...arg.prevState,
-        tmLanguageData: arg.payload.data
+        tmLanguageData: arg.payload.data,
     };
 }
 
@@ -166,7 +166,7 @@ function handleUnmount(arg: MonacoReducerArg): IMonacoState {
     return {
         ...arg.prevState,
         onigasmData: undefined,
-        tmLanguageData: undefined
+        tmLanguageData: undefined,
     };
 }
 
@@ -204,7 +204,7 @@ const reducerMap: IMonacoActionMapping = {
     [InteractiveWindowMessages.ResolveCompletionItemResponse]: handleResolveCompletionItemResponse,
     [CommonActionType.CODE_CREATED]: handleCodeCreated,
     [CommonActionType.EDIT_CELL]: handleEditCell,
-    [CommonActionType.UNMOUNT]: handleUnmount
+    [CommonActionType.UNMOUNT]: handleUnmount,
 };
 
 export function generateMonacoReducer(
@@ -217,7 +217,7 @@ export function generateMonacoReducer(
         tmLanguageData: undefined,
         testMode,
         intellisenseProvider: undefined,
-        postOffice
+        postOffice,
     };
 
     // Then combine that with our map of state change message to reducer

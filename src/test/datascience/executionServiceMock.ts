@@ -12,7 +12,7 @@ import {
     InterpreterInfomation,
     IPythonExecutionService,
     ObservableExecutionResult,
-    SpawnOptions
+    SpawnOptions,
 } from '../../client/common/process/types';
 import { Architecture } from '../../client/common/utils/platform';
 
@@ -30,7 +30,7 @@ export class MockPythonExecutionService implements IPythonExecutionService {
             version: new SemVer('3.6.0-beta'),
             sysVersion: '1.0',
             sysPrefix: '1.0',
-            architecture: Architecture.x64
+            architecture: Architecture.x64,
         });
     }
 

@@ -12,11 +12,11 @@ const config = {
     mode: 'production',
     target: 'node',
     entry: {
-        'debugger/debugAdapter/main': './src/client/debugger/debugAdapter/main.ts'
+        'debugger/debugAdapter/main': './src/client/debugger/debugAdapter/main.ts',
     },
     devtool: 'source-map',
     node: {
-        __dirname: false
+        __dirname: false,
     },
     module: {
         rules: [
@@ -25,33 +25,33 @@ const config = {
                 test: /@jupyterlab[\\\/]services[\\\/].*js$/,
                 use: [
                     {
-                        loader: path.join(__dirname, 'loaders', 'fixNodeFetch.js')
-                    }
-                ]
+                        loader: path.join(__dirname, 'loaders', 'fixNodeFetch.js'),
+                    },
+                ],
             },
             {
                 test: /\.ts$/,
                 exclude: /node_modules/,
                 use: [
                     {
-                        loader: 'ts-loader'
-                    }
-                ]
-            }
-        ]
+                        loader: 'ts-loader',
+                    },
+                ],
+            },
+        ],
     },
     externals: ['vscode', 'commonjs'],
     plugins: [...common.getDefaultPlugins('debugger')],
     resolve: {
         extensions: ['.ts', '.js'],
-        plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })]
+        plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })],
     },
     output: {
         filename: '[name].js',
         path: path.resolve(constants.ExtensionRootDir, 'out', 'client'),
         libraryTarget: 'commonjs2',
-        devtoolModuleFilenameTemplate: '../../[resource-path]'
-    }
+        devtoolModuleFilenameTemplate: '../../[resource-path]',
+    },
 };
 // tslint:disable-next-line:no-default-export
 exports.default = config;

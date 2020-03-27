@@ -38,6 +38,6 @@ export enum ExtensionChannel {
      */
     off = 'off',
     weekly = 'weekly',
-    daily = 'daily'
+    daily = 'daily',
 }
 export type ExtensionChannels = 'off' | 'weekly' | 'daily';

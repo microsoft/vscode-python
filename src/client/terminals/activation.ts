@@ -68,7 +68,7 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         // If we have just one workspace, then pass that as the resource.
         // Until upstream VSC issue is resolved https://github.com/Microsoft/vscode/issues/63052.
         await this.activator.activateEnvironmentInTerminal(terminal, {
-            resource: this.activeResourceService.getActiveResource()
+            resource: this.activeResourceService.getActiveResource(),
         });
     }
 }

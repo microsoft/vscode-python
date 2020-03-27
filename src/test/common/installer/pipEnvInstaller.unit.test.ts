@@ -11,7 +11,7 @@ import {
     IInterpreterLocatorService,
     InterpreterType,
     PIPENV_SERVICE,
-    PythonInterpreter
+    PythonInterpreter,
 } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -24,7 +24,7 @@ suite('PipEnv installer', async () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         locatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(PIPENV_SERVICE)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(PIPENV_SERVICE)))
             .returns(() => locatorService.object);
         pipEnvInstaller = new PipEnvInstaller(serviceContainer.object);
     });
@@ -39,7 +39,7 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Pipenv interpreter, method isSupported() returns true', async () => {
         const interpreter = {
-            type: InterpreterType.Pipenv
+            type: InterpreterType.Pipenv,
         };
         // tslint:disable-next-line: no-any
         const result = await pipEnvInstaller.isSupported(interpreter as any);
@@ -48,7 +48,7 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Python interpreter but not of type Pipenv, method isSupported() returns false', async () => {
         const interpreter = {
-            type: InterpreterType.Conda
+            type: InterpreterType.Conda,
         };
         // tslint:disable-next-line: no-any
         const result = await pipEnvInstaller.isSupported(interpreter as any);
@@ -58,11 +58,11 @@ suite('PipEnv installer', async () => {
     test('If InterpreterUri is Resource, and if resource contains pipEnv interpreters, return true', async () => {
         const resource = Uri.parse('a');
         locatorService
-            .setup(p => p.getInterpreters(resource))
+            .setup((p) => p.getInterpreters(resource))
             .returns(() =>
                 Promise.resolve([
                     TypeMoq.Mock.ofType<PythonInterpreter>().object,
-                    TypeMoq.Mock.ofType<PythonInterpreter>().object
+                    TypeMoq.Mock.ofType<PythonInterpreter>().object,
                 ])
             );
         const result = await pipEnvInstaller.isSupported(resource);
@@ -71,7 +71,7 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Resource, and if resource does not contain pipEnv interpreters, return false', async () => {
         const resource = Uri.parse('a');
-        locatorService.setup(p => p.getInterpreters(resource)).returns(() => Promise.resolve([]));
+        locatorService.setup((p) => p.getInterpreters(resource)).returns(() => Promise.resolve([]));
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(false, 'Should be false');
     });

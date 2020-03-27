@@ -28,7 +28,7 @@ export class SystemWideInterpretersAutoSelectionRule extends BaseRuleService {
         const interpreters = await this.interpreterService.getInterpreters(resource);
         // Exclude non-local interpreters.
         const filteredInterpreters = interpreters.filter(
-            int =>
+            (int) =>
                 int.type !== InterpreterType.VirtualEnv &&
                 int.type !== InterpreterType.Venv &&
                 int.type !== InterpreterType.Pipenv

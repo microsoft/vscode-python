@@ -39,7 +39,7 @@ class MockSocketCallbackHandler extends SocketCallbackHandler {
         const stringBuffer = new Buffer(message);
         const buffer = Buffer.concat([
             Buffer.concat([new Buffer('U'), uint64be.encode(stringBuffer.byteLength)]),
-            stringBuffer
+            stringBuffer,
         ]);
         this.stream.Write(buffer);
     }
@@ -137,7 +137,7 @@ class MockSocketClient {
                     const errorMessage = `Received unknown command '${cmdId}'`;
                     const errorBuffer = Buffer.concat([
                         Buffer.concat([new Buffer('A'), uint64be.encode(errorMessage.length)]),
-                        new Buffer(errorMessage)
+                        new Buffer(errorMessage),
                     ]);
                     this.SocketStream.Write(errorBuffer);
                     return;
@@ -148,7 +148,7 @@ class MockSocketClient {
                 const messageBuffer = new Buffer(message);
                 const pongBuffer = Buffer.concat([
                     Buffer.concat([new Buffer('U'), uint64be.encode(messageBuffer.byteLength)]),
-                    messageBuffer
+                    messageBuffer,
                 ]);
                 this.SocketStream.Write(pongBuffer);
             } catch (ex) {
@@ -157,7 +157,7 @@ class MockSocketClient {
                 const errorMessage = `Fatal error in handling data at socket client. Error: ${ex.message}`;
                 const errorBuffer = Buffer.concat([
                     Buffer.concat([new Buffer('A'), uint64be.encode(errorMessage.length)]),
-                    new Buffer(errorMessage)
+                    new Buffer(errorMessage),
                 ]);
                 this.SocketStream.Write(errorBuffer);
             }

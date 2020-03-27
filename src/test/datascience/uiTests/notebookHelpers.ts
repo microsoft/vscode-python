@@ -37,7 +37,7 @@ async function createNotebookFileWithContents(contents: string, disposables: IDi
             } catch {
                 noop();
             }
-        }
+        },
     });
     await fs.writeFile(notebookFile.filePath, contents);
     return notebookFile.filePath;
@@ -47,7 +47,7 @@ function createWebViewPanel(): WebviewPanel {
     const disposeEventEmitter = new EventEmitter<void>();
     const webViewPanel: Partial<WebviewPanel> = {
         webview: {
-            html: ''
+            html: '',
             // tslint:disable-next-line: no-any
         } as any,
         reveal: noop,
@@ -58,11 +58,11 @@ function createWebViewPanel(): WebviewPanel {
         active: true,
         options: {},
         visible: true,
-        viewColumn: ViewColumn.Active
+        viewColumn: ViewColumn.Active,
     };
 
     mockedVSCodeNamespaces.window
-        ?.setup(w =>
+        ?.setup((w) =>
             w.createWebviewPanel(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
         )
         // tslint:disable-next-line: no-any
@@ -90,7 +90,7 @@ export async function openNotebook(
     // I.e. wait until we open the notebook react ui in browser.
     const originalWaitForConnection = WebServer.prototype.waitForConnection;
     const waitForConnection = sinon.stub(WebServer.prototype, 'waitForConnection');
-    waitForConnection.callsFake(async function(this: WebServer) {
+    waitForConnection.callsFake(async function (this: WebServer) {
         waitForConnection.restore();
         // Hook up the message service with the notebook class.
         // Used to send/receive messages (postOffice) via webSockets in webserver.

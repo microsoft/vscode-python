@@ -19,7 +19,7 @@ import { getDefaultSettings } from '../react-common/settingsReactSide';
 export enum CursorPos {
     Top,
     Bottom,
-    Current
+    Current,
 }
 
 export interface ICellViewModel {
@@ -126,7 +126,7 @@ export enum ServerStatus {
     Idle = 'Idle',
     Dead = 'Dead',
     Starting = 'Starting',
-    Restarting = 'Restarting'
+    Restarting = 'Restarting',
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -163,7 +163,7 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         isAtBottom: false,
         font: {
             size: 14,
-            family: "Consolas, 'Courier New', monospace"
+            family: "Consolas, 'Courier New', monospace",
         },
         dirty: false,
         codeTheme: 'Foo',
@@ -175,8 +175,8 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         kernel: {
             localizedUri: 'No Kernel',
             displayName: 'Python',
-            jupyterServerStatus: ServerStatus.NotStarted
-        }
+            jupyterServerStatus: ServerStatus.NotStarted,
+        },
     };
 }
 
@@ -188,7 +188,7 @@ export function createEmptyCell(id: string | undefined, executionCount: number |
         id: id ? id : Identifiers.EditCellId,
         file: Identifiers.EmptyFileName,
         line: 0,
-        state: CellState.finished
+        state: CellState.finished,
     };
 }
 
@@ -204,7 +204,7 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         focused: false,
         cursorPos: CursorPos.Current,
         hasBeenRun: false,
-        scrollCount: 0
+        scrollCount: 0,
     };
 }
 
@@ -224,7 +224,7 @@ export function extractInputText(inputCellVM: ICellViewModel, settings: IDataSci
         }
         // Eliminate the lines to hide if we're debugging
         if (inputCell.extraLines) {
-            inputCell.extraLines.forEach(i => source.splice(i, 1));
+            inputCell.extraLines.forEach((i) => source.splice(i, 1));
             inputCell.extraLines = undefined;
         }
     }
@@ -257,7 +257,7 @@ export function createCellVM(
         cursorPos: CursorPos.Current,
         hasBeenRun: false,
         scrollCount: 0,
-        runDuringDebug
+        runDuringDebug,
     };
 
     // Update the input text
@@ -304,7 +304,7 @@ export function generateTestCells(filePath: string, repetitions: number): ICell[
                 line: 1,
                 state: key === cellData.length - 1 ? CellState.executing : CellState.finished,
                 type: key === 3 ? 'preview' : 'execute',
-                data: data
+                data: data,
             };
         }
     );
@@ -319,8 +319,8 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
             execution_count: 467,
             metadata: {
                 slideshow: {
-                    slide_type: '-'
-                }
+                    slide_type: '-',
+                },
             },
             outputs: [
                 {
@@ -517,13 +517,13 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                           </tbody>
                         </table>
                         <p>5 rows × 3000 columns</p>
-                        </div>`
-                        ]
+                        </div>`,
+                        ],
                     },
                     execution_count: 4,
                     metadata: {},
-                    output_type: 'execute_result'
-                }
+                    output_type: 'execute_result',
+                },
             ],
             source: [
                 'myvar = """ # Lorem Ipsum\n',
@@ -534,13 +534,13 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                 'Nunc quis orci ante. Vivamus vel blandit velit.\n","Sed mattis dui diam, et blandit augue mattis vestibulum.\n',
                 'Suspendisse ornare interdum velit. Suspendisse potenti.\n',
                 'Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.\n',
-                '"""'
-            ]
+                '"""',
+            ],
         },
         {
             cell_type: 'markdown',
             metadata: {},
-            source: ['## Cell 3\n', "Here's some markdown\n", '- A List\n', '- Of Items']
+            source: ['## Cell 3\n', "Here's some markdown\n", '- A List\n', '- Of Items'],
         },
         {
             cell_type: 'code',
@@ -555,11 +555,11 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                         '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
                         '\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
                         '\u001b[1;32m<ipython-input-1-00cf07b74dcd>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m()\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mdf\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m',
-                        '\u001b[1;31mNameError\u001b[0m: name "df" is not defined'
-                    ]
-                }
+                        '\u001b[1;31mNameError\u001b[0m: name "df" is not defined',
+                    ],
+                },
             ],
-            source: ['df']
+            source: ['df'],
         },
         {
             cell_type: 'code',
@@ -574,11 +574,11 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                         '\u001b[1;31m---------------------------------------------------------------------------\u001b[0m',
                         '\u001b[1;31mNameError\u001b[0m                                 Traceback (most recent call last)',
                         '\u001b[1;32m<ipython-input-1-00cf07b74dcd>\u001b[0m in \u001b[0;36m<module>\u001b[1;34m()\u001b[0m\n\u001b[1;32m----> 1\u001b[1;33m \u001b[0mdf\u001b[0m\u001b[1;33m\u001b[0m\u001b[0m\n\u001b[0m',
-                        '\u001b[1;31mNameError\u001b[0m: name "df" is not defined'
-                    ]
-                }
+                        '\u001b[1;31mNameError\u001b[0m: name "df" is not defined',
+                    ],
+                },
             ],
-            source: ['df']
-        }
+            source: ['df'],
+        },
     ];
 }

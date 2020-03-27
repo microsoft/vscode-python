@@ -23,7 +23,7 @@ import { JupyterInstallError } from '../jupyterInstallError';
 import { JupyterKernelSpec, parseKernelSpecs } from '../kernels/jupyterKernelSpec';
 import {
     getMessageForLibrariesNotInstalled,
-    JupyterInterpreterDependencyService
+    JupyterInterpreterDependencyService,
 } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
 
@@ -112,7 +112,7 @@ export class JupyterInterpreterSubCommandExecutionService
         );
         const executionService = await this.pythonExecutionFactory.createDaemon({
             daemonModule: PythonDaemonModule,
-            pythonPath: interpreter.path
+            pythonPath: interpreter.path,
         });
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), options);
     }
@@ -121,7 +121,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         const daemon = await this.pythonExecutionFactory.createDaemon({
             daemonModule: PythonDaemonModule,
-            pythonPath: interpreter.path
+            pythonPath: interpreter.path,
         });
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
@@ -147,7 +147,7 @@ export class JupyterInterpreterSubCommandExecutionService
 
         const daemon = await this.pythonExecutionFactory.createDaemon({
             daemonModule: PythonDaemonModule,
-            pythonPath: interpreter.path
+            pythonPath: interpreter.path,
         });
         // Wait for the nbconvert to finish
         const args = template
@@ -157,7 +157,7 @@ export class JupyterInterpreterSubCommandExecutionService
         // stdout contains the generated python code.
         return daemon
             .execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: false, encoding: 'utf8', token })
-            .then(output => output.stdout);
+            .then((output) => output.stdout);
     }
     public async openNotebook(notebookFile: string): Promise<void> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable();
@@ -165,7 +165,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
             interpreter,
             bypassCondaExecution: true,
-            allowEnvironmentFetchExceptions: true
+            allowEnvironmentFetchExceptions: true,
         });
         const args: string[] = [`--NotebookApp.file_to_run=${notebookFile}`];
 
@@ -179,7 +179,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         const daemon = await this.pythonExecutionFactory.createDaemon({
             daemonModule: PythonDaemonModule,
-            pythonPath: interpreter.path
+            pythonPath: interpreter.path,
         });
         if (Cancellation.isCanceled(token)) {
             return [];
@@ -190,8 +190,8 @@ export class JupyterInterpreterSubCommandExecutionService
             // Ask for our current list.
             const stdoutFromDaemonPromise = await daemon
                 .execModule('jupyter', ['kernelspec', 'list', '--json'], spawnOptions)
-                .then(output => output.stdout)
-                .catch(daemonEx => {
+                .then((output) => output.stdout)
+                .catch((daemonEx) => {
                     sendTelemetryEvent(Telemetry.KernelSpecNotFound);
                     traceError('Failed to list kernels from daemon', daemonEx);
                     return '';
@@ -205,22 +205,22 @@ export class JupyterInterpreterSubCommandExecutionService
                             'pythonFiles',
                             'vscode_datascience_helpers',
                             'getJupyterKernels.py'
-                        )
+                        ),
                     ],
                     spawnOptions
                 )
-                .then(output => output.stdout)
-                .catch(fileEx => {
+                .then((output) => output.stdout)
+                .catch((fileEx) => {
                     traceError('Failed to list kernels from getJupyterKernels.py', fileEx);
                     return '';
                 });
 
             const [stdoutFromDaemon, stdoutFromFileExec] = await Promise.all([
                 stdoutFromDaemonPromise,
-                stdoutFromFileExecPromise
+                stdoutFromFileExecPromise,
             ]);
 
-            return parseKernelSpecs(stdoutFromDaemon || stdoutFromFileExec, this.fs, token).catch(parserError => {
+            return parseKernelSpecs(stdoutFromDaemon || stdoutFromFileExec, this.fs, token).catch((parserError) => {
                 traceError('Failed to parse kernelspecs', parserError);
                 // This is failing for some folks. In that case return nothing
                 return [];

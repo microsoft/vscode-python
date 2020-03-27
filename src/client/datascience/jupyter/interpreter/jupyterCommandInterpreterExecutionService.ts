@@ -81,7 +81,7 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
         const [interpreter, activeInterpreter] = await Promise.all([
             this.getSelectedInterpreter(token),
-            this.interpreterService.getActiveInterpreter(undefined)
+            this.interpreterService.getActiveInterpreter(undefined),
         ]);
         if (!interpreter) {
             return;
@@ -92,12 +92,12 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
         const daemon = await (isActiveInterpreter
             ? this.pythonExecutionFactory.createDaemon({
                   daemonModule: PythonDaemonModule,
-                  pythonPath: interpreter.path
+                  pythonPath: interpreter.path,
               })
             : this.pythonExecutionFactory.createActivatedEnvironment({
                   allowEnvironmentFetchExceptions: true,
                   interpreter,
-                  bypassCondaExecution: true
+                  bypassCondaExecution: true,
               }));
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
@@ -128,7 +128,7 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
             : [file, '--to', 'python', '--stdout'];
         return convert.command
             .exec(args, { throwOnStdErr: false, encoding: 'utf8', token })
-            .then(output => output.stdout);
+            .then((output) => output.stdout);
     }
     public async openNotebook(notebookFile: string): Promise<void> {
         // First we find a way to start a notebook server
@@ -159,10 +159,10 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
             // Ask for our current list.
             const output = await kernelSpecCommand.command.exec(['list', '--json'], {
                 throwOnStdErr: true,
-                encoding: 'utf8'
+                encoding: 'utf8',
             });
 
-            return parseKernelSpecs(output.stdout, this.fs, token).catch(parserError => {
+            return parseKernelSpecs(output.stdout, this.fs, token).catch((parserError) => {
                 traceError('Failed to parse kernelspecs', parserError);
                 // This is failing for some folks. In that case return nothing
                 return [];

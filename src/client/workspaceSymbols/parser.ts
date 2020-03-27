@@ -99,7 +99,7 @@ const newValuesAndKeys = {};
 CTagKinMapping.forEach((value, key) => {
     (newValuesAndKeys as any)[key.substring(1)] = value;
 });
-Object.keys(newValuesAndKeys).forEach(key => {
+Object.keys(newValuesAndKeys).forEach((key) => {
     CTagKinMapping.set(key, (newValuesAndKeys as any)[key]);
 });
 
@@ -110,7 +110,7 @@ export function parseTags(
     token: vscode.CancellationToken,
     fs: IFileSystem
 ): Promise<ITag[]> {
-    return fs.fileExists(tagFile).then(exists => {
+    return fs.fileExists(tagFile).then((exists) => {
         if (!exists) {
             return Promise.resolve([]);
         }
@@ -167,6 +167,6 @@ function parseTagsLine(workspaceFolder: string, line: string, searchPattern: str
         code: match.code,
         position: new vscode.Position(Number(match.line) - 1, 0),
         symbolName: match.name,
-        symbolKind: symbolKind
+        symbolKind: symbolKind,
     };
 }

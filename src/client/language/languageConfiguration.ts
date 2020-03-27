@@ -21,8 +21,8 @@ export function getLanguageConfiguration(): LanguageConfiguration {
                     $
                 `),
                 action: {
-                    indentAction: IndentAction.Indent
-                }
+                    indentAction: IndentAction.Indent,
+                },
             },
             // continue comments
             {
@@ -30,8 +30,8 @@ export function getLanguageConfiguration(): LanguageConfiguration {
                 afterText: /.+$/,
                 action: {
                     indentAction: IndentAction.None,
-                    appendText: '# '
-                }
+                    appendText: '# ',
+                },
             },
             // indent on enter (block-beginning statements)
             {
@@ -74,8 +74,8 @@ export function getLanguageConfiguration(): LanguageConfiguration {
                     $
                 `),
                 action: {
-                    indentAction: IndentAction.Indent
-                }
+                    indentAction: IndentAction.Indent,
+                },
             },
             // outdent on enter (block-ending statements)
             {
@@ -103,12 +103,12 @@ export function getLanguageConfiguration(): LanguageConfiguration {
                     $
                 `),
                 action: {
-                    indentAction: IndentAction.Outdent
-                }
-            }
+                    indentAction: IndentAction.Outdent,
+                },
+            },
             // Note that we do not currently have an auto-dedent
             // solution for "elif", "else", "except", and "finally".
             // We had one but had to remove it (see issue #6886).
-        ]
+        ],
     };
 }

@@ -69,7 +69,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
         }
     }
     public dispose(): void | undefined {
-        this.disposables.filter(item => !!item).forEach(item => item.dispose());
+        this.disposables.filter((item) => !!item).forEach((item) => item.dispose());
         this.clearTimeout();
     }
     private onNotebookModified(_: INotebookEditor) {
@@ -89,7 +89,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
         if (!uri) {
             return;
         }
-        return this.notebookEditorProvider.editors.find(item =>
+        return this.notebookEditorProvider.editors.find((item) =>
             this.fileSystem.arePathsSame(item.file.fsPath, uri.fsPath)
         );
     }
@@ -97,7 +97,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
         const filesConfig = this.workspace.getConfiguration('files', this.notebookUri);
         return {
             autoSave: filesConfig.get('autoSave', 'off'),
-            autoSaveDelay: filesConfig.get('autoSaveDelay', 1000)
+            autoSaveDelay: filesConfig.get('autoSaveDelay', 1000),
         };
     }
     private onSettingsChanded(e: ConfigurationChangeEvent) {

@@ -63,12 +63,12 @@ suite('Debug - Child Process', () => {
                 arguments: {
                     type: 'python',
                     name: '',
-                    request: 'attach'
+                    request: 'attach',
                 },
                 command: 'attach',
                 seq: 0,
-                type: 'python'
-            }
+                type: 'python',
+            },
         };
         const session: any = {};
         when(attachService.attach(body, session)).thenThrow(new Error('Kaboom'));

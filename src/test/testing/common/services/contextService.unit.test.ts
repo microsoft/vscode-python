@@ -13,7 +13,7 @@ import { TestCollectionStorageService } from '../../../../client/testing/common/
 import {
     ITestCollectionStorageService,
     ITestContextService,
-    TestStatus
+    TestStatus,
 } from '../../../../client/testing/common/types';
 import { UnitTestManagementService } from '../../../../client/testing/main';
 import { ITestManagementService, WorkspaceTestStatus } from '../../../../client/testing/types';

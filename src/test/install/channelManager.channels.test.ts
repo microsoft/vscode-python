@@ -13,13 +13,13 @@ import { Product } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import {
     IInterpreterLocatorService,
     InterpreterType,
     PIPENV_SERVICE,
-    PythonInterpreter
+    PythonInterpreter,
 } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -35,7 +35,7 @@ const info: PythonInterpreter = {
     type: InterpreterType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: ''
+    sysVersion: '',
 };
 
 // tslint:disable-next-line:max-func-body-length
@@ -93,9 +93,9 @@ suite('Installation - installation channels', () => {
         const interpreter: PythonInterpreter = {
             ...info,
             path: 'pipenv',
-            type: InterpreterType.VirtualEnv
+            type: InterpreterType.VirtualEnv,
         };
-        pipEnv.setup(x => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([interpreter]));
+        pipEnv.setup((x) => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([interpreter]));
 
         const cm = new InstallationChannelManager(serviceContainer);
         const channels = await cm.getInstallationChannels();
@@ -113,7 +113,7 @@ suite('Installation - installation channels', () => {
         // tslint:disable-next-line:no-any
         let items: any[] | undefined;
         appShell
-            .setup(x => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((x) => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .callback((i: string[], _o: QuickPickOptions) => {
                 items = i;
             })
@@ -121,8 +121,8 @@ suite('Installation - installation channels', () => {
                 () => new Promise<string | undefined>((resolve, _reject) => resolve(undefined))
             );
 
-        installer1.setup(x => x.displayName).returns(() => 'Name 1');
-        installer2.setup(x => x.displayName).returns(() => 'Name 2');
+        installer1.setup((x) => x.displayName).returns(() => 'Name 1');
+        installer2.setup((x) => x.displayName).returns(() => 'Name 2');
 
         const cm = new InstallationChannelManager(serviceContainer);
         await cm.getInstallationChannel(Product.pylint);
@@ -136,11 +136,11 @@ suite('Installation - installation channels', () => {
     function mockInstaller(supported: boolean, name: string, priority?: number): TypeMoq.IMock<IModuleInstaller> {
         const installer = TypeMoq.Mock.ofType<IModuleInstaller>();
         installer
-            .setup(x => x.isSupported(TypeMoq.It.isAny()))
+            .setup((x) => x.isSupported(TypeMoq.It.isAny()))
             .returns(
-                () => new Promise<boolean>(resolve => resolve(supported))
+                () => new Promise<boolean>((resolve) => resolve(supported))
             );
-        installer.setup(x => x.priority).returns(() => (priority ? priority : 0));
+        installer.setup((x) => x.priority).returns(() => (priority ? priority : 0));
         serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, installer.object, name);
         return installer;
     }

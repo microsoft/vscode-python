@@ -41,7 +41,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
      */
     public registerCommTarget(targetName: string, callback: CommTargetCallback): void {
         this.commRegistrationMessagesToSend.push(targetName);
-        this.handlers.forEach(handler => handler(targetName, callback));
+        this.handlers.forEach((handler) => handler(targetName, callback));
         this.commTargetCallbacks.set(targetName, callback);
     }
     public connectToComm(targetName: string, commId: string = uuid()): Kernel.IComm {
@@ -55,7 +55,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         this.pendingCommInfoResponses.set(requestId, promiseHolder);
         this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_RequestCommInfo_request, {
             requestId,
-            msg: content
+            msg: content,
         });
         return promiseHolder.promise;
     }
@@ -79,7 +79,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         }
     }
     public initialize(): void {
-        this.commRegistrationMessagesToSend.forEach(targetName =>
+        this.commRegistrationMessagesToSend.forEach((targetName) =>
             this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_registerCommTarget, targetName)
         );
         this.commRegistrationMessagesToSend = [];
@@ -161,7 +161,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                         requestId: args.requestId,
                         parentId: args.parentId,
                         msgType: args.msg.header.msg_type,
-                        result: r
+                        result: r,
                     });
                 });
             } else {
@@ -169,7 +169,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                     requestId: args.requestId,
                     parentId: args.parentId,
                     msgType: args.msg.header.msg_type,
-                    result: result === true
+                    result: result === true,
                 });
             }
         } else {
@@ -178,7 +178,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                 requestId: args.requestId,
                 parentId: args.parentId,
                 msgType: args.msg.header.msg_type,
-                result: true
+                result: true,
             });
         }
     }

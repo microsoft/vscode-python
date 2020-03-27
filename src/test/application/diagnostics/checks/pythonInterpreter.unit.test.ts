@@ -11,19 +11,19 @@ import { BaseDiagnosticsService } from '../../../../client/application/diagnosti
 import { InvalidLaunchJsonDebuggerDiagnostic } from '../../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
 import {
     InvalidPythonInterpreterDiagnostic,
-    InvalidPythonInterpreterService
+    InvalidPythonInterpreterService,
 } from '../../../../client/application/diagnostics/checks/pythonInterpreter';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import {
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
     IDiagnostic,
     IDiagnosticCommand,
     IDiagnosticHandlerService,
-    IDiagnosticsService
+    IDiagnosticsService,
 } from '../../../../client/application/diagnostics/types';
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { IPlatformService } from '../../../../client/common/platform/types';
@@ -46,7 +46,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         messageHandler = typemoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
         serviceContainer
-            .setup(s =>
+            .setup((s) =>
                 s.get(
                     typemoq.It.isValue(IDiagnosticHandlerService),
                     typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)
@@ -55,24 +55,26 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             .returns(() => messageHandler.object);
         commandFactory = typemoq.Mock.ofType<IDiagnosticsCommandFactory>();
         serviceContainer
-            .setup(s => s.get(typemoq.It.isValue(IDiagnosticsCommandFactory)))
+            .setup((s) => s.get(typemoq.It.isValue(IDiagnosticsCommandFactory)))
             .returns(() => commandFactory.object);
         settings = typemoq.Mock.ofType<IPythonSettings>();
-        settings.setup(s => s.pythonPath).returns(() => pythonPath);
+        settings.setup((s) => s.pythonPath).returns(() => pythonPath);
         const configService = typemoq.Mock.ofType<IConfigurationService>();
-        configService.setup(c => c.getSettings(typemoq.It.isAny())).returns(() => settings.object);
+        configService.setup((c) => c.getSettings(typemoq.It.isAny())).returns(() => settings.object);
         serviceContainer
-            .setup(s => s.get(typemoq.It.isValue(IConfigurationService)))
+            .setup((s) => s.get(typemoq.It.isValue(IConfigurationService)))
             .returns(() => configService.object);
         interpreterService = typemoq.Mock.ofType<IInterpreterService>();
         serviceContainer
-            .setup(s => s.get(typemoq.It.isValue(IInterpreterService)))
+            .setup((s) => s.get(typemoq.It.isValue(IInterpreterService)))
             .returns(() => interpreterService.object);
         platformService = typemoq.Mock.ofType<IPlatformService>();
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+        serviceContainer
+            .setup((s) => s.get(typemoq.It.isValue(IPlatformService)))
+            .returns(() => platformService.object);
         helper = typemoq.Mock.ofType<IInterpreterHelper>();
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IInterpreterHelper))).returns(() => helper.object);
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
+        serviceContainer.setup((s) => s.get(typemoq.It.isValue(IInterpreterHelper))).returns(() => helper.object);
+        serviceContainer.setup((s) => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         return serviceContainer.object;
     }
     suite('Diagnostics', () => {
@@ -93,11 +95,11 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         test('Can handle InvalidPythonPathInterpreter diagnostics', async () => {
             for (const code of [
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
-                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic
+                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
             ]) {
                 const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
                 diagnostic
-                    .setup(d => d.code)
+                    .setup((d) => d.code)
                     .returns(() => code)
                     .verifiable(typemoq.Times.atLeastOnce());
 
@@ -109,7 +111,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         test('Can not handle non-InvalidPythonPathInterpreter diagnostics', async () => {
             const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
             diagnostic
-                .setup(d => d.code)
+                .setup((d) => d.code)
                 .returns(() => 'Something Else' as any)
                 .verifiable(typemoq.Times.atLeastOnce());
 
@@ -119,7 +121,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         });
         test('Should return empty diagnostics if installer check is disabled', async () => {
             settings
-                .setup(s => s.disableInstallationChecks)
+                .setup((s) => s.disableInstallationChecks)
                 .returns(() => true)
                 .verifiable(typemoq.Times.once());
 
@@ -129,11 +131,11 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         });
         test('Should return diagnostics if there are no interpreters', async () => {
             settings
-                .setup(s => s.disableInstallationChecks)
+                .setup((s) => s.disableInstallationChecks)
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup(i => i.hasInterpreters)
+                .setup((i) => i.hasInterpreters)
                 .returns(() => Promise.resolve(false))
                 .verifiable(typemoq.Times.once());
 
@@ -147,15 +149,15 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         });
         test('Should return invalid diagnostics if there are interpreters but no current interpreter', async () => {
             settings
-                .setup(s => s.disableInstallationChecks)
+                .setup((s) => s.disableInstallationChecks)
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup(i => i.hasInterpreters)
+                .setup((i) => i.hasInterpreters)
                 .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup(i => i.getActiveInterpreter(typemoq.It.isAny()))
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve(undefined);
                 })
@@ -167,7 +169,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     new InvalidPythonInterpreterDiagnostic(
                         DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
                         undefined
-                    )
+                    ),
                 ],
                 'not the same'
             );
@@ -176,15 +178,15 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         });
         test('Should return empty diagnostics if there are interpreters and a current interpreter', async () => {
             settings
-                .setup(s => s.disableInstallationChecks)
+                .setup((s) => s.disableInstallationChecks)
                 .returns(() => false)
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup(i => i.hasInterpreters)
+                .setup((i) => i.hasInterpreters)
                 .returns(() => Promise.resolve(true))
                 .verifiable(typemoq.Times.once());
             interpreterService
-                .setup(i => i.getActiveInterpreter(typemoq.It.isAny()))
+                .setup((i) => i.getActiveInterpreter(typemoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve({ type: InterpreterType.Unknown } as any);
                 })
@@ -203,12 +205,12 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             const cmd = ({} as any) as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
-                .setup(i => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
+                .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
                 .callback((_d, p: MessageCommandPrompt) => (messagePrompt = p))
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
             commandFactory
-                .setup(f =>
+                .setup((f) =>
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' })
@@ -232,16 +234,16 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             const cmd = ({} as any) as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
-                .setup(i => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
+                .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
                 .callback((_d, p: MessageCommandPrompt) => (messagePrompt = p))
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
             commandFactory
-                .setup(f =>
+                .setup((f) =>
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand'
+                            type: 'executeVSCCommand',
                         })
                     )
                 )
@@ -254,7 +256,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
-                { prompt: 'Select Python Interpreter', command: cmd }
+                { prompt: 'Select Python Interpreter', command: cmd },
             ]);
         });
         test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
@@ -265,16 +267,16 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             const cmd = ({} as any) as IDiagnosticCommand;
             let messagePrompt: MessageCommandPrompt | undefined;
             messageHandler
-                .setup(i => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
+                .setup((i) => i.handle(typemoq.It.isValue(diagnostic), typemoq.It.isAny()))
                 .callback((_d, p: MessageCommandPrompt) => (messagePrompt = p))
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
             commandFactory
-                .setup(f =>
+                .setup((f) =>
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand'
+                            type: 'executeVSCCommand',
                         })
                     )
                 )
@@ -287,7 +289,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
-                { prompt: 'Select Python Interpreter', command: cmd }
+                { prompt: 'Select Python Interpreter', command: cmd },
             ]);
         });
         test('Handling an empty diagnostic should not show a message nor return a command', async () => {
@@ -295,16 +297,16 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             const cmd = ({} as any) as IDiagnosticCommand;
 
             messageHandler
-                .setup(i => i.handle(typemoq.It.isAny(), typemoq.It.isAny()))
+                .setup((i) => i.handle(typemoq.It.isAny(), typemoq.It.isAny()))
                 .callback((_d, p: MessageCommandPrompt) => p)
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.never());
             commandFactory
-                .setup(f =>
+                .setup((f) =>
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand'
+                            type: 'executeVSCCommand',
                         })
                     )
                 )
@@ -326,18 +328,18 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                 InvalidPythonInterpreterService
             >;
 
-            diagnosticServiceMock.setup(f => f.canHandle(typemoq.It.isAny())).returns(() => Promise.resolve(false));
+            diagnosticServiceMock.setup((f) => f.canHandle(typemoq.It.isAny())).returns(() => Promise.resolve(false));
             messageHandler
-                .setup(i => i.handle(typemoq.It.isAny(), typemoq.It.isAny()))
+                .setup((i) => i.handle(typemoq.It.isAny(), typemoq.It.isAny()))
                 .callback((_d, p: MessageCommandPrompt) => p)
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.never());
             commandFactory
-                .setup(f =>
+                .setup((f) =>
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand'
+                            type: 'executeVSCCommand',
                         })
                     )
                 )
@@ -354,16 +356,16 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             const cmd = ({} as any) as IDiagnosticCommand;
 
             messageHandler
-                .setup(i => i.handle(typemoq.It.isAny(), typemoq.It.isAny()))
+                .setup((i) => i.handle(typemoq.It.isAny(), typemoq.It.isAny()))
                 .callback((_d, p: MessageCommandPrompt) => p)
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.never());
             commandFactory
-                .setup(f =>
+                .setup((f) =>
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand'
+                            type: 'executeVSCCommand',
                         })
                     )
                 )

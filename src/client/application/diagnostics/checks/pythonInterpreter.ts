@@ -19,7 +19,7 @@ const messages = {
     [DiagnosticCodes.NoPythonInterpretersDiagnostic]:
         'Python is not installed. Please download and install Python before using the extension.',
     [DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic]:
-        'No Python interpreter is selected. You need to select a Python interpreter to enable features such as IntelliSense, linting, and debugging.'
+        'No Python interpreter is selected. You need to select a Python interpreter to enable features such as IntelliSense, linting, and debugging.',
 };
 
 export class InvalidPythonInterpreterDiagnostic extends BaseDiagnostic {
@@ -44,7 +44,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
         super(
             [
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
-                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic
+                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
             ],
             serviceContainer,
             disposableRegistry,
@@ -71,7 +71,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                 new InvalidPythonInterpreterDiagnostic(
                     DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
                     resource
-                )
+                ),
             ];
         }
 
@@ -86,7 +86,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             DiagnosticCommandPromptHandlerServiceId
         );
         await Promise.all(
-            diagnostics.map(async diagnostic => {
+            diagnostics.map(async (diagnostic) => {
                 if (!this.canHandle(diagnostic)) {
                     return;
                 }
@@ -104,9 +104,9 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                         prompt: 'Download',
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'launch',
-                            options: 'https://www.python.org/downloads'
-                        })
-                    }
+                            options: 'https://www.python.org/downloads',
+                        }),
+                    },
                 ];
             }
             case DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic: {
@@ -115,9 +115,9 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                         prompt: 'Select Python Interpreter',
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'executeVSCCommand',
-                            options: 'python.setInterpreter'
-                        })
-                    }
+                            options: 'python.setInterpreter',
+                        }),
+                    },
                 ];
             }
             default: {

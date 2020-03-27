@@ -18,7 +18,7 @@ use(chaiAsPromised);
 type PathVar = 'Path' | 'PATH';
 const PATHS = [
     'Path', // Windows
-    'PATH' // non-Windows
+    'PATH', // non-Windows
 ];
 
 suite('Environment Variables Service', () => {
@@ -40,9 +40,9 @@ suite('Environment Variables Service', () => {
         fs.verifyAll();
     }
     function setFile(fileName: string, text: string) {
-        fs.setup(f => f.fileExists(fileName)) // Handle the specific file.
+        fs.setup((f) => f.fileExists(fileName)) // Handle the specific file.
             .returns(() => Promise.resolve(true)); // The file exists.
-        fs.setup(f => f.readFile(fileName)) // Handle the specific file.
+        fs.setup((f) => f.readFile(fileName)) // Handle the specific file.
             .returns(() => Promise.resolve(text)); // Pretend to read from the file.
     }
 
@@ -55,7 +55,7 @@ suite('Environment Variables Service', () => {
         });
 
         test('Custom variables should be undefined with non-existent files', async () => {
-            fs.setup(f => f.fileExists(filename)) // Handle the specific file.
+            fs.setup((f) => f.fileExists(filename)) // Handle the specific file.
                 .returns(() => Promise.resolve(false)); // The file is missing.
 
             const vars = await variablesService.parseFile(filename);
@@ -66,7 +66,7 @@ suite('Environment Variables Service', () => {
 
         test('Custom variables should be undefined when folder name is passed instead of a file name', async () => {
             const dirname = 'x/y/z';
-            fs.setup(f => f.fileExists(dirname)) // Handle the specific "file".
+            fs.setup((f) => f.fileExists(dirname)) // Handle the specific "file".
                 .returns(() => Promise.resolve(false)); // It isn't a "regular" file.
 
             const vars = await variablesService.parseFile(dirname);
@@ -159,11 +159,11 @@ PYTHON=${BINDIR}/python3\n\
         });
     });
 
-    PATHS.map(pathVariable => {
+    PATHS.map((pathVariable) => {
         suite(`mergeVariables() (path var: ${pathVariable})`, () => {
             setup(() => {
                 pathUtils
-                    .setup(pu => pu.getPathVariableName()) // This always gets called.
+                    .setup((pu) => pu.getPathVariableName()) // This always gets called.
                     .returns(() => pathVariable as PathVar); // Pretend we're on a specific platform.
             });
 
@@ -217,11 +217,11 @@ PYTHON=${BINDIR}/python3\n\
         });
     });
 
-    PATHS.map(pathVariable => {
+    PATHS.map((pathVariable) => {
         suite(`appendPath() (path var: ${pathVariable})`, () => {
             setup(() => {
                 pathUtils
-                    .setup(pu => pu.getPathVariableName()) // This always gets called.
+                    .setup((pu) => pu.getPathVariableName()) // This always gets called.
                     .returns(() => pathVariable as PathVar); // Pretend we're on a specific platform.
             });
 
@@ -636,7 +636,7 @@ HAM=$ ... $$ \n\
                 const vars = parseEnvFile('\
 PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
                 ', {
-                    REPO: '/home/user/git/foobar'
+                    REPO: '/home/user/git/foobar',
                 });
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');

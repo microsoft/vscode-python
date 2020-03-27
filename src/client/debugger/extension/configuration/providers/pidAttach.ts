@@ -25,7 +25,7 @@ export class PidAttachDebugConfigurationProvider implements IDebugConfigurationP
             type: DebuggerTypeName,
             request: 'attach',
             // tslint:disable-next-line:no-invalid-template-strings
-            processId: '${command:pickProcess}'
+            processId: '${command:pickProcess}',
         };
         Object.assign(state.config, config);
     }

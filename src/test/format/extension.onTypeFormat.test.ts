@@ -36,11 +36,11 @@ function testFormatting(
     let textDocument: vscode.TextDocument;
     return vscode.workspace
         .openTextDocument(fileToFormat)
-        .then(document => {
+        .then((document) => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
         })
-        .then(_editor => {
+        .then((_editor) => {
             return provider.provideOnTypeFormattingEdits(
                 textDocument,
                 position,
@@ -50,7 +50,7 @@ function testFormatting(
             );
         })
         .then(
-            edits => {
+            (edits) => {
                 assert.equal(edits.length, expectedEdits.length, 'Number of edits not the same');
                 edits.forEach((edit, index) => {
                     const expectedEdit = expectedEdits[index];
@@ -67,7 +67,7 @@ function testFormatting(
                     );
                 });
             },
-            reason => {
+            (reason) => {
                 assert.fail(reason, undefined, 'Type Formatting failed', '');
             }
         );
@@ -78,7 +78,7 @@ suite('Else block with if in first line of file', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['elseBlocksFirstLine2.py', 'elseBlocksFirstLine4.py', 'elseBlocksFirstLineTab.py'].forEach(file => {
+        ['elseBlocksFirstLine2.py', 'elseBlocksFirstLine4.py', 'elseBlocksFirstLineTab.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -104,7 +104,7 @@ suite('Else block with if in first line of file', () => {
             column: 7,
             expectedEdits: [vscode.TextEdit.delete(new vscode.Range(3, 0, 3, 2))],
             formatOptions: { insertSpaces: true, tabSize: 2 },
-            filePath: elseBlockFirstLine2OutFilePath
+            filePath: elseBlockFirstLine2OutFilePath,
         },
         {
             title: 'else block with 4 spaces',
@@ -112,7 +112,7 @@ suite('Else block with if in first line of file', () => {
             column: 9,
             expectedEdits: [vscode.TextEdit.delete(new vscode.Range(3, 0, 3, 4))],
             formatOptions: { insertSpaces: true, tabSize: 4 },
-            filePath: elseBlockFirstLine4OutFilePath
+            filePath: elseBlockFirstLine4OutFilePath,
         },
         {
             title: 'else block with Tab',
@@ -120,15 +120,15 @@ suite('Else block with if in first line of file', () => {
             column: 6,
             expectedEdits: [
                 vscode.TextEdit.delete(new vscode.Range(3, 0, 3, 1)),
-                vscode.TextEdit.insert(new vscode.Position(3, 0), '')
+                vscode.TextEdit.insert(new vscode.Position(3, 0), ''),
             ],
             formatOptions: { insertSpaces: false, tabSize: 4 },
-            filePath: elseBlockFirstLineTabOutFilePath
-        }
+            filePath: elseBlockFirstLineTabOutFilePath,
+        },
     ];
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(testCase.filePath, pos, testCase.expectedEdits, testCase.formatOptions).then(done, done);
         });
@@ -140,7 +140,7 @@ suite('Try blocks with indentation of 2 spaces', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['tryBlocks2.py'].forEach(file => {
+        ['tryBlocks2.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -162,71 +162,71 @@ suite('Try blocks with indentation of 2 spaces', () => {
             title: 'except off by tab',
             line: 6,
             column: 22,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(6, 0, 6, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(6, 0, 6, 2))],
         },
         {
             title: 'except off by one should not be formatted',
             line: 15,
             column: 21,
-            expectedEdits: []
+            expectedEdits: [],
         },
         {
             title: 'except off by tab inside a for loop',
             line: 35,
             column: 13,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(35, 0, 35, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(35, 0, 35, 2))],
         },
         {
             title: 'except off by one inside a for loop should not be formatted',
             line: 47,
             column: 12,
-            expectedEdits: []
+            expectedEdits: [],
         },
         {
             title: 'except IOError: off by tab inside a for loop',
             line: 54,
             column: 19,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(54, 0, 54, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(54, 0, 54, 2))],
         },
         {
             title: 'else: off by tab inside a for loop',
             line: 76,
             column: 9,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(76, 0, 76, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(76, 0, 76, 2))],
         },
         {
             title: 'except ValueError:: off by tab inside a function',
             line: 143,
             column: 22,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(143, 0, 143, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(143, 0, 143, 2))],
         },
         {
             title: 'except ValueError as err: off by one inside a function should not be formatted',
             line: 157,
             column: 25,
-            expectedEdits: []
+            expectedEdits: [],
         },
         {
             title: 'else: off by tab inside function',
             line: 172,
             column: 11,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(172, 0, 172, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(172, 0, 172, 2))],
         },
         {
             title: 'finally: off by tab inside function',
             line: 195,
             column: 12,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(195, 0, 195, 2))]
-        }
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(195, 0, 195, 2))],
+        },
     ];
 
     const formatOptions: vscode.FormattingOptions = {
         insertSpaces: true,
-        tabSize: 2
+        tabSize: 2,
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(tryBlock2OutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });
@@ -238,7 +238,7 @@ suite('Try blocks with indentation of 4 spaces', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['tryBlocks4.py'].forEach(file => {
+        ['tryBlocks4.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -260,71 +260,71 @@ suite('Try blocks with indentation of 4 spaces', () => {
             title: 'except off by tab',
             line: 6,
             column: 22,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(6, 0, 6, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(6, 0, 6, 4))],
         },
         {
             title: 'except off by one should not be formatted',
             line: 15,
             column: 21,
-            expectedEdits: []
+            expectedEdits: [],
         },
         {
             title: 'except off by tab inside a for loop',
             line: 35,
             column: 13,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(35, 0, 35, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(35, 0, 35, 4))],
         },
         {
             title: 'except off by one inside a for loop should not be formatted',
             line: 47,
             column: 12,
-            expectedEdits: []
+            expectedEdits: [],
         },
         {
             title: 'except IOError: off by tab inside a for loop',
             line: 54,
             column: 19,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(54, 0, 54, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(54, 0, 54, 4))],
         },
         {
             title: 'else: off by tab inside a for loop',
             line: 76,
             column: 9,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(76, 0, 76, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(76, 0, 76, 4))],
         },
         {
             title: 'except ValueError:: off by tab inside a function',
             line: 143,
             column: 22,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(143, 0, 143, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(143, 0, 143, 4))],
         },
         {
             title: 'except ValueError as err: off by one inside a function should not be formatted',
             line: 157,
             column: 25,
-            expectedEdits: []
+            expectedEdits: [],
         },
         {
             title: 'else: off by tab inside function',
             line: 172,
             column: 11,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(172, 0, 172, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(172, 0, 172, 4))],
         },
         {
             title: 'finally: off by tab inside function',
             line: 195,
             column: 12,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(195, 0, 195, 4))]
-        }
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(195, 0, 195, 4))],
+        },
     ];
 
     const formatOptions: vscode.FormattingOptions = {
         insertSpaces: true,
-        tabSize: 4
+        tabSize: 4,
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(tryBlock4OutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });
@@ -336,7 +336,7 @@ suite('Try blocks with indentation of Tab', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['tryBlocksTab.py'].forEach(file => {
+        ['tryBlocksTab.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -361,8 +361,8 @@ suite('Try blocks with indentation of Tab', () => {
             column: 22,
             expectedEdits: [
                 vscode.TextEdit.delete(new vscode.Range(6, 0, 6, 2)),
-                vscode.TextEdit.insert(new vscode.Position(6, 0), TAB)
-            ]
+                vscode.TextEdit.insert(new vscode.Position(6, 0), TAB),
+            ],
         },
         {
             title: 'except off by tab inside a for loop',
@@ -370,8 +370,8 @@ suite('Try blocks with indentation of Tab', () => {
             column: 13,
             expectedEdits: [
                 vscode.TextEdit.delete(new vscode.Range(35, 0, 35, 2)),
-                vscode.TextEdit.insert(new vscode.Position(35, 0), TAB)
-            ]
+                vscode.TextEdit.insert(new vscode.Position(35, 0), TAB),
+            ],
         },
         {
             title: 'except IOError: off by tab inside a for loop',
@@ -379,8 +379,8 @@ suite('Try blocks with indentation of Tab', () => {
             column: 19,
             expectedEdits: [
                 vscode.TextEdit.delete(new vscode.Range(54, 0, 54, 2)),
-                vscode.TextEdit.insert(new vscode.Position(54, 0), TAB)
-            ]
+                vscode.TextEdit.insert(new vscode.Position(54, 0), TAB),
+            ],
         },
         {
             title: 'else: off by tab inside a for loop',
@@ -388,8 +388,8 @@ suite('Try blocks with indentation of Tab', () => {
             column: 9,
             expectedEdits: [
                 vscode.TextEdit.delete(new vscode.Range(76, 0, 76, 2)),
-                vscode.TextEdit.insert(new vscode.Position(76, 0), TAB)
-            ]
+                vscode.TextEdit.insert(new vscode.Position(76, 0), TAB),
+            ],
         },
         {
             title: 'except ValueError:: off by tab inside a function',
@@ -397,8 +397,8 @@ suite('Try blocks with indentation of Tab', () => {
             column: 22,
             expectedEdits: [
                 vscode.TextEdit.delete(new vscode.Range(143, 0, 143, 2)),
-                vscode.TextEdit.insert(new vscode.Position(143, 0), TAB)
-            ]
+                vscode.TextEdit.insert(new vscode.Position(143, 0), TAB),
+            ],
         },
         {
             title: 'else: off by tab inside function',
@@ -406,8 +406,8 @@ suite('Try blocks with indentation of Tab', () => {
             column: 11,
             expectedEdits: [
                 vscode.TextEdit.delete(new vscode.Range(172, 0, 172, 3)),
-                vscode.TextEdit.insert(new vscode.Position(172, 0), TAB + TAB)
-            ]
+                vscode.TextEdit.insert(new vscode.Position(172, 0), TAB + TAB),
+            ],
         },
         {
             title: 'finally: off by tab inside function',
@@ -415,18 +415,18 @@ suite('Try blocks with indentation of Tab', () => {
             column: 12,
             expectedEdits: [
                 vscode.TextEdit.delete(new vscode.Range(195, 0, 195, 2)),
-                vscode.TextEdit.insert(new vscode.Position(195, 0), TAB)
-            ]
-        }
+                vscode.TextEdit.insert(new vscode.Position(195, 0), TAB),
+            ],
+        },
     ];
 
     const formatOptions: vscode.FormattingOptions = {
         insertSpaces: false,
-        tabSize: 4
+        tabSize: 4,
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(tryBlockTabOutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });
@@ -438,7 +438,7 @@ suite('Else blocks with indentation of 2 spaces', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['elseBlocks2.py'].forEach(file => {
+        ['elseBlocks2.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -461,95 +461,95 @@ suite('Else blocks with indentation of 2 spaces', () => {
             title: 'elif off by tab',
             line: 4,
             column: 18,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(4, 0, 4, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(4, 0, 4, 2))],
         },
         {
             title: 'elif off by tab',
             line: 7,
             column: 18,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(7, 0, 7, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(7, 0, 7, 2))],
         },
         {
             title: 'elif off by tab again',
             line: 21,
             column: 18,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(21, 0, 21, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(21, 0, 21, 2))],
         },
         {
             title: 'else off by tab',
             line: 38,
             column: 7,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(38, 0, 38, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(38, 0, 38, 2))],
         },
         {
             title: 'else: off by tab inside a for loop',
             line: 47,
             column: 13,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(47, 0, 47, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(47, 0, 47, 2))],
         },
         {
             title: 'else: off by tab inside a try',
             line: 57,
             column: 9,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(57, 0, 57, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(57, 0, 57, 2))],
         },
         {
             title: 'elif off by a tab inside a function',
             line: 66,
             column: 20,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(66, 0, 66, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(66, 0, 66, 2))],
         },
         {
             title: 'elif off by a tab inside a function should not format',
             line: 69,
             column: 20,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(69, 0, 69, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(69, 0, 69, 2))],
         },
         {
             title: 'elif off by a tab inside a function',
             line: 83,
             column: 20,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(83, 0, 83, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(83, 0, 83, 2))],
         },
         {
             title: 'else: off by tab inside if of a for and for in a function',
             line: 109,
             column: 15,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(109, 0, 109, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(109, 0, 109, 2))],
         },
         {
             title: 'else: off by tab inside try in a function',
             line: 119,
             column: 11,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(119, 0, 119, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(119, 0, 119, 2))],
         },
         {
             title: 'else: off by tab inside while in a function',
             line: 134,
             column: 9,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(134, 0, 134, 2))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(134, 0, 134, 2))],
         },
         {
             title: 'elif: off by tab inside if but inline with elif',
             line: 345,
             column: 18,
-            expectedEdits: []
+            expectedEdits: [],
         },
         {
             title: 'elif: off by tab inside if but inline with if',
             line: 359,
             column: 18,
-            expectedEdits: []
-        }
+            expectedEdits: [],
+        },
     ];
 
     const formatOptions: vscode.FormattingOptions = {
         insertSpaces: true,
-        tabSize: 2
+        tabSize: 2,
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(elseBlock2OutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });
@@ -561,7 +561,7 @@ suite('Else blocks with indentation of 4 spaces', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['elseBlocks4.py'].forEach(file => {
+        ['elseBlocks4.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -583,89 +583,89 @@ suite('Else blocks with indentation of 4 spaces', () => {
             title: 'elif off by tab',
             line: 4,
             column: 18,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(4, 0, 4, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(4, 0, 4, 4))],
         },
         {
             title: 'elif off by tab',
             line: 7,
             column: 18,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(7, 0, 7, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(7, 0, 7, 4))],
         },
         {
             title: 'elif off by tab again',
             line: 21,
             column: 18,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(21, 0, 21, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(21, 0, 21, 4))],
         },
         {
             title: 'else off by tab',
             line: 38,
             column: 7,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(38, 0, 38, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(38, 0, 38, 4))],
         },
         {
             title: 'else: off by tab inside a for loop',
             line: 47,
             column: 13,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(47, 0, 47, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(47, 0, 47, 4))],
         },
         {
             title: 'else: off by tab inside a try',
             line: 57,
             column: 9,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(57, 0, 57, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(57, 0, 57, 4))],
         },
         {
             title: 'elif off by a tab inside a function',
             line: 66,
             column: 20,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(66, 0, 66, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(66, 0, 66, 4))],
         },
         {
             title: 'elif off by a tab inside a function should not format',
             line: 69,
             column: 20,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(69, 0, 69, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(69, 0, 69, 4))],
         },
         {
             title: 'elif off by a tab inside a function',
             line: 83,
             column: 20,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(83, 0, 83, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(83, 0, 83, 4))],
         },
         {
             title: 'else: off by tab inside if of a for and for in a function',
             line: 109,
             column: 15,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(109, 0, 109, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(109, 0, 109, 4))],
         },
         {
             title: 'else: off by tab inside try in a function',
             line: 119,
             column: 11,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(119, 0, 119, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(119, 0, 119, 4))],
         },
         {
             title: 'else: off by tab inside while in a function',
             line: 134,
             column: 9,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(134, 0, 134, 4))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(134, 0, 134, 4))],
         },
         {
             title: 'elif: off by tab inside if but inline with elif',
             line: 345,
             column: 18,
-            expectedEdits: []
-        }
+            expectedEdits: [],
+        },
     ];
 
     const formatOptions: vscode.FormattingOptions = {
         insertSpaces: true,
-        tabSize: 2
+        tabSize: 2,
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(elseBlock4OutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });
@@ -677,7 +677,7 @@ suite('Else blocks with indentation of Tab', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['elseBlocksTab.py'].forEach(file => {
+        ['elseBlocksTab.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -700,89 +700,89 @@ suite('Else blocks with indentation of Tab', () => {
             title: 'elif off by tab',
             line: 4,
             column: 18,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(4, 0, 4, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(4, 0, 4, 1))],
         },
         {
             title: 'elif off by tab',
             line: 7,
             column: 18,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(7, 0, 7, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(7, 0, 7, 1))],
         },
         {
             title: 'elif off by tab again',
             line: 21,
             column: 18,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(21, 0, 21, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(21, 0, 21, 1))],
         },
         {
             title: 'else off by tab',
             line: 38,
             column: 7,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(38, 0, 38, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(38, 0, 38, 1))],
         },
         {
             title: 'else: off by tab inside a for loop',
             line: 47,
             column: 13,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(47, 0, 47, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(47, 0, 47, 1))],
         },
         {
             title: 'else: off by tab inside a try',
             line: 57,
             column: 9,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(57, 0, 57, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(57, 0, 57, 1))],
         },
         {
             title: 'elif off by a tab inside a function',
             line: 66,
             column: 20,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(66, 0, 66, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(66, 0, 66, 1))],
         },
         {
             title: 'elif off by a tab inside a function should not format',
             line: 69,
             column: 20,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(69, 0, 69, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(69, 0, 69, 1))],
         },
         {
             title: 'elif off by a tab inside a function',
             line: 83,
             column: 20,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(83, 0, 83, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(83, 0, 83, 1))],
         },
         {
             title: 'else: off by tab inside if of a for and for in a function',
             line: 109,
             column: 15,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(109, 0, 109, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(109, 0, 109, 1))],
         },
         {
             title: 'else: off by tab inside try in a function',
             line: 119,
             column: 11,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(119, 0, 119, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(119, 0, 119, 1))],
         },
         {
             title: 'else: off by tab inside while in a function',
             line: 134,
             column: 9,
-            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(134, 0, 134, 1))]
+            expectedEdits: [vscode.TextEdit.delete(new vscode.Range(134, 0, 134, 1))],
         },
         {
             title: 'elif: off by tab inside if but inline with elif',
             line: 345,
             column: 18,
-            expectedEdits: []
-        }
+            expectedEdits: [],
+        },
     ];
 
     const formatOptions: vscode.FormattingOptions = {
         insertSpaces: true,
-        tabSize: 2
+        tabSize: 2,
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(elseBlockTabOutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });

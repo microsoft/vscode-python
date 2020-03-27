@@ -53,14 +53,14 @@ suite('Extension API - Debugger', () => {
                 host,
                 '--port',
                 port.toString(),
-                '--wait'
+                '--wait',
             ]);
         } else {
             when(debugAdapterFactory.getRemoteDebuggerArgs(anything())).thenReturn([
                 '--host',
                 host,
                 '--port',
-                port.toString()
+                port.toString(),
             ]);
         }
     }
@@ -75,7 +75,7 @@ suite('Extension API - Debugger', () => {
                 host,
                 '--port',
                 port.toString(),
-                '--wait'
+                '--wait',
             ]);
         } else {
             when(debugAdapterFactory.getRemoteDebuggerArgs(anything())).thenReturn([
@@ -83,7 +83,7 @@ suite('Extension API - Debugger', () => {
                 '--host',
                 host,
                 '--port',
-                port.toString()
+                port.toString(),
             ]);
         }
     }
@@ -132,7 +132,7 @@ suite('Extension API - Debugger', () => {
             ptvsdHost,
             '--port',
             ptvsdPort.toString(),
-            '--wait'
+            '--wait',
         ];
 
         expect(args).to.be.deep.equal(expectedArgs);

@@ -24,13 +24,13 @@ function getEntry(isNotebook) {
     if (isNotebook) {
         return {
             nativeEditor: ['babel-polyfill', `./src/datascience-ui/native-editor/index.tsx`],
-            interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`]
+            interactiveWindow: ['babel-polyfill', `./src/datascience-ui/history-react/index.tsx`],
         };
     }
 
     return {
         plotViewer: ['babel-polyfill', `./src/datascience-ui/plot/index.tsx`],
-        dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`]
+        dataExplorer: ['babel-polyfill', `./src/datascience-ui/data-explorer/index.tsx`],
     };
 }
 
@@ -43,29 +43,29 @@ function getPlugins(isNotebook) {
     if (isNotebook) {
         plugins.push(
             new MonacoWebpackPlugin({
-                languages: [] // force to empty so onigasm will be used
+                languages: [], // force to empty so onigasm will be used
             }),
             new HtmlWebpackPlugin({
                 template: path.join(__dirname, '/nativeOrInteractivePicker.html'),
                 chunks: [],
-                filename: 'index.html'
+                filename: 'index.html',
             }),
             new HtmlWebpackPlugin({
                 template: 'src/datascience-ui/native-editor/index.html',
                 chunks: ['monaco', 'commons', 'nativeEditor'],
-                filename: 'index.nativeEditor.html'
+                filename: 'index.nativeEditor.html',
             }),
             new HtmlWebpackPlugin({
                 template: 'src/datascience-ui/history-react/index.html',
                 chunks: ['monaco', 'commons', 'interactiveWindow'],
-                filename: 'index.interactiveWindow.html'
+                filename: 'index.interactiveWindow.html',
             })
         );
     } else {
         const definePlugin = new webpack.DefinePlugin({
             'process.env': {
-                NODE_ENV: JSON.stringify('production')
-            }
+                NODE_ENV: JSON.stringify('production'),
+            },
         });
 
         plugins.push(
@@ -75,14 +75,14 @@ function getPlugins(isNotebook) {
                     template: 'src/datascience-ui/plot/index.html',
                     indexUrl: `${constants.ExtensionRootDir}/out/1`,
                     chunks: ['commons', 'plotViewer'],
-                    filename: 'index.plotViewer.html'
+                    filename: 'index.plotViewer.html',
                 }),
                 new HtmlWebpackPlugin({
                     template: 'src/datascience-ui/data-explorer/index.html',
                     indexUrl: `${constants.ExtensionRootDir}/out/1`,
                     chunks: ['commons', 'dataExplorer'],
-                    filename: 'index.dataExplorer.html'
-                })
+                    filename: 'index.dataExplorer.html',
+                }),
             ]
         );
     }
@@ -100,7 +100,7 @@ function buildConfiguration(isNotebook) {
         output: {
             path: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
             filename: '[name].js',
-            chunkFilename: `[name].bundle.js`
+            chunkFilename: `[name].bundle.js`,
         },
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
         devtool: isProdBuild ? 'source-map' : 'inline-source-map',
@@ -119,7 +119,7 @@ function buildConfiguration(isNotebook) {
                         name: 'commons',
                         chunks: 'initial',
                         minChunks: isNotebook ? 2 : 1, // We want at least one shared bundle (2 for notebooks, as we want monago split into another).
-                        filename: '[name].initial.bundle.js'
+                        filename: '[name].initial.bundle.js',
                     },
                     // Even though nteract has been split up, some of them are large as nteract alone is large.
                     // This will ensure nteract (just some of the nteract) goes into a separate bundle.
@@ -136,7 +136,7 @@ function buildConfiguration(isNotebook) {
                                 module.resource &&
                                 module.resource.includes(`${path.sep}node_modules${path.sep}@nteract`)
                             );
-                        }
+                        },
                     },
                     // Bundling `plotly` with nteract isn't the best option, as this plotly alone is 6mb.
                     // This will ensure it is in a seprate bundle, hence small files for SSH scenarios.
@@ -151,7 +151,7 @@ function buildConfiguration(isNotebook) {
                             return (
                                 module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}plotly`)
                             );
-                        }
+                        },
                     },
                     // Monaco is a monster. For SSH again, we pull this into a seprate bundle.
                     // This is only a solution for SSH.
@@ -168,14 +168,14 @@ function buildConfiguration(isNotebook) {
                             return (
                                 module.resource && module.resource.includes(`${path.sep}node_modules${path.sep}monaco`)
                             );
-                        }
-                    }
-                }
+                        },
+                    },
+                },
             },
-            chunkIds: 'named'
+            chunkIds: 'named',
         },
         node: {
-            fs: 'empty'
+            fs: 'empty',
         },
         plugins: [
             new FixDefaultImportPlugin(),
@@ -187,24 +187,24 @@ function buildConfiguration(isNotebook) {
                     { from: './**/*theme*.json', to: '.' },
                     {
                         from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
-                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
                     },
                     {
                         from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
-                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
-                    }
+                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder),
+                    },
                 ],
                 { context: 'src' }
             ),
             new webpack.optimize.LimitChunkCountPlugin({
-                maxChunks: 100
+                maxChunks: 100,
             }),
-            ...getPlugins(isNotebook)
+            ...getPlugins(isNotebook),
         ],
         externals: ['log4js'],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.
-            extensions: ['.ts', '.tsx', '.js', '.json', '.svg']
+            extensions: ['.ts', '.tsx', '.js', '.json', '.svg'],
         },
 
         module: {
@@ -216,17 +216,17 @@ function buildConfiguration(isNotebook) {
                         loader: 'awesome-typescript-loader',
                         options: {
                             configFileName,
-                            reportFiles: ['src/datascience-ui/**/*.{ts,tsx}']
-                        }
-                    }
+                            reportFiles: ['src/datascience-ui/**/*.{ts,tsx}'],
+                        },
+                    },
                 },
                 {
                     test: /\.svg$/,
-                    use: ['svg-inline-loader']
+                    use: ['svg-inline-loader'],
                 },
                 {
                     test: /\.css$/,
-                    use: ['style-loader', 'css-loader']
+                    use: ['style-loader', 'css-loader'],
                 },
                 {
                     test: /\.js$/,
@@ -234,9 +234,9 @@ function buildConfiguration(isNotebook) {
                     use: [
                         {
                             loader: path.resolve('./build/webpack/loaders/remarkLoader.js'),
-                            options: {}
-                        }
-                    ]
+                            options: {},
+                        },
+                    ],
                 },
                 {
                     test: /\.json$/,
@@ -245,17 +245,17 @@ function buildConfiguration(isNotebook) {
                     use: [
                         {
                             loader: path.resolve('./build/webpack/loaders/jsonloader.js'),
-                            options: {}
-                        }
-                    ]
+                            options: {},
+                        },
+                    ],
                 },
                 { test: /\.(png|woff|woff2|eot|gif|ttf)$/, loader: 'url-loader?limit=100000' },
                 {
                     test: /\.less$/,
-                    use: ['style-loader', 'css-loader', 'less-loader']
-                }
-            ]
-        }
+                    use: ['style-loader', 'css-loader', 'less-loader'],
+                },
+            ],
+        },
     };
 }
 

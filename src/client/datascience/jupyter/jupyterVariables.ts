@@ -22,7 +22,7 @@ import {
     IJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
-    INotebook
+    INotebook,
 } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 
@@ -87,7 +87,7 @@ export class JupyterVariables implements IJupyterVariables {
         return this.runScript<JSONObject>(notebook, targetVariable, {}, () => this.fetchDataFrameRowsScript, [
             { key: '_VSCode_JupyterValuesColumn', value: localize.DataScience.valuesColumn() },
             { key: '_VSCode_JupyterStartRow', value: start.toString() },
-            { key: '_VSCode_JupyterEndRow', value: end.toString() }
+            { key: '_VSCode_JupyterEndRow', value: end.toString() },
         ]);
     }
 
@@ -138,7 +138,7 @@ export class JupyterVariables implements IJupyterVariables {
         const regexPattern =
             extraReplacements.length === 0
                 ? '_VSCode_JupyterTestValue'
-                : ['_VSCode_JupyterTestValue', ...extraReplacements.map(v => v.key)].join('|');
+                : ['_VSCode_JupyterTestValue', ...extraReplacements.map((v) => v.key)].join('|');
         const replaceRegex = new RegExp(regexPattern, 'g');
 
         // Replace the test value with our current value. Replace start and end as well
@@ -146,7 +146,7 @@ export class JupyterVariables implements IJupyterVariables {
             if (match === '_VSCode_JupyterTestValue') {
                 return variableString;
             } else {
-                const index = extraReplacements.findIndex(v => v.key === match);
+                const index = extraReplacements.findIndex((v) => v.key === match);
                 if (index >= 0) {
                     return extraReplacements[index].value;
                 }
@@ -234,7 +234,7 @@ export class JupyterVariables implements IJupyterVariables {
         if (!result) {
             let query = this.configService
                 .getSettings(notebook.resource)
-                .datascience.variableQueries.find(v => v.language === language);
+                .datascience.variableQueries.find((v) => v.language === language);
             if (!query) {
                 query = Settings.DefaultVariableQuery;
             }
@@ -242,7 +242,7 @@ export class JupyterVariables implements IJupyterVariables {
             // Use the query to generate our regex
             result = {
                 query: query.query,
-                parser: new RegExp(query.parseExpr, 'g')
+                parser: new RegExp(query.parseExpr, 'g'),
             };
             this.languageToQueryMap.set(language, result);
         }
@@ -277,7 +277,7 @@ export class JupyterVariables implements IJupyterVariables {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
                 currentExecutionCount: request.executionCount,
-                variables: (await this.getVariableNamesFromKernel(notebook)).map(n => {
+                variables: (await this.getVariableNamesFromKernel(notebook)).map((n) => {
                     return {
                         name: n,
                         value: undefined,
@@ -286,9 +286,9 @@ export class JupyterVariables implements IJupyterVariables {
                         size: 0,
                         shape: '',
                         count: 0,
-                        truncated: true
+                        truncated: true,
                     };
-                })
+                }),
             };
         }
 
@@ -300,7 +300,7 @@ export class JupyterVariables implements IJupyterVariables {
             executionCount: request.executionCount,
             pageStartIndex: -1,
             pageResponse: [],
-            totalCount: 0
+            totalCount: 0,
         };
 
         // Use the list of names to fetch the page of data

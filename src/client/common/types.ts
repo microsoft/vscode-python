@@ -15,7 +15,7 @@ import {
     ExtensionContext,
     OutputChannel,
     Uri,
-    WorkspaceEdit
+    WorkspaceEdit,
 } from 'vscode';
 import { LanguageServerType } from '../activation/types';
 import { CommandsWithoutArgs } from './application/commands';
@@ -68,13 +68,13 @@ export type ExecutionInfo = {
 export enum LogLevel {
     Information = 'Information',
     Error = 'Error',
-    Warning = 'Warning'
+    Warning = 'Warning',
 }
 
 export enum InstallerResponse {
     Installed,
     Disabled,
-    Ignore
+    Ignore,
 }
 
 export enum ProductType {
@@ -83,7 +83,7 @@ export enum ProductType {
     TestFramework = 'TestFramework',
     RefactoringLibrary = 'RefactoringLibrary',
     WorkspaceSymbols = 'WorkspaceSymbols',
-    DataScience = 'DataScience'
+    DataScience = 'DataScience',
 }
 
 export enum Product {
@@ -109,12 +109,12 @@ export enum Product {
     notebook = 20,
     kernelspec = 21,
     nbconvert = 22,
-    pandas = 23
+    pandas = 23,
 }
 
 export enum ModuleNamePurpose {
     install = 1,
-    run = 2
+    run = 2,
 }
 
 export const IInstaller = Symbol('IInstaller');

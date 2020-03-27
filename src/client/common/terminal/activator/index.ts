@@ -22,7 +22,7 @@ export class TerminalActivator implements ITerminalActivator {
         options?: TerminalActivationOptions
     ): Promise<boolean> {
         const activated = await this.baseActivator.activateEnvironmentInTerminal(terminal, options);
-        this.handlers.forEach(handler =>
+        this.handlers.forEach((handler) =>
             handler
                 .handleActivation(terminal, options?.resource, options?.preserveFocus === true, activated)
                 .ignoreErrors()

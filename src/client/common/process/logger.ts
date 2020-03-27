@@ -37,7 +37,7 @@ export class ProcessLogger implements IProcessLogger {
             info.push(`${Logging.currentWorkingDirectory()} ${this.pathUtils.getDisplayName(options.cwd)}`);
         }
 
-        info.forEach(line => {
+        info.forEach((line) => {
             traceInfo(line);
             this.outputChannel.appendLine(line);
         });

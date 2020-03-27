@@ -29,7 +29,7 @@ suite('Debugging - Configuration Provider File', () => {
             request: 'launch',
             // tslint:disable-next-line:no-invalid-template-strings
             program: '${file}',
-            console: 'integratedTerminal'
+            console: 'integratedTerminal',
         };
 
         expect(state.config).to.be.deep.equal(config);

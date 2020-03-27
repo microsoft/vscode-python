@@ -24,7 +24,7 @@ import {
     IDataScienceErrorHandler,
     IJupyterExecution,
     INotebookEditorProvider,
-    INotebookExporter
+    INotebookExporter,
 } from '../types';
 
 @injectable()
@@ -99,8 +99,8 @@ export class JupyterExporter implements INotebookExporter {
                 name: 'python',
                 codemirror_mode: {
                     name: 'ipython',
-                    version: pythonNumber
-                }
+                    version: pythonNumber,
+                },
             },
             orig_nbformat: 2,
             file_extension: '.py',
@@ -108,7 +108,7 @@ export class JupyterExporter implements INotebookExporter {
             name: 'python',
             npconvert_exporter: 'python',
             pygments_lexer: `ipython${pythonNumber}`,
-            version: pythonNumber
+            version: pythonNumber,
         };
 
         // Create an object for matching cell definitions
@@ -119,7 +119,7 @@ export class JupyterExporter implements INotebookExporter {
             cells: this.pruneCells(cells, matcher),
             nbformat: 4,
             nbformat_minor: 2,
-            metadata: metadata
+            metadata: metadata,
         };
     }
 
@@ -151,7 +151,7 @@ export class JupyterExporter implements INotebookExporter {
                 id: uuid(),
                 file: Identifiers.EmptyFileName,
                 line: 0,
-                state: CellState.finished
+                state: CellState.finished,
             };
 
             return [cell, ...cells];
@@ -182,7 +182,7 @@ export class JupyterExporter implements INotebookExporter {
     private calculateDirectoryChange = async (notebookFile: string, cells: ICell[]): Promise<string | undefined> => {
         // Make sure we don't already have a cell with a ChangeDirectory comment in it.
         let directoryChange: string | undefined;
-        const haveChangeAlready = cells.find(c =>
+        const haveChangeAlready = cells.find((c) =>
             concatMultilineStringInput(c.data.source).includes(CodeSnippits.ChangeDirectoryCommentIdentifier)
         );
         if (!haveChangeAlready) {
@@ -221,9 +221,9 @@ export class JupyterExporter implements INotebookExporter {
         // First filter out sys info cells. Jupyter doesn't understand these
         return (
             cells
-                .filter(c => c.data.cell_type !== 'messages')
+                .filter((c) => c.data.cell_type !== 'messages')
                 // Then prune each cell down to just the cell data.
-                .map(c => this.pruneCell(c, cellMatcher))
+                .map((c) => this.pruneCell(c, cellMatcher))
         );
     };
 
@@ -245,7 +245,7 @@ export class JupyterExporter implements INotebookExporter {
             const array = source
                 .toString()
                 .split('\n')
-                .map(s => `${s}\n`);
+                .map((s) => `${s}\n`);
             if (array.length > 0 && cellMatcher.isCell(array[0])) {
                 return array.slice(1);
             }

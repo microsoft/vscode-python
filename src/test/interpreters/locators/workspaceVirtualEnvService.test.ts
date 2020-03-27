@@ -15,7 +15,7 @@ import { StopWatch } from '../../../client/common/utils/stopWatch';
 import {
     IInterpreterLocatorService,
     IInterpreterWatcherBuilder,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../../client/interpreter/contracts';
 import { WorkspaceVirtualEnvWatcherService } from '../../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -27,7 +27,7 @@ import {
     OSType,
     PYTHON_PATH,
     rootWorkspaceUri,
-    waitForCondition
+    waitForCondition,
 } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
 import { sleep } from '../../core';
@@ -37,7 +37,7 @@ const execAsync = promisify(exec);
 async function run(argv: string[], cwd: string) {
     const cmdline = argv.join(' ');
     const { stderr } = await execAsync(cmdline, {
-        cwd: cwd
+        cwd: cwd,
     });
     if (stderr && stderr.length > 0) {
         throw Error(stderr);
@@ -76,7 +76,7 @@ class Venvs {
 }
 
 const timeoutMs = IS_CI_SERVER ? 60_000 : 15_000;
-suite('Interpreters - Workspace VirtualEnv Service', function() {
+suite('Interpreters - Workspace VirtualEnv Service', function () {
     this.timeout(timeoutMs);
     this.retries(0);
 
@@ -108,7 +108,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function() {
         const envNameToLookFor = path.basename(venvRoot);
         const predicate = async () => {
             const items = await locator.getInterpreters(workspaceUri);
-            return items.some(item => item.envName === envNameToLookFor);
+            return items.some((item) => item.envName === envNameToLookFor);
         };
         const promise = waitForCondition(
             predicate,
@@ -123,7 +123,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function() {
         return venvs.create(envSuffix);
     }
 
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         // skip for Python < 3, no venv support
         if (await isPythonVersionInProcess(undefined, '2')) {
             return this.skip();
@@ -157,7 +157,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function() {
         await waitForInterpreterToBeDetected(env2);
     });
 
-    test('Detect a new Virtual Environment, and other workspace folder must not be affected (multiroot)', async function() {
+    test('Detect a new Virtual Environment, and other workspace folder must not be affected (multiroot)', async function () {
         if (!IS_MULTI_ROOT_TEST) {
             return this.skip();
         }
@@ -167,7 +167,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function() {
 
         const [env1, env2] = await Promise.all([
             createVirtualEnvironment('first3'),
-            createVirtualEnvironment('second3')
+            createVirtualEnvironment('second3'),
         ]);
         await Promise.all([waitForInterpreterToBeDetected(env1), waitForInterpreterToBeDetected(env2)]);
 

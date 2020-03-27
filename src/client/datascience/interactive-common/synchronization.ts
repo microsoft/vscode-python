@@ -1,6 +1,6 @@
 import {
     CommonActionType,
-    CommonActionTypeMapping
+    CommonActionTypeMapping,
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { CssMessages, SharedMessages } from '../messages';
 import { IInteractiveWindowMapping, InteractiveWindowMessages, IPyWidgetMessages } from './interactiveWindowTypes';
@@ -21,7 +21,7 @@ export enum MessageType {
      * Action dispatched to re-broadcast a message across other sessions (live share).
      */
     syncWithLiveShare = 1 << 1,
-    noIdea = 1 << 2
+    noIdea = 1 << 2,
 }
 
 type MessageMapping<T> = {
@@ -193,7 +193,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_RequestCommInfo_request]: MessageType.noIdea,
-    [IPyWidgetMessages.IPyWidgets_RequestCommInfo_reply]: MessageType.noIdea
+    [IPyWidgetMessages.IPyWidgets_RequestCommInfo_reply]: MessageType.noIdea,
 };
 
 /**
@@ -232,6 +232,6 @@ export function shouldRebroadcast(message: keyof IInteractiveWindowMapping): [bo
 
     return [
         (messageType & MessageType.syncAcrossSameNotebooks) > 0 || (messageType & MessageType.syncWithLiveShare) > 0,
-        messageType
+        messageType,
     ];
 }

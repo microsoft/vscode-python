@@ -42,7 +42,7 @@ export class InterpreterLocatorProgressStatubarHandler implements IInterpreterLo
     private createProgress() {
         const progressOptions: ProgressOptions = {
             location: ProgressLocation.Window,
-            title: this.isFirstTimeLoadingInterpreters ? Common.loadingExtension() : Interpreters.refreshing()
+            title: this.isFirstTimeLoadingInterpreters ? Common.loadingExtension() : Interpreters.refreshing(),
         };
         this.isFirstTimeLoadingInterpreters = false;
         this.shell.withProgress(progressOptions, () => {

@@ -15,7 +15,7 @@ suite('Debugging - Protocol Writer', () => {
             transform: (chunk, _encoding, callback) => {
                 dataWritten += (chunk as Buffer).toString('utf8');
                 callback(undefined, chunk);
-            }
+            },
         });
 
         const message = new InitializedEvent();

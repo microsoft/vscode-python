@@ -11,7 +11,7 @@ import { IEditorUtils } from './types';
 enum EditAction {
     Delete,
     Insert,
-    Replace
+    Replace,
 }
 
 const NEW_LINE_LENGTH = EOL.length;
@@ -71,11 +71,11 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
     const textEdits: TextEdit[] = [];
 
     // Add line feeds and build the text edits
-    patches.forEach(p => {
-        p.diffs.forEach(diff => {
+    patches.forEach((p) => {
+        p.diffs.forEach((diff) => {
             diff[1] += EOL;
         });
-        getTextEditsInternal(before, p.diffs, p.start1).forEach(edit => textEdits.push(edit.apply()));
+        getTextEditsInternal(before, p.diffs, p.start1).forEach((edit) => textEdits.push(edit.apply()));
     });
 
     return textEdits;
@@ -86,7 +86,7 @@ export function getWorkspaceEditsFromPatch(
     fs: IFileSystem
 ): WorkspaceEdit {
     const workspaceEdit = new WorkspaceEdit();
-    filePatches.forEach(patch => {
+    filePatches.forEach((patch) => {
         const indexOfAtAt = patch.indexOf('@@');
         if (indexOfAtAt === -1) {
             return;
@@ -94,8 +94,8 @@ export function getWorkspaceEditsFromPatch(
         const fileNameLines = patch
             .substring(0, indexOfAtAt)
             .split(/\r?\n/g)
-            .map(line => line.trim())
-            .filter(line => line.length > 0 && line.toLowerCase().endsWith('.py') && line.indexOf(' a') > 0);
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0 && line.toLowerCase().endsWith('.py') && line.indexOf(' a') > 0);
 
         if (patch.startsWith('---')) {
             // Strip the first two lines
@@ -131,12 +131,12 @@ export function getWorkspaceEditsFromPatch(
         const fileUri = Uri.file(fileName);
 
         // Add line feeds and build the text edits
-        patches.forEach(p => {
-            p.diffs.forEach(diff => {
+        patches.forEach((p) => {
+            p.diffs.forEach((diff) => {
                 diff[1] += EOL;
             });
 
-            getTextEditsInternal(fileSource, p.diffs, p.start1).forEach(edit => {
+            getTextEditsInternal(fileSource, p.diffs, p.start1).forEach((edit) => {
                 switch (edit.action) {
                     case EditAction.Delete:
                         workspaceEdit.delete(fileUri, new Range(edit.start, edit.end));
@@ -161,14 +161,14 @@ export function getTextEdits(before: string, after: string): TextEdit[] {
     const dmp = require('diff-match-patch') as typeof import('diff-match-patch');
     const d = new dmp.diff_match_patch();
     const diffs = d.diff_main(before, after);
-    return getTextEditsInternal(before, diffs).map(edit => edit.apply());
+    return getTextEditsInternal(before, diffs).map((edit) => edit.apply());
 }
 function getTextEditsInternal(before: string, diffs: [number, string][], startLine: number = 0): Edit[] {
     let line = startLine;
     let character = 0;
     const beforeLines = before.split(/\r?\n/g);
     if (line > 0) {
-        beforeLines.filter((_l, i) => i < line).forEach(l => (character += l.length + NEW_LINE_LENGTH));
+        beforeLines.filter((_l, i) => i < line).forEach((l) => (character += l.length + NEW_LINE_LENGTH));
     }
     const edits: Edit[] = [];
     let edit: Edit | null = null;
@@ -369,11 +369,11 @@ export class EditorUtils implements IEditorUtils {
         }
 
         // Add line feeds and build the text edits
-        patches.forEach(p => {
-            p.diffs.forEach(diff => {
+        patches.forEach((p) => {
+            p.diffs.forEach((diff) => {
                 diff[1] += EOL;
             });
-            getTextEditsInternal(originalContents, p.diffs, p.start1).forEach(edit => {
+            getTextEditsInternal(originalContents, p.diffs, p.start1).forEach((edit) => {
                 switch (edit.action) {
                     case EditAction.Delete:
                         workspaceEdit.delete(uri, new Range(edit.start, edit.end));

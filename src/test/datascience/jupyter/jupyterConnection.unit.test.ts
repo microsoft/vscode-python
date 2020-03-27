@@ -40,7 +40,7 @@ suite('Data Science - JupyterConnection', () => {
             port: 1243,
             secure: false,
             token: 'wow',
-            url: 'url'
+            url: 'url',
         },
         {
             base_url: '2',
@@ -51,7 +51,7 @@ suite('Data Science - JupyterConnection', () => {
             port: 4444,
             secure: true,
             token: 'wow2',
-            url: 'url2'
+            url: 'url2',
         },
         {
             base_url: '22',
@@ -62,8 +62,8 @@ suite('Data Science - JupyterConnection', () => {
             port: 555,
             secure: true,
             token: 'wow3',
-            url: 'url23'
-        }
+            url: 'url23',
+        },
     ];
     const expectedServerInfo = dummyServerInfos[1];
 
@@ -73,7 +73,7 @@ suite('Data Science - JupyterConnection', () => {
             dispose: noop,
             out: observableOutput,
             // tslint:disable-next-line: no-any
-            proc: childProc as any
+            proc: childProc as any,
         };
         getServerInfoStub = sinon.stub<[CancellationToken | undefined], JupyterServerInfo[] | undefined>();
         serviceContainer = mock(ServiceContainer);

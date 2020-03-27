@@ -22,7 +22,7 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
 } from '../../client/interpreter/autoSelection/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
@@ -32,7 +32,7 @@ import {
     IInterpreterComparer,
     IInterpreterSelector,
     IPythonPathUpdaterServiceFactory,
-    IPythonPathUpdaterServiceManager
+    IPythonPathUpdaterServiceManager,
 } from '../../client/interpreter/configuration/types';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -58,7 +58,7 @@ import {
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { InterpreterSelectionTip } from '../../client/interpreter/display/interpreterSelectionTip';
@@ -75,18 +75,18 @@ import { CondaEnvService } from '../../client/interpreter/locators/services/cond
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import {
     CurrentPathService,
-    PythonInPathCommandProvider
+    PythonInPathCommandProvider,
 } from '../../client/interpreter/locators/services/currentPathService';
 import {
     GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService
+    GlobalVirtualEnvService,
 } from '../../client/interpreter/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
 import { InterpreterWatcherBuilder } from '../../client/interpreter/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
-    KnownSearchPathsForInterpreters
+    KnownSearchPathsForInterpreters,
 } from '../../client/interpreter/locators/services/KnownPathsService';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from '../../client/interpreter/locators/services/pipEnvServiceHelper';
@@ -94,7 +94,7 @@ import { WindowsRegistryService } from '../../client/interpreter/locators/servic
 import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService
+    WorkspaceVirtualEnvService,
 } from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
@@ -156,12 +156,12 @@ suite('Interpreters - Service Registry', () => {
             [
                 IInterpreterAutoSelectionRule,
                 WindowsRegistryInterpretersAutoSelectionRule,
-                AutoSelectionRule.windowsRegistry
+                AutoSelectionRule.windowsRegistry,
             ],
             [
                 IInterpreterAutoSelectionRule,
                 WorkspaceVirtualEnvInterpretersAutoSelectionRule,
-                AutoSelectionRule.workspaceVirtualEnvs
+                AutoSelectionRule.workspaceVirtualEnvs,
             ],
             [IInterpreterAutoSelectionRule, CachedInterpretersAutoSelectionRule, AutoSelectionRule.cachedInterpreters],
             [IInterpreterAutoSelectionRule, SettingsInterpretersAutoSelectionRule, AutoSelectionRule.settings],
@@ -175,8 +175,8 @@ suite('Interpreters - Service Registry', () => {
 
             [WindowsStoreInterpreter, WindowsStoreInterpreter],
             [InterpreterHashProvider, InterpreterHashProvider],
-            [InterpeterHashProviderFactory, InterpeterHashProviderFactory]
-        ].forEach(mapping => {
+            [InterpeterHashProviderFactory, InterpeterHashProviderFactory],
+        ].forEach((mapping) => {
             verify(serviceManager.addSingleton.apply(serviceManager, mapping as any)).once();
         });
         verify(

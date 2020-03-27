@@ -114,7 +114,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         try {
             sendTelemetryEvent(Telemetry.ShowDataViewer, 0, {
                 rows: output.rowCount ? output.rowCount : 0,
-                columns: output.columns ? output.columns.length : 0
+                columns: output.columns ? output.columns.length : 0,
             });
 
             // Count number of rows to fetch so can send telemetry on how long it took.
@@ -153,7 +153,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
                 return this.postMessage(DataViewerMessages.GetRowsResponse, {
                     rows,
                     start: request.start,
-                    end: request.end
+                    end: request.end,
                 });
             }
         });
@@ -166,7 +166,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             if (e instanceof JupyterDataRateLimitError) {
                 traceError(e);
                 const actionTitle = localize.DataScience.pythonInteractiveHelpLink();
-                this.applicationShell.showErrorMessage(e.toString(), actionTitle).then(v => {
+                this.applicationShell.showErrorMessage(e.toString(), actionTitle).then((v) => {
                     // User clicked on the link, open it.
                     if (v === actionTitle) {
                         this.applicationShell.openUrl(HelpLinks.JupyterDataRateHelpLink);

@@ -30,8 +30,8 @@ export namespace Helpers {
     }
 
     export function firstCodeCellAbove(state: IMainState, cellId: string | undefined) {
-        const codeCells = state.cellVMs.filter(c => c.cell.data.cell_type === 'code');
-        const index = codeCells.findIndex(c => c.cell.id === cellId);
+        const codeCells = state.cellVMs.filter((c) => c.cell.data.cell_type === 'code');
+        const index = codeCells.findIndex((c) => c.cell.id === cellId);
         if (index > 0) {
             return codeCells[index - 1].cell.id;
         }
@@ -91,16 +91,16 @@ export namespace Helpers {
                     state: arg.payload.data.state,
                     data: {
                         ...arg.payload.data.data,
-                        source: newVMs[index].cell.data.source
-                    }
-                }
+                        source: newVMs[index].cell.data.source,
+                    },
+                },
             };
             newVMs[index] = asCellViewModel(newVM);
 
             return {
                 ...arg.prevState,
                 cellVMs: newVMs,
-                currentExecutionCount: newExecutionCount
+                currentExecutionCount: newExecutionCount,
             };
         } else {
             // This is an entirely new cell (it may have started out as finished)
@@ -110,7 +110,7 @@ export namespace Helpers {
                 ...arg.prevState,
                 cellVMs: newVMs,
                 undoStack: pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
-                currentExecutionCount: newExecutionCount
+                currentExecutionCount: newExecutionCount,
             };
         }
     }

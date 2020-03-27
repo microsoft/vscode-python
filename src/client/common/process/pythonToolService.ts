@@ -11,7 +11,7 @@ import {
     IPythonExecutionFactory,
     IPythonToolExecutionService,
     ObservableExecutionResult,
-    SpawnOptions
+    SpawnOptions,
 } from './types';
 
 @injectable()

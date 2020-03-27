@@ -15,7 +15,7 @@ import { DebugClient, DebugType } from './DebugClient';
 enum DebugServerStatus {
     Unknown = 1,
     Running = 2,
-    NotRunning = 3
+    NotRunning = 3,
 }
 
 export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
@@ -85,7 +85,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                 case 'externalTerminal':
                 case 'integratedTerminal': {
                     const isSudo =
-                        Array.isArray(this.args.debugOptions) && this.args.debugOptions.some(opt => opt === 'Sudo');
+                        Array.isArray(this.args.debugOptions) && this.args.debugOptions.some((opt) => opt === 'Sudo');
                     this.launchExternalTerminal(isSudo, processCwd, pythonPath, args, envVars)
                         .then(resolve)
                         .catch(reject);
@@ -99,14 +99,14 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                     // Only once connected do we know that the application has successfully launched.
                     this.debugServer!.DebugClientConnected.then(resolve)
                         // tslint:disable-next-line: no-console
-                        .catch(ex => console.error('Python Extension: debugServer.DebugClientConnected', ex));
+                        .catch((ex) => console.error('Python Extension: debugServer.DebugClientConnected', ex));
                 }
             }
         });
     }
     // tslint:disable-next-line:member-ordering
     protected handleProcessOutput(proc: ChildProcess, failedToLaunch: (error: Error | string | Buffer) => void) {
-        proc.on('error', error => {
+        proc.on('error', (error) => {
             // If debug server has started, then don't display errors.
             // The debug adapter will get this info from the debugger (e.g. ptvsd lib).
             const status = this.debugServerStatus;
@@ -121,7 +121,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
         });
         proc.stderr.setEncoding('utf8');
         proc.stderr.on('data', noop);
-        proc.stdout.on('data', _ => {
+        proc.stdout.on('data', (_) => {
             // This is necessary so we read the stdout of the python process,
             // Else it just keep building up (related to issue #203 and #52).
             // tslint:disable-next-line:prefer-const no-unused-variable
@@ -159,9 +159,9 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                     title: 'Python Debug Console',
                     cwd,
                     args: [command].concat(commandArgs),
-                    env
+                    env,
                 };
-                this.debugSession.runInTerminalRequest(termArgs, 5000, response => {
+                this.debugSession.runInTerminalRequest(termArgs, 5000, (response) => {
                     if (response.success) {
                         resolve();
                     } else {
@@ -170,11 +170,11 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                 });
             } else {
                 open({ wait: false, app: [pythonPath].concat(args), cwd, env, sudo: sudo }).then(
-                    proc => {
+                    (proc) => {
                         this.pyProc = proc;
                         resolve();
                     },
-                    error => {
+                    (error) => {
                         if (this.debugServerStatus === DebugServerStatus.Running) {
                             return;
                         }

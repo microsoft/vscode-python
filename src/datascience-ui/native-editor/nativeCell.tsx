@@ -704,7 +704,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 altKey: event.altKey,
                 target: event.target as HTMLDivElement,
                 stopPropagation: () => event.stopPropagation(),
-                preventDefault: () => event.preventDefault()
+                preventDefault: () => event.preventDefault(),
             });
         }
     };

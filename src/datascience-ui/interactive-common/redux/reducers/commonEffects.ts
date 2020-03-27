@@ -15,28 +15,28 @@ export namespace CommonEffects {
     export function notebookDirty(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
-            dirty: true
+            dirty: true,
         };
     }
 
     export function notebookClean(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
-            dirty: false
+            dirty: false,
         };
     }
 
     export function startProgress(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
-            busy: true
+            busy: true,
         };
     }
 
     export function stopProgress(arg: CommonReducerArg): IMainState {
         return {
             ...arg.prevState,
-            busy: false
+            busy: false,
         };
     }
 
@@ -94,25 +94,25 @@ export namespace CommonEffects {
             rootCss: arg.payload.data.css,
             font: {
                 size: fontSize,
-                family: fontFamily
+                family: fontFamily,
             },
             vscodeThemeName: arg.payload.data.theme,
             knownDark: computedKnownDark,
-            baseTheme: newBaseTheme
+            baseTheme: newBaseTheme,
         };
     }
 
     export function monacoReady<T>(arg: CommonReducerArg<T>): IMainState {
         return {
             ...arg.prevState,
-            monacoReady: true
+            monacoReady: true,
         };
     }
 
     export function monacoThemeChange<T>(arg: CommonReducerArg<T, IGetMonacoThemeResponse>): IMainState {
         return {
             ...arg.prevState,
-            monacoTheme: Identifiers.GeneratedThemeName
+            monacoTheme: Identifiers.GeneratedThemeName,
         };
     }
 
@@ -120,7 +120,7 @@ export namespace CommonEffects {
         return {
             ...prevState,
             // This is only applicable for interactive window & not native editor.
-            focusPending: prevState.focusPending + 1
+            focusPending: prevState.focusPending + 1,
         };
     }
 

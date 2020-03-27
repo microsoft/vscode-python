@@ -22,7 +22,7 @@ suite('ProcessService', () => {
     setup(initialize);
     teardown(initialize);
 
-    test('execObservable should stream output with new lines', function(done) {
+    test('execObservable should stream output with new lines', function (done) {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(10000);
         const procService = new ProcessService(new BufferDecoder());
@@ -37,14 +37,14 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'print("3")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(
-            output => {
+            (output) => {
                 // Ignore line breaks.
                 if (output.out.trim().length === 0) {
                     return;
@@ -62,7 +62,7 @@ suite('ProcessService', () => {
         );
     });
 
-    test('execObservable should stream output without new lines', function(done) {
+    test('execObservable should stream output without new lines', function (done) {
         // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
         // tslint:disable-next-line: no-invalid-this
@@ -82,14 +82,14 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'sys.stdout.write("3")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(
-            output => {
+            (output) => {
                 // Ignore line breaks.
                 if (output.out.trim().length === 0) {
                     return;
@@ -107,7 +107,7 @@ suite('ProcessService', () => {
         );
     });
 
-    test('execObservable should end when cancellationToken is cancelled', function(done) {
+    test('execObservable should end when cancellationToken is cancelled', function (done) {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
@@ -119,18 +119,18 @@ suite('ProcessService', () => {
             'time.sleep(10)',
             'print("2")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], {
-            token: cancellationToken.token
+            token: cancellationToken.token,
         });
 
         const def = createDeferred();
         def.promise.then(done).catch(done);
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(
-            output => {
+            (output) => {
                 const value = output.out.trim();
                 if (value === '1') {
                     cancellationToken.cancel();
@@ -154,7 +154,7 @@ suite('ProcessService', () => {
         );
     });
 
-    test('execObservable should end when process is killed', function(done) {
+    test('execObservable should end when process is killed', function (done) {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
@@ -166,17 +166,17 @@ suite('ProcessService', () => {
             'time.sleep(10)',
             'print("2")',
             'sys.stdout.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], {
-            token: cancellationToken.token
+            token: cancellationToken.token,
         });
         let procKilled = false;
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(
-            output => {
+            (output) => {
                 const value = output.out.trim();
                 // Ignore line breaks.
                 if (value.length === 0) {
@@ -199,7 +199,7 @@ suite('ProcessService', () => {
         );
     });
 
-    test('execObservable should stream stdout and stderr separately', function(done) {
+    test('execObservable should stream stdout and stderr separately', function (done) {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(20000);
         const procService = new ProcessService(new BufferDecoder());
@@ -223,7 +223,7 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'sys.stderr.write("c")',
             'sys.stderr.flush()',
-            'time.sleep(2)'
+            'time.sleep(2)',
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = [
@@ -232,12 +232,12 @@ suite('ProcessService', () => {
             { out: '2', source: 'stdout' },
             { out: 'b', source: 'stderr' },
             { out: '3', source: 'stdout' },
-            { out: 'c', source: 'stderr' }
+            { out: 'c', source: 'stderr' },
         ];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
         result.out.subscribe(
-            output => {
+            (output) => {
                 const value = output.out.trim();
                 // Ignore line breaks.
                 if (value.length === 0) {
@@ -253,7 +253,7 @@ suite('ProcessService', () => {
         );
     });
 
-    test('execObservable should send stdout and stderr streams separately', async function() {
+    test('execObservable should send stdout and stderr streams separately', async function () {
         // This test is failing on Windows. Tracked by GH #4755.
         if (isOs(OSType.Windows)) {
             // tslint:disable-next-line:no-invalid-this
@@ -261,14 +261,14 @@ suite('ProcessService', () => {
         }
     });
 
-    test('execObservable should throw an error with stderr output', done => {
+    test('execObservable should throw an error with stderr output', (done) => {
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'sys.stderr.write("a")', 'sys.stderr.flush()'];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], { throwOnStdErr: true });
 
         expect(result).not.to.be.an('undefined', 'result is undefined.');
         result.out.subscribe(
-            _output => {
+            (_output) => {
                 done("Output received, when we're expecting an error to be thrown.");
             },
             (ex: Error) => {
@@ -281,16 +281,16 @@ suite('ProcessService', () => {
         );
     });
 
-    test('execObservable should throw an error when spawn file not found', done => {
+    test('execObservable should throw an error when spawn file not found', (done) => {
         const procService = new ProcessService(new BufferDecoder());
         const result = procService.execObservable(Date.now().toString(), []);
 
         expect(result).not.to.be.an('undefined', 'result is undefined.');
         result.out.subscribe(
-            _output => {
+            (_output) => {
                 done("Output received, when we're expecting an error to be thrown.");
             },
-            ex => {
+            (ex) => {
                 expect(ex).to.have.property('code', 'ENOENT', 'Invalid error code');
                 done();
             },
@@ -300,13 +300,13 @@ suite('ProcessService', () => {
         );
     });
 
-    test('execObservable should exit without no output', done => {
+    test('execObservable should exit without no output', (done) => {
         const procService = new ProcessService(new BufferDecoder());
         const result = procService.execObservable(pythonPath, ['-c', 'import sys', 'sys.exit()']);
 
         expect(result).not.to.be.an('undefined', 'result is undefined.');
         result.out.subscribe(
-            output => {
+            (output) => {
                 done(`Output received, when we\'re not expecting any, ${JSON.stringify(output)}`);
             },
             done,

@@ -49,10 +49,10 @@ export function createRemoteConnectionInfo(uri: string, settings: IDataScienceSe
         hostName: url.hostname,
         localLaunch: false,
         localProcExitCode: undefined,
-        disconnected: _l => {
+        disconnected: (_l) => {
             return { dispose: noop };
         },
-        dispose: noop
+        dispose: noop,
     };
 }
 

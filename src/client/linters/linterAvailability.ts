@@ -80,7 +80,7 @@ export class AvailableLinterActivator implements IAvailableLinterActivator {
         );
         sendTelemetryEvent(EventName.CONFIGURE_AVAILABLE_LINTER_PROMPT, undefined, {
             tool: linterInfo.id,
-            action: pick ? telemetrySelections[optButtons.indexOf(pick)] : undefined
+            action: pick ? telemetrySelections[optButtons.indexOf(pick)] : undefined,
         });
         if (pick === optButtons[0]) {
             await linterInfo.enableAsync(true);

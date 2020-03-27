@@ -35,17 +35,17 @@ suite('Theme colors', () => {
 
         workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         workspaceConfig
-            .setup(ws => ws.has(TypeMoq.It.isAnyString()))
+            .setup((ws) => ws.has(TypeMoq.It.isAnyString()))
             .returns(() => {
                 return false;
             });
         workspaceConfig
-            .setup(ws => ws.get(TypeMoq.It.isAnyString()))
+            .setup((ws) => ws.get(TypeMoq.It.isAnyString()))
             .returns(() => {
                 return undefined;
             });
         workspaceConfig
-            .setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+            .setup((ws) => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
             .returns((_s, d) => {
                 return d;
             });
@@ -74,15 +74,15 @@ suite('Theme colors', () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: []
+            jupyterCommandLineArguments: [],
         };
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
-        configService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings);
+        configService.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => settings);
 
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
+        workspaceService.setup((c) => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
         workspaceService
-            .setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((c) => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => workspaceConfig.object);
 
         cssGenerator = new CodeCssGenerator(workspaceService.object, themeFinder, configService.object, fs);
@@ -97,22 +97,22 @@ suite('Theme colors', () => {
                 assert.equal(actuallyDark, isDark, `Theme ${themeName} darkness is not ${isDark}`);
                 workspaceConfig.reset();
                 workspaceConfig
-                    .setup(ws => ws.get<string>(TypeMoq.It.isValue('colorTheme')))
+                    .setup((ws) => ws.get<string>(TypeMoq.It.isValue('colorTheme')))
                     .returns(() => {
                         return themeName;
                     });
                 workspaceConfig
-                    .setup(ws => ws.get<string>(TypeMoq.It.isValue('fontFamily')))
+                    .setup((ws) => ws.get<string>(TypeMoq.It.isValue('fontFamily')))
                     .returns(() => {
                         return 'Arial';
                     });
                 workspaceConfig
-                    .setup(ws => ws.get<number>(TypeMoq.It.isValue('fontSize')))
+                    .setup((ws) => ws.get<number>(TypeMoq.It.isValue('fontSize')))
                     .returns(() => {
                         return 16;
                     });
                 workspaceConfig
-                    .setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+                    .setup((ws) => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
                     .returns((_s, d) => {
                         return d;
                     });
@@ -126,7 +126,7 @@ suite('Theme colors', () => {
                 assert.ok(theme.rules, 'No rules found in monaco theme');
                 // tslint:disable-next-line: no-any
                 const commentPunctuation = (theme.rules as any[]).findIndex(
-                    r => r.token === 'punctuation.definition.comment'
+                    (r) => r.token === 'punctuation.definition.comment'
                 );
                 assert.ok(commentPunctuation >= 0, 'No punctuation.comment found');
             } else {
@@ -156,9 +156,9 @@ suite('Theme colors', () => {
     // Test for when theme's json can't be found.
     test('Missing json theme', async () => {
         const mockThemeFinder = TypeMoq.Mock.ofType<IThemeFinder>();
-        mockThemeFinder.setup(m => m.isThemeDark(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(false));
+        mockThemeFinder.setup((m) => m.isThemeDark(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(false));
         mockThemeFinder
-            .setup(m => m.findThemeRootJson(TypeMoq.It.isAnyString()))
+            .setup((m) => m.findThemeRootJson(TypeMoq.It.isAnyString()))
             .returns(() => Promise.resolve(undefined));
 
         const fs = new FileSystem();

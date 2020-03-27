@@ -13,7 +13,7 @@ export enum TerminalActivationProviders {
     commandPromptAndPowerShell = 'commandPromptAndPowerShell',
     pyenv = 'pyenv',
     conda = 'conda',
-    pipenv = 'pipenv'
+    pipenv = 'pipenv',
 }
 export enum TerminalShellType {
     powershell = 'powershell',
@@ -28,7 +28,7 @@ export enum TerminalShellType {
     tcshell = 'tshell',
     wsl = 'wsl',
     xonsh = 'xonsh',
-    other = 'other'
+    other = 'other',
 }
 
 export interface ITerminalService extends IDisposable {

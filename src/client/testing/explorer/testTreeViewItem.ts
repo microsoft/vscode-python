@@ -124,7 +124,7 @@ export class TestTreeItem extends TreeItem {
                 this.command = {
                     command: Commands.navigateToTestFile,
                     title: 'Open',
-                    arguments: [this.resource, this.data]
+                    arguments: [this.resource, this.data],
                 };
                 break;
             }
@@ -132,7 +132,7 @@ export class TestTreeItem extends TreeItem {
                 this.command = {
                     command: Commands.navigateToTestFunction,
                     title: 'Open',
-                    arguments: [this.resource, this.data, false]
+                    arguments: [this.resource, this.data, false],
                 };
                 break;
             }
@@ -141,14 +141,14 @@ export class TestTreeItem extends TreeItem {
                     this.command = {
                         command: Commands.navigateToTestFunction,
                         title: 'Open',
-                        arguments: [this.resource, this.data, false]
+                        arguments: [this.resource, this.data, false],
                     };
                     break;
                 }
                 this.command = {
                     command: Commands.navigateToTestSuite,
                     title: 'Open',
-                    arguments: [this.resource, this.data, false]
+                    arguments: [this.resource, this.data, false],
                 };
                 break;
             }

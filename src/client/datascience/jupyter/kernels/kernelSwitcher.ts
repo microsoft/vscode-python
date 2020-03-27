@@ -142,7 +142,7 @@ export class KernelSwitcher {
         const options: ProgressOptions = {
             location: ProgressLocation.Notification,
             cancellable: false,
-            title: DataScience.switchingKernelProgress().format(displayName)
+            title: DataScience.switchingKernelProgress().format(displayName),
         };
         await this.appShell.withProgress(options, async (_, __) => switchKernel(kernel!));
     }

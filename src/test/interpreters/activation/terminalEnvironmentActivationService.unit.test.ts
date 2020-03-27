@@ -32,7 +32,7 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
         path: '',
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Conda
+        type: InterpreterType.Conda,
     };
     setup(() => {
         terminalFactory = mock(TerminalServiceFactory);
@@ -50,8 +50,8 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
         );
     });
 
-    [undefined, Uri.file('some Resource')].forEach(resource => {
-        [undefined, mockInterpreter].forEach(interpreter => {
+    [undefined, Uri.file('some Resource')].forEach((resource) => {
+        [undefined, mockInterpreter].forEach((interpreter) => {
             suite(resource ? 'With a resource' : 'Without a resource', () => {
                 suite(interpreter ? 'With an interpreter' : 'Without an interpreter', () => {
                     test('Should create a terminal with user defined custom env vars', async () => {

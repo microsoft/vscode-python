@@ -68,7 +68,7 @@ export enum LintMessageSeverity {
     Hint,
     Error,
     Warning,
-    Information
+    Information,
 }
 
 export const ILintingEngine = Symbol('ILintingEngine');

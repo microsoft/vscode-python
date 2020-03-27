@@ -17,16 +17,16 @@ type CacheUtilsTestScenario = {
 const scenariosToTest: CacheUtilsTestScenario[] = [
     {
         scenarioDesc: 'simple string',
-        dataToStore: 'hello'
+        dataToStore: 'hello',
     },
     {
         scenarioDesc: 'undefined',
-        dataToStore: undefined
+        dataToStore: undefined,
     },
     {
         scenarioDesc: 'object',
-        dataToStore: { date: new Date(), hello: 1234 }
-    }
+        dataToStore: { date: new Date(), hello: 1234 },
+    },
 ];
 
 class TestInMemoryInterpreterSpecificCache extends InMemoryInterpreterSpecificCache<
@@ -108,14 +108,14 @@ suite('Common Utils - CacheUtils', () => {
                             },
                             inspect: () => {
                                 return { globalValue: pythonPath };
-                            }
+                            },
                         };
                     },
                     getWorkspaceFolder: () => {
                         return;
-                    }
+                    },
                 },
-                Uri: Uri
+                Uri: Uri,
             } as any;
         }
         scenariosToTest.forEach((scenario: CacheUtilsTestScenario) => {
@@ -258,9 +258,9 @@ suite('Common Utils - CacheUtils', () => {
                 const anotherResource = Uri.parse('b');
                 (vsc.workspace as any).workspaceFolders = [
                     { index: 0, name: '1', uri: Uri.parse('wkfolder1') },
-                    { index: 1, name: '2', uri: Uri.parse('wkfolder2') }
+                    { index: 1, name: '2', uri: Uri.parse('wkfolder2') },
                 ];
-                vsc.workspace.getWorkspaceFolder = res => {
+                vsc.workspace.getWorkspaceFolder = (res) => {
                     const index = res.fsPath === resource.fsPath ? 0 : 1;
                     return vsc.workspace.workspaceFolders![index];
                 };

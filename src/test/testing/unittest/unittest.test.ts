@@ -78,13 +78,13 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(tests.testFunctions.length, 3, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_one.py' && t.nameToRun === 'test_one'),
+            tests.testFiles.some((t) => t.name === 'test_one.py' && t.nameToRun === 'test_one'),
             true,
             'Test File not found'
         );
         assert.equal(
             tests.testFunctions.some(
-                t => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'
+                (t) => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'
             ),
             true,
             'Test File not found'
@@ -100,37 +100,37 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(tests.testFunctions.length, 9, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 3, 'Incorrect number of test suites');
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_one.py' && t.nameToRun === 'test_one'),
+            tests.testFiles.some((t) => t.name === 'test_one.py' && t.nameToRun === 'test_one'),
             true,
             'Test File one not found'
         );
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_two.py' && t.nameToRun === 'test_two'),
+            tests.testFiles.some((t) => t.name === 'test_two.py' && t.nameToRun === 'test_two'),
             true,
             'Test File two not found'
         );
         assert.equal(
-            tests.testFiles.some(t => t.name === 'test_three.py' && t.nameToRun === 'more_tests.test_three'),
+            tests.testFiles.some((t) => t.name === 'test_three.py' && t.nameToRun === 'more_tests.test_three'),
             true,
             'Test File three not found'
         );
         assert.equal(
             tests.testFunctions.some(
-                t => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'
+                (t) => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'
             ),
             true,
             'Test File one not found'
         );
         assert.equal(
             tests.testFunctions.some(
-                t => t.testFunction.name === 'test_2A' && t.testFunction.nameToRun === 'test_two.Test_test2.test_2A'
+                (t) => t.testFunction.name === 'test_2A' && t.testFunction.nameToRun === 'test_two.Test_test2.test_2A'
             ),
             true,
             'Test File two not found'
         );
         assert.equal(
             tests.testFunctions.some(
-                t =>
+                (t) =>
                     t.testFunction.name === 'test_3A' &&
                     t.testFunction.nameToRun === 'more_tests.test_three.Test_test3.test_3A'
             ),
@@ -154,7 +154,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         );
         assert.notEqual(testFunc, undefined, 'No test in file test_three.py named test_3A');
         const testsToRun: TestsToRun = {
-            testFunction: [testFunc!]
+            testFunction: [testFunc!],
         };
         const testRunResult: Tests = await testManager.runTest(CommandSource.ui, testsToRun);
         assert.equal(
@@ -191,7 +191,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         );
         assert.equal(testsFile!.suites.length, 1, 'Expected only 1 test suite in counter test file.');
         const testsToRun: TestsToRun = {
-            testFolder: [testsDiscovered.testFolders[0]]
+            testFolder: [testsDiscovered.testFolders[0]],
         };
 
         // ensure that each re-run of the unit tests in question result in the same summary count information.
@@ -235,7 +235,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         );
         assert.equal(testsFile!.suites.length, 1, 'Expected only 1 test suite in counter test file.');
         const testsToRun: TestsToRun = {
-            testFolder: [testsDiscovered.testFolders[0]]
+            testFolder: [testsDiscovered.testFolders[0]],
         };
 
         // ensure that each re-run of the unit tests in question result in the same summary count information.

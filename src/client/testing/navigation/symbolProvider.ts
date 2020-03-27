@@ -13,7 +13,7 @@ import {
     SymbolInformation,
     SymbolKind,
     TextDocument,
-    Uri
+    Uri,
 } from 'vscode';
 import { traceError } from '../../common/logger';
 import { IPythonExecutionFactory } from '../../common/process/types';
@@ -38,9 +38,9 @@ export class TestFileSymbolProvider implements DocumentSymbolProvider {
             return [];
         }
         return [
-            ...rawSymbols.classes.map(item => this.parseRawSymbol(document.uri, item, SymbolKind.Class)),
-            ...rawSymbols.methods.map(item => this.parseRawSymbol(document.uri, item, SymbolKind.Method)),
-            ...rawSymbols.functions.map(item => this.parseRawSymbol(document.uri, item, SymbolKind.Function))
+            ...rawSymbols.classes.map((item) => this.parseRawSymbol(document.uri, item, SymbolKind.Class)),
+            ...rawSymbols.methods.map((item) => this.parseRawSymbol(document.uri, item, SymbolKind.Method)),
+            ...rawSymbols.functions.map((item) => this.parseRawSymbol(document.uri, item, SymbolKind.Function)),
         ];
     }
     private parseRawSymbol(uri: Uri, symbol: RawSymbol, kind: SymbolKind): SymbolInformation {
@@ -54,7 +54,7 @@ export class TestFileSymbolProvider implements DocumentSymbolProvider {
             containerName: symbol.namespace,
             kind,
             name: symbol.name,
-            location: new Location(uri, range)
+            location: new Location(uri, range),
         };
     }
     private async getSymbols(document: TextDocument, token: CancellationToken): Promise<Symbols | undefined> {

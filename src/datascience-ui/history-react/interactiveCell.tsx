@@ -342,7 +342,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                 altKey: event.altKey,
                 target: event.target as HTMLDivElement,
                 stopPropagation: () => event.stopPropagation(),
-                preventDefault: () => event.preventDefault()
+                preventDefault: () => event.preventDefault(),
             };
             this.onEditCellKeyDown(Identifiers.EditCellId, e);
         }

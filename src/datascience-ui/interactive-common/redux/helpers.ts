@@ -6,12 +6,12 @@
 import * as Redux from 'redux';
 import {
     IInteractiveWindowMapping,
-    InteractiveWindowMessages
+    InteractiveWindowMessages,
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import {
     checkToPostBasedOnOriginalMessageType,
     MessageType,
-    shouldRebroadcast
+    shouldRebroadcast,
 } from '../../../client/datascience/interactive-common/synchronization';
 import { BaseReduxActionPayload, SyncPayload } from '../../../client/datascience/interactive-common/types';
 import { CssMessages, SharedMessages } from '../../../client/datascience/messages';
@@ -22,7 +22,7 @@ const AllowedMessages = [
     ...Object.values(InteractiveWindowMessages),
     ...Object.values(CssMessages),
     ...Object.values(SharedMessages),
-    ...Object.values(CommonActionType)
+    ...Object.values(CommonActionType),
 ];
 export function isAllowedMessage(message: string) {
     // tslint:disable-next-line: no-any
@@ -87,7 +87,7 @@ export function postActionToExtension(originalReducerArg: ReducerArg, message: a
     const newPayload: BaseReduxActionPayload<any> = ({
         data: payload,
         messageDirection: 'outgoing',
-        messageType: MessageType.other
+        messageType: MessageType.other,
         // tslint:disable-next-line: no-any
     } as any) as BaseReduxActionPayload<any>;
     const action = { type: CommonActionType.PostOutgoingMessage, payload: { payload: newPayload, type: message } };
@@ -138,7 +138,7 @@ export function reBroadcastMessageIfRequired(
         const syncPayloadData: BaseReduxActionPayload<any> = {
             data: payload?.data,
             messageType: result[1],
-            messageDirection: 'incoming'
+            messageDirection: 'incoming',
         };
         // tslint:disable-next-line: no-any
         const syncPayload: SyncPayload = { type: message, payload: syncPayloadData };

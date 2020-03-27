@@ -76,7 +76,7 @@ class V4UUID extends ValueUUID {
                 V4UUID._randomHex(),
                 V4UUID._randomHex(),
                 V4UUID._randomHex(),
-                V4UUID._randomHex()
+                V4UUID._randomHex(),
             ].join('')
         );
     }

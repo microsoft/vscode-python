@@ -21,7 +21,7 @@ import {
     IInteractiveWindowListener,
     INotebook,
     INotebookExecutionLogger,
-    INotebookProvider
+    INotebookProvider,
 } from '../types';
 
 @injectable()
@@ -93,8 +93,8 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         const codeLenses: CodeLens[] = [];
         let firstCell = true;
 
-        ranges.forEach(range => {
-            commands.forEach(c => {
+        ranges.forEach((range) => {
+            commands.forEach((c) => {
                 const codeLens = this.createCodeLens(document, range, c, firstCell);
                 if (codeLens) {
                     codeLenses.push(codeLens);
@@ -139,7 +139,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         // Add our non-debug commands
         const commands = this.configService.getSettings(resource).datascience.codeLenses;
         if (commands) {
-            fullCommandList = commands.split(',').map(s => s.trim());
+            fullCommandList = commands.split(',').map((s) => s.trim());
         } else {
             fullCommandList = CodeLensCommands.DefaultDesignLenses;
         }
@@ -147,7 +147,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         // Add our debug commands
         const debugCommands = this.configService.getSettings(resource).datascience.debugCodeLenses;
         if (debugCommands) {
-            fullCommandList = fullCommandList.concat(debugCommands.split(',').map(s => s.trim()));
+            fullCommandList = fullCommandList.concat(debugCommands.split(',').map((s) => s.trim()));
         } else {
             fullCommandList = fullCommandList.concat(CodeLensCommands.DefaultDebuggingLenses);
         }
@@ -197,7 +197,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     range.start.line,
                     range.start.character,
                     range.end.line,
-                    range.end.character
+                    range.end.character,
                 ]);
 
             case Commands.DebugStepOver:
@@ -236,7 +236,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     range.start.line,
                     range.start.character,
                     range.end.line,
-                    range.end.character
+                    range.end.character,
                 ]);
 
             case Commands.RunAllCells:
@@ -283,10 +283,10 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     }
 
     private addExecutionCount(codeLens: CodeLens[], document: TextDocument, range: Range, hashes: IFileHashes[]) {
-        const list = hashes.find(h => this.fileSystem.arePathsSame(h.file, document.fileName));
+        const list = hashes.find((h) => this.fileSystem.arePathsSame(h.file, document.fileName));
         if (list) {
             // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
-            const rangeMatches = list.hashes.filter(h => h.line - 2 === range.start.line);
+            const rangeMatches = list.hashes.filter((h) => h.line - 2 === range.start.line);
             if (rangeMatches && rangeMatches.length) {
                 const rangeMatch = rangeMatches[rangeMatches.length - 1];
                 if (this.cellExecutionCounts.has(rangeMatch.id)) {
@@ -315,7 +315,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         return {
             arguments: args,
             title,
-            command: commandName
+            command: commandName,
         };
     }
 }

@@ -19,7 +19,7 @@ export class PlatformService implements IPlatformService {
     constructor() {
         if (this.osType === OSType.Unknown) {
             sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
-                failureType: PlatformErrors.FailedToDetermineOS
+                failureType: PlatformErrors.FailedToDetermineOS,
             });
         }
     }
@@ -43,14 +43,14 @@ export class PlatformService implements IPlatformService {
                     const ver = coerce(os.release());
                     if (ver) {
                         sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
-                            osVersion: `${ver.major}.${ver.minor}.${ver.patch}`
+                            osVersion: `${ver.major}.${ver.minor}.${ver.patch}`,
                         });
                         return (this.version = ver);
                     }
                     throw new Error('Unable to parse version');
                 } catch (ex) {
                     sendTelemetryEvent(EventName.PLATFORM_INFO, undefined, {
-                        failureType: PlatformErrors.FailedToParseVersion
+                        failureType: PlatformErrors.FailedToParseVersion,
                     });
                     return parseVersion(os.release());
                 }

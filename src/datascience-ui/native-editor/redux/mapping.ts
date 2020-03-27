@@ -3,7 +3,7 @@
 'use strict';
 import {
     IInteractiveWindowMapping,
-    InteractiveWindowMessages
+    InteractiveWindowMessages,
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { IMainState } from '../../interactive-common/mainState';

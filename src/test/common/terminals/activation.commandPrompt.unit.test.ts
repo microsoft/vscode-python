@@ -18,8 +18,8 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
     [
         'c:/programfiles/python/python',
         'c:/program files/python/python',
-        'c:\\users\\windows paths\\conda\\python.exe'
-    ].forEach(pythonPath => {
+        'c:\\users\\windows paths\\conda\\python.exe',
+    ].forEach((pythonPath) => {
         const hasSpaces = pythonPath.indexOf(' ') > 0;
         const resource = Uri.file('a');
 
@@ -28,25 +28,27 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
             : 'and there are no spaces in the script file (pythonpath),';
         suite(suiteTitle, () => {
             ['activate', 'activate.sh', 'activate.csh', 'activate.fish', 'activate.bat', 'Activate.ps1'].forEach(
-                scriptFileName => {
+                (scriptFileName) => {
                     suite(`and script file is ${scriptFileName}`, () => {
                         let serviceContainer: TypeMoq.IMock<IServiceContainer>;
                         let fileSystem: TypeMoq.IMock<IFileSystem>;
                         setup(() => {
                             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-                            serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fileSystem.object);
+                            serviceContainer.setup((c) => c.get(IFileSystem)).returns(() => fileSystem.object);
 
                             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+                                .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
                                 .returns(() => configService.object);
                             const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-                            settings.setup(s => s.pythonPath).returns(() => pythonPath);
-                            configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+                            settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+                            configService
+                                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
+                                .returns(() => settings.object);
                         });
 
-                        getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
+                        getNamesAndValues<TerminalShellType>(TerminalShellType).forEach((shellType) => {
                             const isScriptFileSupported = ['activate.bat', 'Activate.ps1'].indexOf(scriptFileName) >= 0;
                             const titleTitle = isScriptFileSupported
                                 ? `Ensure terminal type is supported (Shell: ${shellType.name})`
@@ -87,16 +89,16 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                     fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
                     platform = TypeMoq.Mock.ofType<IPlatformService>();
-                    serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fileSystem.object);
-                    serviceContainer.setup(c => c.get(IPlatformService)).returns(() => platform.object);
+                    serviceContainer.setup((c) => c.get(IFileSystem)).returns(() => fileSystem.object);
+                    serviceContainer.setup((c) => c.get(IPlatformService)).returns(() => platform.object);
 
                     const configService = TypeMoq.Mock.ofType<IConfigurationService>();
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+                        .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
                         .returns(() => configService.object);
                     const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-                    settings.setup(s => s.pythonPath).returns(() => pythonPath);
-                    configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+                    settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+                    configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
                 });
 
                 test('Ensure batch files are supported by command prompt', async () => {
@@ -104,7 +106,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
 
                     const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
                     fileSystem
-                        .setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
                         .returns(() => Promise.resolve(true));
                     const commands = await bash.getActivationCommands(resource, TerminalShellType.commandPrompt);
 
@@ -119,10 +121,10 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                 test('Ensure batch files are not supported by powershell (on windows)', async () => {
                     const batch = new CommandPromptAndPowerShell(serviceContainer.object);
 
-                    platform.setup(p => p.isWindows).returns(() => true);
+                    platform.setup((p) => p.isWindows).returns(() => true);
                     const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
                     fileSystem
-                        .setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
                         .returns(() => Promise.resolve(true));
                     const command = await batch.getActivationCommands(resource, TerminalShellType.powershell);
 
@@ -132,10 +134,10 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                 test('Ensure batch files are not supported by powershell core (on windows)', async () => {
                     const bash = new CommandPromptAndPowerShell(serviceContainer.object);
 
-                    platform.setup(p => p.isWindows).returns(() => true);
+                    platform.setup((p) => p.isWindows).returns(() => true);
                     const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
                     fileSystem
-                        .setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
                         .returns(() => Promise.resolve(true));
                     const command = await bash.getActivationCommands(resource, TerminalShellType.powershellCore);
 
@@ -145,10 +147,10 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                 test('Ensure batch files are not supported by powershell (on non-windows)', async () => {
                     const bash = new CommandPromptAndPowerShell(serviceContainer.object);
 
-                    platform.setup(p => p.isWindows).returns(() => false);
+                    platform.setup((p) => p.isWindows).returns(() => false);
                     const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
                     fileSystem
-                        .setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
                         .returns(() => Promise.resolve(true));
                     const command = await bash.getActivationCommands(resource, TerminalShellType.powershell);
 
@@ -158,10 +160,10 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                 test('Ensure batch files are not supported by powershell core (on non-windows)', async () => {
                     const bash = new CommandPromptAndPowerShell(serviceContainer.object);
 
-                    platform.setup(p => p.isWindows).returns(() => false);
+                    platform.setup((p) => p.isWindows).returns(() => false);
                     const pathToScriptFile = path.join(path.dirname(pythonPath), 'activate.bat');
                     fileSystem
-                        .setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
                         .returns(() => Promise.resolve(true));
                     const command = await bash.getActivationCommands(resource, TerminalShellType.powershellCore);
 
@@ -177,25 +179,25 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                     serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                     fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
                     platform = TypeMoq.Mock.ofType<IPlatformService>();
-                    serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fileSystem.object);
-                    serviceContainer.setup(c => c.get(IPlatformService)).returns(() => platform.object);
+                    serviceContainer.setup((c) => c.get(IFileSystem)).returns(() => fileSystem.object);
+                    serviceContainer.setup((c) => c.get(IPlatformService)).returns(() => platform.object);
 
                     const configService = TypeMoq.Mock.ofType<IConfigurationService>();
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+                        .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
                         .returns(() => configService.object);
                     const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-                    settings.setup(s => s.pythonPath).returns(() => pythonPath);
-                    configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+                    settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+                    configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
                 });
 
                 test('Ensure powershell files are not supported by command prompt', async () => {
                     const bash = new CommandPromptAndPowerShell(serviceContainer.object);
 
-                    platform.setup(p => p.isWindows).returns(() => true);
+                    platform.setup((p) => p.isWindows).returns(() => true);
                     const pathToScriptFile = path.join(path.dirname(pythonPath), 'Activate.ps1');
                     fileSystem
-                        .setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
                         .returns(() => Promise.resolve(true));
                     const command = await bash.getActivationCommands(resource, TerminalShellType.commandPrompt);
 
@@ -208,10 +210,10 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                 test('Ensure powershell files are supported by powershell', async () => {
                     const bash = new CommandPromptAndPowerShell(serviceContainer.object);
 
-                    platform.setup(p => p.isWindows).returns(() => true);
+                    platform.setup((p) => p.isWindows).returns(() => true);
                     const pathToScriptFile = path.join(path.dirname(pythonPath), 'Activate.ps1');
                     fileSystem
-                        .setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
                         .returns(() => Promise.resolve(true));
                     const command = await bash.getActivationCommands(resource, TerminalShellType.powershell);
 
@@ -224,10 +226,10 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
                 test('Ensure powershell files are supported by powershell core', async () => {
                     const bash = new CommandPromptAndPowerShell(serviceContainer.object);
 
-                    platform.setup(p => p.isWindows).returns(() => true);
+                    platform.setup((p) => p.isWindows).returns(() => true);
                     const pathToScriptFile = path.join(path.dirname(pythonPath), 'Activate.ps1');
                     fileSystem
-                        .setup(fs => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
+                        .setup((fs) => fs.fileExists(TypeMoq.It.isValue(pathToScriptFile)))
                         .returns(() => Promise.resolve(true));
                     const command = await bash.getActivationCommands(resource, TerminalShellType.powershellCore);
 

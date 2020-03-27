@@ -73,12 +73,12 @@ export class DataViewerDependencyService {
             const cancellatonPromise = createPromiseFromCancellation({
                 cancelAction: 'resolve',
                 defaultValue: InstallerResponse.Ignore,
-                token
+                token,
             });
             // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
             const response = await Promise.race([
                 this.installer.install(Product.pandas, interpreter, wrapCancellationTokens(token)),
-                cancellatonPromise
+                cancellatonPromise,
             ]);
             if (response === InstallerResponse.Installed) {
                 sendTelemetryEvent(Telemetry.UserInstalledPandas);
@@ -97,12 +97,12 @@ export class DataViewerDependencyService {
             resource: undefined,
             interpreter,
             allowEnvironmentFetchExceptions: true,
-            bypassCondaExecution: true
+            bypassCondaExecution: true,
         });
         try {
             const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], {
                 throwOnStdErr: true,
-                token
+                token,
             });
             const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(result.stdout);
             if (versionMatch && versionMatch.length > 2) {

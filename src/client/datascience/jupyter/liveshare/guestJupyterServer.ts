@@ -17,7 +17,7 @@ import {
     IJupyterSessionManagerFactory,
     INotebook,
     INotebookServer,
-    INotebookServerLaunchInfo
+    INotebookServerLaunchInfo,
 } from '../../types';
 import { GuestJupyterNotebook } from './guestJupyterNotebook';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
@@ -93,7 +93,7 @@ export class GuestJupyterServer
     public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
         await super.onSessionChange(api);
 
-        this.notebooks.forEach(async notebook => {
+        this.notebooks.forEach(async (notebook) => {
             const guestNotebook = (await notebook) as GuestJupyterNotebook;
             if (guestNotebook) {
                 await guestNotebook.onSessionChange(api);

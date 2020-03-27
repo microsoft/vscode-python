@@ -24,14 +24,14 @@ export class DjangoContextInitializer implements Disposable {
         commandManager: ICommandManager
     ) {
         this.isDjangoProject = new ContextKey('python.isDjangoProject', commandManager);
-        this.ensureContextStateIsSet().catch(ex => traceError('Python Extension: ensureState', ex));
+        this.ensureContextStateIsSet().catch((ex) => traceError('Python Extension: ensureState', ex));
         this.disposables.push(
             this.workpaceService.onDidChangeWorkspaceFolders(() => this.updateContextKeyBasedOnActiveWorkspace())
         );
     }
 
     public dispose() {
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach((disposable) => disposable.dispose());
     }
     private updateContextKeyBasedOnActiveWorkspace() {
         if (this.monitoringActiveTextEditor) {

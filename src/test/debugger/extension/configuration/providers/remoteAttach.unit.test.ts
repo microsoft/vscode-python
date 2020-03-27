@@ -90,9 +90,9 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
             pathMappings: [
                 {
                     localRoot: '${workspaceFolder}',
-                    remoteRoot: '.'
-                }
-            ]
+                    remoteRoot: '.',
+                },
+            ],
         };
 
         expect(state.config).to.be.deep.equal(config);
@@ -123,9 +123,9 @@ suite('Debugging - Configuration Provider Remote Attach', () => {
             pathMappings: [
                 {
                     localRoot: '${workspaceFolder}',
-                    remoteRoot: '.'
-                }
-            ]
+                    remoteRoot: '.',
+                },
+            ],
         };
 
         expect(state.config).to.be.deep.equal(config);

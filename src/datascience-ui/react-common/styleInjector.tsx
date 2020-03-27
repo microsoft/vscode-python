@@ -93,7 +93,7 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
                 {
                     rootCss: response.css,
                     theme: response.theme,
-                    knownDark: computedKnownDark
+                    knownDark: computedKnownDark,
                 },
                 this.props.onReady
             );

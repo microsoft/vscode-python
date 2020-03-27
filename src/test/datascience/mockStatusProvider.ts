@@ -10,7 +10,7 @@ export class MockStatusProvider implements IStatusProvider {
         _panel?: IInteractiveBase
     ): Disposable {
         return {
-            dispose: noop
+            dispose: noop,
         };
     }
 

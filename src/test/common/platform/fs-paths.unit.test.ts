@@ -46,7 +46,7 @@ suite('FileSystem - Path Utils', () => {
         const caseInsensitive = [OSType.Windows];
 
         suite('arePathsSame', () => {
-            getNamesAndValues<OSType>(OSType).forEach(item => {
+            getNamesAndValues<OSType>(OSType).forEach((item) => {
                 const osType = item.value;
 
                 function setNormCase(filename: string, numCalls = 1): string {
@@ -54,7 +54,7 @@ suite('FileSystem - Path Utils', () => {
                     if (osType === OSType.Windows) {
                         norm = path.normalize(filename).toUpperCase();
                     }
-                    deps.setup(d => d.normCase(filename))
+                    deps.setup((d) => d.normCase(filename))
                         .returns(() => norm)
                         .verifiable(TypeMoq.Times.exactly(numCalls));
                     return filename;
@@ -64,8 +64,8 @@ suite('FileSystem - Path Utils', () => {
                     // no upper-case
                     'c:\\users\\peter smith\\my documents\\test.txt',
                     // some upper-case
-                    'c:\\USERS\\Peter Smith\\my documents\\test.TXT'
-                ].forEach(path1 => {
+                    'c:\\USERS\\Peter Smith\\my documents\\test.TXT',
+                ].forEach((path1) => {
                     test(`True if paths are identical (type: ${item.name}) - ${path1}`, () => {
                         path1 = setNormCase(path1, 2);
 

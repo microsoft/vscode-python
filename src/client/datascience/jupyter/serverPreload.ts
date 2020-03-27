@@ -62,7 +62,7 @@ export class ServerPreload implements IExtensionSingleActivationService {
                 server = await this.notebookProvider.getOrCreateServer({
                     getOnly: false,
                     disableUI: true,
-                    localOnly: true
+                    localOnly: true,
                 });
             }
 

@@ -11,7 +11,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     IDisposableRegistry,
-    IOutputChannel
+    IOutputChannel,
 } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
@@ -103,7 +103,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(
                         workingDir: options ? options.workingDir : undefined,
                         purpose,
                         allowUI: () => false,
-                        skipSearchingForKernel: true
+                        skipSearchingForKernel: true,
                     },
                     cancelToken
                 );

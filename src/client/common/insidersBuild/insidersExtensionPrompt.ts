@@ -35,18 +35,18 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
         const prompts = [
             ExtensionChannels.yesWeekly(),
             ExtensionChannels.yesDaily(),
-            DataScienceSurveyBanner.bannerLabelNo()
+            DataScienceSurveyBanner.bannerLabelNo(),
         ];
         const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = [
             'Yes, weekly',
             'Yes, daily',
-            'No, thanks'
+            'No, thanks',
         ];
         const selection = await this.appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts);
 
         await this.hasUserBeenNotified.updateValue(true);
         sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, {
-            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined,
         });
 
         if (!selection) {
@@ -66,7 +66,7 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
             Common.reload()
         );
         sendTelemetryEvent(EventName.INSIDERS_RELOAD_PROMPT, undefined, {
-            selection: selection ? 'Reload' : undefined
+            selection: selection ? 'Reload' : undefined,
         });
         if (selection === Common.reload()) {
             this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);

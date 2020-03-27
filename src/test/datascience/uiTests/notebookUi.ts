@@ -10,11 +10,11 @@ import { CommonActionType } from '../../../datascience-ui/interactive-common/red
 import { BaseWebUI } from './helpers';
 
 enum CellToolbarButton {
-    run = 0
+    run = 0,
 }
 
 enum MainToolbarButton {
-    clearOutput = 6
+    clearOutput = 6,
 }
 
 export class NotebookEditorUI extends BaseWebUI {
@@ -69,10 +69,10 @@ export class NotebookEditorUI extends BaseWebUI {
     }
     private async getCellToolbar(cellIndex: number): Promise<ElementHandle<Element>> {
         const cell = await this.getCell(cellIndex);
-        return cell.$$('.native-editor-celltoolbar-middle').then(items => items[0]);
+        return cell.$$('.native-editor-celltoolbar-middle').then((items) => items[0]);
     }
     private async getToolbarButton(cellIndex: number, button: CellToolbarButton): Promise<ElementHandle<Element>> {
         const toolbar = await this.getCellToolbar(cellIndex);
-        return toolbar.$$('button[role=button]').then(items => items[button]);
+        return toolbar.$$('button[role=button]').then((items) => items[button]);
     }
 }

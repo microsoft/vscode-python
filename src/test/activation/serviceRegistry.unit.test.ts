@@ -19,7 +19,7 @@ import { DotNetLanguageServerFolderService } from '../../client/activation/langu
 import {
     BetaDotNetLanguageServerPackageRepository,
     DailyDotNetLanguageServerPackageRepository,
-    StableDotNetLanguageServerPackageRepository
+    StableDotNetLanguageServerPackageRepository,
 } from '../../client/activation/languageServer/languageServerPackageRepository';
 import { DotNetLanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
 import { DotNetLanguageServerProxy } from '../../client/activation/languageServer/languageServerProxy';
@@ -44,7 +44,7 @@ import {
     ILanguageServerPackageService,
     ILanguageServerProxy,
     IPlatformData,
-    LanguageServerType
+    LanguageServerType,
 } from '../../client/activation/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { IActiveResourceService } from '../../client/common/application/types';
@@ -54,7 +54,7 @@ import {
     BANNER_NAME_INTERACTIVE_SHIFTENTER,
     BANNER_NAME_LS_SURVEY,
     BANNER_NAME_PROPOSE_LS,
-    IPythonExtensionBanner
+    IPythonExtensionBanner,
 } from '../../client/common/types';
 import { DataScienceSurveyBanner } from '../../client/datascience/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../../client/datascience/shiftEnterBanner';

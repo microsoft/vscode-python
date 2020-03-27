@@ -11,7 +11,7 @@ import {
     FoldingRangeProvider,
     ProviderResult,
     Range,
-    TextDocument
+    TextDocument,
 } from 'vscode';
 import { IterableTextRange } from '../language/iterableTextRange';
 import { IToken, TokenizerMode, TokenType } from '../language/types';

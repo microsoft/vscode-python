@@ -32,7 +32,7 @@ suite('WebPanelServer', () => {
         host?.dispose();
     });
 
-    test('Server responds with html when given valid input', done => {
+    test('Server responds with html when given valid input', (done) => {
         chai.request(server)
             .get(
                 `/${uuid()}?token=${token}&scripts=${encodeURIComponent(
@@ -48,7 +48,7 @@ suite('WebPanelServer', () => {
             });
     });
 
-    test('Server responds with 404 when given invalid input', done => {
+    test('Server responds with 404 when given invalid input', (done) => {
         chai.request(server)
             .get(
                 `/${uuid()}?scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(
@@ -62,7 +62,7 @@ suite('WebPanelServer', () => {
             });
     });
 
-    test('Server responds with 404 when given file not found', done => {
+    test('Server responds with 404 when given file not found', (done) => {
         const agent = chai.request(server).keepOpen();
         agent
             .get(
@@ -81,7 +81,7 @@ suite('WebPanelServer', () => {
             });
     });
 
-    test('Server can find the index_bundle', done => {
+    test('Server can find the index_bundle', (done) => {
         // See here for where the code for this comes from (you might think keepOpen is required, but instead request.agent is used for multiple requests)
         // https://www.chaijs.com/plugins/chai-http/ and search 'Retaining cookies with each request'
         const agent = chai.request.agent(server);
@@ -103,7 +103,7 @@ suite('WebPanelServer', () => {
             });
     });
 
-    test('Server can find the a file in a cwd', done => {
+    test('Server can find the a file in a cwd', (done) => {
         const agent = chai.request.agent(server);
         agent
             .get(
@@ -125,7 +125,7 @@ suite('WebPanelServer', () => {
             });
     });
 
-    test('Server will skip a file not in the cwd', done => {
+    test('Server will skip a file not in the cwd', (done) => {
         const agent = chai.request.agent(server);
         agent
             .get(

@@ -21,7 +21,7 @@ enum State {
     notStarted = 0,
     started = 1,
     completed = 2,
-    errored = 4
+    errored = 4,
 }
 
 class ExecutionState implements Disposable {
@@ -68,7 +68,7 @@ class ExecutionState implements Disposable {
 
         this.disposable = {
             // tslint:disable-next-line: no-any
-            dispose: () => clearInterval(timeout as any)
+            dispose: () => clearInterval(timeout as any),
         };
     }
     private async getLockFileState(file: string): Promise<State> {
@@ -143,7 +143,7 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
                 shellExecFile.fileToCommandArgument(),
                 command.fileToCommandArgument(),
                 ...args,
-                lockFile.filePath.fileToCommandArgument()
+                lockFile.filePath.fileToCommandArgument(),
             ]);
             const promise = swallowExceptions ? state.completed : state.completed.catch(noop);
             await Cancellation.race(() => promise, cancel);
@@ -160,7 +160,7 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
     }
 
     private createLockFile(): Promise<TemporaryFile> {
-        return this.fs.createTemporaryFile('.log').then(l => {
+        return this.fs.createTemporaryFile('.log').then((l) => {
             this.disposables.push(l);
             return l;
         });

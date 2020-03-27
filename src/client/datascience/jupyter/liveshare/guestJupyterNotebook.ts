@@ -24,7 +24,7 @@ import {
     INotebookCompletion,
     INotebookExecutionLogger,
     INotebookServer,
-    InterruptResult
+    InterruptResult,
 } from '../../types';
 import { LiveKernelModel } from '../kernels/types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
@@ -124,7 +124,7 @@ export class GuestJupyterNotebook
             (cells: ICell[]) => {
                 output = cells;
             },
-            error => {
+            (error) => {
                 deferred.reject(error);
             },
             () => {
@@ -159,7 +159,7 @@ export class GuestJupyterNotebook
     public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
         // Mimic this to the other side and then wait for a response
         this.waitForService()
-            .then(s => {
+            .then((s) => {
                 if (s) {
                     s.notify(LiveShareCommands.executeObservable, { code, file, line, id });
                 }
@@ -206,9 +206,9 @@ export class GuestJupyterNotebook
             matches: [],
             cursor: {
                 start: 0,
-                end: 0
+                end: 0,
             },
-            metadata: {}
+            metadata: {},
         });
     }
 
@@ -280,7 +280,7 @@ export class GuestJupyterNotebook
             metadata,
             msgId,
             session: '1',
-            username: '1'
+            username: '1',
         });
 
         return {
@@ -293,7 +293,7 @@ export class GuestJupyterNotebook
             removeMessageHook: noop,
             sendInputReply: noop,
             isDisposed: false,
-            dispose: noop
+            dispose: noop,
         };
     }
 
@@ -304,12 +304,12 @@ export class GuestJupyterNotebook
             msgType: 'comm_info_reply',
             channel: 'shell',
             content: {
-                status: 'ok'
+                status: 'ok',
                 // tslint:disable-next-line: no-any
             } as any,
             metadata: {},
             session: '1',
-            username: '1'
+            username: '1',
         });
 
         return Promise.resolve(shellMessage);

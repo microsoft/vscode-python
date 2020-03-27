@@ -39,7 +39,7 @@ export enum AutoSelectionRule {
     settings = 'settings',
     cachedInterpreters = 'cachedInterpreters',
     systemWide = 'system',
-    windowsRegistry = 'windowsRegistry'
+    windowsRegistry = 'windowsRegistry',
 }
 
 export const IInterpreterAutoSelectionRule = Symbol('IInterpreterAutoSelectionRule');

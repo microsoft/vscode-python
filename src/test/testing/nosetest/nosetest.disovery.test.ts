@@ -35,7 +35,7 @@ const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
 );
 const filesToDelete = [
     path.join(UNITTEST_TEST_FILES_PATH, '.noseids'),
-    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')
+    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids'),
 ];
 
 // tslint:disable-next-line:max-func-body-length
@@ -46,7 +46,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         : vscode.ConfigurationTarget.Workspace;
 
     suiteSetup(async () => {
-        filesToDelete.forEach(file => {
+        filesToDelete.forEach((file) => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
             }
@@ -56,7 +56,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
     });
     suiteTeardown(async () => {
         await updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget);
-        filesToDelete.forEach(file => {
+        filesToDelete.forEach((file) => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
             }
@@ -107,7 +107,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
                 );
                 callback({
                     out,
-                    source: 'stdout'
+                    source: 'stdout',
                 });
             }
         });
@@ -133,7 +133,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
         assert.equal(
-            tests.testSuites.every(t => t.testSuite.name === t.testSuite.nameToRun.split(':')[1]),
+            tests.testSuites.every((t) => t.testSuite.name === t.testSuite.nameToRun.split(':')[1]),
             true,
             'Suite name does not match class name'
         );

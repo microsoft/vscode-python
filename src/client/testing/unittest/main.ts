@@ -31,7 +31,7 @@ export class TestManager extends BaseTestManager {
             args,
             token: this.testDiscoveryCancellationToken!,
             ignoreCache,
-            outChannel: this.outputChannel
+            outChannel: this.outputChannel,
         };
     }
     public async runTest(
@@ -43,10 +43,10 @@ export class TestManager extends BaseTestManager {
         if (runFailedTests === true && this.tests) {
             testsToRun = { testFile: [], testFolder: [], testSuite: [], testFunction: [] };
             testsToRun.testFunction = this.tests.testFunctions
-                .filter(fn => {
+                .filter((fn) => {
                     return fn.testFunction.status === TestStatus.Error || fn.testFunction.status === TestStatus.Fail;
                 })
-                .map(fn => fn.testFunction);
+                .map((fn) => fn.testFunction);
         }
         return super.runTest(cmdSource, testsToRun, runFailedTests, debug);
     }
@@ -79,7 +79,7 @@ export class TestManager extends BaseTestManager {
             testsToRun,
             debug,
             token: this.testRunnerCancellationToken!,
-            outChannel: this.outputChannel
+            outChannel: this.outputChannel,
         };
         return this.runner.runTest(this.testResultsService, options, this);
     }

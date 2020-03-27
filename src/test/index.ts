@@ -20,7 +20,7 @@ import {
     IS_SMOKE_TEST,
     MAX_EXTENSION_ACTIVATION_TIME,
     TEST_RETRYCOUNT,
-    TEST_TIMEOUT
+    TEST_TIMEOUT,
 } from './constants';
 import { initialize } from './initialize';
 
@@ -73,7 +73,7 @@ function configure(): SetupOptions {
         testFilesSuffix,
         // Force Mocha to exit after tests.
         // It has been observed that this isn't sufficient, hence the reason for src/test/common/exitCIAfterTestReporter.ts
-        exit: true
+        exit: true,
     };
 
     // If the `MOCHA_REPORTER_JUNIT` env var is true, set up the CI reporter for
@@ -84,7 +84,7 @@ function configure(): SetupOptions {
         options.reporter = 'mocha-multi-reporters';
         const reporterPath = path.join(__dirname, 'common', 'exitCIAfterTestReporter.js');
         options.reporterOptions = {
-            reporterEnabled: `spec,mocha-junit-reporter,${reporterPath}`
+            reporterEnabled: `spec,mocha-junit-reporter,${reporterPath}`,
         };
     }
 
@@ -116,7 +116,7 @@ function activatePythonExtensionScript() {
     const initializationPromise = initialize();
     const promise = Promise.race([initializationPromise, failed]);
     // tslint:disable-next-line: no-console
-    promise.finally(() => clearTimeout(timer!)).catch(e => console.error(e));
+    promise.finally(() => clearTimeout(timer!)).catch((e) => console.error(e));
     return initializationPromise;
 }
 
@@ -156,7 +156,7 @@ export async function run(): Promise<void> {
     });
 
     // Setup test files that need to be run.
-    testFiles.forEach(file => mocha.addFile(path.join(testsRoot, file)));
+    testFiles.forEach((file) => mocha.addFile(path.join(testsRoot, file)));
 
     // tslint:disable: no-console
     console.time('Time taken to activate the extension');
@@ -169,7 +169,7 @@ export async function run(): Promise<void> {
 
     // Run the tests.
     await new Promise<void>((resolve, reject) => {
-        mocha.run(failures => {
+        mocha.run((failures) => {
             if (failures > 0) {
                 return reject(new Error(`${failures} total failures`));
             }

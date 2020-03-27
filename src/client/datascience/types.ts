@@ -17,7 +17,7 @@ import {
     TextDocument,
     TextEditor,
     Uri,
-    WebviewPanel
+    WebviewPanel,
 } from 'vscode';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager } from '../common/application/types';
@@ -61,7 +61,7 @@ export interface IConnection extends Disposable {
 export enum InterruptResult {
     Success = 0,
     TimedOut = 1,
-    Restarted = 2
+    Restarted = 2,
 }
 
 // Information used to launch a notebook server
@@ -514,7 +514,7 @@ export enum CellState {
     init = 0,
     executing = 1,
     finished = 2,
-    error = 3
+    error = 3,
 }
 
 // Basic structure for a cell from a notebook

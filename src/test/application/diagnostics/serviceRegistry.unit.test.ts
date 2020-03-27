@@ -8,31 +8,31 @@ import { LanguageServerType } from '../../../client/activation/types';
 import { ApplicationDiagnostics } from '../../../client/application/diagnostics/applicationDiagnostics';
 import {
     EnvironmentPathVariableDiagnosticsService,
-    EnvironmentPathVariableDiagnosticsServiceId
+    EnvironmentPathVariableDiagnosticsServiceId,
 } from '../../../client/application/diagnostics/checks/envPathVariable';
 import {
     InvalidLaunchJsonDebuggerService,
-    InvalidLaunchJsonDebuggerServiceId
+    InvalidLaunchJsonDebuggerServiceId,
 } from '../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
 import {
     InvalidPythonPathInDebuggerService,
-    InvalidPythonPathInDebuggerServiceId
+    InvalidPythonPathInDebuggerServiceId,
 } from '../../../client/application/diagnostics/checks/invalidPythonPathInDebugger';
 import {
     LSNotSupportedDiagnosticService,
-    LSNotSupportedDiagnosticServiceId
+    LSNotSupportedDiagnosticServiceId,
 } from '../../../client/application/diagnostics/checks/lsNotSupported';
 import {
     InvalidMacPythonInterpreterService,
-    InvalidMacPythonInterpreterServiceId
+    InvalidMacPythonInterpreterServiceId,
 } from '../../../client/application/diagnostics/checks/macPythonInterpreter';
 import {
     PowerShellActivationHackDiagnosticsService,
-    PowerShellActivationHackDiagnosticsServiceId
+    PowerShellActivationHackDiagnosticsServiceId,
 } from '../../../client/application/diagnostics/checks/powerShellActivation';
 import {
     InvalidPythonInterpreterService,
-    InvalidPythonInterpreterServiceId
+    InvalidPythonInterpreterServiceId,
 } from '../../../client/application/diagnostics/checks/pythonInterpreter';
 import { DiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/factory';
 import { IDiagnosticsCommandFactory } from '../../../client/application/diagnostics/commands/types';
@@ -40,13 +40,13 @@ import { DiagnosticFilterService } from '../../../client/application/diagnostics
 import {
     DiagnosticCommandPromptHandlerService,
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
+    MessageCommandPrompt,
 } from '../../../client/application/diagnostics/promptHandler';
 import { registerTypes } from '../../../client/application/diagnostics/serviceRegistry';
 import {
     IDiagnosticFilterService,
     IDiagnosticHandlerService,
-    IDiagnosticsService
+    IDiagnosticsService,
 } from '../../../client/application/diagnostics/types';
 import { IApplicationDiagnostics } from '../../../client/application/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';

@@ -132,7 +132,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
         // Ask the user what file to save to
         const file = await this.applicationShell.showSaveDialog({
             saveLabel: localize.DataScience.exportPlotTitle(),
-            filters: filtersObject
+            filters: filtersObject,
         });
         try {
             if (file) {

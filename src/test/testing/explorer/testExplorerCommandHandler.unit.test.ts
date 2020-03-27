@@ -53,9 +53,9 @@ suite('Unit Tests - Test Explorer Command Handler', () => {
         commandHandler.register();
         commandHandler.dispose();
 
-        disposable1.verify(d => d.dispose(), typemoq.Times.once());
-        disposable2.verify(d => d.dispose(), typemoq.Times.once());
-        disposable3.verify(d => d.dispose(), typemoq.Times.once());
+        disposable1.verify((d) => d.dispose(), typemoq.Times.once());
+        disposable2.verify((d) => d.dispose(), typemoq.Times.once());
+        disposable3.verify((d) => d.dispose(), typemoq.Times.once());
     });
     async function testOpeningTestNode(
         data: TestFile | TestSuite | TestFunction,

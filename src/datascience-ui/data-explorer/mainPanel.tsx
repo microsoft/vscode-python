@@ -13,7 +13,7 @@ import {
     CellFetchSizeSubsequent,
     DataViewerMessages,
     IDataViewerMapping,
-    IGetRowsResponse
+    IGetRowsResponse,
 } from '../../client/datascience/data-viewing/types';
 import { SharedMessages } from '../../client/datascience/messages';
 import { IDataScienceExtraSettings, IJupyterVariable } from '../../client/datascience/types';
@@ -63,7 +63,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (!this.props.skipDefault) {
             const data = generateTestData(5000);
             this.state = {
-                gridColumns: data.columns.map(c => {
+                gridColumns: data.columns.map((c) => {
                     return { ...c, formatter: cellFormatterFunc };
                 }),
                 gridRows: [],
@@ -71,7 +71,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: data.primaryKeys[0],
-                styleReady: false
+                styleReady: false,
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -84,7 +84,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: 'index',
-                styleReady: false
+                styleReady: false,
             };
         }
     }
@@ -169,7 +169,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const newSettingsJSON = JSON.parse(content);
         const newSettings = newSettingsJSON as IDataScienceExtraSettings;
         this.setState({
-            settings: newSettings
+            settings: newSettings,
         });
     }
 
@@ -210,7 +210,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     gridRows: initialRows,
                     totalRowCount,
                     fetchedRowCount: initialRows.length,
-                    indexColumn: indexColumn
+                    indexColumn: indexColumn,
                 });
 
                 // Compute our row fetch sizes based on the number of columns
@@ -250,7 +250,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Update our fetched count and actual rows
         this.setState({
             gridRows: this.state.gridRows.concat(normalized),
-            fetchedRowCount: this.state.totalRowCount
+            fetchedRowCount: this.state.totalRowCount,
         });
 
         // Add all of these rows to the grid
@@ -271,7 +271,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Apply this to our state
         this.setState({
             fetchedRowCount: newFetched,
-            gridRows: newActual
+            gridRows: newActual,
         });
 
         // Tell our grid about the new ros
@@ -294,7 +294,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     id: `${i}`,
                     name: c.key.toString(),
                     sortable: true,
-                    formatter: cellFormatterFunc
+                    formatter: cellFormatterFunc,
                 };
             });
         }

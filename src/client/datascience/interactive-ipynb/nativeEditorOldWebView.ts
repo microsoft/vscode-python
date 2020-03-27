@@ -13,7 +13,7 @@ import {
     IDocumentManager,
     ILiveShareApi,
     IWebPanelProvider,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../common/application/types';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -23,7 +23,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IExperimentsManager,
-    IMemento
+    IMemento,
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -45,7 +45,7 @@ import {
     INotebookModel,
     INotebookProvider,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
 } from '../types';
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorStorage } from './nativeEditorStorage';
@@ -54,7 +54,7 @@ import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 enum AskForSaveResult {
     Yes,
     No,
-    Cancel
+    Cancel,
 }
 
 @injectable()
@@ -271,7 +271,7 @@ export class NativeEditorOldWebView extends NativeEditor {
             fileToSaveTo = await this.applicationShell.showSaveDialog({
                 saveLabel: localize.DataScience.dirtyNotebookDialogTitle(),
                 filters: filtersObject,
-                defaultUri
+                defaultUri,
             });
 
             if (fileToSaveTo) {

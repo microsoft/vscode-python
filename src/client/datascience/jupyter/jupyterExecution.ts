@@ -24,7 +24,7 @@ import {
     IJupyterSubCommandExecutionService,
     INotebookServer,
     INotebookServerLaunchInfo,
-    INotebookServerOptions
+    INotebookServerOptions,
 } from '../types';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { JupyterSessionStartError } from './jupyterSession';
@@ -63,7 +63,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         this.disposableRegistry.push(this);
 
         if (workspace) {
-            const disposable = workspace.onDidChangeConfiguration(e => {
+            const disposable = workspace.onDidChangeConfiguration((e) => {
                 if (e.affectsConfiguration('python.dataScience', undefined)) {
                     // When config changes happen, recreate our commands.
                     this.onSettingsChanged();
@@ -164,7 +164,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Start or connect to the process
                     [connection, kernelSpecInterpreter] = await Promise.all([
                         this.startOrConnect(options, cancelToken),
-                        kernelSpecInterpreterPromise
+                        kernelSpecInterpreterPromise,
                     ]);
 
                     if (!connection.localLaunch && LocalHosts.includes(connection.hostName.toLowerCase())) {
@@ -200,7 +200,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         kernelSpec: kernelSpecInterpreter.kernelSpec,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
-                        purpose: options ? options.purpose : uuid()
+                        purpose: options ? options.purpose : uuid(),
                     };
 
                     // tslint:disable-next-line: no-constant-condition
@@ -306,12 +306,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // Kill any existing connections.
             connection?.dispose();
             sendTelemetryEvent(Telemetry.JupyterStartTimeout, stopWatch.elapsedTime, {
-                timeout: stopWatch.elapsedTime
+                timeout: stopWatch.elapsedTime,
             });
             if (allowUI) {
                 this.appShell
                     .showErrorMessage(localize.DataScience.jupyterStartTimedout(), localize.Common.openOutputPanel())
-                    .then(selection => {
+                    .then((selection) => {
                         if (selection === localize.Common.openOutputPanel()) {
                             this.jupyterOutputChannel.show();
                         }

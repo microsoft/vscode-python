@@ -117,7 +117,7 @@ import {
     IPlotViewer,
     IPlotViewerProvider,
     IStatusProvider,
-    IThemeFinder
+    IThemeFinder,
 } from './types';
 
 // README: Did you make sure "dataScienceIocContainer.ts" has also been updated appropriately?

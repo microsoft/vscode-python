@@ -20,7 +20,7 @@ import {
     TestDataItem,
     TestDataItemType,
     TestWorkspaceFolder,
-    WorkspaceTestStatus
+    WorkspaceTestStatus,
 } from '../types';
 import { TestTreeItem } from './testTreeViewItem';
 
@@ -45,7 +45,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         disposableRegistry.push(this);
         this.testsAreBeingDiscovered = new Map<string, boolean>();
         this.disposables.push(this.testService.onDidStatusChange(this.onTestStatusChanged, this));
-        this.testStore.onDidChange(e => this._onDidChangeTreeData.fire(e.data), this, this.disposables);
+        this.testStore.onDidChange((e) => this._onDidChangeTreeData.fire(e.data), this, this.disposables);
         this.workspace.onDidChangeWorkspaceFolders(() => this._onDidChangeTreeData.fire(), this, this.disposables);
 
         if (Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 0) {
@@ -70,7 +70,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
      * from our internal emitter.
      */
     public dispose() {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
         this._onDidChangeTreeData.dispose();
     }
 
@@ -117,7 +117,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         }
 
         sendTelemetryEvent(EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT, undefined, {
-            count: this.workspace.workspaceFolders.length
+            count: this.workspace.workspaceFolders.length,
         });
 
         // If we are in a single workspace
@@ -128,7 +128,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
 
         // If we are in a mult-root workspace, then nest the test data within a
         // virtual node, represending the workspace folder.
-        return this.workspace.workspaceFolders.map(workspaceFolder => new TestWorkspaceFolder(workspaceFolder));
+        return this.workspace.workspaceFolders.map((workspaceFolder) => new TestWorkspaceFolder(workspaceFolder));
     }
 
     /**

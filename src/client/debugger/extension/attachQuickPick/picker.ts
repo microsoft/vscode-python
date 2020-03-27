@@ -23,7 +23,7 @@ export class AttachPicker implements IAttachPicker {
 
             const refreshButton = {
                 iconPath: getIcon(REFRESH_BUTTON_ICON),
-                tooltip: AttachProcess.refreshList()
+                tooltip: AttachProcess.refreshList(),
             };
 
             const quickPick = this.applicationShell.createQuickPick<IAttachItem>();
@@ -54,7 +54,7 @@ export class AttachPicker implements IAttachPicker {
 
                     const selectedId = quickPick.selectedItems[0].id;
 
-                    disposables.forEach(item => item.dispose());
+                    disposables.forEach((item) => item.dispose());
                     quickPick.dispose();
 
                     resolve(selectedId);
@@ -65,7 +65,7 @@ export class AttachPicker implements IAttachPicker {
 
             quickPick.onDidHide(
                 () => {
-                    disposables.forEach(item => item.dispose());
+                    disposables.forEach((item) => item.dispose());
                     quickPick.dispose();
 
                     reject(new Error(AttachProcess.noProcessSelected()));

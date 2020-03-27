@@ -73,15 +73,15 @@ async function end(exitCode: number) {
 }
 
 async function startSocketServer() {
-    return new Promise(resolve => {
-        server = createServer(socket => {
-            socket.on('data', buffer => {
+    return new Promise((resolve) => {
+        server = createServer((socket) => {
+            socket.on('data', (buffer) => {
                 const data = buffer.toString('utf8');
                 console.log(`Exit code from Tests is ${data}`);
                 const code = parseInt(data.substring(0, 1), 10);
                 end(code).catch(noop);
             });
-            socket.on('error', ex => {
+            socket.on('error', (ex) => {
                 // Just log it, no need to do anything else.
                 console.error(ex);
             });
@@ -94,7 +94,7 @@ async function startSocketServer() {
             await fs.writeFile(portFile, port.toString());
             resolve();
         });
-        server.on('error', ex => {
+        server.on('error', (ex) => {
             // Just log it, no need to do anything else.
             console.error(ex);
         });
@@ -108,7 +108,7 @@ async function start() {
     proc.once('close', end);
 }
 
-start().catch(ex => {
+start().catch((ex) => {
     console.error('File testBootstrap.ts failed with Errors', ex);
     process.exit(1);
 });

@@ -8,7 +8,7 @@ import {
     DebugAdapterDescriptorFactory,
     DebugAdapterTrackerFactory,
     DebugConfigurationProvider,
-    WorkspaceFolder
+    WorkspaceFolder,
 } from 'vscode';
 import { InputStep, MultiStepInput } from '../../common/utils/multiStepInput';
 import { RemoteDebugOptions } from '../debugAdapter/types';
@@ -41,12 +41,12 @@ export enum DebugConfigurationType {
     launchFlask = 'launchFlask',
     launchModule = 'launchModule',
     launchPyramid = 'launchPyramid',
-    pidAttach = 'pidAttach'
+    pidAttach = 'pidAttach',
 }
 
 export enum PythonPathSource {
     launchJson = 'launch.json',
-    settingsJson = 'settings.json'
+    settingsJson = 'settings.json',
 }
 
 export const IDebugAdapterDescriptorFactory = Symbol('IDebugAdapterDescriptorFactory');

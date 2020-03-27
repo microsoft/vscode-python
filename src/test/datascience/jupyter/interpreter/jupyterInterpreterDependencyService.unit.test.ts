@@ -13,11 +13,11 @@ import { DataScience } from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
 import {
     InterpreterJupyterKernelSpecCommand,
-    JupyterCommandFactory
+    JupyterCommandFactory,
 } from '../../../../client/datascience/jupyter/interpreter/jupyterCommand';
 import {
     JupyterInterpreterDependencyResponse,
-    JupyterInterpreterDependencyService
+    JupyterInterpreterDependencyService,
 } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { IJupyterCommand, IJupyterCommandFactory } from '../../../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
@@ -35,7 +35,7 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Unknown
+        type: InterpreterType.Unknown,
     };
     setup(() => {
         appShell = mock(ApplicationShell);

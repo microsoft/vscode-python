@@ -54,7 +54,7 @@ export class ServerCache implements IAsyncDisposable {
                 promise: createFunction(options, cancelSource.token),
                 options: fixedOptions,
                 cancelSource,
-                resolved: false
+                resolved: false,
             };
             this.cache.set(key, data);
         }
@@ -81,7 +81,7 @@ export class ServerCache implements IAsyncDisposable {
 
                 return server;
             })
-            .catch(e => {
+            .catch((e) => {
                 this.cache.delete(key);
                 throw e;
             });
@@ -97,7 +97,7 @@ export class ServerCache implements IAsyncDisposable {
 
     public async dispose(): Promise<void> {
         await Promise.all(
-            [...this.cache.values()].map(async d => {
+            [...this.cache.values()].map(async (d) => {
                 const server = await d.promise;
                 await server?.dispose();
             })
@@ -113,7 +113,7 @@ export class ServerCache implements IAsyncDisposable {
             purpose: options ? options.purpose : uuid(),
             workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
             metadata: options?.metadata,
-            allowUI: options?.allowUI ? options.allowUI : () => false
+            allowUI: options?.allowUI ? options.allowUI : () => false,
         };
     }
 

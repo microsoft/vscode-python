@@ -51,7 +51,7 @@ export class JupyterInterpreterSelector {
             matchOnDescription: true,
             placeHolder: currentPythonPath
                 ? DataScience.currentlySelectedJupyterInterpreterForPlaceholder().format(currentPythonPath)
-                : ''
+                : '',
         };
 
         const selection = await this.applicationShell.showQuickPick(suggestions, quickPickOptions);

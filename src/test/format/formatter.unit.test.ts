@@ -22,7 +22,7 @@ import {
     IDisposableRegistry,
     IFormattingSettings,
     IOutputChannel,
-    IPythonSettings
+    IPythonSettings,
 } from '../../client/common/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BaseFormatter } from '../../client/formatters/baseFormatter';
@@ -53,7 +53,7 @@ suite('Formatting - Test Arguments', () => {
         blackPath: path.join('a', 'exe'),
         provider: '',
         yapfArgs: ['1', '2'],
-        yapfPath: path.join('a', 'exe')
+        yapfPath: path.join('a', 'exe'),
     };
 
     const formattingSettingsWithModuleName: IFormattingSettings = {
@@ -63,7 +63,7 @@ suite('Formatting - Test Arguments', () => {
         blackPath: 'module_name',
         provider: '',
         yapfArgs: ['1', '2'],
-        yapfPath: 'module_name'
+        yapfPath: 'module_name',
     };
 
     setup(() => {
@@ -72,10 +72,10 @@ suite('Formatting - Test Arguments', () => {
         workspace = mock(WorkspaceService);
         settings = mock(PythonSettings);
         document = typemoq.Mock.ofType<TextDocument>();
-        document.setup(doc => doc.getText(typemoq.It.isAny())).returns(() => '');
-        document.setup(doc => doc.isDirty).returns(() => false);
-        document.setup(doc => doc.fileName).returns(() => docUri.fsPath);
-        document.setup(doc => doc.uri).returns(() => docUri);
+        document.setup((doc) => doc.getText(typemoq.It.isAny())).returns(() => '');
+        document.setup((doc) => doc.isDirty).returns(() => false);
+        document.setup((doc) => doc.fileName).returns(() => docUri.fsPath);
+        document.setup((doc) => doc.uri).returns(() => docUri);
         pythonToolExecutionService = mock(PythonToolExecutionService);
 
         const configService = mock(ConfigurationService);

@@ -26,9 +26,9 @@ suite('Terminal Provider', () => {
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
-        serviceContainer.setup(c => c.get(ICommandManager)).returns(() => commandManager.object);
-        serviceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspace.object);
-        serviceContainer.setup(c => c.get(IActiveResourceService)).returns(() => activeResourceService.object);
+        serviceContainer.setup((c) => c.get(ICommandManager)).returns(() => commandManager.object);
+        serviceContainer.setup((c) => c.get(IWorkspaceService)).returns(() => workspace.object);
+        serviceContainer.setup((c) => c.get(IActiveResourceService)).returns(() => activeResourceService.object);
     });
     teardown(() => {
         try {
@@ -40,7 +40,7 @@ suite('Terminal Provider', () => {
     test('Ensure command is registered', () => {
         terminalProvider = new TerminalProvider(serviceContainer.object);
         commandManager.verify(
-            c =>
+            (c) =>
                 c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()),
             TypeMoq.Times.once()
         );
@@ -49,7 +49,7 @@ suite('Terminal Provider', () => {
     test('Ensure command handler is disposed', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         commandManager
-            .setup(c =>
+            .setup((c) =>
                 c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())
             )
             .returns(() => disposable.object);
@@ -57,14 +57,14 @@ suite('Terminal Provider', () => {
         terminalProvider = new TerminalProvider(serviceContainer.object);
         terminalProvider.dispose();
 
-        disposable.verify(d => d.dispose(), TypeMoq.Times.once());
+        disposable.verify((d) => d.dispose(), TypeMoq.Times.once());
     });
 
     test('Ensure terminal is created and displayed when command is invoked', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
         commandManager
-            .setup(c =>
+            .setup((c) =>
                 c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())
             )
             .returns((_cmd, callback) => {
@@ -72,26 +72,26 @@ suite('Terminal Provider', () => {
                 return disposable.object;
             });
         activeResourceService
-            .setup(a => a.getActiveResource())
+            .setup((a) => a.getActiveResource())
             .returns(() => resource)
             .verifiable(TypeMoq.Times.once());
-        workspace.setup(w => w.workspaceFolders).returns(() => undefined);
+        workspace.setup((w) => w.workspaceFolders).returns(() => undefined);
 
         terminalProvider = new TerminalProvider(serviceContainer.object);
         expect(commandHandler).not.to.be.equal(undefined, 'Handler not set');
 
         const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
+            .setup((c) => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
             .returns(() => terminalServiceFactory.object);
         const terminalService = TypeMoq.Mock.ofType<TerminalService>();
         terminalServiceFactory
-            .setup(t => t.createTerminalService(TypeMoq.It.isValue(resource), TypeMoq.It.isValue('Python')))
+            .setup((t) => t.createTerminalService(TypeMoq.It.isValue(resource), TypeMoq.It.isValue('Python')))
             .returns(() => terminalService.object);
 
         commandHandler!.call(terminalProvider);
         activeResourceService.verifyAll();
-        terminalService.verify(t => t.show(false), TypeMoq.Times.once());
+        terminalService.verify((t) => t.show(false), TypeMoq.Times.once());
     });
 
     // tslint:disable-next-line: max-func-body-length
@@ -105,33 +105,33 @@ suite('Terminal Provider', () => {
         setup(() => {
             configService = TypeMoq.Mock.ofType<IConfigurationService>();
             serviceContainer
-                .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+                .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
                 .returns(() => configService.object);
             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
             activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
 
             terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
-            pythonSettings.setup(s => s.terminal).returns(() => terminalSettings.object);
+            pythonSettings.setup((s) => s.terminal).returns(() => terminalSettings.object);
 
             terminalActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
             serviceContainer
-                .setup(c => c.get(TypeMoq.It.isValue(ITerminalActivator)))
+                .setup((c) => c.get(TypeMoq.It.isValue(ITerminalActivator)))
                 .returns(() => terminalActivator.object);
             serviceContainer
-                .setup(c => c.get(TypeMoq.It.isValue(IActiveResourceService)))
+                .setup((c) => c.get(TypeMoq.It.isValue(IActiveResourceService)))
                 .returns(() => activeResourceService.object);
 
             terminal = TypeMoq.Mock.ofType<Terminal>();
         });
 
         test('If terminal.activateCurrentTerminal setting is set, provided terminal should be activated', async () => {
-            terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => true);
+            terminalSettings.setup((t) => t.activateEnvInCurrentTerminal).returns(() => true);
             configService
-                .setup(c => c.getSettings(resource))
+                .setup((c) => c.getSettings(resource))
                 .returns(() => pythonSettings.object)
                 .verifiable(TypeMoq.Times.once());
             activeResourceService
-                .setup(a => a.getActiveResource())
+                .setup((a) => a.getActiveResource())
                 .returns(() => resource)
                 .verifiable(TypeMoq.Times.once());
 
@@ -139,7 +139,7 @@ suite('Terminal Provider', () => {
             await terminalProvider.initialize(terminal.object);
 
             terminalActivator.verify(
-                a => a.activateEnvironmentInTerminal(terminal.object, TypeMoq.It.isAny()),
+                (a) => a.activateEnvironmentInTerminal(terminal.object, TypeMoq.It.isAny()),
                 TypeMoq.Times.once()
             );
             configService.verifyAll();
@@ -147,13 +147,13 @@ suite('Terminal Provider', () => {
         });
 
         test('If terminal.activateCurrentTerminal setting is not set, provided terminal should not be activated', async () => {
-            terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => false);
+            terminalSettings.setup((t) => t.activateEnvInCurrentTerminal).returns(() => false);
             configService
-                .setup(c => c.getSettings(resource))
+                .setup((c) => c.getSettings(resource))
                 .returns(() => pythonSettings.object)
                 .verifiable(TypeMoq.Times.once());
             activeResourceService
-                .setup(a => a.getActiveResource())
+                .setup((a) => a.getActiveResource())
                 .returns(() => resource)
                 .verifiable(TypeMoq.Times.once());
 
@@ -161,7 +161,7 @@ suite('Terminal Provider', () => {
             await terminalProvider.initialize(terminal.object);
 
             terminalActivator.verify(
-                a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                (a) => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                 TypeMoq.Times.never()
             );
             activeResourceService.verifyAll();
@@ -169,13 +169,13 @@ suite('Terminal Provider', () => {
         });
 
         test('terminal.activateCurrentTerminal setting is set but provided terminal is undefined', async () => {
-            terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => true);
+            terminalSettings.setup((t) => t.activateEnvInCurrentTerminal).returns(() => true);
             configService
-                .setup(c => c.getSettings(resource))
+                .setup((c) => c.getSettings(resource))
                 .returns(() => pythonSettings.object)
                 .verifiable(TypeMoq.Times.once());
             activeResourceService
-                .setup(a => a.getActiveResource())
+                .setup((a) => a.getActiveResource())
                 .returns(() => resource)
                 .verifiable(TypeMoq.Times.once());
 
@@ -183,7 +183,7 @@ suite('Terminal Provider', () => {
             await terminalProvider.initialize(undefined);
 
             terminalActivator.verify(
-                a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
+                (a) => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()),
                 TypeMoq.Times.never()
             );
             activeResourceService.verifyAll();
@@ -191,9 +191,9 @@ suite('Terminal Provider', () => {
         });
 
         test('Exceptions are swallowed if initializing terminal provider fails', async () => {
-            terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => true);
-            configService.setup(c => c.getSettings(resource)).throws(new Error('Kaboom'));
-            activeResourceService.setup(a => a.getActiveResource()).returns(() => resource);
+            terminalSettings.setup((t) => t.activateEnvInCurrentTerminal).returns(() => true);
+            configService.setup((c) => c.getSettings(resource)).throws(new Error('Kaboom'));
+            activeResourceService.setup((a) => a.getActiveResource()).returns(() => resource);
 
             terminalProvider = new TerminalProvider(serviceContainer.object);
             try {

@@ -30,7 +30,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
             cwd: options.cwd,
             workspaceFolder: options.workspaceFolder,
             token,
-            outChannel: options.outChannel
+            outChannel: options.outChannel,
         };
 
         const data = await this.runner.run(NOSETEST_PROVIDER, runOptions);

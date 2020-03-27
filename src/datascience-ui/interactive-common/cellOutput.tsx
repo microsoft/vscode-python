@@ -116,8 +116,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 'var(--vscode-terminal-ansiBlue)', // 12
                 'var(--vscode-terminal-ansiBrightMagenta)', // 13
                 'var(--vscode-terminal-ansiBrightCyan)', // 14
-                'var(--vscode-terminal-ansiBrightWhite)' // 15
-            ]
+                'var(--vscode-terminal-ansiBrightWhite)', // 15
+            ],
         };
     }
     public render() {
@@ -212,7 +212,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
     private destroyIPyWidgets() {
-        this.renderedView.forEach(view => {
+        this.renderedView.forEach((view) => {
             try {
                 view.dispose();
             } catch {
@@ -317,9 +317,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         if (this.isCodeCell()) {
             return (
                 this.renderCodeOutputs()
-                    .filter(item => !!item)
+                    .filter((item) => !!item)
                     // tslint:disable-next-line: no-any
-                    .map(item => (item as any) as JSX.Element)
+                    .map((item) => (item as any) as JSX.Element)
             );
         } else if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
             return this.renderMarkdownOutputs();
@@ -348,7 +348,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return [
             <div key={0} className={MarkdownClassName}>
                 <Transform key={0} data={source} />
-            </div>
+            </div>,
         ];
     };
 
@@ -375,7 +375,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             const stream = output as nbformat.IStream; // NOSONAR
             const formatted = concatMultilineStringOutput(stream.text);
             input = {
-                'text/html': formatted.includes('<') ? `<xmp>${formatted}</xmp>` : `<div>${formatted}</div>`
+                'text/html': formatted.includes('<') ? `<xmp>${formatted}</xmp>` : `<div>${formatted}</div>`,
             };
 
             // Output may have goofy ascii colorization chars in it. Try
@@ -385,7 +385,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     const converter = new CellOutput.ansiToHtmlClass(CellOutput.getAnsiToHtmlOptions());
                     const html = converter.toHtml(formatted);
                     input = {
-                        'text/html': html
+                        'text/html': html,
                     };
                 }
             } catch {
@@ -402,12 +402,12 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 const converter = new CellOutput.ansiToHtmlClass(CellOutput.getAnsiToHtmlOptions());
                 const trace = converter.toHtml(error.traceback.join('\n'));
                 input = {
-                    'text/html': trace
+                    'text/html': trace,
                 };
             } catch {
                 // This can fail during unit tests, just use the raw data
                 input = {
-                    'text/html': error.evalue
+                    'text/html': error.evalue,
                 };
             }
         } else if (input) {
@@ -438,7 +438,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             renderWithScrollbars,
             data: data,
             mimeType,
-            mimeBundle
+            mimeBundle,
         };
     }
 
@@ -457,7 +457,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 return {
                     output: data,
                     extraButton,
-                    doubleClick: noop
+                    doubleClick: noop,
                 };
             } else if (data.mimeType === 'image/svg+xml' || data.mimeType === 'image/png') {
                 // If we have a png or svg enable the plot viewer button
@@ -497,7 +497,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     output: data,
                     extraButton,
                     doubleClick,
-                    outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
+                    outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background',
                 };
             } else {
                 // For anything else just return it with a white plot background. This lets stuff like vega look good in
@@ -506,7 +506,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     output: data,
                     extraButton,
                     doubleClick: noop,
-                    outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
+                    outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background',
                 };
             }
         } catch (e) {
@@ -517,10 +517,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     isError: false,
                     renderWithScrollbars: false,
                     mimeType: 'text/plain',
-                    mimeBundle: {}
+                    mimeBundle: {},
                 },
                 extraButton: null,
-                doubleClick: noop
+                doubleClick: noop,
             };
         }
     }
@@ -594,7 +594,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         const style: React.CSSProperties = {};
 
         // Create a scrollbar style if necessary
-        if (transformedList.some(transformed => transformed.output.renderWithScrollbars) && this.props.maxTextSize) {
+        if (transformedList.some((transformed) => transformed.output.renderWithScrollbars) && this.props.maxTextSize) {
             style.overflowY = 'auto';
             style.maxHeight = `${this.props.maxTextSize}px`;
         }

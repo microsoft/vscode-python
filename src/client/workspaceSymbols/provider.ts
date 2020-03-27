@@ -7,7 +7,7 @@ import {
     Location,
     SymbolInformation,
     Uri,
-    WorkspaceSymbolProvider as IWorspaceSymbolProvider
+    WorkspaceSymbolProvider as IWorspaceSymbolProvider,
 } from 'vscode';
 import { ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
@@ -30,15 +30,15 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
             return [];
         }
         const generatorsWithTagFiles = await Promise.all(
-            this.tagGenerators.map(generator => this.fs.fileExists(generator.tagFilePath))
+            this.tagGenerators.map((generator) => this.fs.fileExists(generator.tagFilePath))
         );
-        if (generatorsWithTagFiles.filter(exists => exists).length !== this.tagGenerators.length) {
+        if (generatorsWithTagFiles.filter((exists) => exists).length !== this.tagGenerators.length) {
             await this.commands.executeCommand(Commands.Build_Workspace_Symbols, true, token);
         }
 
         const generators: Generator[] = [];
         await Promise.all(
-            this.tagGenerators.map(async generator => {
+            this.tagGenerators.map(async (generator) => {
                 if (await this.fs.fileExists(generator.tagFilePath)) {
                     generators.push(generator);
                 }
@@ -46,8 +46,8 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
         );
 
         const promises = generators
-            .filter(generator => generator !== undefined && generator.enabled)
-            .map(async generator => {
+            .filter((generator) => generator !== undefined && generator.enabled)
+            .map(async (generator) => {
                 // load tags
                 const items = await parseTags(
                     generator!.workspaceFolder.fsPath,
@@ -60,7 +60,7 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
                     return [];
                 }
                 return items.map(
-                    item =>
+                    (item) =>
                         new SymbolInformation(
                             item.symbolName,
                             item.symbolKind,

@@ -11,7 +11,7 @@ import {
     IDocumentManager,
     ILiveShareApi,
     IWebPanelProvider,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
@@ -24,7 +24,7 @@ import {
     IExperimentsManager,
     IMemento,
     IPersistentStateFactory,
-    Resource
+    Resource,
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -36,7 +36,7 @@ import {
     InteractiveWindowMessages,
     ISubmitNewCell,
     NotebookModelChange,
-    SysInfoReason
+    SysInfoReason,
 } from '../interactive-common/interactiveWindowTypes';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import {
@@ -56,7 +56,7 @@ import {
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
-    WebViewViewChangeEventArgs
+    WebViewViewChangeEventArgs,
 } from '../types';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
@@ -136,7 +136,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 path.join(historyReactDir, 'ipywidgets.js'),
                 path.join(historyReactDir, 'monaco.bundle.js'),
                 path.join(historyReactDir, 'commons.initial.bundle.js'),
-                path.join(historyReactDir, 'interactiveWindow.js')
+                path.join(historyReactDir, 'interactiveWindow.js'),
             ],
             localize.DataScience.historyTitle(),
             ViewColumn.Two,
@@ -217,7 +217,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public async debugCode(code: string, file: string, line: number): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, file));
+        const doc = this.documentManager.textDocuments.find((d) => this.fileSystem.arePathsSame(d.fileName, file));
         if (doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
@@ -227,7 +227,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             // If that worked, we have to open the new document. It should be
             // the new entry in the list
             if (saved) {
-                const diff = this.documentManager.textDocuments.filter(f => beforeSave.indexOf(f) === -1);
+                const diff = this.documentManager.textDocuments.filter((f) => beforeSave.indexOf(f) === -1);
                 if (diff && diff.length > 0) {
                     file = diff[0].fileName;
 
@@ -286,14 +286,14 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             // Activate the other side, and send as if came from a file
             this.interactiveWindowProvider
                 .getOrCreateActive()
-                .then(_v => {
+                .then((_v) => {
                     this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
                         code: info.code,
                         file: Identifiers.EmptyFileName,
                         line: 0,
                         id: info.id,
                         originator: this.id,
-                        debug: false
+                        debug: false,
                     });
                 })
                 .ignoreErrors();
@@ -384,7 +384,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
                 // Bring up the open file dialog box
                 const uri = await this.applicationShell.showSaveDialog({
                     saveLabel: localize.DataScience.exportDialogTitle(),
-                    filters: filtersObject
+                    filters: filtersObject,
                 });
                 if (uri) {
                     await this.jupyterExporter.exportToFile(cells, uri.fsPath);
@@ -410,7 +410,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private handleReturnAllCells(cells: ICell[]) {
         // See what we're waiting for.
         if (this.waitingForExportCells) {
-            this.export(cells).catch(ex => traceError('Error exporting:', ex));
+            this.export(cells).catch((ex) => traceError('Error exporting:', ex));
         }
     }
 }

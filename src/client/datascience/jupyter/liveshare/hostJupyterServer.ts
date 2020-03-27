@@ -18,7 +18,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IOutputChannel,
-    Resource
+    Resource,
 } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
@@ -33,7 +33,7 @@ import {
     INotebook,
     INotebookExecutionLogger,
     INotebookServer,
-    INotebookServerLaunchInfo
+    INotebookServerLaunchInfo,
 } from '../../types';
 import { JupyterServerBase } from '../jupyterServer';
 import { KernelSelector } from '../kernels/kernelSelector';
@@ -135,7 +135,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
         await super.onSessionChange(api);
 
-        this.getNotebooks().forEach(async notebook => {
+        this.getNotebooks().forEach(async (notebook) => {
             const hostNotebook = (await notebook) as HostJupyterNotebook;
             if (hostNotebook) {
                 await hostNotebook.onSessionChange(api);
@@ -275,7 +275,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
         // This launch info contains the server connection info (that could be shared across other nbs).
         // However the kernel info is different. The kernel info is stored as a  property of this, hence create a separate instance for each nb.
         launchInfo = {
-            ...launchInfo
+            ...launchInfo,
         };
 
         // Determine the interpreter for our resource. If different, we need a different kernel.
@@ -326,7 +326,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
             this.portToForward = 0;
             this.sharedPort = await api.shareServer({
                 port,
-                displayName: localize.DataScience.liveShareHostFormat().format(os.hostname())
+                displayName: localize.DataScience.liveShareHostFormat().format(os.hostname()),
             });
         } else {
             this.portToForward = port;

@@ -15,7 +15,7 @@ export namespace WmicProcessParser {
         detail: '',
         id: '',
         processName: '',
-        commandLine: ''
+        commandLine: '',
     };
 
     // Perf numbers on Win10:
@@ -27,7 +27,7 @@ export namespace WmicProcessParser {
     // |           1308 |      1132 |
     export const wmicCommand: ProcessListCommand = {
         command: 'wmic',
-        args: ['process', 'get', 'Name,ProcessId,CommandLine', '/FORMAT:list']
+        args: ['process', 'get', 'Name,ProcessId,CommandLine', '/FORMAT:list'],
     };
 
     export function parseProcesses(processes: string): IAttachItem[] {

@@ -16,7 +16,7 @@ import {
     IInteractiveWindowProvider,
     IJupyterExecution,
     INotebookImporter,
-    INotebookServer
+    INotebookServer,
 } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/testing/common/constants';
@@ -46,7 +46,7 @@ import {
     ITestsStatusUpdaterService,
     ITestVisitor,
     IUnitTestSocketServer,
-    TestProvider
+    TestProvider,
 } from '../../client/testing/common/types';
 import { TestManager as NoseTestManager } from '../../client/testing/nosetest/main';
 import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/testing/nosetest/services/discoveryService';
@@ -131,7 +131,7 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerTestManagers() {
-        this.serviceManager.addFactory<ITestManager>(ITestManagerFactory, context => {
+        this.serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
             return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
 
@@ -154,7 +154,7 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerTestManagerService() {
-        this.serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, context => {
+        this.serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, (context) => {
             return (workspaceFolder: Uri) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
                 const testsHelper = context.container.get<ITestsHelper>(ITestsHelper);

@@ -44,5 +44,5 @@ export enum ReportableAction {
     /**
      * Wait for session to go idle.
      */
-    JupyterSessionWaitForIdleSession = 'JupyterSessionWaitForIdleSession'
+    JupyterSessionWaitForIdleSession = 'JupyterSessionWaitForIdleSession',
 }

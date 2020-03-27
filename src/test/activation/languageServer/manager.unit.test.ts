@@ -14,7 +14,7 @@ import {
     ILanguageServerAnalysisOptions,
     ILanguageServerExtension,
     ILanguageServerFolderService,
-    ILanguageServerProxy
+    ILanguageServerProxy,
 } from '../../../client/activation/types';
 import { ExperimentsManager } from '../../../client/common/experiments';
 import { IExperimentsManager, IPythonExtensionBanner } from '../../../client/common/types';
@@ -56,7 +56,7 @@ suite('Language Server - Manager', () => {
         );
     });
 
-    [undefined, Uri.file(__filename)].forEach(resource => {
+    [undefined, Uri.file(__filename)].forEach((resource) => {
         async function startLanguageServer() {
             let invoked = false;
             const lsExtensionChangeFn = (_handler: Function) => {
@@ -122,7 +122,7 @@ suite('Language Server - Manager', () => {
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
-                onChangeAnalysisHandler.call(manager)
+                onChangeAnalysisHandler.call(manager),
             ]);
             await sleep(1);
 
@@ -143,7 +143,7 @@ suite('Language Server - Manager', () => {
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
-                onChangeAnalysisHandler.call(manager)
+                onChangeAnalysisHandler.call(manager),
             ]);
             await sleep(1);
 
@@ -161,7 +161,7 @@ suite('Language Server - Manager', () => {
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
                 onChangeAnalysisHandler.call(manager),
-                onChangeAnalysisHandler.call(manager)
+                onChangeAnalysisHandler.call(manager),
             ]);
             await sleep(1);
 

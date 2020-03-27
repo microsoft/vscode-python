@@ -124,7 +124,7 @@ function updateTests(tests: Tests, testSuiteResult: TestSuiteResult) {
             //     fn.parentTestSuite && fn.parentTestSuite.name === testcase.$.classname);
 
             // Look for failed file test
-            const fileTest = testcase.$.file && tests.testFiles.find(file => file.nameToRun === testcase.$.file);
+            const fileTest = testcase.$.file && tests.testFiles.find((file) => file.nameToRun === testcase.$.file);
             if (fileTest && testcase.error) {
                 updateResultStatus(fileTest, testcase);
             }
@@ -146,12 +146,8 @@ function findTestFunction(
     className: string,
     funcName: string
 ): TestFunction | undefined {
-    const xmlClassName = className
-        .replace(/\(\)/g, '')
-        .replace(/\.\./g, '.')
-        .replace(/\.\./g, '.')
-        .replace(/\.+$/, '');
-    const flattened = candidates.find(fn => fn.xmlClassName === xmlClassName && fn.testFunction.name === funcName);
+    const xmlClassName = className.replace(/\(\)/g, '').replace(/\.\./g, '.').replace(/\.\./g, '.').replace(/\.+$/, '');
+    const flattened = candidates.find((fn) => fn.xmlClassName === xmlClassName && fn.testFunction.name === funcName);
     if (!flattened) {
         return;
     }

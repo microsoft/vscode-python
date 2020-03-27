@@ -10,7 +10,7 @@ import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
 import {
     azureCDNBlobStorageAccount,
-    LanguageServerDownloadChannel
+    LanguageServerDownloadChannel,
 } from '../../../client/activation/common/packageRepository';
 import { DotNetLanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { PlatformName } from '../../../client/activation/types';
@@ -42,13 +42,13 @@ suite('Language Server - Package Service', () => {
     });
     function setMinVersionOfLs(version: string) {
         const packageJson = { languageServerVersion: version };
-        appVersion.setup(e => e.packageJson).returns(() => packageJson);
+        appVersion.setup((e) => e.packageJson).returns(() => packageJson);
     }
-    [true, false].forEach(is64Bit => {
+    [true, false].forEach((is64Bit) => {
         const bitness = is64Bit ? '64bit' : '32bit';
         test(`Get Package name for Windows (${bitness})`, async () => {
-            platform.setup(p => p.osType).returns(() => OSType.Windows);
-            platform.setup(p => p.is64bit).returns(() => is64Bit);
+            platform.setup((p) => p.osType).returns(() => OSType.Windows);
+            platform.setup((p) => p.is64bit).returns(() => is64Bit);
             const expectedName = is64Bit
                 ? `${downloadBaseFileName}-${PlatformName.Windows64Bit}`
                 : `${downloadBaseFileName}-${PlatformName.Windows32Bit}`;
@@ -59,7 +59,7 @@ suite('Language Server - Package Service', () => {
             expect(name).to.be.equal(expectedName);
         });
         test(`Get Package name for Mac (${bitness})`, async () => {
-            platform.setup(p => p.osType).returns(() => OSType.OSX);
+            platform.setup((p) => p.osType).returns(() => OSType.OSX);
             const expectedName = `${downloadBaseFileName}-${PlatformName.Mac64Bit}`;
 
             const name = lsPackageService.getNugetPackageName();
@@ -68,7 +68,7 @@ suite('Language Server - Package Service', () => {
             expect(name).to.be.equal(expectedName);
         });
         test(`Get Package name for Linux (${bitness})`, async () => {
-            platform.setup(p => p.osType).returns(() => OSType.Linux);
+            platform.setup((p) => p.osType).returns(() => OSType.Linux);
             const expectedName = `${downloadBaseFileName}-${PlatformName.Linux64Bit}`;
 
             const name = lsPackageService.getNugetPackageName();
@@ -86,21 +86,21 @@ suite('Language Server - Package Service', () => {
             { package: '', uri: '', version: new SemVer('1.1.1') },
             { package: '', uri: '', version: new SemVer('3.4.1') },
             { package: '', uri: '', version: new SemVer('3.1.1') },
-            { package: '', uri: '', version: new SemVer('2.1.1') }
+            { package: '', uri: '', version: new SemVer('2.1.1') },
         ];
         const expectedPackage = packages[1];
         const repo = typeMoq.Mock.ofType<INugetRepository>();
         const nuget = typeMoq.Mock.ofType<INugetService>();
         serviceContainer
-            .setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny()))
+            .setup((c) => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny()))
             .returns(() => repo.object);
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget.object);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget.object);
 
-        repo.setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
+        repo.setup((n) => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(packages))
             .verifiable(typeMoq.Times.once());
         nuget
-            .setup(n => n.isReleaseVersion(typeMoq.It.isAny()))
+            .setup((n) => n.isReleaseVersion(typeMoq.It.isAny()))
             .returns(() => true)
             .verifiable(typeMoq.Times.atLeastOnce());
 
@@ -119,17 +119,17 @@ suite('Language Server - Package Service', () => {
             { package: '', uri: '', version: new SemVer('1.1.1') },
             { package: '', uri: '', version: new SemVer('1.3.1-alpha') },
             { package: '', uri: '', version: new SemVer('1.4.1-preview') },
-            { package: '', uri: '', version: new SemVer('1.2.1-internal') }
+            { package: '', uri: '', version: new SemVer('1.2.1-internal') },
         ];
         const expectedPackage = packages[0];
         const repo = typeMoq.Mock.ofType<INugetRepository>();
         const nuget = new NugetService();
         serviceContainer
-            .setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny()))
+            .setup((c) => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny()))
             .returns(() => repo.object);
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
 
-        repo.setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
+        repo.setup((n) => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(packages))
             .verifiable(typeMoq.Times.once());
 
@@ -146,16 +146,16 @@ suite('Language Server - Package Service', () => {
         lsPackageService.maxMajorVersion = 0;
         const packages: NugetPackage[] = [
             { package: '', uri: '', version: new SemVer('0.1.48') },
-            { package: '', uri: '', version: new SemVer('0.1.49') }
+            { package: '', uri: '', version: new SemVer('0.1.49') },
         ];
         const repo = typeMoq.Mock.ofType<INugetRepository>();
         const nuget = new NugetService();
         serviceContainer
-            .setup(c => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny()))
+            .setup((c) => c.get(typeMoq.It.isValue(INugetRepository), typeMoq.It.isAny()))
             .returns(() => repo.object);
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(INugetService))).returns(() => nuget);
 
-        repo.setup(n => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
+        repo.setup((n) => n.getPackages(typeMoq.It.isValue(packageName), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(packages))
             .verifiable(typeMoq.Times.once());
 
@@ -165,7 +165,7 @@ suite('Language Server - Package Service', () => {
         const expectedPackage: NugetPackage = {
             version: new SemVer(minimumVersion),
             package: LanguageServerDownloadChannel.stable,
-            uri: `${azureCDNBlobStorageAccount}/${LanguageServerDownloadChannel.stable}/${packageName}.${minimumVersion}.nupkg`
+            uri: `${azureCDNBlobStorageAccount}/${LanguageServerDownloadChannel.stable}/${packageName}.${minimumVersion}.nupkg`,
         };
         expect(info).to.deep.equal(expectedPackage);
     });
@@ -181,7 +181,7 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
         platform = typeMoq.Mock.ofType<IPlatformService>();
         appVersion = typeMoq.Mock.ofType<IApplicationEnvironment>();
         configService = typeMoq.Mock.ofType<IConfigurationService>();
-        serviceContainer.setup(s => s.get(IConfigurationService)).returns(() => configService.object);
+        serviceContainer.setup((s) => s.get(IConfigurationService)).returns(() => configService.object);
         lsPackageService = new DotNetLanguageServerPackageService(
             serviceContainer.object,
             appVersion.object,
@@ -192,10 +192,10 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
     test("If 'python.analysis.downloadChannel' setting is specified, return the value of the setting", async () => {
         const settings = {
             analysis: {
-                downloadChannel: 'someValue'
-            }
+                downloadChannel: 'someValue',
+            },
         };
-        configService.setup(c => c.getSettings()).returns(() => settings as any);
+        configService.setup((c) => c.getSettings()).returns(() => settings as any);
 
         lsPackageService.isAlphaVersionOfExtension = () => {
             throw new Error('Should not be here');
@@ -208,9 +208,9 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
     test("If 'python.analysis.downloadChannel' setting is not specified and insiders channel is 'weekly', return 'beta'", async () => {
         const settings = {
             analysis: {},
-            insidersChannel: 'weekly'
+            insidersChannel: 'weekly',
         };
-        configService.setup(c => c.getSettings()).returns(() => settings as any);
+        configService.setup((c) => c.getSettings()).returns(() => settings as any);
 
         lsPackageService.isAlphaVersionOfExtension = () => {
             throw new Error('Should not be here');
@@ -223,9 +223,9 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
     test("If 'python.analysis.downloadChannel' setting is not specified and insiders channel is 'daily', return 'beta'", async () => {
         const settings = {
             analysis: {},
-            insidersChannel: 'daily'
+            insidersChannel: 'daily',
         };
-        configService.setup(c => c.getSettings()).returns(() => settings as any);
+        configService.setup((c) => c.getSettings()).returns(() => settings as any);
 
         lsPackageService.isAlphaVersionOfExtension = () => {
             throw new Error('Should not be here');
@@ -238,9 +238,9 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
     test("If 'python.analysis.downloadChannel' setting is not specified, user is not using insiders, and extension has Alpha version, return 'beta'", async () => {
         const settings = {
             analysis: {},
-            insidersChannel: 'off'
+            insidersChannel: 'off',
         };
-        configService.setup(c => c.getSettings()).returns(() => settings as any);
+        configService.setup((c) => c.getSettings()).returns(() => settings as any);
 
         lsPackageService.isAlphaVersionOfExtension = () => true;
         const downloadChannel = lsPackageService.getLanguageServerDownloadChannel();
@@ -251,9 +251,9 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
     test("If 'python.analysis.downloadChannel' setting is not specified, user is not using insiders, and extension does not have Alpha version, return 'stable'", async () => {
         const settings = {
             analysis: {},
-            insidersChannel: 'off'
+            insidersChannel: 'off',
         };
-        configService.setup(c => c.getSettings()).returns(() => settings as any);
+        configService.setup((c) => c.getSettings()).returns(() => settings as any);
 
         lsPackageService.isAlphaVersionOfExtension = () => false;
         const downloadChannel = lsPackageService.getLanguageServerDownloadChannel();

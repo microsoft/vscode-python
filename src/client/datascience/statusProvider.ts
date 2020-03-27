@@ -71,7 +71,7 @@ export class StatusProvider implements IStatusProvider {
         const progressOptions: ProgressOptions = {
             location: cancel ? ProgressLocation.Notification : ProgressLocation.Window,
             title: message,
-            cancellable: cancel !== undefined
+            cancellable: cancel !== undefined,
         };
 
         // Set our application shell status with a busy icon

@@ -17,7 +17,7 @@ import {
     ITestsParser,
     Options,
     TestDiscoveryOptions,
-    Tests
+    Tests,
 } from '../../../client/testing/common/types';
 import { TestDiscoveryService } from '../../../client/testing/nosetest/services/discoveryService';
 import { IArgumentsService, TestFilter } from '../../../client/testing/types';
@@ -37,10 +37,10 @@ suite('Unit Tests - nose - Discovery', () => {
         runner = typeMoq.Mock.ofType<ITestRunner>();
 
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IArgumentsService), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IArgumentsService), typeMoq.It.isAny()))
             .returns(() => argsService.object);
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(ITestRunner), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(ITestRunner), typeMoq.It.isAny()))
             .returns(() => runner.object);
 
         discoveryService = new TestDiscoveryService(serviceContainer.object, testParser.object);
@@ -54,14 +54,14 @@ suite('Unit Tests - nose - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsService
-            .setup(a => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))
+            .setup((a) => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))
             .returns(() => [])
             .verifiable(typeMoq.Times.once());
         runner
-            .setup(r => r.run(typeMoq.It.isValue(NOSETEST_PROVIDER), typeMoq.It.isAny()))
+            .setup((r) => r.run(typeMoq.It.isValue(NOSETEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('--collect-only');
                 expect(opts.args).to.include('-vvv');
@@ -69,15 +69,15 @@ suite('Unit Tests - nose - Discovery', () => {
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
         testParser
-            .setup(t => t.parse(typeMoq.It.isValue(runOutput), typeMoq.It.isAny()))
+            .setup((t) => t.parse(typeMoq.It.isValue(runOutput), typeMoq.It.isAny()))
             .returns(() => tests)
             .verifiable(typeMoq.Times.once());
 
         const options = typeMoq.Mock.ofType<TestDiscoveryOptions>();
         const token = typeMoq.Mock.ofType<CancellationToken>();
-        options.setup(o => o.args).returns(() => args);
-        options.setup(o => o.token).returns(() => token.object);
-        token.setup(t => t.isCancellationRequested).returns(() => false);
+        options.setup((o) => o.args).returns(() => args);
+        options.setup((o) => o.token).returns(() => token.object);
+        token.setup((t) => t.isCancellationRequested).returns(() => false);
 
         const result = await discoveryService.discoverTests(options.object);
 
@@ -95,14 +95,14 @@ suite('Unit Tests - nose - Discovery', () => {
             testFunctions: [],
             testSuites: [],
             rootTestFolders: [],
-            testFolders: []
+            testFolders: [],
         };
         argsService
-            .setup(a => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))
+            .setup((a) => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))
             .returns(() => [])
             .verifiable(typeMoq.Times.once());
         runner
-            .setup(r => r.run(typeMoq.It.isValue(NOSETEST_PROVIDER), typeMoq.It.isAny()))
+            .setup((r) => r.run(typeMoq.It.isValue(NOSETEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('--collect-only');
                 expect(opts.args).to.include('-vvv');
@@ -110,19 +110,19 @@ suite('Unit Tests - nose - Discovery', () => {
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
         testParser
-            .setup(t => t.parse(typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .setup((t) => t.parse(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => tests)
             .verifiable(typeMoq.Times.never());
 
         const options = typeMoq.Mock.ofType<TestDiscoveryOptions>();
         const token = typeMoq.Mock.ofType<CancellationToken>();
         token
-            .setup(t => t.isCancellationRequested)
+            .setup((t) => t.isCancellationRequested)
             .returns(() => true)
             .verifiable(typeMoq.Times.once());
 
-        options.setup(o => o.args).returns(() => args);
-        options.setup(o => o.token).returns(() => token.object);
+        options.setup((o) => o.args).returns(() => args);
+        options.setup((o) => o.token).returns(() => token.object);
         const promise = discoveryService.discoverTests(options.object);
 
         await expect(promise).to.eventually.be.rejectedWith('cancelled');

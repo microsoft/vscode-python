@@ -9,7 +9,7 @@ export const KeyCodes = {
     PageUp: 33,
     PageDown: 34,
     End: 35,
-    Home: 36
+    Home: 36,
 };
 
 export function getOSType() {

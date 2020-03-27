@@ -16,7 +16,7 @@ import { JupyterCommands } from '../../../../client/datascience/constants';
 import { InterpreterJupyterNotebookCommand } from '../../../../client/datascience/jupyter/interpreter/jupyterCommand';
 import {
     JupyterCommandFinder,
-    ModuleExistsStatus
+    ModuleExistsStatus,
 } from '../../../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
 import { JupyterCommandFinderInterpreterExecutionService } from '../../../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterExecutionService';
 import { IJupyterCommand, IJupyterSubCommandExecutionService } from '../../../../client/datascience/types';
@@ -44,7 +44,7 @@ suite('Data Science - Jupyter CommandInterpreterExecutionService', () => {
         (instance(execService) as any).then = undefined;
         when(cmdFinder.findBestCommand(JupyterCommands.KernelSpecCommand)).thenResolve({
             status: ModuleExistsStatus.Found,
-            command: instance(kernelSpecCmd)
+            command: instance(kernelSpecCmd),
         });
 
         jupyterInterpreterExecutionService = new JupyterCommandFinderInterpreterExecutionService(
@@ -69,8 +69,8 @@ suite('Data Science - Jupyter CommandInterpreterExecutionService', () => {
                     argv: [],
                     display_name: 'disp1',
                     language: PYTHON_LANGUAGE,
-                    metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } }
-                }
+                    metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } },
+                },
             },
             K2: {
                 resource_dir: 'dir2',
@@ -78,12 +78,12 @@ suite('Data Science - Jupyter CommandInterpreterExecutionService', () => {
                     argv: [],
                     display_name: 'disp2',
                     language: PYTHON_LANGUAGE,
-                    metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } }
-                }
-            }
+                    metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } },
+                },
+            },
         };
         when(kernelSpecCmd.exec(deepEqual(['list', '--json']), anything())).thenResolve({
-            stdout: JSON.stringify({ kernelspecs: kernelSpecs })
+            stdout: JSON.stringify({ kernelspecs: kernelSpecs }),
         });
         when(fs.fileExists(path.join('dir1', 'kernel.json'))).thenResolve(false);
         when(fs.fileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);

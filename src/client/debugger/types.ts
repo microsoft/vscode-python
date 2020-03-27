@@ -19,7 +19,7 @@ export enum DebugOptions {
     UnixClient = 'UnixClient',
     StopOnEntry = 'StopOnEntry',
     ShowReturnValue = 'ShowReturnValue',
-    SubProcess = 'Multiprocess'
+    SubProcess = 'Multiprocess',
 }
 
 export type PathMapping = {

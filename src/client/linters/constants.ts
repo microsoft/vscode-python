@@ -15,5 +15,5 @@ export const LINTERID_BY_PRODUCT = new Map<Product, LinterId>([
     [Product.pycodestyle, 'pycodestyle'],
     [Product.prospector, 'prospector'],
     [Product.pydocstyle, 'pydocstyle'],
-    [Product.pylama, 'pylama']
+    [Product.pylama, 'pylama'],
 ]);

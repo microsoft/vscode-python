@@ -22,7 +22,7 @@ const OptionsWithoutArguments = [
     '--help',
     '--locals',
     '--quiet',
-    '--verbose'
+    '--verbose',
 ];
 
 @injectable()
@@ -34,7 +34,7 @@ export class ArgumentsService implements IArgumentsService {
     public getKnownOptions(): { withArgs: string[]; withoutArgs: string[] } {
         return {
             withArgs: OptionsWithArguments,
-            withoutArgs: OptionsWithoutArguments
+            withoutArgs: OptionsWithoutArguments,
         };
     }
     public getOptionValue(args: string[], option: string): string | string[] | undefined {
@@ -47,7 +47,7 @@ export class ArgumentsService implements IArgumentsService {
         // So if we want to run a specific test, then remove positional args.
         let removePositionalArgs = false;
         if (Array.isArray(argumentToRemoveOrFilter)) {
-            argumentToRemoveOrFilter.forEach(item => {
+            argumentToRemoveOrFilter.forEach((item) => {
                 if (OptionsWithArguments.indexOf(item) >= 0) {
                     optionsWithArgsToRemove.push(item);
                 }
@@ -66,7 +66,7 @@ export class ArgumentsService implements IArgumentsService {
                 OptionsWithArguments,
                 OptionsWithoutArguments
             );
-            filteredArgs = filteredArgs.filter(item => positionalArgs.indexOf(item) === -1);
+            filteredArgs = filteredArgs.filter((item) => positionalArgs.indexOf(item) === -1);
         }
         return this.helper.filterArguments(filteredArgs, optionsWithArgsToRemove, optionsWithoutArgsToRemove);
     }

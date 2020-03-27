@@ -7,7 +7,7 @@ import { inject, injectable, named } from 'inversify';
 import { Terminal } from 'vscode';
 import {
     PowerShellActivationHackDiagnosticsServiceId,
-    PowershellActivationNotAvailableDiagnostic
+    PowershellActivationNotAvailableDiagnostic,
 } from '../../../application/diagnostics/checks/powerShellActivation';
 import { IDiagnosticsService } from '../../../application/diagnostics/types';
 import { IPlatformService } from '../../platform/types';

@@ -37,7 +37,7 @@ export class SvgViewer extends React.Component<ISvgViewerProps, ISvgViewerState>
             this.setState({
                 // tslint:disable-next-line: no-object-literal-type-assertion
                 value: this.props.defaultValue ? this.props.defaultValue : ({} as Value),
-                tool: this.props.tool
+                tool: this.props.tool,
             });
         } else if (this.props.tool !== this.state.tool) {
             this.setState({ tool: this.props.tool });

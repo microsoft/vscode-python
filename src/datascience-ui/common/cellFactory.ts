@@ -32,7 +32,7 @@ export function createMarkdownCell(code: string | string[]): nbformat.IMarkdownC
     return {
         cell_type: 'markdown',
         metadata: {},
-        source: generateMarkdownFromCodeLines(code)
+        source: generateMarkdownFromCodeLines(code),
     };
 }
 
@@ -41,7 +41,7 @@ export function createErrorOutput(error: Error): nbformat.IError {
         output_type: 'error',
         ename: error.name,
         evalue: error.message,
-        traceback: (error.stack || '').splitLines()
+        traceback: (error.stack || '').splitLines(),
     };
 }
 export function createCodeCell(): nbformat.ICodeCell;
@@ -64,7 +64,7 @@ export function createCodeCell(code?: string | string[], options?: boolean | nbf
         execution_count: null,
         metadata: {},
         outputs,
-        source
+        source,
     };
 }
 /**
@@ -89,7 +89,7 @@ export function cloneCell<T extends nbformat.IBaseCell>(cell: T): T {
                 metadata: (clonedCell.metadata ?? {}) as any,
                 execution_count: typeof clonedCell.execution_count === 'number' ? clonedCell.execution_count : null,
                 outputs: Array.isArray(clonedCell.outputs) ? (clonedCell.outputs as nbformat.IOutput[]) : [],
-                source
+                source,
             };
             // tslint:disable-next-line: no-any
             return (codeCell as any) as T;
@@ -101,7 +101,7 @@ export function cloneCell<T extends nbformat.IBaseCell>(cell: T): T {
                 metadata: (clonedCell.metadata ?? {}) as any,
                 source,
                 // tslint:disable-next-line: no-any
-                attachments: clonedCell.attachments as any
+                attachments: clonedCell.attachments as any,
             };
             // tslint:disable-next-line: no-any
             return (markdownCell as any) as T;
@@ -113,7 +113,7 @@ export function cloneCell<T extends nbformat.IBaseCell>(cell: T): T {
                 metadata: (clonedCell.metadata ?? {}) as any,
                 source,
                 // tslint:disable-next-line: no-any
-                attachments: clonedCell.attachments as any
+                attachments: clonedCell.attachments as any,
             };
             // tslint:disable-next-line: no-any
             return (rawCell as any) as T;
@@ -138,7 +138,7 @@ export function createCellFrom(
                   source: source.source,
                   cell_type: target,
                   // tslint:disable-next-line: no-any
-                  metadata: cloneDeep(source.metadata) as any
+                  metadata: cloneDeep(source.metadata) as any,
               };
 
     switch (target) {

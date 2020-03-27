@@ -14,7 +14,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import {
     ExtensionChannelService,
-    insidersChannelSetting
+    insidersChannelSetting,
 } from '../../../client/common/insidersBuild/downloadChannelService';
 import { ExtensionChannels } from '../../../client/common/insidersBuild/types';
 import { IConfigurationService } from '../../../client/common/types';
@@ -43,22 +43,22 @@ suite('Download channel service', () => {
         {
             testName: "Get channel returns 'off' if settings value is set to 'off'",
             settings: 'off',
-            expectedResult: 'off'
+            expectedResult: 'off',
         },
         {
             testName: "Get channel returns 'weekly' if settings value is set to 'weekly'",
             settings: 'weekly',
-            expectedResult: 'weekly'
+            expectedResult: 'weekly',
         },
         {
             testName: "Get channel returns 'daily' if settings value is set to 'daily'",
             settings: 'daily',
-            expectedResult: 'daily'
-        }
-    ].forEach(testParams => {
+            expectedResult: 'daily',
+        },
+    ].forEach((testParams) => {
         test(testParams.testName, async () => {
             when(configService.getSettings()).thenReturn({
-                insidersChannel: testParams.settings as ExtensionChannels
+                insidersChannel: testParams.settings as ExtensionChannels,
             } as any);
             const result = channelService.getChannel();
             expect(result).to.equal(testParams.expectedResult);
@@ -72,7 +72,7 @@ suite('Download channel service', () => {
 
         when(workspaceService.getConfiguration('python')).thenReturn(workspaceConfig.object);
         workspaceConfig
-            .setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
+            .setup((c) => c.inspect<ExtensionChannels>(insidersChannelSetting))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
         expect(channelService.isChannelUsingDefaultConfiguration).to.equal(false, 'Incorrect value');
@@ -85,7 +85,7 @@ suite('Download channel service', () => {
 
         when(workspaceService.getConfiguration('python')).thenReturn(workspaceConfig.object);
         workspaceConfig
-            .setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
+            .setup((c) => c.inspect<ExtensionChannels>(insidersChannelSetting))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
         expect(channelService.isChannelUsingDefaultConfiguration).to.equal(true, 'Incorrect value');
@@ -98,7 +98,7 @@ suite('Download channel service', () => {
 
         when(workspaceService.getConfiguration('python')).thenReturn(workspaceConfig.object);
         workspaceConfig
-            .setup(c => c.inspect<ExtensionChannels>(insidersChannelSetting))
+            .setup((c) => c.inspect<ExtensionChannels>(insidersChannelSetting))
             .returns(() => settings as any)
             .verifiable(TypeMoq.Times.once());
         expect(() => channelService.isChannelUsingDefaultConfiguration).to.throw();
@@ -130,13 +130,13 @@ suite('Download channel service', () => {
         const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
         const settings = { insidersChannel: 'off' };
         event
-            .setup(e => e.affectsConfiguration(`python.${insidersChannelSetting}`))
+            .setup((e) => e.affectsConfiguration(`python.${insidersChannelSetting}`))
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
         when(configService.getSettings()).thenReturn(settings as any);
         channelService._onDidChannelChange = _onDidChannelChange.object;
         _onDidChannelChange
-            .setup(emitter => emitter.fire(TypeMoq.It.isValue(settings.insidersChannel as any)))
+            .setup((emitter) => emitter.fire(TypeMoq.It.isValue(settings.insidersChannel as any)))
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         await channelService.onDidChangeConfiguration(event.object);
@@ -150,13 +150,13 @@ suite('Download channel service', () => {
         const event = TypeMoq.Mock.ofType<ConfigurationChangeEvent>();
         const settings = { insidersChannel: 'off' };
         event
-            .setup(e => e.affectsConfiguration(`python.${insidersChannelSetting}`))
+            .setup((e) => e.affectsConfiguration(`python.${insidersChannelSetting}`))
             .returns(() => false)
             .verifiable(TypeMoq.Times.once());
         when(configService.getSettings()).thenReturn(settings as any);
         channelService._onDidChannelChange = _onDidChannelChange.object;
         _onDidChannelChange
-            .setup(emitter => emitter.fire(TypeMoq.It.isValue(settings.insidersChannel as any)))
+            .setup((emitter) => emitter.fire(TypeMoq.It.isValue(settings.insidersChannel as any)))
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.never());
         await channelService.onDidChangeConfiguration(event.object);
@@ -168,7 +168,7 @@ suite('Download channel service', () => {
     test('Ensure on channel change captures the fired event with the correct arguments', async () => {
         const deferred = createDeferred<true>();
         const settings = { insidersChannel: 'off' };
-        channelService.onDidChannelChange(channel => {
+        channelService.onDidChannelChange((channel) => {
             expect(channel).to.equal(settings.insidersChannel);
             deferred.resolve(true);
         });

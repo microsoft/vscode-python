@@ -19,14 +19,14 @@ export class LanguageServerCompatibilityService implements ILanguageServerCompat
         try {
             const supported = await this.dotnetCompatibility.isSupported();
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
-                supported: supported
+                supported: supported,
             });
             return supported;
         } catch (ex) {
             traceError('Unable to determine whether LS is supported', ex);
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
                 supported: false,
-                failureType: 'UnknownError'
+                failureType: 'UnknownError',
             });
             return false;
         }

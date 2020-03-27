@@ -21,7 +21,7 @@ export class PythonHoverProvider implements vscode.HoverProvider {
     ): Promise<vscode.Hover | undefined> {
         const itemInfos = await this.itemInfoSource.getItemInfoFromDocument(document, position, token);
         if (itemInfos) {
-            return new vscode.Hover(itemInfos.map(item => item.tooltip));
+            return new vscode.Hover(itemInfos.map((item) => item.tooltip));
         }
     }
 }

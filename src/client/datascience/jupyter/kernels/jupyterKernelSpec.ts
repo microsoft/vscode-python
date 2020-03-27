@@ -49,13 +49,13 @@ export async function parseKernelSpecs(stdout: string, fs: IFileSystem, token?: 
 
     const specs = await Promise.race([
         Promise.all(
-            Object.keys(kernelSpecs).map(async kernelName => {
+            Object.keys(kernelSpecs).map(async (kernelName) => {
                 const specFile = path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json');
                 const spec = kernelSpecs[kernelName].spec;
                 // Add the missing name property.
                 const model = {
                     ...spec,
-                    name: kernelName
+                    name: kernelName,
                 };
                 // Check if the spec file exists.
                 if (await fs.fileExists(specFile)) {
@@ -65,7 +65,7 @@ export async function parseKernelSpecs(stdout: string, fs: IFileSystem, token?: 
                 }
             })
         ),
-        createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: [], token })
+        createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: [], token }),
     ]);
-    return specs.filter(item => !!item).map(item => item as JupyterKernelSpec);
+    return specs.filter((item) => !!item).map((item) => item as JupyterKernelSpec);
 }

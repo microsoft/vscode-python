@@ -77,13 +77,13 @@ suite('Debugging - Config Resolver', () => {
         const doc = typemoq.Mock.ofType<TextDocument>();
 
         editor
-            .setup(e => e.document)
+            .setup((e) => e.document)
             .returns(() => doc.object)
             .verifiable(typemoq.Times.once());
-        doc.setup(d => d.languageId)
+        doc.setup((d) => d.languageId)
             .returns(() => PYTHON_LANGUAGE)
             .verifiable(typemoq.Times.once());
-        doc.setup(d => d.fileName)
+        doc.setup((d) => d.fileName)
             .returns(() => expectedFileName)
             .verifiable(typemoq.Times.once());
         when(documentManager.activeTextEditor).thenReturn(editor.object);
@@ -97,10 +97,10 @@ suite('Debugging - Config Resolver', () => {
         const doc = typemoq.Mock.ofType<TextDocument>();
 
         editor
-            .setup(e => e.document)
+            .setup((e) => e.document)
             .returns(() => doc.object)
             .verifiable(typemoq.Times.once());
-        doc.setup(d => d.languageId)
+        doc.setup((d) => d.languageId)
             .returns(() => 'C#')
             .verifiable(typemoq.Times.once());
         when(documentManager.activeTextEditor).thenReturn(editor.object);
@@ -127,10 +127,10 @@ suite('Debugging - Config Resolver', () => {
     [
         {
             title: 'Should get directory of active program when there are not workspace folders',
-            workspaceFolders: undefined
+            workspaceFolders: undefined,
         },
-        { title: 'Should get directory of active program when there are 0 workspace folders', workspaceFolders: [] }
-    ].forEach(item => {
+        { title: 'Should get directory of active program when there are 0 workspace folders', workspaceFolders: [] },
+    ].forEach((item) => {
         test(item.title, () => {
             const programPath = path.join('one', 'two', 'three.xyz');
 
@@ -197,7 +197,7 @@ suite('Debugging - Config Resolver', () => {
     });
     test('Python path in debug config must point to pythonpath in settings  if pythonPath in config is ${config:python.pythonPath}', () => {
         const config = {
-            pythonPath: '${config:python.pythonPath}'
+            pythonPath: '${config:python.pythonPath}',
         };
         const pythonPath = path.join('1', '2', '3');
 
@@ -213,9 +213,9 @@ suite('Debugging - Config Resolver', () => {
         '::1': true,
         '127.0.0.2': false,
         '156.1.2.3': false,
-        '::2': false
+        '::2': false,
     };
-    Object.keys(localHostTestMatrix).forEach(key => {
+    Object.keys(localHostTestMatrix).forEach((key) => {
         test(`Local host = ${localHostTestMatrix[key]} for ${key}`, () => {
             const isLocalHost = resolver.isLocalHost(key);
 

@@ -48,7 +48,7 @@ export class Editor extends React.Component<IEditorProps> {
     }
 
     public componentWillUnmount = () => {
-        this.subscriptions.forEach(d => d.dispose());
+        this.subscriptions.forEach((d) => d.dispose());
     };
 
     public render() {
@@ -74,14 +74,14 @@ export class Editor extends React.Component<IEditorProps> {
         const readOnly = this.props.readOnly;
         const options: monacoEditor.editor.IEditorConstructionOptions = {
             minimap: {
-                enabled: false
+                enabled: false,
             },
             glyphMargin: false,
             wordWrap: 'on',
             scrollBeyondLastLine: false,
             scrollbar: {
                 vertical: 'hidden',
-                horizontal: 'hidden'
+                horizontal: 'hidden',
             },
             lineNumbers: this.props.showLineNumbers ? 'on' : 'off',
             renderLineHighlight: 'none',
@@ -99,7 +99,7 @@ export class Editor extends React.Component<IEditorProps> {
             matchBrackets: false,
             fontSize: this.props.font.size,
             fontFamily: this.props.font.family,
-            ...this.props.editorOptions
+            ...this.props.editorOptions,
         };
 
         return (
@@ -189,10 +189,10 @@ export class Editor extends React.Component<IEditorProps> {
                         isDirty,
                         isSuggesting,
                         contents: this.getContents(),
-                        clear: this.clear
+                        clear: this.clear,
                     },
                     stopPropagation: () => e.stopPropagation(),
-                    preventDefault: () => e.preventDefault()
+                    preventDefault: () => e.preventDefault(),
                 });
             }
         }

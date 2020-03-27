@@ -43,7 +43,7 @@ export class GatherProvider implements IGatherProvider {
                     this._executionSlicer = new ppa.ExecutionLogSlicer(this.dataflowAnalyzer);
 
                     this.disposables.push(
-                        this.configService.getSettings(undefined).onDidChange(e => this.updateEnableGather(e))
+                        this.configService.getSettings(undefined).onDidChange((e) => this.updateEnableGather(e))
                     );
                 }
             } catch (ex) {
@@ -149,7 +149,7 @@ function convertVscToGatherCell(cell: IVscCell): ppatypes.Cell | undefined {
             executionEventId: uuid(),
 
             persistentId: cell.id,
-            hasError: cell.state === CellState.error
+            hasError: cell.state === CellState.error,
             // tslint:disable-next-line: no-any
         } as any;
         return result;

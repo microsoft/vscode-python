@@ -9,7 +9,7 @@ import { Memento } from 'vscode';
 import { Architecture } from '../../../../client/common/utils/platform';
 import {
     JupyterInterpreterDependencyResponse,
-    JupyterInterpreterDependencyService
+    JupyterInterpreterDependencyService,
 } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
 import { JupyterInterpreterSelector } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSelector';
@@ -37,14 +37,14 @@ suite('Data Science - Jupyter Interpreter Service', () => {
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Unknown
+        type: InterpreterType.Unknown,
     };
     const secondPythonInterpreter: PythonInterpreter = {
         path: 'second interpreter path',
         architecture: Architecture.Unknown,
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Unknown
+        type: InterpreterType.Unknown,
     };
 
     setup(() => {
@@ -68,7 +68,7 @@ suite('Data Science - Jupyter Interpreter Service', () => {
             secondPythonInterpreter
         );
         when(memento.update(anything(), anything())).thenResolve();
-        jupyterInterpreterService.onDidChangeInterpreter(e => (selectedInterpreterEventArgs = e));
+        jupyterInterpreterService.onDidChangeInterpreter((e) => (selectedInterpreterEventArgs = e));
         when(interpreterSelector.selectInterpreter()).thenResolve(pythonInterpreter);
     });
 

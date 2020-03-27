@@ -14,7 +14,7 @@ import {
     IProvideCompletionItemsResponse,
     IProvideHoverResponse,
     IProvideSignatureHelpResponse,
-    IResolveCompletionItemResponse
+    IResolveCompletionItemResponse,
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
 interface IRequestData<T> {
@@ -80,7 +80,7 @@ export class IntellisenseProvider
             position,
             context,
             requestId,
-            cellId: this.getCellId(model.id)
+            cellId: this.getCellId(model.id),
         });
 
         return promise.promise;
@@ -108,7 +108,7 @@ export class IntellisenseProvider
                 position,
                 item,
                 requestId,
-                cellId: this.getCellId(model.id)
+                cellId: this.getCellId(model.id),
             });
 
             const newItem = await promise.promise;
@@ -139,7 +139,7 @@ export class IntellisenseProvider
         this.sendMessage(InteractiveWindowMessages.ProvideHoverRequest, {
             position,
             requestId,
-            cellId: this.getCellId(model.id)
+            cellId: this.getCellId(model.id),
         });
 
         return promise.promise;
@@ -165,7 +165,7 @@ export class IntellisenseProvider
             position,
             context,
             requestId,
-            cellId: this.getCellId(model.id)
+            cellId: this.getCellId(model.id),
         });
 
         return promise.promise;
@@ -173,10 +173,10 @@ export class IntellisenseProvider
 
     public dispose() {
         this.disposed = true;
-        this.registerDisposables.forEach(r => r.dispose());
-        this.completionRequests.forEach(r => r.promise.resolve());
-        this.resolveCompletionRequests.forEach(r => r.promise.resolve());
-        this.hoverRequests.forEach(r => r.promise.resolve());
+        this.registerDisposables.forEach((r) => r.dispose());
+        this.completionRequests.forEach((r) => r.promise.resolve());
+        this.resolveCompletionRequests.forEach((r) => r.promise.resolve());
+        this.hoverRequests.forEach((r) => r.promise.resolve());
 
         this.registerDisposables = [];
         this.completionRequests.clear();
@@ -215,7 +215,7 @@ export class IntellisenseProvider
         if (waiting) {
             waiting.promise.resolve({
                 value: response.signatureHelp,
-                dispose: noop
+                dispose: noop,
             });
             this.signatureHelpRequests.delete(response.requestId);
         }

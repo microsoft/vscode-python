@@ -44,7 +44,7 @@ suite('Formatting - General', () => {
     suiteSetup(async () => {
         await initialize();
         initializeDI();
-        [autoPep8FileToFormat, blackFileToFormat, yapfFileToFormat].forEach(file => {
+        [autoPep8FileToFormat, blackFileToFormat, yapfFileToFormat].forEach((file) => {
             fs.copySync(originalUnformattedFile, file, { overwrite: true });
         });
         formattedYapf = fs.readFileSync(yapfFormatted).toString();
@@ -64,7 +64,7 @@ suite('Formatting - General', () => {
         initializeDI();
     });
     suiteTeardown(async () => {
-        [autoPep8FileToFormat, blackFileToFormat, yapfFileToFormat].forEach(file => {
+        [autoPep8FileToFormat, blackFileToFormat, yapfFileToFormat].forEach((file) => {
             if (fs.existsSync(file)) {
                 fs.unlinkSync(file);
             }
@@ -105,7 +105,7 @@ suite('Formatting - General', () => {
             if (args.indexOf('--diff') >= 0) {
                 callback({
                     out: fs.readFileSync(path.join(formatFilesPath, outputFileName), 'utf8'),
-                    source: 'stdout'
+                    source: 'stdout',
                 });
             }
         });
@@ -121,14 +121,14 @@ suite('Formatting - General', () => {
         const textEditor = await window.showTextDocument(textDocument);
         const options = {
             insertSpaces: textEditor.options.insertSpaces! as boolean,
-            tabSize: textEditor.options.tabSize! as number
+            tabSize: textEditor.options.tabSize! as number,
         };
 
         await injectFormatOutput(outputFileName);
 
         const edits = await formatter.formatDocument(textDocument, options, new CancellationTokenSource().token);
-        await textEditor.edit(editBuilder => {
-            edits.forEach(edit => editBuilder.replace(edit.range, edit.newText));
+        await textEditor.edit((editBuilder) => {
+            edits.forEach((edit) => editBuilder.replace(edit.range, edit.newText));
         });
         compareFiles(formattedContents, textEditor.document.getText());
     }
@@ -142,7 +142,7 @@ suite('Formatting - General', () => {
         );
     });
     // tslint:disable-next-line:no-function-expression
-    test('Black', async function() {
+    test('Black', async function () {
         if (!(await formattingTestIsBlackSupported())) {
             // Skip for versions of python below 3.6, as Black doesn't support them at all.
             // tslint:disable-next-line:no-invalid-this
@@ -175,7 +175,7 @@ suite('Formatting - General', () => {
 
         const textDocument = await workspace.openTextDocument(fileToFormat);
         const textEditor = await window.showTextDocument(textDocument);
-        await textEditor.edit(builder => {
+        await textEditor.edit((builder) => {
             // Make file dirty. Trailing blanks will be removed.
             builder.insert(new Position(0, 0), '\n    \n');
         });
@@ -190,8 +190,8 @@ suite('Formatting - General', () => {
             const options = { insertSpaces: textEditor.options.insertSpaces! as boolean, tabSize: 1 };
             const formatter = new YapfFormatter(ioc.serviceContainer);
             const edits = await formatter.formatDocument(textDocument, options, new CancellationTokenSource().token);
-            await textEditor.edit(editBuilder => {
-                edits.forEach(edit => editBuilder.replace(edit.range, edit.newText));
+            await textEditor.edit((editBuilder) => {
+                edits.forEach((edit) => editBuilder.replace(edit.range, edit.newText));
             });
 
             const expected = fs.readFileSync(formattedFile).toString();

@@ -29,12 +29,12 @@ export class LinterCommands implements IDisposable {
         commandManager.registerCommand(Commands.Run_Linter, this.runLinting.bind(this));
     }
     public dispose() {
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach((disposable) => disposable.dispose());
     }
 
     public async setLinterAsync(): Promise<void> {
         const linters = this.linterManager.getAllLinterInfos();
-        const suggestions = linters.map(x => x.id).sort();
+        const suggestions = linters.map((x) => x.id).sort();
         const linterList = ['Disable Linting', ...suggestions];
         const activeLinters = await this.linterManager.getActiveLinters(true, this.settingsUri);
 
@@ -54,7 +54,7 @@ export class LinterCommands implements IDisposable {
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: `current: ${current}`
+            placeHolder: `current: ${current}`,
         };
 
         const selection = await this.appShell.showQuickPick(linterList, quickPickOptions);
@@ -63,7 +63,7 @@ export class LinterCommands implements IDisposable {
                 await this.linterManager.enableLintingAsync(false);
                 sendTelemetryEvent(EventName.SELECT_LINTER, undefined, { enabled: false });
             } else {
-                const index = linters.findIndex(x => x.id === selection);
+                const index = linters.findIndex((x) => x.id === selection);
                 if (activeLinters.length > 1) {
                     const response = await this.appShell.showWarningMessage(
                         Linters.replaceWithSelectedLinter().format(selection),
@@ -87,7 +87,7 @@ export class LinterCommands implements IDisposable {
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: `current: ${current}`
+            placeHolder: `current: ${current}`,
         };
 
         const selection = await this.appShell.showQuickPick(options, quickPickOptions);

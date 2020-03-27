@@ -16,7 +16,7 @@ suite('Debugging - Configuration Provider Factory', () => {
     let factory: IDebugConfigurationProviderFactory;
     setup(() => {
         mappedProviders = new Map<DebugConfigurationType, IDebugConfigurationProvider>();
-        getNamesAndValues<DebugConfigurationType>(DebugConfigurationType).forEach(item => {
+        getNamesAndValues<DebugConfigurationType>(DebugConfigurationType).forEach((item) => {
             mappedProviders.set(item.value, (item.value as any) as IDebugConfigurationProvider);
         });
         factory = new DebugConfigurationProviderFactory(
@@ -29,7 +29,7 @@ suite('Debugging - Configuration Provider Factory', () => {
             mappedProviders.get(DebugConfigurationType.pidAttach)!
         );
     });
-    getNamesAndValues<DebugConfigurationType>(DebugConfigurationType).forEach(item => {
+    getNamesAndValues<DebugConfigurationType>(DebugConfigurationType).forEach((item) => {
         test(`Configuration Provider for ${item.name}`, () => {
             const provider = factory.create(item.value);
             expect(provider).to.equal(mappedProviders.get(item.value));

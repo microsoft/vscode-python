@@ -36,7 +36,7 @@ interface IVariableExplorerProps {
 const defaultColumnProperties = {
     filterable: false,
     sortable: false,
-    resizable: true
+    resizable: true,
 };
 
 interface IFormatterArgs {
@@ -86,7 +86,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                 type: 'string',
                 width: 120,
                 formatter: this.formatNameColumn,
-                headerRenderer: <VariableExplorerHeaderCellFormatter />
+                headerRenderer: <VariableExplorerHeaderCellFormatter />,
             },
             {
                 key: 'type',
@@ -94,7 +94,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                 type: 'string',
                 width: 120,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
-                headerRenderer: <VariableExplorerHeaderCellFormatter />
+                headerRenderer: <VariableExplorerHeaderCellFormatter />,
             },
             {
                 key: 'size',
@@ -102,7 +102,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                 type: 'string',
                 width: 120,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.numeric} />,
-                headerRenderer: <VariableExplorerHeaderCellFormatter />
+                headerRenderer: <VariableExplorerHeaderCellFormatter />,
             },
             {
                 key: 'value',
@@ -110,7 +110,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                 type: 'string',
                 width: 300,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
-                headerRenderer: <VariableExplorerHeaderCellFormatter />
+                headerRenderer: <VariableExplorerHeaderCellFormatter />,
             },
             {
                 key: 'buttons',
@@ -124,8 +124,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                         showDataExplorer={this.props.showDataExplorer}
                         baseTheme={this.props.baseTheme}
                     />
-                )
-            }
+                ),
+            },
         ];
 
         this.divRef = React.createRef<HTMLDivElement>();
@@ -147,7 +147,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         const contentClassName = `variable-explorer-content`;
 
         const fontSizeStyle: React.CSSProperties = {
-            fontSize: `${this.props.fontSize.toString()}px`
+            fontSize: `${this.props.fontSize.toString()}px`,
         };
 
         return (
@@ -188,7 +188,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                     aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}
                 >
                     <AdazzleReactDataGrid
-                        columns={this.gridColumns.map(c => {
+                        columns={this.gridColumns.map((c) => {
                             return { ...defaultColumnProperties, ...c };
                         })}
                         // tslint:disable-next-line: react-this-binding-issue
@@ -229,7 +229,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                         name: variable.name,
                         supportsDataExplorer: variable.supportsDataExplorer,
                         variable,
-                        numberOfColumns: this.getColumnCountFromShape(variable.shape)
+                        numberOfColumns: this.getColumnCountFromShape(variable.shape),
                     },
                     name: variable.name,
                     type: variable.type,
@@ -237,7 +237,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                     index,
                     value: variable.value
                         ? variable.value
-                        : getLocString('DataScience.variableLoadingValue', 'Loading...')
+                        : getLocString('DataScience.variableLoadingValue', 'Loading...'),
                 };
             }
         }
@@ -248,7 +248,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
             type: '',
             size: '',
             index,
-            value: getLocString('DataScience.variableLoadingValue', 'Loading...')
+            value: getLocString('DataScience.variableLoadingValue', 'Loading...'),
         };
     };
 
@@ -272,7 +272,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         const haveValue = this.props.variables[index]?.value;
         const newExecution = this.props.executionCount !== this.requestedPagesExecutionCount;
         // tslint:disable-next-line: restrict-plus-operands
-        const notRequested = !this.requestedPages.find(n => n <= index && index < n + pageSize);
+        const notRequested = !this.requestedPages.find((n) => n <= index && index < n + pageSize);
         if (!haveValue && (newExecution || notRequested)) {
             // Try to find a page of data around this index.
             let pageIndex = index;

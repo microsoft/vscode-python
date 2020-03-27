@@ -35,7 +35,7 @@ enum monacoCompletionItemKind {
     Customcolor = 22,
     Folder = 23,
     TypeParameter = 24,
-    Snippet = 25
+    Snippet = 25,
 }
 //
 
@@ -65,7 +65,7 @@ const mapCompletionItemKind: Map<number, number> = new Map<number, number>([
     [vscode.CompletionItemKind.Struct, monacoCompletionItemKind.Struct], // Struct
     [vscode.CompletionItemKind.Event, monacoCompletionItemKind.Event], // Event
     [vscode.CompletionItemKind.Operator, monacoCompletionItemKind.Operator], // Operator
-    [vscode.CompletionItemKind.TypeParameter, monacoCompletionItemKind.TypeParameter] // TypeParameter
+    [vscode.CompletionItemKind.TypeParameter, monacoCompletionItemKind.TypeParameter], // TypeParameter
 ]);
 
 // Left side is the monaco value.
@@ -95,7 +95,7 @@ const reverseMapCompletionItemKind: Map<number, vscode.CompletionItemKind> = new
         [monacoCompletionItemKind.Struct, vscode.CompletionItemKind.Struct], // Struct
         [monacoCompletionItemKind.Event, vscode.CompletionItemKind.Event], // Event
         [monacoCompletionItemKind.Operator, vscode.CompletionItemKind.Operator], // Operator
-        [monacoCompletionItemKind.TypeParameter, vscode.CompletionItemKind.TypeParameter] // TypeParameter
+        [monacoCompletionItemKind.TypeParameter, vscode.CompletionItemKind.TypeParameter], // TypeParameter
     ]
 );
 
@@ -126,7 +126,7 @@ const mapJupyterKind: Map<string, number> = new Map<string, number>([
     ['folder', monacoCompletionItemKind.Folder],
     ['typeParameter', monacoCompletionItemKind.TypeParameter],
     ['snippet', monacoCompletionItemKind.Snippet],
-    ['<unknown>', monacoCompletionItemKind.Snippet]
+    ['<unknown>', monacoCompletionItemKind.Snippet],
 ]);
 
 function convertToMonacoRange(range: vscodeLanguageClient.Range | undefined): monacoEditor.IRange | undefined {
@@ -135,7 +135,7 @@ function convertToMonacoRange(range: vscodeLanguageClient.Range | undefined): mo
             startLineNumber: range.start.line + 1,
             startColumn: range.start.character + 1,
             endLineNumber: range.end.line + 1,
-            endColumn: range.end.character + 1
+            endColumn: range.end.character + 1,
         };
     }
 }
@@ -235,22 +235,22 @@ export function convertToMonacoCompletionList(
         if (result.hasOwnProperty('items')) {
             const list = result as vscodeLanguageClient.CompletionList;
             return {
-                suggestions: list.items.map(l => convertToMonacoCompletionItem(l, requiresKindConversion)),
-                incomplete: list.isIncomplete
+                suggestions: list.items.map((l) => convertToMonacoCompletionItem(l, requiresKindConversion)),
+                incomplete: list.isIncomplete,
             };
         } else {
             // Must be one of the two array types since there's no items property.
             const array = result as vscodeLanguageClient.CompletionItem[];
             return {
-                suggestions: array.map(l => convertToMonacoCompletionItem(l, requiresKindConversion)),
-                incomplete: false
+                suggestions: array.map((l) => convertToMonacoCompletionItem(l, requiresKindConversion)),
+                incomplete: false,
             };
         }
     }
 
     return {
         suggestions: [],
-        incomplete: false
+        incomplete: false,
     };
 }
 
@@ -266,26 +266,26 @@ function convertToMonacoMarkdown(
         const content = strings as vscodeLanguageClient.MarkupContent;
         return [
             {
-                value: content.value
-            }
+                value: content.value,
+            },
         ];
     } else if (strings.hasOwnProperty('value')) {
         // tslint:disable-next-line: no-any
         const content = strings as any;
         return [
             {
-                value: content.value
-            }
+                value: content.value,
+            },
         ];
     } else if (typeof strings === 'string') {
         return [
             {
-                value: strings.toString()
-            }
+                value: strings.toString(),
+            },
         ];
     } else if (Array.isArray(strings)) {
         const array = strings as vscodeLanguageClient.MarkedString[];
-        return array.map(a => convertToMonacoMarkdown(a)[0]);
+        return array.map((a) => convertToMonacoMarkdown(a)[0]);
     }
 
     return [];
@@ -297,12 +297,12 @@ export function convertToMonacoHover(
     if (result) {
         return {
             contents: convertToMonacoMarkdown(result.contents),
-            range: convertToMonacoRange(result.range)
+            range: convertToMonacoRange(result.range),
         };
     }
 
     return {
-        contents: []
+        contents: [],
     };
 }
 
@@ -328,7 +328,7 @@ export function convertStringsToSuggestions(
             insertText: s,
             sortText: s,
             kind: kinds ? kinds[i] : 3, // Note: importing the monacoEditor.languages.CompletionItemKind causes a failure in loading the extension. So we use numbers.
-            range
+            range,
         };
     });
 }
@@ -343,6 +343,6 @@ export function convertToMonacoSignatureHelp(
     return {
         signatures: [],
         activeParameter: 0,
-        activeSignature: 0
+        activeSignature: 0,
     };
 }

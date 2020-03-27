@@ -11,7 +11,7 @@ import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     ExecutionResult,
     IPythonExecutionFactory,
-    SpawnOptions
+    SpawnOptions,
 } from '../../../common/process/types';
 import { IOutputChannel } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
@@ -48,13 +48,13 @@ export class TestsDiscoveryService implements ITestDiscoveryService {
     public async exec(options: TestDiscoveryOptions): Promise<ExecutionResult<string>> {
         const creationOptions: ExecutionFactoryCreateWithEnvironmentOptions = {
             allowEnvironmentFetchExceptions: false,
-            resource: options.workspaceFolder
+            resource: options.workspaceFolder,
         };
         const execService = await this.execFactory.createActivatedEnvironment(creationOptions);
         const spawnOptions: SpawnOptions = {
             token: options.token,
             cwd: options.cwd,
-            throwOnStdErr: true
+            throwOnStdErr: true,
         };
         const argv = [DISCOVERY_FILE, ...options.args];
         this.outChannel.appendLine(`python ${argv.join(' ')}`);

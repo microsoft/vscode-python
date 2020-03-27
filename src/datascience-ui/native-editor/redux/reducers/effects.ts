@@ -32,13 +32,13 @@ export namespace Effects {
                         prevState,
                         payload: {
                             ...arg.payload,
-                            data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id }
-                        }
+                            data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id },
+                        },
                     });
                     prevState = deselectCell({
                         ...arg,
                         prevState,
-                        payload: { ...arg.payload, data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } }
+                        payload: { ...arg.payload, data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } },
                     });
                 }
             }
@@ -46,19 +46,19 @@ export namespace Effects {
             const newVMs = [...prevState.cellVMs];
 
             // Add focus on new cell
-            const addFocusIndex = newVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+            const addFocusIndex = newVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
             if (addFocusIndex >= 0) {
                 newVMs[addFocusIndex] = {
                     ...newVMs[addFocusIndex],
                     focused: true,
                     selected: true,
-                    cursorPos: arg.payload.data.cursorPos
+                    cursorPos: arg.payload.data.cursorPos,
                 };
             }
 
             return {
                 ...prevState,
-                cellVMs: newVMs
+                cellVMs: newVMs,
             };
         }
 
@@ -67,14 +67,14 @@ export namespace Effects {
 
     export function unfocusCell(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         // Unfocus the cell
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
         if (index >= 0 && selectionInfo.focusedCellId === arg.payload.data.cellId) {
             const newVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];
             const newCell = {
                 ...current,
-                focused: false
+                focused: false,
             };
 
             // tslint:disable-next-line: no-any
@@ -82,14 +82,14 @@ export namespace Effects {
 
             return {
                 ...arg.prevState,
-                cellVMs: newVMs
+                cellVMs: newVMs,
             };
         } else if (index >= 0) {
             // Dont change focus state if not the focused cell. Just update the code.
             const newVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];
             const newCell = {
-                ...current
+                ...current,
             };
 
             // tslint:disable-next-line: no-any
@@ -97,7 +97,7 @@ export namespace Effects {
 
             return {
                 ...arg.prevState,
-                cellVMs: newVMs
+                cellVMs: newVMs,
             };
         }
 
@@ -105,14 +105,14 @@ export namespace Effects {
     }
 
     export function deselectCell(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
         if (index >= 0 && selectionInfo.selectedCellId === arg.payload.data.cellId) {
             const newVMs = [...arg.prevState.cellVMs];
             const target = arg.prevState.cellVMs[index];
             const newCell = {
                 ...target,
-                selected: false
+                selected: false,
             };
 
             // tslint:disable-next-line: no-any
@@ -120,7 +120,7 @@ export namespace Effects {
 
             return {
                 ...arg.prevState,
-                cellVMs: newVMs
+                cellVMs: newVMs,
             };
         }
 
@@ -140,13 +140,13 @@ export namespace Effects {
         const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
         if (arg.payload.data.cellId !== selectionInfo.selectedCellId) {
             let prevState = arg.prevState;
-            const addIndex = prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+            const addIndex = prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
             const someOtherCellWasFocusedAndSelected =
                 selectionInfo.focusedCellId === selectionInfo.selectedCellId && !!selectionInfo.focusedCellId;
             // First find the old focused cell and unfocus it
-            let removeFocusIndex = arg.prevState.cellVMs.findIndex(c => c.cell.id === selectionInfo.focusedCellId);
+            let removeFocusIndex = arg.prevState.cellVMs.findIndex((c) => c.cell.id === selectionInfo.focusedCellId);
             if (removeFocusIndex < 0) {
-                removeFocusIndex = arg.prevState.cellVMs.findIndex(c => c.cell.id === selectionInfo.selectedCellId);
+                removeFocusIndex = arg.prevState.cellVMs.findIndex((c) => c.cell.id === selectionInfo.selectedCellId);
             }
 
             if (removeFocusIndex >= 0) {
@@ -155,13 +155,13 @@ export namespace Effects {
                     prevState,
                     payload: {
                         ...arg.payload,
-                        data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id }
-                    }
+                        data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id },
+                    },
                 });
                 prevState = deselectCell({
                     ...arg,
                     prevState,
-                    payload: { ...arg.payload, data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } }
+                    payload: { ...arg.payload, data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } },
                 });
             }
 
@@ -172,39 +172,39 @@ export namespace Effects {
                     focused:
                         typeof shouldFocusCell === 'boolean' ? shouldFocusCell : someOtherCellWasFocusedAndSelected,
                     selected: true,
-                    cursorPos: arg.payload.data.cursorPos
+                    cursorPos: arg.payload.data.cursorPos,
                 };
             }
 
             return {
                 ...prevState,
-                cellVMs: newVMs
+                cellVMs: newVMs,
             };
         }
         return arg.prevState;
     }
 
     export function toggleLineNumbers(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             const newVMs = [...arg.prevState.cellVMs];
             newVMs[index] = { ...newVMs[index], showLineNumbers: !newVMs[index].showLineNumbers };
             return {
                 ...arg.prevState,
-                cellVMs: newVMs
+                cellVMs: newVMs,
             };
         }
         return arg.prevState;
     }
 
     export function toggleOutput(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             const newVMs = [...arg.prevState.cellVMs];
             newVMs[index] = { ...newVMs[index], hideOutput: !newVMs[index].hideOutput };
             return {
                 ...arg.prevState,
-                cellVMs: newVMs
+                cellVMs: newVMs,
             };
         }
         return arg.prevState;
@@ -240,8 +240,8 @@ export namespace Effects {
             editorOptions: { ...newEditorOptions, lineDecorationsWidth: 5 },
             font: {
                 size: newFontSize,
-                family: newFontFamily
-            }
+                family: newFontFamily,
+            },
         };
     }
 }

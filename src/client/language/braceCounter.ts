@@ -30,7 +30,7 @@ export class BraceCounter {
     private readonly bracePairs: BracePair[] = [
         new BracePair(TokenType.OpenBrace, TokenType.CloseBrace),
         new BracePair(TokenType.OpenBracket, TokenType.CloseBracket),
-        new BracePair(TokenType.OpenCurly, TokenType.CloseCurly)
+        new BracePair(TokenType.OpenCurly, TokenType.CloseCurly),
     ];
     private braceStacks: Stack[] = [new Stack(), new Stack(), new Stack()];
 

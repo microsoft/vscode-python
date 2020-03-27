@@ -30,13 +30,13 @@ suite('JupyterVariables', () => {
                 return {
                     output_type: outputType,
                     data: {
-                        'text/plain': outputData
-                    }
+                        'text/plain': outputData,
+                    },
                 };
             default:
                 return {
                     output_type: outputType,
-                    text: outputData
+                    text: outputData,
                 };
         }
     }
@@ -48,12 +48,12 @@ suite('JupyterVariables', () => {
                 execution_count: 0,
                 metadata: {},
                 outputs: hasOutput ? [generateVariableOutput(outputData, outputType)] : [],
-                source: ''
+                source: '',
             },
             id: '0',
             file: '',
             line: 0,
-            state: CellState.finished
+            state: CellState.finished,
         };
     }
 
@@ -97,7 +97,7 @@ suite('JupyterVariables', () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: []
+            jupyterCommandLineArguments: [],
         };
 
         // Create our fake notebook
@@ -105,8 +105,8 @@ suite('JupyterVariables', () => {
         const config = createTypeMoq<IConfigurationService>('Config ');
 
         fileSystem = typemoq.Mock.ofType<IFileSystem>();
-        fileSystem.setup(fs => fs.readFile(typemoq.It.isAnyString())).returns(() => Promise.resolve('test'));
-        config.setup(s => s.getSettings(typemoq.It.isAny())).returns(() => pythonSettings);
+        fileSystem.setup((fs) => fs.readFile(typemoq.It.isAnyString())).returns(() => Promise.resolve('test'));
+        config.setup((s) => s.getSettings(typemoq.It.isAny())).returns(() => pythonSettings);
 
         jupyterVariables = new JupyterVariables(fileSystem.object, config.object);
     });
@@ -114,7 +114,7 @@ suite('JupyterVariables', () => {
     // No cells, no output, no text/plain
     test('getVariables no cells', async () => {
         fakeNotebook
-            .setup(fs =>
+            .setup((fs) =>
                 fs.execute(
                     typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
@@ -134,7 +134,7 @@ suite('JupyterVariables', () => {
                 pageSize: 100,
                 sortColumn: '',
                 sortAscending: true,
-                executionCount: 1
+                executionCount: 1,
             });
         } catch (exc) {
             exceptionThrown = true;
@@ -146,7 +146,7 @@ suite('JupyterVariables', () => {
 
     test('getVariables no output', async () => {
         fakeNotebook
-            .setup(fs =>
+            .setup((fs) =>
                 fs.execute(
                     typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
@@ -166,7 +166,7 @@ suite('JupyterVariables', () => {
                 pageSize: 100,
                 sortColumn: '',
                 sortAscending: true,
-                executionCount: 1
+                executionCount: 1,
             });
         } catch (exc) {
             exceptionThrown = true;
@@ -178,7 +178,7 @@ suite('JupyterVariables', () => {
 
     test('getVariables bad output type', async () => {
         fakeNotebook
-            .setup(fs =>
+            .setup((fs) =>
                 fs.execute(
                     typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
@@ -198,7 +198,7 @@ suite('JupyterVariables', () => {
                 pageSize: 100,
                 sortColumn: '',
                 sortAscending: true,
-                executionCount: 1
+                executionCount: 1,
             });
         } catch (exc) {
             exceptionThrown = true;
@@ -210,7 +210,7 @@ suite('JupyterVariables', () => {
 
     test('getVariables fake data', async () => {
         fakeNotebook
-            .setup(fs =>
+            .setup((fs) =>
                 fs.execute(
                     typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
@@ -230,7 +230,7 @@ suite('JupyterVariables', () => {
             )
             .verifiable(typemoq.Times.once());
         fakeNotebook
-            .setup(fs => fs.inspect(typemoq.It.isAny()))
+            .setup((fs) => fs.inspect(typemoq.It.isAny()))
             .returns(() =>
                 Promise.resolve({
                     'text/plain': `\u001b[1;31mType:\u001b[0m        complex
@@ -239,7 +239,7 @@ suite('JupyterVariables', () => {
 Create a complex number from a real part and an optional imaginary part.
                         
 This is equivalent to (real + imag*1j) where imag defaults to 0.
-                        "`
+                        "`,
                 })
             );
 
@@ -248,7 +248,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
             pageSize: 100,
             sortColumn: '',
             sortAscending: true,
-            executionCount: 1
+            executionCount: 1,
         });
 
         // Check the results that we get back
@@ -268,7 +268,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
     // getValue failure paths are shared with getVariables, so no need to test them here
     test('getValue fake data', async () => {
         fakeNotebook
-            .setup(fs =>
+            .setup((fs) =>
                 fs.execute(
                     typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
@@ -281,7 +281,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
             .returns(() => Promise.resolve(generateCells(`['big_complex']`, 'execute_result')))
             .verifiable(typemoq.Times.once());
         fakeNotebook
-            .setup(fs => fs.inspect(typemoq.It.isValue('big_complex')))
+            .setup((fs) => fs.inspect(typemoq.It.isValue('big_complex')))
             .returns(() =>
                 Promise.resolve({
                     'text/plain': `\u001b[1;31mType:\u001b[0m        complex
@@ -290,7 +290,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
 Create a complex number from a real part and an optional imaginary part.
                         
 This is equivalent to (real + imag*1j) where imag defaults to 0.
-                        "`
+                        "`,
                 })
             )
             .verifiable(typemoq.Times.once());
@@ -303,7 +303,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
             count: 0,
             shape: '',
             value: ' (1+1j)',
-            supportsDataExplorer: false
+            supportsDataExplorer: false,
         };
 
         const results = await jupyterVariables.getVariables(fakeNotebook.object, {
@@ -311,7 +311,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
             pageSize: 100,
             sortColumn: '',
             sortAscending: true,
-            executionCount: 1
+            executionCount: 1,
         });
         const resultVariable = results.pageResponse[0];
 

@@ -31,7 +31,7 @@ import { LaunchDebugConfigurationExperiment } from '../../../client/debugger/ext
 import {
     IDebugConfigurationProviderFactory,
     IDebugConfigurationResolver,
-    ILaunchDebugConfigurationResolverExperiment
+    ILaunchDebugConfigurationResolverExperiment,
 } from '../../../client/debugger/extension/configuration/types';
 import { ChildProcessAttachEventHandler } from '../../../client/debugger/extension/hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from '../../../client/debugger/extension/hooks/childProcessAttachService';
@@ -44,7 +44,7 @@ import {
     IDebugConfigurationService,
     IDebuggerBanner,
     IDebugSessionLoggingFactory,
-    IOutdatedDebuggerPromptFactory
+    IOutdatedDebuggerPromptFactory,
 } from '../../../client/debugger/extension/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../../client/debugger/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';

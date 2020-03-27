@@ -482,7 +482,7 @@ export namespace vscUri {
 
         toJSON(): UriComponents {
             const res = <UriState>{
-                $mid: 1
+                $mid: 1,
             };
             // cached state
             if (this._fsPath) {
@@ -536,7 +536,7 @@ export namespace vscUri {
         [CharCode.Semicolon]: '%3B',
         [CharCode.Equals]: '%3D',
 
-        [CharCode.Space]: '%20'
+        [CharCode.Space]: '%20',
     };
 
     function encodeURIComponentFast(uriComponent: string, allowSlash: boolean): string {

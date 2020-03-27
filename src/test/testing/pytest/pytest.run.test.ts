@@ -16,7 +16,7 @@ import {
     IBufferDecoder,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonExecutionService
+    IPythonExecutionService,
 } from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
@@ -36,7 +36,7 @@ import {
     ITestManagerFactory,
     Tests,
     TestStatus,
-    TestsToRun
+    TestsToRun,
 } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { MockProcessService } from '../../mocks/proc';
@@ -81,7 +81,7 @@ async function getScenarioTestsToRun(scenario: ITestScenarioDetails, tests: Test
             testFolder: [],
             testFile: [],
             testSuite: [],
-            testFunction: []
+            testFunction: [],
         };
         if (scenario.testSuiteIndex) {
             scenario.testsToRun.testSuite!.push(tests.testSuites[scenario.testSuiteIndex].testSuite);
@@ -129,9 +129,9 @@ function getExpectedSummaryCount(testDetails: ITestDetails[], failedRun: boolean
         passes: 0,
         skips: 0,
         failures: 0,
-        errors: 0
+        errors: 0,
     };
-    testDetails.forEach(td => {
+    testDetails.forEach((td) => {
         let tStatus = td.status;
         if (failedRun && td.passOnFailedRun) {
             tStatus = TestStatus.Pass;
@@ -168,7 +168,7 @@ function getExpectedSummaryCount(testDetails: ITestDetails[], failedRun: boolean
  * @param fileName The name of the file to find test details for.
  */
 function getRelevantTestDetailsForFile(testDetails: ITestDetails[], fileName: string): ITestDetails[] {
-    return testDetails.filter(td => {
+    return testDetails.filter((td) => {
         return td.fileName === fileName;
     });
 }
@@ -191,7 +191,7 @@ function getIssueCountFromRelevantTestDetails(
     skippedTestDetails: ITestDetails[],
     failedRun: boolean = false
 ): number {
-    const relevantIssueDetails = testDetails.filter(td => {
+    const relevantIssueDetails = testDetails.filter((td) => {
         return td.status !== TestStatus.Pass && !(failedRun && td.passOnFailedRun);
     });
     // If it's a failed run, the skipped tests won't be included in testDetails, but should still be included as they still aren't passing.
@@ -208,7 +208,7 @@ function getDiagnosticForTestFunc(
     diagnostics: readonly vscode.Diagnostic[],
     testFunc: FlattenedTestFunction
 ): vscode.Diagnostic {
-    return diagnostics.find(diag => {
+    return diagnostics.find((diag) => {
         return testFunc.testFunction.nameToRun === diag.code;
     })!;
 }
@@ -234,7 +234,7 @@ function getUniqueIssueFilesFromTestDetails(testDetails: ITestDetails[]): string
  * @param fileName The location of a file that had tests run.
  */
 function getRelevantSkippedIssuesFromTestDetailsForFile(testDetails: ITestDetails[], fileName: string): ITestDetails[] {
-    return testDetails.filter(td => {
+    return testDetails.filter((td) => {
         return td.fileName === fileName && td.status === TestStatus.Skipped;
     });
 }
@@ -253,7 +253,7 @@ function getTestFuncFromResultsByTestFileAndName(
     testDetails: ITestDetails
 ): FlattenedTestFunction {
     const fileSystem = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
-    return results.testFunctions.find(test => {
+    return results.testFunctions.find((test) => {
         return (
             fileSystem.arePathsSame(vscode.Uri.file(test.parentTestFile.fullPath).fsPath, testFileUri.fsPath) &&
             test.testFunction.name === testDetails.testName
@@ -468,7 +468,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             if (failedOutput && args.indexOf('--last-failed') === -1) {
                 return;
             }
-            const index = args.findIndex(arg => arg.startsWith('--junitxml='));
+            const index = args.findIndex((arg) => arg.startsWith('--junitxml='));
             if (index >= 0) {
                 const fileName = args[index].substr('--junitxml='.length);
                 const contents = fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8');
@@ -479,13 +479,13 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     }
     function getScenarioTestDetails(scenario: ITestScenarioDetails, failedRun: boolean): ITestDetails[] {
         if (scenario.shouldRunFailed && failedRun) {
-            return scenario.testDetails!.filter(td => {
+            return scenario.testDetails!.filter((td) => {
                 return td.status === TestStatus.Fail;
             })!;
         }
         return scenario.testDetails!;
     }
-    testScenarios.forEach(scenario => {
+    testScenarios.forEach((scenario) => {
         suite(scenario.scenarioName, () => {
             let testDetails: ITestDetails[];
             let factory: ITestManagerFactory;
@@ -524,7 +524,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                     test('Test results summary', async () => {
                         await testResultsSummary(results, expectedSummaryCount);
                     });
-                    uniqueIssueFiles.forEach(fileName => {
+                    uniqueIssueFiles.forEach((fileName) => {
                         suite(fileName, () => {
                             let testFileUri: vscode.Uri;
                             const relevantTestDetails = getRelevantTestDetailsForFile(testDetails, fileName);

@@ -19,7 +19,7 @@ import {
     LaunchOptions,
     TestRunOptions,
     Tests,
-    TestStatus
+    TestStatus,
 } from '../common/types';
 import { IArgumentsHelper, ITestManagerRunner, IUnitTestHelper } from '../types';
 
@@ -79,7 +79,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         this.server.on('connect', noop);
         this.server.on('start', noop);
         this.server.on('result', (data: ITestData) => {
-            const test = options.tests.testFunctions.find(t => t.testFunction.nameToRun === data.test);
+            const test = options.tests.testFunctions.find((t) => t.testFunction.nameToRun === data.test);
             const statusDetails = outcomeMapping.get(data.outcome)!;
             if (test) {
                 test.testFunction.status = statusDetails.status;
@@ -123,7 +123,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         const runTestInternal = async (testFile: string = '', testId: string = '') => {
             let testArgs = this.buildTestArgs(options.args);
             failFast = testArgs.indexOf('--uf') >= 0;
-            testArgs = testArgs.filter(arg => arg !== '--uf');
+            testArgs = testArgs.filter((arg) => arg !== '--uf');
 
             testArgs.push(`--result-port=${port}`);
             if (testId.length > 0) {
@@ -140,7 +140,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                     args: testArgs,
                     token: options.token,
                     outChannel: options.outChannel,
-                    testProvider: UNITTEST_PROVIDER
+                    testProvider: UNITTEST_PROVIDER,
                 };
                 return debugLauncher.launchDebugger(launchOptions);
             } else {
@@ -149,7 +149,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                     cwd: options.cwd,
                     outChannel: options.outChannel,
                     token: options.token,
-                    workspaceFolder: options.workspaceFolder
+                    workspaceFolder: options.workspaceFolder,
                 };
                 await this.testRunner.run(UNITTEST_PROVIDER, runOptions);
             }
@@ -168,7 +168,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                 }
                 if (Array.isArray(options.testsToRun.testSuite)) {
                     for (const testSuite of options.testsToRun.testSuite) {
-                        const item = options.tests.testSuites.find(t => t.testSuite === testSuite);
+                        const item = options.tests.testSuites.find((t) => t.testSuite === testSuite);
                         if (item) {
                             const testFileName = item.parentTestFile.fullPath;
                             await runTestInternal(testFileName, testSuite.nameToRun);
@@ -177,7 +177,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                 }
                 if (Array.isArray(options.testsToRun.testFunction)) {
                     for (const testFn of options.testsToRun.testFunction) {
-                        const item = options.tests.testFunctions.find(t => t.testFunction === testFn);
+                        const item = options.tests.testFunctions.find((t) => t.testFunction === testFn);
                         if (item) {
                             const testFileName = item.parentTestFile.fullPath;
                             await runTestInternal(testFileName, testFn.nameToRun);
@@ -201,7 +201,7 @@ export class TestManagerRunner implements ITestManagerRunner {
     private async removeListenersAfter(after: Promise<any>): Promise<any> {
         return after
             .then(() => this.server.removeAllListeners())
-            .catch(err => {
+            .catch((err) => {
                 this.server.removeAllListeners();
                 throw err; // keep propagating this downward
             });
@@ -217,8 +217,8 @@ export class TestManagerRunner implements ITestManagerRunner {
         } else if (typeof longValueValue === 'string') {
             pattern = longValueValue;
         }
-        const failFast = args.some(arg => arg.trim() === '-f' || arg.trim() === '--failfast');
-        const verbosity = args.some(arg => arg.trim().indexOf('-v') === 0) ? 2 : 1;
+        const failFast = args.some((arg) => arg.trim() === '-f' || arg.trim() === '--failfast');
+        const verbosity = args.some((arg) => arg.trim().indexOf('-v') === 0) ? 2 : 1;
         const testArgs = [`--us=${startTestDiscoveryDirectory}`, `--up=${pattern}`, `--uvInt=${verbosity}`];
         if (failFast) {
             testArgs.push('--uf');

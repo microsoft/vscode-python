@@ -15,12 +15,12 @@ import { getRandomBetween } from '../common/utils/random';
 export enum LSSurveyStateKeys {
     ShowBanner = 'ShowLSSurveyBanner',
     ShowAttemptCounter = 'LSSurveyShowAttempt',
-    ShowAfterCompletionCount = 'LSSurveyShowCount'
+    ShowAfterCompletionCount = 'LSSurveyShowCount',
 }
 
 enum LSSurveyLabelIndex {
     Yes,
-    No
+    No,
 }
 
 /*
@@ -36,7 +36,7 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
     private bannerMessage: string = localize.LanguageService.bannerMessage();
     private bannerLabels: string[] = [
         localize.LanguageService.bannerLabelYes(),
-        localize.LanguageService.bannerLabelNo()
+        localize.LanguageService.bannerLabelNo(),
     ];
 
     constructor(

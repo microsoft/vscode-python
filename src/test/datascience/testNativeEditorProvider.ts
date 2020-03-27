@@ -8,7 +8,7 @@ import {
     ICommandManager,
     ICustomEditorService,
     IDocumentManager,
-    IWorkspaceService
+    IWorkspaceService,
 } from '../../client/common/application/types';
 import { UseCustomEditorApi } from '../../client/common/constants';
 import { IFileSystem } from '../../client/common/platform/types';

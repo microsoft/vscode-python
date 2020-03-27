@@ -10,7 +10,7 @@ import {
     DeprecatedFeatureInfo,
     DeprecatedSettingAndValue,
     IFeatureDeprecationManager,
-    IPersistentStateFactory
+    IPersistentStateFactory,
 } from './types';
 
 const deprecatedFeatures: DeprecatedFeatureInfo[] = [
@@ -18,22 +18,22 @@ const deprecatedFeatures: DeprecatedFeatureInfo[] = [
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE',
         message: "The setting 'python.formatting.formatOnSave' is deprecated, please use 'editor.formatOnSave'.",
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/309',
-        setting: { setting: 'formatting.formatOnSave', values: ['true', true] }
+        setting: { setting: 'formatting.formatOnSave', values: ['true', true] },
     },
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE',
         message:
             "The setting 'python.linting.lintOnTextChange' is deprecated, please enable 'python.linting.lintOnSave' and 'files.autoSave'.",
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/313',
-        setting: { setting: 'linting.lintOnTextChange', values: ['true', true] }
+        setting: { setting: 'linting.lintOnTextChange', values: ['true', true] },
     },
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES',
         message:
             "The setting 'python.autoComplete.preloadModules' is deprecated, please consider using the new Language Server ('python.jediEnabled = false').",
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/1704',
-        setting: { setting: 'autoComplete.preloadModules' }
-    }
+        setting: { setting: 'autoComplete.preloadModules' },
+    },
 ];
 
 @injectable()
@@ -47,7 +47,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     ) {}
 
     public dispose() {
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach((disposable) => disposable.dispose());
     }
 
     public initialize() {
@@ -56,7 +56,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
 
     public registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void {
         if (Array.isArray(deprecatedInfo.commands)) {
-            deprecatedInfo.commands.forEach(cmd => {
+            deprecatedInfo.commands.forEach((cmd) => {
                 this.disposables.push(
                     this.cmdMgr.registerCommand(cmd, () => this.notifyDeprecation(deprecatedInfo), this)
                 );
@@ -100,7 +100,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     public checkAndNotifyDeprecatedSetting(deprecatedInfo: DeprecatedFeatureInfo) {
         let notify = false;
         if (Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0) {
-            this.workspace.workspaceFolders.forEach(workspaceFolder => {
+            this.workspace.workspaceFolders.forEach((workspaceFolder) => {
                 if (notify) {
                     return;
                 }
@@ -117,7 +117,9 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         }
 
         if (notify) {
-            this.notifyDeprecation(deprecatedInfo).catch(ex => traceVerbose('Python Extension: notifyDeprecation', ex));
+            this.notifyDeprecation(deprecatedInfo).catch((ex) =>
+                traceVerbose('Python Extension: notifyDeprecation', ex)
+            );
         }
     }
 

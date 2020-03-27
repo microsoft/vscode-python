@@ -18,7 +18,7 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService
+    TestFrameworkProductPathService,
 } from './productPath';
 import { ProductService } from './productService';
 import {
@@ -28,7 +28,7 @@ import {
     INSIDERS_INSTALLER,
     IProductPathService,
     IProductService,
-    STABLE_INSTALLER
+    STABLE_INSTALLER,
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
