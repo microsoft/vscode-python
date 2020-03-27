@@ -30,6 +30,7 @@ suite('Env file telemetry', () => {
 
     teardown(() => {
         sandbox.restore();
+        EnvFileTelemetry.EnvFileTelemetryTests.resetState();
     });
 
     test('shouldSendEnvTelemetry should return true if no telemetry event has been sent', () => {

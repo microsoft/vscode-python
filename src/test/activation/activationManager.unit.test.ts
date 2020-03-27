@@ -24,6 +24,7 @@ import { IInterpreterService } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import * as Telemetry from '../../client/telemetry';
 import { EventName } from '../../client/telemetry/constants';
+import { EnvFileTelemetry } from '../../client/telemetry/envFileTelemetry';
 import { sleep } from '../core';
 
 // tslint:disable:max-func-body-length no-any
@@ -422,6 +423,7 @@ suite('Language Server Activation - Env file telemetry', () => {
     teardown(() => {
         telemetryEvent = undefined;
         sandbox.restore();
+        EnvFileTelemetry.EnvFileTelemetryTests.resetState();
     });
 
     test('Should send env file telemetry on activation if an env file exists at the default workspace location', async () => {

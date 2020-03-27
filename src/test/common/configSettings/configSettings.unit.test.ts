@@ -30,6 +30,7 @@ import {
 import { noop } from '../../../client/common/utils/misc';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
+import { EnvFileTelemetry } from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 
 // tslint:disable-next-line:max-func-body-length
@@ -271,6 +272,7 @@ suite('Python Settings', async () => {
     });
 
     suite('Config settings - Env file telemetry', () => {
+        const defaultEnvFileSettingValue = 'defaultValue';
         let sandbox: sinon.SinonSandbox;
         let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
 
@@ -288,7 +290,7 @@ suite('Python Settings', async () => {
             };
             const mockWorkspaceConfig = {
                 inspect: () => ({
-                    defaultValue: 'defaultValue'
+                    defaultValue: defaultEnvFileSettingValue
                 })
             };
 
@@ -305,6 +307,7 @@ suite('Python Settings', async () => {
         teardown(() => {
             telemetryEvent = undefined;
             sandbox.restore();
+            EnvFileTelemetry.EnvFileTelemetryTests.resetState();
         });
 
         test('Send telemetry if the envFile setting is different from the default value', () => {
@@ -318,6 +321,8 @@ suite('Python Settings', async () => {
         });
 
         test('Do not send telemetry if the envFile setting is equal to the default value', () => {
+            expected.envFile = defaultEnvFileSettingValue;
+
             initializeConfig(expected);
 
             settings.update(config.object);

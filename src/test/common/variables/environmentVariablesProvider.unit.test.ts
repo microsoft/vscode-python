@@ -23,6 +23,7 @@ import { EnvironmentVariablesProvider } from '../../../client/common/variables/e
 import { IEnvironmentVariablesService } from '../../../client/common/variables/types';
 import * as Telemetry from '../../../client/telemetry';
 import { EventName } from '../../../client/telemetry/constants';
+import { EnvFileTelemetry } from '../../../client/telemetry/envFileTelemetry';
 import { noop } from '../../core';
 
 // tslint:disable:no-any max-func-body-length
@@ -317,6 +318,7 @@ suite('Environment variables provider - Env file telemetry', () => {
     teardown(() => {
         telemetryEvent = undefined;
         sandbox.restore();
+        EnvFileTelemetry.EnvFileTelemetryTests.resetState();
     });
 
     test('Env file telemetry is sent when an environment file is created', () => {

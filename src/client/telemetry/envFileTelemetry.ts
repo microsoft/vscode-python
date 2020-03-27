@@ -54,4 +54,12 @@ export namespace EnvFileTelemetry {
 
         return fileSystem.fileExists(envFilePath);
     }
+
+    // Reset global state for tests.
+    export namespace EnvFileTelemetryTests {
+        export function resetState() {
+            _defaultEnvFileSetting = undefined;
+            envFileTelemetrySent = false;
+        }
+    }
 }
