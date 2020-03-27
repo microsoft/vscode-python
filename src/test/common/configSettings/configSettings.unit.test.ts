@@ -7,11 +7,13 @@
 
 import { assert, expect } from 'chai';
 import * as path from 'path';
+import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 // tslint:disable-next-line:no-require-imports
 import untildify = require('untildify');
 import { WorkspaceConfiguration } from 'vscode';
 import { LanguageServerType } from '../../../client/activation/types';
+import { IWorkspaceService } from '../../../client/common/application/types';
 import { PythonSettings } from '../../../client/common/configSettings';
 import {
     IAnalysisSettings,
@@ -26,6 +28,8 @@ import {
     IWorkspaceSymbolSettings
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
+import * as Telemetry from '../../../client/telemetry';
+import { EventName } from '../../../client/telemetry/constants';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 
 // tslint:disable-next-line:max-func-body-length
@@ -264,6 +268,62 @@ suite('Python Settings', async () => {
             expect((settings.formatting as any)[key]).to.be.equal(expectedPath);
         }
         config.verifyAll();
+    });
+
+    suite('Config settings - Env file telemetry', () => {
+        let sandbox: sinon.SinonSandbox;
+        let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
+
+        setup(() => {
+            const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+            const mockSendTelemetryEvent = (
+                eventName: EventName,
+                _: number | undefined,
+                { hasCustomEnvPath }: { hasCustomEnvPath: boolean }
+            ) => {
+                telemetryEvent = {
+                    eventName,
+                    hasCustomEnvPath
+                };
+            };
+            const mockWorkspaceConfig = {
+                inspect: () => ({
+                    defaultValue: 'defaultValue'
+                })
+            };
+
+            sandbox = sinon.createSandbox();
+            const telemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent');
+            telemetryStub.callsFake(mockSendTelemetryEvent);
+
+            workspaceService.setup(w => w.getConfiguration('python')).returns(() => mockWorkspaceConfig as any);
+            config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
+
+            settings = new CustomPythonSettings(undefined, new MockAutoSelectionService(), workspaceService.object);
+        });
+
+        teardown(() => {
+            telemetryEvent = undefined;
+            sandbox.restore();
+        });
+
+        test('Send telemetry if the envFile setting is different from the default value', () => {
+            expected.envFile = 'foo';
+
+            initializeConfig(expected);
+
+            settings.update(config.object);
+
+            assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
+        });
+
+        test('Do not send telemetry if the envFile setting is equal to the default value', () => {
+            initializeConfig(expected);
+
+            settings.update(config.object);
+
+            assert.deepEqual(telemetryEvent, undefined);
+        });
     });
     test('File env variables remain in settings', () => {
         expected.datascience = {
