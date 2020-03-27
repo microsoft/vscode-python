@@ -17,7 +17,7 @@ import {
     IExperimentsManager,
     IPersistentState,
     IPersistentStateFactory,
-    IRandom,
+    IRandom
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Common, ExtensionSurveyBanner, LanguageService } from '../../client/common/utils/localize';
@@ -224,7 +224,7 @@ suite('Extension survey prompt - showSurvey()', () => {
 
     test("Launch survey if 'Yes' option is clicked", async () => {
         const packageJson = {
-            version: 'extensionVersion',
+            version: 'extensionVersion'
         };
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
         const expectedUrl = `https://aka.ms/AA5rjx5?o=Windows&v=vscodeVersion&e=extensionVersion&m=machineId`;

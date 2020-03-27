@@ -19,7 +19,7 @@ import {
     InterpreterInfomation,
     IProcessLogger,
     IPythonExecutionService,
-    Output,
+    Output
 } from '../../../client/common/process/types';
 import { sleep } from '../../../client/common/utils/async';
 import { noop } from '../../core';
@@ -60,7 +60,7 @@ suite('Daemon - Python Daemon Pool', () => {
             onDispose: noop,
             onError: noop,
             onNotification: noop,
-            onUnhandledNotification: noop,
+            onUnhandledNotification: noop
         } as any) as MessageConnection;
         const daemonProc = (new EventEmitter() as any) as ChildProcess;
         daemonProc.killed = false;
@@ -74,7 +74,7 @@ suite('Daemon - Python Daemon Pool', () => {
         ).thenReturn({
             proc: daemonProc,
             dispose: noop,
-            out: undefined as any,
+            out: undefined as any
         });
 
         // Create and initialize the pool.
@@ -146,7 +146,7 @@ suite('Daemon - Python Daemon Pool', () => {
         const [info1, info2, info3] = await Promise.all([
             pool.getInterpreterInformation(),
             pool.getInterpreterInformation(),
-            pool.getInterpreterInformation(),
+            pool.getInterpreterInformation()
         ]);
 
         // Verify we used the daemon.
@@ -189,7 +189,7 @@ suite('Daemon - Python Daemon Pool', () => {
                 pool.getInterpreterInformation(),
                 pool.getInterpreterInformation(),
                 pool.getInterpreterInformation(),
-                pool.getInterpreterInformation(),
+                pool.getInterpreterInformation()
             ]);
 
             // Verify we used the python execution service.

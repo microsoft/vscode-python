@@ -29,7 +29,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
                     widgetMessages.next({ type: message, payload });
                 }
                 return true;
-            },
+            }
         });
 
         this.widgetManager = new WidgetManager(

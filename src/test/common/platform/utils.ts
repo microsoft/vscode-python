@@ -36,7 +36,7 @@ export const SUPPORTS_SOCKETS = (() => {
     }
     const tmp = tmpMod.dirSync({
         prefix: 'pyvsc-test-',
-        unsafeCleanup: true, // for non-empty dir
+        unsafeCleanup: true // for non-empty dir
     });
     const filename = path.join(tmp.name, 'test.sock');
     try {
@@ -210,7 +210,7 @@ export class FSFixture extends CleanupFixture {
 
         const tempDir = tmpMod.dirSync({
             prefix: 'pyvsc-fs-tests-',
-            unsafeCleanup: true,
+            unsafeCleanup: true
         });
         this.tempDir = tempDir.name;
 

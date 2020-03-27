@@ -11,7 +11,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonExecutionService,
-    ObservableExecutionResult,
+    ObservableExecutionResult
 } from '../../../common/process/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
@@ -89,7 +89,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
             if (isActiveInterpreter) {
                 const svc = await pythonExecutionFactory.createDaemon({
                     daemonModule: PythonDaemonModule,
-                    pythonPath: interpreter!.path,
+                    pythonPath: interpreter!.path
                 });
 
                 // If we're using this command to start notebook, then ensure the daemon can start a notebook inside it.
@@ -106,7 +106,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
                                     'pythonFiles',
                                     'vscode_datascience_helpers',
                                     'jupyter_nbInstalled.py'
-                                ),
+                                )
                             ],
                             {}
                         );
@@ -120,7 +120,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
             }
             return pythonExecutionFactory.createActivatedEnvironment({
                 interpreter: this._interpreter,
-                bypassCondaExecution: true,
+                bypassCondaExecution: true
             });
         });
     }
@@ -261,7 +261,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
         const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
             interpreter,
-            bypassCondaExecution: true,
+            bypassCondaExecution: true
         });
         return activatedEnv.exec(
             [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'vscode_datascience_helpers', 'getJupyterKernels.py')],
@@ -272,7 +272,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
         const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({
             interpreter,
-            bypassCondaExecution: true,
+            bypassCondaExecution: true
         });
         return activatedEnv.exec(
             [
@@ -281,7 +281,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
                     'pythonFiles',
                     'vscode_datascience_helpers',
                     'getJupyterKernelspecVersion.py'
-                ),
+                )
             ],
             { ...options, throwOnStdErr: true }
         );

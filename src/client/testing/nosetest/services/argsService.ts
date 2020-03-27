@@ -52,7 +52,7 @@ const OptionsWithArguments = [
     '-w',
     '--profile-restrict',
     '--profile-sort',
-    '--profile-stats-file',
+    '--profile-stats-file'
 ];
 
 const OptionsWithoutArguments = [
@@ -104,7 +104,7 @@ const OptionsWithoutArguments = [
     '--with-xunit',
     '--all-modules',
     '--collect-only',
-    '--with-profile',
+    '--with-profile'
 ];
 
 @injectable()
@@ -116,7 +116,7 @@ export class ArgumentsService implements IArgumentsService {
     public getKnownOptions(): { withArgs: string[]; withoutArgs: string[] } {
         return {
             withArgs: OptionsWithArguments,
-            withoutArgs: OptionsWithoutArguments,
+            withoutArgs: OptionsWithoutArguments
         };
     }
     public getOptionValue(args: string[], option: string): string | string[] | undefined {
@@ -157,7 +157,7 @@ export class ArgumentsService implements IArgumentsService {
                             ...OptionsWithoutArguments.filter((item) => item.startsWith('--cover')),
                             ...OptionsWithoutArguments.filter((item) => item.startsWith('--logging')),
                             ...OptionsWithoutArguments.filter((item) => item.startsWith('--pdb')),
-                            ...OptionsWithoutArguments.filter((item) => item.indexOf('xunit') >= 0),
+                            ...OptionsWithoutArguments.filter((item) => item.indexOf('xunit') >= 0)
                         ]
                     );
                     optionsWithArgsToRemove.push(
@@ -168,7 +168,7 @@ export class ArgumentsService implements IArgumentsService {
                             '--cover-package',
                             ...OptionsWithoutArguments.filter((item) => item.startsWith('--cover')),
                             ...OptionsWithArguments.filter((item) => item.startsWith('--logging')),
-                            ...OptionsWithoutArguments.filter((item) => item.indexOf('xunit') >= 0),
+                            ...OptionsWithoutArguments.filter((item) => item.indexOf('xunit') >= 0)
                         ]
                     );
                     break;

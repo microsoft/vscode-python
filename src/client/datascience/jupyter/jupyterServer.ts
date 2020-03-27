@@ -13,7 +13,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IOutputChannel,
-    Resource,
+    Resource
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -26,7 +26,7 @@ import {
     IJupyterSessionManagerFactory,
     INotebook,
     INotebookServer,
-    INotebookServerLaunchInfo,
+    INotebookServerLaunchInfo
 } from '../types';
 
 // This code is based on the examples here:
@@ -184,7 +184,7 @@ export class JupyterServerBase implements INotebookServer {
         // Return a copy with a no-op for dispose
         return {
             ...this.launchInfo.connectionInfo,
-            dispose: noop,
+            dispose: noop
         };
     }
 

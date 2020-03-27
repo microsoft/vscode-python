@@ -13,14 +13,14 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService,
+    TestFrameworkProductPathService
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import {
     IInstallationChannelManager,
     IModuleInstaller,
     IProductPathService,
-    IProductService,
+    IProductService
 } from '../../client/common/installer/types';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { PathUtils } from '../../client/common/platform/pathUtils';
@@ -38,7 +38,7 @@ import {
     IsWindows,
     ModuleNamePurpose,
     Product,
-    ProductType,
+    ProductType
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { getNamesAndValues } from '../../client/common/utils/enum';

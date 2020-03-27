@@ -13,7 +13,7 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
-    ILiveShareTestingApi,
+    ILiveShareTestingApi
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Commands } from '../../client/datascience/constants';
@@ -23,7 +23,7 @@ import {
     IDataScienceCommandListener,
     IInteractiveWindow,
     IInteractiveWindowProvider,
-    IJupyterExecution,
+    IJupyterExecution
 } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
@@ -73,7 +73,7 @@ suite('DataScience LiveShare tests', () => {
         const dummyDisposable = {
             dispose: () => {
                 return;
-            },
+            }
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => (lastErrorMessage = e));
@@ -143,7 +143,7 @@ suite('DataScience LiveShare tests', () => {
             // Wait for all of the renders to go through. Guest may have been shutdown by now.
             await Promise.all([
                 hostRenderPromise,
-                isSessionStarted(vsls.Role.Guest) ? guestRenderPromise : Promise.resolve(),
+                isSessionStarted(vsls.Role.Guest) ? guestRenderPromise : Promise.resolve()
             ]);
         }
         return container.wrapper!;

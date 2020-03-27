@@ -34,7 +34,7 @@ import {
     closeInteractiveWindow,
     getInteractiveCellResults,
     getOrCreateInteractiveWindow,
-    runMountedTest,
+    runMountedTest
 } from './interactiveWindowTestHelpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockEditor } from './mockTextEditor';
@@ -59,7 +59,7 @@ import {
     verifyHtmlOnCell,
     verifyLastCellInputState,
     waitForMessage,
-    waitForMessageResponse,
+    waitForMessageResponse
 } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -131,7 +131,7 @@ for i in range(10):
             addContinuousMockData(ioc, text, async (_c) => {
                 return {
                     result: 'Hello World 9!',
-                    haveMore: false,
+                    haveMore: false
                 };
             });
             await addCode(ioc, wrapper, text);
@@ -405,7 +405,7 @@ for _ in range(50):
                     result: `Signature: len(obj, /)
 Docstring: Return the number of items in a container.
 Type:      builtin_function_or_method`,
-                    haveMore: false,
+                    haveMore: false
                 });
             });
             await addCode(ioc, wrapper, 'len?');
@@ -553,7 +553,7 @@ Type:      builtin_function_or_method`,
             const dummyDisposable = {
                 dispose: () => {
                     return;
-                },
+                }
             };
             let exportCalled = false;
             const appShell = TypeMoq.Mock.ofType<IApplicationShell>();

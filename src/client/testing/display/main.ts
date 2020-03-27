@@ -160,7 +160,7 @@ export class TestResultDisplay implements ITestResultDisplay {
             'testing.promptToConfigure',
             'testing.pytestEnabled',
             'testing.unittestEnabled',
-            'testing.nosetestsEnabled',
+            'testing.nosetestsEnabled'
         ];
 
         for (const setting of settingsToDisable) {

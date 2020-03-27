@@ -59,11 +59,11 @@ class SimpleMessageProducer implements IMessageProducer {
                 session: '1111111111',
                 msg_id: '1.1',
                 msg_type: msgType,
-                date: '',
+                date: ''
             },
             parent_header: {},
             metadata: {},
-            content: result,
+            content: result
         };
     }
 
@@ -79,11 +79,11 @@ class SimpleMessageProducer implements IMessageProducer {
                 session: '1111111111',
                 msg_id: '1.1',
                 msg_type: msgType,
-                date: '',
+                date: ''
             },
             parent_header: {},
             metadata: {},
-            content: result,
+            content: result
         };
     }
 
@@ -96,14 +96,14 @@ class SimpleMessageProducer implements IMessageProducer {
                 session: '1111111111',
                 msg_id: '1.1',
                 msg_type: 'stdin' as any,
-                date: '',
+                date: ''
             },
             parent_header: {},
             metadata: {},
             content: {
                 prompt: 'Type Something',
-                password: false,
-            },
+                password: false
+            }
         };
     }
 
@@ -116,13 +116,13 @@ class SimpleMessageProducer implements IMessageProducer {
                 session: '1111111111',
                 msg_id: '1.1',
                 msg_type: 'clear_output',
-                date: '',
+                date: ''
             },
             parent_header: {},
             metadata: {},
             content: {
-                wait,
-            },
+                wait
+            }
         };
     }
 }
@@ -150,7 +150,7 @@ class OutputMessageProducer extends SimpleMessageProducer {
                 const streamResult = await resultGenerator(this.cancelToken);
                 return {
                     message: this.generateIOPubMessage(streamResult.result.output_type, streamResult.result),
-                    haveMore: streamResult.haveMore,
+                    haveMore: streamResult.haveMore
                 };
             }
         } else if (this.output.output_type === 'input') {
@@ -159,20 +159,20 @@ class OutputMessageProducer extends SimpleMessageProducer {
                 this.waitingForInput = undefined;
                 return {
                     message: this.generateDummyMessage(),
-                    haveMore: false,
+                    haveMore: false
                 };
             } else {
                 this.waitingForInput = createDeferred<string>();
                 return {
                     message: this.generateInputMessage(),
-                    haveMore: this.waitingForInput !== undefined,
+                    haveMore: this.waitingForInput !== undefined
                 };
             }
         } else if (this.output.output_type === 'clear_true') {
             // Generate a clear message
             return {
                 message: this.generateClearMessage(true),
-                haveMore: false,
+                haveMore: false
             };
         }
 
@@ -193,11 +193,11 @@ class OutputMessageProducer extends SimpleMessageProducer {
                 version: '1.1',
                 session: '1111111111',
                 msg_id: '1.1',
-                msg_type: 'stdin' as any,
+                msg_type: 'stdin' as any
             },
             parent_header: {},
             metadata: {},
-            content: {},
+            content: {}
         } as any;
     }
 }
@@ -232,11 +232,11 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
                 session: '1111111111',
                 msg_id: '1.1',
                 msg_type: ('shell' as any) as KernelMessage.ShellMessageType,
-                date: '',
+                date: ''
             },
             parent_header: {},
             metadata: {},
-            content: {},
+            content: {}
         };
         this.onIOPub = noop;
         this.onReply = noop;
@@ -284,10 +284,10 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
             new SimpleMessageProducer('status', { execution_state: 'busy' }),
             new SimpleMessageProducer('execute_input', {
                 code: concatMultilineStringInput(this.cell.data.source),
-                execution_count: this.executionCount,
+                execution_count: this.executionCount
             }),
             ...outputProducers,
-            new SimpleMessageProducer('status', { execution_state: 'idle' }),
+            new SimpleMessageProducer('status', { execution_state: 'idle' })
         ];
 
         // Then send these until we're done

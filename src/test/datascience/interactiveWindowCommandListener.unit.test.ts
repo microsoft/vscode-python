@@ -31,7 +31,7 @@ import {
     IJupyterExecution,
     INotebook,
     INotebookEditorProvider,
-    INotebookServer,
+    INotebookServer
 } from '../../client/datascience/types';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
@@ -141,7 +141,7 @@ suite('Interactive window command listener', async () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: [],
+            jupyterCommandLineArguments: []
         };
 
         when(knownSearchPaths.getSearchPaths()).thenReturn(['/foo/bar']);
@@ -151,7 +151,7 @@ suite('Interactive window command listener', async () => {
             dispose: () => {
                 return undefined;
             },
-            filePath: '/foo/bar/baz.py',
+            filePath: '/foo/bar/baz.py'
         };
         when(fileSystem.createTemporaryFile(anything())).thenResolve(tempFile);
         when(fileSystem.deleteDirectory(anything())).thenResolve();
@@ -174,8 +174,8 @@ suite('Interactive window command listener', async () => {
                 name: 'python',
                 codemirror_mode: {
                     name: 'ipython',
-                    version: 3,
-                },
+                    version: 3
+                }
             },
             orig_nbformat: 2,
             file_extension: '.py',
@@ -183,13 +183,13 @@ suite('Interactive window command listener', async () => {
             name: 'python',
             npconvert_exporter: 'python',
             pygments_lexer: `ipython${3}`,
-            version: 3,
+            version: 3
         };
         when(notebookExporter.translateToNotebook(anything())).thenResolve({
             cells: [],
             nbformat: 4,
             nbformat_minor: 2,
-            metadata: metadata,
+            metadata: metadata
         });
 
         when(jupyterExecution.isNotebookSupported()).thenResolve(true);

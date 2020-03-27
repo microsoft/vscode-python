@@ -22,6 +22,6 @@ export function activateCodeLenses(
     return {
         dispose: () => {
             disposables.forEach((d) => d.dispose());
-        },
+        }
     };
 }

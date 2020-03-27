@@ -30,13 +30,13 @@ suite('JupyterVariables', () => {
                 return {
                     output_type: outputType,
                     data: {
-                        'text/plain': outputData,
-                    },
+                        'text/plain': outputData
+                    }
                 };
             default:
                 return {
                     output_type: outputType,
-                    text: outputData,
+                    text: outputData
                 };
         }
     }
@@ -48,12 +48,12 @@ suite('JupyterVariables', () => {
                 execution_count: 0,
                 metadata: {},
                 outputs: hasOutput ? [generateVariableOutput(outputData, outputType)] : [],
-                source: '',
+                source: ''
             },
             id: '0',
             file: '',
             line: 0,
-            state: CellState.finished,
+            state: CellState.finished
         };
     }
 
@@ -97,7 +97,7 @@ suite('JupyterVariables', () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: [],
+            jupyterCommandLineArguments: []
         };
 
         // Create our fake notebook
@@ -134,7 +134,7 @@ suite('JupyterVariables', () => {
                 pageSize: 100,
                 sortColumn: '',
                 sortAscending: true,
-                executionCount: 1,
+                executionCount: 1
             });
         } catch (exc) {
             exceptionThrown = true;
@@ -166,7 +166,7 @@ suite('JupyterVariables', () => {
                 pageSize: 100,
                 sortColumn: '',
                 sortAscending: true,
-                executionCount: 1,
+                executionCount: 1
             });
         } catch (exc) {
             exceptionThrown = true;
@@ -198,7 +198,7 @@ suite('JupyterVariables', () => {
                 pageSize: 100,
                 sortColumn: '',
                 sortAscending: true,
-                executionCount: 1,
+                executionCount: 1
             });
         } catch (exc) {
             exceptionThrown = true;
@@ -239,7 +239,7 @@ suite('JupyterVariables', () => {
 Create a complex number from a real part and an optional imaginary part.
                         
 This is equivalent to (real + imag*1j) where imag defaults to 0.
-                        "`,
+                        "`
                 })
             );
 
@@ -248,7 +248,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
             pageSize: 100,
             sortColumn: '',
             sortAscending: true,
-            executionCount: 1,
+            executionCount: 1
         });
 
         // Check the results that we get back
@@ -290,7 +290,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
 Create a complex number from a real part and an optional imaginary part.
                         
 This is equivalent to (real + imag*1j) where imag defaults to 0.
-                        "`,
+                        "`
                 })
             )
             .verifiable(typemoq.Times.once());
@@ -303,7 +303,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
             count: 0,
             shape: '',
             value: ' (1+1j)',
-            supportsDataExplorer: false,
+            supportsDataExplorer: false
         };
 
         const results = await jupyterVariables.getVariables(fakeNotebook.object, {
@@ -311,7 +311,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
             pageSize: 100,
             sortColumn: '',
             sortAscending: true,
-            executionCount: 1,
+            executionCount: 1
         });
         const resultVariable = results.pageResponse[0];
 

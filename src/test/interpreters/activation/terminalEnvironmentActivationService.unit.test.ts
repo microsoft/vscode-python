@@ -32,7 +32,7 @@ suite('Interpreters Activation - Python Environment Variables (using terminals)'
         path: '',
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Conda,
+        type: InterpreterType.Conda
     };
     setup(() => {
         terminalFactory = mock(TerminalServiceFactory);

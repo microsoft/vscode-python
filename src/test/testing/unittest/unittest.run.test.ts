@@ -23,13 +23,13 @@ import {
     ITestManagerFactory,
     ITestRunner,
     IUnitTestSocketServer,
-    TestsToRun,
+    TestsToRun
 } from '../../../client/testing/common/types';
 import {
     IArgumentsHelper,
     IArgumentsService,
     ITestManagerRunner,
-    IUnitTestHelper,
+    IUnitTestHelper
 } from '../../../client/testing/types';
 import { UnitTestHelper } from '../../../client/testing/unittest/helper';
 import { TestManagerRunner } from '../../../client/testing/unittest/runner';
@@ -81,7 +81,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             ['-s', '--start - directory'].forEach((s) => {
                 switches.push({
                     patternSwitch: p,
-                    startDirSwitch: s,
+                    startDirSwitch: s
                 });
             });
         });
@@ -155,7 +155,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                         .split(/\r?\n/g)
                         .map((item) => item.trim())
                         .join(EOL),
-                    source: 'stdout',
+                    source: 'stdout'
                 });
             }
         });
@@ -193,7 +193,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                     outcome: 'failed',
                     traceback: 'AssertionError: Not implemented\n',
                     message: 'Not implemented',
-                    test: 'test_unittest_one.Test_test1.test_A',
+                    test: 'test_unittest_one.Test_test1.test_A'
                 },
                 { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_B' },
                 { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_c' },
@@ -201,28 +201,28 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                     outcome: 'failed',
                     traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
                     message: 'Not implemented',
-                    test: 'test_unittest_two.Test_test2.test_A2',
+                    test: 'test_unittest_two.Test_test2.test_A2'
                 },
                 { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2.test_B2' },
                 {
                     outcome: 'failed',
                     traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n',
                     message: '1 != 2 : Not equal',
-                    test: 'test_unittest_two.Test_test2.test_C2',
+                    test: 'test_unittest_two.Test_test2.test_C2'
                 },
                 {
                     outcome: 'error',
                     traceback: 'raise ArithmeticError()\nArithmeticError\n',
                     message: '',
-                    test: 'test_unittest_two.Test_test2.test_D2',
+                    test: 'test_unittest_two.Test_test2.test_D2'
                 },
                 {
                     outcome: 'failed',
                     traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
                     message: 'Not implemented',
-                    test: 'test_unittest_two.Test_test2a.test_222A2',
+                    test: 'test_unittest_two.Test_test2a.test_222A2'
                 },
-                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' },
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' }
             ];
             injectTestSocketServerResults(resultsToSend);
 
@@ -261,7 +261,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                     outcome: 'failed',
                     traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
                     message: 'Not implemented',
-                    test: 'test_unittest_one.Test_test1.test_A',
+                    test: 'test_unittest_one.Test_test1.test_A'
                 },
                 { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_B' },
                 { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_c' },
@@ -269,28 +269,28 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                     outcome: 'failed',
                     traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
                     message: 'Not implemented',
-                    test: 'test_unittest_two.Test_test2.test_A2',
+                    test: 'test_unittest_two.Test_test2.test_A2'
                 },
                 { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2.test_B2' },
                 {
                     outcome: 'failed',
                     traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n',
                     message: '1 != 2 : Not equal',
-                    test: 'test_unittest_two.Test_test2.test_C2',
+                    test: 'test_unittest_two.Test_test2.test_C2'
                 },
                 {
                     outcome: 'error',
                     traceback: 'raise ArithmeticError()\nArithmeticError\n',
                     message: '',
-                    test: 'test_unittest_two.Test_test2.test_D2',
+                    test: 'test_unittest_two.Test_test2.test_D2'
                 },
                 {
                     outcome: 'failed',
                     traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
                     message: 'Not implemented',
-                    test: 'test_unittest_two.Test_test2a.test_222A2',
+                    test: 'test_unittest_two.Test_test2a.test_222A2'
                 },
-                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' },
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' }
             ];
             injectTestSocketServerResults(resultsToSend);
 
@@ -307,32 +307,32 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                     outcome: 'failed',
                     traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
                     message: 'Not implemented',
-                    test: 'test_unittest_one.Test_test1.test_A',
+                    test: 'test_unittest_one.Test_test1.test_A'
                 },
                 {
                     outcome: 'failed',
                     traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
                     message: 'Not implemented',
-                    test: 'test_unittest_two.Test_test2.test_A2',
+                    test: 'test_unittest_two.Test_test2.test_A2'
                 },
                 {
                     outcome: 'failed',
                     traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n',
                     message: '1 != 2 : Not equal',
-                    test: 'test_unittest_two.Test_test2.test_C2',
+                    test: 'test_unittest_two.Test_test2.test_C2'
                 },
                 {
                     outcome: 'error',
                     traceback: 'raise ArithmeticError()\nArithmeticError\n',
                     message: '',
-                    test: 'test_unittest_two.Test_test2.test_D2',
+                    test: 'test_unittest_two.Test_test2.test_D2'
                 },
                 {
                     outcome: 'failed',
                     traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
                     message: 'Not implemented',
-                    test: 'test_unittest_two.Test_test2a.test_222A2',
-                },
+                    test: 'test_unittest_two.Test_test2a.test_222A2'
+                }
             ];
             injectTestSocketServerResults(failedResultsToSend);
 
@@ -368,26 +368,26 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                     outcome: 'passed',
                     traceback: null,
                     message: null,
-                    test: 'test_unittest_one.Test_test_one_1.test_1_1_1',
+                    test: 'test_unittest_one.Test_test_one_1.test_1_1_1'
                 },
                 {
                     outcome: 'failed',
                     traceback: 'AssertionError: 1 != 2 : Not equal\n',
                     message: '1 != 2 : Not equal',
-                    test: 'test_unittest_one.Test_test_one_1.test_1_1_2',
+                    test: 'test_unittest_one.Test_test_one_1.test_1_1_2'
                 },
                 {
                     outcome: 'skipped',
                     traceback: null,
                     message: null,
-                    test: 'test_unittest_one.Test_test_one_1.test_1_1_3',
+                    test: 'test_unittest_one.Test_test_one_1.test_1_1_3'
                 },
                 {
                     outcome: 'passed',
                     traceback: null,
                     message: null,
-                    test: 'test_unittest_one.Test_test_one_2.test_1_2_1',
-                },
+                    test: 'test_unittest_one.Test_test_one_2.test_1_2_1'
+                }
             ];
             injectTestSocketServerResults(resultsToSend);
 
@@ -401,7 +401,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                 testFile: [testFileToTest],
                 testFolder: [],
                 testFunction: [],
-                testSuite: [],
+                testSuite: []
             };
             const results = await testManager.runTest(CommandSource.ui, testFile);
 
@@ -435,26 +435,26 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                     outcome: 'passed',
                     traceback: null,
                     message: null,
-                    test: 'test_unittest_one.Test_test_one_1.test_1_1_1',
+                    test: 'test_unittest_one.Test_test_one_1.test_1_1_1'
                 },
                 {
                     outcome: 'failed',
                     traceback: 'AssertionError: 1 != 2 : Not equal\n',
                     message: '1 != 2 : Not equal',
-                    test: 'test_unittest_one.Test_test_one_1.test_1_1_2',
+                    test: 'test_unittest_one.Test_test_one_1.test_1_1_2'
                 },
                 {
                     outcome: 'skipped',
                     traceback: null,
                     message: null,
-                    test: 'test_unittest_one.Test_test_one_1.test_1_1_3',
+                    test: 'test_unittest_one.Test_test_one_1.test_1_1_3'
                 },
                 {
                     outcome: 'passed',
                     traceback: null,
                     message: null,
-                    test: 'test_unittest_one.Test_test_one_2.test_1_2_1',
-                },
+                    test: 'test_unittest_one.Test_test_one_2.test_1_2_1'
+                }
             ];
             injectTestSocketServerResults(resultsToSend);
 
@@ -468,7 +468,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                 testFile: [],
                 testFolder: [],
                 testFunction: [],
-                testSuite: [testSuiteToTest],
+                testSuite: [testSuiteToTest]
             };
             const results = await testManager.runTest(CommandSource.ui, testSuite);
 
@@ -503,8 +503,8 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                     outcome: 'failed',
                     traceback: 'AssertionError: Not implemented\n',
                     message: 'Not implemented',
-                    test: 'test_unittest_one.Test_test1.test_A',
-                },
+                    test: 'test_unittest_one.Test_test1.test_A'
+                }
             ];
             injectTestSocketServerResults(resultsToSend);
 
@@ -515,7 +515,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                 testFile: [],
                 testFolder: [],
                 testFunction: [tests.testFunctions[0].testFunction],
-                testSuite: [],
+                testSuite: []
             };
             const results = await testManager.runTest(CommandSource.ui, testFn);
             assert.equal(results.summary.errors, 0, 'Errors');

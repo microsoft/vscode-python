@@ -21,7 +21,7 @@ import {
     IInteractiveWindowListener,
     INotebook,
     INotebookExecutionLogger,
-    INotebookProvider,
+    INotebookProvider
 } from '../types';
 
 @injectable()
@@ -197,7 +197,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     range.start.line,
                     range.start.character,
                     range.end.line,
-                    range.end.character,
+                    range.end.character
                 ]);
 
             case Commands.DebugStepOver:
@@ -236,7 +236,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
                     range.start.line,
                     range.start.character,
                     range.end.line,
-                    range.end.character,
+                    range.end.character
                 ]);
 
             case Commands.RunAllCells:
@@ -315,7 +315,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         return {
             arguments: args,
             title,
-            command: commandName,
+            command: commandName
         };
     }
 }

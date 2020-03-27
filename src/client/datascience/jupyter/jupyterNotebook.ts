@@ -34,7 +34,7 @@ import {
     INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo,
-    InterruptResult,
+    InterruptResult
 } from '../types';
 import { expandWorkingDir, modifyTraceback } from './jupyterUtils';
 import { LiveKernelModel } from './kernels/types';
@@ -44,7 +44,7 @@ import cloneDeep = require('lodash/cloneDeep');
 import {
     concatMultilineStringInput,
     concatMultilineStringOutput,
-    formatStreamText,
+    formatStreamText
 } from '../../../datascience-ui/common';
 import { RefBool } from '../../common/refBool';
 
@@ -412,12 +412,12 @@ export class JupyterNotebookBase implements INotebook {
                 cell_type: 'messages',
                 messages: [version, notebookVersion, pythonPath],
                 metadata: {},
-                source: [],
+                source: []
             },
             id: uuid(),
             file: '',
             line: 0,
-            state: CellState.finished,
+            state: CellState.finished
         };
     }
 
@@ -555,15 +555,15 @@ export class JupyterNotebookBase implements INotebook {
                 return {
                     matches: [],
                     cursor: { start: 0, end: 0 },
-                    metadata: [],
+                    metadata: []
                 };
             }
             const result = await Promise.race([
                 this.session!.requestComplete({
                     code: cellCode,
-                    cursor_pos: offsetInCode,
+                    cursor_pos: offsetInCode
                 }),
-                createPromiseFromCancellation({ defaultValue: undefined, cancelAction: 'resolve', token: cancelToken }),
+                createPromiseFromCancellation({ defaultValue: undefined, cancelAction: 'resolve', token: cancelToken })
             ]);
             if (result && result.content) {
                 if ('matches' in result.content) {
@@ -571,16 +571,16 @@ export class JupyterNotebookBase implements INotebook {
                         matches: result.content.matches,
                         cursor: {
                             start: result.content.cursor_start,
-                            end: result.content.cursor_end,
+                            end: result.content.cursor_end
                         },
-                        metadata: result.content.metadata,
+                        metadata: result.content.metadata
                     };
                 }
             }
             return {
                 matches: [],
                 cursor: { start: 0, end: 0 },
-                metadata: [],
+                metadata: []
             };
         }
 
@@ -828,7 +828,7 @@ export class JupyterNotebookBase implements INotebook {
                           code: cellMatcher.stripFirstMarker(code),
                           stop_on_error: false,
                           allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
-                          store_history: !silent, // Silent actually means don't output anything. Store_history is what affects execution_count
+                          store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
                       },
                       true
                   )
@@ -986,7 +986,7 @@ export class JupyterNotebookBase implements INotebook {
             this.applicationService
                 .showInputBox({
                     prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
-                    password: hasPassword,
+                    password: hasPassword
                 })
                 .then((v) => {
                     this.session.sendInputReply(v || '');
@@ -1183,7 +1183,7 @@ export class JupyterNotebookBase implements INotebook {
                 output_type: 'execute_result',
                 data: msg.content.data,
                 metadata: msg.content.metadata,
-                execution_count: msg.content.execution_count,
+                execution_count: msg.content.execution_count
             },
             clearState
         );
@@ -1209,7 +1209,7 @@ export class JupyterNotebookBase implements INotebook {
                             output_type: 'stream',
                             text: data,
                             metadata: {},
-                            execution_count: reply.execution_count,
+                            execution_count: reply.execution_count
                         },
                         clearState
                     );
@@ -1261,7 +1261,7 @@ export class JupyterNotebookBase implements INotebook {
             const output: nbformat.IStream = {
                 output_type: 'stream',
                 name: msg.content.name,
-                text: trimFunc(originalText),
+                text: trimFunc(originalText)
             };
             data.outputs = [...data.outputs, output];
             trimmedTextLenght = output.text.length;
@@ -1284,7 +1284,7 @@ export class JupyterNotebookBase implements INotebook {
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: msg.content.data,
-            metadata: msg.content.metadata,
+            metadata: msg.content.metadata
         };
         this.addToCellData(cell, output, clearState);
     }
@@ -1324,9 +1324,9 @@ export class JupyterNotebookBase implements INotebook {
                     // Does this need to be translated? All depends upon if jupyter does or not
                     traceback: [
                         '[1;31m---------------------------------------------------------------------------[0m',
-                        '[1;31mKeyboardInterrupt[0m: ',
-                    ],
-                },
+                        '[1;31mKeyboardInterrupt[0m: '
+                    ]
+                }
             },
             new RefBool(false),
             cell
@@ -1338,7 +1338,7 @@ export class JupyterNotebookBase implements INotebook {
             output_type: 'error',
             ename: msg.content.ename,
             evalue: msg.content.evalue,
-            traceback: modifyTraceback(cell.file, this.fs.getDisplayName(cell.file), cell.line, msg.content.traceback),
+            traceback: modifyTraceback(cell.file, this.fs.getDisplayName(cell.file), cell.line, msg.content.traceback)
         };
         this.addToCellData(cell, output, clearState);
         cell.state = CellState.error;

@@ -91,7 +91,7 @@ suite('Feature Deprecation Manager Tests', () => {
             { valueInSetting: [], expectedValue: false },
             { valueInSetting: ['1'], expectedValue: true },
             { valueInSetting: [1], expectedValue: true },
-            { valueInSetting: [{}], expectedValue: true },
+            { valueInSetting: [{}], expectedValue: true }
         ];
 
         for (const config of testConfigs) {
@@ -114,7 +114,7 @@ suite('Feature Deprecation Manager Tests', () => {
             { valueInSetting: 'true', expectedValue: true, valuesToLookFor: ['true', true] },
             { valueInSetting: true, expectedValue: true, valuesToLookFor: ['true', true] },
             { valueInSetting: 'false', expectedValue: true, valuesToLookFor: ['false', false] },
-            { valueInSetting: false, expectedValue: true, valuesToLookFor: ['false', false] },
+            { valueInSetting: false, expectedValue: true, valuesToLookFor: ['false', false] }
         ];
 
         for (const config of testConfigs) {

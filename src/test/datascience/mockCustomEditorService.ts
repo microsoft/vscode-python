@@ -5,7 +5,7 @@ import {
     CustomDocument,
     CustomEditorProvider,
     ICommandManager,
-    ICustomEditorService,
+    ICustomEditorService
 } from '../../client/common/application/types';
 import { IDisposableRegistry } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
@@ -111,7 +111,7 @@ export class MockCustomEditorService implements ICustomEditorService {
         return {
             uri: file,
             viewType: NativeEditorProvider.customEditorViewType,
-            onDidDispose: eventEmitter.event,
+            onDidDispose: eventEmitter.event
         };
     }
 

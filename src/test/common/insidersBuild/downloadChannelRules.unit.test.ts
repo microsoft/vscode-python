@@ -14,7 +14,7 @@ import {
     ExtensionInsidersWeeklyChannelRule,
     frequencyForDailyInsidersCheck,
     frequencyForWeeklyInsidersCheck,
-    lastLookUpTimeKey,
+    lastLookUpTimeKey
 } from '../../../client/common/insidersBuild/downloadChannelRules';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';

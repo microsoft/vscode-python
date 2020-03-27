@@ -31,9 +31,9 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
                 {
                     // tslint:disable-next-line:no-invalid-template-strings
                     localRoot: '${workspaceFolder}',
-                    remoteRoot: '.',
-                },
-            ],
+                    remoteRoot: '.'
+                }
+            ]
         };
 
         config.host = await input.showInputBox({
@@ -45,7 +45,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
             validate: (value) =>
                 Promise.resolve(
                     value && value.trim().length > 0 ? undefined : DebugConfigStrings.attach.enterRemoteHost.invalid()
-                ),
+                )
         });
         if (!config.host) {
             config.host = defaultHost;
@@ -53,7 +53,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
 
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.remoteAttach,
-            manuallyEnteredAValue: config.host !== defaultHost,
+            manuallyEnteredAValue: config.host !== defaultHost
         });
         Object.assign(state.config, config);
         return (_) => this.configurePort(input, state.config);
@@ -73,7 +73,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
                     value && /^\d+$/.test(value.trim())
                         ? undefined
                         : DebugConfigStrings.attach.enterRemotePort.invalid()
-                ),
+                )
         });
         if (port && /^\d+$/.test(port.trim())) {
             config.port = parseInt(port, 10);
@@ -83,7 +83,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
         }
         sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
             configurationType: DebugConfigurationType.remoteAttach,
-            manuallyEnteredAValue: config.port !== defaultPort,
+            manuallyEnteredAValue: config.port !== defaultPort
         });
     }
 }

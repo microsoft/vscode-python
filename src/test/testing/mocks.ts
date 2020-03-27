@@ -14,7 +14,7 @@ import {
     TestDiscoveryOptions,
     TestProvider,
     Tests,
-    TestsToRun,
+    TestsToRun
 } from '../../client/testing/common/types';
 
 @injectable()

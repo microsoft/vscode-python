@@ -22,7 +22,7 @@ if (!tty.getWindowSize) {
 
 let mocha = new Mocha(<any>{
     ui: 'tdd',
-    colors: true,
+    colors: true
 });
 
 export type SetupOptions = Mocha.MochaOptions & {

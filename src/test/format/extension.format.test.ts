@@ -105,7 +105,7 @@ suite('Formatting - General', () => {
             if (args.indexOf('--diff') >= 0) {
                 callback({
                     out: fs.readFileSync(path.join(formatFilesPath, outputFileName), 'utf8'),
-                    source: 'stdout',
+                    source: 'stdout'
                 });
             }
         });
@@ -121,7 +121,7 @@ suite('Formatting - General', () => {
         const textEditor = await window.showTextDocument(textDocument);
         const options = {
             insertSpaces: textEditor.options.insertSpaces! as boolean,
-            tabSize: textEditor.options.tabSize! as number,
+            tabSize: textEditor.options.tabSize! as number
         };
 
         await injectFormatOutput(outputFileName);

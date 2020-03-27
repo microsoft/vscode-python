@@ -23,7 +23,7 @@ export class AttachPicker implements IAttachPicker {
 
             const refreshButton = {
                 iconPath: getIcon(REFRESH_BUTTON_ICON),
-                tooltip: AttachProcess.refreshList(),
+                tooltip: AttachProcess.refreshList()
             };
 
             const quickPick = this.applicationShell.createQuickPick<IAttachItem>();

@@ -62,7 +62,7 @@ const OptionsWithArguments = [
     '--numprocesses',
     '--rsyncdir',
     '--rsyncignore',
-    '--tx',
+    '--tx'
 ];
 
 const OptionsWithoutArguments = [
@@ -126,7 +126,7 @@ const OptionsWithoutArguments = [
     '--looponfail',
     '--trace',
     '--tx',
-    '-d',
+    '-d'
 ];
 
 @injectable()
@@ -138,7 +138,7 @@ export class ArgumentsService implements IArgumentsService {
     public getKnownOptions(): { withArgs: string[]; withoutArgs: string[] } {
         return {
             withArgs: OptionsWithArguments,
-            withoutArgs: OptionsWithoutArguments,
+            withoutArgs: OptionsWithoutArguments
         };
     }
     public getOptionValue(args: string[], option: string): string | string[] | undefined {
@@ -197,7 +197,7 @@ export class ArgumentsService implements IArgumentsService {
                             '--setup-only',
                             '--setup-show',
                             '--setup-plan',
-                            '--trace',
+                            '--trace'
                         ]
                     );
                     optionsWithArgsToRemove.push(
@@ -219,7 +219,7 @@ export class ArgumentsService implements IArgumentsService {
                             '--result-log',
                             '-W',
                             '--pythonwarnings',
-                            '--log-*',
+                            '--log-*'
                         ]
                     );
                     removePositionalArgs = true;
@@ -241,7 +241,7 @@ export class ArgumentsService implements IArgumentsService {
                             '--failed-first',
                             '--nf',
                             '--new-first',
-                            '--trace',
+                            '--trace'
                         ]
                     );
                     optionsWithArgsToRemove.push(...['-k', '-m', '--lfnf', '--last-failed-no-failures']);

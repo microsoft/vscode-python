@@ -15,7 +15,7 @@ const methodNames = [
     'setStatusBarMessage',
     // From IOutputChannel (vscode.OutputChannel):
     'appendLine',
-    'appendLine',
+    'appendLine'
 ];
 // tslint:ignore-next-line:no-suspicious-comments
 // TODO: Ideally we would not ignore any files.

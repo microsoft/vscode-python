@@ -10,7 +10,7 @@ import {
     IInterpreterHelper,
     InterpreterType,
     IVirtualEnvironmentsSearchPathProvider,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { lookForInterpretersInDirectory } from '../helpers';
@@ -87,7 +87,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
         return Promise.all([
             this.helper.getInterpreterInformation(interpreter),
             this.virtualEnvMgr.getEnvironmentName(interpreter, resource),
-            this.virtualEnvMgr.getEnvironmentType(interpreter, resource),
+            this.virtualEnvMgr.getEnvironmentType(interpreter, resource)
         ]).then(([details, virtualEnvName, type]) => {
             if (!details) {
                 return;
@@ -96,7 +96,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
             return {
                 ...(details as PythonInterpreter),
                 envName: virtualEnvName,
-                type: type! as InterpreterType,
+                type: type! as InterpreterType
             };
         });
     }

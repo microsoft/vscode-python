@@ -25,7 +25,7 @@ import {
     IExperimentsManager,
     IExtensionContext,
     IFeatureDeprecationManager,
-    IOutputChannel,
+    IOutputChannel
 } from './common/types';
 import { OutputChannelNames } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
@@ -42,7 +42,7 @@ import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
     IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
-    IInterpreterService,
+    IInterpreterService
 } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { IServiceContainer, IServiceManager } from './ioc/types';
@@ -192,7 +192,7 @@ async function activateLegacy(
 
     context.subscriptions.push(
         languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), {
-            providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports],
+            providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports]
         })
     );
 

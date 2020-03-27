@@ -16,7 +16,7 @@ import {
     BANNER_NAME_PROPOSE_LS,
     IConfigurationService,
     IPythonExtensionBanner,
-    IPythonSettings,
+    IPythonSettings
 } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
 import { swallowExceptions } from '../common/utils/decorators';
@@ -126,7 +126,7 @@ export enum CommandType {
     Hover,
     Usages,
     Definitions,
-    Symbols,
+    Symbols
 }
 
 const commandNames = new Map<CommandType, string>();
@@ -300,7 +300,7 @@ export class JediProxy implements Disposable {
                         mem_use: result.memory,
                         limit: limit * 1024 * 1024,
                         isUserDefinedLimit: limit !== 1024,
-                        restart: restartJedi,
+                        restart: restartJedi
                     };
                     sendTelemetryEvent(EventName.JEDI_MEMORY, undefined, props);
                 }
@@ -508,7 +508,7 @@ export class JediProxy implements Disposable {
         });
         const completionResult: ICompletionResult = {
             items: results,
-            requestId: command.id,
+            requestId: command.id
         };
         this.safeResolve(command, completionResult);
     }
@@ -518,7 +518,7 @@ export class JediProxy implements Disposable {
         const defs = JediProxy.getProperty<any[]>(response, 'results');
         const defResult: IDefinitionResult = {
             requestId: command.id,
-            definitions: [],
+            definitions: []
         };
         if (defs.length > 0) {
             defResult.definitions = defs.map((def) => {
@@ -534,8 +534,8 @@ export class JediProxy implements Disposable {
                         startLine: def.range.start_line,
                         startColumn: def.range.start_column,
                         endLine: def.range.end_line,
-                        endColumn: def.range.end_column,
-                    },
+                        endColumn: def.range.end_column
+                    }
                 };
             });
         }
@@ -553,9 +553,9 @@ export class JediProxy implements Disposable {
                     description: def.description,
                     signature: def.signature,
                     docstring: def.docstring,
-                    text: def.text,
+                    text: def.text
                 };
-            }),
+            })
         };
         this.safeResolve(command, defResult);
     }
@@ -566,7 +566,7 @@ export class JediProxy implements Disposable {
         defs = Array.isArray(defs) ? defs : [];
         const defResults: ISymbolResult = {
             requestId: command.id,
-            definitions: [],
+            definitions: []
         };
         defResults.definitions = defs.map<IDefinition>((def) => {
             const originalType = def.type as string;
@@ -581,8 +581,8 @@ export class JediProxy implements Disposable {
                     startLine: def.range.start_line,
                     startColumn: def.range.start_column,
                     endLine: def.range.end_line,
-                    endColumn: def.range.end_column,
-                },
+                    endColumn: def.range.end_column
+                }
             };
         });
         this.safeResolve(command, defResults);
@@ -600,9 +600,9 @@ export class JediProxy implements Disposable {
                     fileName: item.fileName,
                     lineIndex: item.line - 1,
                     moduleName: item.moduleName,
-                    name: item.name,
+                    name: item.name
                 };
-            }),
+            })
         };
         this.safeResolve(command, refResult);
     }
@@ -613,7 +613,7 @@ export class JediProxy implements Disposable {
         // tslint:disable-next-line:no-object-literal-type-assertion
         this.safeResolve(command, <IArgumentsResult>{
             requestId: command.id,
-            definitions: defs,
+            definitions: defs
         });
     }
 
@@ -645,7 +645,7 @@ export class JediProxy implements Disposable {
             source: cmd.source,
             line: cmd.lineIndex,
             column: cmd.columnIndex,
-            config: this.getConfig(),
+            config: this.getConfig()
         };
 
         if (cmd.command === CommandType.Symbols) {
@@ -686,7 +686,7 @@ export class JediProxy implements Disposable {
             // This is returned by "from distutils.sysconfig import get_python_lib; print(get_python_lib())".
             this.getPathFromPythonCommand([
                 '-c',
-                'from distutils.sysconfig import get_python_lib; print(get_python_lib())',
+                'from distutils.sysconfig import get_python_lib; print(get_python_lib())'
             ])
                 .then((libPath) => {
                     // On windows we also need the libs path (second item will return c:\xxx\lib\site-packages).
@@ -695,7 +695,7 @@ export class JediProxy implements Disposable {
                 })
                 .catch(() => ''),
             // Python global site packages, as a fallback in case user hasn't installed them in custom environment.
-            this.getPathFromPythonCommand(['-m', 'site', '--user-site']).catch(() => ''),
+            this.getPathFromPythonCommand(['-m', 'site', '--user-site']).catch(() => '')
         ];
 
         try {
@@ -758,7 +758,7 @@ export class JediProxy implements Disposable {
             useSnippets: false,
             caseInsensitiveCompletion: true,
             showDescriptions: true,
-            fuzzyMatcher: true,
+            fuzzyMatcher: true
         };
     }
 

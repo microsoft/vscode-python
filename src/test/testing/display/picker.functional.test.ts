@@ -33,8 +33,8 @@ suite('Testing - TestDisplay', () => {
         collectedTests.testFiles = [
             {
                 fullPath: fullpath ? fullpath : 'path/to/testfile',
-                ...anything(),
-            },
+                ...anything()
+            }
         ];
         return collectedTests;
     }
@@ -56,12 +56,12 @@ suite('Testing - TestDisplay', () => {
         const paths: { [key: string]: any } = {
             match: {
                 fullPath: '/path/to/testfile',
-                fileName: '/path/to/testfile',
+                fileName: '/path/to/testfile'
             },
             mismatch: {
                 fullPath: '/path/to/testfile',
-                fileName: '/testfile/to/path',
-            },
+                fileName: '/testfile/to/path'
+            }
         };
         let tests: Tests;
 

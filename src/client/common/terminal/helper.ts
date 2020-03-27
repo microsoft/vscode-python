@@ -18,7 +18,7 @@ import {
     ITerminalActivationCommandProvider,
     ITerminalHelper,
     TerminalActivationProviders,
-    TerminalShellType,
+    TerminalShellType
 } from './types';
 
 @injectable()

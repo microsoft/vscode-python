@@ -9,7 +9,7 @@ import {
     SymbolInformation,
     SymbolKind,
     TextDocument,
-    Uri,
+    Uri
 } from 'vscode';
 import { LanguageClient } from 'vscode-languageclient';
 import { IFileSystem } from '../common/platform/types';
@@ -132,7 +132,7 @@ export class JediSymbolProvider implements DocumentSymbolProvider {
                 command: proxy.CommandType.Symbols,
                 fileName: filename,
                 columnIndex: 0,
-                lineIndex: 0,
+                lineIndex: 0
             };
 
             if (document.isDirty) {

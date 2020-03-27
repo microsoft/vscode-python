@@ -57,7 +57,7 @@ export interface IMultiStepInput<S> {
         activeItem,
         placeholder,
         buttons,
-        shouldResume,
+        shouldResume
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>>;
     showInputBox<P extends InputBoxParameters>({
         title,
@@ -67,7 +67,7 @@ export interface IMultiStepInput<S> {
         prompt,
         validate,
         buttons,
-        shouldResume,
+        shouldResume
     }: P): Promise<MultiStepInputInputBoxResponseType<P>>;
 }
 
@@ -87,7 +87,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         activeItem,
         placeholder,
         buttons,
-        shouldResume,
+        shouldResume
     }: P): Promise<MultiStepInputQuickPicResponseType<T, P>> {
         const disposables: Disposable[] = [];
         try {
@@ -139,7 +139,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
         prompt,
         validate,
         buttons,
-        shouldResume,
+        shouldResume
     }: P): Promise<MultiStepInputInputBoxResponseType<P>> {
         const disposables: Disposable[] = [];
         try {

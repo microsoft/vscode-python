@@ -10,7 +10,7 @@ import { IDisposableRegistry } from '../../common/types';
 import {
     INotebookIdentity,
     InteractiveWindowMessages,
-    IPyWidgetMessages,
+    IPyWidgetMessages
 } from '../interactive-common/interactiveWindowTypes';
 import { IInteractiveWindowListener, INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';

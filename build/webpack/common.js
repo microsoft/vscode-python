@@ -36,7 +36,7 @@ exports.nodeModulesToExternalize = [
     'koa',
     'koa-compress',
     'koa-logger',
-    'zeromq',
+    'zeromq'
 ];
 exports.nodeModulesToReplacePaths = [...exports.nodeModulesToExternalize];
 function getDefaultPlugins(name) {
@@ -47,7 +47,7 @@ function getDefaultPlugins(name) {
             reportFilename: `${name}.analyzer.html`,
             generateStatsFile: true,
             statsFilename: `${name}.stats.json`,
-            openAnalyzer: false, // Open file manually if you want to see it :)
+            openAnalyzer: false // Open file manually if you want to see it :)
         })
     );
     return plugins;

@@ -9,7 +9,7 @@ import {
     ICommandManager,
     ICustomEditorService,
     IDocumentManager,
-    IWorkspaceService,
+    IWorkspaceService
 } from '../../common/application/types';
 import { JUPYTER_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
@@ -94,7 +94,7 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             this.customDocuments.set(file.fsPath, {
                 uri: file,
                 viewType: NativeEditorProvider.customEditorViewType,
-                onDidDispose: new EventEmitter<void>().event,
+                onDidDispose: new EventEmitter<void>().event
             });
         }
 

@@ -16,7 +16,7 @@ import {
     CommandSource,
     NOSETEST_PROVIDER,
     PYTEST_PROVIDER,
-    UNITTEST_PROVIDER,
+    UNITTEST_PROVIDER
 } from '../../client/testing/common/constants';
 import { TestRunner } from '../../client/testing/common/runner';
 import {
@@ -25,7 +25,7 @@ import {
     ITestMessageService,
     ITestRunner,
     IXUnitParser,
-    TestProvider,
+    TestProvider
 } from '../../client/testing/common/types';
 import { XUnitParser } from '../../client/testing/common/xUnitParser';
 import { ArgumentsService as NoseTestArgumentsService } from '../../client/testing/nosetest/services/argsService';
@@ -56,7 +56,7 @@ suite('Unit Tests - debugging', () => {
         await Promise.all([
             updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
             updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
-            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget),
+            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget)
         ]);
     });
     setup(async function () {
@@ -71,7 +71,7 @@ suite('Unit Tests - debugging', () => {
         await Promise.all([
             updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget),
             updateSetting('testing.nosetestArgs', [], rootWorkspaceUri, configTarget),
-            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget),
+            updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget)
         ]);
     });
 

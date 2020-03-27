@@ -45,7 +45,7 @@ export class TestContextService implements ITestContextService {
             ...[
                 this.runningTests.set(status.status === TestStatus.Running),
                 this.discoveringTests.set(status.status === TestStatus.Discovering),
-                this.busyTests.set(status.status === TestStatus.Running || status.status === TestStatus.Discovering),
+                this.busyTests.set(status.status === TestStatus.Running || status.status === TestStatus.Discovering)
             ]
         );
 

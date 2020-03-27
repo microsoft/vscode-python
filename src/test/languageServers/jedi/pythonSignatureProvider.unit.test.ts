@@ -37,12 +37,12 @@ suite('Signature Provider unit tests', () => {
                             description: 'Some parameter',
                             docstring: 'gimme docs',
                             name: 'param',
-                            value: 'blah',
-                        },
-                    ],
-                },
+                            value: 'blah'
+                        }
+                    ]
+                }
             ],
-            requestId: 1,
+            requestId: 1
         };
     });
 
@@ -179,7 +179,7 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set to the beginning of ${sourceLine} but `,
-                'is reported as being within a string or comment.',
+                'is reported as being within a string or comment.'
             ].join('')
         );
     });
@@ -192,7 +192,7 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within the string in ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.',
+                'is reported as NOT being within a string or comment.'
             ].join('')
         );
     });
@@ -205,7 +205,7 @@ suite('Signature Provider unit tests', () => {
             false,
             [
                 `Position set to just before the string in ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as being within a string or comment.',
+                'is reported as being within a string or comment.'
             ].join('')
         );
     });
@@ -218,7 +218,7 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set to the start of the string in ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as being within a string or comment.',
+                'is reported as being within a string or comment.'
             ].join('')
         );
     });
@@ -231,7 +231,7 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a full line comment ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.',
+                'is reported as NOT being within a string or comment.'
             ].join('')
         );
     });
@@ -244,7 +244,7 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a trailing line comment ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.',
+                'is reported as NOT being within a string or comment.'
             ].join('')
         );
     });
@@ -257,7 +257,7 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a trailing line comment ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.',
+                'is reported as NOT being within a string or comment.'
             ].join('')
         );
     });
@@ -271,7 +271,7 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.',
+                'is reported as NOT being within a string or comment.'
             ].join('')
         );
     });
@@ -285,7 +285,7 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.',
+                'is reported as NOT being within a string or comment.'
             ].join('')
         );
     });
@@ -299,7 +299,7 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.',
+                'is reported as NOT being within a string or comment.'
             ].join('')
         );
     });
@@ -313,7 +313,7 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.',
+                'is reported as NOT being within a string or comment.'
             ].join('')
         );
     });
@@ -326,7 +326,7 @@ suite('Signature Provider unit tests', () => {
             true,
             [
                 `Position set within a multi-line string ${sourceLine} (position ${sourcePos}) but `,
-                'is reported as NOT being within a string or comment.',
+                'is reported as NOT being within a string or comment.'
             ].join('')
         );
     });

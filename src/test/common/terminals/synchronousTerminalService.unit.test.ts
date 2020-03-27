@@ -111,7 +111,7 @@ suite('Terminal Service (synchronous)', () => {
                         'cmd'.fileToCommandArgument(),
                         '1',
                         '2',
-                        tmpFile.filePath.fileToCommandArgument(),
+                        tmpFile.filePath.fileToCommandArgument()
                     ])
                 )
             ).once();
@@ -153,7 +153,7 @@ suite('Terminal Service (synchronous)', () => {
                         'cmd'.fileToCommandArgument(),
                         '1',
                         '2',
-                        tmpFile.filePath.fileToCommandArgument(),
+                        tmpFile.filePath.fileToCommandArgument()
                     ])
                 )
             ).once();

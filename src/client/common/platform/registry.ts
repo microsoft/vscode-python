@@ -5,7 +5,7 @@ import { IRegistry, RegistryHive } from './types';
 
 enum RegistryArchitectures {
     x86 = 'x86',
-    x64 = 'x64',
+    x64 = 'x64'
 }
 
 @injectable()

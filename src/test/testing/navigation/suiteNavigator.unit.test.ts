@@ -15,7 +15,7 @@ import {
     TextDocument,
     TextEditor,
     TextEditorRevealType,
-    Uri,
+    Uri
 } from 'vscode';
 import { DocumentManager } from '../../../client/common/application/documentManager';
 import { IDocumentManager } from '../../../client/common/application/types';
@@ -76,7 +76,7 @@ suite('Unit Tests - Navigation Suite', () => {
             containerName: '',
             kind: SymbolKind.Class,
             name: 'suite_name',
-            location: new Location(Uri.file(__filename), range),
+            location: new Location(Uri.file(__filename), range)
         };
         when(helper.findSymbol(doc.object, anything(), anything())).thenResolve(symbol);
 

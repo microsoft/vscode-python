@@ -7,7 +7,7 @@ import {
     TestFile,
     TestFolder,
     TestFunction,
-    TestSuite,
+    TestSuite
 } from '../types';
 
 @injectable()
@@ -53,7 +53,7 @@ export class TestFlatteningVisitor implements ITestVisitor {
             testFunction,
             xmlClassName: parentTestSuite.xmlName,
             parentTestFile,
-            parentTestSuite,
+            parentTestSuite
         };
         this._flattedTestFunctions.set(key, flattenedFunction);
     }

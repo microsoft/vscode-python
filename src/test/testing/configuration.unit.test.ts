@@ -15,7 +15,7 @@ import {
     IOutputChannel,
     IPythonSettings,
     ITestingSettings,
-    Product,
+    Product
 } from '../../client/common/types';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -27,7 +27,7 @@ import { UnitTestConfigurationService } from '../../client/testing/configuration
 import {
     ITestConfigSettingsService,
     ITestConfigurationManager,
-    ITestConfigurationManagerFactory,
+    ITestConfigurationManagerFactory
 } from '../../client/testing/types';
 
 suite('Unit Tests - ConfigurationService', () => {

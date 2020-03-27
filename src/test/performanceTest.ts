@@ -34,7 +34,7 @@ const logFilesPath = path.join(tmpFolder, 'test', 'logs');
 
 enum Version {
     Dev,
-    Release,
+    Release
 }
 
 class TestRunner {
@@ -83,7 +83,7 @@ class TestRunner {
         const env: Record<string, {}> = {
             ACTIVATION_TIMES_LOG_FILE_PATH: logFile,
             ACTIVATION_TIMES_EXT_VERSION: version === Version.Release ? releaseVersion : devVersion,
-            CODE_EXTENSIONS_PATH: version === Version.Release ? publishedExtensionPath : EXTENSION_ROOT_DIR,
+            CODE_EXTENSIONS_PATH: version === Version.Release ? publishedExtensionPath : EXTENSION_ROOT_DIR
         };
 
         await this.launchTest(env);
@@ -92,7 +92,7 @@ class TestRunner {
         const env: Record<string, {}> = {
             ACTIVATION_TIMES_DEV_LOG_FILE_PATHS: JSON.stringify(devLogFiles),
             ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS: JSON.stringify(releaseLogFiles),
-            ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS: JSON.stringify(languageServerLogFiles),
+            ACTIVATION_TIMES_DEV_LANGUAGE_SERVER_LOG_FILE_PATHS: JSON.stringify(languageServerLogFiles)
         };
 
         await this.launchTest(env);
@@ -104,7 +104,7 @@ class TestRunner {
                 TEST_FILES_SUFFIX: 'perf.test',
                 CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance'),
                 ...process.env,
-                ...customEnvVars,
+                ...customEnvVars
             };
 
             const proc = spawn('node', [path.join(__dirname, 'standardTest.js')], { cwd: EXTENSION_ROOT_DIR, env });

@@ -25,7 +25,7 @@ import {
     IJupyterKernelSpec,
     IJupyterSessionManagerFactory,
     INotebook,
-    INotebookServer,
+    INotebookServer
 } from '../../../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { noop } from '../../../core';
@@ -52,28 +52,28 @@ suite('Data Science - Kernel Switcher', () => {
             name: 'CurrentKernel',
             numberOfConnections: 0,
             // tslint:disable-next-line: no-any
-            session: {} as any,
+            session: {} as any
         };
         selectedKernel = {
             lastActivityTime: new Date(),
             name: 'NewKernel',
             numberOfConnections: 0,
             // tslint:disable-next-line: no-any
-            session: {} as any,
+            session: {} as any
         };
         selectedKernelSecondTime = {
             lastActivityTime: new Date(),
             name: 'SecondKernel',
             numberOfConnections: 0,
             // tslint:disable-next-line: no-any
-            session: {} as any,
+            session: {} as any
         };
         selectedInterpreter = {
             path: '',
             type: InterpreterType.Conda,
             architecture: Architecture.Unknown,
             sysPrefix: '',
-            sysVersion: '',
+            sysVersion: ''
         };
         notebook = mock(JupyterNotebookBase);
         configService = mock(ConfigurationService);
@@ -107,7 +107,7 @@ suite('Data Science - Kernel Switcher', () => {
                     hostName: '',
                     token: '',
                     localProcExitCode: 0,
-                    dispose: noop,
+                    dispose: noop
                 });
             });
             teardown(() => {
@@ -117,7 +117,7 @@ suite('Data Science - Kernel Switcher', () => {
 
             [
                 { title: 'Without an existing kernel', currentKernel: undefined },
-                { title: 'With an existing kernel', currentKernel },
+                { title: 'With an existing kernel', currentKernel }
             ].forEach((currentKernelInfo) => {
                 suite(currentKernelInfo.title, () => {
                     setup(() => {
@@ -180,7 +180,7 @@ suite('Data Science - Kernel Switcher', () => {
                                 ).thenResolve({
                                     kernelModel: selectedKernel,
                                     kernelSpec: undefined,
-                                    interpreter: selectedInterpreter,
+                                    interpreter: selectedInterpreter
                                 });
                             } else {
                                 when(
@@ -194,7 +194,7 @@ suite('Data Science - Kernel Switcher', () => {
                                 ).thenResolve({
                                     kernelModel: selectedKernel,
                                     kernelSpec: undefined,
-                                    interpreter: selectedInterpreter,
+                                    interpreter: selectedInterpreter
                                 });
                             }
                         });
@@ -328,7 +328,7 @@ suite('Data Science - Kernel Switcher', () => {
                                             ? selectedKernel
                                             : selectedKernelSecondTime,
                                         kernelSpec: undefined,
-                                        interpreter: selectedInterpreter,
+                                        interpreter: selectedInterpreter
                                     };
                                 });
                                 when(appShell.showErrorMessage(anything(), anything(), anything())).thenResolve(

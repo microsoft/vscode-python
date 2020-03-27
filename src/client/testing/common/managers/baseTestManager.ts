@@ -9,7 +9,7 @@ import {
     EventEmitter,
     languages,
     OutputChannel,
-    Uri,
+    Uri
 } from 'vscode';
 import { ICommandManager, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
@@ -22,7 +22,7 @@ import {
     IInstaller,
     IOutputChannel,
     IPythonSettings,
-    Product,
+    Product
 } from '../../../common/types';
 import { getNamesAndValues } from '../../../common/utils/enum';
 import { noop } from '../../../common/utils/misc';
@@ -44,12 +44,12 @@ import {
     TestProvider,
     Tests,
     TestStatus,
-    TestsToRun,
+    TestsToRun
 } from './../types';
 
 enum CancellationTokenType {
     testDiscovery,
-    testRunner,
+    testRunner
 }
 
 // tslint:disable: member-ordering max-func-body-length
@@ -193,7 +193,7 @@ export abstract class BaseTestManager implements ITestManager {
             tool: this.testProvider,
             // tslint:disable-next-line:no-any prefer-type-cast
             trigger: cmdSource as any,
-            failed: false,
+            failed: false
         };
         this.commandManager.executeCommand('setContext', 'testsDiscovered', true).then(noop, noop);
         this.createCancellationToken(CancellationTokenType.testDiscovery);
@@ -283,7 +283,7 @@ export abstract class BaseTestManager implements ITestManager {
             Run_Failed_Tests: 'false',
             Run_Specific_File: 'false',
             Run_Specific_Class: 'false',
-            Run_Specific_Function: 'false',
+            Run_Specific_Function: 'false'
         };
         //Ensure valid values are sent.
         const validCmdSourceValues = getNamesAndValues<CommandSource>(CommandSource).map((item) => item.value);
@@ -292,7 +292,7 @@ export abstract class BaseTestManager implements ITestManager {
             scope: 'all',
             debugging: debug === true,
             triggerSource: validCmdSourceValues.indexOf(cmdSource) === -1 ? 'commandpalette' : cmdSource,
-            failed: false,
+            failed: false
         };
 
         if (!runFailedTests && !testsToRun) {
@@ -356,7 +356,7 @@ export abstract class BaseTestManager implements ITestManager {
                     testFolders: [],
                     testFunctions: [],
                     testSuites: [],
-                    summary: { errors: 0, failures: 0, passed: 0, skipped: 0 },
+                    summary: { errors: 0, failures: 0, passed: 0, skipped: 0 }
                 };
             })
             .then((tests) => {

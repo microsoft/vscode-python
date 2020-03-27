@@ -9,7 +9,7 @@ import { IConfigurationService, Resource } from './common/types';
 import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService,
+    IInterpreterAutoSelectionService
 } from './interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
 import { IServiceContainer } from './ioc/types';
@@ -114,7 +114,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
             .then((ver) => (ver ? ver.raw : ''))
             .catch<string>(() => ''),
         interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
-        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => []),
+        interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
     ]);
     const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
@@ -137,6 +137,6 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         hasPython3,
         usingUserDefinedInterpreter,
         usingAutoSelectedWorkspaceInterpreter,
-        usingGlobalInterpreter,
+        usingGlobalInterpreter
     };
 }

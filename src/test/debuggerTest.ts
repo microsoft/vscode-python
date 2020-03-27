@@ -19,7 +19,7 @@ function start() {
         extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test', 'index'),
         launchArgs: [workspacePath],
         version: 'stable',
-        extensionTestsEnv: { ...process.env, UITEST_DISABLE_INSIDERS: '1' },
+        extensionTestsEnv: { ...process.env, UITEST_DISABLE_INSIDERS: '1' }
     }).catch((ex) => {
         console.error('End Debugger tests (with errors)', ex);
         process.exit(1);

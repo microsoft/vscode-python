@@ -51,7 +51,7 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
             return {
                 package: item.name,
                 uri: `${azureCDNBlobStorageAccount}/${azureBlobStorageContainer}/${item.name}`,
-                version: nugetService.getVersionFromPackageFileName(item.name),
+                version: nugetService.getVersionFromPackageFileName(item.name)
             };
         });
     }

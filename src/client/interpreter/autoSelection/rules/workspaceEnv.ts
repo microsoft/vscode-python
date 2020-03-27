@@ -17,7 +17,7 @@ import {
     IInterpreterLocatorService,
     PIPENV_SERVICE,
     PythonInterpreter,
-    WORKSPACE_VIRTUAL_ENV_SERVICE,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../contracts';
 import { AutoSelectionRule, IInterpreterAutoSelectionService } from '../types';
 import { BaseRuleService, NextAction } from './baseRule';

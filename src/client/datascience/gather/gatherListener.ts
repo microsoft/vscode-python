@@ -23,7 +23,7 @@ import {
     INotebookEditorProvider,
     INotebookExecutionLogger,
     INotebookExporter,
-    INotebookProvider,
+    INotebookProvider
 } from '../types';
 
 @injectable()
@@ -153,8 +153,8 @@ export class GatherListener implements IInteractiveWindowListener {
                                 ? this.notebookUri.fsPath
                                 : cell.file
                         )
-                    ),
-                },
+                    )
+                }
             ];
 
             // Create new notebook with the returned program and open it.
@@ -200,7 +200,7 @@ export class GatherListener implements IInteractiveWindowListener {
         // Create a new open editor with the returned program in the right panel
         const doc = await this.documentManager.openTextDocument({
             content: slicedProgram,
-            language: PYTHON_LANGUAGE,
+            language: PYTHON_LANGUAGE
         });
         const editor = await this.documentManager.showTextDocument(doc, viewColumn);
 

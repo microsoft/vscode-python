@@ -171,7 +171,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
                 enableColumnReorder: false,
                 explicitInitialization: false,
                 viewportClass: 'react-grid',
-                rowHeight: this.getAppropiateRowHeight(fontSize),
+                rowHeight: this.getAppropiateRowHeight(fontSize)
             };
 
             // Transform columns so they are sortable and stylable
@@ -281,7 +281,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         const style: React.CSSProperties = this.props.forceHeight
             ? {
                   height: `${this.props.forceHeight}px`,
-                  width: `${this.props.forceHeight}px`,
+                  width: `${this.props.forceHeight}px`
               }
             : {};
 

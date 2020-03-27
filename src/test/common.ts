@@ -36,7 +36,7 @@ export enum OSType {
     Unknown = 'Unknown',
     Windows = 'Windows',
     OSX = 'OSX',
-    Linux = 'Linux',
+    Linux = 'Linux'
 }
 
 export type PythonSettingKeys =
@@ -452,7 +452,7 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
     return new Promise<void>((resolve, reject) => {
         const zip = new StreamZip({
             file: zipFile,
-            storeEntries: true,
+            storeEntries: true
         });
         zip.on('ready', async () => {
             zip.extract('extension', targetFolder, (err: any) => {

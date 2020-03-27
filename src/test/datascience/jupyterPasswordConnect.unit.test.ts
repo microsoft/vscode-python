@@ -50,7 +50,7 @@ suite('JupyterPasswordConnect', () => {
                 fm('http://TESTNAME:8888/login?', {
                     method: 'get',
                     redirect: 'manual',
-                    headers: { Connection: 'keep-alive' },
+                    headers: { Connection: 'keep-alive' }
                 })
             )
             .returns(() => Promise.resolve(mockXsrfResponse.object))
@@ -83,8 +83,8 @@ suite('JupyterPasswordConnect', () => {
                         headers: {
                             Cookie: `_xsrf=${xsrfValue}`,
                             Connection: 'keep-alive',
-                            'content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                        },
+                            'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                        }
                     })
                 )
             )
@@ -139,7 +139,7 @@ suite('JupyterPasswordConnect', () => {
                     'https://TESTNAME:8888/login?',
                     typemoq.It.isObjectWith({
                         method: 'get',
-                        headers: { Connection: 'keep-alive' },
+                        headers: { Connection: 'keep-alive' }
                     })
                 )
             )
@@ -173,8 +173,8 @@ suite('JupyterPasswordConnect', () => {
                         headers: {
                             Cookie: `_xsrf=${xsrfValue}`,
                             Connection: 'keep-alive',
-                            'content-type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                        },
+                            'content-type': 'application/x-www-form-urlencoded;charset=UTF-8'
+                        }
                     })
                 )
             )
@@ -229,7 +229,7 @@ suite('JupyterPasswordConnect', () => {
                 fm('http://TESTNAME:8888/login?', {
                     method: 'get',
                     redirect: 'manual',
-                    headers: { Connection: 'keep-alive' },
+                    headers: { Connection: 'keep-alive' }
                 })
             )
             .returns(() => Promise.resolve(mockXsrfResponse.object))

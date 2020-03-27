@@ -62,7 +62,7 @@ suite('Smoke Test: Interactive Window', () => {
         const fileContents = await fs.readFile(file, { encoding: 'utf-8' });
         const outputFile = path.join(path.dirname(file), 'ds_n.log');
         await fs.writeFile(file, fileContents.replace("'ds_n.log'", `'${outputFile.replace(/\\/g, '/')}'`), {
-            encoding: 'utf-8',
+            encoding: 'utf-8'
         });
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);

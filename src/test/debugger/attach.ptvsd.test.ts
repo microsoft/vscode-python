@@ -23,7 +23,7 @@ import { PythonDebugConfigurationService } from '../../client/debugger/extension
 import { AttachConfigurationResolver } from '../../client/debugger/extension/configuration/resolvers/attach';
 import {
     IDebugConfigurationProviderFactory,
-    IDebugConfigurationResolver,
+    IDebugConfigurationResolver
 } from '../../client/debugger/extension/configuration/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -79,7 +79,7 @@ suite('Debugging - Attach Debugger', () => {
             '--wait',
             '--port',
             `${port}`,
-            fileToDebug.fileToCommandArgument(),
+            fileToDebug.fileToCommandArgument()
         ];
         proc = spawn(PYTHON_PATH, pythonArgs, { env: env, cwd: path.dirname(fileToDebug) });
         const exited = new Promise((resolve) => proc.once('close', resolve));
@@ -93,7 +93,7 @@ suite('Debugging - Attach Debugger', () => {
             supportsRunInTerminalRequest: true,
             pathFormat: 'path',
             supportsVariableType: true,
-            supportsVariablePaging: true,
+            supportsVariablePaging: true
         });
         const options: AttachRequestArguments & DebugConfiguration = {
             name: 'attach',
@@ -104,7 +104,7 @@ suite('Debugging - Attach Debugger', () => {
             port: port,
             host: 'localhost',
             logToFile: false,
-            debugOptions: [DebugOptions.RedirectOutput],
+            debugOptions: [DebugOptions.RedirectOutput]
         };
         const platformService = TypeMoq.Mock.ofType<IPlatformService>();
         platformService.setup((p) => p.isWindows).returns(() => isLocalHostWindows);
@@ -150,7 +150,7 @@ suite('Debugging - Attach Debugger', () => {
         const breakpointPromise = debugClient.setBreakpointsRequest({
             lines: [breakpointLocation.line],
             breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
-            source: { path: breakpointLocation.path },
+            source: { path: breakpointLocation.path }
         });
         const exceptionBreakpointPromise = debugClient.setExceptionBreakpointsRequest({ filters: [] });
         const breakpointStoppedPromise = debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
@@ -162,7 +162,7 @@ suite('Debugging - Attach Debugger', () => {
             debugClient.threadsRequest(),
             stdOutPromise,
             stdErrPromise,
-            breakpointStoppedPromise,
+            breakpointStoppedPromise
         ]);
 
         await continueDebugging(debugClient);

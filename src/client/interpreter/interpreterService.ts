@@ -13,7 +13,7 @@ import {
     IDisposableRegistry,
     IPersistentState,
     IPersistentStateFactory,
-    Resource,
+    Resource
 } from '../common/types';
 import { sleep } from '../common/utils/async';
 import { IServiceContainer } from '../ioc/types';
@@ -26,7 +26,7 @@ import {
     IInterpreterService,
     INTERPRETER_LOCATOR_SERVICE,
     InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from './contracts';
 import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
 import { IInterpreterHashProviderFactory } from './locators/types';
@@ -296,7 +296,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const virtualEnvManager = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
         const [info, type] = await Promise.all([
             interpreterHelper.getInterpreterInformation(pythonPath),
-            virtualEnvManager.getEnvironmentType(pythonPath),
+            virtualEnvManager.getEnvironmentType(pythonPath)
         ]);
         if (!info) {
             return;
@@ -304,7 +304,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const details: Partial<PythonInterpreter> = {
             ...(info as PythonInterpreter),
             path: pythonPath,
-            type: type,
+            type: type
         };
 
         const envName =
@@ -313,7 +313,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 : await virtualEnvManager.getEnvironmentName(pythonPath, resource);
         const pthonInfo = {
             ...(details as PythonInterpreter),
-            envName,
+            envName
         };
         pthonInfo.displayName = await this.getDisplayName(pthonInfo, resource);
         return pthonInfo;

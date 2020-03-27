@@ -2,7 +2,7 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import {
     IEditorContentChange,
     IEditorPosition,
-    IEditorRange,
+    IEditorRange
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
 export interface IMonacoTextModel {
@@ -69,13 +69,13 @@ export function generateReverseChange(
         startColumn: oldStart.column,
         startLineNumber: oldStart.lineNumber,
         endColumn: oldEnd.column,
-        endLineNumber: oldEnd.lineNumber,
+        endLineNumber: oldEnd.lineNumber
     };
     return {
         rangeLength: c.text.length,
         rangeOffset: c.rangeOffset,
         text: oldText ? oldText : '',
-        range: oldRange,
+        range: oldRange
     };
 }
 
@@ -108,6 +108,6 @@ export function generateChangeEvent(
         isUndoing: ev.isUndoing,
         isRedoing: ev.isRedoing,
         versionId: m.getVersionId(),
-        model: m,
+        model: m
     };
 }

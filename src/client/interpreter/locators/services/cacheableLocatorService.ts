@@ -101,7 +101,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                     traceVerbose(`Interpreters returned by ${this.name} are ${JSON.stringify(items)}`);
                     sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
                         locator: this.name,
-                        interpreters: Array.isArray(items) ? items.length : 0,
+                        interpreters: Array.isArray(items) ? items.length : 0
                     });
                     deferred!.resolve(items);
                 })
@@ -169,7 +169,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         return persistence.value.map((item) => {
             return {
                 ...item,
-                cachedEntry: true,
+                cachedEntry: true
             };
         });
     }

@@ -38,7 +38,7 @@ suite('Terminal - Django Shell Code Execution', () => {
             .setup((c) => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
                 return {
-                    dispose: () => void 0,
+                    dispose: () => void 0
                 };
             });
         platform = TypeMoq.Mock.ofType<IPlatformService>();

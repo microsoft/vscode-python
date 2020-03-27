@@ -18,7 +18,7 @@ import {
     OutputChannel,
     ProgressLocation,
     Uri,
-    WorkspaceConfiguration,
+    WorkspaceConfiguration
 } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
@@ -37,7 +37,7 @@ import {
     IOutputChannel,
     IPythonSettings,
     ModuleNamePurpose,
-    Product,
+    Product
 } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Products } from '../../../client/common/utils/localize';
@@ -46,7 +46,7 @@ import {
     ICondaService,
     IInterpreterService,
     InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -112,7 +112,7 @@ suite('Module Installer', () => {
         test('Show error message if sudo exec fails with error', async () => {
             const error = 'Error message';
             const sudoPromptMock = {
-                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(error, 'stdout', 'stderr'),
+                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(error, 'stdout', 'stderr')
             };
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
@@ -133,7 +133,7 @@ suite('Module Installer', () => {
         test('Show stdout if sudo exec succeeds', async () => {
             const stdout = 'stdout';
             const sudoPromptMock = {
-                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(undefined, stdout, undefined),
+                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(undefined, stdout, undefined)
             };
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
@@ -157,7 +157,7 @@ suite('Module Installer', () => {
         test('Show stderr if sudo exec gives a warning with stderr', async () => {
             const stderr = 'stderr';
             const sudoPromptMock = {
-                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(undefined, undefined, stderr),
+                exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(undefined, undefined, stderr)
             };
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
@@ -192,7 +192,7 @@ suite('Module Installer', () => {
                               { name: 'My-Env01', path: '' },
                               { name: '', path: path.join('conda', 'path') },
                               { name: 'My-Env01 With Spaces', path: '' },
-                              { name: '', path: path.join('conda with spaces', 'path') },
+                              { name: '', path: path.join('conda with spaces', 'path') }
                           ]
                         : [];
                 [undefined, ...condaEnvs].forEach((condaEnvInfo) => {
@@ -336,7 +336,7 @@ suite('Module Installer', () => {
                                                     ...proxyArgs,
                                                     'install',
                                                     '-U',
-                                                    '"pylint<2.0.0"',
+                                                    '"pylint<2.0.0"'
                                                 ];
                                                 await installModuleAndVerifyCommand(pythonPath, expectedArgs);
                                             });
@@ -379,7 +379,7 @@ suite('Module Installer', () => {
                                                     ...proxyArgs,
                                                     'install',
                                                     '-U',
-                                                    'pylint',
+                                                    'pylint'
                                                 ];
                                                 await installModuleAndVerifyCommand(pythonPath, expectedArgs);
                                             });
@@ -508,7 +508,7 @@ suite('Module Installer', () => {
                                         const options = {
                                             location: ProgressLocation.Notification,
                                             cancellable: true,
-                                            title: Products.installingModule().format(product.name),
+                                            title: Products.installingModule().format(product.name)
                                         };
                                         appShell
                                             .setup((a) => a.withProgress(TypeMoq.It.isAny(), TypeMoq.It.isAny()))

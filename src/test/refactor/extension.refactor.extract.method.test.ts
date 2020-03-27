@@ -14,7 +14,7 @@ import {
     TextEditorOptions,
     Uri,
     window,
-    workspace,
+    workspace
 } from 'vscode';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
@@ -63,7 +63,7 @@ suite('Method Extraction', () => {
         cursorStyle: TextEditorCursorStyle.Line,
         insertSpaces: true,
         lineNumbers: TextEditorLineNumbersStyle.Off,
-        tabSize: 4,
+        tabSize: 4
     };
     let refactorTargetFile = '';
     let ioc: UnitTestIocContainer;

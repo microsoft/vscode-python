@@ -42,7 +42,7 @@ import {
     IUnitTestSocketServer,
     IWorkspaceTestManagerService,
     IXUnitParser,
-    TestProvider,
+    TestProvider
 } from './common/types';
 import { UpdateTestSettingService } from './common/updateTestSettings';
 import { XUnitParser } from './common/xUnitParser';
@@ -80,7 +80,7 @@ import {
     ITestManagerRunner,
     ITestResultDisplay,
     ITestTreeViewProvider,
-    IUnitTestHelper,
+    IUnitTestHelper
 } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';

@@ -33,7 +33,7 @@ const defaultShells = {
     [OSType.Windows]: 'cmd',
     [OSType.OSX]: 'bash',
     [OSType.Linux]: 'bash',
-    [OSType.Unknown]: undefined,
+    [OSType.Unknown]: undefined
 };
 
 // tslint:disable:no-unnecessary-override no-any max-func-body-length
@@ -55,7 +55,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
 
     function initSetup() {
@@ -177,7 +177,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                                 env: envVars,
                                 timeout: 30000,
                                 maxBuffer: 1000 * 1000,
-                                throwOnStdErr: false,
+                                throwOnStdErr: false
                             });
                         });
                         test('Use current process variables if there are no custom variables', async () => {
@@ -212,7 +212,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                                 shell: expectedShell,
                                 timeout: 30000,
                                 maxBuffer: 1000 * 1000,
-                                throwOnStdErr: false,
+                                throwOnStdErr: false
                             });
                         });
                         test('Error must be swallowed when activation fails', async () => {

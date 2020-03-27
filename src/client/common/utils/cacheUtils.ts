@@ -113,7 +113,7 @@ export class InMemoryCache<T> {
     public set data(value: T | undefined) {
         this.store.set(this.cacheKey, {
             expiry: this.calculateExpiry(),
-            value,
+            value
         });
     }
     public clear() {

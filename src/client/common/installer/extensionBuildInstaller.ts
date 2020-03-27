@@ -55,7 +55,7 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
         const downloadOptions = {
             extension: vsixFileExtension,
             outputChannel: this.output,
-            progressMessagePrefix: ExtensionChannels.downloadingInsidersMessage(),
+            progressMessagePrefix: ExtensionChannels.downloadingInsidersMessage()
         };
         return this.fileDownloader.downloadFile(developmentBuildUri, downloadOptions).then((file) => {
             this.output.appendLine(ExtensionChannels.downloadCompletedOutputMessage());

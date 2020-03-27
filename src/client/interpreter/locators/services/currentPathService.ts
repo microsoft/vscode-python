@@ -81,7 +81,7 @@ export class CurrentPathService extends CacheableLocatorService {
             return {
                 ...(details as PythonInterpreter),
                 path: pythonPath,
-                type: details.type ? details.type : InterpreterType.Unknown,
+                type: details.type ? details.type : InterpreterType.Unknown
             };
         });
     }

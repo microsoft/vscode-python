@@ -21,7 +21,7 @@ import { JupyterInstallError } from '../jupyterInstallError';
 export enum JupyterInterpreterDependencyResponse {
     ok,
     selectAnotherInterpreter,
-    cancel,
+    cancel
 }
 
 /**
@@ -168,13 +168,13 @@ export class JupyterInterpreterDependencyService {
                 const cancellatonPromise = createPromiseFromCancellation({
                     cancelAction: 'resolve',
                     defaultValue: InstallerResponse.Ignore,
-                    token,
+                    token
                 });
                 while (productToInstall) {
                     // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
                     const response = await Promise.race([
                         this.installer.install(productToInstall, interpreter, wrapCancellationTokens(token)),
-                        cancellatonPromise,
+                        cancellatonPromise
                     ]);
                     if (response === InstallerResponse.Installed) {
                         productToInstall = productsToInstall.shift();
@@ -262,9 +262,9 @@ export class JupyterInterpreterDependencyService {
                     .then((installed) => (installed ? noop() : notInstalled.push(Product.jupyter))),
                 this.installer
                     .isInstalled(Product.notebook, interpreter)
-                    .then((installed) => (installed ? noop() : notInstalled.push(Product.notebook))),
+                    .then((installed) => (installed ? noop() : notInstalled.push(Product.notebook)))
             ]),
-            createPromiseFromCancellation<void>({ cancelAction: 'resolve', defaultValue: undefined, token }),
+            createPromiseFromCancellation<void>({ cancelAction: 'resolve', defaultValue: undefined, token })
         ]);
 
         if (notInstalled.length > 0) {

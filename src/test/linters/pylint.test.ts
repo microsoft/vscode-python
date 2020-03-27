@@ -13,7 +13,7 @@ import { IPythonToolExecutionService } from '../../client/common/process/types';
 import { ExecutionInfo, IConfigurationService, IInstaller, IPythonSettings } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSeletionProxyService
 } from '../../client/interpreter/autoSelection/types';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -223,7 +223,7 @@ suite('Linting - Pylint', () => {
             'No config file found, using default configuration',
             '************* Module test',
             '1,1,convention,C0111:Missing module docstring',
-            '3,-1,error,E1305:Too many arguments for format string',
+            '3,-1,error,E1305:Too many arguments for format string'
         ].join(os.EOL);
         execService
             .setup((x) => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -239,7 +239,7 @@ suite('Linting - Pylint', () => {
             error: DiagnosticSeverity.Error,
             fatal: DiagnosticSeverity.Error,
             refactor: DiagnosticSeverity.Hint,
-            warning: DiagnosticSeverity.Warning,
+            warning: DiagnosticSeverity.Warning
         };
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();

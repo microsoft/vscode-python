@@ -24,7 +24,7 @@ import {
     PythonExecutionInfo,
     PythonVersionInfo,
     SpawnOptions,
-    StdErrError,
+    StdErrError
 } from './types';
 
 type ErrorResponse = { error?: string };
@@ -92,7 +92,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
                 path: this.pythonPath,
                 version: parsePythonVersion(versionValue),
                 sysVersion: response.sysVersion,
-                sysPrefix: response.sysPrefix,
+                sysPrefix: response.sysPrefix
             };
         } catch (ex) {
             traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
@@ -220,7 +220,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             'token',
             'encoding',
             'mergeStdOutErr',
-            'extraVariables',
+            'extraVariables'
         ];
         // tslint:disable-next-line: no-any
         return Object.keys(options).every((item) => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
@@ -273,7 +273,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             file_name: fileName,
             args,
             cwd: options.cwd,
-            env: options.env,
+            env: options.env
         });
         this.processResponse(response, options);
         return response;
@@ -295,7 +295,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             module_name: moduleName,
             args,
             cwd: options.cwd,
-            env: options.env,
+            env: options.env
         });
         this.processResponse(response, options);
         return response;
@@ -321,7 +321,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
                     file_name: moduleOrFile.fileName,
                     args,
                     cwd: options.cwd,
-                    env: options.env,
+                    env: options.env
                 });
             } else {
                 const request = new RequestType<
@@ -335,7 +335,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
                     module_name: moduleOrFile.moduleName,
                     args,
                     cwd: options.cwd,
-                    env: options.env,
+                    env: options.env
                 });
             }
             // Might not get a response object back, as its observable.
@@ -376,7 +376,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         return {
             proc: this.proc,
             dispose: () => this.dispose(),
-            out: subject,
+            out: subject
         };
     }
     private monitorConnection() {

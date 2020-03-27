@@ -13,7 +13,7 @@ import { IApplicationShell } from '../../../client/common/application/types';
 import { IBrowserService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import {
     LanguageServerSurveyBanner,
-    LSSurveyStateKeys,
+    LSSurveyStateKeys
 } from '../../../client/languageServices/languageServerSurveyBanner';
 
 suite('Language Server Survey Banner', () => {
@@ -90,7 +90,7 @@ suite('Language Server Survey Banner', () => {
         '0.0.1234567890',
         '1234567890.0.1',
         '1.0.1-alpha+2',
-        '22.4.999-rc.6',
+        '22.4.999-rc.6'
     ];
     languageServerVersions.forEach(async (languageServerVersion: string) => {
         test(`Survey URL is as expected for Language Server version '${languageServerVersion}'.`, async () => {
@@ -107,7 +107,7 @@ suite('Language Server Survey Banner', () => {
 
             const lsFolder: FolderVersionPair = {
                 path: '/some/path',
-                version: new SemVer(languageServerVersion, true),
+                version: new SemVer(languageServerVersion, true)
             };
             // language service will get asked for the current Language
             // Server directory installed. This in turn will give the tested

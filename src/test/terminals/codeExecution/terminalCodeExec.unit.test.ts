@@ -337,7 +337,7 @@ suite('Terminal - Code Execution', () => {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
                 await testCondaFileExecution(PYTHON_PATH, ['-a', '-b', '-c'], file, {
                     name: 'foo-env',
-                    path: 'path/to/foo-env',
+                    path: 'path/to/foo-env'
                 });
             });
 
@@ -345,7 +345,7 @@ suite('Terminal - Code Execution', () => {
                 const file = Uri.file(path.join('c', 'path', 'to', 'file', 'one.py'));
                 await testCondaFileExecution(PYTHON_PATH, ['-a', '-b', '-c'], file, {
                     name: '',
-                    path: 'path/to/foo-env',
+                    path: 'path/to/foo-env'
                 });
             });
 
@@ -443,14 +443,14 @@ suite('Terminal - Code Execution', () => {
             test('Ensure conda args with env name are returned when building repl args with a conda env with a name', async () => {
                 await testReplCondaCommandArguments(PYTHON_PATH, ['-a', 'b', 'c'], {
                     name: 'foo-env',
-                    path: 'path/to/foo-env',
+                    path: 'path/to/foo-env'
                 });
             });
 
             test('Ensure conda args with env path are returned when building repl args with a conda env without a name', async () => {
                 await testReplCondaCommandArguments(PYTHON_PATH, ['-a', 'b', 'c'], {
                     name: '',
-                    path: 'path/to/foo-env',
+                    path: 'path/to/foo-env'
                 });
             });
 
@@ -500,7 +500,7 @@ suite('Terminal - Code Execution', () => {
                     .returns((callback) => {
                         closeTerminalCallback = callback;
                         return {
-                            dispose: noop,
+                            dispose: noop
                         };
                     });
 

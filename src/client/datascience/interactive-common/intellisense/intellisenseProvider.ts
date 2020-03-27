@@ -15,7 +15,7 @@ import {
     EventEmitter,
     SignatureHelpContext,
     TextDocumentContentChangeEvent,
-    Uri,
+    Uri
 } from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient';
 import { concatMultilineStringInput } from '../../../../datascience-ui/common';
@@ -42,7 +42,7 @@ import {
     IProvideHoverRequest,
     IProvideSignatureHelpRequest,
     IResolveCompletionItemRequest,
-    NotebookModelChange,
+    NotebookModelChange
 } from '../interactiveWindowTypes';
 import {
     convertStringsToSuggestions,
@@ -50,7 +50,7 @@ import {
     convertToMonacoCompletionList,
     convertToMonacoHover,
     convertToMonacoSignatureHelp,
-    convertToVSCodeCompletionItem,
+    convertToVSCodeCompletionItem
 } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
 
@@ -230,7 +230,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
         return {
             suggestions: [],
-            incomplete: false,
+            incomplete: false
         };
     }
     protected async provideHover(
@@ -248,7 +248,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         }
 
         return {
-            contents: [],
+            contents: []
         };
     }
     protected async provideSignatureHelp(
@@ -274,7 +274,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         return {
             signatures: [],
             activeParameter: 0,
-            activeSignature: 0,
+            activeSignature: 0
         };
     }
 
@@ -361,7 +361,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             const emptyList: monacoEditor.languages.CompletionList = {
                 dispose: noop,
                 incomplete: false,
-                suggestions: [],
+                suggestions: []
             };
 
             const lsCompletions = this.provideCompletionItems(
@@ -391,7 +391,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                     // Telemetry will prove/disprove this assumption and we'll change this code accordingly.
                     lsCompletions,
                     // Wait for a max of n ms before ignoring results from jupyter (jupyter completion is generally slower).
-                    Promise.race([jupyterCompletions, sleep(Settings.IntellisenseTimeout).then(() => emptyList)]),
+                    Promise.race([jupyterCompletions, sleep(Settings.IntellisenseTimeout).then(() => emptyList)])
                 ])
             );
         };
@@ -473,11 +473,11 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                             startLineNumber: startPosition.line + 1 - basePosition.line, // monaco is 1 based
                             startColumn: startPosition.character + 1,
                             endLineNumber: endPosition.line + 1 - basePosition.line,
-                            endColumn: endPosition.character + 1,
+                            endColumn: endPosition.character + 1
                         };
                         return {
                             suggestions: convertStringsToSuggestions(filteredMatches, range, jupyterResults.metadata),
-                            incomplete: false,
+                            incomplete: false
                         };
                     }
                 }
@@ -490,7 +490,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
         return {
             suggestions: [],
-            incomplete: false,
+            incomplete: false
         };
     }
 
@@ -551,7 +551,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
         return {
             suggestions: Array.from(uniqueSuggestions.values()),
-            incomplete: false,
+            incomplete: false
         };
     }
 
@@ -567,7 +567,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 } else {
                     return {
                         signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 },
-                        requestId: request.requestId,
+                        requestId: request.requestId
                     };
                 }
             }
@@ -686,7 +686,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                     .map((cell) => {
                         return {
                             code: concatMultilineStringInput(cell.data.source),
-                            id: cell.id,
+                            id: cell.id
                         };
                     })
             );

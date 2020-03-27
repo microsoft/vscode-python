@@ -31,7 +31,7 @@ export class ConfigurationService implements IConfigurationService {
     ): Promise<void> {
         const defaultSetting = {
             uri: resource,
-            target: configTarget || ConfigurationTarget.WorkspaceFolder,
+            target: configTarget || ConfigurationTarget.WorkspaceFolder
         };
         let settingsInfo = defaultSetting;
         if (section === 'python' && configTarget !== ConfigurationTarget.Global) {

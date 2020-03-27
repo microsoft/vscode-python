@@ -76,7 +76,7 @@ export class WebPanelServer {
         if (!state) {
             state = {
                 cwd: ctx.query.cwd,
-                outDir: ctx.query.rootPath,
+                outDir: ctx.query.rootPath
             };
             this.state.set(id, state);
         }

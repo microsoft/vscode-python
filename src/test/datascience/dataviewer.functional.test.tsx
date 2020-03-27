@@ -85,7 +85,7 @@ suite('DataScience DataViewer tests', () => {
                 size: 0,
                 truncated: true,
                 shape: '',
-                count: 0,
+                count: 0
             },
             notebook!
         );
@@ -94,7 +94,7 @@ suite('DataScience DataViewer tests', () => {
     async function injectCode(code: string): Promise<void> {
         const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
         notebook = await notebookProvider.getOrCreateNotebook({
-            identity: Uri.parse(Identifiers.InteractiveWindowIdentity),
+            identity: Uri.parse(Identifiers.InteractiveWindowIdentity)
         });
         if (notebook) {
             const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());
@@ -152,7 +152,7 @@ suite('DataScience DataViewer tests', () => {
                 sortCol: col,
                 sortAsc,
                 multiColumnSort: false,
-                grid: reactGrid.state.grid,
+                grid: reactGrid.state.grid
             });
         }
     }

@@ -18,11 +18,11 @@ import {
     IInstaller,
     ILintingSettings,
     IOutputChannel,
-    IPythonSettings,
+    IPythonSettings
 } from '../../client/common/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSeletionProxyService
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -45,7 +45,7 @@ suite('Linting - Arguments', () => {
     [undefined, path.join('users', 'dev_user')].forEach((workspaceUri) => {
         [
             Uri.file(path.join('users', 'dev_user', 'development path to', 'one.py')),
-            Uri.file(path.join('users', 'dev_user', 'development', 'one.py')),
+            Uri.file(path.join('users', 'dev_user', 'development', 'one.py'))
         ].forEach((fileUri) => {
             suite(
                 `File path ${fileUri.fsPath.indexOf(' ') > 0 ? 'with' : 'without'} spaces and ${
@@ -205,7 +205,7 @@ suite('Linting - Arguments', () => {
                             '{line},0,{severity},{test_id}:{msg}',
                             '-n',
                             '-1',
-                            fileUri.fsPath,
+                            fileUri.fsPath
                         ];
                         await testLinter(linter, expectedArgs);
                     });

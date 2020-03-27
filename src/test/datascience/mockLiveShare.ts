@@ -10,7 +10,7 @@ import {
     Event,
     EventEmitter,
     TreeDataProvider,
-    Uri,
+    Uri
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -106,7 +106,7 @@ class Emitter<T> {
                         if (!this._disposed) {
                             this._listeners = this._listeners.filter((l) => l !== listener);
                         }
-                    },
+                    }
                 };
                 if (Array.isArray(disposables)) {
                     disposables.push(result);
@@ -255,7 +255,7 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
             displayName: 'Test',
             emailAddress: 'Test@Microsoft.Com',
             userName: 'Test',
-            id: '0',
+            id: '0'
         };
     }
     public get access(): vsls.Access {

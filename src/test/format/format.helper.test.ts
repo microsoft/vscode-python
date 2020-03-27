@@ -71,7 +71,7 @@ suite('Formatting - Helper', () => {
             const translatedId = formatHelper.translateToId(formatter)!;
             const settings = {
                 argsName: `${translatedId}Args` as keyof IFormattingSettings,
-                pathName: `${translatedId}Path` as keyof IFormattingSettings,
+                pathName: `${translatedId}Path` as keyof IFormattingSettings
             };
 
             assert.deepEqual(

@@ -17,12 +17,12 @@ import {
     IPersistentStateFactory,
     IPythonSettings,
     Product,
-    WORKSPACE_MEMENTO,
+    WORKSPACE_MEMENTO
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSeletionProxyService
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';

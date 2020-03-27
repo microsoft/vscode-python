@@ -23,7 +23,7 @@ import {
     ISortImportSettings,
     ITerminalSettings,
     ITestingSettings,
-    IWorkspaceSymbolSettings,
+    IWorkspaceSymbolSettings
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
@@ -57,7 +57,7 @@ suite('Python Settings', async () => {
             'pipenvPath',
             'envFile',
             'poetryPath',
-            'insidersChannel',
+            'insidersChannel'
         ]) {
             config
                 .setup((c) => c.get<string>(name))
@@ -186,7 +186,7 @@ suite('Python Settings', async () => {
         expected.experiments = {
             enabled,
             optInto: [],
-            optOutFrom: [],
+            optOutFrom: []
         };
         initializeConfig(expected);
         config
@@ -216,7 +216,7 @@ suite('Python Settings', async () => {
             blackPath: 'two',
             yapfArgs: ['5', '6'],
             yapfPath: 'three',
-            provider: '',
+            provider: ''
         };
         expected.formatting.blackPath = 'spam';
         initializeConfig(expected);
@@ -243,7 +243,7 @@ suite('Python Settings', async () => {
             blackPath: path.join('~', 'two'),
             yapfArgs: [],
             yapfPath: path.join('~', 'three'),
-            provider: '',
+            provider: ''
         };
         expected.formatting.blackPath = 'spam';
         initializeConfig(expected);
@@ -291,14 +291,14 @@ suite('Python Settings', async () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: [],
+            jupyterCommandLineArguments: []
         };
         expected.pythonPath = 'python3';
         // tslint:disable-next-line:no-any
         expected.experiments = {
             enabled: false,
             optInto: [],
-            optOutFrom: [],
+            optOutFrom: []
         };
         initializeConfig(expected);
         config

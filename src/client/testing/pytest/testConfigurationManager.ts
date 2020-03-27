@@ -31,7 +31,7 @@ export class ConfigurationManager extends TestConfigurationManager {
         if (configFiles.length === 1 && configFiles[0] === 'setup.cfg') {
             options.push({
                 label: configFileOptionLabel,
-                description: 'setup.cfg',
+                description: 'setup.cfg'
             });
         }
         const subDirs = await this.getTestDirs(wkspace.fsPath);

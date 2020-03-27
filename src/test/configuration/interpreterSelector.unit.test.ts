@@ -9,7 +9,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IWorkspaceService,
+    IWorkspaceService
 } from '../../client/common/application/types';
 import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -19,13 +19,13 @@ import { InterpreterSelector } from '../../client/interpreter/configuration/inte
 import {
     IInterpreterComparer,
     IInterpreterQuickPickItem,
-    IPythonPathUpdaterServiceManager,
+    IPythonPathUpdaterServiceManager
 } from '../../client/interpreter/configuration/types';
 import {
     IInterpreterService,
     InterpreterType,
     IShebangCodeLensProvider,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../client/interpreter/contracts';
 
 const info: PythonInterpreter = {
@@ -37,7 +37,7 @@ const info: PythonInterpreter = {
     type: InterpreterType.Unknown,
     version: new SemVer('1.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: '',
+    sysVersion: ''
 };
 
 class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
@@ -126,7 +126,7 @@ suite('Interpreters - selector', () => {
                 { displayName: '2', path: 'c:/path2/path2', type: InterpreterType.Unknown },
                 { displayName: '2 (virtualenv)', path: 'c:/path2/path2', type: InterpreterType.VirtualEnv },
                 { displayName: '3', path: 'c:/path2/path2', type: InterpreterType.Unknown },
-                { displayName: '4', path: 'c:/path4/path4', type: InterpreterType.Conda },
+                { displayName: '4', path: 'c:/path4/path4', type: InterpreterType.Conda }
             ].map((item) => {
                 return { ...info, ...item };
             });
@@ -142,7 +142,7 @@ suite('Interpreters - selector', () => {
                 new InterpreterQuickPickItem('2', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('2 (virtualenv)', 'c:/path2/path2'),
                 new InterpreterQuickPickItem('3', 'c:/path2/path2'),
-                new InterpreterQuickPickItem('4', 'c:/path4/path4'),
+                new InterpreterQuickPickItem('4', 'c:/path4/path4')
             ];
 
             assert.equal(actual.length, expected.length, 'Suggestion lengths are different.');
@@ -181,7 +181,7 @@ suite('Interpreters - selector', () => {
             label: '',
             path: 'This is the selected Python path',
             // tslint:disable-next-line: no-any
-            interpreter: {} as any,
+            interpreter: {} as any
         };
 
         workspace.setup((w) => w.workspaceFolders).returns(() => undefined);
@@ -229,7 +229,7 @@ suite('Interpreters - selector', () => {
             label: '',
             path: 'This is the selected Python path',
             // tslint:disable-next-line: no-any
-            interpreter: {} as any,
+            interpreter: {} as any
         };
 
         const folder = { name: 'one', uri: Uri.parse('one'), index: 0 };
@@ -278,7 +278,7 @@ suite('Interpreters - selector', () => {
             label: '',
             path: 'This is the selected Python path',
             // tslint:disable-next-line: no-any
-            interpreter: {} as any,
+            interpreter: {} as any
         };
 
         const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
@@ -332,7 +332,7 @@ suite('Interpreters - selector', () => {
             label: '',
             path: 'This is the selected Python path',
             // tslint:disable-next-line: no-any
-            interpreter: {} as any,
+            interpreter: {} as any
         };
 
         const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };

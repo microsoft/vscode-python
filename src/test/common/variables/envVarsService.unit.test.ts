@@ -18,7 +18,7 @@ use(chaiAsPromised);
 type PathVar = 'Path' | 'PATH';
 const PATHS = [
     'Path', // Windows
-    'PATH', // non-Windows
+    'PATH' // non-Windows
 ];
 
 suite('Environment Variables Service', () => {
@@ -636,7 +636,7 @@ HAM=$ ... $$ \n\
                 const vars = parseEnvFile('\
 PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
                 ', {
-                    REPO: '/home/user/git/foobar',
+                    REPO: '/home/user/git/foobar'
                 });
 
                 expect(vars).to.not.equal(undefined, 'Variables is undefiend');

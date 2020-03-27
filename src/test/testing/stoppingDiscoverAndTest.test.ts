@@ -22,13 +22,13 @@ const EmptyTests = {
         passed: 0,
         failures: 0,
         errors: 0,
-        skipped: 0,
+        skipped: 0
     },
     testFiles: [],
     testFunctions: [],
     testSuites: [],
     testFolders: [],
-    rootTestFolders: [],
+    rootTestFolders: []
 };
 
 // tslint:disable-next-line:max-func-body-length

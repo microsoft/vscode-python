@@ -19,7 +19,7 @@ import {
     injectCode,
     mountWebView,
     simulateKey,
-    waitForMessage,
+    waitForMessage
 } from './testHelpers';
 
 // tslint:disable: no-any

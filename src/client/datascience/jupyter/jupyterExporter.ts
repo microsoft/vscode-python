@@ -24,7 +24,7 @@ import {
     IDataScienceErrorHandler,
     IJupyterExecution,
     INotebookEditorProvider,
-    INotebookExporter,
+    INotebookExporter
 } from '../types';
 
 @injectable()
@@ -99,8 +99,8 @@ export class JupyterExporter implements INotebookExporter {
                 name: 'python',
                 codemirror_mode: {
                     name: 'ipython',
-                    version: pythonNumber,
-                },
+                    version: pythonNumber
+                }
             },
             orig_nbformat: 2,
             file_extension: '.py',
@@ -108,7 +108,7 @@ export class JupyterExporter implements INotebookExporter {
             name: 'python',
             npconvert_exporter: 'python',
             pygments_lexer: `ipython${pythonNumber}`,
-            version: pythonNumber,
+            version: pythonNumber
         };
 
         // Create an object for matching cell definitions
@@ -119,7 +119,7 @@ export class JupyterExporter implements INotebookExporter {
             cells: this.pruneCells(cells, matcher),
             nbformat: 4,
             nbformat_minor: 2,
-            metadata: metadata,
+            metadata: metadata
         };
     }
 
@@ -151,7 +151,7 @@ export class JupyterExporter implements INotebookExporter {
                 id: uuid(),
                 file: Identifiers.EmptyFileName,
                 line: 0,
-                state: CellState.finished,
+                state: CellState.finished
             };
 
             return [cell, ...cells];

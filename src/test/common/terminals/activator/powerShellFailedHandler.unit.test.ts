@@ -11,7 +11,7 @@ import { PowershellTerminalActivationFailedHandler } from '../../../../client/co
 import {
     ITerminalActivationHandler,
     ITerminalHelper,
-    TerminalShellType,
+    TerminalShellType
 } from '../../../../client/common/terminal/types';
 import { getNamesAndValues } from '../../../../client/common/utils/enum';
 

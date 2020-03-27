@@ -15,7 +15,7 @@ import { DebugClient, DebugType } from './DebugClient';
 enum DebugServerStatus {
     Unknown = 1,
     Running = 2,
-    NotRunning = 3,
+    NotRunning = 3
 }
 
 export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
@@ -159,7 +159,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                     title: 'Python Debug Console',
                     cwd,
                     args: [command].concat(commandArgs),
-                    env,
+                    env
                 };
                 this.debugSession.runInTerminalRequest(termArgs, 5000, (response) => {
                     if (response.success) {

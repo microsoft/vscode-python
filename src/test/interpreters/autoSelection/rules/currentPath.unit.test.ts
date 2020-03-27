@@ -21,7 +21,7 @@ import { IInterpreterAutoSelectionService } from '../../../../client/interpreter
 import {
     IInterpreterHelper,
     IInterpreterLocatorService,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { KnownPathsService } from '../../../../client/interpreter/locators/services/KnownPathsService';

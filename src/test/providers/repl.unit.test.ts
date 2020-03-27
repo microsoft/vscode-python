@@ -8,7 +8,7 @@ import {
     IActiveResourceService,
     ICommandManager,
     IDocumentManager,
-    IWorkspaceService,
+    IWorkspaceService
 } from '../../client/common/application/types';
 import { Commands } from '../../client/common/constants';
 import { IServiceContainer } from '../../client/ioc/types';

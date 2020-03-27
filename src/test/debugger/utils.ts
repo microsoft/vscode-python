@@ -85,7 +85,7 @@ export async function hitHttpBreakpoint(
     await debugClient.setBreakpointsRequest({
         lines: [breakpointLocation.line],
         breakpoints: [{ line: breakpointLocation.line, column: breakpointLocation.column }],
-        source: { path: breakpointLocation.path },
+        source: { path: breakpointLocation.path }
     });
 
     // Make the request, we want the breakpoint to be hit.

@@ -92,7 +92,7 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
                         .split(/\r?\n/g)
                         .map((item) => item.trim())
                         .join(EOL),
-                    source: 'stdout',
+                    source: 'stdout'
                 });
             }
         });

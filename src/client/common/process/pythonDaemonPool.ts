@@ -7,7 +7,7 @@ import {
     MessageConnection,
     RequestType,
     StreamMessageReader,
-    StreamMessageWriter,
+    StreamMessageWriter
 } from 'vscode-jsonrpc';
 
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -28,7 +28,7 @@ import {
     IPythonExecutionService,
     ObservableExecutionResult,
     PythonExecutionInfo,
-    SpawnOptions,
+    SpawnOptions
 } from './types';
 
 type DaemonType = 'StandardDaemon' | 'ObservableDaemon';
@@ -74,13 +74,13 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         const promises = Promise.all(
             [
                 // tslint:disable-next-line: prefer-array-literal
-                ...new Array(this.options.daemonCount ?? 2).keys(),
+                ...new Array(this.options.daemonCount ?? 2).keys()
             ].map(() => this.addDaemonService('StandardDaemon'))
         );
         const promises2 = Promise.all(
             [
                 // tslint:disable-next-line: prefer-array-literal
-                ...new Array(this.options.observableDaemonCount ?? 1).keys(),
+                ...new Array(this.options.observableDaemonCount ?? 1).keys()
             ].map(() => this.addDaemonService('ObservableDaemon'))
         );
 

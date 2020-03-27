@@ -39,7 +39,7 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
         path: '',
         sysPrefix: '',
         sysVersion: '',
-        type: InterpreterType.Conda,
+        type: InterpreterType.Conda
     };
 
     // tslint:disable-next-line: max-func-body-length
@@ -63,14 +63,14 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                             const extContext: IExtensionContext = {
                                 get storagePath() {
                                     return storagePath;
-                                },
+                                }
                                 // tslint:disable-next-line: no-any
                             } as any;
                             when(crypto.createHash(anything(), anything(), anything())).thenCall((value) => value);
                             when(experiment.inExperiment(anything())).thenReturn(true);
                             when(envVarsProvider.getCustomEnvironmentVariables(anything())).thenCall((value) =>
                                 Promise.resolve({
-                                    key: (value || {}).toString(),
+                                    key: (value || {}).toString()
                                 })
                             );
                             when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(onDidChangeEnvVars.event);
@@ -268,7 +268,7 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
                                     path: 'New',
                                     sysPrefix: '',
                                     sysVersion: '',
-                                    type: InterpreterType.Pipenv,
+                                    type: InterpreterType.Pipenv
                                 };
                                 when(
                                     termActivation.getActivatedEnvironmentVariables(

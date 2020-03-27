@@ -10,7 +10,7 @@ import {
     ObservableExecutionResult,
     Output,
     ShellOptions,
-    SpawnOptions,
+    SpawnOptions
 } from '../../client/common/process/types';
 import { noop, sleep } from '../core';
 
@@ -98,7 +98,7 @@ export class MockProcessService implements IProcessService {
         return {
             proc: undefined,
             out: output,
-            dispose: () => noop,
+            dispose: () => noop
         };
     }
 

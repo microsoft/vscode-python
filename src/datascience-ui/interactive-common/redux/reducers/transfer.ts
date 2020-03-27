@@ -5,7 +5,7 @@ import { Identifiers } from '../../../../client/datascience/constants';
 import {
     IEditorContentChange,
     InteractiveWindowMessages,
-    NotebookModelChange,
+    NotebookModelChange
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { ICell } from '../../../../client/datascience/types';
@@ -19,7 +19,7 @@ import {
     IEditCellAction,
     ILinkClickAction,
     ISendCommandAction,
-    IShowDataViewerAction,
+    IShowDataViewerAction
 } from './types';
 
 // These are all reducers that don't actually change state. They merely dispatch a message to the other side.
@@ -31,7 +31,7 @@ export namespace Transfer {
         // Indicate busy
         return {
             ...arg.prevState,
-            busy: true,
+            busy: true
         };
     }
 
@@ -40,7 +40,7 @@ export namespace Transfer {
 
         // Actually waiting for save results before marking as not dirty, so don't do it here.
         postActionToExtension(arg, InteractiveWindowMessages.SaveAll, {
-            cells: arg.prevState.cellVMs.map((cvm) => cvm.cell),
+            cells: arg.prevState.cellVMs.map((cvm) => cvm.cell)
         });
         return arg.prevState;
     }
@@ -48,7 +48,7 @@ export namespace Transfer {
     export function showDataViewer(arg: CommonReducerArg<CommonActionType, IShowDataViewerAction>): IMainState {
         postActionToExtension(arg, InteractiveWindowMessages.ShowDataViewer, {
             variable: arg.payload.data.variable,
-            columnSize: arg.payload.data.columnSize,
+            columnSize: arg.payload.data.columnSize
         });
         return arg.prevState;
     }
@@ -56,7 +56,7 @@ export namespace Transfer {
     export function sendCommand(arg: CommonReducerArg<CommonActionType, ISendCommandAction>): IMainState {
         postActionToExtension(arg, InteractiveWindowMessages.NativeCommand, {
             command: arg.payload.data.command,
-            source: arg.payload.data.commandType,
+            source: arg.payload.data.commandType
         });
         return arg.prevState;
     }
@@ -90,7 +90,7 @@ export namespace Transfer {
         if (cellVM && cellVM.cell.data.cell_type === 'code') {
             postActionToExtension(arg, InteractiveWindowMessages.GotoCodeCell, {
                 file: cellVM.cell.file,
-                line: cellVM.cell.line,
+                line: cellVM.cell.line
             });
         }
         return arg.prevState;
@@ -105,7 +105,7 @@ export namespace Transfer {
         // Send a message to the other side to jump to a particular cell
         if (cellVM) {
             postActionToExtension(arg, InteractiveWindowMessages.CopyCodeCell, {
-                source: extractInputText(cellVM, arg.prevState.settings),
+                source: extractInputText(cellVM, arg.prevState.settings)
             });
         }
 
@@ -137,7 +137,7 @@ export namespace Transfer {
             oldDirty: arg.prevState.dirty,
             forward,
             reverse,
-            id,
+            id
         });
     }
 
@@ -154,7 +154,7 @@ export namespace Transfer {
             oldDirty: arg.prevState.dirty,
             index,
             cell,
-            codeCellAboveId,
+            codeCellAboveId
         });
     }
 
@@ -164,7 +164,7 @@ export namespace Transfer {
             kind: 'changeCellType',
             newDirty: true,
             oldDirty: arg.prevState.dirty,
-            cell,
+            cell
         });
     }
 
@@ -175,7 +175,7 @@ export namespace Transfer {
             oldDirty: arg.prevState.dirty,
             newDirty: true,
             cell,
-            index,
+            index
         });
     }
 
@@ -186,7 +186,7 @@ export namespace Transfer {
             oldDirty: arg.prevState.dirty,
             newDirty: true,
             // tslint:disable-next-line: no-any
-            oldCells: arg.prevState.cellVMs.map((c) => c.cell as any) as ICell[],
+            oldCells: arg.prevState.cellVMs.map((c) => c.cell as any) as ICell[]
         });
     }
 
@@ -198,7 +198,7 @@ export namespace Transfer {
             newDirty: true,
             // tslint:disable-next-line: no-any
             oldCells: arg.prevState.cellVMs.map((c) => c.cell as any) as ICell[],
-            newCellId,
+            newCellId
         });
     }
 
@@ -213,7 +213,7 @@ export namespace Transfer {
             oldDirty: arg.prevState.dirty,
             newDirty: true,
             firstCellId,
-            secondCellId,
+            secondCellId
         });
     }
 
@@ -245,17 +245,17 @@ export namespace Transfer {
                         ...current.cell,
                         data: {
                             ...current.cell.data,
-                            source: arg.payload.data.code,
-                        },
+                            source: arg.payload.data.code
+                        }
                     },
-                    codeVersion: arg.payload.data.version,
+                    codeVersion: arg.payload.data.version
                 };
 
                 // tslint:disable-next-line: no-any
                 newVMs[index] = Helpers.asCellViewModel(newCell); // This is because IMessageCell doesn't fit in here
                 return {
                     ...arg.prevState,
-                    cellVMs: newVMs,
+                    cellVMs: newVMs
                 };
             }
         }
@@ -267,7 +267,7 @@ export namespace Transfer {
         postActionToExtension(arg, InteractiveWindowMessages.Started);
         postActionToExtension(arg, CssMessages.GetCssRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' });
         postActionToExtension(arg, CssMessages.GetMonacoThemeRequest, {
-            isDark: arg.prevState.baseTheme !== 'vscode-light',
+            isDark: arg.prevState.baseTheme !== 'vscode-light'
         });
         postActionToExtension(arg, InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
         postActionToExtension(arg, InteractiveWindowMessages.LoadTmLanguageRequest);
@@ -276,7 +276,7 @@ export namespace Transfer {
 
     export function loadedAllCells(arg: CommonReducerArg): IMainState {
         postActionToExtension(arg, InteractiveWindowMessages.LoadAllCellsComplete, {
-            cells: arg.prevState.cellVMs.map((c) => c.cell),
+            cells: arg.prevState.cellVMs.map((c) => c.cell)
         });
         return arg.prevState;
     }

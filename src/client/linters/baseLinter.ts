@@ -60,7 +60,7 @@ export function parseLine(
         column: isNaN(match.column) || match.column <= 0 ? 0 : match.column - colOffset,
         line: match.line,
         type: match.type,
-        provider: linterID,
+        provider: linterID
     };
 }
 

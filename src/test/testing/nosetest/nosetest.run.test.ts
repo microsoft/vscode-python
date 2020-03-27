@@ -31,7 +31,7 @@ const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
 );
 const filesToDelete = [
     path.join(UNITTEST_TEST_FILES_PATH, '.noseids'),
-    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids'),
+    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')
 ];
 
 // tslint:disable-next-line:max-func-body-length
@@ -99,7 +99,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
                             /\/Users\/donjayamanne\/.vscode\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles\/noseFiles/g,
                             UNITTEST_TEST_FILES_PATH
                         ),
-                    source: 'stdout',
+                    source: 'stdout'
                 });
             }
         });
@@ -189,7 +189,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
             testFile: [],
             testFolder: [],
             testFunction: [],
-            testSuite: [testSuiteToRun!.testSuite],
+            testSuite: [testSuiteToRun!.testSuite]
         };
         const results = await testManager.runTest(CommandSource.ui, testSuite);
         assert.equal(results.summary.errors, 0, 'Errors');
@@ -212,7 +212,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
             testFile: [],
             testFolder: [],
             testFunction: [testFnToRun!.testFunction],
-            testSuite: [],
+            testSuite: []
         };
         const results = await testManager.runTest(CommandSource.ui, testFn);
         assert.equal(results.summary.errors, 0, 'Errors');

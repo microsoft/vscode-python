@@ -75,15 +75,15 @@ suite('DataScience Error Handler Unit Tests', () => {
                 displayName: 'Pip',
                 priority: 0,
                 isSupported: () => Promise.resolve(true),
-                installModule: () => Promise.resolve(),
+                installModule: () => Promise.resolve()
             },
             {
                 name: 'Conda',
                 displayName: 'Conda',
                 priority: 0,
                 isSupported: () => Promise.resolve(true),
-                installModule: () => Promise.resolve(),
-            },
+                installModule: () => Promise.resolve()
+            }
         ];
 
         channels

@@ -72,7 +72,7 @@ suite('Localization', () => {
     test('key found for locale', (done) => {
         addLocale('spam', {
             'debug.selectConfigurationTitle': '???',
-            'Common.gotIt': '!!!',
+            'Common.gotIt': '!!!'
         });
         setLocale('spam');
 
@@ -86,7 +86,7 @@ suite('Localization', () => {
 
     test('key not found for locale (default used)', (done) => {
         addLocale('spam', {
-            'debug.selectConfigurationTitle': '???',
+            'debug.selectConfigurationTitle': '???'
         });
         setLocale('spam');
 

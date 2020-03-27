@@ -13,13 +13,13 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonExecutionService,
-    SpawnOptions,
+    SpawnOptions
 } from '../../../common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
     IPersistentState,
-    IPersistentStateFactory,
+    IPersistentStateFactory
 } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
@@ -27,7 +27,7 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { JupyterCommands, PythonDaemonModule, RegExpValues, Telemetry } from '../../constants';
@@ -36,7 +36,7 @@ import { IJupyterCommand, IJupyterCommandFactory } from '../../types';
 export enum ModuleExistsStatus {
     NotFound,
     FoundJupyter,
-    Found,
+    Found
 }
 
 interface IModuleExistsResult {
@@ -50,7 +50,7 @@ export interface IFindCommandResult extends IModuleExistsResult {
 
 const cancelledResult: IFindCommandResult = {
     status: ModuleExistsStatus.NotFound,
-    error: localize.DataScience.noInterpreter(),
+    error: localize.DataScience.noInterpreter()
 };
 
 function isCommandFinderCancelled(command: JupyterCommands, token?: CancellationToken) {
@@ -158,14 +158,14 @@ export class JupyterCommandFinderImpl {
     ): Promise<IFindCommandResult> {
         let findResult: IFindCommandResult = {
             status: ModuleExistsStatus.NotFound,
-            error: localize.DataScience.noInterpreter(),
+            error: localize.DataScience.noInterpreter()
         };
 
         // If the module is found on this interpreter, then we found it.
         if (interpreter && !Cancellation.isCanceled(cancelToken)) {
             const [result, activeInterpreter] = await Promise.all([
                 this.doesModuleExist(command, interpreter, cancelToken),
-                this.interpreterService.getActiveInterpreter(undefined),
+                this.interpreterService.getActiveInterpreter(undefined)
             ]);
             findResult = result!;
             const isActiveInterpreter = activeInterpreter ? activeInterpreter.path === interpreter.path : false;
@@ -223,12 +223,12 @@ export class JupyterCommandFinderImpl {
             if (jupyterPath) {
                 return {
                     status: ModuleExistsStatus.Found,
-                    command: this.commandFactory.createProcessCommand(jupyterPath, [command]),
+                    command: this.commandFactory.createProcessCommand(jupyterPath, [command])
                 };
             }
         }
         return {
-            status: ModuleExistsStatus.NotFound,
+            status: ModuleExistsStatus.NotFound
         };
     }
 
@@ -247,7 +247,7 @@ export class JupyterCommandFinderImpl {
         cancelToken?: CancellationToken
     ): Promise<IFindCommandResult> {
         let found: IFindCommandResult = {
-            status: ModuleExistsStatus.NotFound,
+            status: ModuleExistsStatus.NotFound
         };
         let firstError: string | undefined;
 
@@ -280,7 +280,7 @@ export class JupyterCommandFinderImpl {
             const options: ProgressOptions = {
                 cancellable: true,
                 location: ProgressLocation.Notification,
-                title: localize.DataScience.findJupyterCommandProgress().format(command),
+                title: localize.DataScience.findJupyterCommandProgress().format(command)
             };
             found = await this.appShell.withProgress<IFindCommandResult>(options, async (progress, token) => {
                 cancelToken = wrapCancellationTokens(cancelToken, token);
@@ -309,7 +309,7 @@ export class JupyterCommandFinderImpl {
         // Make sure found is set (tests can mess this up when interpreters aren't returned)
         if (!found) {
             found = {
-                status: ModuleExistsStatus.NotFound,
+                status: ModuleExistsStatus.NotFound
             };
         }
 
@@ -345,14 +345,14 @@ export class JupyterCommandFinderImpl {
         cancelToken?: CancellationToken
     ): Promise<IFindCommandResult> {
         let found: IFindCommandResult = {
-            status: ModuleExistsStatus.NotFound,
+            status: ModuleExistsStatus.NotFound
         };
 
         // Look through all of our interpreters (minus the active one at the same time)
         const cancelGetInterpreters = createPromiseFromCancellation<PythonInterpreter[]>({
             defaultValue: [],
             cancelAction: 'resolve',
-            token: cancelToken,
+            token: cancelToken
         });
         const all = await Promise.race([this.interpreterService.getInterpreters(undefined), cancelGetInterpreters]);
 
@@ -367,7 +367,7 @@ export class JupyterCommandFinderImpl {
         const cancelFind = createPromiseFromCancellation<IFindCommandResult[]>({
             defaultValue: [],
             cancelAction: 'resolve',
-            token: cancelToken,
+            token: cancelToken
         });
         const promises = all
             .filter((i) => i !== current)
@@ -395,7 +395,7 @@ export class JupyterCommandFinderImpl {
                     progress.report({
                         message: localize.DataScience.findJupyterCommandProgressCheckInterpreter().format(
                             interpreter.displayName
-                        ),
+                        )
                     });
                 }
                 const version = interpreter ? interpreter.version : undefined;
@@ -429,8 +429,8 @@ export class JupyterCommandFinderImpl {
                 resource: undefined,
                 interpreter,
                 allowEnvironmentFetchExceptions: true,
-                bypassCondaExecution: true,
-            }),
+                bypassCondaExecution: true
+            })
         ]);
 
         // Use daemons for current interpreter, when using any other interpreter, do not use a daemon.
@@ -449,7 +449,7 @@ export class JupyterCommandFinderImpl {
         cancelToken?: CancellationToken
     ): Promise<IModuleExistsResult> {
         const result: IModuleExistsResult = {
-            status: ModuleExistsStatus.NotFound,
+            status: ModuleExistsStatus.NotFound
         };
         if (interpreter && interpreter !== null) {
             const newOptions: SpawnOptions = { throwOnStdErr: false, encoding: 'utf8', token: cancelToken };

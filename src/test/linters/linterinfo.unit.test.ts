@@ -28,7 +28,7 @@ suite('Linter Info - Pylint', () => {
 
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: false },
-            jediEnabled: true,
+            jediEnabled: true
         } as any);
 
         expect(linterInfo.isEnabled()).to.be.false;
@@ -49,11 +49,11 @@ suite('Linter Info - Pylint', () => {
 
         const inspection = {};
         const pythonConfig = {
-            inspect: () => inspection,
+            inspect: () => inspection
         };
         when(config.getSettings(anything())).thenReturn({
             linting: { pylintEnabled: true },
-            jediEnabled: false,
+            jediEnabled: false
         } as any);
         when(workspaceService.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 
@@ -62,16 +62,16 @@ suite('Linter Info - Pylint', () => {
     const testsForisEnabled = [
         {
             testName: 'When workspaceFolder setting is provided',
-            inspection: { workspaceFolderValue: true },
+            inspection: { workspaceFolderValue: true }
         },
         {
             testName: 'When workspace setting is provided',
-            inspection: { workspaceValue: true },
+            inspection: { workspaceValue: true }
         },
         {
             testName: 'When global setting is provided',
-            inspection: { globalValue: true },
-        },
+            inspection: { globalValue: true }
+        }
     ];
 
     suite('Test is enabled when using Language Server and Pylint is configured', () => {
@@ -82,11 +82,11 @@ suite('Linter Info - Pylint', () => {
                 const linterInfo = new PylintLinterInfo(instance(config), instance(workspaceService), []);
 
                 const pythonConfig = {
-                    inspect: () => testParams.inspection,
+                    inspect: () => testParams.inspection
                 };
                 when(config.getSettings(anything())).thenReturn({
                     linting: { pylintEnabled: true },
-                    jediEnabled: false,
+                    jediEnabled: false
                 } as any);
                 when(workspaceService.getConfiguration('python', anything())).thenReturn(pythonConfig as any);
 

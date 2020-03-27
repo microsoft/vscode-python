@@ -22,7 +22,7 @@ import {
     ExperimentsManager,
     experimentStorageKey,
     isDownloadedStorageValidKey,
-    oldExperimentSalts,
+    oldExperimentSalts
 } from '../../client/common/experiments';
 import { HttpClient } from '../../client/common/net/httpClient';
 import { PersistentStateFactory } from '../../client/common/persistentState';
@@ -34,7 +34,7 @@ import {
     IHttpClient,
     IOutputChannel,
     IPersistentState,
-    IPersistentStateFactory,
+    IPersistentStateFactory
 } from '../../client/common/types';
 import { createDeferred, createDeferredFromPromise } from '../../client/common/utils/async';
 import { sleep } from '../common';
@@ -729,9 +729,9 @@ suite('A/B experiments', () => {
             experimentName: 'imaginary experiment',
             userExperiments: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
             ],
-            expectedResult: false,
+            expectedResult: false
         },
         {
             testName:
@@ -739,10 +739,10 @@ suite('A/B experiments', () => {
             experimentName: 'experiment1',
             userExperiments: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
             ],
-            expectedResult: true,
-        },
+            expectedResult: true
+        }
     ];
 
     testsForInExperiment.forEach((testParams) => {
@@ -760,30 +760,30 @@ suite('A/B experiments', () => {
         {
             testName: 'Returns true if hash modulo output is in range',
             hash: 1181,
-            expectedResult: true,
+            expectedResult: true
         },
         {
             testName: 'Returns false if hash modulo is less than min',
             hash: 967,
-            expectedResult: false,
+            expectedResult: false
         },
         {
             testName: 'Returns false if hash modulo is more than max',
             hash: 3297,
-            expectedResult: false,
+            expectedResult: false
         },
         {
             testName: 'If checking if user is in range fails with error, throw error',
             hash: 3297,
             error: true,
-            expectedResult: false,
+            expectedResult: false
         },
         {
             testName: 'If machine ID is bogus, throw error',
             hash: 3297,
             machineIdError: true,
-            expectedResult: false,
-        },
+            expectedResult: false
+        }
     ];
 
     suite('Function IsUserInRange()', () => {
@@ -828,7 +828,7 @@ suite('A/B experiments', () => {
                 'ShowExtensionSurveyPrompt',
                 'ShowPlayIcon',
                 'AlwaysDisplayTestExplorer',
-                'LS',
+                'LS'
             ];
             assert.deepEqual(expectedOldExperimentSalts, oldExperimentSalts);
         });
@@ -838,37 +838,37 @@ suite('A/B experiments', () => {
         {
             testName: 'User experiments list is empty if experiment storage value is not an array',
             experimentStorageValue: undefined,
-            expectedResult: [],
+            expectedResult: []
         },
         {
             testName: 'User experiments list is empty if experiment storage value is an empty array',
             experimentStorageValue: [],
-            expectedResult: [],
+            expectedResult: []
         },
         {
             testName:
                 'User experiments list does not contain any experiments if user has requested to opt out of all experiments',
             experimentStorageValue: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 },
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
             ],
             hash: 8187,
             experimentsOptedOutFrom: ['All'],
-            expectedResult: [],
+            expectedResult: []
         },
         {
             testName:
                 'User experiments list contains all experiments if user has requested to opt into all experiments',
             experimentStorageValue: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 },
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
             ],
             hash: 8187,
             experimentsOptedInto: ['All'],
             expectedResult: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 },
-            ],
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
+            ]
         },
         {
             testName:
@@ -876,62 +876,62 @@ suite('A/B experiments', () => {
             experimentStorageValue: [{ name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 }],
             hash: 8187,
             experimentsOptedInto: ['experiment2 - control'],
-            expectedResult: [],
+            expectedResult: []
         },
         {
             testName:
                 'User experiments list contains the experiment if user has requested to opt out of a control group but user is in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 }
             ],
             hash: 8187,
             experimentsOptedOutFrom: ['experiment1 - control'],
-            expectedResult: [{ name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 }],
+            expectedResult: [{ name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 }]
         },
         {
             testName:
                 'User experiments list does not contains the experiment if user has opted out of experiment even though user is in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
             ],
             hash: 8187,
             experimentsOptedOutFrom: ['experiment1'],
-            expectedResult: [],
+            expectedResult: []
         },
         {
             testName:
                 'User experiments list contains the experiment if user has opted into the experiment even though user is not in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
             ],
             hash: 8187,
             experimentsOptedInto: ['experiment1'],
-            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }],
+            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]
         },
         {
             testName:
                 'User experiments list does not contain the experiment if user has both opted in and out of an experiment',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
             ],
             hash: 8187,
             experimentsOptedInto: ['experiment1'],
             experimentsOptedOutFrom: ['experiment1'],
-            expectedResult: [],
+            expectedResult: []
         },
         {
             testName: 'Otherwise user experiments list contains the experiment if user is in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
             ],
             hash: 8187,
-            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }],
-        },
+            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]
+        }
     ];
 
     suite('Function populateUserExperiments', async () => {
@@ -958,48 +958,48 @@ suite('A/B experiments', () => {
         {
             testName: 'If experiments are not an array, return false',
             experiments: undefined,
-            expectedResult: false,
+            expectedResult: false
         },
         {
             testName: 'If any experiment have `min` field missing, return false',
             experiments: [
                 { name: 'experiment1', salt: 'salt', max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
             ],
-            expectedResult: false,
+            expectedResult: false
         },
         {
             testName: 'If any experiment have `max` field missing, return false',
             experiments: [
                 { name: 'experiment1', salt: 'salt', min: 79 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
             ],
-            expectedResult: false,
+            expectedResult: false
         },
         {
             testName: 'If any experiment have `salt` field missing, return false',
             experiments: [
                 { name: 'experiment1', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
             ],
-            expectedResult: false,
+            expectedResult: false
         },
         {
             testName: 'If any experiment have `name` field missing, return false',
             experiments: [
                 { salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
             ],
-            expectedResult: false,
+            expectedResult: false
         },
         {
             testName: 'If all experiments contain all the fields in type `ABExperiment`, return true',
             experiments: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
-                { name: 'experiment2', salt: 'salt', min: 19, max: 30 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
             ],
-            expectedResult: true,
-        },
+            expectedResult: true
+        }
     ];
 
     suite('Function areExperimentsValid()', () => {
@@ -1099,7 +1099,7 @@ suite('A/B experiments', () => {
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         when(httpClient.getJSON(configUri, false)).thenResolve([
-            { name: 'experiment1', salt: 'salt', min: 90, max: 100 },
+            { name: 'experiment1', salt: 'salt', min: 90, max: 100 }
         ]);
 
         await expManager.downloadAndStoreExperiments(experimentStorage.object);

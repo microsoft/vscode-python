@@ -36,7 +36,7 @@ import {
     IPathUtils,
     IPersistentStateFactory,
     IsWindows,
-    WORKSPACE_MEMENTO,
+    WORKSPACE_MEMENTO
 } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { OSType } from '../../../client/common/utils/platform';
@@ -45,7 +45,7 @@ import { EnvironmentActivationService } from '../../../client/interpreter/activa
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSeletionProxyService
 } from '../../../client/interpreter/autoSelection/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
@@ -173,7 +173,7 @@ suite('PythonExecutableService', () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
             cwd: path.dirname(workspace4PyFile.fsPath),
-            throwOnStdErr: true,
+            throwOnStdErr: true
         });
 
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
@@ -191,7 +191,7 @@ suite('PythonExecutableService', () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const promise = pythonExecService.exec([workspace4PyFile.fsPath], {
             cwd: path.dirname(workspace4PyFile.fsPath),
-            throwOnStdErr: true,
+            throwOnStdErr: true
         });
 
         await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);

@@ -31,7 +31,7 @@ import {
     IPathUtils,
     IPersistentStateFactory,
     IPythonSettings,
-    IsWindows,
+    IsWindows
 } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import {
@@ -41,7 +41,7 @@ import {
     INTERPRETER_LOCATOR_SERVICE,
     InterpreterType,
     PIPENV_SERVICE,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
@@ -65,7 +65,7 @@ const info: PythonInterpreter = {
     type: InterpreterType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: '',
+    sysVersion: ''
 };
 
 suite('Module Installer', () => {
@@ -241,8 +241,8 @@ suite('Module Installer', () => {
                             envName: '',
                             path: pythonPath,
                             type: InterpreterType.Conda,
-                            version: new SemVer('1.0.0'),
-                        },
+                            version: new SemVer('1.0.0')
+                        }
                     ])
                 );
             ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
@@ -337,7 +337,7 @@ suite('Module Installer', () => {
             const interpreter: PythonInterpreter = {
                 ...info,
                 type: InterpreterType.Unknown,
-                path: PYTHON_PATH,
+                path: PYTHON_PATH
             };
             interpreterService
                 .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))

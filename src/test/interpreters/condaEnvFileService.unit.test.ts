@@ -8,7 +8,7 @@ import {
     ICondaService,
     IInterpreterHelper,
     IInterpreterLocatorService,
-    InterpreterType,
+    InterpreterType
 } from '../../client/interpreter/contracts';
 import { AnacondaCompanyName } from '../../client/interpreter/locators/services/conda';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
@@ -71,12 +71,12 @@ suite('Interpreters from Conda Environments Text File', () => {
     async function filterFilesInEnvironmentsFileAndReturnValidItems(isWindows: boolean) {
         const validPaths = [
             path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-            path.join(environmentsPath, 'conda', 'envs', 'scipy'),
+            path.join(environmentsPath, 'conda', 'envs', 'scipy')
         ];
         const interpreterPaths = [
             path.join(environmentsPath, 'xyz', 'one'),
             path.join(environmentsPath, 'xyz', 'two'),
-            path.join(environmentsPath, 'xyz', 'python.exe'),
+            path.join(environmentsPath, 'xyz', 'python.exe')
         ].concat(validPaths);
         condaService.setup((c) => c.condaEnvironmentsFile).returns(() => environmentsFilePath);
         condaService
@@ -92,7 +92,7 @@ suite('Interpreters from Conda Environments Text File', () => {
                 const condaEnvironments = validPaths.map((item) => {
                     return {
                         path: item,
-                        name: path.basename(item),
+                        name: path.basename(item)
                     };
                 });
                 return Promise.resolve(condaEnvironments);

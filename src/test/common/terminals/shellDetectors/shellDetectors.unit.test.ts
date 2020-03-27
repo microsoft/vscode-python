@@ -53,7 +53,7 @@ suite('Shell Detectors', () => {
         shellIdentificationSource: 'default',
         terminalProvided: false,
         hasCustomShell: undefined,
-        hasShellInEnv: undefined,
+        hasShellInEnv: undefined
     };
 
     setup(() => {

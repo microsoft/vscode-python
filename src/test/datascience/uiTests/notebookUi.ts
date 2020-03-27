@@ -10,11 +10,11 @@ import { CommonActionType } from '../../../datascience-ui/interactive-common/red
 import { BaseWebUI } from './helpers';
 
 enum CellToolbarButton {
-    run = 0,
+    run = 0
 }
 
 enum MainToolbarButton {
-    clearOutput = 6,
+    clearOutput = 6
 }
 
 export class NotebookEditorUI extends BaseWebUI {

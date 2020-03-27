@@ -136,7 +136,7 @@ export class LintingEngine implements ILintingEngine {
             tool: info.id,
             hasCustomArgs: info.linterArgs(resource).length > 0,
             trigger,
-            executableSpecified: linterExecutablePathName.length > 0,
+            executableSpecified: linterExecutablePathName.length > 0
         };
         sendTelemetryWhenDone(EventName.LINTING, promise, stopWatch, properties);
     }

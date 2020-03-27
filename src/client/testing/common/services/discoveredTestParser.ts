@@ -24,7 +24,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
             testFiles: [],
             testFolders: [],
             testFunctions: [],
-            testSuites: [],
+            testSuites: []
         };
 
         const workspace = this.workspaceService.getWorkspaceFolder(resource);
@@ -40,7 +40,7 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
                 time: 0,
                 testFiles: [],
                 resource: resource,
-                nameToRun: data.rootid,
+                nameToRun: data.rootid
             };
             tests.rootTestFolders.push(rootFolder);
             tests.testFolders.push(rootFolder);
@@ -253,7 +253,7 @@ function createTestFolder(root: testing.TestFolder, item: discovery.TestFolder):
         resource: root.resource,
         time: 0,
         folders: [],
-        testFiles: [],
+        testFiles: []
     };
 }
 
@@ -267,7 +267,7 @@ function createTestFile(root: testing.TestFolder, item: discovery.TestFile): tes
         resource: root.resource,
         suites: [],
         time: 0,
-        xmlName: createXmlName(item.id),
+        xmlName: createXmlName(item.id)
     };
 }
 
@@ -285,7 +285,7 @@ function createTestSuite(
         time: 0,
         xmlName: '',
         isInstance: false,
-        isUnitTest: false,
+        isUnitTest: false
     };
     suite.xmlName = `${parentSuiteFile.xmlName}.${item.name}`;
     return suite;
@@ -296,7 +296,7 @@ function createFlattenedSuite(tests: testing.Tests, suite: testing.TestSuite): t
     return {
         parentTestFile: parentFile,
         testSuite: suite,
-        xmlClassName: parentFile.xmlName,
+        xmlClassName: parentFile.xmlName
     };
 }
 
@@ -313,7 +313,7 @@ function createFlattenedParameterizedFunction(
         parentTestFile: parentFile,
         parentTestSuite: parentSuite,
         xmlClassName: parentSuite ? parentSuite.xmlName : parentFile.xmlName,
-        testFunction: func,
+        testFunction: func
     };
 }
 
@@ -327,7 +327,7 @@ function createFlattenedFunction(tests: testing.Tests, func: testing.TestFunctio
         parentTestFile: parentFile,
         parentTestSuite: parentSuite,
         xmlClassName: parentSuite ? parentSuite.xmlName : parentFile.xmlName,
-        testFunction: func,
+        testFunction: func
     };
 }
 
@@ -344,13 +344,13 @@ function createParameterizedTestFunction(
         resource: root.resource,
         time: 0,
         suites: [],
-        xmlName: '',
+        xmlName: ''
     };
     return {
         asSuite: suite,
         name: item.name,
         nameToRun: item.id,
-        time: 0,
+        time: 0
     };
 }
 
@@ -360,7 +360,7 @@ function createTestFunction(root: testing.TestFolder, item: discovery.Test): tes
         nameToRun: item.id,
         resource: root.resource,
         time: 0,
-        file: item.source.substr(0, item.source.lastIndexOf(':')),
+        file: item.source.substr(0, item.source.lastIndexOf(':'))
     };
 }
 

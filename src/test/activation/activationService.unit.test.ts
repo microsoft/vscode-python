@@ -11,7 +11,7 @@ import {
     IExtensionActivationService,
     ILanguageServerActivator,
     ILanguageServerFolderService,
-    LanguageServerType,
+    LanguageServerType
 } from '../../client/activation/types';
 import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
 import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagnostics/types';
@@ -27,7 +27,7 @@ import {
     IPersistentState,
     IPersistentStateFactory,
     IPythonSettings,
-    Resource,
+    Resource
 } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
@@ -66,7 +66,7 @@ suite('Language Server Activation - ActivationService', () => {
                 const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
                 const folderVer: FolderVersionPair = {
                     path: '',
-                    version: new SemVer('1.2.3'),
+                    version: new SemVer('1.2.3')
                 };
                 lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
                 workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
@@ -437,7 +437,7 @@ suite('Language Server Activation - ActivationService', () => {
                     envName: '1',
                     sysVersion: '3.1.1.1',
                     architecture: Architecture.x64,
-                    type: InterpreterType.Unknown,
+                    type: InterpreterType.Unknown
                 };
                 const interpreter2: PythonInterpreter = {
                     path: '/foo/baz/python',
@@ -445,7 +445,7 @@ suite('Language Server Activation - ActivationService', () => {
                     envName: '2',
                     sysVersion: '3.1.1.1',
                     architecture: Architecture.x64,
-                    type: InterpreterType.Unknown,
+                    type: InterpreterType.Unknown
                 };
                 const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
@@ -503,7 +503,7 @@ suite('Language Server Activation - ActivationService', () => {
                     envName: '1',
                     sysVersion: '3.1.1.1',
                     architecture: Architecture.x64,
-                    type: InterpreterType.Unknown,
+                    type: InterpreterType.Unknown
                 };
                 const interpreter2: PythonInterpreter = {
                     path: '/foo/baz/python',
@@ -511,7 +511,7 @@ suite('Language Server Activation - ActivationService', () => {
                     envName: '2',
                     sysVersion: '3.1.1.1',
                     architecture: Architecture.x64,
-                    type: InterpreterType.Unknown,
+                    type: InterpreterType.Unknown
                 };
                 let getActiveCount = 0;
                 interpreterService
@@ -812,7 +812,7 @@ suite('Language Server Activation - ActivationService', () => {
             const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const folderVer: FolderVersionPair = {
                 path: '',
-                version: new SemVer('1.2.3'),
+                version: new SemVer('1.2.3')
             };
             lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
@@ -983,7 +983,7 @@ suite('Language Server Activation - ActivationService', () => {
             const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const folderVer: FolderVersionPair = {
                 path: '',
-                version: new SemVer('1.2.3'),
+                version: new SemVer('1.2.3')
             };
             lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
@@ -1107,13 +1107,13 @@ suite('Language Server Activation - ActivationService', () => {
                     {
                         testName: 'Returns false when python settings value is false',
                         pythonSettingsValue: false,
-                        expectedResult: false,
+                        expectedResult: false
                     },
                     {
                         testName: 'Returns true when python settings value is true',
                         pythonSettingsValue: true,
-                        expectedResult: true,
-                    },
+                        expectedResult: true
+                    }
                 ].forEach((testParams) => {
                     test(testParams.testName, async () => {
                         const settings = { workspaceFolderValue: true };
@@ -1185,7 +1185,7 @@ suite('Language Server Activation - ActivationService', () => {
             const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const folderVer: FolderVersionPair = {
                 path: '',
-                version: new SemVer('1.2.3'),
+                version: new SemVer('1.2.3')
             };
             lsNotSupportedDiagnosticService = TypeMoq.Mock.ofType<IDiagnosticsService>();
             workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
@@ -1257,7 +1257,7 @@ suite('Language Server Activation - ActivationService', () => {
                     const settings = {
                         globalValue: value[globalIndex],
                         workspaceValue: value[workspaceIndex],
-                        workspaceFolderValue: value[workspaceFolderIndex],
+                        workspaceFolderValue: value[workspaceFolderIndex]
                     };
                     const testName = `Returns ${expectedResult} for setting = ${JSON.stringify(settings)}`;
                     test(testName, async () => {

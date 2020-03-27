@@ -17,7 +17,7 @@ import {
     FSFixture,
     SUPPORTS_SOCKETS,
     SUPPORTS_SYMLINKS,
-    WINDOWS,
+    WINDOWS
 } from './utils';
 
 // Note: all functional tests that do not trigger the VS Code "fs" API
@@ -485,7 +485,7 @@ suite('FileSystem - raw', () => {
                 [script, FileType.File],
                 [file3, FileType.File],
                 [file2, FileType.File],
-                [subdir, FileType.Directory],
+                [subdir, FileType.Directory]
             ];
             if (SUPPORTS_SYMLINKS) {
                 // a symlink to a file (source not directly in listed dir)
@@ -859,7 +859,7 @@ suite('FileSystem - utils', () => {
 
                 expect(entries.sort()).to.deep.equal([
                     [file, FileType.File],
-                    [subdir, FileType.Directory],
+                    [subdir, FileType.Directory]
                 ]);
             });
         });
@@ -1024,7 +1024,7 @@ suite('FileSystem', () => {
 
                     expect(entries.sort()).to.deep.equal([
                         [file, FileType.File],
-                        [subdir, FileType.Directory],
+                        [subdir, FileType.Directory]
                     ]);
                 });
             });
@@ -1189,7 +1189,7 @@ suite('FileSystem', () => {
                 const dirname = await fix.createDirectory('x/y/z/scripts');
                 const expected = [
                     await fix.createDirectory('x/y/z/scripts/w'), // subdir1
-                    await fix.createDirectory('x/y/z/scripts/v'), // subdir2
+                    await fix.createDirectory('x/y/z/scripts/v') // subdir2
                 ];
                 if (SUPPORTS_SYMLINKS) {
                     // a symlink to a directory (source is outside listed dir)
@@ -1230,7 +1230,7 @@ suite('FileSystem', () => {
                 const expected = [
                     await fix.createFile('x/y/z/scripts/spam.py'), // file1
                     await fix.createFile('x/y/z/scripts/eggs.py'), // file2
-                    await fix.createFile('x/y/z/scripts/data.json'), // file3
+                    await fix.createFile('x/y/z/scripts/data.json') // file3
                 ];
                 if (SUPPORTS_SYMLINKS) {
                     const symlinkFileSource = await fix.createFile('x/info.py');

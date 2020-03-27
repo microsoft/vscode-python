@@ -17,7 +17,7 @@ import {
     PIPENV_SERVICE,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../contracts';
 import { InterpreterFilter } from './services/interpreterFilter';
 import { IInterpreterFilter } from './types';
@@ -113,7 +113,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             [GLOBAL_VIRTUAL_ENV_SERVICE, undefined],
             [WORKSPACE_VIRTUAL_ENV_SERVICE, undefined],
             [KNOWN_PATH_SERVICE, undefined],
-            [CURRENT_PATH_SERVICE, undefined],
+            [CURRENT_PATH_SERVICE, undefined]
         ];
         return keys
             .filter((item) => item[1] === undefined || item[1] === this.platform.osType)

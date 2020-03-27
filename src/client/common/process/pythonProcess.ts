@@ -19,7 +19,7 @@ import {
     ObservableExecutionResult,
     PythonExecutionInfo,
     PythonVersionInfo,
-    SpawnOptions,
+    SpawnOptions
 } from './types';
 
 @injectable()
@@ -148,7 +148,7 @@ export class PythonExecutionService implements IPythonExecutionService {
                 path: this.pythonPath,
                 version: parsePythonVersion(versionValue),
                 sysVersion: json.sysVersion,
-                sysPrefix: json.sysPrefix,
+                sysPrefix: json.sysPrefix
             };
         } catch (ex) {
             traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);

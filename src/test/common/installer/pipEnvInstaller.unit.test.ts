@@ -11,7 +11,7 @@ import {
     IInterpreterLocatorService,
     InterpreterType,
     PIPENV_SERVICE,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -39,7 +39,7 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Pipenv interpreter, method isSupported() returns true', async () => {
         const interpreter = {
-            type: InterpreterType.Pipenv,
+            type: InterpreterType.Pipenv
         };
         // tslint:disable-next-line: no-any
         const result = await pipEnvInstaller.isSupported(interpreter as any);
@@ -48,7 +48,7 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Python interpreter but not of type Pipenv, method isSupported() returns false', async () => {
         const interpreter = {
-            type: InterpreterType.Conda,
+            type: InterpreterType.Conda
         };
         // tslint:disable-next-line: no-any
         const result = await pipEnvInstaller.isSupported(interpreter as any);
@@ -62,7 +62,7 @@ suite('PipEnv installer', async () => {
             .returns(() =>
                 Promise.resolve([
                     TypeMoq.Mock.ofType<PythonInterpreter>().object,
-                    TypeMoq.Mock.ofType<PythonInterpreter>().object,
+                    TypeMoq.Mock.ofType<PythonInterpreter>().object
                 ])
             );
         const result = await pipEnvInstaller.isSupported(resource);

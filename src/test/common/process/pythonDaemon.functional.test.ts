@@ -16,7 +16,7 @@ import {
     MessageConnection,
     RequestType,
     StreamMessageReader,
-    StreamMessageWriter,
+    StreamMessageWriter
 } from 'vscode-jsonrpc';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
@@ -126,7 +126,7 @@ suite('Daemon', () => {
             path: fullyQualifiedPythonPath,
             version: parsePythonVersion(versionValue),
             sysVersion: json.sysVersion,
-            sysPrefix: json.sysPrefix,
+            sysPrefix: json.sysPrefix
         };
 
         const version = await pythonDaemon.getInterpreterInformation();

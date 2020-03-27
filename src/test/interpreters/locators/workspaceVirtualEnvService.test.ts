@@ -15,7 +15,7 @@ import { StopWatch } from '../../../client/common/utils/stopWatch';
 import {
     IInterpreterLocatorService,
     IInterpreterWatcherBuilder,
-    WORKSPACE_VIRTUAL_ENV_SERVICE,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../../client/interpreter/contracts';
 import { WorkspaceVirtualEnvWatcherService } from '../../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -27,7 +27,7 @@ import {
     OSType,
     PYTHON_PATH,
     rootWorkspaceUri,
-    waitForCondition,
+    waitForCondition
 } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
 import { sleep } from '../../core';
@@ -37,7 +37,7 @@ const execAsync = promisify(exec);
 async function run(argv: string[], cwd: string) {
     const cmdline = argv.join(' ');
     const { stderr } = await execAsync(cmdline, {
-        cwd: cwd,
+        cwd: cwd
     });
     if (stderr && stderr.length > 0) {
         throw Error(stderr);
@@ -167,7 +167,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function () {
 
         const [env1, env2] = await Promise.all([
             createVirtualEnvironment('first3'),
-            createVirtualEnvironment('second3'),
+            createVirtualEnvironment('second3')
         ]);
         await Promise.all([waitForInterpreterToBeDetected(env1), waitForInterpreterToBeDetected(env2)]);
 

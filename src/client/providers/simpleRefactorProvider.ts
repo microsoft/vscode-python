@@ -192,7 +192,7 @@ function extractName(
                         new vscode.Selection(
                             newWordPosition,
                             new vscode.Position(newWordPosition.line, newWordPosition.character + newName.length)
-                        ),
+                        )
                     ];
                     textEditor.revealRange(
                         new vscode.Range(textEditor.selection.start, textEditor.selection.end),

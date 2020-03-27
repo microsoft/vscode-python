@@ -18,7 +18,7 @@ suite('Terminal Environment Activation (cmd/powershell)', () => {
     [
         'c:/programfiles/python/python',
         'c:/program files/python/python',
-        'c:\\users\\windows paths\\conda\\python.exe',
+        'c:\\users\\windows paths\\conda\\python.exe'
     ].forEach((pythonPath) => {
         const hasSpaces = pythonPath.indexOf(' ') > 0;
         const resource = Uri.file('a');

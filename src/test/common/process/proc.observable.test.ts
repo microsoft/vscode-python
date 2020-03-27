@@ -37,7 +37,7 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'print("3")',
             'sys.stdout.flush()',
-            'time.sleep(2)',
+            'time.sleep(2)'
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
@@ -82,7 +82,7 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'sys.stdout.write("3")',
             'sys.stdout.flush()',
-            'time.sleep(2)',
+            'time.sleep(2)'
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
@@ -119,11 +119,11 @@ suite('ProcessService', () => {
             'time.sleep(10)',
             'print("2")',
             'sys.stdout.flush()',
-            'time.sleep(2)',
+            'time.sleep(2)'
         ];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], {
-            token: cancellationToken.token,
+            token: cancellationToken.token
         });
 
         const def = createDeferred();
@@ -166,11 +166,11 @@ suite('ProcessService', () => {
             'time.sleep(10)',
             'print("2")',
             'sys.stdout.flush()',
-            'time.sleep(2)',
+            'time.sleep(2)'
         ];
         const cancellationToken = new CancellationTokenSource();
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')], {
-            token: cancellationToken.token,
+            token: cancellationToken.token
         });
         let procKilled = false;
 
@@ -223,7 +223,7 @@ suite('ProcessService', () => {
             'time.sleep(2)',
             'sys.stderr.write("c")',
             'sys.stderr.flush()',
-            'time.sleep(2)',
+            'time.sleep(2)'
         ];
         const result = procService.execObservable(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = [
@@ -232,7 +232,7 @@ suite('ProcessService', () => {
             { out: '2', source: 'stdout' },
             { out: 'b', source: 'stderr' },
             { out: '3', source: 'stdout' },
-            { out: 'c', source: 'stderr' },
+            { out: 'c', source: 'stderr' }
         ];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');

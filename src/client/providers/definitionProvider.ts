@@ -45,7 +45,7 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
             command: proxy.CommandType.Definitions,
             fileName: filename,
             columnIndex: columnIndex,
-            lineIndex: position.line,
+            lineIndex: position.line
         };
         if (document.isDirty) {
             cmd.source = document.getText();

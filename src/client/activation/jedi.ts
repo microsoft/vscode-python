@@ -22,7 +22,7 @@ import {
     SignatureHelpContext,
     SymbolInformation,
     TextDocument,
-    WorkspaceEdit,
+    WorkspaceEdit
 } from 'vscode';
 
 import { PYTHON } from '../common/constants';
@@ -139,7 +139,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             this.registrations.push(languages.registerCodeLensProvider(this.documentSelector, this.codeLensProvider));
             const onTypeDispatcher = new OnTypeFormattingDispatcher({
                 '\n': new OnEnterFormatter(),
-                ':': new BlockFormatProviders(),
+                ':': new BlockFormatProviders()
             });
             const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
             if (onTypeTriggers) {

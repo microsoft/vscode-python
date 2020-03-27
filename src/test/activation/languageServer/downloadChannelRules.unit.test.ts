@@ -10,7 +10,7 @@ import * as typeMoq from 'typemoq';
 import {
     DownloadBetaChannelRule,
     DownloadDailyChannelRule,
-    DownloadStableChannelRule,
+    DownloadStableChannelRule
 } from '../../../client/activation/common/downloadChannelRules';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';

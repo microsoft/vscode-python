@@ -10,7 +10,7 @@ import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
 import {
     azureCDNBlobStorageAccount,
-    LanguageServerDownloadChannel,
+    LanguageServerDownloadChannel
 } from '../../../client/activation/common/packageRepository';
 import { DotNetLanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { PlatformName } from '../../../client/activation/types';
@@ -86,7 +86,7 @@ suite('Language Server - Package Service', () => {
             { package: '', uri: '', version: new SemVer('1.1.1') },
             { package: '', uri: '', version: new SemVer('3.4.1') },
             { package: '', uri: '', version: new SemVer('3.1.1') },
-            { package: '', uri: '', version: new SemVer('2.1.1') },
+            { package: '', uri: '', version: new SemVer('2.1.1') }
         ];
         const expectedPackage = packages[1];
         const repo = typeMoq.Mock.ofType<INugetRepository>();
@@ -119,7 +119,7 @@ suite('Language Server - Package Service', () => {
             { package: '', uri: '', version: new SemVer('1.1.1') },
             { package: '', uri: '', version: new SemVer('1.3.1-alpha') },
             { package: '', uri: '', version: new SemVer('1.4.1-preview') },
-            { package: '', uri: '', version: new SemVer('1.2.1-internal') },
+            { package: '', uri: '', version: new SemVer('1.2.1-internal') }
         ];
         const expectedPackage = packages[0];
         const repo = typeMoq.Mock.ofType<INugetRepository>();
@@ -146,7 +146,7 @@ suite('Language Server - Package Service', () => {
         lsPackageService.maxMajorVersion = 0;
         const packages: NugetPackage[] = [
             { package: '', uri: '', version: new SemVer('0.1.48') },
-            { package: '', uri: '', version: new SemVer('0.1.49') },
+            { package: '', uri: '', version: new SemVer('0.1.49') }
         ];
         const repo = typeMoq.Mock.ofType<INugetRepository>();
         const nuget = new NugetService();
@@ -165,7 +165,7 @@ suite('Language Server - Package Service', () => {
         const expectedPackage: NugetPackage = {
             version: new SemVer(minimumVersion),
             package: LanguageServerDownloadChannel.stable,
-            uri: `${azureCDNBlobStorageAccount}/${LanguageServerDownloadChannel.stable}/${packageName}.${minimumVersion}.nupkg`,
+            uri: `${azureCDNBlobStorageAccount}/${LanguageServerDownloadChannel.stable}/${packageName}.${minimumVersion}.nupkg`
         };
         expect(info).to.deep.equal(expectedPackage);
     });
@@ -192,8 +192,8 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
     test("If 'python.analysis.downloadChannel' setting is specified, return the value of the setting", async () => {
         const settings = {
             analysis: {
-                downloadChannel: 'someValue',
-            },
+                downloadChannel: 'someValue'
+            }
         };
         configService.setup((c) => c.getSettings()).returns(() => settings as any);
 
@@ -208,7 +208,7 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
     test("If 'python.analysis.downloadChannel' setting is not specified and insiders channel is 'weekly', return 'beta'", async () => {
         const settings = {
             analysis: {},
-            insidersChannel: 'weekly',
+            insidersChannel: 'weekly'
         };
         configService.setup((c) => c.getSettings()).returns(() => settings as any);
 
@@ -223,7 +223,7 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
     test("If 'python.analysis.downloadChannel' setting is not specified and insiders channel is 'daily', return 'beta'", async () => {
         const settings = {
             analysis: {},
-            insidersChannel: 'daily',
+            insidersChannel: 'daily'
         };
         configService.setup((c) => c.getSettings()).returns(() => settings as any);
 
@@ -238,7 +238,7 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
     test("If 'python.analysis.downloadChannel' setting is not specified, user is not using insiders, and extension has Alpha version, return 'beta'", async () => {
         const settings = {
             analysis: {},
-            insidersChannel: 'off',
+            insidersChannel: 'off'
         };
         configService.setup((c) => c.getSettings()).returns(() => settings as any);
 
@@ -251,7 +251,7 @@ suite('Language Server Package Service - getLanguageServerDownloadChannel()', ()
     test("If 'python.analysis.downloadChannel' setting is not specified, user is not using insiders, and extension does not have Alpha version, return 'stable'", async () => {
         const settings = {
             analysis: {},
-            insidersChannel: 'off',
+            insidersChannel: 'off'
         };
         configService.setup((c) => c.getSettings()).returns(() => settings as any);
 

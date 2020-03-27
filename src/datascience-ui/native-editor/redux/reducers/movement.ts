@@ -21,7 +21,7 @@ export namespace Movement {
             return {
                 ...arg.prevState,
                 cellVMs: newVMs,
-                undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
+                undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs)
             };
         }
 
@@ -37,9 +37,9 @@ export namespace Movement {
                     ...arg.payload,
                     data: {
                         firstCellId: arg.prevState.cellVMs[index - 1].cell.id,
-                        secondCellId: arg.payload.data.cellId,
-                    },
-                },
+                        secondCellId: arg.payload.data.cellId
+                    }
+                }
             });
         }
 
@@ -56,9 +56,9 @@ export namespace Movement {
                     ...arg.payload,
                     data: {
                         firstCellId: arg.payload.data.cellId,
-                        secondCellId: arg.prevState.cellVMs[index + 1].cell.id,
-                    },
-                },
+                        secondCellId: arg.prevState.cellVMs[index + 1].cell.id
+                    }
+                }
             });
         }
 
@@ -70,7 +70,7 @@ export namespace Movement {
         if (index > 0) {
             queueIncomingActionWithPayload(arg, CommonActionType.SELECT_CELL, {
                 cellId: arg.prevState.cellVMs[index - 1].cell.id,
-                cursorPos: CursorPos.Bottom,
+                cursorPos: CursorPos.Bottom
             });
         }
 
@@ -82,7 +82,7 @@ export namespace Movement {
         if (index < arg.prevState.cellVMs.length - 1) {
             queueIncomingActionWithPayload(arg, CommonActionType.SELECT_CELL, {
                 cellId: arg.prevState.cellVMs[index + 1].cell.id,
-                cursorPos: CursorPos.Bottom,
+                cursorPos: CursorPos.Bottom
             });
         }
 

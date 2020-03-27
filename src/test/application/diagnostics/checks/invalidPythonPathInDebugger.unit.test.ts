@@ -15,13 +15,13 @@ import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/ap
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import {
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt,
+    MessageCommandPrompt
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
     IDiagnostic,
     IDiagnosticCommand,
     IDiagnosticHandlerService,
-    IInvalidPythonPathInDebuggerService,
+    IInvalidPythonPathInDebuggerService
 } from '../../../../client/application/diagnostics/types';
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { IDocumentManager, IWorkspaceService } from '../../../../client/common/application/types';
@@ -87,7 +87,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
     test('Can handle InvalidPythonPathInDebugger diagnostics', async () => {
         for (const code of [
             DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
-            DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic,
+            DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic
         ]) {
             const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
             diagnostic
@@ -127,7 +127,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
                 f.createCommand(
                     typemoq.It.isAny(),
                     typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                        type: 'executeVSCCommand',
+                        type: 'executeVSCCommand'
                     })
                 )
             )
@@ -157,7 +157,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
                 f.createCommand(
                     typemoq.It.isAny(),
                     typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                        type: 'executeVSCCommand',
+                        type: 'executeVSCCommand'
                     })
                 )
             )
@@ -190,7 +190,7 @@ suite('Application Diagnostics - Checks Python Path in debugger', () => {
                 f.createCommand(
                     typemoq.It.isAny(),
                     typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                        type: 'executeVSCCommand',
+                        type: 'executeVSCCommand'
                     })
                 )
             )

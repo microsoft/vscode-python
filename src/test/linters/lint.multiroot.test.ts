@@ -8,7 +8,7 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService,
+    TestFrameworkProductPathService
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
@@ -134,7 +134,7 @@ suite('Multiroot Linting', () => {
         const config = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
         await Promise.all([
             config.updateSetting(setting, global, Uri.file(multirootPath), ConfigurationTarget.Global),
-            config.updateSetting(setting, wks, Uri.file(multirootPath), ConfigurationTarget.Workspace),
+            config.updateSetting(setting, wks, Uri.file(multirootPath), ConfigurationTarget.Workspace)
         ]);
         await testLinterInWorkspaceFolder(product, 'workspace1', wks);
         await Promise.all(

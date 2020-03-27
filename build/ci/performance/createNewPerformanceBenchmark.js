@@ -17,14 +17,14 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
     if (fastXmlParser.validate(xmlData)) {
         const defaultOptions = {
             attributeNamePrefix: '',
-            ignoreAttributes: false,
+            ignoreAttributes: false
         };
         const jsonObj = fastXmlParser.parse(xmlData, defaultOptions);
 
         jsonObj.testsuite.testcase.forEach((testcase) => {
             const test = {
                 name: testcase.classname + ' ' + testcase.name,
-                time: testcase.failure || testcase.skipped === '' ? -1 : parseFloat(testcase.time),
+                time: testcase.failure || testcase.skipped === '' ? -1 : parseFloat(testcase.time)
             };
 
             performanceData.push(test);

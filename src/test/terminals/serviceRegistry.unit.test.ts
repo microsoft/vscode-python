@@ -15,7 +15,7 @@ import {
     ICodeExecutionHelper,
     ICodeExecutionManager,
     ICodeExecutionService,
-    ITerminalAutoActivation,
+    ITerminalAutoActivation
 } from '../../client/terminals/types';
 
 suite('Terminal - Service Registry', () => {
@@ -28,7 +28,7 @@ suite('Terminal - Service Registry', () => {
             [IExtensionSingleActivationService, ExtensionActivationForTerminalActivation],
             [ICodeExecutionService, ReplProvider, 'repl'],
             [ITerminalAutoActivation, TerminalAutoActivation],
-            [ICodeExecutionService, TerminalCodeExecutionProvider, 'standard'],
+            [ICodeExecutionService, TerminalCodeExecutionProvider, 'standard']
         ].forEach((args) => {
             if (args.length === 2) {
                 services

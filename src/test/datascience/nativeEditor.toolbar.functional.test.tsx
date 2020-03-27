@@ -24,7 +24,7 @@ enum Button {
     ClearAllOutput = 6,
     VariableExplorer = 7,
     Save = 8,
-    Export = 9,
+    Export = 9
 }
 suite('DataScience Native Toolbar', () => {
     const noopAny: any = noop;
@@ -52,7 +52,7 @@ suite('DataScience Native Toolbar', () => {
             selectionFocusedInfo: {},
             sendCommand: noopAny,
             toggleVariableExplorer: sinon.stub(),
-            variablesVisible: false,
+            variablesVisible: false
         };
     });
     function mountToolbar() {

@@ -12,7 +12,7 @@ import {
     IDataScienceSettings,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings,
+    IPythonSettings
 } from '../../client/common/types';
 import { Telemetry } from '../../client/datascience/constants';
 import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../client/datascience/shiftEnterBanner';
@@ -68,7 +68,7 @@ suite('Interactive Shift Enter Banner', () => {
 
         expect(Reporter.eventNames).to.deep.equal([
             Telemetry.ShiftEnterBannerShown,
-            Telemetry.EnableInteractiveShiftEnter,
+            Telemetry.EnableInteractiveShiftEnter
         ]);
     });
 
@@ -113,7 +113,7 @@ suite('Interactive Shift Enter Banner', () => {
 
         expect(Reporter.eventNames).to.deep.equal([
             Telemetry.ShiftEnterBannerShown,
-            Telemetry.DisableInteractiveShiftEnter,
+            Telemetry.DisableInteractiveShiftEnter
         ]);
     });
 });

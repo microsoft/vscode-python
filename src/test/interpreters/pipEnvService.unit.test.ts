@@ -20,7 +20,7 @@ import {
     ICurrentProcess,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings,
+    IPythonSettings
 } from '../../client/common/types';
 import { getNamesAndValues } from '../../client/common/utils/enum';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
@@ -33,7 +33,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 enum OS {
     Mac,
     Windows,
-    Linux,
+    Linux
 }
 
 suite('Interpreters - PipEnv', () => {
@@ -235,7 +235,7 @@ suite('Interpreters - PipEnv', () => {
             test(`Should return interpreter information using PipFile defined in Env variable${testSuffix}`, async () => {
                 const envPipFile = 'XYZ';
                 const env = {
-                    PIPENV_PIPFILE: envPipFile,
+                    PIPENV_PIPFILE: envPipFile
                 };
                 const pythonPath = 'one';
                 envVarsProvider

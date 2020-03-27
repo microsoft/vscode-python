@@ -16,7 +16,7 @@ import {
     IInteractiveWindowProvider,
     IJupyterExecution,
     INotebookImporter,
-    INotebookServer,
+    INotebookServer
 } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/testing/common/constants';
@@ -46,7 +46,7 @@ import {
     ITestsStatusUpdaterService,
     ITestVisitor,
     IUnitTestSocketServer,
-    TestProvider,
+    TestProvider
 } from '../../client/testing/common/types';
 import { TestManager as NoseTestManager } from '../../client/testing/nosetest/main';
 import { TestDiscoveryService as NoseTestDiscoveryService } from '../../client/testing/nosetest/services/discoveryService';

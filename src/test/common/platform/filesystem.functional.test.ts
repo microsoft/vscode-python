@@ -19,7 +19,7 @@ import {
     OSX,
     SUPPORTS_SOCKETS,
     SUPPORTS_SYMLINKS,
-    WINDOWS,
+    WINDOWS
 } from './utils';
 
 // tslint:disable:no-require-imports no-var-requires
@@ -402,7 +402,7 @@ suite('FileSystem - utils', () => {
                 await fix.createFile('x/y/z/spam.py'),
                 await fix.createFile('x/y/z/spam.pyc'),
                 await fix.createFile('x/y/z/spam.so'),
-                await fix.createDirectory('x/y/z/spam.data'),
+                await fix.createDirectory('x/y/z/spam.data')
             ];
             // non-matches
             await fix.createFile('x/spam.py');
@@ -673,7 +673,7 @@ suite('FileSystem', () => {
                     await fix.createFile('x/y/z/spam.py'),
                     await fix.createFile('x/y/z/spam.pyc'),
                     await fix.createFile('x/y/z/spam.so'),
-                    await fix.createDirectory('x/y/z/spam.data'),
+                    await fix.createDirectory('x/y/z/spam.data')
                 ];
                 // non-matches
                 await fix.createFile('x/spam.py');

@@ -16,7 +16,7 @@ import { DotNetLanguageServerFolderService } from '../../../client/activation/la
 import {
     ILanguageServerFolderService,
     ILanguageServerOutputChannel,
-    IPlatformData,
+    IPlatformData
 } from '../../../client/activation/types';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
@@ -202,7 +202,7 @@ suite('Language Server Activation - Downloader', () => {
             const expectedDownloadOptions = {
                 extension: '.nupkg',
                 outputChannel: instance(outputChannelDownload),
-                progressMessagePrefix: downloadTitle,
+                progressMessagePrefix: downloadTitle
             };
 
             const file = await lsDownloader.downloadFile(downloadUri, downloadTitle);
@@ -347,6 +347,6 @@ function makePkgInfo(name: string, uri: string, version: string = '0.0.0') {
     return {
         package: name,
         uri: uri,
-        version: new SemVer(version),
+        version: new SemVer(version)
     } as any;
 }

@@ -101,7 +101,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                 .then((reply) => {
                     this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ShellSend_resolve, {
                         requestId,
-                        msg: reply,
+                        msg: reply
                     });
                     this.pendingShellMessages.delete(requestId);
                     future.dispose();
@@ -199,7 +199,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         if (this.notebookIdentity && !this.notebook) {
             this.notebook = await this.notebookProvider.getOrCreateNotebook({
                 identity: this.notebookIdentity,
-                getOnly: true,
+                getOnly: true
             });
         }
         if (this.notebook && !this.kernelRestartHandlerAttached) {
@@ -230,7 +230,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             if (result) {
                 this.raisePostMessage(IPyWidgetMessages.IPyWidgets_RequestCommInfo_reply, {
                     requestId: args.requestId,
-                    msg: result,
+                    msg: result
                 });
             }
         }

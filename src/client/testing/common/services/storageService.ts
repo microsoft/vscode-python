@@ -9,7 +9,7 @@ import {
     ITestCollectionStorageService,
     TestFunction,
     Tests,
-    TestSuite,
+    TestSuite
 } from './../types';
 
 @injectable()

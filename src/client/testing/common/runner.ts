@@ -7,7 +7,7 @@ import {
     IPythonExecutionService,
     IPythonToolExecutionService,
     ObservableExecutionResult,
-    SpawnOptions,
+    SpawnOptions
 } from '../../common/process/types';
 import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -46,7 +46,7 @@ export async function run(
         execPath: testExecutablePath,
         args: options.args,
         moduleName: testExecutablePath && testExecutablePath.length > 0 ? undefined : moduleName,
-        product: testHelper.parseProduct(testProvider),
+        product: testHelper.parseProduct(testProvider)
     };
 
     if (testProvider === UNITTEST_PROVIDER) {

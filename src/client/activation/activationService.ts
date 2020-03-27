@@ -18,7 +18,7 @@ import {
     IOutputChannel,
     IPersistentStateFactory,
     IPythonSettings,
-    Resource,
+    Resource
 } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { noop } from '../common/utils/misc';
@@ -32,7 +32,7 @@ import {
     IExtensionActivationService,
     ILanguageServerActivator,
     ILanguageServerCache,
-    LanguageServerType,
+    LanguageServerType
 } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
@@ -138,11 +138,11 @@ export class LanguageServerExtensionActivationService
         if (state.value !== jediEnabled) {
             await state.updateValue(jediEnabled);
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                switchTo: jediEnabled,
+                switchTo: jediEnabled
             });
         } else {
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_CURRENT_SELECTION, undefined, {
-                lsStartup: jediEnabled,
+                lsStartup: jediEnabled
             });
         }
     }
@@ -236,7 +236,7 @@ export class LanguageServerExtensionActivationService
                 lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
                 if (diagnostic.length) {
                     sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, {
-                        supported: false,
+                        supported: false
                     });
                     serverType = LanguageServerType.Jedi;
                 }

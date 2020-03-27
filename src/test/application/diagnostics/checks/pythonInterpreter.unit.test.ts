@@ -11,19 +11,19 @@ import { BaseDiagnosticsService } from '../../../../client/application/diagnosti
 import { InvalidLaunchJsonDebuggerDiagnostic } from '../../../../client/application/diagnostics/checks/invalidLaunchJsonDebugger';
 import {
     InvalidPythonInterpreterDiagnostic,
-    InvalidPythonInterpreterService,
+    InvalidPythonInterpreterService
 } from '../../../../client/application/diagnostics/checks/pythonInterpreter';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import {
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt,
+    MessageCommandPrompt
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
     IDiagnostic,
     IDiagnosticCommand,
     IDiagnosticHandlerService,
-    IDiagnosticsService,
+    IDiagnosticsService
 } from '../../../../client/application/diagnostics/types';
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { IPlatformService } from '../../../../client/common/platform/types';
@@ -95,7 +95,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         test('Can handle InvalidPythonPathInterpreter diagnostics', async () => {
             for (const code of [
                 DiagnosticCodes.NoPythonInterpretersDiagnostic,
-                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
+                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic
             ]) {
                 const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
                 diagnostic
@@ -169,7 +169,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     new InvalidPythonInterpreterDiagnostic(
                         DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
                         undefined
-                    ),
+                    )
                 ],
                 'not the same'
             );
@@ -243,7 +243,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand',
+                            type: 'executeVSCCommand'
                         })
                     )
                 )
@@ -256,7 +256,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
-                { prompt: 'Select Python Interpreter', command: cmd },
+                { prompt: 'Select Python Interpreter', command: cmd }
             ]);
         });
         test('Handling no interpreters diagnostic should return select interpreter cmd', async () => {
@@ -276,7 +276,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand',
+                            type: 'executeVSCCommand'
                         })
                     )
                 )
@@ -289,7 +289,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             commandFactory.verifyAll();
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
-                { prompt: 'Select Python Interpreter', command: cmd },
+                { prompt: 'Select Python Interpreter', command: cmd }
             ]);
         });
         test('Handling an empty diagnostic should not show a message nor return a command', async () => {
@@ -306,7 +306,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand',
+                            type: 'executeVSCCommand'
                         })
                     )
                 )
@@ -339,7 +339,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand',
+                            type: 'executeVSCCommand'
                         })
                     )
                 )
@@ -365,7 +365,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand',
+                            type: 'executeVSCCommand'
                         })
                     )
                 )

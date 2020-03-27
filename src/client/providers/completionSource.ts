@@ -91,7 +91,7 @@ export class CompletionSource {
             fileName: document.fileName,
             columnIndex: columnIndex,
             lineIndex: position.line,
-            source: source,
+            source: source
         };
 
         return this.jediFactory.getJediProxyHandler<proxy.ICompletionResult>(document.uri).sendCommand(cmd, token);

@@ -54,7 +54,7 @@ export class LinterCommands implements IDisposable {
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: `current: ${current}`,
+            placeHolder: `current: ${current}`
         };
 
         const selection = await this.appShell.showQuickPick(linterList, quickPickOptions);
@@ -87,7 +87,7 @@ export class LinterCommands implements IDisposable {
         const quickPickOptions: QuickPickOptions = {
             matchOnDetail: true,
             matchOnDescription: true,
-            placeHolder: `current: ${current}`,
+            placeHolder: `current: ${current}`
         };
 
         const selection = await this.appShell.showQuickPick(options, quickPickOptions);

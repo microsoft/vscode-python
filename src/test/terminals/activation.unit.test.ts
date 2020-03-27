@@ -48,7 +48,7 @@ suite('Terminal', () => {
                 creationOptions: {},
                 processId: Promise.resolve(0),
                 sendText: noop,
-                show: noop,
+                show: noop
             };
             nonActivatedTerminal = {
                 dispose: noop,
@@ -57,7 +57,7 @@ suite('Terminal', () => {
                 name: 'Something',
                 processId: Promise.resolve(0),
                 sendText: noop,
-                show: noop,
+                show: noop
             };
             autoActivation.register();
         });

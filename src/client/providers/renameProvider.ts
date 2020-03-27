@@ -7,7 +7,7 @@ import {
     TextDocument,
     window,
     workspace,
-    WorkspaceEdit,
+    WorkspaceEdit
 } from 'vscode';
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';

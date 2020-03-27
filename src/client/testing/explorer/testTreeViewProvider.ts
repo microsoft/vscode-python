@@ -20,7 +20,7 @@ import {
     TestDataItem,
     TestDataItemType,
     TestWorkspaceFolder,
-    WorkspaceTestStatus,
+    WorkspaceTestStatus
 } from '../types';
 import { TestTreeItem } from './testTreeViewItem';
 
@@ -117,7 +117,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
         }
 
         sendTelemetryEvent(EventName.UNITTEST_EXPLORER_WORK_SPACE_COUNT, undefined, {
-            count: this.workspace.workspaceFolders.length,
+            count: this.workspace.workspaceFolders.length
         });
 
         // If we are in a single workspace

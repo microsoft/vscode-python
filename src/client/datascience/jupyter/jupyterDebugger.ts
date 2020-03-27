@@ -26,7 +26,7 @@ import {
     IFileHashes,
     IJupyterDebugger,
     INotebook,
-    ISourceMapRequest,
+    ISourceMapRequest
 } from '../types';
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
@@ -277,7 +277,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 line: cellHash.line,
                 endLine: cellHash.endLine,
                 runtimeSource: { path: `<ipython-input-${cellHash.executionCount}-${cellHash.hash}>` },
-                runtimeLine: cellHash.runtimeLine,
+                runtimeLine: cellHash.runtimeLine
             };
         });
 
@@ -340,7 +340,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                     patch,
                     build: [],
                     prerelease: [],
-                    raw: `${major}.${minor}.${patch}`,
+                    raw: `${major}.${minor}.${patch}`
                 };
             }
         }
@@ -419,7 +419,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                         type: 'python',
                         port: parseInt(debugInfoMatch[2], 10),
                         host: debugInfoMatch[1],
-                        justMyCode: settings.datascience.debugJustMyCode,
+                        justMyCode: settings.datascience.debugJustMyCode
                     };
                     if (local) {
                         return localConfig;
@@ -429,9 +429,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                             pathMappings: [
                                 {
                                     localRoot: this.workspace.rootPath,
-                                    remoteRoot: '.',
-                                },
-                            ],
+                                    remoteRoot: '.'
+                                }
+                            ]
                         };
                     }
                 }

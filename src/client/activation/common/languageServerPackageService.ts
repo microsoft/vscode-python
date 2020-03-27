@@ -80,7 +80,7 @@ export abstract class LanguageServerPackageService implements ILanguageServerPac
             package: LanguageServerDownloadChannel.stable,
             uri: `${azureCDNBlobStorageAccount}/${
                 LanguageServerDownloadChannel.stable
-            }/${this.getNugetPackageName()}.${minimumVersion}.nupkg`,
+            }/${this.getNugetPackageName()}.${minimumVersion}.nupkg`
         };
     }
 }

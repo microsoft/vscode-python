@@ -86,7 +86,7 @@ export class InterpreterHelper implements IInterpreterHelper {
             }
             const details = {
                 ...info,
-                fileHash,
+                fileHash
             };
             await store.updateValue(details);
             return details;

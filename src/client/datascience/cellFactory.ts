@@ -27,7 +27,7 @@ function generateCodeCell(
         id: id,
         file: file,
         line: line,
-        state: CellState.init,
+        state: CellState.init
     };
 }
 
@@ -37,7 +37,7 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
         file: file,
         line: line,
         state: CellState.finished,
-        data: createMarkdownCell(code),
+        data: createMarkdownCell(code)
     };
 }
 
@@ -85,7 +85,7 @@ export function generateCells(
                     line + firstNonMarkdown,
                     uuid(),
                     magicCommandsAsComments
-                ),
+                )
             ];
         } else {
             // Just a single markdown cell
@@ -136,7 +136,7 @@ export function generateCellsFromString(source: string, settings?: IDataScienceS
                     startLine: index + 1,
                     title: results,
                     cell_type: matcher.getCellType(line),
-                    code: '',
+                    code: ''
                 });
             }
             currentCode = undefined;
@@ -174,7 +174,7 @@ export function generateCellRangesFromDocument(document: TextDocument, settings?
                 cells.push({
                     range: line.range,
                     title: results,
-                    cell_type: matcher.getCellType(line.text),
+                    cell_type: matcher.getCellType(line.text)
                 });
             }
         }

@@ -13,13 +13,13 @@ import { Product } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSeletionProxyService
 } from '../../client/interpreter/autoSelection/types';
 import {
     IInterpreterLocatorService,
     InterpreterType,
     PIPENV_SERVICE,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -35,7 +35,7 @@ const info: PythonInterpreter = {
     type: InterpreterType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: '',
+    sysVersion: ''
 };
 
 // tslint:disable-next-line:max-func-body-length
@@ -93,7 +93,7 @@ suite('Installation - installation channels', () => {
         const interpreter: PythonInterpreter = {
             ...info,
             path: 'pipenv',
-            type: InterpreterType.VirtualEnv,
+            type: InterpreterType.VirtualEnv
         };
         pipEnv.setup((x) => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([interpreter]));
 

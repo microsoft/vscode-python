@@ -111,20 +111,20 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
             documentSelector,
             workspaceFolder,
             synchronize: {
-                configurationSection: PYTHON_LANGUAGE,
+                configurationSection: PYTHON_LANGUAGE
             },
             outputChannel: this.output,
             revealOutputChannelOn: RevealOutputChannelOn.Never,
             initializationOptions: {
                 interpreter: {
-                    properties,
+                    properties
                 },
                 displayOptions: {
                     preferredFormat: 'markdown',
                     trimDocumentationLines: false,
                     maxDocumentationLineLength: 0,
                     trimDocumentationText: false,
-                    maxDocumentationTextLength: 0,
+                    maxDocumentationTextLength: 0
                 },
                 searchPaths,
                 typeStubSearchPaths: this.typeshedPaths,
@@ -133,14 +133,14 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 testEnvironment: isTestExecution(),
                 analysisUpdates: true,
                 traceLogging: true, // Max level, let LS decide through settings actual level of logging.
-                asyncStartup: true,
-            },
+                asyncStartup: true
+            }
         };
     }
     protected getDocumentSelector(workspaceFolder?: WorkspaceFolder): DocumentSelector {
         const documentSelector: DocumentFilter[] = [
             { scheme: 'file', language: PYTHON_LANGUAGE },
-            { scheme: 'untitled', language: PYTHON_LANGUAGE },
+            { scheme: 'untitled', language: PYTHON_LANGUAGE }
         ];
         // Set the document selector only when in a multi-root workspace scenario.
         if (

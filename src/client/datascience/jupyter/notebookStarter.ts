@@ -84,9 +84,9 @@ export class NotebookStarter implements Disposable {
                 this.jupyterInterpreterService.startNotebook(args || [], {
                     throwOnStdErr: false,
                     encoding: 'utf8',
-                    token: cancelToken,
+                    token: cancelToken
                 }),
-                tempDirPromise,
+                tempDirPromise
             ]);
 
             // Watch for premature exits
@@ -120,8 +120,8 @@ export class NotebookStarter implements Disposable {
                 createPromiseFromCancellation({
                     cancelAction: 'reject',
                     defaultValue: new CancellationError(),
-                    token: cancelToken,
-                }),
+                    token: cancelToken
+                })
             ]);
 
             if (connection instanceof CancellationError) {
@@ -284,7 +284,7 @@ export class NotebookStarter implements Disposable {
                         count += 1;
                     }
                 }
-            },
+            }
         };
     }
 }

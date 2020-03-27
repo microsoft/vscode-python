@@ -90,7 +90,7 @@ export class ItemInfoSource implements IItemInfoSource {
             command: proxy.CommandType.Hover,
             fileName: document.fileName,
             columnIndex: range.end.character,
-            lineIndex: range.end.line,
+            lineIndex: range.end.line
         };
         if (document.isDirty) {
             cmd.source = document.getText();
@@ -110,7 +110,7 @@ export class ItemInfoSource implements IItemInfoSource {
             fileName: fileName,
             columnIndex: range.end.character,
             lineIndex: range.end.line,
-            source: sourceText,
+            source: sourceText
         };
         return this.jediFactory.getJediProxyHandler<proxy.IHoverResult>(documentUri).sendCommand(cmd, token);
     }

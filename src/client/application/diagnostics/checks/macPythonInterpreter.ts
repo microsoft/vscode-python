@@ -21,7 +21,7 @@ const messages = {
     [DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic]:
         'You have selected the macOS system install of Python, which is not recommended for use with the Python extension. Some functionality will be limited, please select a different interpreter.',
     [DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic]:
-        'The macOS system install of Python is not recommended, some functionality in the extension will be limited. Install another version of Python for the best experience.',
+        'The macOS system install of Python is not recommended, some functionality in the extension will be limited. Install another version of Python for the best experience.'
 };
 
 export class InvalidMacPythonInterpreterDiagnostic extends BaseDiagnostic {
@@ -51,7 +51,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         super(
             [
                 DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
+                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic
             ],
             serviceContainer,
             disposableRegistry,
@@ -99,7 +99,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                 new InvalidMacPythonInterpreterDiagnostic(
                     DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
                     resource
-                ),
+                )
             ];
         }
 
@@ -107,7 +107,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             new InvalidMacPythonInterpreterDiagnostic(
                 DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
                 resource
-            ),
+            )
         ];
     }
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
@@ -168,16 +168,16 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                         prompt: 'Select Python Interpreter',
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'executeVSCCommand',
-                            options: 'python.setInterpreter',
-                        }),
+                            options: 'python.setInterpreter'
+                        })
                     },
                     {
                         prompt: 'Do not show again',
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'ignore',
-                            options: DiagnosticScope.Global,
-                        }),
-                    },
+                            options: DiagnosticScope.Global
+                        })
+                    }
                 ];
             }
             case DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic: {
@@ -186,23 +186,23 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                         prompt: 'Learn more',
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'launch',
-                            options: 'https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites',
-                        }),
+                            options: 'https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites'
+                        })
                     },
                     {
                         prompt: 'Download',
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'launch',
-                            options: 'https://www.python.org/downloads',
-                        }),
+                            options: 'https://www.python.org/downloads'
+                        })
                     },
                     {
                         prompt: 'Do not show again',
                         command: commandFactory.createCommand(diagnostic, {
                             type: 'ignore',
-                            options: DiagnosticScope.Global,
-                        }),
-                    },
+                            options: DiagnosticScope.Global
+                        })
+                    }
                 ];
             }
             default: {

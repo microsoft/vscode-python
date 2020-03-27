@@ -64,7 +64,7 @@ export class CodeBlockFormatProvider {
 
                 return [
                     TextEdit.delete(new Range(startDeletePosition, endDeletePosition)),
-                    TextEdit.insert(startDeletePosition, prefixOfPreviousBlock),
+                    TextEdit.insert(startDeletePosition, prefixOfPreviousBlock)
                 ];
             }
         }

@@ -38,13 +38,13 @@ export class InstallationChannelManager implements IInstallationChannelManager {
             return {
                 label: `Install using ${installer.displayName}`,
                 description: '',
-                installer,
+                installer
             };
         });
         const selection = await appShell.showQuickPick<typeof options[0]>(options, {
             matchOnDescription: true,
             matchOnDetail: true,
-            placeHolder,
+            placeHolder
         });
         return selection ? selection.installer : undefined;
     }

@@ -19,7 +19,7 @@ import {
     SymbolInformation,
     TextDocument,
     TextDocumentContentChangeEvent,
-    WorkspaceEdit,
+    WorkspaceEdit
 } from 'vscode';
 
 import { ILanguageServer } from '../../client/activation/types';

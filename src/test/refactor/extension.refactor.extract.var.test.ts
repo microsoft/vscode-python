@@ -13,7 +13,7 @@ import {
     TextEditorOptions,
     Uri,
     window,
-    workspace,
+    workspace
 } from 'vscode';
 import { getTextEditsFromPatch } from '../../client/common/editor';
 import { ICondaService } from '../../client/interpreter/contracts';
@@ -61,7 +61,7 @@ suite('Variable Extraction', () => {
         cursorStyle: TextEditorCursorStyle.Line,
         insertSpaces: true,
         lineNumbers: TextEditorLineNumbersStyle.Off,
-        tabSize: 4,
+        tabSize: 4
     };
     let refactorTargetFile = '';
     let ioc: UnitTestIocContainer;

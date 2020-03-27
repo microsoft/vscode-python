@@ -69,7 +69,7 @@ export class LinkProvider implements IInteractiveWindowListener {
                     this.applicationShell
                         .showSaveDialog({
                             saveLabel: localize.DataScience.savePngTitle(),
-                            filters: filtersObject,
+                            filters: filtersObject
                         })
                         .then((f) => {
                             if (f) {

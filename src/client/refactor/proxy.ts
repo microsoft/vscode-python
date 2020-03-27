@@ -67,7 +67,7 @@ export class RefactorProxy extends Disposable {
             start: this.getOffsetAt(document, range.start).toString(),
             id: '1',
             name: name,
-            indent_size: options.tabSize,
+            indent_size: options.tabSize
         };
 
         return this.sendCommand<T>(JSON.stringify(command));
@@ -89,7 +89,7 @@ export class RefactorProxy extends Disposable {
             end: this.getOffsetAt(document, range.end).toString(),
             id: '1',
             name: name,
-            indent_size: options.tabSize,
+            indent_size: options.tabSize
         };
         return this.sendCommand<T>(JSON.stringify(command));
     }
@@ -117,7 +117,7 @@ export class RefactorProxy extends Disposable {
             end: this.getOffsetAt(document, range.end).toString(),
             id: '1',
             name: name,
-            indent_size: options.tabSize,
+            indent_size: options.tabSize
         };
         return this.sendCommand<T>(JSON.stringify(command));
     }

@@ -14,7 +14,7 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IExtensionContext,
-    Resource,
+    Resource
 } from '../../common/types';
 import { createDeferredFromPromise } from '../../common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
@@ -67,7 +67,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         let key: string;
         [key, interpreter] = await Promise.all([
             this.getCacheKey(resource, interpreter),
-            interpreter || (await this.interpreterService.getActiveInterpreter(undefined)),
+            interpreter || (await this.interpreterService.getActiveInterpreter(undefined))
         ]);
 
         const procCacheKey = `Process${key}`;

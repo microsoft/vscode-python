@@ -52,7 +52,7 @@ const DefaultCssVars: { [key: string]: string } = {
         --override-lineHighlightBorder: #282828;
         --override-peek-background: #001f33;
     }
-`,
+`
 };
 
 // These colors below should match colors that come from either the Default Light+ theme or the Default Dark+ theme.
@@ -75,7 +75,7 @@ const DefaultColors: { [key: string]: string } = {
     'dark.variable': '#9CDCFE',
     'dark.entity.name.type': '#4EC9B0',
     'dark.support.function': '#DCDCAA',
-    'dark.punctuation': '#1e1e1e',
+    'dark.punctuation': '#1e1e1e'
 };
 
 interface IApplyThemeArgs {
@@ -144,7 +144,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                         fontFamily,
                         fontSize,
                         isDark: isDarkUpdated,
-                        defaultStyle: ignoreTheme ? LightTheme : undefined,
+                        defaultStyle: ignoreTheme ? LightTheme : undefined
                     });
                 } else if (tokenColors === null && fontFamily && fontSize) {
                     // No colors found. See if we can figure out what type of theme we have
@@ -249,7 +249,7 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
             base: args.isDark ? 'vs-dark' : 'vs',
             inherit: false,
             rules: [],
-            colors: {},
+            colors: {}
         };
         // If we have token colors enumerate them and add them into the rules
         if (args.tokenColors && args.tokenColors.length) {
@@ -280,13 +280,13 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
                                     token,
                                     foreground: settings.foreground,
                                     background: settings.background,
-                                    fontStyle: settings.fontStyle,
+                                    fontStyle: settings.fontStyle
                                 });
                             } else {
                                 result.rules.push({
                                     token,
                                     background: settings.background,
-                                    fontStyle: settings.fontStyle,
+                                    fontStyle: settings.fontStyle
                                 });
                             }
 
@@ -298,7 +298,7 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
                                     token: 'punctuation.definition.comment',
                                     foreground: settings.foreground,
                                     background: settings.background,
-                                    fontStyle: settings.fontStyle,
+                                    fontStyle: settings.fontStyle
                                 });
                             }
 
@@ -309,7 +309,7 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
                                     token: 'punctuation.definition.string',
                                     foreground: settings.foreground,
                                     background: settings.background,
-                                    fontStyle: settings.fontStyle,
+                                    fontStyle: settings.fontStyle
                                 });
                             }
                         }
@@ -331,11 +331,11 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
                 // Special case. We need rules for the comment beginning and the string beginning
                 result.rules.push({
                     token: 'punctuation.definition.comment',
-                    foreground: DefaultColors[`${args.defaultStyle}.comment`],
+                    foreground: DefaultColors[`${args.defaultStyle}.comment`]
                 });
                 result.rules.push({
                     token: 'punctuation.definition.string',
-                    foreground: DefaultColors[`${args.defaultStyle}.string`],
+                    foreground: DefaultColors[`${args.defaultStyle}.string`]
                 });
             }
         }

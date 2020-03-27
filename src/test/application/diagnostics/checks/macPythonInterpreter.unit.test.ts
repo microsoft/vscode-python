@@ -11,13 +11,13 @@ import { ConfigurationChangeEvent } from 'vscode';
 import { BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
 import {
     InvalidMacPythonInterpreterDiagnostic,
-    InvalidMacPythonInterpreterService,
+    InvalidMacPythonInterpreterService
 } from '../../../../client/application/diagnostics/checks/macPythonInterpreter';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import {
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt,
+    MessageCommandPrompt
 } from '../../../../client/application/diagnostics/promptHandler';
 import {
     DiagnosticScope,
@@ -25,7 +25,7 @@ import {
     IDiagnosticCommand,
     IDiagnosticFilterService,
     IDiagnosticHandlerService,
-    IDiagnosticsService,
+    IDiagnosticsService
 } from '../../../../client/application/diagnostics/types';
 import { CommandsWithoutArgs } from '../../../../client/common/application/commands';
 import { IWorkspaceService } from '../../../../client/common/application/types';
@@ -109,7 +109,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
         test('Can handle InvalidPythonPathInterpreter diagnostics', async () => {
             for (const code of [
                 DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
-                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
+                DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic
             ]) {
                 const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
                 diagnostic
@@ -250,7 +250,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     new InvalidMacPythonInterpreterDiagnostic(
                         DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
                         undefined
-                    ),
+                    )
                 ],
                 'not the same'
             );
@@ -271,7 +271,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     Promise.resolve([
                         { path: pythonPath } as any,
                         { path: pythonPath } as any,
-                        { path: nonMacStandardInterpreter } as any,
+                        { path: nonMacStandardInterpreter } as any
                     ])
                 )
                 .verifiable(typemoq.Times.once());
@@ -300,7 +300,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     new InvalidMacPythonInterpreterDiagnostic(
                         DiagnosticCodes.MacInterpreterSelectedAndHaveOtherInterpretersDiagnostic,
                         undefined
-                    ),
+                    )
                 ],
                 'not the same'
             );
@@ -327,7 +327,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                     f.createCommand(
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'executeVSCCommand', CommandsWithoutArgs>>({
-                            type: 'executeVSCCommand',
+                            type: 'executeVSCCommand'
                         })
                     )
                 )
@@ -339,7 +339,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({
                             type: 'ignore',
-                            options: DiagnosticScope.Global,
+                            options: DiagnosticScope.Global
                         })
                     )
                 )
@@ -353,7 +353,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             expect(messagePrompt).not.be.equal(undefined, 'Message prompt not set');
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
                 { prompt: 'Select Python Interpreter', command: cmd },
-                { prompt: 'Do not show again', command: cmdIgnore },
+                { prompt: 'Do not show again', command: cmdIgnore }
             ]);
         });
         test('Handling no interpreters diagnostisc should return 3 commands', async () => {
@@ -376,7 +376,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'launch', string>>({
                             type: 'launch',
-                            options: 'https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites',
+                            options: 'https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites'
                         })
                     )
                 )
@@ -388,7 +388,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'launch', string>>({
                             type: 'launch',
-                            options: 'https://www.python.org/downloads',
+                            options: 'https://www.python.org/downloads'
                         })
                     )
                 )
@@ -400,7 +400,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
                         typemoq.It.isAny(),
                         typemoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({
                             type: 'ignore',
-                            options: DiagnosticScope.Global,
+                            options: DiagnosticScope.Global
                         })
                     )
                 )
@@ -415,7 +415,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             expect(messagePrompt!.commandPrompts).to.be.deep.equal([
                 { prompt: 'Learn more', command: cmdLearn },
                 { prompt: 'Download', command: cmdDownload },
-                { prompt: 'Do not show again', command: cmdIgnore },
+                { prompt: 'Do not show again', command: cmdIgnore }
             ]);
         });
         test('Should not display a message if No Interpreters diagnostic has been ignored', async () => {
@@ -462,8 +462,7 @@ suite('Application Diagnostics - Checks Python Interpreter', () => {
             let invoked = false;
             let callbackHandler!: (e: ConfigurationChangeEvent) => Promise<void>;
             const workspaceService = {
-                onDidChangeConfiguration: (cb: (e: ConfigurationChangeEvent) => Promise<void>) =>
-                    (callbackHandler = cb),
+                onDidChangeConfiguration: (cb: (e: ConfigurationChangeEvent) => Promise<void>) => (callbackHandler = cb)
             } as any;
             const serviceContainerObject = createContainer();
             serviceContainer.setup((s) => s.get(typemoq.It.isValue(IWorkspaceService))).returns(() => workspaceService);

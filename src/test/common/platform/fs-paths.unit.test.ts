@@ -64,7 +64,7 @@ suite('FileSystem - Path Utils', () => {
                     // no upper-case
                     'c:\\users\\peter smith\\my documents\\test.txt',
                     // some upper-case
-                    'c:\\USERS\\Peter Smith\\my documents\\test.TXT',
+                    'c:\\USERS\\Peter Smith\\my documents\\test.TXT'
                 ].forEach((path1) => {
                     test(`True if paths are identical (type: ${item.name}) - ${path1}`, () => {
                         path1 = setNormCase(path1, 2);

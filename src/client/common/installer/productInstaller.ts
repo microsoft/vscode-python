@@ -25,7 +25,7 @@ import {
     IPersistentStateFactory,
     ModuleNamePurpose,
     Product,
-    ProductType,
+    ProductType
 } from '../types';
 import { isResource } from '../utils/misc';
 import { StopWatch } from '../utils/stopWatch';
@@ -255,14 +255,14 @@ export class LinterInstaller extends BaseInstaller {
         if (response === install) {
             sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, {
                 tool: productName as LinterId,
-                action: 'install',
+                action: 'install'
             });
             return this.install(product, resource, cancel);
         } else if (response === disableInstallPrompt) {
             await this.setStoredResponse(disableLinterInstallPromptKey, true);
             sendTelemetryEvent(EventName.LINTER_NOT_INSTALLED_PROMPT, undefined, {
                 tool: productName as LinterId,
-                action: 'disablePrompt',
+                action: 'disablePrompt'
             });
             return InstallerResponse.Ignore;
         }

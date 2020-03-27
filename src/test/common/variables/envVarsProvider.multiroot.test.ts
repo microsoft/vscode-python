@@ -11,7 +11,7 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import {
     IS_WINDOWS,
     NON_WINDOWS_PATH_VARIABLE_NAME,
-    WINDOWS_PATH_VARIABLE_NAME,
+    WINDOWS_PATH_VARIABLE_NAME
 } from '../../../client/common/platform/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IFileSystem } from '../../../client/common/platform/types';

@@ -59,7 +59,7 @@ suite('Terminals Activation - Pipenv', () => {
                 );
                 for (const interpreterType of nonPipInterpreterTypes) {
                     when(interpreterService.getActiveInterpreter(resource)).thenResolve({
-                        type: interpreterType,
+                        type: interpreterType
                     } as any);
 
                     for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
@@ -71,7 +71,7 @@ suite('Terminals Activation - Pipenv', () => {
             });
             test('pipenv shell is returned for pipenv interpeter', async () => {
                 when(interpreterService.getActiveInterpreter(resource)).thenResolve({
-                    type: InterpreterType.Pipenv,
+                    type: InterpreterType.Pipenv
                 } as any);
 
                 for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {
@@ -83,7 +83,7 @@ suite('Terminals Activation - Pipenv', () => {
             test('pipenv is properly escaped', async () => {
                 pipenvExecFile = 'my pipenv';
                 when(interpreterService.getActiveInterpreter(resource)).thenResolve({
-                    type: InterpreterType.Pipenv,
+                    type: InterpreterType.Pipenv
                 } as any);
 
                 for (const shell of getNamesAndValues<TerminalShellType>(TerminalShellType)) {

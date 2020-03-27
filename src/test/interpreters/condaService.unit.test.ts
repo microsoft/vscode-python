@@ -18,7 +18,7 @@ import {
     IInterpreterLocatorService,
     IInterpreterService,
     InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { IServiceContainer } from '../../client/ioc/types';
@@ -36,7 +36,7 @@ const info: PythonInterpreter = {
     type: InterpreterType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: '',
+    sysVersion: ''
 };
 
 suite('Interpreters Conda Service', () => {
@@ -228,7 +228,7 @@ suite('Interpreters Conda Service', () => {
             { name: 'Three', path: path.join(condaEnvsPath, 'three') },
             { name: 'Seven', path: path.join(condaEnvsPath, 'seven') },
             { name: 'Eight', path: path.join(condaEnvsPath, 'Eight 8') },
-            { name: 'nine 9', path: path.join(condaEnvsPath, 'nine 9') },
+            { name: 'nine 9', path: path.join(condaEnvsPath, 'nine 9') }
         ];
 
         platformService.setup((p) => p.isLinux).returns(() => isLinux);
@@ -250,7 +250,7 @@ suite('Interpreters Conda Service', () => {
             .returns(() => Promise.resolve(true));
         await checkCondaNameAndPathForCondaEnvironments(true, false, false, pythonPath, condaEnvDir, {
             name: 'One',
-            path: path.dirname(pythonPath),
+            path: path.dirname(pythonPath)
         });
     });
 
@@ -263,7 +263,7 @@ suite('Interpreters Conda Service', () => {
             .returns(() => Promise.resolve(true));
         await checkCondaNameAndPathForCondaEnvironments(true, false, false, pythonPath, condaEnvDir, {
             name: 'Eight',
-            path: path.dirname(pythonPath),
+            path: path.dirname(pythonPath)
         });
     });
 
@@ -278,7 +278,7 @@ suite('Interpreters Conda Service', () => {
             .returns(() => Promise.resolve(true));
         await checkCondaNameAndPathForCondaEnvironments(false, true, false, pythonPath, condaEnvDir, {
             name: 'One',
-            path: path.join(path.dirname(pythonPath), '..'),
+            path: path.join(path.dirname(pythonPath), '..')
         });
     });
 
@@ -293,7 +293,7 @@ suite('Interpreters Conda Service', () => {
             .returns(() => Promise.resolve(true));
         await checkCondaNameAndPathForCondaEnvironments(false, true, false, pythonPath, condaEnvDir, {
             name: 'Eight',
-            path: path.join(path.dirname(pythonPath), '..'),
+            path: path.join(path.dirname(pythonPath), '..')
         });
     });
 
@@ -308,7 +308,7 @@ suite('Interpreters Conda Service', () => {
             .returns(() => Promise.resolve(true));
         await checkCondaNameAndPathForCondaEnvironments(false, false, true, pythonPath, condaEnvDir, {
             name: 'One',
-            path: path.join(path.dirname(pythonPath), '..'),
+            path: path.join(path.dirname(pythonPath), '..')
         });
     });
 
@@ -323,7 +323,7 @@ suite('Interpreters Conda Service', () => {
             .returns(() => Promise.resolve(true));
         await checkCondaNameAndPathForCondaEnvironments(false, false, true, pythonPath, condaEnvDir, {
             name: 'Eight',
-            path: path.join(path.dirname(pythonPath), '..'),
+            path: path.join(path.dirname(pythonPath), '..')
         });
     });
 
@@ -336,7 +336,7 @@ suite('Interpreters Conda Service', () => {
             { name: 'Three', path: path.join(condaEnvsPath, 'three') },
             { name: 'Seven', path: path.join(condaEnvsPath, 'seven') },
             { name: 'Eight', path: path.join(condaEnvsPath, 'Eight 8') },
-            { name: 'nine 9', path: path.join(condaEnvsPath, 'nine 9') },
+            { name: 'nine 9', path: path.join(condaEnvsPath, 'nine 9') }
         ];
 
         platformService.setup((p) => p.isLinux).returns(() => false);
@@ -357,7 +357,7 @@ suite('Interpreters Conda Service', () => {
             'py27                     /Users/donjayamanne/anaconda3/envs/py27',
             'py36                     /Users/donjayamanne/anaconda3/envs/py36',
             'three                    /Users/donjayamanne/anaconda3/envs/three',
-            `newEnvironment           ${path.join(condaEnvsPath, 'newEnvironment')}`,
+            `newEnvironment           ${path.join(condaEnvsPath, 'newEnvironment')}`
         ];
 
         processService
@@ -384,7 +384,7 @@ suite('Interpreters Conda Service', () => {
             { name: 'Three', path: path.join(condaEnvsPath, 'three') },
             { name: 'Seven', path: path.join(condaEnvsPath, 'seven') },
             { name: 'Eight', path: path.join(condaEnvsPath, 'Eight 8') },
-            { name: 'nine 9', path: path.join(condaEnvsPath, 'nine 9') },
+            { name: 'nine 9', path: path.join(condaEnvsPath, 'nine 9') }
         ];
 
         platformService.setup((p) => p.isLinux).returns(() => false);
@@ -404,7 +404,7 @@ suite('Interpreters Conda Service', () => {
             'one two                  /Users/donjayamanne/anaconda3/envs/one two',
             'py27                     /Users/donjayamanne/anaconda3/envs/py27',
             'py36                     /Users/donjayamanne/anaconda3/envs/py36',
-            'three                    /Users/donjayamanne/anaconda3/envs/three',
+            'three                    /Users/donjayamanne/anaconda3/envs/three'
         ];
 
         processService
@@ -427,28 +427,28 @@ suite('Interpreters Conda Service', () => {
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: condaPythonExePath,
                 companyDisplayName: 'Two 2',
                 version: new SemVer('1.11.0'),
-                type: InterpreterType.Conda,
+                type: InterpreterType.Conda
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: InterpreterType.Unknown,
-            },
+                type: InterpreterType.Unknown
+            }
         ].map((item) => {
             return { ...info, ...item };
         });
@@ -480,49 +480,49 @@ suite('Interpreters Conda Service', () => {
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 1',
                 version: new SemVer('1.11.0'),
-                type: InterpreterType.Conda,
+                type: InterpreterType.Conda
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.11',
                 version: new SemVer('2.11.0'),
-                type: InterpreterType.Conda,
+                type: InterpreterType.Conda
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.31',
                 version: new SemVer('2.31.0'),
-                type: InterpreterType.Conda,
+                type: InterpreterType.Conda
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.21',
                 version: new SemVer('2.21.0'),
-                type: InterpreterType.Conda,
+                type: InterpreterType.Conda
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: InterpreterType.Unknown,
-            },
+                type: InterpreterType.Unknown
+            }
         ].map((item) => {
             return { ...info, ...item };
         });
@@ -551,49 +551,49 @@ suite('Interpreters Conda Service', () => {
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda1', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 1',
                 version: new SemVer('1.11.0'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda211', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.11',
                 version: new SemVer('2.11.0'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda231', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.31',
                 version: new SemVer('2.31.0'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: path.join(condaPythonExePath, 'conda221', 'Scripts', 'python.exe'),
                 companyDisplayName: 'Two 2.21',
                 version: new SemVer('2.21.0'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: InterpreterType.Unknown,
-            },
+                type: InterpreterType.Unknown
+            }
         ].map((item) => {
             return { ...info, ...item };
         });
@@ -692,7 +692,7 @@ suite('Interpreters Conda Service', () => {
         '~/anaconda2/bin/conda',
         '~/miniconda2/bin/conda',
         '~/anaconda3/bin/conda',
-        '~/miniconda3/bin/conda',
+        '~/miniconda3/bin/conda'
     ].forEach((knownLocation) => {
         test(`Must return conda path from known location '${knownLocation}' (non windows)`, async () => {
             const expectedCondaLocation = untildify(knownLocation);
@@ -744,11 +744,11 @@ suite('Interpreters Conda Service', () => {
         const expectedInfo = {
             envs: [
                 path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-                path.join(environmentsPath, 'conda', 'envs', 'scipy'),
+                path.join(environmentsPath, 'conda', 'envs', 'scipy')
             ],
             default_prefix: '',
             'sys.version':
-                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
+                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
         };
         processService
             .setup((p) => p.exec(TypeMoq.It.isValue('conda'), TypeMoq.It.isValue(['--version']), TypeMoq.It.isAny()))
@@ -821,7 +821,7 @@ suite('Interpreters Conda Service', () => {
             'one two                  /Users/donjayamanne/anaconda3/envs/one two',
             'py27                     /Users/donjayamanne/anaconda3/envs/py27',
             'py36                     /Users/donjayamanne/anaconda3/envs/py36',
-            'three                    /Users/donjayamanne/anaconda3/envs/three',
+            'three                    /Users/donjayamanne/anaconda3/envs/three'
         ];
 
         processService
@@ -873,28 +873,28 @@ suite('Interpreters Conda Service', () => {
                 path: path.join(environmentsPath, 'path1', 'one.exe'),
                 companyDisplayName: 'One 1',
                 version: new SemVer('1.0.0'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Anaconda',
                 path: condaPythonExePath,
                 companyDisplayName: 'Two 2',
                 version: new SemVer('1.11.0'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Three',
                 path: path.join(environmentsPath, 'path2', 'one.exe'),
                 companyDisplayName: 'Three 3',
                 version: new SemVer('2.10.1'),
-                type: InterpreterType.Unknown,
+                type: InterpreterType.Unknown
             },
             {
                 displayName: 'Seven',
                 path: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
                 companyDisplayName: 'Continuum Analytics, Inc.',
-                type: InterpreterType.Unknown,
-            },
+                type: InterpreterType.Unknown
+            }
         ].map((item) => {
             return { ...info, ...item };
         });
@@ -1022,26 +1022,26 @@ suite('Interpreters Conda Service', () => {
             pythonPath: path.join('users', 'foo', 'envs', 'test1', 'python'),
             environmentName: 'test1',
             isLinux: true,
-            expectedCondaPath: path.join('users', 'foo', 'bin', 'conda'),
+            expectedCondaPath: path.join('users', 'foo', 'bin', 'conda')
         },
         {
             pythonPath: path.join('users', 'foo', 'envs', 'test2', 'python'),
             environmentName: 'test2',
             isLinux: true,
-            expectedCondaPath: path.join('users', 'foo', 'envs', 'test2', 'conda'),
+            expectedCondaPath: path.join('users', 'foo', 'envs', 'test2', 'conda')
         },
         {
             pythonPath: path.join('users', 'foo', 'envs', 'test3', 'python'),
             environmentName: 'test3',
             isLinux: false,
-            expectedCondaPath: path.join('users', 'foo', 'Scripts', 'conda.exe'),
+            expectedCondaPath: path.join('users', 'foo', 'Scripts', 'conda.exe')
         },
         {
             pythonPath: path.join('users', 'foo', 'envs', 'test4', 'python'),
             environmentName: 'test4',
             isLinux: false,
-            expectedCondaPath: path.join('users', 'foo', 'conda.exe'),
-        },
+            expectedCondaPath: path.join('users', 'foo', 'conda.exe')
+        }
     ];
 
     testsForInterpreter.forEach((t) => {

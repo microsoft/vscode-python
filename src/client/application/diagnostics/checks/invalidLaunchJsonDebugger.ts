@@ -20,7 +20,7 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../type
 const messages = {
     [DiagnosticCodes.InvalidDebuggerTypeDiagnostic]: Diagnostics.invalidDebuggerTypeDiagnostic(),
     [DiagnosticCodes.JustMyCodeDiagnostic]: Diagnostics.justMyCodeDiagnostic(),
-    [DiagnosticCodes.ConsoleTypeDiagnostic]: Diagnostics.consoleTypeDiagnostic(),
+    [DiagnosticCodes.ConsoleTypeDiagnostic]: Diagnostics.consoleTypeDiagnostic()
 };
 
 export class InvalidLaunchJsonDebuggerDiagnostic extends BaseDiagnostic {
@@ -52,7 +52,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             [
                 DiagnosticCodes.InvalidDebuggerTypeDiagnostic,
                 DiagnosticCodes.JustMyCodeDiagnostic,
-                DiagnosticCodes.ConsoleTypeDiagnostic,
+                DiagnosticCodes.ConsoleTypeDiagnostic
             ],
             serviceContainer,
             disposableRegistry,
@@ -114,12 +114,12 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
                     diagnostic,
                     invoke: async (): Promise<void> => {
                         await this.fixLaunchJson(diagnostic.code);
-                    },
-                },
+                    }
+                }
             },
             {
-                prompt: Common.noIWillDoItLater(),
-            },
+                prompt: Common.noIWillDoItLater()
+            }
         ];
 
         await this.messageService.handle(diagnostic, { commandPrompts });

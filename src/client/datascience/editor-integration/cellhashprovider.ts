@@ -21,7 +21,7 @@ import {
     ICellHashListener,
     ICellHashProvider,
     IFileHashes,
-    IInteractiveWindowListener,
+    IInteractiveWindowListener
 } from '../types';
 
 interface IRangedCellHash extends ICellHash {
@@ -95,7 +95,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             .map((e) => {
                 return {
                     file: e[0],
-                    hashes: e[1].filter((h) => !h.deleted),
+                    hashes: e[1].filter((h) => !h.deleted)
                 };
             })
             .filter((e) => e.hashes.length > 0);
@@ -201,7 +201,7 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
                 code: hashedCode,
                 realCode,
                 runtimeLine,
-                id: cell.id,
+                id: cell.id
             };
 
             traceInfo(`Adding hash for ${expectedCount} = ${hash.hash} with ${stripped.length} lines`);

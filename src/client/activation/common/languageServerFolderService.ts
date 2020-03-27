@@ -16,7 +16,7 @@ import {
     FolderVersionPair,
     IDownloadChannelRule,
     ILanguageServerFolderService,
-    ILanguageServerPackageService,
+    ILanguageServerPackageService
 } from '../types';
 
 @injectable()

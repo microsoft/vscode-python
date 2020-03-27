@@ -118,7 +118,7 @@ export class MockJupyterSession implements IJupyterSession {
                 status: 'ok',
                 metadata: {},
                 found: true,
-                data: {}, // Could add variable values here?
+                data: {} // Could add variable values here?
             },
             channel: 'shell',
             header: {
@@ -127,7 +127,7 @@ export class MockJupyterSession implements IJupyterSession {
                 session: '1',
                 msg_id: '1',
                 msg_type: 'inspect_reply',
-                username: 'foo',
+                username: 'foo'
             },
             parent_header: {
                 date: 'foo',
@@ -135,9 +135,9 @@ export class MockJupyterSession implements IJupyterSession {
                 session: '1',
                 msg_id: '1',
                 msg_type: 'inspect_request',
-                username: 'foo',
+                username: 'foo'
             },
-            metadata: {},
+            metadata: {}
         });
     }
 
@@ -158,7 +158,7 @@ export class MockJupyterSession implements IJupyterSession {
                 cursor_start: 0,
                 cursor_end: 7,
                 status: 'ok',
-                metadata: {},
+                metadata: {}
             },
             channel: 'shell',
             header: {
@@ -167,10 +167,10 @@ export class MockJupyterSession implements IJupyterSession {
                 session: '1',
                 msg_id: '1',
                 msg_type: 'complete' as any,
-                date: '',
+                date: ''
             },
             parent_header: {},
-            metadata: {},
+            metadata: {}
         } as any;
     }
 
@@ -221,7 +221,7 @@ export class MockJupyterSession implements IJupyterSession {
             metadata,
             msgId,
             session: '1',
-            username: '1',
+            username: '1'
         });
 
         return {
@@ -234,7 +234,7 @@ export class MockJupyterSession implements IJupyterSession {
             removeMessageHook: noop,
             sendInputReply: noop,
             isDisposed: false,
-            dispose: noop,
+            dispose: noop
         };
     }
 
@@ -245,12 +245,12 @@ export class MockJupyterSession implements IJupyterSession {
             msgType: 'comm_info_reply',
             channel: 'shell',
             content: {
-                status: 'ok',
+                status: 'ok'
                 // tslint:disable-next-line: no-any
             } as any,
             metadata: {},
             session: '1',
-            username: '1',
+            username: '1'
         });
 
         return Promise.resolve(shellMessage);

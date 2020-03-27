@@ -19,7 +19,7 @@ import {
     IDataScienceCodeLensProvider,
     IInteractiveWindowListener,
     IJupyterExecution,
-    INotebook,
+    INotebook
 } from '../../../client/datascience/types';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { MockDocumentManager } from '../mockDocumentManager';
@@ -91,7 +91,7 @@ suite('DataScience gotocell tests', () => {
                 skipUsingDefaultConfig: !useDefaultConfig,
                 workingDir: testDir,
                 purpose: purpose ? purpose : Identifiers.HistoryPurpose,
-                allowUI: () => false,
+                allowUI: () => false
             });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
@@ -208,16 +208,16 @@ suite('DataScience gotocell tests', () => {
             [
                 {
                     code: `#%%\na=1\na`,
-                    result: 1,
+                    result: 1
                 },
                 {
                     code: `#%%\na+=1\na`,
-                    result: 2,
+                    result: 2
                 },
                 {
                     code: `#%%\na+=4\na`,
-                    result: 6,
-                },
+                    result: 6
+                }
             ],
             path.join(srcDirectory(), 'foo.py')
         );
@@ -243,20 +243,20 @@ suite('DataScience gotocell tests', () => {
             [
                 {
                     code: `#%%\na=1\na`,
-                    result: 1,
+                    result: 1
                 },
                 {
                     code: `#%%\na+=1\na`,
-                    result: 2,
+                    result: 2
                 },
                 {
                     code: `#%%\na+=4\na`,
-                    result: 6,
+                    result: 6
                 },
                 {
                     code: `#%%\n`,
-                    result: undefined,
-                },
+                    result: undefined
+                }
             ],
             filePath
         );

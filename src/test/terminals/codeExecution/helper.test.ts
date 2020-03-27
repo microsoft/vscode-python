@@ -42,7 +42,7 @@ suite('Terminal - Code Execution Helper', () => {
         sysPrefix: 'Python',
         displayName: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
 
     setup(() => {
@@ -117,7 +117,7 @@ suite('Terminal - Code Execution Helper', () => {
             '',
             '',
             'print(1)',
-            'print(2)',
+            'print(2)'
         ];
         const expectedCode = code.filter((line) => line.trim().length > 0).join(EOL);
         await ensureBlankLinesAreRemoved(code.join(EOL), expectedCode);
@@ -134,7 +134,7 @@ suite('Terminal - Code Execution Helper', () => {
             '',
             '',
             'print(1)',
-            'print(2)',
+            'print(2)'
         ];
         const actualProcessService = new ProcessService(new BufferDecoder());
         processService

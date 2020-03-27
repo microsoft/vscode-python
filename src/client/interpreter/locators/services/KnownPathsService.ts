@@ -9,7 +9,7 @@ import {
     IInterpreterHelper,
     IKnownSearchPathsForInterpreters,
     InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -73,7 +73,7 @@ export class KnownPathsService extends CacheableLocatorService {
         return {
             ...(details as PythonInterpreter),
             path: interpreter,
-            type: InterpreterType.Unknown,
+            type: InterpreterType.Unknown
         };
     }
 

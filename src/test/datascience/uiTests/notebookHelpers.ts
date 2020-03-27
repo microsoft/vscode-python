@@ -37,7 +37,7 @@ async function createNotebookFileWithContents(contents: string, disposables: IDi
             } catch {
                 noop();
             }
-        },
+        }
     });
     await fs.writeFile(notebookFile.filePath, contents);
     return notebookFile.filePath;
@@ -47,7 +47,7 @@ function createWebViewPanel(): WebviewPanel {
     const disposeEventEmitter = new EventEmitter<void>();
     const webViewPanel: Partial<WebviewPanel> = {
         webview: {
-            html: '',
+            html: ''
             // tslint:disable-next-line: no-any
         } as any,
         reveal: noop,
@@ -58,7 +58,7 @@ function createWebViewPanel(): WebviewPanel {
         active: true,
         options: {},
         visible: true,
-        viewColumn: ViewColumn.Active,
+        viewColumn: ViewColumn.Active
     };
 
     mockedVSCodeNamespaces.window

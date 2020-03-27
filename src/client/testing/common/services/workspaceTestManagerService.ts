@@ -7,7 +7,7 @@ import {
     ITestManagerService,
     ITestManagerServiceFactory,
     IWorkspaceTestManagerService,
-    UnitTestProduct,
+    UnitTestProduct
 } from './../types';
 
 @injectable()

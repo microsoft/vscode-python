@@ -122,7 +122,7 @@ export class CondaEnvFileService extends CacheableLocatorService {
             companyDisplayName: AnacondaCompanyName,
             type: InterpreterType.Conda,
             envPath: environmentPath,
-            envName,
+            envName
         };
     }
 }

@@ -55,7 +55,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
         const hkcuArch = this.platform.is64bit ? undefined : Architecture.x86;
         const promises: Promise<CompanyInterpreter[]>[] = [
             this.getCompanies(RegistryHive.HKCU, hkcuArch),
-            this.getCompanies(RegistryHive.HKLM, Architecture.x86),
+            this.getCompanies(RegistryHive.HKLM, Architecture.x86)
         ];
         // https://github.com/Microsoft/PTVS/blob/ebfc4ca8bab234d453f15ee426af3b208f3c143c/Python/Product/Cookiecutter/Shared/Interpreters/PythonRegistrySearch.cs#L44
         if (this.platform.is64bit) {
@@ -132,7 +132,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     Promise.resolve(installPath),
                     this.registry.getValue(key, hive, arch, 'ExecutablePath'),
                     this.registry.getValue(tagKey, hive, arch, 'SysVersion'),
-                    this.getCompanyDisplayName(companyKey, hive, arch),
+                    this.getCompanyDisplayName(companyKey, hive, arch)
                 ]).then(([installedPath, executablePath, version, companyDisplayName]) => {
                     companyDisplayName =
                         AnacondaCompanyNames.indexOf(companyDisplayName!) === -1
@@ -143,7 +143,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                         installPath: installedPath,
                         executablePath,
                         version,
-                        companyDisplayName,
+                        companyDisplayName
                     } as InterpreterInformation;
                 });
             })
@@ -179,7 +179,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     companyDisplayName: interpreterInfo.companyDisplayName,
                     type: this.windowsStoreInterpreter.isWindowsStoreInterpreter(executablePath)
                         ? InterpreterType.WindowsStore
-                        : InterpreterType.Unknown,
+                        : InterpreterType.Unknown
                 } as PythonInterpreter;
             })
             .then((interpreter) =>

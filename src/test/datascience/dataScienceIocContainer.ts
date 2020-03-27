@@ -19,7 +19,7 @@ import {
     Memento,
     Uri,
     WorkspaceFolder,
-    WorkspaceFoldersChangeEvent,
+    WorkspaceFoldersChangeEvent
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
@@ -46,22 +46,22 @@ import {
     ILanguageServerManager,
     ILanguageServerPackageService,
     ILanguageServerProxy,
-    LanguageServerType,
+    LanguageServerType
 } from '../../client/activation/types';
 import {
     LSNotSupportedDiagnosticService,
-    LSNotSupportedDiagnosticServiceId,
+    LSNotSupportedDiagnosticServiceId
 } from '../../client/application/diagnostics/checks/lsNotSupported';
 import { DiagnosticFilterService } from '../../client/application/diagnostics/filter';
 import {
     DiagnosticCommandPromptHandlerService,
     DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt,
+    MessageCommandPrompt
 } from '../../client/application/diagnostics/promptHandler';
 import {
     IDiagnosticFilterService,
     IDiagnosticHandlerService,
-    IDiagnosticsService,
+    IDiagnosticsService
 } from '../../client/application/diagnostics/types';
 import { ClipboardService } from '../../client/common/application/clipboard';
 import { TerminalManager } from '../../client/common/application/terminalManager';
@@ -79,7 +79,7 @@ import {
     IWebPanelMessageListener,
     IWebPanelOptions,
     IWebPanelProvider,
-    IWorkspaceService,
+    IWorkspaceService
 } from '../../client/common/application/types';
 import { WebPanel } from '../../client/common/application/webPanels/webPanel';
 import { WebPanelProvider } from '../../client/common/application/webPanels/webPanelProvider';
@@ -99,7 +99,7 @@ import {
     FormatterProductPathService,
     LinterProductPathService,
     RefactoringLibraryProductPathService,
-    TestFrameworkProductPathService,
+    TestFrameworkProductPathService
 } from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
@@ -116,7 +116,7 @@ import {
     IBufferDecoder,
     IProcessLogger,
     IProcessServiceFactory,
-    IPythonExecutionFactory,
+    IPythonExecutionFactory
 } from '../../client/common/process/types';
 import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../client/common/terminal/environmentActivationProviders/commandPrompt';
@@ -129,7 +129,7 @@ import {
     IShellDetector,
     ITerminalActivationCommandProvider,
     ITerminalHelper,
-    TerminalActivationProviders,
+    TerminalActivationProviders
 } from '../../client/common/terminal/types';
 import {
     BANNER_NAME_LS_SURVEY,
@@ -151,7 +151,7 @@ import {
     IsWindows,
     ProductType,
     Resource,
-    WORKSPACE_MEMENTO,
+    WORKSPACE_MEMENTO
 } from '../../client/common/types';
 import { Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -257,13 +257,13 @@ import {
     IPlotViewer,
     IPlotViewerProvider,
     IStatusProvider,
-    IThemeFinder,
+    IThemeFinder
 } from '../../client/datascience/types';
 import { ProtocolParser } from '../../client/debugger/debugAdapter/Common/protocolParser';
 import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
 import {
     EnvironmentActivationService,
-    EnvironmentActivationServiceCache,
+    EnvironmentActivationServiceCache
 } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
@@ -274,7 +274,7 @@ import {
     IInterpreterComparer,
     IInterpreterSelector,
     IPythonPathUpdaterServiceFactory,
-    IPythonPathUpdaterServiceManager,
+    IPythonPathUpdaterServiceManager
 } from '../../client/interpreter/configuration/types';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -300,7 +300,7 @@ import {
     PIPENV_SERVICE,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../client/interpreter/contracts';
 import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
@@ -312,11 +312,11 @@ import { CondaEnvFileService } from '../../client/interpreter/locators/services/
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
 import {
     CurrentPathService,
-    PythonInPathCommandProvider,
+    PythonInPathCommandProvider
 } from '../../client/interpreter/locators/services/currentPathService';
 import {
     GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService,
+    GlobalVirtualEnvService
 } from '../../client/interpreter/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
@@ -324,7 +324,7 @@ import { InterpreterFilter } from '../../client/interpreter/locators/services/in
 import { InterpreterWatcherBuilder } from '../../client/interpreter/locators/services/interpreterWatcherBuilder';
 import {
     KnownPathsService,
-    KnownSearchPathsForInterpreters,
+    KnownSearchPathsForInterpreters
 } from '../../client/interpreter/locators/services/KnownPathsService';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from '../../client/interpreter/locators/services/pipEnvServiceHelper';
@@ -332,7 +332,7 @@ import { WindowsRegistryService } from '../../client/interpreter/locators/servic
 import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import {
     WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService,
+    WorkspaceVirtualEnvService
 } from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
@@ -409,7 +409,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         sysPrefix: 'Python',
         displayName: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
     private workingPython2: PythonInterpreter = {
         path: '/foo/baz/python.exe',
@@ -418,7 +418,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         sysPrefix: 'Python',
         displayName: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
     private extraListeners: ((m: string, p: any) => void)[] = [];
 
@@ -563,7 +563,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [
-            ICellHashListener,
+            ICellHashListener
         ]);
         this.serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
         this.serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, TestNativeEditorProvider);
@@ -685,12 +685,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
         this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
         this.serviceManager.add<ICellHashLogger>(ICellHashLogger, CellHashLogger, undefined, [
-            INotebookExecutionLogger,
+            INotebookExecutionLogger
         ]);
         this.serviceManager.add<IGatherProvider>(IGatherProvider, GatherProvider);
         this.serviceManager.add<IGatherLogger>(IGatherLogger, GatherLogger, undefined, [INotebookExecutionLogger]);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory, undefined, [
-            IInteractiveWindowListener,
+            IInteractiveWindowListener
         ]);
         this.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
         this.serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
@@ -750,7 +750,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const progressReporter = mock(ProgressReporter);
         when(progressReporter.createProgressIndicator(anything())).thenReturn({
             dispose: noop,
-            token: new CancellationTokenSource().token,
+            token: new CancellationTokenSource().token
         });
         this.serviceManager.addSingletonInstance<ProgressReporter>(ProgressReporter, instance(progressReporter));
 
@@ -1066,7 +1066,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const dummyDisposable = {
             dispose: () => {
                 return;
-            },
+            }
         };
 
         appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(''));
@@ -1181,7 +1181,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.configChangeEvent.fire({
             affectsConfiguration(_s: string, _r?: Uri): boolean {
                 return true;
-            },
+            }
         });
     }
 
@@ -1353,7 +1353,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             debugJustMyCode: true,
             variableQueries: [],
             jupyterCommandLineArguments: [],
-            disableJupyterAutoStart: true,
+            disableJupyterAutoStart: true
         };
         pythonSettings.jediEnabled = false;
         pythonSettings.downloadLanguageServer = false;
@@ -1364,7 +1364,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             executeInFileDir: false,
             launchArgs: [],
             activateEnvironment: true,
-            activateEnvInCurrentTerminal: false,
+            activateEnvInCurrentTerminal: false
         };
 
         // Use these settings to default all of the settings in a python configuration
@@ -1473,7 +1473,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 // tslint:disable-next-line:no-any no-empty
                 getState: () => {
                     return {};
-                },
+                }
             };
         };
         // tslint:disable-next-line:no-string-literal

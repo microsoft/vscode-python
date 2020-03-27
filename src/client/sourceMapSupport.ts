@@ -55,7 +55,7 @@ export class SourceMapSupport {
         );
         await Promise.all([
             this.enableSourceMap(enable, extensionSourceFile),
-            this.enableSourceMap(enable, debuggerSourceFile),
+            this.enableSourceMap(enable, debuggerSourceFile)
         ]);
     }
     protected async enableSourceMap(enable: boolean, sourceFile: string) {

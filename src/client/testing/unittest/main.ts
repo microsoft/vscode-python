@@ -31,7 +31,7 @@ export class TestManager extends BaseTestManager {
             args,
             token: this.testDiscoveryCancellationToken!,
             ignoreCache,
-            outChannel: this.outputChannel,
+            outChannel: this.outputChannel
         };
     }
     public async runTest(
@@ -79,7 +79,7 @@ export class TestManager extends BaseTestManager {
             testsToRun,
             debug,
             token: this.testRunnerCancellationToken!,
-            outChannel: this.outputChannel,
+            outChannel: this.outputChannel
         };
         return this.runner.runTest(this.testResultsService, options, this);
     }

@@ -21,7 +21,7 @@ import {
     ExecutionResult,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    Output,
+    Output
 } from '../../client/common/process/types';
 import { IConfigurationService, IInstaller, Product } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
@@ -34,7 +34,7 @@ import {
     IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
-    IJupyterSessionManager,
+    IJupyterSessionManager
 } from '../../client/datascience/types';
 import { IInterpreterService, PythonInterpreter } from '../../client/interpreter/contracts';
 import { IServiceManager } from '../../client/ioc/types';
@@ -55,7 +55,7 @@ export enum SupportedCommands {
     nbconvert = 2,
     notebook = 4,
     kernelspec = 8,
-    all = 0xffff,
+    all = 0xffff
 }
 
 function createKernelSpecs(specs: { name: string; resourceDir: string }[]): Record<string, any> {
@@ -66,8 +66,8 @@ function createKernelSpecs(specs: { name: string; resourceDir: string }[]): Reco
             spec: {
                 name: spec.name,
                 display_name: spec.name,
-                language: 'python',
-            },
+                language: 'python'
+            }
         };
     });
     return models;
@@ -139,7 +139,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         // tslint:disable-next-line:no-octal-literal
         this.kernelSpecs.push({
             name: '0e8519db-0895-416c-96df-fa80131ecea0',
-            dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0',
+            dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
         });
 
         // Setup our default cells that happen for everything
@@ -278,7 +278,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             output_type: 'error',
             ename: message,
             evalue: message,
-            traceback: [message],
+            traceback: [message]
         };
 
         this.addCell(code, result);
@@ -293,7 +293,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const taggedResult = {
-                    output_type: 'generator',
+                    output_type: 'generator'
                 };
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;
                 data.outputs = [...data.outputs, taggedResult];
@@ -303,7 +303,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     const result = await resultGenerator(t);
                     return {
                         result: this.createStreamResult(result.result),
-                        haveMore: result.haveMore,
+                        haveMore: result.haveMore
                     };
                 };
 
@@ -336,7 +336,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
             if (c.data.cell_type === 'code') {
                 const taggedResult = {
-                    output_type: 'input',
+                    output_type: 'input'
                 };
                 const massagedResult = this.massageCellResult(result, mimeType);
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;
@@ -482,7 +482,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         return {
             output_type: 'stream',
             name: 'stdout',
-            text: str,
+            text: str
         };
     }
 
@@ -510,17 +510,17 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 output_type: 'execute_result',
                 execution_count: 1,
                 data: {},
-                metadata: {},
+                metadata: {}
             };
         } else if (mimeType && mimeType === 'clear_true') {
             return {
-                output_type: 'clear_true',
+                output_type: 'clear_true'
             };
         } else if (mimeType && mimeType === 'stream') {
             return {
                 output_type: 'stream',
                 text: result,
-                name: 'stdout',
+                name: 'stdout'
             };
         } else if (typeof result === 'string') {
             const data = {};
@@ -529,14 +529,14 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 output_type: 'execute_result',
                 execution_count: 1,
                 data: data,
-                metadata: {},
+                metadata: {}
             };
         } else if (typeof result === 'number') {
             return {
                 output_type: 'execute_result',
                 execution_count: 1,
                 data: { 'text/plain': result.toString() },
-                metadata: {},
+                metadata: {}
             };
         } else {
             return result;
@@ -551,7 +551,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         fs.writeJSONSync(filePath, {
             display_name: 'Python 3',
             language: 'python',
-            argv: [pythonPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [pythonPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}']
         });
         return filePath;
     }
@@ -591,7 +591,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             }),
             dispose: () => {
                 noop();
-            },
+            }
         };
 
         service.addExecObservableResult(['-m', module, ...args], () => result);
@@ -623,7 +623,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 }),
                 dispose: () => {
                     noop();
-                },
+                }
             };
         });
     }
@@ -664,7 +664,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 ['nbconvert', /.*/, '--to', 'python', '--stdout', '--template', /.*/],
                 () => {
                     return Promise.resolve({
-                        stdout: '#%%\r\nimport os\r\nos.chdir()\r\n#%%\r\na=1',
+                        stdout: '#%%\r\nimport os\r\nos.chdir()\r\n#%%\r\na=1'
                     });
                 }
             );
@@ -684,7 +684,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     '--no-browser',
                     /--notebook-dir=.*/,
                     /.*/,
-                    '--NotebookApp.iopub_data_rate_limit=10000000000.0',
+                    '--NotebookApp.iopub_data_rate_limit=10000000000.0'
                 ],
                 [],
                 notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'],
@@ -749,14 +749,14 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     '--name',
                     /\w+-\w+-\w+-\w+-\w+/,
                     '--display-name',
-                    `'Python Interactive'`,
+                    `'Python Interactive'`
                 ],
                 () => {
                     const spec = this.addKernelSpec(workingPython.path);
                     return Promise.resolve({
                         stdout: JSON.stringify(
                             createKernelSpecs([{ name: 'somename', resourceDir: path.dirname(spec) }])
-                        ),
+                        )
                     });
                 }
             );
@@ -786,7 +786,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     '--no-browser',
                     /--notebook-dir=.*/,
                     /.*/,
-                    '--NotebookApp.iopub_data_rate_limit=10000000000.0',
+                    '--NotebookApp.iopub_data_rate_limit=10000000000.0'
                 ],
                 [],
                 notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -800,7 +800,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     'notebook',
                     '--no-browser',
                     /--notebook-dir=.*/,
-                    '--NotebookApp.iopub_data_rate_limit=10000000000.0',
+                    '--NotebookApp.iopub_data_rate_limit=10000000000.0'
                 ],
                 [],
                 notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -841,7 +841,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     '--no-browser',
                     /--notebook-dir=.*/,
                     /.*/,
-                    '--NotebookApp.iopub_data_rate_limit=10000000000.0',
+                    '--NotebookApp.iopub_data_rate_limit=10000000000.0'
                 ],
                 [],
                 notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -855,7 +855,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                     'notebook',
                     '--no-browser',
                     /--notebook-dir=.*/,
-                    '--NotebookApp.iopub_data_rate_limit=10000000000.0',
+                    '--NotebookApp.iopub_data_rate_limit=10000000000.0'
                 ],
                 [],
                 notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -868,7 +868,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 ['-m', 'jupyter', 'nbconvert', /.*/, '--to', 'python', '--stdout', '--template', /.*/],
                 () => {
                     return Promise.resolve({
-                        stdout: '#%%\r\nimport os\r\nos.chdir()',
+                        stdout: '#%%\r\nimport os\r\nos.chdir()'
                     });
                 }
             );

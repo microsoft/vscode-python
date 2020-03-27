@@ -21,7 +21,7 @@ import {
     IBufferDecoder,
     IProcessLogger,
     IPythonExecutionFactory,
-    IPythonToolExecutionService,
+    IPythonToolExecutionService
 } from '../../client/common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../../client/common/types';
 import { IEnvironmentVariablesProvider } from '../../client/common/variables/types';
@@ -43,11 +43,11 @@ const linterConfigDirs = new Map<LinterId, string>([
     ['flake8', path.join(pythonFilesDir, 'flake8config')],
     ['pycodestyle', path.join(pythonFilesDir, 'pycodestyleconfig')],
     ['pydocstyle', path.join(pythonFilesDir, 'pydocstyleconfig27')],
-    ['pylint', path.join(pythonFilesDir, 'pylintconfig')],
+    ['pylint', path.join(pythonFilesDir, 'pylintconfig')]
 ]);
 const linterConfigRCFiles = new Map<LinterId, string>([
     ['pylint', '.pylintrc'],
-    ['pydocstyle', '.pydocstyle'],
+    ['pydocstyle', '.pydocstyle']
 ]);
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
@@ -58,7 +58,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'I0011',
         message: 'Locally disabling no-member (E1101)',
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 30,
@@ -67,7 +67,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'I0011',
         message: 'Locally disabling no-member (E1101)',
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 34,
@@ -76,7 +76,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'I0012',
         message: 'Locally enabling no-member (E1101)',
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 40,
@@ -85,7 +85,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'I0011',
         message: 'Locally disabling no-member (E1101)',
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 44,
@@ -94,7 +94,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'I0012',
         message: 'Locally enabling no-member (E1101)',
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 55,
@@ -103,7 +103,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'I0011',
         message: 'Locally disabling no-member (E1101)',
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 59,
@@ -112,7 +112,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'I0012',
         message: 'Locally enabling no-member (E1101)',
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 62,
@@ -121,7 +121,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'I0011',
         message: 'Locally disabling undefined-variable (E0602)',
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 70,
@@ -130,7 +130,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'I0011',
         message: 'Locally disabling no-member (E1101)',
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 84,
@@ -139,7 +139,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'I0011',
         message: 'Locally disabling no-member (E1101)',
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 87,
@@ -148,7 +148,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'C0304',
         message: 'Final newline missing',
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 11,
@@ -157,7 +157,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'W0613',
         message: "Unused argument 'arg'",
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 26,
@@ -166,7 +166,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'E1101',
         message: "Instance of 'Foo' has no 'blop' member",
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 36,
@@ -175,7 +175,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'E1101',
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 46,
@@ -184,7 +184,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'E1101',
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 61,
@@ -193,7 +193,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'E1101',
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 72,
@@ -202,7 +202,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'E1101',
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 75,
@@ -211,7 +211,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'E1101',
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 77,
@@ -220,7 +220,7 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'E1101',
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
-        type: 'warning',
+        type: 'warning'
     },
     {
         line: 83,
@@ -229,8 +229,8 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
         code: 'E1101',
         message: "Instance of 'Foo' has no 'blip' member",
         provider: '',
-        type: 'warning',
-    },
+        type: 'warning'
+    }
 ];
 const flake8MessagesToBeReturned: ILintMessage[] = [
     {
@@ -240,7 +240,7 @@ const flake8MessagesToBeReturned: ILintMessage[] = [
         code: 'E302',
         message: 'expected 2 blank lines, found 1',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 19,
@@ -249,7 +249,7 @@ const flake8MessagesToBeReturned: ILintMessage[] = [
         code: 'E127',
         message: 'continuation line over-indented for visual indent',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 24,
@@ -258,7 +258,7 @@ const flake8MessagesToBeReturned: ILintMessage[] = [
         code: 'E261',
         message: 'at least two spaces before inline comment',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 62,
@@ -267,7 +267,7 @@ const flake8MessagesToBeReturned: ILintMessage[] = [
         code: 'E261',
         message: 'at least two spaces before inline comment',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 70,
@@ -276,7 +276,7 @@ const flake8MessagesToBeReturned: ILintMessage[] = [
         code: 'E261',
         message: 'at least two spaces before inline comment',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 80,
@@ -285,7 +285,7 @@ const flake8MessagesToBeReturned: ILintMessage[] = [
         code: 'E303',
         message: 'too many blank lines (2)',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 87,
@@ -294,8 +294,8 @@ const flake8MessagesToBeReturned: ILintMessage[] = [
         code: 'W292',
         message: 'no newline at end of file',
         provider: '',
-        type: 'E',
-    },
+        type: 'E'
+    }
 ];
 const pycodestyleMessagesToBeReturned: ILintMessage[] = [
     {
@@ -305,7 +305,7 @@ const pycodestyleMessagesToBeReturned: ILintMessage[] = [
         code: 'E302',
         message: 'expected 2 blank lines, found 1',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 19,
@@ -314,7 +314,7 @@ const pycodestyleMessagesToBeReturned: ILintMessage[] = [
         code: 'E127',
         message: 'continuation line over-indented for visual indent',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 24,
@@ -323,7 +323,7 @@ const pycodestyleMessagesToBeReturned: ILintMessage[] = [
         code: 'E261',
         message: 'at least two spaces before inline comment',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 62,
@@ -332,7 +332,7 @@ const pycodestyleMessagesToBeReturned: ILintMessage[] = [
         code: 'E261',
         message: 'at least two spaces before inline comment',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 70,
@@ -341,7 +341,7 @@ const pycodestyleMessagesToBeReturned: ILintMessage[] = [
         code: 'E261',
         message: 'at least two spaces before inline comment',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 80,
@@ -350,7 +350,7 @@ const pycodestyleMessagesToBeReturned: ILintMessage[] = [
         code: 'E303',
         message: 'too many blank lines (2)',
         provider: '',
-        type: 'E',
+        type: 'E'
     },
     {
         line: 87,
@@ -359,8 +359,8 @@ const pycodestyleMessagesToBeReturned: ILintMessage[] = [
         code: 'W292',
         message: 'no newline at end of file',
         provider: '',
-        type: 'E',
-    },
+        type: 'E'
+    }
 ];
 const pydocstyleMessagesToBeReturned: ILintMessage[] = [
     {
@@ -370,7 +370,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 0,
         line: 1,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D400',
@@ -379,7 +379,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 0,
         line: 5,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D102',
@@ -388,7 +388,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 8,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D401',
@@ -397,7 +397,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 11,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D403',
@@ -406,7 +406,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 11,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D400',
@@ -415,7 +415,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 11,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D403',
@@ -424,7 +424,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 15,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D400',
@@ -433,7 +433,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 15,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D403',
@@ -442,7 +442,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 21,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D400',
@@ -451,7 +451,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 21,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D403',
@@ -460,7 +460,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 28,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D400',
@@ -469,7 +469,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 28,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D403',
@@ -478,7 +478,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 38,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D400',
@@ -487,7 +487,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 38,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D403',
@@ -496,7 +496,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 53,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D400',
@@ -505,7 +505,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 53,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D403',
@@ -514,7 +514,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 68,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D400',
@@ -523,7 +523,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 68,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D403',
@@ -532,7 +532,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 80,
         type: '',
-        provider: 'pydocstyle',
+        provider: 'pydocstyle'
     },
     {
         code: 'D400',
@@ -541,8 +541,8 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
         column: 4,
         line: 80,
         type: '',
-        provider: 'pydocstyle',
-    },
+        provider: 'pydocstyle'
+    }
 ];
 
 const filteredFlake8MessagesToBeReturned: ILintMessage[] = [
@@ -553,8 +553,8 @@ const filteredFlake8MessagesToBeReturned: ILintMessage[] = [
         code: 'W292',
         message: 'no newline at end of file',
         provider: '',
-        type: '',
-    },
+        type: ''
+    }
 ];
 const filteredPycodestyleMessagesToBeReturned: ILintMessage[] = [
     {
@@ -564,8 +564,8 @@ const filteredPycodestyleMessagesToBeReturned: ILintMessage[] = [
         code: 'W292',
         message: 'no newline at end of file',
         provider: '',
-        type: '',
-    },
+        type: ''
+    }
 ];
 
 function getMessages(product: Product): ILintMessage[] {
@@ -613,7 +613,7 @@ async function getInfoForConfig(product: Product) {
     return {
         filename,
         messagesToBeReceived,
-        origRCFile: basename ? path.join(dirname!, basename) : '',
+        origRCFile: basename ? path.join(dirname!, basename) : ''
     };
 }
 

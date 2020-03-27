@@ -24,7 +24,7 @@ import {
     IPythonExecutionService,
     ObservableExecutionResult,
     Output,
-    PythonVersionInfo,
+    PythonVersionInfo
 } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
@@ -93,7 +93,7 @@ suite('Daemon - Python Daemon Pool', () => {
             pythonPath: fullyQualifiedPythonPath,
             daemonModule: PythonDaemonModule,
             daemonCount: 2,
-            observableDaemonCount: 1,
+            observableDaemonCount: 1
         };
         pythonDaemonPool = new DaemonPool(logger, [], options, instance(pythonExecutionService), {}, 100);
         await pythonDaemonPool.initialize();
@@ -143,7 +143,7 @@ suite('Daemon - Python Daemon Pool', () => {
             path: fullyQualifiedPythonPath,
             version: parsePythonVersion(versionValue),
             sysVersion: json.sysVersion,
-            sysPrefix: json.sysPrefix,
+            sysPrefix: json.sysPrefix
         };
 
         const version = await pythonDaemonPool.getInterpreterInformation();
@@ -338,7 +338,7 @@ suite('Daemon - Python Daemon Pool', () => {
         const [result1, result2, result3] = await Promise.all([
             getStdOutFromObservable(output1),
             getStdOutFromObservable(output2),
-            getStdOutFromObservable(output3),
+            getStdOutFromObservable(output3)
         ]);
 
         // Two process ids are used to run the code (one process for a daemon, another for bogus puthon process).
@@ -380,7 +380,7 @@ suite('Daemon - Python Daemon Pool', () => {
 
         const [output1, output2] = await Promise.all([
             pythonDaemonPool.exec([fileToExecute], {}),
-            pythonDaemonPool.exec([fileToExecute], {}),
+            pythonDaemonPool.exec([fileToExecute], {})
         ]);
 
         // The pid for both processes will be different.
@@ -400,7 +400,7 @@ suite('Daemon - Python Daemon Pool', () => {
 
         let [pid1, pid2] = await Promise.all([
             pythonDaemonPool.exec([fileToExecute1], {}).then((out) => out.stdout.trim()),
-            pythonDaemonPool.exec([fileToExecute1], {}).then((out) => out.stdout.trim()),
+            pythonDaemonPool.exec([fileToExecute1], {}).then((out) => out.stdout.trim())
         ]);
 
         const processesUsedToRunCode = new Set<string>();
@@ -427,7 +427,7 @@ suite('Daemon - Python Daemon Pool', () => {
             pythonDaemonPool
                 .exec([fileToExecute2], {})
                 .then((out) => out.stdout.trim())
-                .catch(() => 'FAILED'),
+                .catch(() => 'FAILED')
         ]);
 
         // Confirm that one of the executions failed due to an error.
@@ -448,7 +448,7 @@ suite('Daemon - Python Daemon Pool', () => {
         // One of them will be new.
         [pid1, pid2] = await Promise.all([
             pythonDaemonPool.exec([fileToExecute1], {}).then((out) => out.stdout.trim()),
-            pythonDaemonPool.exec([fileToExecute1], {}).then((out) => out.stdout.trim()),
+            pythonDaemonPool.exec([fileToExecute1], {}).then((out) => out.stdout.trim())
         ]);
 
         // Keep track of the pids.

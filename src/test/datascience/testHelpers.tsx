@@ -33,12 +33,12 @@ export enum CellInputState {
     Hidden,
     Visible,
     Collapsed,
-    Expanded,
+    Expanded
 }
 
 export enum CellPosition {
     First = 'first',
-    Last = 'last',
+    Last = 'last'
 }
 
 type WaitForMessageOptions = {
@@ -336,13 +336,13 @@ export function createKeyboardEventForCell(event: Partial<IKeyboardEvent> & { co
             isFirstLine: false,
             isLastLine: false,
             isSuggesting: false,
-            clear: noop,
+            clear: noop
         },
         metaKey: false,
         preventDefault: noop,
         shiftKey: false,
         stopPropagation: noop,
-        target: {} as any,
+        target: {} as any
     };
 
     const defaultEditorInfo = defaultKeyboardEvent.editorInfo!;
@@ -352,8 +352,8 @@ export function createKeyboardEventForCell(event: Partial<IKeyboardEvent> & { co
         ...event,
         editorInfo: {
             ...defaultEditorInfo,
-            ...providedEditorInfo,
-        },
+            ...providedEditorInfo
+        }
     };
 }
 

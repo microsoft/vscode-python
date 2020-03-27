@@ -35,7 +35,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
         mockStorage?: MockMemento
     ): JupyterServerSelector {
         dsSettings = {
-            jupyterServerURI: Settings.JupyterServerLocalLaunch,
+            jupyterServerURI: Settings.JupyterServerLocalLaunch
             // tslint:disable-next-line: no-any
         } as any;
         clipboard = mock(ClipboardService);

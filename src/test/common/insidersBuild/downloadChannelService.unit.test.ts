@@ -14,7 +14,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import {
     ExtensionChannelService,
-    insidersChannelSetting,
+    insidersChannelSetting
 } from '../../../client/common/insidersBuild/downloadChannelService';
 import { ExtensionChannels } from '../../../client/common/insidersBuild/types';
 import { IConfigurationService } from '../../../client/common/types';
@@ -43,22 +43,22 @@ suite('Download channel service', () => {
         {
             testName: "Get channel returns 'off' if settings value is set to 'off'",
             settings: 'off',
-            expectedResult: 'off',
+            expectedResult: 'off'
         },
         {
             testName: "Get channel returns 'weekly' if settings value is set to 'weekly'",
             settings: 'weekly',
-            expectedResult: 'weekly',
+            expectedResult: 'weekly'
         },
         {
             testName: "Get channel returns 'daily' if settings value is set to 'daily'",
             settings: 'daily',
-            expectedResult: 'daily',
-        },
+            expectedResult: 'daily'
+        }
     ].forEach((testParams) => {
         test(testParams.testName, async () => {
             when(configService.getSettings()).thenReturn({
-                insidersChannel: testParams.settings as ExtensionChannels,
+                insidersChannel: testParams.settings as ExtensionChannels
             } as any);
             const result = channelService.getChannel();
             expect(result).to.equal(testParams.expectedResult);

@@ -52,7 +52,7 @@ export function createRemoteConnectionInfo(uri: string, settings: IDataScienceSe
         disconnected: (_l) => {
             return { dispose: noop };
         },
-        dispose: noop,
+        dispose: noop
     };
 }
 

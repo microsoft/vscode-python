@@ -20,7 +20,7 @@ import {
     INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo,
-    InterruptResult,
+    InterruptResult
 } from '../../types';
 import { JupyterNotebookBase } from '../jupyterNotebook';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
@@ -301,7 +301,7 @@ export class HostJupyterNotebook
                     // We need the results of this execute to end up in both the guest responses and the local responses
                     this.makeRequest(obj.code, file, obj.line, obj.id, false, [
                         this.localResponses,
-                        this.catchupResponses,
+                        this.catchupResponses
                     ]).ignoreErrors();
                 } catch (e) {
                     traceError(e);

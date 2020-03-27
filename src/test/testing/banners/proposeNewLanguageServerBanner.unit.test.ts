@@ -11,7 +11,7 @@ import { IApplicationShell } from '../../../client/common/application/types';
 import { IConfigurationService, IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 import {
     ProposeLanguageServerBanner,
-    ProposeLSStateKeys,
+    ProposeLSStateKeys
 } from '../../../client/languageServices/proposeLanguageServerBanner';
 
 suite('Propose New Language Server Banner', () => {

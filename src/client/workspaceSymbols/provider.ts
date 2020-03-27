@@ -7,7 +7,7 @@ import {
     Location,
     SymbolInformation,
     Uri,
-    WorkspaceSymbolProvider as IWorspaceSymbolProvider,
+    WorkspaceSymbolProvider as IWorspaceSymbolProvider
 } from 'vscode';
 import { ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';

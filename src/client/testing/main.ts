@@ -11,7 +11,7 @@ import {
     EventEmitter,
     OutputChannel,
     TextDocument,
-    Uri,
+    Uri
 } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import * as constants from '../common/constants';
@@ -23,7 +23,7 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IOutputChannel,
-    Resource,
+    Resource
 } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService } from '../interpreter/contracts';
@@ -40,7 +40,7 @@ import {
     TestFile,
     TestFunction,
     TestStatus,
-    TestsToRun,
+    TestsToRun
 } from './common/types';
 import {
     ITestConfigurationService,
@@ -48,7 +48,7 @@ import {
     ITestManagementService,
     ITestResultDisplay,
     TestWorkspaceFolder,
-    WorkspaceTestStatus,
+    WorkspaceTestStatus
 } from './types';
 
 // tslint:disable:no-any
@@ -585,7 +585,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
                 constants.Commands.Tests_Run_Current_File,
                 (_, cmdSource: CommandSource = CommandSource.commandPalette) => this.runCurrentTestFile(cmdSource)
             ),
-            commandManager.registerCommand(constants.Commands.Tests_Discovering, noop),
+            commandManager.registerCommand(constants.Commands.Tests_Discovering, noop)
         ];
 
         disposablesRegistry.push(...disposables);

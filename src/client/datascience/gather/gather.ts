@@ -149,7 +149,7 @@ function convertVscToGatherCell(cell: IVscCell): ppatypes.Cell | undefined {
             executionEventId: uuid(),
 
             persistentId: cell.id,
-            hasError: cell.state === CellState.error,
+            hasError: cell.state === CellState.error
             // tslint:disable-next-line: no-any
         } as any;
         return result;

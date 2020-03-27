@@ -9,7 +9,7 @@ import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget } from 'vscode';
 import {
     getCommandPromptLocation,
-    useCommandPromptAsDefaultShell,
+    useCommandPromptAsDefaultShell
 } from '../../../client/common/terminal/commandPrompt';
 import { IConfigurationService, ICurrentProcess } from '../../../client/common/types';
 

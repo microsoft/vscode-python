@@ -62,7 +62,7 @@ export class PythonReferenceProvider implements vscode.ReferenceProvider {
             command: proxy.CommandType.Usages,
             fileName: filename,
             columnIndex: columnIndex,
-            lineIndex: position.line,
+            lineIndex: position.line
         };
 
         if (document.isDirty) {

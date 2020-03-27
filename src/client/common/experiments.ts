@@ -21,7 +21,7 @@ import {
     IExperimentsManager,
     IOutputChannel,
     IPersistentState,
-    IPersistentStateFactory,
+    IPersistentStateFactory
 } from './types';
 import { sleep } from './utils/async';
 import { swallowExceptions } from './utils/decorators';
@@ -156,7 +156,7 @@ export class ExperimentsManager implements IExperimentsManager {
                         this._experimentsOptedOutFrom.includes(experiment.name)
                     ) {
                         sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                            expNameOptedOutOf: experiment.name,
+                            expNameOptedOutOf: experiment.name
                         });
                         continue;
                     }
@@ -165,7 +165,7 @@ export class ExperimentsManager implements IExperimentsManager {
                         this._experimentsOptedInto.includes(experiment.name)
                     ) {
                         sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, {
-                            expNameOptedInto: experiment.name,
+                            expNameOptedInto: experiment.name
                         });
                         this.userExperiments.push(experiment);
                     } else if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
@@ -303,7 +303,7 @@ export class ExperimentsManager implements IExperimentsManager {
             const success = await Promise.race([
                 // Download and store experiments in the storage for the current session
                 this.downloadAndStoreExperiments(this.experimentStorage).then(() => true),
-                sleep(this.experimentEffortTimeout).then(() => false),
+                sleep(this.experimentEffortTimeout).then(() => false)
             ]);
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
             return success;

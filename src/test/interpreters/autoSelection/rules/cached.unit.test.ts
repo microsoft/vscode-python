@@ -20,7 +20,7 @@ import { CachedInterpretersAutoSelectionRule } from '../../../../client/interpre
 import { SystemWideInterpretersAutoSelectionRule } from '../../../../client/interpreter/autoSelection/rules/system';
 import {
     IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService,
+    IInterpreterAutoSelectionService
 } from '../../../../client/interpreter/autoSelection/types';
 import { IInterpreterHelper, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';

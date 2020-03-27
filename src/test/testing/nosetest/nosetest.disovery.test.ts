@@ -35,7 +35,7 @@ const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(
 );
 const filesToDelete = [
     path.join(UNITTEST_TEST_FILES_PATH, '.noseids'),
-    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids'),
+    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')
 ];
 
 // tslint:disable-next-line:max-func-body-length
@@ -107,7 +107,7 @@ suite('Unit Tests - nose - discovery with mocked process output', () => {
                 );
                 callback({
                     out,
-                    source: 'stdout',
+                    source: 'stdout'
                 });
             }
         });

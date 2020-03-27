@@ -17,7 +17,7 @@ import {
     INotebookCompletion,
     INotebookExecutionLogger,
     INotebookServer,
-    InterruptResult,
+    InterruptResult
 } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
@@ -172,7 +172,7 @@ export class MockJupyterNotebook implements INotebook {
             metadata,
             msgId,
             session: '1',
-            username: '1',
+            username: '1'
         });
 
         return {
@@ -185,7 +185,7 @@ export class MockJupyterNotebook implements INotebook {
             removeMessageHook: noop,
             sendInputReply: noop,
             isDisposed: false,
-            dispose: noop,
+            dispose: noop
         };
     }
 
@@ -196,12 +196,12 @@ export class MockJupyterNotebook implements INotebook {
             msgType: 'comm_info_reply',
             channel: 'shell',
             content: {
-                status: 'ok',
+                status: 'ok'
                 // tslint:disable-next-line: no-any
             } as any,
             metadata: {},
             session: '1',
-            username: '1',
+            username: '1'
         });
 
         return Promise.resolve(shellMessage);

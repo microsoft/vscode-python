@@ -16,7 +16,7 @@ import { IServiceContainer } from '../../../../client/ioc/types';
 import { UNIT_TEST_PRODUCTS } from '../../../../client/testing/common/constants';
 import {
     BufferedTestConfigSettingsService,
-    TestConfigSettingsService,
+    TestConfigSettingsService
 } from '../../../../client/testing/common/services/configSettingService';
 import { UnitTestProduct } from '../../../../client/testing/common/types';
 import { ITestConfigSettingsService } from '../../../../client/testing/types';
@@ -26,7 +26,7 @@ use(chaiPromise);
 const updateMethods: (keyof Omit<ITestConfigSettingsService, 'getTestEnablingSetting'>)[] = [
     'updateTestArgs',
     'disable',
-    'enable',
+    'enable'
 ];
 
 suite('Unit Tests - ConfigSettingsService', () => {

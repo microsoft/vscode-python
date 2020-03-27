@@ -6,7 +6,7 @@ import { noop } from '../../../../client/common/utils/misc';
 import {
     IEditorContentChange,
     ILoadAllCells,
-    NotebookModelChange,
+    NotebookModelChange
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { splitMultilineString } from '../../../common';
@@ -17,7 +17,7 @@ import {
     extractInputText,
     getSelectedAndFocusedInfo,
     ICellViewModel,
-    IMainState,
+    IMainState
 } from '../../../interactive-common/mainState';
 import { queueIncomingActionWithPayload } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
@@ -49,7 +49,7 @@ export namespace Creation {
         queueIncomingActionWithPayload(arg, CommonActionType.ADD_NEW_CELL, { newCellId: arg.payload.data.newCellId });
         queueIncomingActionWithPayload(arg, CommonActionType.FOCUS_CELL, {
             cellId: arg.payload.data.newCellId,
-            cursorPos: CursorPos.Current,
+            cursorPos: CursorPos.Current
         });
         return arg.prevState;
     }
@@ -57,11 +57,11 @@ export namespace Creation {
     export function insertAboveAndFocusCell(arg: NativeEditorReducerArg<IAddCellAction & ICellAction>): IMainState {
         queueIncomingActionWithPayload(arg, CommonActionType.INSERT_ABOVE, {
             cellId: arg.payload.data.cellId,
-            newCellId: arg.payload.data.newCellId,
+            newCellId: arg.payload.data.newCellId
         });
         queueIncomingActionWithPayload(arg, CommonActionType.FOCUS_CELL, {
             cellId: arg.payload.data.newCellId,
-            cursorPos: CursorPos.Current,
+            cursorPos: CursorPos.Current
         });
         return arg.prevState;
     }
@@ -69,22 +69,22 @@ export namespace Creation {
     export function insertBelowAndFocusCell(arg: NativeEditorReducerArg<IAddCellAction & ICellAction>): IMainState {
         queueIncomingActionWithPayload(arg, CommonActionType.INSERT_BELOW, {
             cellId: arg.payload.data.cellId,
-            newCellId: arg.payload.data.newCellId,
+            newCellId: arg.payload.data.newCellId
         });
         queueIncomingActionWithPayload(arg, CommonActionType.FOCUS_CELL, {
             cellId: arg.payload.data.newCellId,
-            cursorPos: CursorPos.Current,
+            cursorPos: CursorPos.Current
         });
         return arg.prevState;
     }
 
     export function insertAboveFirstAndFocusCell(arg: NativeEditorReducerArg<IAddCellAction>): IMainState {
         queueIncomingActionWithPayload(arg, CommonActionType.INSERT_ABOVE_FIRST, {
-            newCellId: arg.payload.data.newCellId,
+            newCellId: arg.payload.data.newCellId
         });
         queueIncomingActionWithPayload(arg, CommonActionType.FOCUS_CELL, {
             cellId: arg.payload.data.newCellId,
-            cursorPos: CursorPos.Current,
+            cursorPos: CursorPos.Current
         });
         return arg.prevState;
     }
@@ -105,7 +105,7 @@ export namespace Creation {
         const result = {
             ...arg.prevState,
             undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
-            cellVMs: newList,
+            cellVMs: newList
         };
 
         // Send a messsage that we inserted a cell
@@ -131,7 +131,7 @@ export namespace Creation {
         const result = {
             ...arg.prevState,
             undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
-            cellVMs: newList,
+            cellVMs: newList
         };
 
         // Send a messsage that we inserted a cell
@@ -147,7 +147,7 @@ export namespace Creation {
         // Do what an insertAbove does
         return insertAbove({
             ...arg,
-            payload: { ...arg.payload, data: { cellId: firstCellId, newCellId: arg.payload.data.newCellId } },
+            payload: { ...arg.payload, data: { cellId: firstCellId, newCellId: arg.payload.data.newCellId } }
         });
     }
 
@@ -159,9 +159,9 @@ export namespace Creation {
                 ...arg.payload,
                 data: {
                     cellId: getSelectedAndFocusedInfo(arg.prevState).selectedCellId,
-                    newCellId: arg.payload.data.newCellId,
-                },
-            },
+                    newCellId: arg.payload.data.newCellId
+                }
+            }
         });
     }
 
@@ -190,7 +190,7 @@ export namespace Creation {
             focused: false,
             cursorPos: CursorPos.Current,
             hasBeenRun: false,
-            scrollCount: 0,
+            scrollCount: 0
         };
 
         Transfer.postModelRemoveAll(arg, newVM.cell.id);
@@ -198,7 +198,7 @@ export namespace Creation {
         return {
             ...arg.prevState,
             cellVMs: [newVM],
-            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
+            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs)
         };
     }
 
@@ -224,7 +224,7 @@ export namespace Creation {
             return Effects.focusCell({
                 ...arg,
                 prevState: { ...arg.prevState, cellVMs: newVMs },
-                payload: { ...arg.payload, data: { cursorPos: CursorPos.Current, cellId: arg.payload.data.id } },
+                payload: { ...arg.payload, data: { cursorPos: CursorPos.Current, cellId: arg.payload.data.id } }
             });
         }
         return arg.prevState;
@@ -245,7 +245,7 @@ export namespace Creation {
                 focused: cells[0].focused,
                 cursorPos: CursorPos.Current,
                 hasBeenRun: false,
-                scrollCount: 0,
+                scrollCount: 0
             };
 
             // Send messages to other side to indicate the new add
@@ -255,7 +255,7 @@ export namespace Creation {
             return {
                 ...arg.prevState,
                 undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
-                cellVMs: [newVM],
+                cellVMs: [newVM]
             };
         } else if (arg.payload.data.cellId) {
             // Otherwise just a straight delete
@@ -275,7 +275,7 @@ export namespace Creation {
                         newVMs[nextOrPrev] = {
                             ...newVMs[nextOrPrev],
                             selected: true,
-                            focused: previousSelection.focusedCellId === arg.payload.data.cellId,
+                            focused: previousSelection.focusedCellId === arg.payload.data.cellId
                         };
                     }
                 }
@@ -284,7 +284,7 @@ export namespace Creation {
                     ...arg.prevState,
                     cellVMs: newVMs,
                     undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
-                    skipNextScroll: true,
+                    skipNextScroll: true
                 };
             }
         }
@@ -300,7 +300,7 @@ export namespace Creation {
             loadTotal: arg.payload.data.cells.length,
             undoStack: [],
             cellVMs: vms,
-            loaded: true,
+            loaded: true
         };
     }
 
@@ -309,7 +309,7 @@ export namespace Creation {
             ...arg.prevState,
             cellVMs: [],
             undoStack: [],
-            redoStack: [],
+            redoStack: []
         };
     }
 
@@ -321,17 +321,17 @@ export namespace Creation {
             case 'clear':
                 return loadAllCells({
                     ...disabledQueueArg,
-                    payload: { ...arg.payload, data: { cells: arg.payload.data.oldCells } },
+                    payload: { ...arg.payload, data: { cells: arg.payload.data.oldCells } }
                 });
             case 'edit':
                 return applyCellEdit({
                     ...disabledQueueArg,
-                    payload: { ...arg.payload, data: { id: arg.payload.data.id, changes: arg.payload.data.reverse } },
+                    payload: { ...arg.payload, data: { id: arg.payload.data.id, changes: arg.payload.data.reverse } }
                 });
             case 'insert':
                 return deleteCell({
                     ...disabledQueueArg,
-                    payload: { ...arg.payload, data: { cellId: arg.payload.data.cell.id } },
+                    payload: { ...arg.payload, data: { cellId: arg.payload.data.cell.id } }
                 });
             case 'remove':
                 const cellBelow =
@@ -342,13 +342,13 @@ export namespace Creation {
                     ...disabledQueueArg,
                     payload: {
                         ...arg.payload,
-                        data: { newCellId: arg.payload.data.cell.id, cellId: cellBelow ? cellBelow.id : undefined },
-                    },
+                        data: { newCellId: arg.payload.data.cell.id, cellId: cellBelow ? cellBelow.id : undefined }
+                    }
                 });
             case 'remove_all':
                 return loadAllCells({
                     ...disabledQueueArg,
-                    payload: { ...arg.payload, data: { cells: arg.payload.data.oldCells } },
+                    payload: { ...arg.payload, data: { cells: arg.payload.data.oldCells } }
                 });
             case 'swap':
                 return Movement.swapCells({
@@ -357,9 +357,9 @@ export namespace Creation {
                         ...arg.payload,
                         data: {
                             firstCellId: arg.payload.data.secondCellId,
-                            secondCellId: arg.payload.data.firstCellId,
-                        },
-                    },
+                            secondCellId: arg.payload.data.firstCellId
+                        }
+                    }
                 });
             case 'modify':
                 // Undo for modify should reapply the outputs. Go through each and apply the update
@@ -368,7 +368,7 @@ export namespace Creation {
                     result = updateCell({
                         ...disabledQueueArg,
                         prevState: result,
-                        payload: { ...arg.payload, data: c },
+                        payload: { ...arg.payload, data: c }
                     });
                 });
                 return result;
@@ -392,25 +392,25 @@ export namespace Creation {
             case 'edit':
                 return applyCellEdit({
                     ...disabledQueueArg,
-                    payload: { ...arg.payload, data: { id: arg.payload.data.id, changes: arg.payload.data.forward } },
+                    payload: { ...arg.payload, data: { id: arg.payload.data.id, changes: arg.payload.data.forward } }
                 });
             case 'insert':
                 return insertAbove({
                     ...disabledQueueArg,
                     payload: {
                         ...arg.payload,
-                        data: { newCellId: arg.payload.data.cell.id, cellId: arg.payload.data.codeCellAboveId },
-                    },
+                        data: { newCellId: arg.payload.data.cell.id, cellId: arg.payload.data.codeCellAboveId }
+                    }
                 });
             case 'remove':
                 return deleteCell({
                     ...disabledQueueArg,
-                    payload: { ...arg.payload, data: { cellId: arg.payload.data.cell.id } },
+                    payload: { ...arg.payload, data: { cellId: arg.payload.data.cell.id } }
                 });
             case 'remove_all':
                 return deleteAllCells({
                     ...disabledQueueArg,
-                    payload: { ...arg.payload, data: { newCellId: arg.payload.data.newCellId } },
+                    payload: { ...arg.payload, data: { newCellId: arg.payload.data.newCellId } }
                 });
             case 'swap':
                 return Movement.swapCells({
@@ -419,9 +419,9 @@ export namespace Creation {
                         ...arg.payload,
                         data: {
                             firstCellId: arg.payload.data.secondCellId,
-                            secondCellId: arg.payload.data.firstCellId,
-                        },
-                    },
+                            secondCellId: arg.payload.data.firstCellId
+                        }
+                    }
                 });
             case 'modify':
                 // Redo for modify should reapply the outputs. Go through each and apply the update
@@ -430,7 +430,7 @@ export namespace Creation {
                     result = updateCell({
                         ...disabledQueueArg,
                         prevState: result,
-                        payload: { ...arg.payload, data: c },
+                        payload: { ...arg.payload, data: c }
                     });
                 });
                 return result;

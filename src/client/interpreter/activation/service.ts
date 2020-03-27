@@ -32,12 +32,12 @@ const defaultShells = {
     [OSType.Windows]: { shell: 'cmd', shellType: TerminalShellType.commandPrompt },
     [OSType.OSX]: { shell: 'bash', shellType: TerminalShellType.bash },
     [OSType.Linux]: { shell: 'bash', shellType: TerminalShellType.bash },
-    [OSType.Unknown]: undefined,
+    [OSType.Unknown]: undefined
 };
 
 const condaRetryMessages = [
     'The process cannot access the file because it is being used by another process',
-    'The directory is not empty',
+    'The directory is not empty'
 ];
 
 /**
@@ -199,7 +199,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                         shell: shellInfo.shell,
                         timeout: getEnvironmentTimeout,
                         maxBuffer: 1000 * 1000,
-                        throwOnStdErr: false,
+                        throwOnStdErr: false
                     });
                     if (result.stderr && result.stderr.length > 0) {
                         throw new Error(`StdErr from ShellExec, ${result.stderr} for ${command}`);
@@ -231,7 +231,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             traceError('getActivatedEnvironmentVariables', e);
             sendTelemetryEvent(EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED, undefined, {
                 isPossiblyCondaEnv,
-                terminal: shellInfo.shellType,
+                terminal: shellInfo.shellType
             });
 
             // Some callers want this to bubble out, others don't

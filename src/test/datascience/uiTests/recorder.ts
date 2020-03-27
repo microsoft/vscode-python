@@ -50,7 +50,7 @@ export class TestRecorder {
         }
         const messages = JSON.stringify(this.messages, undefined, 4);
         await fs.writeFile(this.file, messages, {
-            encoding: 'utf8',
+            encoding: 'utf8'
         });
     }
     private initialize() {

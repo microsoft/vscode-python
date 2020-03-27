@@ -32,13 +32,13 @@ export namespace Effects {
                         prevState,
                         payload: {
                             ...arg.payload,
-                            data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id },
-                        },
+                            data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id }
+                        }
                     });
                     prevState = deselectCell({
                         ...arg,
                         prevState,
-                        payload: { ...arg.payload, data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } },
+                        payload: { ...arg.payload, data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } }
                     });
                 }
             }
@@ -52,13 +52,13 @@ export namespace Effects {
                     ...newVMs[addFocusIndex],
                     focused: true,
                     selected: true,
-                    cursorPos: arg.payload.data.cursorPos,
+                    cursorPos: arg.payload.data.cursorPos
                 };
             }
 
             return {
                 ...prevState,
-                cellVMs: newVMs,
+                cellVMs: newVMs
             };
         }
 
@@ -74,7 +74,7 @@ export namespace Effects {
             const current = arg.prevState.cellVMs[index];
             const newCell = {
                 ...current,
-                focused: false,
+                focused: false
             };
 
             // tslint:disable-next-line: no-any
@@ -82,14 +82,14 @@ export namespace Effects {
 
             return {
                 ...arg.prevState,
-                cellVMs: newVMs,
+                cellVMs: newVMs
             };
         } else if (index >= 0) {
             // Dont change focus state if not the focused cell. Just update the code.
             const newVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];
             const newCell = {
-                ...current,
+                ...current
             };
 
             // tslint:disable-next-line: no-any
@@ -97,7 +97,7 @@ export namespace Effects {
 
             return {
                 ...arg.prevState,
-                cellVMs: newVMs,
+                cellVMs: newVMs
             };
         }
 
@@ -112,7 +112,7 @@ export namespace Effects {
             const target = arg.prevState.cellVMs[index];
             const newCell = {
                 ...target,
-                selected: false,
+                selected: false
             };
 
             // tslint:disable-next-line: no-any
@@ -120,7 +120,7 @@ export namespace Effects {
 
             return {
                 ...arg.prevState,
-                cellVMs: newVMs,
+                cellVMs: newVMs
             };
         }
 
@@ -155,13 +155,13 @@ export namespace Effects {
                     prevState,
                     payload: {
                         ...arg.payload,
-                        data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id },
-                    },
+                        data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id }
+                    }
                 });
                 prevState = deselectCell({
                     ...arg,
                     prevState,
-                    payload: { ...arg.payload, data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } },
+                    payload: { ...arg.payload, data: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } }
                 });
             }
 
@@ -172,13 +172,13 @@ export namespace Effects {
                     focused:
                         typeof shouldFocusCell === 'boolean' ? shouldFocusCell : someOtherCellWasFocusedAndSelected,
                     selected: true,
-                    cursorPos: arg.payload.data.cursorPos,
+                    cursorPos: arg.payload.data.cursorPos
                 };
             }
 
             return {
                 ...prevState,
-                cellVMs: newVMs,
+                cellVMs: newVMs
             };
         }
         return arg.prevState;
@@ -191,7 +191,7 @@ export namespace Effects {
             newVMs[index] = { ...newVMs[index], showLineNumbers: !newVMs[index].showLineNumbers };
             return {
                 ...arg.prevState,
-                cellVMs: newVMs,
+                cellVMs: newVMs
             };
         }
         return arg.prevState;
@@ -204,7 +204,7 @@ export namespace Effects {
             newVMs[index] = { ...newVMs[index], hideOutput: !newVMs[index].hideOutput };
             return {
                 ...arg.prevState,
-                cellVMs: newVMs,
+                cellVMs: newVMs
             };
         }
         return arg.prevState;
@@ -240,8 +240,8 @@ export namespace Effects {
             editorOptions: { ...newEditorOptions, lineDecorationsWidth: 5 },
             font: {
                 size: newFontSize,
-                family: newFontFamily,
-            },
+                family: newFontFamily
+            }
         };
     }
 }

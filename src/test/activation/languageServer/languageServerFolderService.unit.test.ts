@@ -29,7 +29,7 @@ suite('Language Server Folder Service', () => {
         let getCurrentLanguageServerDirectory: sinon.SinonStub<any>;
         const currentLSDirectory = {
             path: 'path/to/currentLSDirectoryName',
-            version: new semver.SemVer('1.2.3'),
+            version: new semver.SemVer('1.2.3')
         };
         let languageServerPackageService: TypeMoq.IMock<ILanguageServerPackageService>;
         setup(() => {
@@ -88,7 +88,7 @@ suite('Language Server Folder Service', () => {
             const nugetPackage = {
                 package: 'packageName',
                 version: new semver.SemVer('1.1.3'),
-                uri: 'nugetUri',
+                uri: 'nugetUri'
             };
             languageServerPackageService
                 .setup((l) => l.getLatestNugetPackageVersion(resource))
@@ -112,7 +112,7 @@ suite('Language Server Folder Service', () => {
             const nugetPackage = {
                 package: 'packageName',
                 version: new semver.SemVer('1.3.2'),
-                uri: 'nugetUri',
+                uri: 'nugetUri'
             };
             languageServerPackageService
                 .setup((l) => l.getLatestNugetPackageVersion(resource, '0.0.0'))
@@ -134,7 +134,7 @@ suite('Language Server Folder Service', () => {
         let downloadChannelRule: TypeMoq.IMock<IDownloadChannelRule>;
         const currentLSDirectory = {
             path: 'path/to/currentLSDirectoryName',
-            version: new semver.SemVer('1.2.3'),
+            version: new semver.SemVer('1.2.3')
         };
         setup(() => {
             configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -157,7 +157,7 @@ suite('Language Server Folder Service', () => {
         test('Returns false if current folder is provided and setting `python.downloadLanguageServer` is set to false', async () => {
             const settings = {
                 downloadLanguageServer: false,
-                autoUpdateLanguageServer: true,
+                autoUpdateLanguageServer: true
             };
             configurationService
                 .setup((c) => c.getSettings())
@@ -170,7 +170,7 @@ suite('Language Server Folder Service', () => {
         test('Returns false if current folder is provided and setting `python.autoUpdateLanguageServer` is set to false', async () => {
             const settings = {
                 downloadLanguageServer: true,
-                autoUpdateLanguageServer: false,
+                autoUpdateLanguageServer: false
             };
             configurationService
                 .setup((c) => c.getSettings())
@@ -183,7 +183,7 @@ suite('Language Server Folder Service', () => {
         test('Returns whatever the rule to infer LS returns otherwise', async () => {
             const settings = {
                 downloadLanguageServer: true,
-                autoUpdateLanguageServer: false,
+                autoUpdateLanguageServer: false
             };
             configurationService
                 .setup((c) => c.getSettings())
@@ -215,11 +215,11 @@ suite('Language Server Folder Service', () => {
 
         test('Returns the expected LS directory if setting `python.downloadLanguageServer` is set to false', async () => {
             const settings = {
-                downloadLanguageServer: false,
+                downloadLanguageServer: false
             };
             const expectedLSDirectory = {
                 path: 'languageServer',
-                version: new semver.SemVer('0.0.0'),
+                version: new semver.SemVer('0.0.0')
             };
             configurationService
                 .setup((c) => c.getSettings())
@@ -231,7 +231,7 @@ suite('Language Server Folder Service', () => {
 
         test('Returns `undefined` if no LS directory exists', async () => {
             const settings = {
-                downloadLanguageServer: true,
+                downloadLanguageServer: true
             };
             const directories = ['path/to/directory1', 'path/to/directory2'];
             configurationService
@@ -245,18 +245,18 @@ suite('Language Server Folder Service', () => {
 
         test('Returns the LS directory with highest version if multiple LS directories exists', async () => {
             const settings = {
-                downloadLanguageServer: true,
+                downloadLanguageServer: true
             };
             const directories = [
                 'path/to/languageServer',
                 'path/to/languageServer.0.9.3',
                 'path/to/languageServer.1.0.7',
                 'path/to/languageServer.1.2.3',
-                'path/to/languageServer.1.2.3.5',
+                'path/to/languageServer.1.2.3.5'
             ];
             const expectedLSDirectory = {
                 path: 'path/to/languageServer.1.2.3',
-                version: semver.parse('1.2.3', true)!,
+                version: semver.parse('1.2.3', true)!
             };
             configurationService
                 .setup((c) => c.getSettings())

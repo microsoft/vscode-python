@@ -16,7 +16,7 @@ import {
     IApplicationShell,
     ICommandManager,
     IDocumentManager,
-    IWorkspaceService,
+    IWorkspaceService
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';

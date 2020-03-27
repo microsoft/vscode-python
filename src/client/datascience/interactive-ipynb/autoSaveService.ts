@@ -97,7 +97,7 @@ export class AutoSaveService implements IInteractiveWindowListener {
         const filesConfig = this.workspace.getConfiguration('files', this.notebookUri);
         return {
             autoSave: filesConfig.get('autoSave', 'off'),
-            autoSaveDelay: filesConfig.get('autoSaveDelay', 1000),
+            autoSaveDelay: filesConfig.get('autoSaveDelay', 1000)
         };
     }
     private onSettingsChanded(e: ConfigurationChangeEvent) {

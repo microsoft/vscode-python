@@ -30,7 +30,7 @@ export class TerminalProvider implements Disposable {
                 await terminalActivator.activateEnvironmentInTerminal(currentTerminal, { preserveFocus: true });
             }
             sendTelemetryEvent(EventName.ACTIVATE_ENV_IN_CURRENT_TERMINAL, undefined, {
-                isTerminalVisible: currentTerminal ? true : false,
+                isTerminalVisible: currentTerminal ? true : false
             });
         }
     }

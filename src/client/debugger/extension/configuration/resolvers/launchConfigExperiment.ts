@@ -50,7 +50,7 @@ export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigura
                     );
                     sendTelemetryEvent(EventName.PYTHON_WEB_APP_RELOAD, undefined, {
                         subProcessModified,
-                        argsModified,
+                        argsModified
                     });
                 }
             } else {

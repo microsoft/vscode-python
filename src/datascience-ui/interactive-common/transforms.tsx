@@ -108,7 +108,7 @@ const mimeTypeToImport: TransformData[] = [
     new TransformData('text/plain', async () => {
         const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
         return module.TextTransform;
-    }),
+    })
 ];
 
 export function getRichestMimetype(data: any): string {

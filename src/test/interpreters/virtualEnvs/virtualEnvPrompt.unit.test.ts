@@ -17,7 +17,7 @@ import {
     IInterpreterHelper,
     IInterpreterLocatorService,
     IInterpreterWatcherBuilder,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../client/interpreter/helpers';
 import { CacheableLocatorService } from '../../../client/interpreter/locators/services/cacheableLocatorService';
@@ -70,7 +70,7 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [
             InteractiveShiftEnterBanner.bannerLabelYes(),
             InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain(),
+            Common.doNotShowAgain()
         ];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         // tslint:disable:no-any
@@ -96,7 +96,7 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [
             InteractiveShiftEnterBanner.bannerLabelYes(),
             InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain(),
+            Common.doNotShowAgain()
         ];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
@@ -133,7 +133,7 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [
             InteractiveShiftEnterBanner.bannerLabelYes(),
             InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain(),
+            Common.doNotShowAgain()
         ];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
@@ -175,7 +175,7 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [
             InteractiveShiftEnterBanner.bannerLabelYes(),
             InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain(),
+            Common.doNotShowAgain()
         ];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
@@ -201,7 +201,7 @@ suite('Virtual Environment Prompt', () => {
         const prompts = [
             InteractiveShiftEnterBanner.bannerLabelYes(),
             InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.doNotShowAgain(),
+            Common.doNotShowAgain()
         ];
         const notificationPromptEnabled = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(

@@ -17,7 +17,7 @@ import {
     IJupyterSessionManagerFactory,
     INotebook,
     INotebookServer,
-    INotebookServerLaunchInfo,
+    INotebookServerLaunchInfo
 } from '../../types';
 import { GuestJupyterNotebook } from './guestJupyterNotebook';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';

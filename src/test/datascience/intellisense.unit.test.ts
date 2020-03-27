@@ -15,7 +15,7 @@ import { IntellisenseProvider } from '../../client/datascience/interactive-commo
 import {
     IEditorContentChange,
     IInteractiveWindowMapping,
-    InteractiveWindowMessages,
+    InteractiveWindowMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, INotebookProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
@@ -97,7 +97,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             newDirty: true,
             fullText: code,
             currentText: code,
-            cell,
+            cell
         });
         cells.splice(cells.length - 1, 0, cell);
         return result;
@@ -113,7 +113,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             getPositionAt: (o: number) => {
                 const p = doc.positionAt(o);
                 return { lineNumber: p.line + 1, column: p.character + 1 };
-            },
+            }
         };
     }
 
@@ -126,7 +126,7 @@ suite('Data Science Intellisense Unit Tests', () => {
     ) {
         const reverse = {
             ...generateReverseChange(oldText, generateModel(doc), change),
-            position: { lineNumber: 1, column: 1 },
+            position: { lineNumber: 1, column: 1 }
         };
         return sendMessage(InteractiveWindowMessages.UpdateModel, {
             source,
@@ -135,7 +135,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             newDirty: true,
             forward: [change],
             reverse: [reverse],
-            id,
+            id
         });
     }
 
@@ -151,15 +151,15 @@ suite('Data Science Intellisense Unit Tests', () => {
                 startLineNumber: 1,
                 startColumn: 1,
                 endLineNumber: oldSplit.length,
-                endColumn: oldSplit[oldSplit.length - 1].length + 1,
+                endColumn: oldSplit[oldSplit.length - 1].length + 1
             },
             rangeOffset: 0,
             rangeLength: oldCode.length,
             text: newCode,
             position: {
                 column: 1,
-                lineNumber: 1,
-            },
+                lineNumber: 1
+            }
         };
         return sendUpdate(id, oldCode, getDocument(), change, source);
     }
@@ -173,15 +173,15 @@ suite('Data Science Intellisense Unit Tests', () => {
                 startLineNumber: line,
                 startColumn: pos,
                 endLineNumber: line,
-                endColumn: pos,
+                endColumn: pos
             },
             rangeOffset: offset,
             rangeLength: 0,
             text: code,
             position: {
                 column: 1,
-                lineNumber: 1,
-            },
+                lineNumber: 1
+            }
         };
         return sendMessage(InteractiveWindowMessages.UpdateModel, {
             source: 'user',
@@ -190,7 +190,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             newDirty: true,
             forward: [change],
             reverse: [change],
-            id: cells[cells.length - 1].id,
+            id: cells[cells.length - 1].id
         });
     }
 
@@ -203,15 +203,15 @@ suite('Data Science Intellisense Unit Tests', () => {
                 startLineNumber: line,
                 startColumn: startPos,
                 endLineNumber: line,
-                endColumn: endPos,
+                endColumn: endPos
             },
             rangeOffset: startPos,
             rangeLength: length,
             text: '',
             position: {
                 column: 1,
-                lineNumber: 1,
-            },
+                lineNumber: 1
+            }
         };
         return sendUpdate(cells[cells.length - 1].id, '', getDocument(), change);
     }
@@ -234,7 +234,7 @@ suite('Data Science Intellisense Unit Tests', () => {
                 oldDirty: false,
                 newDirty: true,
                 cell,
-                index,
+                index
             });
             return index;
         }
@@ -248,7 +248,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             oldDirty: false,
             newDirty: true,
             oldCells,
-            newCellId: uuid(),
+            newCellId: uuid()
         });
     }
 
@@ -259,7 +259,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             oldDirty: false,
             newDirty: true,
             firstCellId: id1,
-            secondCellId: id2,
+            secondCellId: id2
         });
     }
 
@@ -285,7 +285,7 @@ suite('Data Science Intellisense Unit Tests', () => {
             newDirty: true,
             codeCellAboveId: codeCellAbove,
             cell,
-            index,
+            index
         });
     }
 

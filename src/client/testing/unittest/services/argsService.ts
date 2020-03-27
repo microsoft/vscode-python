@@ -22,7 +22,7 @@ const OptionsWithoutArguments = [
     '--help',
     '--locals',
     '--quiet',
-    '--verbose',
+    '--verbose'
 ];
 
 @injectable()
@@ -34,7 +34,7 @@ export class ArgumentsService implements IArgumentsService {
     public getKnownOptions(): { withArgs: string[]; withoutArgs: string[] } {
         return {
             withArgs: OptionsWithArguments,
-            withoutArgs: OptionsWithoutArguments,
+            withoutArgs: OptionsWithoutArguments
         };
     }
     public getOptionValue(args: string[], option: string): string | string[] | undefined {

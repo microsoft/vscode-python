@@ -274,7 +274,7 @@ export class KernelService {
         const execServicePromise = this.execFactory.createActivatedEnvironment({
             interpreter,
             allowEnvironmentFetchExceptions: true,
-            bypassCondaExecution: true,
+            bypassCondaExecution: true
         });
         // Swallow errors if we get out of here and not resolve this.
         execServicePromise.ignoreErrors();
@@ -307,7 +307,7 @@ export class KernelService {
             {
                 throwOnStdErr: true,
                 encoding: 'utf8',
-                token: cancelToken,
+                token: cancelToken
             }
         );
         if (Cancellation.isCanceled(cancelToken)) {
@@ -418,7 +418,7 @@ export class KernelService {
                 // Update the kernel.json with our new stuff.
                 await this.fileSystem.writeFile(specedKernel.specFile, JSON.stringify(specModel, undefined, 2), {
                     flag: 'w',
-                    encoding: 'utf8',
+                    encoding: 'utf8'
                 });
             }
 
@@ -453,7 +453,7 @@ export class KernelService {
         sendTelemetryEvent(Telemetry.KernelEnumeration, undefined, {
             count: result.length,
             isPython: anyPython,
-            source: sessionManager ? 'connection' : 'cli',
+            source: sessionManager ? 'connection' : 'cli'
         });
 
         return result;

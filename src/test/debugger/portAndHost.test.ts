@@ -70,7 +70,7 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
             port,
             type: debuggerType,
             name: '',
-            request: 'launch',
+            request: 'launch'
         };
     }
 
@@ -78,7 +78,7 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
         await Promise.all([
             debugClient.configurationSequence(),
             debugClient.launch(buildLaunchArgs('startAndWait.py', false, port, host)),
-            debugClient.waitForEvent('initialized'),
+            debugClient.waitForEvent('initialized')
         ]);
 
         // Confirm port is in use (if one was provided).

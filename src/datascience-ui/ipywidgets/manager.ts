@@ -15,7 +15,7 @@ import { noop } from '../../client/common/utils/misc';
 import { deserializeDataViews } from '../../client/common/utils/serializers';
 import {
     IInteractiveWindowMapping,
-    IPyWidgetMessages,
+    IPyWidgetMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ProxyKernel } from './kernel';
 import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, IMessageSender } from './types';

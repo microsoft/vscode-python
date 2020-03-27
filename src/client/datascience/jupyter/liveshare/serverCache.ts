@@ -54,7 +54,7 @@ export class ServerCache implements IAsyncDisposable {
                 promise: createFunction(options, cancelSource.token),
                 options: fixedOptions,
                 cancelSource,
-                resolved: false,
+                resolved: false
             };
             this.cache.set(key, data);
         }
@@ -113,7 +113,7 @@ export class ServerCache implements IAsyncDisposable {
             purpose: options ? options.purpose : uuid(),
             workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
             metadata: options?.metadata,
-            allowUI: options?.allowUI ? options.allowUI : () => false,
+            allowUI: options?.allowUI ? options.allowUI : () => false
         };
     }
 

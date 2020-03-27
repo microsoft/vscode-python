@@ -22,7 +22,7 @@ import { TerminalNameShellDetector } from '../../../client/common/terminal/shell
 import {
     IShellDetector,
     ITerminalActivationCommandProvider,
-    TerminalShellType,
+    TerminalShellType
 } from '../../../client/common/terminal/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
@@ -53,7 +53,7 @@ suite('Terminal Service helpers', () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
 
     function doSetup() {

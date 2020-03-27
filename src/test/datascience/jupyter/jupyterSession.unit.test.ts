@@ -6,7 +6,7 @@ import {
     KernelMessage,
     ServerConnection,
     Session,
-    SessionManager,
+    SessionManager
 } from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
 import { DefaultSession } from '@jupyterlab/services/lib/session/default';
@@ -199,20 +199,20 @@ suite('Data Science - JupyterSession', () => {
                 numberOfConnections: 1,
                 session: {
                     statusChanged: {
-                        connect: noop,
+                        connect: noop
                     },
                     kernelChanged: {
-                        connect: noop,
+                        connect: noop
                     },
                     kernel: {
                         status: 'idle',
-                        restart: () => (restartCount = restartCount + 1),
+                        restart: () => (restartCount = restartCount + 1)
                     },
                     shutdown: () => Promise.resolve(),
-                    isRemoteSession: false,
+                    isRemoteSession: false
                     // tslint:disable-next-line: no-any
                 } as any,
-                id: 'liveKernel',
+                id: 'liveKernel'
             };
             let remoteSession: ISession;
             let remoteKernel: Kernel.IKernelConnection;
@@ -313,7 +313,7 @@ suite('Data Science - JupyterSession', () => {
                     display_name: 'new kernel',
                     language: 'python',
                     name: 'newkernel',
-                    path: 'path',
+                    path: 'path'
                 };
 
                 await jupyterSession.changeKernel(newKernel, 10000);

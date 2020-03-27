@@ -24,7 +24,7 @@ import {
     IBufferDecoder,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonToolExecutionService,
+    IPythonToolExecutionService
 } from '../client/common/process/types';
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
 import {
@@ -35,7 +35,7 @@ import {
     IOutputChannel,
     IPathUtils,
     IsWindows,
-    WORKSPACE_MEMENTO,
+    WORKSPACE_MEMENTO
 } from '../client/common/types';
 import { createDeferred } from '../client/common/utils/async';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
@@ -44,7 +44,7 @@ import { EnvironmentActivationService } from '../client/interpreter/activation/s
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSeletionProxyService
 } from '../client/interpreter/autoSelection/types';
 import {
     CONDA_ENV_FILE_SERVICE,
@@ -59,7 +59,7 @@ import {
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../client/interpreter/contracts';
 import { InterpreterService } from '../client/interpreter/interpreterService';
 import { PythonInterpreterLocatorService } from '../client/interpreter/locators';

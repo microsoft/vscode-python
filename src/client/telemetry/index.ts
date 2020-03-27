@@ -17,7 +17,7 @@ import {
     JupyterCommands,
     NativeKeyboardCommandTelemetry,
     NativeMouseCommandTelemetry,
-    Telemetry,
+    Telemetry
 } from '../datascience/constants';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';

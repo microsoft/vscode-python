@@ -16,7 +16,7 @@ import {
     IInterpreterLocatorService,
     InterpreterType,
     PythonInterpreter,
-    WINDOWS_REGISTRY_SERVICE,
+    WINDOWS_REGISTRY_SERVICE
 } from '../../contracts';
 import { CondaHelper } from './condaHelper';
 
@@ -31,7 +31,7 @@ const condaGlobPathsForLinuxMac = [
     untildify('~/opt/*conda*/bin/conda'),
     '/opt/*conda*/bin/conda',
     '/usr/share/*conda*/bin/conda',
-    untildify('~/*conda*/bin/conda'),
+    untildify('~/*conda*/bin/conda')
 ];
 
 export const CondaLocationsGlob = `{${condaGlobPathsForLinuxMac.join(',')}}`;
@@ -43,7 +43,7 @@ const condaGlobPathsForWindows = [
     untildify('~/[Mm]iniconda*/Scripts/conda.exe'),
     untildify('~/[Aa]naconda*/Scripts/conda.exe'),
     untildify('~/AppData/Local/Continuum/[Mm]iniconda*/Scripts/conda.exe'),
-    untildify('~/AppData/Local/Continuum/[Aa]naconda*/Scripts/conda.exe'),
+    untildify('~/AppData/Local/Continuum/[Aa]naconda*/Scripts/conda.exe')
 ];
 
 // format for glob processing:

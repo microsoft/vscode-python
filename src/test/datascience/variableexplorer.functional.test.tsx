@@ -115,7 +115,7 @@ value = 'hello world'`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 // tslint:disable-next-line:quotemark
                 {
@@ -126,8 +126,8 @@ value = 'hello world'`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
-                },
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
 
@@ -148,8 +148,8 @@ value = 'hello world'`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
-                },
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
         },
@@ -178,8 +178,8 @@ value = 'hello world'`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
-                },
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
 
@@ -195,7 +195,7 @@ value = 'hello world'`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 {
                     name: 'value',
@@ -205,8 +205,8 @@ value = 'hello world'`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
-                },
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
 
@@ -222,7 +222,7 @@ value = 'hello world'`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 {
                     name: 'value',
@@ -232,7 +232,7 @@ value = 'hello world'`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 // tslint:disable-next-line:quotemark
                 {
@@ -243,8 +243,8 @@ value = 'hello world'`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
-                },
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
         },
@@ -275,7 +275,7 @@ myDict = {'a': 1}`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 // tslint:disable-next-line:quotemark
                 {
@@ -286,7 +286,7 @@ myDict = {'a': 1}`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 {
                     name: 'myList',
@@ -296,7 +296,7 @@ myDict = {'a': 1}`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 // Set can vary between python versions, so just don't both to check the value, just see that we got it
                 {
@@ -307,8 +307,8 @@ myDict = {'a': 1}`;
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
-                },
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
         },
@@ -345,7 +345,7 @@ myTuple = 1,2,3,4,5,6,7,8,9
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 {
                     name: 'myComplex',
@@ -355,7 +355,7 @@ myTuple = 1,2,3,4,5,6,7,8,9
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 {
                     name: 'myDataframe',
@@ -368,7 +368,7 @@ myTuple = 1,2,3,4,5,6,7,8,9
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 {
                     name: 'myFloat',
@@ -378,7 +378,7 @@ myTuple = 1,2,3,4,5,6,7,8,9
                     size: 58,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 {
                     name: 'myInt',
@@ -388,7 +388,7 @@ myTuple = 1,2,3,4,5,6,7,8,9
                     size: 56,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 // tslint:disable:no-trailing-whitespace
                 {
@@ -402,7 +402,7 @@ Name: 0, dtype: float64`,
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 {
                     name: 'myTuple',
@@ -412,7 +412,7 @@ Name: 0, dtype: float64`,
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
+                    truncated: false
                 },
                 {
                     name: 'mynpArray',
@@ -422,8 +422,8 @@ Name: 0, dtype: float64`,
                     size: 54,
                     shape: '',
                     count: 0,
-                    truncated: false,
-                },
+                    truncated: false
+                }
             ];
             verifyVariables(wrapper, targetVariables);
         },
@@ -446,7 +446,7 @@ Name: 0, dtype: float64`,
             size: 54,
             shape: '',
             count: 100000,
-            truncated: false,
+            truncated: false
         };
     }
 

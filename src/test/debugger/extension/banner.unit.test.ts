@@ -14,7 +14,7 @@ import {
     IDisposableRegistry,
     IPersistentState,
     IPersistentStateFactory,
-    IRandom,
+    IRandom
 } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
 import { DebuggerBanner, PersistentStateKeys } from '../../../client/debugger/extension/banner';

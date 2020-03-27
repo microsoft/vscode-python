@@ -70,7 +70,7 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
 
         const cmd: Command = {
             command: 'python.setShebangInterpreter',
-            title: 'Set as interpreter',
+            title: 'Set as interpreter'
         };
 
         return [new CodeLens(shebangRange, cmd)];

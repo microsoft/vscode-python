@@ -23,7 +23,7 @@ import { JupyterInstallError } from '../jupyterInstallError';
 import { JupyterKernelSpec, parseKernelSpecs } from '../kernels/jupyterKernelSpec';
 import {
     getMessageForLibrariesNotInstalled,
-    JupyterInterpreterDependencyService,
+    JupyterInterpreterDependencyService
 } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
 
@@ -112,7 +112,7 @@ export class JupyterInterpreterSubCommandExecutionService
         );
         const executionService = await this.pythonExecutionFactory.createDaemon({
             daemonModule: PythonDaemonModule,
-            pythonPath: interpreter.path,
+            pythonPath: interpreter.path
         });
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), options);
     }
@@ -121,7 +121,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         const daemon = await this.pythonExecutionFactory.createDaemon({
             daemonModule: PythonDaemonModule,
-            pythonPath: interpreter.path,
+            pythonPath: interpreter.path
         });
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
@@ -147,7 +147,7 @@ export class JupyterInterpreterSubCommandExecutionService
 
         const daemon = await this.pythonExecutionFactory.createDaemon({
             daemonModule: PythonDaemonModule,
-            pythonPath: interpreter.path,
+            pythonPath: interpreter.path
         });
         // Wait for the nbconvert to finish
         const args = template
@@ -165,7 +165,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({
             interpreter,
             bypassCondaExecution: true,
-            allowEnvironmentFetchExceptions: true,
+            allowEnvironmentFetchExceptions: true
         });
         const args: string[] = [`--NotebookApp.file_to_run=${notebookFile}`];
 
@@ -179,7 +179,7 @@ export class JupyterInterpreterSubCommandExecutionService
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         const daemon = await this.pythonExecutionFactory.createDaemon({
             daemonModule: PythonDaemonModule,
-            pythonPath: interpreter.path,
+            pythonPath: interpreter.path
         });
         if (Cancellation.isCanceled(token)) {
             return [];
@@ -205,7 +205,7 @@ export class JupyterInterpreterSubCommandExecutionService
                             'pythonFiles',
                             'vscode_datascience_helpers',
                             'getJupyterKernels.py'
-                        ),
+                        )
                     ],
                     spawnOptions
                 )
@@ -217,7 +217,7 @@ export class JupyterInterpreterSubCommandExecutionService
 
             const [stdoutFromDaemon, stdoutFromFileExec] = await Promise.all([
                 stdoutFromDaemonPromise,
-                stdoutFromFileExecPromise,
+                stdoutFromFileExecPromise
             ]);
 
             return parseKernelSpecs(stdoutFromDaemon || stdoutFromFileExec, this.fs, token).catch((parserError) => {

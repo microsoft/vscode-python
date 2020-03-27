@@ -12,7 +12,7 @@ import { CellHashLogger } from '../../../client/datascience/editor-integration/c
 import { CellHashProvider } from '../../../client/datascience/editor-integration/cellhashprovider';
 import {
     InteractiveWindowMessages,
-    SysInfoReason,
+    SysInfoReason
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState, ICell, ICellHashListener, IFileHashes } from '../../../client/datascience/types';
 import { MockDocumentManager } from '../mockDocumentManager';
@@ -71,10 +71,10 @@ suite('CellHashProvider Unit Tests', () => {
                 cell_type: 'code',
                 metadata: {},
                 outputs: [],
-                execution_count: 1,
+                execution_count: 1
             },
             id: '1',
-            state: CellState.init,
+            state: CellState.init
         };
         return hashLogger.preExecute(cell, false);
     }
@@ -484,12 +484,12 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.changeDocument('foo.py', [
             {
                 range: new Range(new Position(0, 0), new Position(0, 0)),
-                newText: '#%%\r\nprint("new cell")\r\n',
+                newText: '#%%\r\nprint("new cell")\r\n'
             },
             {
                 range: new Range(new Position(0, 0), new Position(0, 0)),
-                newText: '#%%\r\nprint("new cell")\r\n',
-            },
+                newText: '#%%\r\nprint("new cell")\r\n'
+            }
         ]);
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');
@@ -501,12 +501,12 @@ suite('CellHashProvider Unit Tests', () => {
         documentManager.changeDocument('foo.py', [
             {
                 range: new Range(new Position(0, 0), new Position(0, 0)),
-                newText: '#%%\r\nprint("new cell")\r\n',
+                newText: '#%%\r\nprint("new cell")\r\n'
             },
             {
                 range: new Range(new Position(0, 0), new Position(2, 0)),
-                newText: '',
-            },
+                newText: ''
+            }
         ]);
         hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 1, 'No hashes found');

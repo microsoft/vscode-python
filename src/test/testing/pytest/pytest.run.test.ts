@@ -16,7 +16,7 @@ import {
     IBufferDecoder,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonExecutionService,
+    IPythonExecutionService
 } from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
@@ -36,7 +36,7 @@ import {
     ITestManagerFactory,
     Tests,
     TestStatus,
-    TestsToRun,
+    TestsToRun
 } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
 import { MockProcessService } from '../../mocks/proc';
@@ -81,7 +81,7 @@ async function getScenarioTestsToRun(scenario: ITestScenarioDetails, tests: Test
             testFolder: [],
             testFile: [],
             testSuite: [],
-            testFunction: [],
+            testFunction: []
         };
         if (scenario.testSuiteIndex) {
             scenario.testsToRun.testSuite!.push(tests.testSuites[scenario.testSuiteIndex].testSuite);
@@ -129,7 +129,7 @@ function getExpectedSummaryCount(testDetails: ITestDetails[], failedRun: boolean
         passes: 0,
         skips: 0,
         failures: 0,
-        errors: 0,
+        errors: 0
     };
     testDetails.forEach((td) => {
         let tStatus = td.status;

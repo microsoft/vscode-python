@@ -24,7 +24,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         super(
             new DocumentContext(kernel),
             new RenderMimeRegistry({
-                initialFactories: standardRendererFactories,
+                initialFactories: standardRendererFactories
             }),
             { saveState: false }
         );
@@ -34,7 +34,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
             {
                 safe: false,
                 mimeTypes: [WIDGET_MIMETYPE],
-                createRenderer: (options) => new jupyterlab.WidgetRenderer(options, this),
+                createRenderer: (options) => new jupyterlab.WidgetRenderer(options, this)
             },
             0
         );

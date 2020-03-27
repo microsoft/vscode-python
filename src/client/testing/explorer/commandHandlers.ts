@@ -22,7 +22,7 @@ type NavigationCommands =
 const testNavigationCommandMapping: { [key: string]: NavigationCommands } = {
     [TestDataItemType.file]: Commands.navigateToTestFile,
     [TestDataItemType.function]: Commands.navigateToTestFunction,
-    [TestDataItemType.suite]: Commands.navigateToTestSuite,
+    [TestDataItemType.suite]: Commands.navigateToTestSuite
 };
 
 @injectable()

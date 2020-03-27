@@ -9,7 +9,7 @@ import { TerminalActivator } from '../../../../client/common/terminal/activator'
 import {
     ITerminalActivationHandler,
     ITerminalActivator,
-    ITerminalHelper,
+    ITerminalHelper
 } from '../../../../client/common/terminal/types';
 
 // tslint:disable-next-line:max-func-body-length

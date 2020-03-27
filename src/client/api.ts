@@ -69,10 +69,10 @@ export function buildApi(
                 return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({
                     host,
                     port,
-                    waitUntilDebuggerAttaches,
+                    waitUntilDebuggerAttaches
                 });
-            },
-        },
+            }
+        }
     };
 
     // In test environment return the DI Container.

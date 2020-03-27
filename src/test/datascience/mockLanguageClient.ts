@@ -30,7 +30,7 @@ import {
     TextDocumentContentChangeEvent,
     TextDocumentItem,
     Trace,
-    VersionedTextDocumentIdentifier,
+    VersionedTextDocumentIdentifier
 } from 'vscode-languageclient';
 
 import { createDeferred, Deferred } from '../../client/common/utils/async';
@@ -231,7 +231,7 @@ export class MockLanguageClient extends LanguageClient {
             return {
                 label: l,
                 insertText: l,
-                sortText: l,
+                sortText: l
             };
         });
     }

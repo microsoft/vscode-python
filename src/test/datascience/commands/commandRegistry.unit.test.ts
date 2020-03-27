@@ -79,7 +79,7 @@ suite('Data Science - Commands', () => {
             Commands.DebugStop,
             Commands.DebugCurrentCellPalette,
             Commands.CreateNewNotebook,
-            Commands.ViewJupyterOutput,
+            Commands.ViewJupyterOutput
         ].forEach((command) => {
             test(`Should register Command ${command}`, () => {
                 // tslint:disable-next-line: no-any

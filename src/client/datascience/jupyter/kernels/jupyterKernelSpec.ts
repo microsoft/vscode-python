@@ -55,7 +55,7 @@ export async function parseKernelSpecs(stdout: string, fs: IFileSystem, token?: 
                 // Add the missing name property.
                 const model = {
                     ...spec,
-                    name: kernelName,
+                    name: kernelName
                 };
                 // Check if the spec file exists.
                 if (await fs.fileExists(specFile)) {
@@ -65,7 +65,7 @@ export async function parseKernelSpecs(stdout: string, fs: IFileSystem, token?: 
                 }
             })
         ),
-        createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: [], token }),
+        createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: [], token })
     ]);
     return specs.filter((item) => !!item).map((item) => item as JupyterKernelSpec);
 }

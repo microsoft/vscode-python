@@ -95,16 +95,16 @@ suite('DataScience Intellisense tests', () => {
                 });
                 return {
                     disposable,
-                    promise: promise.promise,
+                    promise: promise.promise
                 };
             }
         }
 
         return {
             disposable: {
-                dispose: noop,
+                dispose: noop
             },
-            promise: Promise.resolve(),
+            promise: Promise.resolve()
         };
     }
 

@@ -46,7 +46,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         // Activate all activation services together.
         await Promise.all([
             Promise.all(this.singleActivationServices.map((item) => item.activate())),
-            this.activateWorkspace(this.activeResourceService.getActiveResource()),
+            this.activateWorkspace(this.activeResourceService.getActiveResource())
         ]);
         await this.autoSelection.autoSelectInterpreter(undefined);
     }

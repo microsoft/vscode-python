@@ -5,7 +5,7 @@ import * as Redux from 'redux';
 
 import {
     IInteractiveWindowMapping,
-    IPyWidgetMessages,
+    IPyWidgetMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { BaseReduxActionPayload } from '../../../client/datascience/interactive-common/types';
 import { PostOffice } from '../../react-common/postOffice';

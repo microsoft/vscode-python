@@ -15,7 +15,7 @@ import {
     ICodeWatcher,
     IDataScienceCodeLensProvider,
     IDataScienceCommandListener,
-    INotebookEditorProvider,
+    INotebookEditorProvider
 } from '../types';
 import { JupyterCommandLineSelectorCommand } from './commandLineSelector';
 import { KernelSwitcherCommand } from './kernelSwitcher';

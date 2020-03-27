@@ -17,7 +17,7 @@ import {
     IApplicationShell,
     ICustomEditorService,
     IDocumentManager,
-    IWorkspaceService,
+    IWorkspaceService
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
@@ -30,7 +30,7 @@ import {
     IDataScienceErrorHandler,
     IJupyterExecution,
     INotebookEditorProvider,
-    INotebookExporter,
+    INotebookExporter
 } from '../../client/datascience/types';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
@@ -56,7 +56,7 @@ import {
     mountNativeWebView,
     openEditor,
     runMountedTest,
-    setupWebview,
+    setupWebview
 } from './nativeEditorTestHelpers';
 import { waitForUpdate } from './reactHelpers';
 import {
@@ -78,7 +78,7 @@ import {
     verifyCellIndex,
     verifyHtmlOnCell,
     waitForMessage,
-    waitForMessageResponse,
+    waitForMessageResponse
 } from './testHelpers';
 
 use(chaiAsPromised);
@@ -93,7 +93,7 @@ suite('DataScience Native Editor', () => {
         ((value: string) => {
             return {
                 get: () => value,
-                set: (v: string) => (value = v),
+                set: (v: string) => (value = v)
             };
         })(originalPlatform)
     );
@@ -108,7 +108,7 @@ suite('DataScience Native Editor', () => {
                     file: Identifiers.EmptyFileName,
                     line: 0,
                     state: 2,
-                    ...cell,
+                    ...cell
                 };
                 newCell.data = {
                     cell_type: 'code',
@@ -116,7 +116,7 @@ suite('DataScience Native Editor', () => {
                     metadata: {},
                     outputs: [],
                     source: '',
-                    ...data,
+                    ...data
                 };
 
                 return newCell;
@@ -234,14 +234,14 @@ suite('DataScience Native Editor', () => {
                         if (ioc.mockJupyter) {
                             const kernelDesc = {
                                 name: 'foobar',
-                                display_name: 'foobar',
+                                display_name: 'foobar'
                             };
                             const invalidKernel = {
                                 name: 'foobar',
                                 display_name: 'foobar',
                                 language: 'python',
                                 path: '/foo/bar/python',
-                                argv: [],
+                                argv: []
                             };
 
                             // Allow the invalid kernel to be used
@@ -317,14 +317,14 @@ df.head()`;
                             'text/plain',
                             'stream',
                             'text/plain',
-                            'stream',
+                            'stream'
                         ]);
                         addMockData(ioc, clearalternating, clearalternatingResults, [
                             'text/plain',
                             'stream',
                             'clear_true',
                             'text/plain',
-                            'stream',
+                            'stream'
                         ]);
                         const cursors = ['|', '/', '-', '\\'];
                         let cursorPos = 0;
@@ -483,7 +483,7 @@ df.head()`;
                             await ioc.activate();
                             ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
                                 ...ioc.getSettings().datascience,
-                                disableJupyterAutoStart: false,
+                                disableJupyterAutoStart: false
                             });
 
                             // Create an editor so something is listening to messages
@@ -534,7 +534,7 @@ df.head()`;
                         const dummyDisposable = {
                             dispose: () => {
                                 return;
-                            },
+                            }
                         };
                         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                         appShell
@@ -596,7 +596,7 @@ df.head()`;
                         const dummyDisposable = {
                             dispose: () => {
                                 return;
-                            },
+                            }
                         };
                         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                         appShell
@@ -649,7 +649,7 @@ df.head()`;
                         const baseFile = [
                             { id: 'NotebookImport#0', data: { source: 'print(1)\na=1' } },
                             { id: 'NotebookImport#1', data: { source: 'a=a+1\nprint(a)' } },
-                            { id: 'NotebookImport#2', data: { source: 'print(a+1)' } },
+                            { id: 'NotebookImport#2', data: { source: 'print(a+1)' } }
                         ];
                         const runAllCells = baseFile.map((cell) => {
                             return createFileCell(cell, cell.data);
@@ -662,7 +662,7 @@ df.head()`;
                         const runAllButton = findButton(wrapper, NativeEditor, 0);
                         // The render method needs to be executed 3 times for three cells.
                         const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                            numberOfTimes: 3,
+                            numberOfTimes: 3
                         });
                         await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
                         await threeCellsUpdated;
@@ -695,7 +695,7 @@ df.head()`;
                         const baseFile = [
                             { id: 'NotebookImport#0', data: { source: 'a=1\na' } },
                             { id: 'NotebookImport#1', data: { source: 'b=2\nb' } },
-                            { id: 'NotebookImport#2', data: { source: 'c=3\nc' } },
+                            { id: 'NotebookImport#2', data: { source: 'c=3\nc' } }
                         ];
                         const runAllCells = baseFile.map((cell) => {
                             return createFileCell(cell, cell.data);
@@ -707,7 +707,7 @@ df.head()`;
 
                         // Run everything
                         let threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                            numberOfTimes: 3,
+                            numberOfTimes: 3
                         });
                         let runAllButton = findButton(wrapper, NativeEditor, 0);
                         await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
@@ -718,7 +718,7 @@ df.head()`;
                         const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
                         const server = await jupyterExecution.getServer({
                             allowUI: () => false,
-                            purpose: Identifiers.HistoryPurpose,
+                            purpose: Identifiers.HistoryPurpose
                         });
                         assert.ok(server, 'Server was destroyed on notebook shutdown');
 
@@ -728,7 +728,7 @@ df.head()`;
                         editor = await openEditor(ioc, JSON.stringify(notebook));
 
                         threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                            numberOfTimes: 3,
+                            numberOfTimes: 3
                         });
                         runAllButton = findButton(newWrapper!, NativeEditor, 0);
                         await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
@@ -767,7 +767,7 @@ df.head()`;
                     await createNewEditor(ioc);
                     const result = await Promise.race([
                         addCell(wrapper, ioc, 'a=1\na', true),
-                        errorThrownDeferred.promise,
+                        errorThrownDeferred.promise
                     ]);
                     assert.ok(result, 'Error not found');
                     assert.ok(result instanceof Error, 'Error not found');
@@ -781,7 +781,7 @@ df.head()`;
                     const runButton = imageButtons.findWhere((w) => w.props().tooltip === 'Run cell');
                     assert.equal(runButton.length, 1, 'No run button found');
                     const update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                        numberOfTimes: 3,
+                        numberOfTimes: 3
                     });
                     runButton.simulate('click');
                     await update;
@@ -896,7 +896,7 @@ df.head()`;
                     execution_count: null,
                     metadata: {},
                     outputs: [],
-                    source: ['a'],
+                    source: ['a']
                 });
 
                 const addedJSONFile = JSON.stringify(addedJSON, null, ' ');
@@ -924,7 +924,7 @@ df.head()`;
                         await fs.writeFile(notebookFile.filePath, fileContents ? fileContents : baseFile);
                         await Promise.all([
                             waitForUpdate(wrapper, NativeEditor, 1),
-                            openEditor(ioc, fileContents ? fileContents : baseFile, notebookFile.filePath),
+                            openEditor(ioc, fileContents ? fileContents : baseFile, notebookFile.filePath)
                         ]);
                     } else {
                         // tslint:disable-next-line: no-invalid-this
@@ -1015,7 +1015,7 @@ df.head()`;
                             shiftKey: keyboardEvent.shiftKey,
                             ctrlKey: keyboardEvent.ctrlKey,
                             altKey: keyboardEvent.altKey,
-                            metaKey: keyboardEvent.metaKey,
+                            metaKey: keyboardEvent.metaKey
                         });
                     }
                     wrapper.update();
@@ -1027,7 +1027,7 @@ df.head()`;
                             shiftKey: keyboardEvent.shiftKey,
                             ctrlKey: keyboardEvent.ctrlKey,
                             altKey: keyboardEvent.altKey,
-                            metaKey: keyboardEvent.metaKey,
+                            metaKey: keyboardEvent.metaKey
                         });
                     }
                     nativeCell = wrapper.find(NativeCell).at(cellIndex);
@@ -1038,7 +1038,7 @@ df.head()`;
                             shiftKey: keyboardEvent.shiftKey,
                             ctrlKey: keyboardEvent.ctrlKey,
                             altKey: keyboardEvent.altKey,
-                            metaKey: keyboardEvent.metaKey,
+                            metaKey: keyboardEvent.metaKey
                         });
                     }
                     wrapper.update();
@@ -1425,7 +1425,7 @@ df.head()`;
                             { keyCode: 'k', cellIndexToPressKeysOn: 2, expectedSelectedCell: 1 },
                             { keyCode: 'k', cellIndexToPressKeysOn: 1, expectedSelectedCell: 0 },
                             // Arrow up on last cell is a noop.
-                            { keyCode: 'k', cellIndexToPressKeysOn: 0, expectedSelectedCell: 0 },
+                            { keyCode: 'k', cellIndexToPressKeysOn: 0, expectedSelectedCell: 0 }
                         ];
 
                         // keypress on first cell, then second, then third.
@@ -1450,7 +1450,7 @@ df.head()`;
                             { keyCode: 'ArrowUp', cellIndexToPressKeysOn: 2, expectedIndex: 1 },
                             { keyCode: 'ArrowUp', cellIndexToPressKeysOn: 1, expectedIndex: 0 },
                             // Arrow up on last cell is a noop.
-                            { keyCode: 'ArrowUp', cellIndexToPressKeysOn: 0, expectedIndex: 0 },
+                            { keyCode: 'ArrowUp', cellIndexToPressKeysOn: 0, expectedIndex: 0 }
                         ];
 
                         // keypress on first cell, then second, then third.
@@ -2199,13 +2199,13 @@ df.head()`;
                         const promise = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath, {
                             ...defaultDataScienceSettings(),
-                            showCellInputCode: false,
+                            showCellInputCode: false
                         });
                         await promise;
 
                         const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
                         const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean, {
-                            timeoutMs: 5_000,
+                            timeoutMs: 5_000
                         });
 
                         await modifyNotebook();
@@ -2258,7 +2258,7 @@ df.head()`;
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
                         const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
                         const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean, {
-                            timeoutMs: 5_000,
+                            timeoutMs: 5_000
                         });
 
                         await modifyNotebook();
@@ -2311,7 +2311,7 @@ df.head()`;
                         const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
                         const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
                         const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean, {
-                            timeoutMs: 5_000,
+                            timeoutMs: 5_000
                         });
 
                         await modifyNotebook();
@@ -2341,19 +2341,19 @@ df.head()`;
                             cell_type: 'code',
                             execution_count: 1,
                             metadata: {
-                                collapsed: true,
+                                collapsed: true
                             },
                             outputs: [
                                 {
                                     data: {
-                                        'text/plain': ['1'],
+                                        'text/plain': ['1']
                                     },
                                     output_type: 'execute_result',
                                     execution_count: 1,
-                                    metadata: {},
-                                },
+                                    metadata: {}
+                                }
                             ],
-                            source: ['a=1\n', 'a'],
+                            source: ['a=1\n', 'a']
                         },
                         {
                             cell_type: 'code',
@@ -2362,14 +2362,14 @@ df.head()`;
                             outputs: [
                                 {
                                     data: {
-                                        'text/plain': ['2'],
+                                        'text/plain': ['2']
                                     },
                                     output_type: 'execute_result',
                                     execution_count: 2,
-                                    metadata: {},
-                                },
+                                    metadata: {}
+                                }
                             ],
-                            source: ['b=2\n', 'b'],
+                            source: ['b=2\n', 'b']
                         },
                         {
                             cell_type: 'code',
@@ -2378,27 +2378,27 @@ df.head()`;
                             outputs: [
                                 {
                                     data: {
-                                        'text/plain': ['3'],
+                                        'text/plain': ['3']
                                     },
                                     output_type: 'execute_result',
                                     execution_count: 3,
-                                    metadata: {},
-                                },
+                                    metadata: {}
+                                }
                             ],
-                            source: ['c=3\n', 'c'],
-                        },
+                            source: ['c=3\n', 'c']
+                        }
                     ],
                     metadata: {
                         orig_nbformat: 4,
                         kernelspec: {
                             display_name: 'JUNK',
-                            name: 'JUNK',
+                            name: 'JUNK'
                         },
                         language_info: {
                             name: 'python',
-                            version: '1.2.3',
-                        },
-                    },
+                            version: '1.2.3'
+                        }
+                    }
                 };
 
                 suite('Update Metadata', () => {
@@ -2417,7 +2417,7 @@ df.head()`;
                         await addCell(wrapper, ioc, 'a=1\na');
                         const runAllButton = findButton(wrapper, NativeEditor, 0);
                         const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                            numberOfTimes: 3,
+                            numberOfTimes: 3
                         });
                         await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
                         await threeCellsUpdated;
@@ -2461,7 +2461,7 @@ df.head()`;
                     test('Clear Outputs in WebView', async () => {
                         const runAllButton = findButton(wrapper, NativeEditor, 0);
                         const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                            numberOfTimes: 3,
+                            numberOfTimes: 3
                         });
                         await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
                         await threeCellsUpdated;
@@ -2489,7 +2489,7 @@ df.head()`;
                         // await addCell(wrapper, ioc, 'a=1\na');
                         const runAllButton = findButton(wrapper, NativeEditor, 0);
                         const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
-                            numberOfTimes: 3,
+                            numberOfTimes: 3
                         });
                         await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
                         await threeCellsUpdated;

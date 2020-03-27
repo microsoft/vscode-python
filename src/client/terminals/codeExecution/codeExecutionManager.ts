@@ -15,7 +15,7 @@ import {
     BANNER_NAME_INTERACTIVE_SHIFTENTER,
     IDisposableRegistry,
     IPythonExtensionBanner,
-    Resource,
+    Resource
 } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';

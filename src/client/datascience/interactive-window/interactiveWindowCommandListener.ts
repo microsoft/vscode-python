@@ -30,7 +30,7 @@ import {
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
-    IStatusProvider,
+    IStatusProvider
 } from '../types';
 
 @injectable()
@@ -187,7 +187,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                     // Bring up the save file dialog box
                     const uri = await this.applicationShell.showSaveDialog({
                         saveLabel: localize.DataScience.exportDialogTitle(),
-                        filters: filtersObject,
+                        filters: filtersObject
                     });
                     await this.waitForStatus(
                         async () => {
@@ -364,7 +364,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         // Bring up the save file dialog box
         const uri = await this.applicationShell.showSaveDialog({
             saveLabel: localize.DataScience.exportDialogTitle(),
-            filters: filtersObject,
+            filters: filtersObject
         });
 
         return uri ? uri.fsPath : undefined;
@@ -451,7 +451,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
         const uris = await this.applicationShell.showOpenDialog({
             openLabel: localize.DataScience.importDialogTitle(),
-            filters: filtersObject,
+            filters: filtersObject
         });
 
         if (uris && uris.length > 0) {

@@ -14,14 +14,14 @@ import {
     IConfigurationService,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings,
+    IPythonSettings
 } from '../../client/common/types';
 import { OSType } from '../../client/common/utils/platform';
 import { IInterpreterVersionService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import {
     CurrentPathService,
-    PythonInPathCommandProvider,
+    PythonInPathCommandProvider
 } from '../../client/interpreter/locators/services/currentPathService';
 import { IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';

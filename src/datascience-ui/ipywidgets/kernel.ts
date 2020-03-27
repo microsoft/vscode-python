@@ -55,7 +55,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         this.pendingCommInfoResponses.set(requestId, promiseHolder);
         this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_RequestCommInfo_request, {
             requestId,
-            msg: content,
+            msg: content
         });
         return promiseHolder.promise;
     }
@@ -161,7 +161,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                         requestId: args.requestId,
                         parentId: args.parentId,
                         msgType: args.msg.header.msg_type,
-                        result: r,
+                        result: r
                     });
                 });
             } else {
@@ -169,7 +169,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                     requestId: args.requestId,
                     parentId: args.parentId,
                     msgType: args.msg.header.msg_type,
-                    result: result === true,
+                    result: result === true
                 });
             }
         } else {
@@ -178,7 +178,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                 requestId: args.requestId,
                 parentId: args.parentId,
                 msgType: args.msg.header.msg_type,
-                result: true,
+                result: true
             });
         }
     }

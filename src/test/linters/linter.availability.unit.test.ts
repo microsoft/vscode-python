@@ -20,7 +20,7 @@ import {
     IPersistentState,
     IPersistentStateFactory,
     IPythonSettings,
-    Product,
+    Product
 } from '../../client/common/types';
 import { Common, Linters } from '../../client/common/utils/localize';
 import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
@@ -40,7 +40,7 @@ suite('Linter Availability Provider tests', () => {
             fsMock,
             workspaceServiceMock,
             configServiceMock,
-            factoryMock,
+            factoryMock
         ] = getDependenciesForAvailabilityTests();
         setupConfigurationServiceForJediSettingsTest(jediEnabledValue, configServiceMock);
 
@@ -72,7 +72,7 @@ suite('Linter Availability Provider tests', () => {
             fsMock,
             workspaceServiceMock,
             configServiceMock,
-            factoryMock,
+            factoryMock
         ] = getDependenciesForAvailabilityTests();
         setupConfigurationServiceForJediSettingsTest(jediEnabledValue, configServiceMock);
 
@@ -104,7 +104,7 @@ suite('Linter Availability Provider tests', () => {
             workspaceServiceMock,
             configServiceMock,
             factoryMock,
-            linterInfo,
+            linterInfo
         ] = getDependenciesForAvailabilityTests();
         setupWorkspaceMockForLinterConfiguredTests(
             pylintUserValue,
@@ -140,7 +140,7 @@ suite('Linter Availability Provider tests', () => {
             workspaceServiceMock,
             configServiceMock,
             factoryMock,
-            linterInfo,
+            linterInfo
         ] = getDependenciesForAvailabilityTests();
         setupWorkspaceMockForLinterConfiguredTests(
             pylintUserValue,
@@ -179,7 +179,7 @@ suite('Linter Availability Provider tests', () => {
             workspaceServiceMock,
             configServiceMock,
             factoryMock,
-            linterInfo,
+            linterInfo
         ] = getDependenciesForAvailabilityTests();
         setupWorkspaceMockForLinterConfiguredTests(
             pylintUserValue,
@@ -217,7 +217,7 @@ suite('Linter Availability Provider tests', () => {
             workspaceServiceMock,
             configServiceMock,
             factoryMock,
-            linterInfo,
+            linterInfo
         ] = getDependenciesForAvailabilityTests();
         setupWorkspaceMockForLinterConfiguredTests(
             pylintUserValue,
@@ -401,7 +401,7 @@ suite('Linter Availability Provider tests', () => {
             workspaceServiceMock,
             configServiceMock,
             factoryMock,
-            linterInfo,
+            linterInfo
         ] = getDependenciesForAvailabilityTests();
         const selections: ['enable', 'ignore', 'disablePrompt'] = ['enable', 'ignore', 'disablePrompt'];
         const optButtons = [Linters.enableLinter().format(linterInfo.id), Common.notNow(), Common.doNotShowAgain()];
@@ -591,7 +591,7 @@ suite('Linter Availability Provider tests', () => {
             workspaceServiceMock,
             configServiceMock,
             factoryMock,
-            linterInfo,
+            linterInfo
         ] = getDependenciesForAvailabilityTests();
         setupInstallerForAvailabilityTest(linterInfo, linterIsInstalled, fsMock, workspaceServiceMock);
 
@@ -625,7 +625,7 @@ suite('Linter Availability Provider tests', () => {
             workspaceServiceMock,
             configServiceMock,
             factoryMock,
-            linterInfo,
+            linterInfo
         ] = getDependenciesForAvailabilityTests();
         setupInstallerForAvailabilityTest(linterInfo, linterIsInstalled, fsMock, workspaceServiceMock);
 
@@ -654,7 +654,7 @@ suite('Linter Availability Provider tests', () => {
         const defaultWorkspace: WorkspaceFolder = {
             uri: Uri.file(path.join('a', 'b', 'default')),
             name: 'default',
-            index: 0,
+            index: 0
         };
         const resource = Uri.file(__dirname);
         setup(() => {
@@ -789,7 +789,7 @@ function setupWorkspaceMockForLinterConfiguredTests(
                 globalValue: enabledForUser,
                 defaultValue: false,
                 workspaceFolderValue: enabeldForWorkspace,
-                workspaceValue: enabledForWorkspaceFolder,
+                workspaceValue: enabledForWorkspaceFolder
             };
         })
         .verifiable(TypeMoq.Times.once());
@@ -855,6 +855,6 @@ function getDependenciesForAvailabilityTests(): [
         TypeMoq.Mock.ofType<IWorkspaceService>(),
         TypeMoq.Mock.ofType<IConfigurationService>(),
         TypeMoq.Mock.ofType<IPersistentStateFactory>(),
-        new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc']),
+        new LinterInfo(Product.pylint, 'pylint', configServiceMock.object, ['.pylintrc', 'pylintrc'])
     ];
 }

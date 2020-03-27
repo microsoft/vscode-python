@@ -49,7 +49,7 @@ suite('Smoke Test: Debug file', () => {
             request: 'launch',
             type: 'python',
             program: file,
-            args: [outputFile],
+            args: [outputFile]
         };
 
         const started = await vscode.debug.startDebugging(vscode.workspace.workspaceFolders![0], config);

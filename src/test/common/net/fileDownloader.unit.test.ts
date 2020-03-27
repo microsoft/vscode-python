@@ -184,7 +184,7 @@ suite('File Downloader', () => {
                 .reply(200, () => [
                     200,
                     new DelayedReadMemoryStream(1024 * totalKb, 5, 1024 * 10),
-                    { 'content-length': 1024 * totalKb },
+                    { 'content-length': 1024 * totalKb }
                 ]);
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
@@ -251,7 +251,7 @@ suite('File Downloader', () => {
             await fileDownloader.downloadFile('file to download', {
                 progressMessagePrefix: '',
                 extension: '.pdf',
-                outputChannel: outputChannel,
+                outputChannel: outputChannel
             });
 
             verify(outputChannel.appendLine(Http.downloadingFile().format('file to download')));

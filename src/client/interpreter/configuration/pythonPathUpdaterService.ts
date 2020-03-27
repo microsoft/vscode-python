@@ -54,7 +54,7 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
     ) {
         const telemtryProperties: PythonInterpreterTelemetry = {
             failed,
-            trigger,
+            trigger
         };
         if (!failed) {
             const processService = await this.executionFactory.create({ pythonPath });

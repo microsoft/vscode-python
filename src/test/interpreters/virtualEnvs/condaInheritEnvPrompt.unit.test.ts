@@ -17,7 +17,7 @@ import { Common, InteractiveShiftEnterBanner, Interpreters } from '../../../clie
 import { IInterpreterService, InterpreterType } from '../../../client/interpreter/contracts';
 import {
     CondaInheritEnvPrompt,
-    condaInheritEnvPromptKey,
+    condaInheritEnvPromptKey
 } from '../../../client/interpreter/virtualEnvs/condaInheritEnvPrompt';
 
 // tslint:disable:no-any
@@ -92,7 +92,7 @@ suite('Conda Inherit Env Prompt', async () => {
         });
         test('Returns false if active interpreter is not of type Conda', async () => {
             const interpreter = {
-                type: InterpreterType.Pipenv,
+                type: InterpreterType.Pipenv
             };
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             platformService
@@ -133,7 +133,7 @@ suite('Conda Inherit Env Prompt', async () => {
         });
         test('Returns false if settings returned is `undefined`', async () => {
             const interpreter = {
-                type: InterpreterType.Conda,
+                type: InterpreterType.Conda
             };
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             platformService
@@ -163,29 +163,29 @@ suite('Conda Inherit Env Prompt', async () => {
                 settings: {
                     globalValue: true,
                     workspaceValue: undefined,
-                    workspaceFolderValue: undefined,
-                },
+                    workspaceFolderValue: undefined
+                }
             },
             {
                 name: 'Returns false if workspaceValue of `terminal.integrated.inheritEnv` setting is set',
                 settings: {
                     globalValue: undefined,
                     workspaceValue: true,
-                    workspaceFolderValue: undefined,
-                },
+                    workspaceFolderValue: undefined
+                }
             },
             {
                 name: 'Returns false if workspaceFolderValue of `terminal.integrated.inheritEnv` setting is set',
                 settings: {
                     globalValue: undefined,
                     workspaceValue: undefined,
-                    workspaceFolderValue: false,
-                },
-            },
+                    workspaceFolderValue: false
+                }
+            }
         ].forEach((testParams) => {
             test(testParams.name, async () => {
                 const interpreter = {
-                    type: InterpreterType.Conda,
+                    type: InterpreterType.Conda
                 };
                 const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                 platformService
@@ -211,12 +211,12 @@ suite('Conda Inherit Env Prompt', async () => {
         });
         test('Returns true otherwise', async () => {
             const interpreter = {
-                type: InterpreterType.Conda,
+                type: InterpreterType.Conda
             };
             const settings = {
                 globalValue: undefined,
                 workspaceValue: undefined,
-                workspaceFolderValue: undefined,
+                workspaceFolderValue: undefined
             };
             const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
             platformService
@@ -351,7 +351,7 @@ suite('Conda Inherit Env Prompt', async () => {
         const prompts = [
             InteractiveShiftEnterBanner.bannerLabelYes(),
             InteractiveShiftEnterBanner.bannerLabelNo(),
-            Common.moreInfo(),
+            Common.moreInfo()
         ];
         setup(() => {
             workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();

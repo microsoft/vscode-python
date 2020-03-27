@@ -86,12 +86,12 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
                 source: '',
                 execution_count: 1,
                 metadata: {},
-                outputs,
+                outputs
             },
             file: new Date().getTime().toString(),
             id: new Date().getTime().toString(),
             line: 1,
-            state: CellState.init,
+            state: CellState.init
         };
     }
     function generateTextOutput(output_type: string) {
@@ -130,7 +130,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
             hasVega: lowerMimeType.includes('vega').toString(),
             hasWidget: lowerMimeType.includes('widget').toString(),
             hasJupyter: lowerMimeType.includes('jupyter').toString(),
-            hasVnd: lowerMimeType.includes('vnd').toString(),
+            hasVnd: lowerMimeType.includes('vnd').toString()
         };
     }
     test('Send telemetry for cell with streamed output', async () => {
@@ -206,12 +206,12 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
             generateTelemetry('text/html'),
             generateTelemetry('application/svg+xml'),
             generateTelemetry('application/vnd.plotly.v1+json'),
-            generateTelemetry('stream'),
+            generateTelemetry('stream')
         ];
         const cell1 = generateCellWithOutput([
             generateTextOutput('display_data'),
             generateSvgOutput('update_display_data'),
-            generatePlotlyWithTextOutput('execute_result'),
+            generatePlotlyWithTextOutput('execute_result')
         ]);
         const cell2 = generateCellWithOutput([generateErrorOutput()]);
         const cell3 = generateCellWithOutput([]);
@@ -257,7 +257,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
                 const expectedTelemetry = generateTelemetry('text/html');
                 const cellTextOutput = generateCellWithOutput([
                     generateTextOutput(outputType),
-                    generateTextOutput(outputType),
+                    generateTextOutput(outputType)
                 ]);
 
                 emitNotebookEvent([cellTextOutput, cellTextOutput]);

@@ -22,14 +22,14 @@ import {
     IDisposableRegistry,
     IPersistentState,
     IPersistentStateFactory,
-    IPythonSettings,
+    IPythonSettings
 } from '../../client/common/types';
 import * as EnumEx from '../../client/common/utils/enum';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSeletionProxyService
 } from '../../client/interpreter/autoSelection/types';
 import { IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
@@ -38,7 +38,7 @@ import {
     IInterpreterLocatorService,
     INTERPRETER_LOCATOR_SERVICE,
     InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { IInterpreterHashProvider, IInterpreterHashProviderFactory } from '../../client/interpreter/locators/types';
@@ -101,7 +101,7 @@ suite('Interpreters service', () => {
             .setup((p) => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
                 const state = {
-                    updateValue: () => Promise.resolve(),
+                    updateValue: () => Promise.resolve()
                 };
                 return state as any;
             });
@@ -275,7 +275,7 @@ suite('Interpreters service', () => {
                 .returns(() => {
                     const state = {
                         updateValue: () => Promise.resolve(),
-                        value: { hash, displayName: expectedDisplayName },
+                        value: { hash, displayName: expectedDisplayName }
                     };
                     return state as any;
                 })
@@ -307,7 +307,7 @@ suite('Interpreters service', () => {
                 .returns(() => {
                     const state = {
                         updateValue: () => Promise.resolve(),
-                        value: { fileHash: 'something else', displayName: expectedDisplayName },
+                        value: { fileHash: 'something else', displayName: expectedDisplayName }
                     };
                     return state as any;
                 })
@@ -357,7 +357,7 @@ suite('Interpreters service', () => {
                                                         : 'without interpreter type'
                                                 }`,
                                                 `${envName ? 'with' : 'without'} environment name`,
-                                                `${pipEnvName ? 'with' : 'without'} pip environment`,
+                                                `${pipEnvName ? 'with' : 'without'} pip environment`
                                             ].join(', ');
 
                                             test(testName, async () => {
@@ -366,7 +366,7 @@ suite('Interpreters service', () => {
                                                     architecture: arch ? arch.value : undefined,
                                                     envName,
                                                     type: interpreterType ? interpreterType.value : undefined,
-                                                    path: pythonPath,
+                                                    path: pythonPath
                                                 };
 
                                                 if (
@@ -479,7 +479,7 @@ suite('Interpreters service', () => {
                 .returns(() => {
                     return {
                         fileHash,
-                        info: info as any,
+                        info: info as any
                     };
                 })
                 .verifiable(TypeMoq.Times.atLeastOnce());
@@ -524,7 +524,7 @@ suite('Interpreters service', () => {
                 .returns(() => {
                     return {
                         fileHash,
-                        info: info as any,
+                        info: info as any
                     };
                 })
                 .verifiable(TypeMoq.Times.atLeastOnce());

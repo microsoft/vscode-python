@@ -14,7 +14,7 @@ import {
     IXUnitParser,
     LaunchOptions,
     TestRunOptions,
-    Tests,
+    Tests
 } from '../common/types';
 import { IArgumentsHelper, IArgumentsService, ITestManagerRunner } from '../types';
 
@@ -80,7 +80,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                     args: debuggerArgs,
                     token: options.token,
                     outChannel: options.outChannel,
-                    testProvider: NOSETEST_PROVIDER,
+                    testProvider: NOSETEST_PROVIDER
                 };
                 await debugLauncher.launchDebugger(launchOptions);
             } else {
@@ -89,7 +89,7 @@ export class TestManagerRunner implements ITestManagerRunner {
                     cwd: options.cwd,
                     outChannel: options.outChannel,
                     token: options.token,
-                    workspaceFolder: options.workspaceFolder,
+                    workspaceFolder: options.workspaceFolder
                 };
                 await this.testRunner.run(NOSETEST_PROVIDER, runOptions);
             }

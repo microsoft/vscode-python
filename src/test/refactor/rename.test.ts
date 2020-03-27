@@ -36,7 +36,7 @@ suite('Refactor Rename', () => {
         cursorStyle: TextEditorCursorStyle.Line,
         insertSpaces: true,
         lineNumbers: TextEditorLineNumbersStyle.Off,
-        tabSize: 4,
+        tabSize: 4
     };
     let pythonSettings: typeMoq.IMock<IPythonSettings>;
     let serviceContainer: typeMoq.IMock<IServiceContainer>;

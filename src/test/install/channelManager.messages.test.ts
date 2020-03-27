@@ -13,7 +13,7 @@ import { Product } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import {
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSeletionProxyService
 } from '../../client/interpreter/autoSelection/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -30,7 +30,7 @@ const info: PythonInterpreter = {
     type: InterpreterType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: '',
+    sysVersion: ''
 };
 
 // tslint:disable-next-line:max-func-body-length
@@ -156,7 +156,7 @@ suite('Installation - channel messages', () => {
         const activeInterpreter: PythonInterpreter = {
             ...info,
             type: interpreterType,
-            path: '',
+            path: ''
         };
         interpreters
             .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))

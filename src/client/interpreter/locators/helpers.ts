@@ -68,7 +68,7 @@ export class InterpreterLocatorHelper implements IInterpreterLocatorHelper {
                         'sysPrefix',
                         'architecture',
                         'sysVersion',
-                        'version',
+                        'version'
                     ];
                     for (const prop of props) {
                         if (!existingItem[prop] && current[prop]) {

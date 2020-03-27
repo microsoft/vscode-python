@@ -53,8 +53,8 @@ suite('Completion Provider', () => {
                 rawType: CompletionItemKind.Function,
                 rightLabel: 'right label',
                 text: 'some text',
-                type: CompletionItemKind.Function,
-            },
+                type: CompletionItemKind.Function
+            }
         ];
 
         autoCompleteSettings.setup((a) => a.addBrackets).returns(() => addBrackets);

@@ -22,7 +22,7 @@ import {
     ExtensionChannels,
     IExtensionChannelRule,
     IExtensionChannelService,
-    IInsiderExtensionPrompt,
+    IInsiderExtensionPrompt
 } from '../../../client/common/insidersBuild/types';
 import { InsidersBuildInstaller } from '../../../client/common/installer/extensionBuildInstaller';
 import { IExtensionBuildInstaller } from '../../../client/common/installer/types';
@@ -297,15 +297,15 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 // prompt to enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: true,
+                isChannelUsingDefaultConfiguration: true
             },
             {
                 installChannel: 'off',
                 // prompt to enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: true,
-            },
+                isChannelUsingDefaultConfiguration: true
+            }
         ];
 
         setup(() => {
@@ -344,7 +344,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 vscodeChannel: 'stable',
                 // disable
                 // with installChannel from above
-                extensionChannel: 'stable',
+                extensionChannel: 'stable'
             },
             {
                 installChannel: 'weekly',
@@ -352,8 +352,8 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 vscodeChannel: 'stable',
                 // disable
                 // with installChannel from above
-                extensionChannel: 'stable',
-            },
+                extensionChannel: 'stable'
+            }
         ];
 
         setup(() => {
@@ -392,7 +392,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: true,
                 // skip disable
-                extensionChannel: 'insiders',
+                extensionChannel: 'insiders'
             },
             {
                 installChannel: 'daily',
@@ -401,35 +401,35 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 hasUserBeenNotified: false,
                 isChannelUsingDefaultConfiguration: false,
                 // skip disable
-                extensionChannel: 'insiders',
+                extensionChannel: 'insiders'
             },
             {
                 installChannel: 'daily',
                 // skip enroll
                 vscodeChannel: 'stable',
                 // skip disable
-                extensionChannel: 'insiders',
+                extensionChannel: 'insiders'
             },
             {
                 installChannel: 'off',
                 // skip enroll
                 vscodeChannel: 'insiders',
-                hasUserBeenNotified: true,
+                hasUserBeenNotified: true
             },
             {
                 installChannel: 'off',
                 isChannelUsingDefaultConfiguration: true,
                 // skip enroll
                 vscodeChannel: 'insiders',
-                hasUserBeenNotified: true,
+                hasUserBeenNotified: true
             },
             {
                 // skip re-enroll
                 installChannel: 'off',
                 isChannelUsingDefaultConfiguration: true,
                 // skip enroll
-                vscodeChannel: 'stable',
-            },
+                vscodeChannel: 'stable'
+            }
         ];
 
         setup(() => {

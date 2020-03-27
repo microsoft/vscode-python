@@ -21,7 +21,7 @@ import {
     CTagsInstaller,
     FormatterInstaller,
     LinterInstaller,
-    ProductInstaller,
+    ProductInstaller
 } from '../../../client/common/installer/productInstaller';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { ProductService } from '../../../client/common/installer/productService';
@@ -29,7 +29,7 @@ import {
     IInstallationChannelManager,
     IModuleInstaller,
     IProductPathService,
-    IProductService,
+    IProductService
 } from '../../../client/common/installer/types';
 import { IPlatformService } from '../../../client/common/platform/types';
 import {
@@ -37,7 +37,7 @@ import {
     IProcessService,
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonExecutionService,
+    IPythonExecutionService
 } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import {
@@ -49,7 +49,7 @@ import {
     IPersistentStateFactory,
     ModuleNamePurpose,
     Product,
-    ProductType,
+    ProductType
 } from '../../../client/common/types';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
@@ -682,7 +682,7 @@ suite('Module Installer only', () => {
                             .setup((p) => (p as any).then)
                             .returns(() => undefined);
                         const executionResult: ExecutionResult<string> = {
-                            stdout: 'output',
+                            stdout: 'output'
                         };
                         processService
                             .setup((p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))

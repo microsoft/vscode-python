@@ -167,6 +167,6 @@ function parseTagsLine(workspaceFolder: string, line: string, searchPattern: str
         code: match.code,
         position: new vscode.Position(Number(match.line) - 1, 0),
         symbolName: match.name,
-        symbolKind: symbolKind,
+        symbolKind: symbolKind
     };
 }

@@ -68,7 +68,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             env,
             envFile: '',
             logToFile: false,
-            type: debuggerType,
+            type: debuggerType
         } as any) as LaunchRequestArguments;
 
         return options;
@@ -81,7 +81,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             debugClient.configurationSequence(),
             debugClient.launch(buildLaunchArgs('simplePrint.py', false)),
             debugClient.waitForEvent('initialized'),
-            debugClient.waitForEvent('terminated'),
+            debugClient.waitForEvent('terminated')
         ]);
     });
     // Check https://github.com/Microsoft/vscode-python/issues/4067
@@ -93,7 +93,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             debugClient.waitForEvent('initialized'),
             //TODO: ptvsd does not differentiate.
             debugClient.assertOutput('stderr', 'error output'),
-            debugClient.waitForEvent('terminated'),
+            debugClient.waitForEvent('terminated')
         ]);
     });
     test('Test stdout output', async () => {
@@ -102,7 +102,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             debugClient.launch(buildLaunchArgs('stdOutOutput.py', false)),
             debugClient.waitForEvent('initialized'),
             debugClient.assertOutput('stdout', 'normal output'),
-            debugClient.waitForEvent('terminated'),
+            debugClient.waitForEvent('terminated')
         ]);
     });
 });

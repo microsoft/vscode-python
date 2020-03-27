@@ -36,7 +36,7 @@ suite('PythonExecutionService', () => {
             versionInfo: [3, 7, 5, 'candidate'],
             sysPrefix: '/path/of/sysprefix/versions/3.7.5rc1',
             version: '3.7.5rc1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
-            is64Bit: true,
+            is64Bit: true
         };
 
         processService
@@ -49,7 +49,7 @@ suite('PythonExecutionService', () => {
             path: pythonPath,
             version: new SemVer('3.7.5-candidate'),
             sysPrefix: json.sysPrefix,
-            sysVersion: undefined,
+            sysVersion: undefined
         };
 
         expect(result).to.deep.equal(expectedResult, 'Incorrect value returned by getInterpreterInformation().');
@@ -60,7 +60,7 @@ suite('PythonExecutionService', () => {
             versionInfo: [3, 7, 5],
             sysPrefix: '/path/of/sysprefix/versions/3.7.5rc1',
             version: '3.7.5rc1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
-            is64Bit: true,
+            is64Bit: true
         };
 
         processService
@@ -73,7 +73,7 @@ suite('PythonExecutionService', () => {
             path: pythonPath,
             version: new SemVer('3.7.5'),
             sysPrefix: json.sysPrefix,
-            sysVersion: undefined,
+            sysVersion: undefined
         };
 
         expect(result).to.deep.equal(
@@ -87,7 +87,7 @@ suite('PythonExecutionService', () => {
             versionInfo: [3, 7, 5, 'candidate'],
             sysPrefix: '/path/of/sysprefix/versions/3.7.5rc1',
             version: '3.7.5rc1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
-            is64Bit: false,
+            is64Bit: false
         };
 
         processService
@@ -100,7 +100,7 @@ suite('PythonExecutionService', () => {
             path: pythonPath,
             version: new SemVer('3.7.5-candidate'),
             sysPrefix: json.sysPrefix,
-            sysVersion: undefined,
+            sysVersion: undefined
         };
 
         expect(result).to.deep.equal(
@@ -210,7 +210,7 @@ suite('PythonExecutionService', () => {
             out: {} as any,
             dispose: () => {
                 noop();
-            },
+            }
         };
         processService.setup((p) => p.execObservable(pythonPath, args, options)).returns(() => observable);
 
@@ -231,7 +231,7 @@ suite('PythonExecutionService', () => {
             out: {} as any,
             dispose: () => {
                 noop();
-            },
+            }
         };
         processService.setup((p) => p.execObservable(pythonPath, expectedArgs, options)).returns(() => observable);
 

@@ -90,7 +90,7 @@ export class DebugLauncher implements ITestDebugLauncher {
                 name: 'Debug Unit Test',
                 type: 'python',
                 request: 'test',
-                subProcess: true,
+                subProcess: true
             };
         }
         if (!debugConfig.rules) {
@@ -98,7 +98,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
         debugConfig.rules.push({
             path: path.join(EXTENSION_ROOT_DIR, 'pythonFiles'),
-            include: false,
+            include: false
         });
         this.applyDefaults(debugConfig!, workspaceFolder, configSettings);
 

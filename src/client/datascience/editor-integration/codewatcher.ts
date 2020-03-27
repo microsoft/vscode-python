@@ -11,7 +11,7 @@ import {
     Selection,
     TextDocument,
     TextEditor,
-    TextEditorRevealType,
+    TextEditorRevealType
 } from 'vscode';
 
 import { IDocumentManager } from '../../common/application/types';

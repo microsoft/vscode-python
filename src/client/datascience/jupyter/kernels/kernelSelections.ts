@@ -31,7 +31,7 @@ function getQuickPickItemForKernelSpec(
         label: kernelSpec.display_name,
         // If we have a matching interpreter, then display that path in the dropdown else path of the kernelspec.
         detail: pathUtils.getDisplayName(kernelSpec.metadata?.interpreter?.path || kernelSpec.path),
-        selection: { kernelModel: undefined, kernelSpec: kernelSpec, interpreter: undefined },
+        selection: { kernelModel: undefined, kernelSpec: kernelSpec, interpreter: undefined }
     };
 }
 
@@ -51,7 +51,7 @@ function getQuickPickItemForActiveKernel(kernel: LiveKernelModel, pathUtils: IPa
             kernel.lastActivityTime.toLocaleString(),
             kernel.numberOfConnections.toString()
         ),
-        selection: { kernelModel: kernel, kernelSpec: undefined, interpreter: undefined },
+        selection: { kernelModel: kernel, kernelSpec: undefined, interpreter: undefined }
     };
 }
 
@@ -71,7 +71,7 @@ export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelS
         const [activeKernels, activeSessions, kernelSpecs] = await Promise.all([
             this.sessionManager.getRunningKernels(),
             this.sessionManager.getRunningSessions(),
-            this.sessionManager.getKernelSpecs(),
+            this.sessionManager.getKernelSpecs()
         ]);
         const items = activeSessions.map((item) => {
             const matchingSpec: Partial<IJupyterKernelSpec> =
@@ -82,7 +82,7 @@ export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelS
                 ...item.kernel,
                 ...matchingSpec,
                 ...activeKernel,
-                session: item,
+                session: item
             } as LiveKernelModel;
         });
         return items
@@ -137,7 +137,7 @@ export class InterpreterKernelSelectionListProvider implements IKernelSelectionL
                 ...item,
                 // We don't want descriptions.
                 description: '',
-                selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined },
+                selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
             };
         });
     }

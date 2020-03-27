@@ -30,7 +30,7 @@ import {
     IPythonExecutionFactory,
     IPythonExecutionService,
     ObservableExecutionResult,
-    Output,
+    Output
 } from '../../client/common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
@@ -46,7 +46,7 @@ import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
 import {
     IJupyterKernelSpec,
     IJupyterSubCommandExecutionService,
-    INotebookServer,
+    INotebookServer
 } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
@@ -110,7 +110,7 @@ suite('Jupyter Execution', async () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
 
     const missingKernelPython: PythonInterpreter = {
@@ -119,7 +119,7 @@ suite('Jupyter Execution', async () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
 
     const missingNotebookPython: PythonInterpreter = {
@@ -128,7 +128,7 @@ suite('Jupyter Execution', async () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
 
     const missingNotebookPython2: PythonInterpreter = {
@@ -137,7 +137,7 @@ suite('Jupyter Execution', async () => {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
 
     let workingKernelSpec: string;
@@ -187,7 +187,7 @@ suite('Jupyter Execution', async () => {
         fs.writeJSONSync(filePath, {
             display_name: 'Python 3',
             language: 'python',
-            argv: [pythonPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}'],
+            argv: [pythonPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}']
         });
         return filePath;
     }
@@ -302,7 +302,7 @@ suite('Jupyter Execution', async () => {
             }),
             dispose: () => {
                 noop();
-            },
+            }
         };
 
         service
@@ -374,7 +374,7 @@ suite('Jupyter Execution', async () => {
             }),
             dispose: () => {
                 noop();
-            },
+            }
         };
 
         service
@@ -396,8 +396,8 @@ suite('Jupyter Execution', async () => {
                 spec: {
                     name: spec.name,
                     display_name: spec.name,
-                    language: 'python',
-                },
+                    language: 'python'
+                }
             };
         });
         return models;
@@ -422,8 +422,8 @@ suite('Jupyter Execution', async () => {
                     {
                         name: '0e8519db-0895-416c-96df-fa80131ecea0',
                         resourceDir:
-                            'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0',
-                    },
+                            'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+                    }
                 ]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             } else {
@@ -431,8 +431,8 @@ suite('Jupyter Execution', async () => {
                     {
                         name: '0e8519db-0895-416c-96df-fa80131ecea0',
                         resourceDir:
-                            'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0',
-                    },
+                            'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+                    }
                 ]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             }
@@ -442,8 +442,8 @@ suite('Jupyter Execution', async () => {
             {
                 name: '0e8519db-0895-416c-96df-fa80131ecea0',
                 resourceDir:
-                    'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0',
-            },
+                    'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+            }
         ]);
         setupPythonService(
             service,
@@ -458,7 +458,7 @@ suite('Jupyter Execution', async () => {
             () => {
                 ipykernelInstallCount += 1;
                 const kernelSpecs = createKernelSpecs([
-                    { name: 'somename', resourceDir: path.dirname(workingKernelSpec) },
+                    { name: 'somename', resourceDir: path.dirname(workingKernelSpec) }
                 ]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             }
@@ -486,7 +486,7 @@ suite('Jupyter Execution', async () => {
                 /--notebook-dir=.*/,
                 /--config=.*/,
                 '--NotebookApp.iopub_data_rate_limit=10000000000.0',
-                ...dockerArgs,
+                ...dockerArgs
             ],
             [],
             notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -528,7 +528,7 @@ suite('Jupyter Execution', async () => {
                 '--no-browser',
                 /--notebook-dir=.*/,
                 /--config=.*/,
-                '--NotebookApp.iopub_data_rate_limit=10000000000.0',
+                '--NotebookApp.iopub_data_rate_limit=10000000000.0'
             ],
             [],
             notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -558,8 +558,8 @@ suite('Jupyter Execution', async () => {
                         {
                             name: '0e8519db-0895-416c-96df-fa80131ecea0',
                             resourceDir:
-                                'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0',
-                        },
+                                'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+                        }
                     ]);
                     return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
                 } else {
@@ -567,8 +567,8 @@ suite('Jupyter Execution', async () => {
                         {
                             name: '0e8519db-0895-416c-96df-fa80131ecea0',
                             resourceDir:
-                                'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0',
-                        },
+                                'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+                        }
                     ]);
                     return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
                 }
@@ -579,8 +579,8 @@ suite('Jupyter Execution', async () => {
             {
                 name: '0e8519db-0895-416c-96df-fa80131ecea0',
                 resourceDir:
-                    'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0',
-            },
+                    'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+            }
         ]);
         setupProcessServiceExec(
             service,
@@ -599,12 +599,12 @@ suite('Jupyter Execution', async () => {
                 '--name',
                 /\w+-\w+-\w+-\w+-\w+/,
                 '--display-name',
-                `'Python Interactive'`,
+                `'Python Interactive'`
             ],
             () => {
                 ipykernelInstallCount += 1;
                 const kernelSpecs = createKernelSpecs([
-                    { name: 'somename', resourceDir: path.dirname(workingKernelSpec) },
+                    { name: 'somename', resourceDir: path.dirname(workingKernelSpec) }
                 ]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             }
@@ -638,7 +638,7 @@ suite('Jupyter Execution', async () => {
                 '--no-browser',
                 /--notebook-dir=.*/,
                 /--config=.*/,
-                '--NotebookApp.iopub_data_rate_limit=10000000000.0',
+                '--NotebookApp.iopub_data_rate_limit=10000000000.0'
             ],
             [],
             notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -682,7 +682,7 @@ suite('Jupyter Execution', async () => {
                 '--no-browser',
                 /--notebook-dir=.*/,
                 /--config=.*/,
-                '--NotebookApp.iopub_data_rate_limit=10000000000.0',
+                '--NotebookApp.iopub_data_rate_limit=10000000000.0'
             ],
             [],
             notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -723,7 +723,7 @@ suite('Jupyter Execution', async () => {
                 '--no-browser',
                 /--notebook-dir=.*/,
                 /--config=.*/,
-                '--NotebookApp.iopub_data_rate_limit=10000000000.0',
+                '--NotebookApp.iopub_data_rate_limit=10000000000.0'
             ],
             [],
             notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
@@ -763,7 +763,7 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getInterpreters(anything())).thenResolve([
             workingPython,
             missingKernelPython,
-            missingNotebookPython,
+            missingNotebookPython
         ]);
         when(interpreterService.getInterpreterDetails(match('/foo/bar/python.exe'))).thenResolve(workingPython); // Mockito is stupid. Matchers have to use literals.
         when(interpreterService.getInterpreterDetails(match('/foo/baz/python.exe'))).thenResolve(missingKernelPython);
@@ -892,7 +892,7 @@ suite('Jupyter Execution', async () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: [],
+            jupyterCommandLineArguments: []
         };
 
         // Service container also needs to generate jupyter servers. However we can't use a mock as that messes up returning
@@ -906,7 +906,7 @@ suite('Jupyter Execution', async () => {
             dispose: () => {
                 return undefined;
             },
-            filePath: '/foo/bar/baz.py',
+            filePath: '/foo/bar/baz.py'
         };
         when(fileSystem.createTemporaryFile(anything())).thenResolve(tempFile);
         when(fileSystem.createDirectory(anything())).thenResolve();
@@ -963,12 +963,12 @@ suite('Jupyter Execution', async () => {
             display_name: 'hello',
             language: PYTHON_LANGUAGE,
             name: 'hello',
-            path: '',
+            path: ''
         };
         when(
             kernelSelector.getKernelForLocalConnection(anything(), anything(), anything(), anything(), anything())
         ).thenResolve({
-            kernelSpec,
+            kernelSpec
         });
         const jupyterCmdExecutionService = new JupyterCommandFinderInterpreterExecutionService(
             commandFinder,
@@ -1002,7 +1002,7 @@ suite('Jupyter Execution', async () => {
                 instance(application),
                 instance(jupyterOutputChannel),
                 instance(serviceContainer)
-            ),
+            )
         };
     }
 
@@ -1041,7 +1041,7 @@ suite('Jupyter Execution', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters(anything())).thenResolve([
             missingNotebookPython,
-            missingNotebookPython2,
+            missingNotebookPython2
         ]);
         await assert.isRejected(execution.connectToNotebookServer(), 'cant exec');
     }).timeout(10000);
@@ -1099,7 +1099,7 @@ suite('Jupyter Execution', async () => {
         const evt = {
             affectsConfiguration(_m: string): boolean {
                 return true;
-            },
+            }
         };
         configChangeEvent.fire(evt);
         // Wait for cache to get cleared.
@@ -1130,7 +1130,7 @@ suite('Jupyter Execution', async () => {
         const evt = {
             affectsConfiguration(_m: string): boolean {
                 return true;
-            },
+            }
         };
         configChangeEvent.fire(evt);
         // Wait for cache to get cleared.

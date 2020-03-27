@@ -12,7 +12,7 @@ import {
     cache,
     cacheResourceSpecificInterpreterData,
     makeDebounceAsyncDecorator,
-    makeDebounceDecorator,
+    makeDebounceDecorator
 } from '../../../client/common/utils/decorators';
 import { sleep } from '../../core';
 use(chaiPromise);
@@ -37,14 +37,14 @@ suite('Common Utils - Decorators', function () {
                             },
                             inspect: () => {
                                 return { globalValue: pythonPath };
-                            },
+                            }
                         };
                     },
                     getWorkspaceFolder: () => {
                         return;
-                    },
+                    }
                 },
-                Uri: Uri,
+                Uri: Uri
             } as any;
         }
         test('Result must be cached when using cache decorator', async () => {

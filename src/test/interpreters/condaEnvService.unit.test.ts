@@ -65,11 +65,11 @@ suite('Interpreters from Conda Environments', () => {
         const info = {
             envs: [
                 path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-                path.join(environmentsPath, 'conda', 'envs', 'scipy'),
+                path.join(environmentsPath, 'conda', 'envs', 'scipy')
             ],
             default_prefix: '',
             'sys.version':
-                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
+                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -124,11 +124,11 @@ suite('Interpreters from Conda Environments', () => {
         const info = {
             envs: [
                 path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-                path.join(environmentsPath, 'conda', 'envs', 'scipy'),
+                path.join(environmentsPath, 'conda', 'envs', 'scipy')
             ],
             default_prefix: path.join(environmentsPath, 'conda', 'envs', 'root'),
             'sys.version':
-                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
+                '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -154,7 +154,7 @@ suite('Interpreters from Conda Environments', () => {
                 Promise.resolve([
                     { name: 'base', path: environmentsPath },
                     { name: 'numpy', path: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
-                    { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') },
+                    { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') }
                 ])
             );
         fileSystem
@@ -193,8 +193,7 @@ suite('Interpreters from Conda Environments', () => {
         const info = {
             envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')],
             default_prefix: '',
-            'sys.version':
-                '3.6.1 |Anaonda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
+            'sys.version': '3.6.1 |Anaonda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -241,8 +240,7 @@ suite('Interpreters from Conda Environments', () => {
         const info = {
             envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')],
             default_prefix: '',
-            'sys.version':
-                '3.6.1 |Anaonda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]',
+            'sys.version': '3.6.1 |Anaonda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'
         };
         interpreterHelper
             .setup((i) => i.getInterpreterInformation(TypeMoq.It.isAny()))
@@ -254,7 +252,7 @@ suite('Interpreters from Conda Environments', () => {
                 Promise.resolve([
                     { name: 'base', path: environmentsPath },
                     { name: 'numpy', path: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
-                    { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') },
+                    { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') }
                 ])
             );
         condaService
@@ -298,7 +296,7 @@ suite('Interpreters from Conda Environments', () => {
 
     async function useDefaultNameIfSysVersionIsEmpty(isWindows: boolean) {
         const info = {
-            envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')],
+            envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')]
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -344,7 +342,7 @@ suite('Interpreters from Conda Environments', () => {
 
     async function useDefaultNameIfSysVersionIsEmptyAndSuffixWithEnvironmentName(isWindows: boolean) {
         const info = {
-            envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')],
+            envs: [path.join(environmentsPath, 'conda', 'envs', 'numpy')]
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -370,7 +368,7 @@ suite('Interpreters from Conda Environments', () => {
                 Promise.resolve([
                     { name: 'base', path: environmentsPath },
                     { name: 'numpy', path: path.join(environmentsPath, 'conda', 'envs', 'numpy') },
-                    { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') },
+                    { name: 'scipy', path: path.join(environmentsPath, 'conda', 'envs', 'scipy') }
                 ])
             );
         fileSystem
@@ -398,7 +396,7 @@ suite('Interpreters from Conda Environments', () => {
 
     async function includeDefaultPrefixIntoListOfInterpreters(isWindows: boolean) {
         const info = {
-            default_prefix: path.join(environmentsPath, 'conda', 'envs', 'numpy'),
+            default_prefix: path.join(environmentsPath, 'conda', 'envs', 'numpy')
         };
         condaService
             .setup((c) => c.getInterpreterPath(TypeMoq.It.isAny()))
@@ -447,8 +445,8 @@ suite('Interpreters from Conda Environments', () => {
                 path.join(environmentsPath, 'path1', 'one.exe'),
                 path.join(environmentsPath, 'path2', 'one.exe'),
                 path.join(environmentsPath, 'conda', 'envs', 'scipy'),
-                path.join(environmentsPath, 'path3', 'three.exe'),
-            ],
+                path.join(environmentsPath, 'path3', 'three.exe')
+            ]
         };
         const validPaths = info.envs.filter((_, index) => index % 2 === 0);
         interpreterHelper

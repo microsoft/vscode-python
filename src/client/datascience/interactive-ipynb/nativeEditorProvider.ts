@@ -12,14 +12,14 @@ import {
     CustomEditorEditingDelegate,
     CustomEditorProvider,
     ICustomEditorService,
-    IWorkspaceService,
+    IWorkspaceService
 } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
     IConfigurationService,
-    IDisposableRegistry,
+    IDisposableRegistry
 } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -96,7 +96,7 @@ export class NativeEditorProvider
         // Register for the custom editor service.
         customEditorService.registerCustomEditorProvider(NativeEditorProvider.customEditorViewType, this, {
             enableFindWidget: true,
-            retainContextWhenHidden: true,
+            retainContextWhenHidden: true
         });
     }
 

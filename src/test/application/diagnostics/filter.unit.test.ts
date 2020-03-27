@@ -22,8 +22,8 @@ suite('Application Diagnostics - Filter', () => {
             name: 'Workspace',
             scope: DiagnosticScope.WorkspaceFolder,
             state: () => workspaceState,
-            otherState: () => globalState,
-        },
+            otherState: () => globalState
+        }
     ].forEach((item) => {
         let serviceContainer: typemoq.IMock<IServiceContainer>;
         let filterService: IDiagnosticFilterService;

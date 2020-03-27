@@ -17,7 +17,7 @@ import {
     IInterpreterHelper,
     IInterpreterLocatorHelper,
     InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../../client/interpreter/contracts';
 import { InterpreterLocatorHelper } from '../../../client/interpreter/locators/helpers';
 import { PipEnvServiceHelper } from '../../../client/interpreter/locators/services/pipEnvServiceHelper';
@@ -27,7 +27,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 enum OS {
     Windows = 'Windows',
     Linux = 'Linux',
-    Mac = 'Mac',
+    Mac = 'Mac'
 }
 
 suite('Interpreters - Locators Helper', () => {
@@ -71,7 +71,7 @@ suite('Interpreters - Locators Helper', () => {
                 sysPrefix: name,
                 sysVersion: name,
                 type: InterpreterType.Unknown,
-                version: new SemVer('0.0.0-alpha'),
+                version: new SemVer('0.0.0-alpha')
             };
             interpreters.push(interpreter);
 
@@ -114,7 +114,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     type: InterpreterType.Unknown,
-                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`),
+                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
                 interpreters.push(interpreter);
                 expectedInterpreters.push(interpreter);
@@ -128,7 +128,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     type: InterpreterType.Unknown,
-                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`),
+                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
 
                 const duplicateInterpreter = {
@@ -138,7 +138,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     type: InterpreterType.Unknown,
-                    version: new SemVer(interpreter.version.raw),
+                    version: new SemVer(interpreter.version.raw)
                 };
 
                 interpreters.push(interpreter);
@@ -181,7 +181,7 @@ suite('Interpreters - Locators Helper', () => {
                     sysPrefix: name,
                     sysVersion: name,
                     type,
-                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`),
+                    version: new SemVer(`3.${parseInt(name.substr(-1), 10)}.0-final`)
                 };
                 interpreters.push(interpreter);
 

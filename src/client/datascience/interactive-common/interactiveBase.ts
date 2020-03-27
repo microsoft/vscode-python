@@ -20,7 +20,7 @@ import {
     Selection,
     TextEditor,
     Uri,
-    ViewColumn,
+    ViewColumn
 } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -30,7 +30,7 @@ import {
     IDocumentManager,
     ILiveShareApi,
     IWebPanelProvider,
-    IWorkspaceService,
+    IWorkspaceService
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
@@ -59,7 +59,7 @@ import {
     IRemoteReexecuteCode,
     IShowDataViewer,
     ISubmitNewCell,
-    SysInfoReason,
+    SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -90,7 +90,7 @@ import {
     InterruptResult,
     IStatusProvider,
     IThemeFinder,
-    WebViewViewChangeEventArgs,
+    WebViewViewChangeEventArgs
 } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
@@ -531,7 +531,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 line,
                 id,
                 originator: this.id,
-                debug: debug !== undefined ? debug : false,
+                debug: debug !== undefined ? debug : false
             });
         }
 
@@ -648,8 +648,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 cell_type: 'messages',
                 messages: [message],
                 source: [],
-                metadata: {},
-            },
+                metadata: {}
+            }
         };
 
         // Do the same thing that happens when new code is added.
@@ -732,7 +732,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.shareMessage(InteractiveWindowMessages.AddedSysInfo, {
                     type: reason,
                     sysInfoCell: sysInfo,
-                    id: this.id,
+                    id: this.id
                 });
             }
 
@@ -777,9 +777,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     ...cell.data,
                     metadata: {
                         ...oldData.metadata,
-                        ...cell.data.metadata,
-                    },
-                },
+                        ...cell.data.metadata
+                    }
+                }
             };
             // Workaround the nyc compiler problem.
             // tslint:disable-next-line: no-any
@@ -1022,7 +1022,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const [resource, uri, metadata] = await Promise.all([
                 this.getOwningResource(),
                 this.getNotebookIdentity(),
-                this.getNotebookMetadata(),
+                this.getNotebookMetadata()
             ]);
             try {
                 notebook = uri
@@ -1078,7 +1078,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                     jupyterServerStatus: status,
                     localizedUri: this.getServerUri(notebook.server),
-                    displayName: name,
+                    displayName: name
                 });
             }
         };
@@ -1096,7 +1096,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.Busy,
                 localizedUri: this.getServerUri(server),
-                displayName: '',
+                displayName: ''
             }).ignoreErrors();
 
             this._notebook = await this.createNotebook(server);
@@ -1311,7 +1311,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                   totalCount: 0,
                   pageResponse: [],
                   pageStartIndex: args?.startIndex,
-                  executionCount: args?.executionCount,
+                  executionCount: args?.executionCount
               };
 
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();

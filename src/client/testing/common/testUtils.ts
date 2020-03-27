@@ -21,7 +21,7 @@ import {
     TestSettingsPropertyNames,
     TestsToRun,
     TestSuite,
-    UnitTestProduct,
+    UnitTestProduct
 } from './types';
 
 export async function selectTestWorkspace(appShell: IApplicationShell): Promise<Uri | undefined> {
@@ -89,20 +89,20 @@ export class TestsHelper implements ITestsHelper {
                 return {
                     argsName: 'pytestArgs' as keyof ITestingSettings,
                     pathName: 'pytestPath' as keyof ITestingSettings,
-                    enabledName: 'pytestEnabled' as keyof ITestingSettings,
+                    enabledName: 'pytestEnabled' as keyof ITestingSettings
                 };
             }
             case 'nosetest': {
                 return {
                     argsName: 'nosetestArgs' as keyof ITestingSettings,
                     pathName: 'nosetestPath' as keyof ITestingSettings,
-                    enabledName: 'nosetestsEnabled' as keyof ITestingSettings,
+                    enabledName: 'nosetestsEnabled' as keyof ITestingSettings
                 };
             }
             case 'unittest': {
                 return {
                     argsName: 'unittestArgs' as keyof ITestingSettings,
-                    enabledName: 'unittestEnabled' as keyof ITestingSettings,
+                    enabledName: 'unittestEnabled' as keyof ITestingSettings
                 };
             }
             default: {
@@ -120,7 +120,7 @@ export class TestsHelper implements ITestsHelper {
             testSuites: this.flatteningVisitor.flattenedTestSuites,
             testFolders: [],
             rootTestFolders: [],
-            summary: { passed: 0, failures: 0, errors: 0, skipped: 0 },
+            summary: { passed: 0, failures: 0, errors: 0, skipped: 0 }
         };
 
         this.placeTestFilesIntoFolders(tests, workspaceFolder);
@@ -160,7 +160,7 @@ export class TestsHelper implements ITestsHelper {
                         time: 0,
                         functionsPassed: 0,
                         functionsFailed: 0,
-                        functionsDidNotRun: 0,
+                        functionsDidNotRun: 0
                     };
                     folderMap.set(newPath, testFolder);
                     if (parentFolder) {
@@ -223,9 +223,9 @@ export class TestsHelper implements ITestsHelper {
                     time: 0,
                     functionsPassed: 0,
                     functionsFailed: 0,
-                    functionsDidNotRun: 0,
-                },
-            ],
+                    functionsDidNotRun: 0
+                }
+            ]
         };
     }
     public displayTestErrorMessage(message: string) {

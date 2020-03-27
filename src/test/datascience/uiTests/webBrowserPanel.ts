@@ -123,7 +123,7 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
         this.disposableRegistry.push(this);
         const webViewOptions: WebviewOptions = {
             enableScripts: true,
-            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)],
+            localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)]
         };
         if (options.webViewPanel) {
             this.panel = options.webViewPanel;
@@ -136,7 +136,7 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
                 {
                     retainContextWhenHidden: true,
                     enableFindWidget: true,
-                    ...webViewOptions,
+                    ...webViewOptions
                 }
             );
         }

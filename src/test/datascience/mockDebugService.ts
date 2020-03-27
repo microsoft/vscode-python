@@ -19,7 +19,7 @@ import {
     Event,
     EventEmitter,
     SourceBreakpoint,
-    WorkspaceFolder,
+    WorkspaceFolder
 } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
@@ -104,7 +104,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
             },
             appendLine(_value: string): void {
                 noop();
-            },
+            }
         };
     }
     public get breakpoints(): Breakpoint[] {
@@ -140,7 +140,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         return {
             dispose: () => {
                 noop();
-            },
+            }
         };
     }
 
@@ -199,7 +199,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         await this.emitMessage('stackTrace', {
             threadId: this._stoppedThreadId ? this._stoppedThreadId : 1,
             startFrame: 0,
-            levels: 1,
+            levels: 1
         });
         return deferred.promise;
     }
@@ -225,13 +225,13 @@ export class MockDebuggerService implements IDebugService, IDisposable {
         return this.sendMessage('setBreakpoints', {
             source: {
                 name: path.basename(file),
-                path: file,
+                path: file
             },
             lines: sbs.map((sb) => sb.location.range.start.line),
             breakpoints: sbs.map((sb) => {
                 return { line: sb.location.range.start.line };
             }),
-            sourceModified: true,
+            sourceModified: true
         });
     }
 
@@ -249,7 +249,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
             showReturnValue: true,
             workspaceFolder: EXTENSION_ROOT_DIR,
             pathMappings: [{ localRoot: EXTENSION_ROOT_DIR, remoteRoot: EXTENSION_ROOT_DIR }],
-            __sessionId: sessionId,
+            __sessionId: sessionId
         });
     }
 
@@ -269,7 +269,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
             supportsVariableType: true,
             supportsVariablePaging: true,
             supportsRunInTerminalRequest: true,
-            locale: 'en-us',
+            locale: 'en-us'
         });
     }
 
@@ -289,7 +289,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
                         command,
                         arguments: args,
                         type: 'request',
-                        seq: this.sequence,
+                        seq: this.sequence
                     };
                     this.sequence += 1;
                     const objString = JSON.stringify(obj);

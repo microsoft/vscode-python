@@ -15,7 +15,7 @@ import {
     IInterpreterHelper,
     IInterpreterService,
     InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { InterpreterDisplay } from '../../client/interpreter/display';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
@@ -32,7 +32,7 @@ const info: PythonInterpreter = {
     type: InterpreterType.Unknown,
     version: new SemVer('0.0.0-alpha'),
     sysPrefix: '',
-    sysVersion: '',
+    sysVersion: ''
 };
 
 suite('Interpreters Display', () => {
@@ -120,7 +120,7 @@ suite('Interpreters Display', () => {
             ...info,
             displayName: 'Dummy_Display_Name',
             type: InterpreterType.Unknown,
-            path: path.join('user', 'development', 'env', 'bin', 'python'),
+            path: path.join('user', 'development', 'env', 'bin', 'python')
         };
         setupWorkspaceFolder(resource, workspaceFolder);
         when(autoSelection.autoSelectInterpreter(anything())).thenResolve();
@@ -146,7 +146,7 @@ suite('Interpreters Display', () => {
         setupWorkspaceFolder(resource, workspaceFolder);
         const pythonInterpreter: PythonInterpreter = ({
             displayName,
-            path: pythonPath,
+            path: pythonPath
         } as any) as PythonInterpreter;
         interpreterService
             .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder)))
@@ -196,7 +196,7 @@ suite('Interpreters Display', () => {
             displayName: 'Dummy_Display_Name',
             type: InterpreterType.Unknown,
             companyDisplayName: 'Company Name',
-            path: pythonPath,
+            path: pythonPath
         };
         fileSystem.setup((fs) => fs.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
         virtualEnvMgr

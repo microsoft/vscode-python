@@ -238,7 +238,7 @@ suite('Language Server Activation - ActivationManager', () => {
     test('If doc opened is not python, return', async () => {
         const doc = {
             uri: Uri.parse('doc'),
-            languageId: 'NOT PYTHON',
+            languageId: 'NOT PYTHON'
         };
 
         managerTest.onDocOpened(doc as any);
@@ -248,7 +248,7 @@ suite('Language Server Activation - ActivationManager', () => {
     test('If we have opened a doc that does not belong to workspace, then do nothing', async () => {
         const doc = {
             uri: Uri.parse('doc'),
-            languageId: PYTHON_LANGUAGE,
+            languageId: PYTHON_LANGUAGE
         };
         when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('');
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
@@ -262,7 +262,7 @@ suite('Language Server Activation - ActivationManager', () => {
     test('If workspace corresponding to the doc has already been activated, then do nothing', async () => {
         const doc = {
             uri: Uri.parse('doc'),
-            languageId: PYTHON_LANGUAGE,
+            languageId: PYTHON_LANGUAGE
         };
         when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('key');
         managerTest.activatedWorkspaces.add('key');

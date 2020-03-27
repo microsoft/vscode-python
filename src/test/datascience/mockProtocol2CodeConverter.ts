@@ -323,7 +323,7 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
                 return {
                     text: new code.SnippetString(item.textEdit.newText),
                     range: this.asRange(item.textEdit.range),
-                    fromEdit: true,
+                    fromEdit: true
                 };
             } else {
                 return { text: item.textEdit.newText, range: this.asRange(item.textEdit.range), fromEdit: true };

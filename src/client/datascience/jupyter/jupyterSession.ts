@@ -8,7 +8,7 @@ import {
     KernelMessage,
     ServerConnection,
     Session,
-    SessionManager,
+    SessionManager
 } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
@@ -338,7 +338,7 @@ export class JupyterSession implements IJupyterSession {
                 metadata,
                 msgId,
                 session: this.session.kernel.clientId,
-                username: this.session.kernel.username,
+                username: this.session.kernel.username
             });
 
             return this.session.kernel.sendShellMessage(shellMessage, false, true);
@@ -428,7 +428,7 @@ export class JupyterSession implements IJupyterSession {
                             ...session.kernel,
                             lastActivityTime: new Date(),
                             numberOfConnections: 0,
-                            session: session.model,
+                            session: session.model
                         })
                     );
                 }
@@ -512,7 +512,7 @@ export class JupyterSession implements IJupyterSession {
             path: this.notebookFiles[this.notebookFiles.length - 1].path,
             kernelName: kernelSpec ? kernelSpec.name : '',
             name: uuid(), // This is crucial to distinguish this session from any other.
-            serverSettings: serverSettings,
+            serverSettings: serverSettings
         };
 
         return Cancellation.race(

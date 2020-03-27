@@ -25,7 +25,7 @@ class TestRunner {
     private async launchSmokeTests() {
         const env: Record<string, {}> = {
             VSC_PYTHON_SMOKE_TEST: '1',
-            CODE_EXTENSIONS_PATH: SMOKE_TEST_EXTENSIONS_DIR,
+            CODE_EXTENSIONS_PATH: SMOKE_TEST_EXTENSIONS_DIR
         };
 
         await this.launchTest(env);
@@ -60,11 +60,11 @@ class TestRunner {
                     'smokeTests'
                 ),
                 ...process.env,
-                ...customEnvVars,
+                ...customEnvVars
             };
             const proc = spawn('node', [path.join(__dirname, 'standardTest.js')], {
                 cwd: EXTENSION_ROOT_DIR_FOR_TESTS,
-                env,
+                env
             });
             proc.stdout.pipe(process.stdout);
             proc.stderr.pipe(process.stderr);

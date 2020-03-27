@@ -79,7 +79,7 @@ suite('Debugging - Capabilities', function () {
 
             public getInitializeResponseFromDebugAdapter() {
                 let initializeResponse = {
-                    body: {},
+                    body: {}
                 } as DebugProtocol.InitializeResponse;
                 this.sendResponse = (resp) => (initializeResponse = resp);
 
@@ -100,7 +100,7 @@ suite('Debugging - Capabilities', function () {
         env.PYTHONPATH = PTVSD_PATH;
         proc = spawn(PYTHON_PATH, ['-m', 'ptvsd', '--host', 'localhost', '--wait', '--port', `${port}`, fileToDebug], {
             cwd: path.dirname(fileToDebug),
-            env,
+            env
         });
         await sleep(3000);
 
@@ -125,7 +125,7 @@ suite('Debugging - Capabilities', function () {
             port: port,
             host: 'localhost',
             logToFile: false,
-            debugOptions: [],
+            debugOptions: []
         });
         const attached = new Promise((resolve) => protocolParser.once('response_attach', resolve));
         protocolWriter.write(socket, attachRequest);

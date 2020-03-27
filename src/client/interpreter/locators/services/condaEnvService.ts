@@ -109,7 +109,7 @@ export async function parseCondaInfo(
             path: pythonPath,
             companyDisplayName: AnacondaCompanyName,
             type: InterpreterType.Conda,
-            envPath,
+            envPath
         };
     });
 

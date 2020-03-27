@@ -36,7 +36,7 @@ suite('Terminal - Code Execution Manager', () => {
             .setup((c) => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
                 return {
-                    dispose: () => void 0,
+                    dispose: () => void 0
                 };
             });
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
@@ -79,7 +79,7 @@ suite('Terminal - Code Execution Manager', () => {
             Commands.Exec_In_Terminal,
             Commands.Exec_In_Terminal_Icon,
             Commands.Exec_Selection_In_Django_Shell,
-            Commands.Exec_Selection_In_Terminal,
+            Commands.Exec_Selection_In_Terminal
         ]);
     });
 

@@ -155,8 +155,8 @@ export class IntellisenseDocument implements TextDocument {
                 range: this.createSerializableRange(new Position(0, 0), new Position(0, 0)),
                 rangeOffset: 0,
                 rangeLength: 0, // Adds are always zero
-                text: this._contents,
-            },
+                text: this._contents
+            }
         ];
     }
 
@@ -196,14 +196,14 @@ export class IntellisenseDocument implements TextDocument {
             uri: this._uri.toString(),
             languageId: this.languageId,
             version: this.version,
-            text: this.getText(),
+            text: this.getText()
         };
     }
 
     public get textDocumentId(): vscodeLanguageClient.VersionedTextDocumentIdentifier {
         return {
             uri: this._uri.toString(),
-            version: this.version,
+            version: this.version
         };
     }
 
@@ -223,7 +223,7 @@ export class IntellisenseDocument implements TextDocument {
         const normalized = cells.map((c) => {
             return {
                 id: c.id,
-                code: `${c.code.replace(/\r/g, '')}\n`,
+                code: `${c.code.replace(/\r/g, '')}\n`
             };
         });
 
@@ -244,7 +244,7 @@ export class IntellisenseDocument implements TextDocument {
                 id: c.id,
                 start: prev,
                 fullEnd: prev + c.code.length,
-                currentEnd: prev + c.code.length,
+                currentEnd: prev + c.code.length
             };
             prev += c.code.length;
             return result;
@@ -259,8 +259,8 @@ export class IntellisenseDocument implements TextDocument {
                 range: this.createSerializableRange(new Position(0, 0), new Position(0, 0)),
                 rangeOffset: 0,
                 rangeLength: 0, // Adds are always zero
-                text: this._contents,
-            },
+                text: this._contents
+            }
         ];
     }
 
@@ -291,7 +291,7 @@ export class IntellisenseDocument implements TextDocument {
             id,
             start: fromOffset,
             fullEnd: fromOffset + newCode.length,
-            currentEnd: fromOffset + newCurrentCode.length,
+            currentEnd: fromOffset + newCurrentCode.length
         });
 
         // Update our entire contents and recompute our lines
@@ -306,8 +306,8 @@ export class IntellisenseDocument implements TextDocument {
                 range: this.createSerializableRange(fromPosition, fromPosition),
                 rangeOffset: fromOffset,
                 rangeLength: 0, // Adds are always zero
-                text: newCode,
-            },
+                text: newCode
+            }
         ];
     }
 
@@ -366,7 +366,7 @@ export class IntellisenseDocument implements TextDocument {
             id,
             start: fromOffset,
             fullEnd: fromOffset + newCode.length,
-            currentEnd: fromOffset + newCode.length,
+            currentEnd: fromOffset + newCode.length
         });
 
         return [
@@ -374,8 +374,8 @@ export class IntellisenseDocument implements TextDocument {
                 range: this.createSerializableRange(fromPosition, fromPosition),
                 rangeOffset: fromOffset,
                 rangeLength: 0, // Adds are always zero
-                text: newCode,
-            },
+                text: newCode
+            }
         ];
     }
 
@@ -467,8 +467,8 @@ export class IntellisenseDocument implements TextDocument {
                     range: this.createSerializableRange(from, to),
                     rangeOffset: found.start,
                     rangeLength: foundLength,
-                    text: '',
-                },
+                    text: ''
+                }
             ];
         }
 
@@ -519,8 +519,8 @@ export class IntellisenseDocument implements TextDocument {
                     range: this.createSerializableRange(from, to),
                     rangeOffset: fromOffset,
                     rangeLength: toOffset - fromOffset,
-                    text: replacement,
-                },
+                    text: replacement
+                }
             ];
         }
 
@@ -545,8 +545,8 @@ export class IntellisenseDocument implements TextDocument {
                     range: this.createSerializableRange(from, to),
                     rangeOffset: 0,
                     rangeLength: length,
-                    text: '',
-                },
+                    text: ''
+                }
             ];
         }
 
@@ -573,7 +573,7 @@ export class IntellisenseDocument implements TextDocument {
         if (range) {
             return {
                 offset: range.start,
-                text: this._contents.substring(range.start, range.currentEnd),
+                text: this._contents.substring(range.start, range.currentEnd)
             };
         }
     }
@@ -639,8 +639,8 @@ export class IntellisenseDocument implements TextDocument {
                 range: this.createSerializableRange(from, to),
                 rangeOffset: fromOffset,
                 rangeLength: toOffset - fromOffset,
-                text: newText,
-            },
+                text: newText
+            }
         ];
     }
 
@@ -676,12 +676,12 @@ export class IntellisenseDocument implements TextDocument {
         const result = {
             start: {
                 line: start.line,
-                character: start.character,
+                character: start.character
             },
             end: {
                 line: end.line,
-                character: end.character,
-            },
+                character: end.character
+            }
         };
         return result as Range;
     }

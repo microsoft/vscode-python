@@ -79,19 +79,19 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
             borderColor: new vscode.ThemeColor('peekView.border'),
             borderWidth: '2px 0px 0px 0px',
             borderStyle: 'solid',
-            isWholeLine: true,
+            isWholeLine: true
         });
         this.activeCellBottom = this.documentManager.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('peekView.border'),
             borderWidth: '0px 0px 1px 0px',
             borderStyle: 'solid',
-            isWholeLine: true,
+            isWholeLine: true
         });
         this.cellSeparatorType = this.documentManager.createTextEditorDecorationType({
             borderColor: new vscode.ThemeColor('editor.lineHighlightBorder'),
             borderWidth: '1px 0px 0px 0px',
             borderStyle: 'solid',
-            isWholeLine: true,
+            isWholeLine: true
         });
     }
 

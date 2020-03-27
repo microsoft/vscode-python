@@ -12,7 +12,7 @@ import {
     CursorPos,
     getSelectedAndFocusedInfo,
     ICellViewModel,
-    IMainState,
+    IMainState
 } from '../../../interactive-common/mainState';
 import { postActionToExtension, queueIncomingActionWithPayload } from '../../../interactive-common/redux/helpers';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
@@ -21,7 +21,7 @@ import {
     CommonActionType,
     ICellAction,
     IChangeCellTypeAction,
-    IExecuteAction,
+    IExecuteAction
 } from '../../../interactive-common/redux/reducers/types';
 import { NativeEditorReducerArg } from '../mapping';
 import { Effects } from './effects';
@@ -49,7 +49,7 @@ export namespace Execution {
                 clonedCell.outputs = [];
                 newVMs[index] = Helpers.asCellViewModel({
                     ...orig,
-                    cell: { ...orig.cell, state: CellState.executing, data: clonedCell },
+                    cell: { ...orig.cell, state: CellState.executing, data: clonedCell }
                 });
                 cellIdsToExecute.push(orig.cell.id);
             }
@@ -59,13 +59,13 @@ export namespace Execution {
         if (cellIdsToExecute.length > 0) {
             // Send a message if a code cell
             postActionToExtension(originalArg, InteractiveWindowMessages.ReExecuteCells, {
-                cellIds: cellIdsToExecute,
+                cellIds: cellIdsToExecute
             });
         }
 
         return {
             ...prevState,
-            cellVMs: newVMs,
+            cellVMs: newVMs
         };
     }
 
@@ -82,17 +82,17 @@ export namespace Execution {
     export function executeCellAndAdvance(arg: NativeEditorReducerArg<IExecuteAction>): IMainState {
         queueIncomingActionWithPayload(arg, CommonActionType.EXECUTE_CELL, {
             cellId: arg.payload.data.cellId,
-            moveOp: arg.payload.data.moveOp,
+            moveOp: arg.payload.data.moveOp
         });
         if (arg.payload.data.moveOp === 'add') {
             const newCellId = uuid();
             queueIncomingActionWithPayload(arg, CommonActionType.INSERT_BELOW, {
                 cellId: arg.payload.data.cellId,
-                newCellId,
+                newCellId
             });
             queueIncomingActionWithPayload(arg, CommonActionType.FOCUS_CELL, {
                 cellId: newCellId,
-                cursorPos: CursorPos.Current,
+                cursorPos: CursorPos.Current
             });
         }
         return arg.prevState;
@@ -112,16 +112,16 @@ export namespace Execution {
                         {
                             ...arg,
                             prevState: {
-                                ...executeResult,
+                                ...executeResult
                             },
                             payload: {
                                 ...arg.payload,
                                 data: {
                                     ...arg.payload.data,
                                     cellId: arg.prevState.cellVMs[index + 1].cell.id,
-                                    cursorPos: CursorPos.Current,
-                                },
-                            },
+                                    cursorPos: CursorPos.Current
+                                }
+                            }
                         },
                         // Select the next cell, but do not set focus to it.
                         false
@@ -164,9 +164,9 @@ export namespace Execution {
                     ...arg.payload,
                     data: {
                         cellId: selectionInfo.selectedCellId,
-                        moveOp: 'none',
-                    },
-                },
+                        moveOp: 'none'
+                    }
+                }
             });
         }
 
@@ -177,7 +177,7 @@ export namespace Execution {
         const newList = arg.prevState.cellVMs.map((cellVM) => {
             return Helpers.asCellViewModel({
                 ...cellVM,
-                cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } },
+                cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } }
             });
         });
 
@@ -185,7 +185,7 @@ export namespace Execution {
 
         return {
             ...arg.prevState,
-            cellVMs: newList,
+            cellVMs: newList
         };
     }
 
@@ -200,15 +200,15 @@ export namespace Execution {
                 ...current,
                 cell: {
                     ...current.cell,
-                    data: newNotebookCell,
-                },
+                    data: newNotebookCell
+                }
             };
             cellVMs[index] = newCell;
             Transfer.changeCellType(arg, cellVMs[index].cell);
 
             return {
                 ...arg.prevState,
-                cellVMs,
+                cellVMs
             };
         }
 
@@ -227,7 +227,7 @@ export namespace Execution {
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true,
+                skipNextScroll: true
             };
         }
 
@@ -246,7 +246,7 @@ export namespace Execution {
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true,
+                skipNextScroll: true
             };
         }
 

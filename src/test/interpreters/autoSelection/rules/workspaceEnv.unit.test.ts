@@ -30,7 +30,7 @@ import {
     IInterpreterHelper,
     IInterpreterLocatorService,
     PythonInterpreter,
-    WorkspacePythonPath,
+    WorkspacePythonPath
 } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { KnownPathsService } from '../../../../client/interpreter/locators/services/KnownPathsService';
@@ -214,7 +214,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         when(virtualEnvLocator.getInterpreters(resource, true)).thenResolve([
             interpreter1,
             interpreter2,
-            interpreter3,
+            interpreter3
         ] as any);
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
         when(platform.osType).thenReturn(OSType.Windows);
@@ -249,7 +249,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             when(virtualEnvLocator.getInterpreters(resource, true)).thenResolve([
                 interpreter1,
                 interpreter2,
-                interpreter3,
+                interpreter3
             ] as any);
             when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
             when(platform.osType).thenReturn(osType);

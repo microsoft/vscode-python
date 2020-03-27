@@ -13,7 +13,7 @@ import {
     TestFunction,
     Tests,
     TestStatus,
-    TestsToRun,
+    TestsToRun
 } from '../common/types';
 import { ITestDisplay } from '../types';
 
@@ -48,7 +48,7 @@ export class TestDisplay implements ITestDisplay {
             this.appShell
                 .showQuickPick(buildItemsForFunctions(rootDirectory, tests.testFunctions), {
                     matchOnDescription: true,
-                    matchOnDetail: true,
+                    matchOnDetail: true
                 })
                 .then((item) => {
                     if (item && item.fn) {
@@ -63,7 +63,7 @@ export class TestDisplay implements ITestDisplay {
             this.appShell
                 .showQuickPick(buildItemsForTestFiles(rootDirectory, tests.testFiles), {
                     matchOnDescription: true,
-                    matchOnDetail: true,
+                    matchOnDetail: true
                 })
                 .then((item) => {
                     if (item && item.testFile) {
@@ -122,7 +122,7 @@ export enum Type {
     SelectAndRunMethod = 9,
     DebugMethod = 10,
     Configure = 11,
-    RunParametrized = 12,
+    RunParametrized = 12
 }
 const statusIconMapping = new Map<TestStatus, string>();
 statusIconMapping.set(TestStatus.Pass, constants.Octicons.Test_Pass);
@@ -176,7 +176,7 @@ function buildItems(tests?: Tests): TestItem[] {
             description: '',
             label: 'Run Failed Tests',
             type: Type.RunFailed,
-            detail: `${constants.Octicons.Test_Fail} ${tests.summary.failures} Failed`,
+            detail: `${constants.Octicons.Test_Fail} ${tests.summary.failures} Failed`
         });
     }
 
@@ -191,7 +191,7 @@ const statusSortPrefix = {
     [TestStatus.Discovering]: undefined,
     [TestStatus.Idle]: undefined,
     [TestStatus.Running]: undefined,
-    [TestStatus.Unknown]: undefined,
+    [TestStatus.Unknown]: undefined
 };
 
 function buildRunAllParametrizedItem(tests: FlattenedTestFunction[], debug: boolean = false): TestItem[] {
@@ -204,8 +204,8 @@ function buildRunAllParametrizedItem(tests: FlattenedTestFunction[], debug: bool
             description: '',
             label: debug ? 'Debug All' : 'Run All',
             type: Type.RunParametrized,
-            fns: testFunctions,
-        },
+            fns: testFunctions
+        }
     ];
 }
 function buildItemsForFunctions(
@@ -227,7 +227,7 @@ function buildItemsForFunctions(
             detail: path.relative(rootDirectory, fn.parentTestFile.fullPath),
             label: icon + fn.testFunction.name,
             type: debug === true ? Type.DebugMethod : Type.RunMethod,
-            fn: fn,
+            fn: fn
         });
     });
     functionItems.sort((a, b) => {
@@ -258,7 +258,7 @@ function buildItemsForTestFiles(rootDirectory: string, testFiles: TestFile[]): T
             detail: path.relative(rootDirectory, testFile.fullPath),
             type: Type.RunFile,
             label: path.basename(testFile.fullPath),
-            testFile: testFile,
+            testFile: testFile
         };
     });
     fileItems.sort((a, b) => {

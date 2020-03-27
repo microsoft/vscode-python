@@ -22,7 +22,7 @@ import {
     logger,
     OutputEvent,
     Response,
-    TerminatedEvent,
+    TerminatedEvent
 } from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
 import { DebugProtocol } from 'vscode-debugprotocol';
@@ -93,13 +93,13 @@ export class PythonDebugger extends DebugSession {
             {
                 filter: 'raised',
                 label: 'Raised Exceptions',
-                default: false,
+                default: false
             },
             {
                 filter: 'uncaught',
                 label: 'Uncaught Exceptions',
-                default: true,
-            },
+                default: true
+            }
         ];
         if (typeof args.supportsRunInTerminalRequest === 'boolean') {
             this.supportsRunInTerminalRequest = args.supportsRunInTerminalRequest;

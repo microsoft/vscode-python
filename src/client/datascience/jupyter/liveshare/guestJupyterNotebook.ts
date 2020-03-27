@@ -24,7 +24,7 @@ import {
     INotebookCompletion,
     INotebookExecutionLogger,
     INotebookServer,
-    InterruptResult,
+    InterruptResult
 } from '../../types';
 import { LiveKernelModel } from '../kernels/types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
@@ -206,9 +206,9 @@ export class GuestJupyterNotebook
             matches: [],
             cursor: {
                 start: 0,
-                end: 0,
+                end: 0
             },
-            metadata: {},
+            metadata: {}
         });
     }
 
@@ -280,7 +280,7 @@ export class GuestJupyterNotebook
             metadata,
             msgId,
             session: '1',
-            username: '1',
+            username: '1'
         });
 
         return {
@@ -293,7 +293,7 @@ export class GuestJupyterNotebook
             removeMessageHook: noop,
             sendInputReply: noop,
             isDisposed: false,
-            dispose: noop,
+            dispose: noop
         };
     }
 
@@ -304,12 +304,12 @@ export class GuestJupyterNotebook
             msgType: 'comm_info_reply',
             channel: 'shell',
             content: {
-                status: 'ok',
+                status: 'ok'
                 // tslint:disable-next-line: no-any
             } as any,
             metadata: {},
             session: '1',
-            username: '1',
+            username: '1'
         });
 
         return Promise.resolve(shellMessage);

@@ -24,7 +24,7 @@ import { IInterpreterAutoSelectionService } from '../../../../client/interpreter
 import {
     IInterpreterHelper,
     IInterpreterLocatorService,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { WindowsRegistryService } from '../../../../client/interpreter/locators/services/windowsRegistryService';

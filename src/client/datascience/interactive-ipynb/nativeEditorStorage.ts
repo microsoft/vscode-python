@@ -63,7 +63,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         changeCount: 0,
         saveChangeCount: 0,
         cells: [],
-        notebookJson: {},
+        notebookJson: {}
     };
     private indentAmount: string = ' ';
     private debouncedWriteToStorage = debounce(this.writeToStorage.bind(this), 250);
@@ -107,7 +107,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 newFile: file,
                 oldFile: this.file,
                 newDirty: false,
-                oldDirty: this.isDirty,
+                oldDirty: this.isDirty
             });
         }
     }
@@ -321,7 +321,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             if (contents !== newContents) {
                 const newCell = {
                     ...this.cells[index],
-                    data: { ...this.cells[index].data, source: splitMultilineString(newContents) },
+                    data: { ...this.cells[index].data, source: splitMultilineString(newContents) }
                 };
                 this._state.cells[index] = this.asCell(newCell);
                 return true;
@@ -413,7 +413,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             // Add a new spec in this case
             this._state.notebookJson.metadata.kernelspec = {
                 name: kernelSpec.name || kernelSpec.display_name || '',
-                display_name: kernelSpec.display_name || kernelSpec.name || '',
+                display_name: kernelSpec.display_name || kernelSpec.name || ''
             };
             changed = true;
         } else if (kernelSpec && this._state.notebookJson.metadata && this._state.notebookJson.metadata.kernelspec) {
@@ -468,7 +468,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
             line: 0,
             file: Identifiers.EmptyFileName,
             state: CellState.finished,
-            data: createCodeCell(),
+            data: createCodeCell()
         };
     }
 
@@ -504,7 +504,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 file: Identifiers.EmptyFileName,
                 line: 0,
                 state: CellState.finished,
-                data: c,
+                data: c
             };
         });
 
@@ -544,8 +544,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                     name: 'python',
                     codemirror_mode: {
                         name: 'ipython',
-                        version: pythonNumber,
-                    },
+                        version: pythonNumber
+                    }
                 },
                 orig_nbformat: 2,
                 file_extension: '.py',
@@ -553,14 +553,14 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
                 name: 'python',
                 npconvert_exporter: 'python',
                 pygments_lexer: `ipython${pythonNumber}`,
-                version: pythonNumber,
+                version: pythonNumber
             };
 
             // Default notebook data.
             this._state.notebookJson = {
                 nbformat: 4,
                 nbformat_minor: 2,
-                metadata: metadata,
+                metadata: metadata
             };
         }
     }
@@ -572,7 +572,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Reuse our original json except for the cells.
         const json = {
             ...(this._state.notebookJson as nbformat.INotebookContent),
-            cells: cells.map((c) => this.fixupCell(c.data)),
+            cells: cells.map((c) => this.fixupCell(c.data))
         };
         return JSON.stringify(json, null, this.indentAmount);
     }
@@ -581,7 +581,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Source is usually a single string on input. Convert back to an array
         return ({
             ...cell,
-            source: splitMultilineString(cell.source),
+            source: splitMultilineString(cell.source)
             // tslint:disable-next-line: no-any
         } as any) as nbformat.ICell; // nyc (code coverage) barfs on this so just trick it.
     }

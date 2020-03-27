@@ -2,6 +2,7 @@ module.exports = {
     singleQuote: true,
     printWidth: 120,
     tabWidth: 4,
+    trailingComma: 'none',
     overrides: [
         {
             files: ['*.yml', '*.yaml'],

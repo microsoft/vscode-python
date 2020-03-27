@@ -20,7 +20,7 @@ initializeFileLogger();
 const logLevelMap = {
     [LogLevel.Error]: 'error',
     [LogLevel.Information]: 'info',
-    [LogLevel.Warning]: 'warn',
+    [LogLevel.Warning]: 'warn'
 };
 
 function log(logLevel: LogLevel, ...args: any[]) {
@@ -60,7 +60,7 @@ function initializeConsoleLogger() {
         info: Symbol.for('info'),
         error: Symbol.for('error'),
         debug: Symbol.for('debug'),
-        warn: Symbol.for('warn'),
+        warn: Symbol.for('warn')
     };
 
     function logToConsole(stream: 'info' | 'error' | 'warn' | 'log' | 'debug', ...args: any[]) {
@@ -150,7 +150,7 @@ function initializeConsoleLogger() {
     const consoleFormat = format.combine(
         format.label({ label: 'Python Extension:' }),
         format.timestamp({
-            format: 'YYYY-MM-DD HH:mm:ss',
+            format: 'YYYY-MM-DD HH:mm:ss'
         }),
         consoleFormatter
     );
@@ -172,7 +172,7 @@ function initializeFileLogger() {
     });
     const fileFormat = format.combine(
         format.timestamp({
-            format: 'YYYY-MM-DD HH:mm:ss',
+            format: 'YYYY-MM-DD HH:mm:ss'
         }),
         fileFormatter
     );
@@ -182,7 +182,7 @@ function initializeFileLogger() {
     const logFileSink = new transports.File({
         format: fileFormat,
         filename: logFilePath,
-        handleExceptions: true,
+        handleExceptions: true
     });
     fileLogger.add(logFileSink);
 }
@@ -195,7 +195,7 @@ function initializeFileLogger() {
 export enum LogOptions {
     None = 0,
     Arguments = 1,
-    ReturnValue = 2,
+    ReturnValue = 2
 }
 
 // tslint:disable-next-line:no-any

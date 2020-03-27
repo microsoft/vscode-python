@@ -29,7 +29,7 @@ import {
     INotebookEditorProvider,
     INotebookProvider,
     INotebookServer,
-    INotebookServerOptions,
+    INotebookServerOptions
 } from '../types';
 
 @injectable()
@@ -251,7 +251,7 @@ export class NotebookProvider implements INotebookProvider {
             uri: serverURI,
             skipUsingDefaultConfig: !useDefaultConfig,
             purpose: Identifiers.HistoryPurpose,
-            allowUI: this.allowUI.bind(this),
+            allowUI: this.allowUI.bind(this)
         };
     }
 

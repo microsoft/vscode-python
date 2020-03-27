@@ -50,7 +50,7 @@ export class LinterManager implements ILinterManager {
             new LinterInfo(Product.pycodestyle, 'pycodestyle', this.configService),
             new LinterInfo(Product.prospector, 'prospector', this.configService),
             new LinterInfo(Product.pydocstyle, 'pydocstyle', this.configService),
-            new LinterInfo(Product.pylama, 'pylama', this.configService),
+            new LinterInfo(Product.pylama, 'pylama', this.configService)
         ];
     }
 

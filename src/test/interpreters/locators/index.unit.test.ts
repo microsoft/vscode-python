@@ -25,7 +25,7 @@ import {
     PIPENV_SERVICE,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../../client/interpreter/contracts';
 import { PythonInterpreterLocatorService } from '../../../client/interpreter/locators';
 import { IInterpreterFilter } from '../../../client/interpreter/locators/types';
@@ -82,7 +82,7 @@ suite('Interpreters - Locators Index', () => {
                         sysPrefix: typeName,
                         sysVersion: typeName,
                         type: InterpreterType.Unknown,
-                        version: new SemVer('0.0.0-alpha'),
+                        version: new SemVer('0.0.0-alpha')
                     };
 
                     const typeLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -104,7 +104,7 @@ suite('Interpreters - Locators Index', () => {
                     return {
                         type: typeName,
                         locator: typeLocator,
-                        interpreters: [interpreter],
+                        interpreters: [interpreter]
                     };
                 });
 
@@ -144,7 +144,7 @@ suite('Interpreters - Locators Index', () => {
                         sysPrefix: typeName,
                         sysVersion: typeName,
                         type: InterpreterType.Unknown,
-                        version: new SemVer('0.0.0-alpha'),
+                        version: new SemVer('0.0.0-alpha')
                     };
 
                     const typeLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
@@ -166,7 +166,7 @@ suite('Interpreters - Locators Index', () => {
                     return {
                         type: typeName,
                         locator: typeLocator,
-                        interpreters: [interpreter],
+                        interpreters: [interpreter]
                     };
                 });
 

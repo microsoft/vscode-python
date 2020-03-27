@@ -27,7 +27,7 @@ import {
     TextDocument,
     TextEdit,
     Uri,
-    WorkspaceEdit,
+    WorkspaceEdit
 } from 'vscode';
 import {
     HandleDiagnosticsSignature,
@@ -50,7 +50,7 @@ import {
     ProvideWorkspaceSymbolsSignature,
     ResolveCodeLensSignature,
     ResolveCompletionItemSignature,
-    ResolveDocumentLinkSignature,
+    ResolveDocumentLinkSignature
 } from 'vscode-languageclient';
 
 import { ProvideDeclarationSignature } from 'vscode-languageclient/lib/declaration';
@@ -403,7 +403,7 @@ function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: numb
 
             const properties = {
                 lsVersion: this.serverVersion || 'unknown',
-                method: method,
+                method: method
             };
 
             const stopWatch = new StopWatch();

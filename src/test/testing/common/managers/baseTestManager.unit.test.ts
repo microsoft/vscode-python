@@ -20,7 +20,7 @@ import {
     IDisposableRegistry,
     IInstaller,
     IOutputChannel,
-    IPythonSettings,
+    IPythonSettings
 } from '../../../../client/common/types';
 import { ServiceContainer } from '../../../../client/ioc/container';
 import { IServiceContainer } from '../../../../client/ioc/types';
@@ -37,7 +37,7 @@ import {
     ITestMessageService,
     ITestResultsService,
     ITestsHelper,
-    ITestsStatusUpdaterService,
+    ITestsStatusUpdaterService
 } from '../../../../client/testing/common/types';
 import { TestManager as NoseTestManager } from '../../../../client/testing/nosetest/main';
 import { TestManager as PyTestTestManager } from '../../../../client/testing/pytest/main';
@@ -55,7 +55,7 @@ suite('Unit Tests - Base Test Manager', () => {
     [
         { name: 'nose', class: NoseTestManager },
         { name: 'pytest', class: PyTestTestManager },
-        { name: 'unittest', class: UnitTestTestManager },
+        { name: 'unittest', class: UnitTestTestManager }
     ].forEach((item) => {
         suite(item.name, () => {
             let testManager: ITestManager;

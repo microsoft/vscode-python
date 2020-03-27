@@ -21,7 +21,7 @@ import {
     IDebugLocationTracker,
     IInteractiveWindow,
     IInteractiveWindowProvider,
-    INotebookProvider,
+    INotebookProvider
 } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { ICodeExecutionHelper } from '../../../client/terminals/types';
@@ -94,7 +94,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
             runStartupCommands: '',
             debugJustMyCode: true,
             variableQueries: [],
-            jupyterCommandLineArguments: [],
+            jupyterCommandLineArguments: []
         };
         debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
 

@@ -154,7 +154,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         );
         assert.notEqual(testFunc, undefined, 'No test in file test_three.py named test_3A');
         const testsToRun: TestsToRun = {
-            testFunction: [testFunc!],
+            testFunction: [testFunc!]
         };
         const testRunResult: Tests = await testManager.runTest(CommandSource.ui, testsToRun);
         assert.equal(
@@ -191,7 +191,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         );
         assert.equal(testsFile!.suites.length, 1, 'Expected only 1 test suite in counter test file.');
         const testsToRun: TestsToRun = {
-            testFolder: [testsDiscovered.testFolders[0]],
+            testFolder: [testsDiscovered.testFolders[0]]
         };
 
         // ensure that each re-run of the unit tests in question result in the same summary count information.
@@ -235,7 +235,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         );
         assert.equal(testsFile!.suites.length, 1, 'Expected only 1 test suite in counter test file.');
         const testsToRun: TestsToRun = {
-            testFolder: [testsDiscovered.testFolders[0]],
+            testFolder: [testsDiscovered.testFolders[0]]
         };
 
         // ensure that each re-run of the unit tests in question result in the same summary count information.

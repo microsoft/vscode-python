@@ -65,7 +65,7 @@ suite('Multiroot Environment Variables Provider', () => {
         const changedEvent: ConfigurationChangeEvent = {
             affectsConfiguration(setting: string, uri?: Uri) {
                 return setting === 'python.envFile' && uri!.fsPath === workspaceFolder1Uri.fsPath;
-            },
+            }
         };
 
         provider.configurationChanged(changedEvent);
@@ -82,7 +82,7 @@ suite('Multiroot Environment Variables Provider', () => {
         const changedEvent: ConfigurationChangeEvent = {
             affectsConfiguration(_setting: string, _uri?: Uri) {
                 return false;
-            },
+            }
         };
 
         provider.configurationChanged(changedEvent);
@@ -95,7 +95,7 @@ suite('Multiroot Environment Variables Provider', () => {
         const changedEvent: ConfigurationChangeEvent = {
             affectsConfiguration(_setting: string, _uri?: Uri) {
                 return true;
-            },
+            }
         };
 
         provider.configurationChanged(changedEvent);

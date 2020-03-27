@@ -17,14 +17,14 @@ import { ProcessService } from '../../client/common/process/proc';
 import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
-    IPythonExecutionService,
+    IPythonExecutionService
 } from '../../client/common/process/types';
 import {
     IConfigurationService,
     IDisposableRegistry,
     IEditorUtils,
     IPythonSettings,
-    ISortImportSettings,
+    ISortImportSettings
 } from '../../client/common/types';
 import { noop } from '../../client/common/utils/misc';
 import { IServiceContainer } from '../../client/ioc/types';

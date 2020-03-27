@@ -35,7 +35,7 @@ enum WidgetCSSSelector {
     /**
      * CSS Selector for the hover widget displayed by Monaco.
      */
-    Hover = '.monaco-editor-hover',
+    Hover = '.monaco-editor-hover'
 }
 
 export interface IMonacoEditorProps {
@@ -98,7 +98,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             model: null,
             visibleLineCount: -1,
             attached: false,
-            widgetsReparented: false,
+            widgetsReparented: false
         };
         this.containerRef = React.createRef<HTMLDivElement>();
         this.measureWidthRef = React.createRef<HTMLDivElement>();
@@ -130,7 +130,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const editor = monacoEditor.editor.create(this.monacoContainer, {
                 value: this.props.value,
                 language: this.props.language,
-                ...this.props.options,
+                ...this.props.options
             });
 
             // Force the editor to behave like a unix editor as

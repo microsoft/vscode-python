@@ -13,7 +13,7 @@ import {
     Memento,
     Uri,
     ViewColumn,
-    WebviewPanel,
+    WebviewPanel
 } from 'vscode';
 
 import * as uuid from 'uuid/v4';
@@ -24,7 +24,7 @@ import {
     IDocumentManager,
     ILiveShareApi,
     IWebPanelProvider,
-    IWorkspaceService,
+    IWorkspaceService
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { traceError, traceInfo } from '../../common/logger';
@@ -36,7 +36,7 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IMemento,
-    Resource,
+    Resource
 } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -49,7 +49,7 @@ import {
     Identifiers,
     NativeKeyboardCommandTelemetryLookup,
     NativeMouseCommandTelemetryLookup,
-    Telemetry,
+    Telemetry
 } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import {
@@ -58,7 +58,7 @@ import {
     IReExecuteCells,
     ISubmitNewCell,
     NotebookModelChange,
-    SysInfoReason,
+    SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
 import {
     CellState,
@@ -80,7 +80,7 @@ import {
     INotebookProvider,
     IStatusProvider,
     IThemeFinder,
-    WebViewViewChangeEventArgs,
+    WebViewViewChangeEventArgs
 } from '../types';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
 
@@ -203,7 +203,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 path.join(nativeEditorDir, 'ipywidgets.js'),
                 path.join(nativeEditorDir, 'monaco.bundle.js'),
                 path.join(nativeEditorDir, 'commons.initial.bundle.js'),
-                path.join(nativeEditorDir, 'nativeEditor.js'),
+                path.join(nativeEditorDir, 'nativeEditor.js')
             ],
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active,
@@ -313,7 +313,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 interpreter,
                 oldDirty: this.model.isDirty,
                 newDirty: true,
-                source: 'user',
+                source: 'user'
             };
             this.updateModel(change);
         }
@@ -377,7 +377,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                             line: 0,
                             id: info.id,
                             originator: this.id,
-                            debug: false,
+                            debug: false
                         });
                     })
                     .ignoreErrors();
@@ -454,7 +454,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 newCells: modified,
                 oldCells: cloneDeep(unmodified),
                 oldDirty: this.model.isDirty,
-                newDirty: true,
+                newDirty: true
             });
         }
 
@@ -469,7 +469,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 oldDirty: this.model.isDirty,
                 newDirty: this.model.isDirty,
                 interpreter,
-                kernelSpec,
+                kernelSpec
             });
         }
 
@@ -551,8 +551,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         this.sendCellsToWebView([
             {
                 ...cell,
-                state: CellState.finished,
-            },
+                state: CellState.finished
+            }
         ]);
     }
 
@@ -578,8 +578,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                     id: cell.id,
                     file: Identifiers.EmptyFileName,
                     line: 0,
-                    state: CellState.error,
-                },
+                    state: CellState.error
+                }
             ]);
 
             throw exc;

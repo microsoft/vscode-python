@@ -23,7 +23,7 @@ import {
     TestFolder,
     TestFunction,
     Tests,
-    TestSuite,
+    TestSuite
 } from '../../../client/testing/common/types';
 import { TestTreeViewProvider } from '../../../client/testing/explorer/testTreeViewProvider';
 import { ITestManagementService } from '../../../client/testing/types';
@@ -45,7 +45,7 @@ export function getMockTestFolder(folderPath: string, testFiles: TestFile[] = []
         name: folderPath,
         nameToRun: folderPath,
         testFiles: testFiles,
-        time: 0,
+        time: 0
     };
 
     return folder;
@@ -65,7 +65,7 @@ export function getMockTestFile(
         fullPath: join(__dirname, filePath),
         functions: testFunctions,
         suites: testSuites,
-        xmlName: filePath.replace(/\//g, '.'),
+        xmlName: filePath.replace(/\//g, '.')
     };
 
     return testFile;
@@ -91,7 +91,7 @@ export function getMockTestSuite(
         nameToRun: suiteNameToRun,
         suites: subSuites,
         time: 0,
-        xmlName: suiteNameToRun.replace(/\//g, '.').replace(/\:\:/g, ':'),
+        xmlName: suiteNameToRun.replace(/\//g, '.').replace(/\:\:/g, ':')
     };
     return testSuite;
 }
@@ -105,7 +105,7 @@ export function getMockTestFunction(fnNameToRun: string): TestFunction {
         resource: Uri.file(__filename),
         name: fnName,
         nameToRun: fnNameToRun,
-        time: 0,
+        time: 0
     };
 
     return fn;

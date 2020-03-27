@@ -379,7 +379,7 @@ suite('Unit Tests - TestResultDisplay', () => {
             'testing.promptToConfigure',
             'testing.pytestEnabled',
             'testing.unittestEnabled',
-            'testing.nosetestsEnabled',
+            'testing.nosetestsEnabled'
         ]) {
             configurationService
                 .setup((c) => c.updateSetting(typeMoq.It.isValue(setting), typeMoq.It.isValue(false)))

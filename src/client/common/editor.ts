@@ -11,7 +11,7 @@ import { IEditorUtils } from './types';
 enum EditAction {
     Delete,
     Insert,
-    Replace,
+    Replace
 }
 
 const NEW_LINE_LENGTH = EOL.length;

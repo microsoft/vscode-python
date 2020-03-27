@@ -18,7 +18,7 @@ import {
     IDataScienceCodeLensProvider,
     IDebugLocationTracker,
     IInteractiveWindowProvider,
-    IJupyterExecution,
+    IJupyterExecution
 } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
@@ -97,7 +97,7 @@ suite('DataScience Debugger tests', () => {
         const dummyDisposable = {
             dispose: () => {
                 return;
-            },
+            }
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => (lastErrorMessage = e));
@@ -141,10 +141,10 @@ suite('DataScience Debugger tests', () => {
             const sb: SourceBreakpoint = {
                 location: {
                     uri: Uri.file(sourceFile),
-                    range: breakpoint,
+                    range: breakpoint
                 },
                 id: uuid(),
-                enabled: true,
+                enabled: true
             };
             mockDebuggerService!.addBreakpoints([sb]);
         }

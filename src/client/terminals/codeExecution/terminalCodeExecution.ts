@@ -67,7 +67,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
         return {
             command: isWindows ? command.replace(/\\/g, '/') : command,
-            args: [...launchArgs, ...args],
+            args: [...launchArgs, ...args]
         };
     }
 

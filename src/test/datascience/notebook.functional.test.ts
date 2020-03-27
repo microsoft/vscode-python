@@ -42,13 +42,13 @@ import {
     INotebookExecutionLogger,
     INotebookExporter,
     INotebookImporter,
-    InterruptResult,
+    InterruptResult
 } from '../../client/datascience/types';
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
     InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
@@ -294,7 +294,7 @@ suite('DataScience notebook tests', () => {
                 skipUsingDefaultConfig: !useDefaultConfig,
                 workingDir: workingDir ? workingDir : ioc.getSettings().datascience.notebookFileRoot,
                 purpose: purpose ? purpose : '1',
-                allowUI: () => false,
+                allowUI: () => false
             });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
@@ -352,7 +352,7 @@ suite('DataScience notebook tests', () => {
                     resource: undefined,
                     interpreter: python,
                     allowEnvironmentFetchExceptions: true,
-                    bypassCondaExecution: true,
+                    bypassCondaExecution: true
                 });
             }
         }
@@ -480,7 +480,7 @@ suite('DataScience notebook tests', () => {
                 const server = await jupyterExecution.connectToNotebookServer({
                     uri,
                     purpose: '',
-                    allowUI: () => false,
+                    allowUI: () => false
                 });
                 const notebook = server
                     ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
@@ -499,7 +499,7 @@ suite('DataScience notebook tests', () => {
             const dummyDisposable = {
                 dispose: () => {
                     return;
-                },
+                }
             };
             const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
             appShell
@@ -543,7 +543,7 @@ suite('DataScience notebook tests', () => {
                 'remotePassword.py'
             );
             const exeResult = pythonService.execObservable(['-m', 'jupyter', 'notebook', `--config=${configFile}`], {
-                throwOnStdErr: false,
+                throwOnStdErr: false
             });
             disposables.push(exeResult);
 
@@ -562,7 +562,7 @@ suite('DataScience notebook tests', () => {
             const server = await jupyterExecution.connectToNotebookServer({
                 uri,
                 purpose: '',
-                allowUI: () => false,
+                allowUI: () => false
             });
             const notebook = server
                 ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
@@ -591,7 +591,7 @@ suite('DataScience notebook tests', () => {
                 'remoteToken.py'
             );
             const exeResult = pythonService.execObservable(['-m', 'jupyter', 'notebook', `--config=${configFile}`], {
-                throwOnStdErr: false,
+                throwOnStdErr: false
             });
             disposables.push(exeResult);
 
@@ -610,7 +610,7 @@ suite('DataScience notebook tests', () => {
             const server = await jupyterExecution.connectToNotebookServer({
                 uri,
                 purpose: '',
-                allowUI: () => false,
+                allowUI: () => false
             });
             const notebook = server
                 ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
@@ -804,7 +804,7 @@ suite('DataScience notebook tests', () => {
                 sysVersion: '1.0.0.0',
                 sysPrefix: 'Python',
                 type: InterpreterType.Unknown,
-                architecture: Architecture.x64,
+                architecture: Architecture.x64
             };
 
             // Add interpreter into mock jupyter service and set it as active
@@ -1098,7 +1098,7 @@ a`,
             mimeType: 'text/plain',
             cellType: 'code',
             result: 1,
-            verifyValue: (d) => assert.equal(d, 1, 'Plain text invalid'),
+            verifyValue: (d) => assert.equal(d, 1, 'Plain text invalid')
         },
         {
             markdownRegEx: undefined,
@@ -1109,7 +1109,7 @@ df.head()`,
             result: `pd has no attribute 'read'`,
             cellType: 'error',
             // tslint:disable-next-line:quotemark
-            verifyValue: (d) => assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result'),
+            verifyValue: (d) => assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
         },
         {
             markdownRegEx: undefined,
@@ -1119,7 +1119,7 @@ df.head()`,
             mimeType: 'text/html',
             result: `<td>A table</td>`,
             cellType: 'code',
-            verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found'),
+            verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
         },
         {
             markdownRegEx: undefined,
@@ -1128,7 +1128,7 @@ df.head()`,
             mimeType: 'text/plain',
             cellType: 'markdown',
             result: '#HEADER',
-            verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect'),
+            verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect')
         },
         {
             markdownRegEx: '\\s*#\\s*<markdowncell>',
@@ -1137,7 +1137,7 @@ df.head()`,
             mimeType: 'text/plain',
             cellType: 'markdown',
             result: '#HEADER',
-            verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect'),
+            verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect')
         },
         {
             // Test relative directories too.
@@ -1148,7 +1148,7 @@ df.head()`,
             mimeType: 'text/html',
             cellType: 'code',
             result: `<td>A table</td>`,
-            verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found'),
+            verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
         },
         {
             // Important to test as multiline cell magics only work if they are the first item in the cell
@@ -1159,7 +1159,7 @@ echo 'hello'`,
             mimeType: 'text/plain',
             cellType: 'code',
             result: 'hello',
-            verifyValue: (_d) => noop(), // Anything is fine as long as it tries it.
+            verifyValue: (_d) => noop() // Anything is fine as long as it tries it.
         },
         {
             // Test shell command should work on PC / Mac / Linux
@@ -1168,7 +1168,7 @@ echo 'hello'`,
             mimeType: 'text/plain',
             cellType: 'code',
             result: 'world',
-            verifyValue: (d) => assert.ok(d.includes('world'), 'Cell command incorrect'),
+            verifyValue: (d) => assert.ok(d.includes('world'), 'Cell command incorrect')
         },
         {
             // Plotly
@@ -1185,8 +1185,8 @@ plt.show()`,
             cellType: 'code',
             verifyValue: (_d) => {
                 return;
-            },
-        },
+            }
+        }
     ]);
 
     async function generateNonDefaultConfig() {
@@ -1424,7 +1424,7 @@ plt.show()`,
         mockService.addExecResult(['-m', 'jupyter', 'notebook', '--version'], () => {
             return Promise.resolve({
                 stdout: '9.9.9.9',
-                stderr: 'Not supported',
+                stderr: 'Not supported'
             });
         });
 
@@ -1432,7 +1432,7 @@ plt.show()`,
         mockService.addExecResult(['-m', 'notebook', '--version'], () => {
             return Promise.resolve({
                 stdout: '',
-                stderr: 'Not supported',
+                stderr: 'Not supported'
             });
         });
         // For new approach.
@@ -1449,7 +1449,7 @@ plt.show()`,
         } else {
             const application = mock(ApplicationShell);
             when(application.withProgress(anything(), anything())).thenResolve({
-                status: ModuleExistsStatus.NotFound,
+                status: ModuleExistsStatus.NotFound
             } as any);
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, instance(application));
 
@@ -1467,7 +1467,7 @@ plt.show()`,
                     usingDarkTheme: false,
                     workingDir: testDir,
                     purpose: '1',
-                    allowUI: () => false,
+                    allowUI: () => false
                 });
             } catch (e) {
                 threw = true;

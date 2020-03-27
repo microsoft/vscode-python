@@ -11,7 +11,7 @@ import { ICurrentProcess, IPathUtils } from '../../client/common/types';
 import { IEnvironmentVariablesService } from '../../client/common/variables/types';
 import {
     DebugEnvironmentVariablesHelper,
-    IDebugEnvironmentVariablesService,
+    IDebugEnvironmentVariablesService
 } from '../../client/debugger/extension/configuration/resolvers/helper';
 import { ConsoleType, LaunchRequestArguments } from '../../client/debugger/types';
 import { isOs, OSType } from '../common';
@@ -63,7 +63,7 @@ suite('Resolving Environment Variables when Debugging', () => {
             pythonPath: '',
             args: [],
             envFile: '',
-            console,
+            console
             // tslint:disable-next-line:no-any
         } as any) as LaunchRequestArguments;
 
@@ -106,7 +106,7 @@ suite('Resolving Environment Variables when Debugging', () => {
             args: [],
             envFile: '',
             console,
-            env,
+            env
             // tslint:disable-next-line:no-any
         } as any) as LaunchRequestArguments;
 
@@ -173,7 +173,7 @@ suite('Resolving Environment Variables when Debugging', () => {
             args: [],
             envFile: '',
             console,
-            env,
+            env
         } as any) as LaunchRequestArguments;
 
         const envVars = await debugEnvParser.getEnvironmentVariables(args);

@@ -24,7 +24,7 @@ import {
     IConfigurationService,
     IDisposableRegistry,
     IPythonSettings,
-    ITerminalSettings,
+    ITerminalSettings
 } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { ICondaService } from '../../../client/interpreter/contracts';
@@ -153,7 +153,7 @@ suite('Terminal Environment Activation conda', () => {
             .returns(() =>
                 Promise.resolve({
                     name: envName,
-                    path: path.dirname(pythonPath),
+                    path: path.dirname(pythonPath)
                 })
             );
         condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaPath));
@@ -181,7 +181,7 @@ suite('Terminal Environment Activation conda', () => {
             .returns(() =>
                 Promise.resolve({
                     name: envName,
-                    path: path.dirname(pythonPath),
+                    path: path.dirname(pythonPath)
                 })
             );
         condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaPath));
@@ -207,43 +207,43 @@ suite('Terminal Environment Activation conda', () => {
                 'Activation provides correct activation commands (windows) after 4.4.0 given interpreter path is provided, with no spaces in env name',
             envName: environmentName,
             expectedResult: ['path/to/activate', 'conda activate Env'],
-            isWindows: true,
+            isWindows: true
         },
         {
             testName:
                 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, with no spaces in env name',
             envName: environmentName,
             expectedResult: ['source path/to/activate', 'conda activate Env'],
-            isWindows: false,
+            isWindows: false
         },
         {
             testName:
                 'Activation provides correct activation commands (windows) after 4.4.0 given interpreter path is provided, with spaces in env name',
             envName: environmentNameHasSpaces,
             expectedResult: ['path/to/activate', 'conda activate "Env with spaces"'],
-            isWindows: true,
+            isWindows: true
         },
         {
             testName:
                 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, with spaces in env name',
             envName: environmentNameHasSpaces,
             expectedResult: ['source path/to/activate', 'conda activate "Env with spaces"'],
-            isWindows: false,
+            isWindows: false
         },
         {
             testName:
                 'Activation provides correct activation commands (windows) after 4.4.0 given interpreter path is provided, and no env name',
             envName: '',
             expectedResult: ['path/to/activate', `conda activate .`],
-            isWindows: true,
+            isWindows: true
         },
         {
             testName:
                 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, and no env name',
             envName: '',
             expectedResult: ['source path/to/activate', `conda activate .`],
-            isWindows: false,
-        },
+            isWindows: false
+        }
     ];
 
     testsForActivationUsingInterpreterPath.forEach((testParams) => {
@@ -256,7 +256,7 @@ suite('Terminal Environment Activation conda', () => {
                 .returns(() =>
                     Promise.resolve({
                         name: testParams.envName,
-                        path: path.dirname(pythonPath),
+                        path: path.dirname(pythonPath)
                     })
                 );
             condaService.setup((c) => c.getCondaVersion()).returns(() => Promise.resolve(parse('4.4.0', true)!));
@@ -552,7 +552,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: ['conda activate TesterEnv'],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.powershell,
+            terminalKind: TerminalShellType.powershell
         },
         {
             testName: 'Activation uses full path with spaces on windows for powershell',
@@ -560,7 +560,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: ['conda activate TesterEnv'],
             expectedRawCmd: `"${path.join(windowsTestPathSpaces, 'activate')}"`,
-            terminalKind: TerminalShellType.powershell,
+            terminalKind: TerminalShellType.powershell
         },
         {
             testName: 'Activation uses full path on windows under powershell, environment name has spaces',
@@ -568,7 +568,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'The Tester Environment',
             expectedResult: ['conda activate "The Tester Environment"'],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.powershell,
+            terminalKind: TerminalShellType.powershell
         },
         {
             testName: 'Activation uses full path on windows for powershell-core',
@@ -576,7 +576,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: ['conda activate TesterEnv'],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.powershellCore,
+            terminalKind: TerminalShellType.powershellCore
         },
         {
             testName: 'Activation uses full path with spaces on windows for powershell-core',
@@ -584,7 +584,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: ['conda activate TesterEnv'],
             expectedRawCmd: `"${path.join(windowsTestPathSpaces, 'activate')}"`,
-            terminalKind: TerminalShellType.powershellCore,
+            terminalKind: TerminalShellType.powershellCore
         },
         {
             testName: 'Activation uses full path on windows for powershell-core, environment name has spaces',
@@ -592,7 +592,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'The Tester Environment',
             expectedResult: ['conda activate "The Tester Environment"'],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.powershellCore,
+            terminalKind: TerminalShellType.powershellCore
         },
         {
             testName: 'Activation uses full path on windows for cmd.exe',
@@ -600,7 +600,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: [`${path.join(windowsTestPath, 'activate')} TesterEnv`],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.commandPrompt,
+            terminalKind: TerminalShellType.commandPrompt
         },
         {
             testName: 'Activation uses full path with spaces on windows for cmd.exe',
@@ -608,7 +608,7 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'TesterEnv',
             expectedResult: [`"${path.join(windowsTestPathSpaces, 'activate')}" TesterEnv`],
             expectedRawCmd: `"${path.join(windowsTestPathSpaces, 'activate')}"`,
-            terminalKind: TerminalShellType.commandPrompt,
+            terminalKind: TerminalShellType.commandPrompt
         },
         {
             testName: 'Activation uses full path on windows for cmd.exe, environment name has spaces',
@@ -616,8 +616,8 @@ suite('Terminal Environment Activation conda', () => {
             envName: 'The Tester Environment',
             expectedResult: [`${path.join(windowsTestPath, 'activate')} "The Tester Environment"`],
             expectedRawCmd: `${path.join(windowsTestPath, 'activate')}`,
-            terminalKind: TerminalShellType.commandPrompt,
-        },
+            terminalKind: TerminalShellType.commandPrompt
+        }
     ];
 
     testsForWindowsActivation.forEach((testParams: WindowsActivationTestParams) => {

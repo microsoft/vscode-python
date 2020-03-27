@@ -11,7 +11,7 @@ import {
     IInterpreterLocatorService,
     INTERPRETER_LOCATOR_SERVICE,
     InterpreterType,
-    PythonInterpreter,
+    PythonInterpreter
 } from '../../../client/interpreter/contracts';
 import { getOSType, OSType } from '../../common';
 import { TEST_TIMEOUT } from '../../constants';

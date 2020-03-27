@@ -18,7 +18,7 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService,
+    IInterpreterAutoSeletionProxyService
 } from './types';
 
 const preferredGlobalInterpreter = 'preferredGlobalPyInterpreter';
@@ -65,7 +65,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
                 systemInterpreter,
                 cachedPaths,
                 userDefinedInterpreter,
-                workspaceInterpreter,
+                workspaceInterpreter
             ]
         );
         proxy.registerInstance!(this);

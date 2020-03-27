@@ -18,7 +18,7 @@ suite('Terminal Environment Activation (bash)', () => {
     [
         'usr/bin/python',
         'usr/bin/env with spaces/env more/python',
-        'c:\\users\\windows paths\\conda\\python.exe',
+        'c:\\users\\windows paths\\conda\\python.exe'
     ].forEach((pythonPath) => {
         const hasSpaces = pythonPath.indexOf(' ') > 0;
         const suiteTitle = hasSpaces
