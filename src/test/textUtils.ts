@@ -11,7 +11,6 @@ export function normalizeMarkedString(content: MarkedString): string {
 export function compareFiles(expectedContent: string, actualContent: string) {
     const expectedLines = expectedContent.split(/\r?\n/);
     const actualLines = actualContent.split(/\r?\n/);
-    expect(expectedContent).to.be.equal(actualContent);
 
     for (let i = 0; i < Math.min(expectedLines.length, actualLines.length); i += 1) {
         const e = expectedLines[i];
