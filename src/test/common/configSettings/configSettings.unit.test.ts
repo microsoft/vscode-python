@@ -319,7 +319,7 @@ suite('Python Settings', async () => {
             EnvFileTelemetry.EnvFileTelemetryTests.resetState();
         });
 
-        test('Send telemetry if the envFile setting is different from the default value', () => {
+        test('Send telemetry if the envFile setting is different from the default value', async () => {
             expected.envFile = 'foo';
             console.warn('set expected envFile');
             config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
@@ -335,7 +335,7 @@ suite('Python Settings', async () => {
             console.warn('assertion');
         });
 
-        test('Do not send telemetry if the envFile setting is equal to the default value', () => {
+        test('Do not send telemetry if the envFile setting is equal to the default value', async () => {
             expected.envFile = defaultEnvFileSettingValue;
 
             initializeConfig(expected);
