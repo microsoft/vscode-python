@@ -55,7 +55,13 @@ suite('Multiroot Environment Variables Provider', () => {
             instance(currentProcess)
         );
 
+        sinon.stub(EnvFileTelemetry, 'shouldSendTelemetry').returns(false);
+
         clearCache();
+    });
+
+    teardown(() => {
+        sinon.restore();
     });
 
     test('Event is fired when there are changes to settings', () => {
@@ -263,7 +269,7 @@ suite('Multiroot Environment Variables Provider', () => {
     });
 });
 
-suite('Environment variables provider - Env file telemetry', () => {
+suite('Environment Variables Provider - Env file telemetry', () => {
     const workspaceUri = Uri.file('workspace');
 
     let provider: EnvironmentVariablesProvider;

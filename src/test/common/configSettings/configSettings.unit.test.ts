@@ -47,10 +47,17 @@ suite('Python Settings', async () => {
     let config: TypeMoq.IMock<WorkspaceConfiguration>;
     let expected: CustomPythonSettings;
     let settings: CustomPythonSettings;
+    let envFileTelemetryStub: sinon.SinonStub<[IWorkspaceService, (string | undefined)?], boolean>;
     setup(() => {
+        envFileTelemetryStub = sinon.stub(EnvFileTelemetry, 'shouldSendSettingTelemetry');
+        envFileTelemetryStub.returns(false);
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
         expected = new CustomPythonSettings(undefined, new MockAutoSelectionService());
         settings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
+    });
+
+    teardown(() => {
+        envFileTelemetryStub.restore();
     });
 
     function initializeConfig(sourceSettings: PythonSettings) {
@@ -293,6 +300,9 @@ suite('Python Settings', async () => {
                     defaultValue: defaultEnvFileSettingValue
                 })
             };
+
+            // Undo the stub we've set up for all the other tests.
+            envFileTelemetryStub.restore();
 
             sandbox = sinon.createSandbox();
             const telemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent');
