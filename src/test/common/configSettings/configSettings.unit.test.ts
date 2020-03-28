@@ -278,7 +278,7 @@ suite('Python Settings', async () => {
         config.verifyAll();
     });
 
-    suite('Config settings - Env file telemetry', () => {
+    suite('Config settings - Env file telemetry', async () => {
         const defaultEnvFileSettingValue = 'defaultValue';
         let sandbox: sinon.SinonSandbox;
         let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
@@ -331,7 +331,7 @@ suite('Python Settings', async () => {
             console.warn('settings updated');
             console.warn(`telemetryEvent: ${telemetryEvent}`);
 
-            assert.equal(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
+            assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
             console.warn('assertion');
         });
 
@@ -345,6 +345,7 @@ suite('Python Settings', async () => {
             assert.deepEqual(telemetryEvent, undefined);
         });
     });
+
     test('File env variables remain in settings', () => {
         expected.datascience = {
             allowImportFromNotebook: true,
