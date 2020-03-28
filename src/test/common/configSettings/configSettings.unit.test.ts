@@ -301,7 +301,7 @@ suite('Python Settings', async () => {
                 })
             };
 
-            // Undo the stub we've set up for all the other tests.
+            // Undo the stub we've set up for the other tests.
             envFileTelemetryStub.restore();
 
             sandbox = sinon.createSandbox();
@@ -309,7 +309,6 @@ suite('Python Settings', async () => {
             telemetryStub.callsFake(mockSendTelemetryEvent);
 
             workspaceService.setup(w => w.getConfiguration('python')).returns(() => mockWorkspaceConfig as any);
-            config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
 
             settings = new CustomPythonSettings(undefined, new MockAutoSelectionService(), workspaceService.object);
         });
@@ -322,10 +321,14 @@ suite('Python Settings', async () => {
 
         test('Send telemetry if the envFile setting is different from the default value', () => {
             expected.envFile = 'foo';
-
+            console.warn('set expected envFile');
+            config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
+            console.warn('config is setup with get<string>');
             initializeConfig(expected);
+            console.warn('config initialized');
 
             settings.update(config.object);
+            console.warn('settings updated');
 
             assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
         });
