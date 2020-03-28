@@ -331,8 +331,12 @@ suite('Python Settings', async () => {
             console.warn('settings updated');
             console.warn(`telemetryEvent: ${telemetryEvent}`);
 
-            assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
-            console.warn('assertion');
+            expect(telemetryEvent).to.deep.equal(
+                { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true },
+                'Telemetry event should be sent'
+            );
+            // assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
+            console.warn('expectation');
         });
 
         test('Do not send telemetry if the envFile setting is equal to the default value', async () => {
