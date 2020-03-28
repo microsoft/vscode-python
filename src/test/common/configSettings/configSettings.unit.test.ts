@@ -326,11 +326,11 @@ suite('Python Settings', async () => {
             initializeConfig(expected);
             console.warn('config initialized');
 
-            config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
-            console.warn('config is setup with get<string>');
+            // config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
+            // console.warn('config is setup with get<string>');
 
-            settings.update(config.object);
-            console.warn('settings updated');
+            // settings.update(config.object);
+            // console.warn('settings updated');
 
             // console.warn(`telemetryEvent: ${telemetryEvent}`);
 
