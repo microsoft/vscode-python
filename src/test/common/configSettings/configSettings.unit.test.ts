@@ -323,8 +323,8 @@ suite('Python Settings', async () => {
             expected.envFile = 'foo';
             console.warn('set expected envFile');
 
-            initializeConfig(expected);
-            console.warn('config initialized');
+            // initializeConfig(expected);
+            // console.warn('config initialized');
 
             // config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
             // console.warn('config is setup with get<string>');
@@ -344,15 +344,15 @@ suite('Python Settings', async () => {
             console.warn('expectation');
         });
 
-        test('Do not send telemetry if the envFile setting is equal to the default value', async () => {
-            expected.envFile = defaultEnvFileSettingValue;
+        // test('Do not send telemetry if the envFile setting is equal to the default value', async () => {
+        //     expected.envFile = defaultEnvFileSettingValue;
 
-            initializeConfig(expected);
+        //     initializeConfig(expected);
 
-            settings.update(config.object);
+        //     settings.update(config.object);
 
-            assert.deepEqual(telemetryEvent, undefined);
-        });
+        //     assert.deepEqual(telemetryEvent, undefined);
+        // });
     });
 
     test('File env variables remain in settings', () => {
