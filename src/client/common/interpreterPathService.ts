@@ -3,10 +3,12 @@
 
 'use strict';
 
+import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, ConfigurationTarget, Event, EventEmitter, Uri } from 'vscode';
 import { IWorkspaceService } from './application/types';
 import { PythonSettings } from './configSettings';
+import { isTestExecution } from './constants';
 import {
     IDisposable,
     IDisposableRegistry,
@@ -20,6 +22,14 @@ import {
 } from './types';
 
 export const defaultInterpreterPathSetting: keyof IPythonSettings = 'defaultInterpreterPath';
+const PYTHON_PATH = getPythonPath();
+
+export function getPythonPath(): string {
+    if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
+        return process.env.CI_PYTHON_PATH;
+    }
+    return 'python';
+}
 @injectable()
 export class InterpreterPathService implements IInterpreterPathService {
     public _didChangeInterpreterEmitter = new EventEmitter<InterpreterConfigurationScope>();
@@ -62,7 +72,13 @@ export class InterpreterPathService implements IInterpreterPathService {
 
     public get(resource: Resource): string {
         const settings = this.inspect(resource);
-        return settings.workspaceFolderValue || settings.workspaceValue || settings.globalValue || 'python';
+        return (
+            settings.workspaceFolderValue ||
+            settings.workspaceValue ||
+            settings.globalValue ||
+            // This is to make sure we use `CI_PYTHON_PATH` when executing tests
+            (isTestExecution() ? PYTHON_PATH : 'python')
+        );
     }
 
     public async update(
