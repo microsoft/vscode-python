@@ -153,12 +153,12 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         event?: ConfigurationChangeEvent,
         interpreterConfigurationScope?: InterpreterConfigurationScope
     ) {
-        const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-        const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
-            ? workspaceService.workspaceFolders!.map(workspace => workspace.uri)
-            : [undefined];
         let workspaceUri: Resource;
         if (event) {
+            const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+            const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
+                ? workspaceService.workspaceFolders!.map(workspace => workspace.uri)
+                : [undefined];
             const workspaceUriIndex = workspacesUris.findIndex(uri =>
                 event.affectsConfiguration('python.pythonPath', uri)
             );

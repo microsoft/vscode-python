@@ -5,9 +5,9 @@
 
 // tslint:disable:max-func-body-length no-any max-classes-per-file
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
 import * as typemoq from 'typemoq';
-import { ConfigurationChangeEvent } from 'vscode';
+import { ConfigurationChangeEvent, Uri } from 'vscode';
 import { BaseDiagnosticsService } from '../../../../client/application/diagnostics/base';
 import {
     InvalidMacPythonInterpreterDiagnostic,
@@ -36,7 +36,9 @@ import {
     IDisposableRegistry,
     IExperimentsManager,
     IInterpreterPathService,
-    IPythonSettings
+    InterpreterConfigurationScope,
+    IPythonSettings,
+    Resource
 } from '../../../../client/common/types';
 import { sleep } from '../../../../client/common/utils/async';
 import { noop } from '../../../../client/common/utils/misc';
@@ -506,7 +508,7 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
 
             expect(invoked).to.be.equal(false, 'Not invoked');
         });
-        test('Diagnostics are checked when path changes', async () => {
+        test('Diagnostics are checked with Config change event uri when path changes and event is passed', async () => {
             const event = typemoq.Mock.ofType<ConfigurationChangeEvent>();
             const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
             const serviceContainerObject = createContainer();
@@ -564,6 +566,92 @@ suite('Application Diagnostics - Checks Mac Python Interpreter', () => {
             await sleep(100);
             expect(diagnoseInvocationCount).to.be.equal(2, 'Not invoked');
         });
+
+        test('Diagnostics are checked with correct interpreter config uri when path changes and only config uri is passed', async () => {
+            const configUri = Uri.parse('i');
+            const interpreterConfigurationScope = typemoq.Mock.ofType<InterpreterConfigurationScope>();
+            interpreterConfigurationScope.setup(i => i.uri).returns(() => Uri.parse('i'));
+            const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
+            const serviceContainerObject = createContainer();
+            let diagnoseInvocationCount = 0;
+            serviceContainer
+                .setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
+                .returns(() => workspaceService.object);
+            const experiments = typemoq.Mock.ofType<IExperimentsManager>();
+            serviceContainer
+                .setup(s => s.get(typemoq.It.isValue(IExperimentsManager)))
+                .returns(() => experiments.object);
+            experiments.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+            experiments.setup(e => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control)).returns(() => undefined);
+            const diagnosticSvc = new (class extends InvalidMacPythonInterpreterService {
+                constructor(
+                    arg1: IServiceContainer,
+                    arg2: IInterpreterService,
+                    arg3: IPlatformService,
+                    arg4: IInterpreterHelper
+                ) {
+                    super(arg1, arg2, [], arg3, arg4);
+                    this.changeThrottleTimeout = 1;
+                }
+                public onDidChangeConfigurationEx = (e?: ConfigurationChangeEvent, i?: InterpreterConfigurationScope) =>
+                    super.onDidChangeConfiguration(e, i);
+                public diagnose(resource: Resource): Promise<any> {
+                    diagnoseInvocationCount += 1;
+                    assert.deepEqual(resource, configUri);
+                    return Promise.resolve();
+                }
+            })(
+                serviceContainerObject,
+                typemoq.Mock.ofType<IInterpreterService>().object,
+                typemoq.Mock.ofType<IPlatformService>().object,
+                typemoq.Mock.ofType<IInterpreterHelper>().object
+            );
+
+            await diagnosticSvc.onDidChangeConfigurationEx(undefined, interpreterConfigurationScope.object);
+            await sleep(100);
+            expect(diagnoseInvocationCount).to.be.equal(1, 'Not invoked');
+
+            await diagnosticSvc.onDidChangeConfigurationEx(undefined, interpreterConfigurationScope.object);
+            await sleep(100);
+            expect(diagnoseInvocationCount).to.be.equal(2, 'Not invoked');
+        });
+
+        test('Diagnostics throws error when none of config uri or config change event uri is passed', async () => {
+            const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
+            const serviceContainerObject = createContainer();
+            serviceContainer
+                .setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
+                .returns(() => workspaceService.object);
+            const experiments = typemoq.Mock.ofType<IExperimentsManager>();
+            serviceContainer
+                .setup(s => s.get(typemoq.It.isValue(IExperimentsManager)))
+                .returns(() => experiments.object);
+            experiments.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
+            experiments.setup(e => e.sendTelemetryIfInExperiment(DeprecatePythonPath.control)).returns(() => undefined);
+            const diagnosticSvc = new (class extends InvalidMacPythonInterpreterService {
+                constructor(
+                    arg1: IServiceContainer,
+                    arg2: IInterpreterService,
+                    arg3: IPlatformService,
+                    arg4: IInterpreterHelper
+                ) {
+                    super(arg1, arg2, [], arg3, arg4);
+                    this.changeThrottleTimeout = 1;
+                }
+                public onDidChangeConfigurationEx = (e?: ConfigurationChangeEvent, i?: InterpreterConfigurationScope) =>
+                    super.onDidChangeConfiguration(e, i);
+            })(
+                serviceContainerObject,
+                typemoq.Mock.ofType<IInterpreterService>().object,
+                typemoq.Mock.ofType<IPlatformService>().object,
+                typemoq.Mock.ofType<IInterpreterHelper>().object
+            );
+
+            await expect(diagnosticSvc.onDidChangeConfigurationEx(undefined, undefined)).to.eventually.be.rejectedWith(
+                Error
+            );
+        });
+
         test('Diagnostics are checked and throttled when path changes', async () => {
             const event = typemoq.Mock.ofType<ConfigurationChangeEvent>();
             const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();

@@ -5,7 +5,14 @@
 
 import { assert, expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationChangeEvent, ConfigurationTarget, EventEmitter, Uri, WorkspaceConfiguration } from 'vscode';
+import {
+    ConfigurationChangeEvent,
+    ConfigurationTarget,
+    Event,
+    EventEmitter,
+    Uri,
+    WorkspaceConfiguration
+} from 'vscode';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { defaultInterpreterPathSetting, InterpreterPathService } from '../../client/common/interpreterPathService';
 import { InterpreterConfigurationScope, IPersistentState, IPersistentStateFactory } from '../../client/common/types';
@@ -18,9 +25,8 @@ suite('Interpreter Path Service', async () => {
     const resource = Uri.parse('a');
     const resourceOutsideOfWorkspace = Uri.parse('b');
     const interpreterPath = 'path/to/interpreter';
-    let configChangeEvent: EventEmitter<ConfigurationChangeEvent>;
     setup(() => {
-        configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
+        const event = TypeMoq.Mock.ofType<Event<ConfigurationChangeEvent>>();
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspaceService
             .setup(w => w.getWorkspaceFolder(resource))
@@ -31,12 +37,8 @@ suite('Interpreter Path Service', async () => {
             }));
         workspaceService.setup(w => w.getWorkspaceFolder(resourceOutsideOfWorkspace)).returns(() => undefined);
         persistentStateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
-        workspaceService.setup(w => w.onDidChangeConfiguration).returns(() => configChangeEvent.event);
+        workspaceService.setup(w => w.onDidChangeConfiguration).returns(() => event.object);
         interpreterPathService = new InterpreterPathService(persistentStateFactory.object, workspaceService.object, []);
-    });
-
-    teardown(() => {
-        configChangeEvent.dispose();
     });
 
     test('Global settings are correctly updated', async () => {
