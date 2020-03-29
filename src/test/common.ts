@@ -240,7 +240,10 @@ async function setPythonPathInWorkspace(
 async function restoreGlobalPythonPathSetting(): Promise<void> {
     const vscode = require('vscode') as typeof import('vscode');
     const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
-    await pythonConfig.update('pythonPath', undefined, true);
+    await Promise.all([
+        pythonConfig.update('pythonPath', undefined, true),
+        pythonConfig.update('defaultInterpreterPath', undefined, true)
+    ]);
     await disposePythonSettings();
 }
 
