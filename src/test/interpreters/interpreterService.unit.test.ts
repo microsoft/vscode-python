@@ -292,6 +292,48 @@ suite('Interpreters service', () => {
             // Ensure correct handler was invoked
             configService.verifyAll();
         });
+
+        test('If stored setting is an empty string, refresh the interpreter display', async () => {
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
+            const resource = Uri.parse('a');
+            service._pythonPathSetting = '';
+            configService.reset();
+            configService.setup(c => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
+            interpreterDisplay
+                .setup(i => i.refresh())
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+            service._onConfigChanged(resource);
+            interpreterDisplay.verifyAll();
+        });
+
+        test('If stored setting is not equal to current interpreter path setting, refresh the interpreter display', async () => {
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
+            const resource = Uri.parse('a');
+            service._pythonPathSetting = 'stored setting';
+            configService.reset();
+            configService.setup(c => c.getSettings(resource)).returns(() => ({ pythonPath: 'current path' } as any));
+            interpreterDisplay
+                .setup(i => i.refresh())
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.once());
+            service._onConfigChanged(resource);
+            interpreterDisplay.verifyAll();
+        });
+
+        test('If stored setting is equal to current interpreter path setting, do not refresh the interpreter display', async () => {
+            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
+            const resource = Uri.parse('a');
+            service._pythonPathSetting = 'setting';
+            configService.reset();
+            configService.setup(c => c.getSettings(resource)).returns(() => ({ pythonPath: 'setting' } as any));
+            interpreterDisplay
+                .setup(i => i.refresh())
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.never());
+            service._onConfigChanged(resource);
+            interpreterDisplay.verifyAll();
+        });
     });
 
     suite('Get Interpreter Details', () => {

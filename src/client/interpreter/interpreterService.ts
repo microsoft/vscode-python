@@ -39,6 +39,18 @@ const EXPITY_DURATION = 24 * 60 * 60 * 1000;
 
 @injectable()
 export class InterpreterService implements Disposable, IInterpreterService {
+    public get hasInterpreters(): Promise<boolean> {
+        return this.locator.hasInterpreters;
+    }
+
+    public get onDidChangeInterpreter(): Event<void> {
+        return this.didChangeInterpreterEmitter.event;
+    }
+
+    public get onDidChangeInterpreterInformation(): Event<PythonInterpreter> {
+        return this.didChangeInterpreterInformation.event;
+    }
+    public _pythonPathSetting: string = '';
     private readonly locator: IInterpreterLocatorService;
     private readonly persistentStateFactory: IPersistentStateFactory;
     private readonly configService: IConfigurationService;
@@ -48,7 +60,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
     private readonly didChangeInterpreterInformation = new EventEmitter<PythonInterpreter>();
     private readonly inMemoryCacheOfDisplayNames = new Map<string, string>();
     private readonly updatedInterpreters = new Set<string>();
-    private pythonPathSetting: string = '';
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
@@ -62,9 +73,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
         this.experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
-    }
-    public get hasInterpreters(): Promise<boolean> {
-        return this.locator.hasInterpreters;
     }
 
     public async refresh(resource?: Uri) {
@@ -80,11 +88,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
         );
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const pySettings = this.configService.getSettings();
-        this.pythonPathSetting = pySettings.pythonPath;
+        this._pythonPathSetting = pySettings.pythonPath;
         if (this.experiments.inExperiment(DeprecatePythonPath.experiment)) {
             disposables.push(
                 this.interpreterPathService.onDidChange(i => {
-                    this.onConfigChanged(i.uri);
+                    this._onConfigChanged(i.uri);
                 })
             );
         } else {
@@ -96,7 +104,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
                     e.affectsConfiguration('python.pythonPath', uri)
                 );
                 const workspaceUri = workspaceUriIndex === -1 ? undefined : workspacesUris[workspaceUriIndex];
-                this.onConfigChanged(workspaceUri);
+                this._onConfigChanged(workspaceUri);
             });
             disposables.push(disposable);
         }
@@ -124,14 +132,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
         this.locator.dispose();
         this.didChangeInterpreterEmitter.dispose();
         this.didChangeInterpreterInformation.dispose();
-    }
-
-    public get onDidChangeInterpreter(): Event<void> {
-        return this.didChangeInterpreterEmitter.event;
-    }
-
-    public get onDidChangeInterpreterInformation(): Event<PythonInterpreter> {
-        return this.didChangeInterpreterInformation.event;
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
@@ -250,6 +250,16 @@ export class InterpreterService implements Disposable, IInterpreterService {
         }
         return store;
     }
+    public _onConfigChanged = (resource?: Uri) => {
+        // Check if we actually changed our python path
+        const pySettings = this.configService.getSettings(resource);
+        if (this._pythonPathSetting === '' || this._pythonPathSetting !== pySettings.pythonPath) {
+            this._pythonPathSetting = pySettings.pythonPath;
+            this.didChangeInterpreterEmitter.fire();
+            const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
+            interpreterDisplay.refresh().catch(ex => traceError('Python Extension: display.refresh', ex));
+        }
+    };
     protected async getInterepreterFileHash(pythonPath: string): Promise<string> {
         return this.hashProviderFactory
             .create({ pythonPath })
@@ -302,16 +312,6 @@ export class InterpreterService implements Disposable, IInterpreterService {
         const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
         return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
     }
-    private onConfigChanged = (resource?: Uri) => {
-        // Check if we actually changed our python path
-        const pySettings = this.configService.getSettings(resource);
-        if (this.pythonPathSetting === '' || this.pythonPathSetting !== pySettings.pythonPath) {
-            this.pythonPathSetting = pySettings.pythonPath;
-            this.didChangeInterpreterEmitter.fire();
-            const interpreterDisplay = this.serviceContainer.get<IInterpreterDisplay>(IInterpreterDisplay);
-            interpreterDisplay.refresh().catch(ex => traceError('Python Extension: display.refresh', ex));
-        }
-    };
     private async collectInterpreterDetails(pythonPath: string, resource: Uri | undefined) {
         const interpreterHelper = this.serviceContainer.get<IInterpreterHelper>(IInterpreterHelper);
         const virtualEnvManager = this.serviceContainer.get<IVirtualEnvironmentManager>(IVirtualEnvironmentManager);
