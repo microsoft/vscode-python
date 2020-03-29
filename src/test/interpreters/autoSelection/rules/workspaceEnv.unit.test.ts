@@ -13,6 +13,7 @@ import * as typemoq from 'typemoq';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
+import { DeprecatePythonPath } from '../../../../client/common/experimentGroups';
 import { ExperimentsManager } from '../../../../client/common/experiments';
 import { InterpreterPathService } from '../../../../client/common/interpreterPathService';
 import { PersistentState, PersistentStateFactory } from '../../../../client/common/persistentState';
@@ -158,6 +159,38 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
 
         verify(nextRule.autoSelectInterpreter(someUri, manager)).once();
         verify(helper.getActiveWorkspaceUri(anything())).once();
+        pythonPathInConfig.verifyAll();
+    });
+    test('If in experiment, use new API to fetch settings', async () => {
+        const nextRule = mock(BaseRuleService);
+        const manager = mock(InterpreterAutoSelectionService);
+        type PythonPathInConfig = { workspaceFolderValue: string };
+        const pythonPathInConfig = typemoq.Mock.ofType<PythonPathInConfig>();
+        const pythonPathValue = 'Hello there.exe';
+        pythonPathInConfig
+            .setup(p => p.workspaceFolderValue)
+            .returns(() => pythonPathValue)
+            .verifiable(typemoq.Times.once());
+
+        const pythonPath = { inspect: () => pythonPathInConfig.object };
+        const folderUri = Uri.parse('Folder');
+        const someUri = Uri.parse('somethign');
+
+        rule.setNextRule(nextRule);
+        when(platform.osType).thenReturn(OSType.OSX);
+        when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
+        when(nextRule.autoSelectInterpreter(someUri, manager)).thenResolve();
+        when(workspaceService.getConfiguration('python', folderUri)).thenReturn(pythonPath as any);
+        when(experimentsManager.inExperiment(DeprecatePythonPath.experiment)).thenReturn(true);
+        when(experimentsManager.sendTelemetryIfInExperiment(DeprecatePythonPath.control)).thenReturn(undefined);
+        when(interpreterPathService.inspect(folderUri)).thenReturn(pythonPathInConfig.object);
+
+        rule.setNextRule(instance(nextRule));
+        await rule.autoSelectInterpreter(someUri, manager);
+
+        verify(nextRule.autoSelectInterpreter(someUri, manager)).once();
+        verify(helper.getActiveWorkspaceUri(anything())).once();
+        verify(interpreterPathService.inspect(folderUri)).once();
         pythonPathInConfig.verifyAll();
     });
     test('Does not update settings when there is no interpreter', async () => {

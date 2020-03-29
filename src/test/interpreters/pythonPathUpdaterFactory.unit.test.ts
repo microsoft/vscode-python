@@ -10,7 +10,7 @@ import { IServiceContainer } from '../../client/ioc/types';
 
 // tslint:disable:no-invalid-template-strings max-func-body-length
 
-suite('xPython Path Settings Updater', () => {
+suite('Python Path Settings Updater', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let experimentsManager: TypeMoq.IMock<IExperimentsManager>;

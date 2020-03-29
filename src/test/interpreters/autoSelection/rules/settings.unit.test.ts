@@ -98,7 +98,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         expect(nextAction).to.be.equal(NextAction.exit);
     });
 
-    test('Invoke next rule if python Path in user settings is default', async () => {
+    test('If not in experiment, invoke next rule if python Path in user settings is default', async () => {
         const manager = mock(InterpreterAutoSelectionService);
         const pythonPathInConfig = {};
         const pythonPath = { inspect: () => pythonPathInConfig };
@@ -109,7 +109,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
 
         expect(nextAction).to.be.equal(NextAction.runNextRule);
     });
-    test('Invoke next rule if python Path in user settings is not defined', async () => {
+    test('If not in experiment, invoke next rule if python Path in user settings is not defined', async () => {
         const manager = mock(InterpreterAutoSelectionService);
         const pythonPathInConfig = { globalValue: 'python' };
         const pythonPath = { inspect: () => pythonPathInConfig };
@@ -120,7 +120,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
 
         expect(nextAction).to.be.equal(NextAction.runNextRule);
     });
-    test('Must not Invoke next rule if python Path in user settings is not default', async () => {
+    test('If not in experiment, must not Invoke next rule if python Path in user settings is not default', async () => {
         const manager = mock(InterpreterAutoSelectionService);
         const pythonPathInConfig = { globalValue: 'something else' };
         const pythonPath = { inspect: () => pythonPathInConfig };
