@@ -29,7 +29,7 @@ import {
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 // import * as Telemetry from '../../../client/telemetry';
-import { EventName } from '../../../client/telemetry/constants';
+// import { EventName } from '../../../client/telemetry/constants';
 import { EnvFileTelemetry } from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 
