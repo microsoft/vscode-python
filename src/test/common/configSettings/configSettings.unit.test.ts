@@ -310,7 +310,7 @@ suite('Python Settings', async () => {
 
             workspaceService.setup(w => w.getConfiguration('python')).returns(() => mockWorkspaceConfig as any);
 
-            settings = new CustomPythonSettings(undefined, new MockAutoSelectionService(), workspaceService.object);
+            // settings = new CustomPythonSettings(undefined, new MockAutoSelectionService(), workspaceService.object);
         });
 
         teardown(() => {
