@@ -165,4 +165,19 @@ export namespace scripts {
 
         return [args, parse];
     }
+
+    //============================
+    // normalizeForInterpreter.py
+
+    export function normalizeForInterpreter(code: string): [string[], (out: string) => string] {
+        const script = path.join(SCRIPTS_DIR, 'normalizeForInterpreter.py');
+        const args = [script, code];
+
+        function parse(out: string) {
+            // The text will be used as-is.
+            return out;
+        }
+
+        return [args, parse];
+    }
 }
