@@ -332,7 +332,7 @@ suite('Python Settings', async () => {
             // settings.update(config.object);
             // console.warn('settings updated');
 
-            // console.warn(`telemetryEvent: ${telemetryEvent}`);
+            console.warn(`telemetryEvent: ${telemetryEvent}`);
 
             expect(true).to.equal(true, 'true should be true');
 
