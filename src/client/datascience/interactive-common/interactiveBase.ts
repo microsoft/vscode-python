@@ -4,6 +4,7 @@
 import '../../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import { KernelMessage } from '@jupyterlab/services';
 import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -1068,7 +1069,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         return localizedUri;
     }
 
-    private async listenToNotebookStatus(notebook: INotebook): Promise<void> {
+    private async listenToNotebookEvents(notebook: INotebook): Promise<void> {
         const statusChangeHandler = async (status: ServerStatus) => {
             const kernelSpec = notebook.getKernelSpec();
 
@@ -1087,6 +1088,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         // Fire the status changed handler at least once (might have already been running and so won't show a status update)
         statusChangeHandler(notebook.status).ignoreErrors();
+
+        // Also listen to iopub messages so we can update other cells on update_display_data
+        notebook.registerIOPubListener(this.handleKernelMessage.bind(this));
     }
 
     private async ensureNotebookImpl(server: INotebookServer): Promise<void> {
@@ -1108,7 +1112,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     this._notebook.identity.toString()
                 ).ignoreErrors();
 
-                return this.listenToNotebookStatus(this._notebook);
+                return this.listenToNotebookEvents(this._notebook);
             }
         }
     }
@@ -1399,5 +1403,17 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } else {
             commands.executeCommand('workbench.action.openSettings');
         }
+    }
+
+    private async handleKernelMessage(msg: KernelMessage.IIOPubMessage, _requestId: string) {
+        // Only care about one sort of message, UpdateDisplayData
+        if (KernelMessage.isUpdateDisplayDataMsg(msg)) {
+            return this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg);
+        }
+    }
+
+    private async handleUpdateDisplayData(msg: KernelMessage.IUpdateDisplayDataMsg) {
+        // Send to the UI to handle
+        return this.postMessage(InteractiveWindowMessages.UpdateDisplayData, msg).ignoreErrors();
     }
 }

@@ -4,8 +4,10 @@
 'use strict';
 
 import { Kernel, KernelMessage } from '@jupyterlab/services';
+import * as util from 'util';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Uri } from 'vscode';
+import { traceInfo } from '../../common/logger';
 import { IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
@@ -45,7 +47,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     public receiveMessage(message: IPyWidgetMessage): void {
-        console.dir(message.payload);
+        traceInfo(`IPyWidgetMessage: ${util.inspect(message)}`);
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_ShellSend:
                 this.sendIPythonShellMsg(message.payload);

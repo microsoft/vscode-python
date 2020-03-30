@@ -830,7 +830,7 @@ export class JupyterNotebookBase implements INotebook {
                           allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
                           store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
                       },
-                      true
+                      silent // Dispose only silent futures. Otherwise update_display_data doesn't finda future for a previous cell.
                   )
                 : undefined;
         } catch (exc) {
@@ -1284,19 +1284,14 @@ export class JupyterNotebookBase implements INotebook {
         const output: nbformat.IDisplayData = {
             output_type: 'display_data',
             data: msg.content.data,
-            metadata: msg.content.metadata
+            metadata: msg.content.metadata,
+            transient: msg.content.transient
         };
         this.addToCellData(cell, output, clearState);
     }
 
-    private handleUpdateDisplayData(msg: KernelMessage.IUpdateDisplayDataMsg, _clearState: RefBool, cell: ICell) {
-        // Should already have a display data output in our cell.
-        const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
-        const output = data.outputs.find(o => o.output_type === 'display_data');
-        if (output) {
-            output.data = msg.content.data;
-            output.metadata = msg.content.metadata;
-        }
+    private handleUpdateDisplayData(_msg: KernelMessage.IUpdateDisplayDataMsg, _clearState: RefBool, _cell: ICell) {
+        // Updates should be handled outside.
     }
 
     private handleClearOutput(msg: KernelMessage.IClearOutputMsg, clearState: RefBool, cell: ICell) {

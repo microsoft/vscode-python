@@ -165,6 +165,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [InteractiveWindowMessages.UpdateCell]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateModel]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.UpdateKernel]: MessageType.syncAcrossSameNotebooks | MessageType.syncWithLiveShare,
+    [InteractiveWindowMessages.UpdateDisplayData]: MessageType.syncWithLiveShare,
     [InteractiveWindowMessages.VariableExplorerToggle]: MessageType.other,
     [InteractiveWindowMessages.VariablesComplete]: MessageType.other,
     // Types from CssMessages
