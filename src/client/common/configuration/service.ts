@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, Uri, workspace, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IInterpreterAutoSeletionProxyService } from '../../interpreter/autoSelection/types';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { PythonSettings } from '../configSettings';
+import { isUnitTestExecution } from '../constants';
 import { DeprecatePythonPath } from '../experimentGroups';
 import { IConfigurationService, IExperimentsManager, IInterpreterPathService, IPythonSettings } from '../types';
 
@@ -38,6 +39,10 @@ export class ConfigurationService implements IConfigurationService {
         resource?: Uri,
         configTarget?: ConfigurationTarget
     ): Promise<void> {
+        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
+        const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
+        const inExperiment = experiments.inExperiment(DeprecatePythonPath.experiment);
+        experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         const defaultSetting = {
             uri: resource,
             target: configTarget || ConfigurationTarget.WorkspaceFolder
@@ -46,32 +51,31 @@ export class ConfigurationService implements IConfigurationService {
         if (section === 'python' && configTarget !== ConfigurationTarget.Global) {
             settingsInfo = PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService);
         }
+        configTarget = configTarget ? configTarget : settingsInfo.target;
+        resource = resource ? resource : settingsInfo.uri;
 
-        const configSection = workspace.getConfiguration(section, settingsInfo.uri ? settingsInfo.uri : null);
-        const currentValue = configSection.inspect(setting);
+        const configSection = this.workspaceService.getConfiguration(section, resource);
+        const currentValue =
+            inExperiment && section === 'python' && setting === 'pythonPath'
+                ? interpreterPathService.inspect(resource)
+                : configSection.inspect(setting);
 
         if (
             currentValue !== undefined &&
-            ((settingsInfo.target === ConfigurationTarget.Global && currentValue.globalValue === value) ||
-                (settingsInfo.target === ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
-                (settingsInfo.target === ConfigurationTarget.WorkspaceFolder &&
-                    currentValue.workspaceFolderValue === value))
+            ((configTarget === ConfigurationTarget.Global && currentValue.globalValue === value) ||
+                (configTarget === ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
+                (configTarget === ConfigurationTarget.WorkspaceFolder && currentValue.workspaceFolderValue === value))
         ) {
             return;
         }
-        const experiments = this.serviceContainer.get<IExperimentsManager>(IExperimentsManager);
         if (section === 'python' && setting === 'pythonPath') {
-            if (experiments.inExperiment(DeprecatePythonPath.experiment)) {
-                const interpreterPathService = this.serviceContainer.get<IInterpreterPathService>(
-                    IInterpreterPathService
-                );
+            if (inExperiment) {
                 // tslint:disable-next-line: no-any
-                await interpreterPathService.update(settingsInfo.uri, settingsInfo.target, value as any);
+                await interpreterPathService.update(resource, configTarget, value as any);
             }
-            experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         } else {
-            await configSection.update(setting, value, settingsInfo.target);
-            await this.verifySetting(configSection, settingsInfo.target, setting, value);
+            await configSection.update(setting, value, configTarget);
+            await this.verifySetting(configSection, configTarget, setting, value);
         }
     }
 
@@ -94,7 +98,7 @@ export class ConfigurationService implements IConfigurationService {
         settingName: string,
         value?: {}
     ): Promise<void> {
-        if (this.isTestExecution()) {
+        if (this.isTestExecution() && !isUnitTestExecution()) {
             let retries = 0;
             do {
                 const setting = configSection.inspect(settingName);
