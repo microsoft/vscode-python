@@ -20,6 +20,13 @@ suite('Configuration Service', () => {
     let configService: ConfigurationService;
     setup(() => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        workspaceService
+            .setup(w => w.getWorkspaceFolder(resource))
+            .returns(() => ({
+                uri: resource,
+                index: 0,
+                name: '0'
+            }));
         interpreterPathService = TypeMoq.Mock.ofType<IInterpreterPathService>();
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
@@ -37,13 +44,6 @@ suite('Configuration Service', () => {
         workspaceService
             .setup(w => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(resource)))
             .returns(() => workspaceConfig.object);
-        workspaceService
-            .setup(w => w.getWorkspaceFolder(resource))
-            .returns(() => ({
-                uri: resource,
-                index: 0,
-                name: '0'
-            }));
         return workspaceConfig;
     }
 
@@ -152,7 +152,7 @@ suite('Configuration Service', () => {
         workspaceConfig.verifyAll();
     });
 
-    test('If in Deprecate PythonPath experiment & setting to update is `python.pythonPath`, update settings using new API if stored value is not equal to the new value', async () => {
+    test('xIf in Deprecate PythonPath experiment & setting to update is `python.pythonPath`, update settings using new API if stored value is not equal to the new value', async () => {
         experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
         // tslint:disable-next-line: no-any
         interpreterPathService

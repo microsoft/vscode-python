@@ -52,12 +52,11 @@ export class ConfigurationService implements IConfigurationService {
             settingsInfo = PythonSettings.getSettingsUriAndTarget(resource, this.workspaceService);
         }
         configTarget = configTarget ? configTarget : settingsInfo.target;
-        resource = resource ? resource : settingsInfo.uri;
 
-        const configSection = this.workspaceService.getConfiguration(section, resource);
+        const configSection = this.workspaceService.getConfiguration(section, settingsInfo.uri);
         const currentValue =
             inExperiment && section === 'python' && setting === 'pythonPath'
-                ? interpreterPathService.inspect(resource)
+                ? interpreterPathService.inspect(settingsInfo.uri)
                 : configSection.inspect(setting);
 
         if (
@@ -71,7 +70,7 @@ export class ConfigurationService implements IConfigurationService {
         if (section === 'python' && setting === 'pythonPath') {
             if (inExperiment) {
                 // tslint:disable-next-line: no-any
-                await interpreterPathService.update(resource, configTarget, value as any);
+                await interpreterPathService.update(settingsInfo.uri, configTarget, value as any);
             }
         } else {
             await configSection.update(setting, value, configTarget);
