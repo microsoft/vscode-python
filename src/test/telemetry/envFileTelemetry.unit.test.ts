@@ -14,6 +14,11 @@ suite('Env file telemetry', () => {
     let sandbox: sinon.SinonSandbox;
     let workspaceService: IWorkspaceService;
 
+    suiteSetup(function() {
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
+    });
+
     setup(() => {
         workspaceService = mock(WorkspaceService);
         const mockWorkspaceConfig = {
