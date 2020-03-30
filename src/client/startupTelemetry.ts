@@ -79,7 +79,7 @@ function isUsingGlobalInterpreterInWorkspace(currentPythonPath: string, serviceC
     return currentPythonPath === globalInterpreter.path;
 }
 
-function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
+export function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
     const abExperiments = serviceContainer.get<IExperimentsManager>(IExperimentsManager);
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const interpreterPathService = serviceContainer.get<IInterpreterPathService>(IInterpreterPathService);
