@@ -323,8 +323,8 @@ suite('Python Settings', async () => {
             expected.envFile = 'foo';
             console.warn('set expected envFile');
 
-            // initializeConfig(expected);
-            // console.warn('config initialized');
+            initializeConfig(expected);
+            console.warn('config initialized');
 
             // config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
             // console.warn('config is setup with get<string>');
