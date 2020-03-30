@@ -38,7 +38,7 @@ export namespace EnvFileTelemetry {
     export function defaultEnvFileSetting(workspaceService: IWorkspaceService) {
         if (!_defaultEnvFileSetting) {
             const section = workspaceService.getConfiguration('python');
-            _defaultEnvFileSetting = section.inspect<string>('envFile')!.defaultValue;
+            _defaultEnvFileSetting = section.inspect<string>('envFile')?.defaultValue || '';
         }
 
         return _defaultEnvFileSetting;
