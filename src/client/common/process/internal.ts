@@ -5,6 +5,7 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { PythonVersionInfo } from './types';
 
+// It is simpler to hard-code it instead of using vscode.ExtensionContext.extensionPath.
 const SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
 
 export namespace scripts {
@@ -31,6 +32,7 @@ export namespace scripts {
             }
             return json;
         }
+
         return [args, parse];
     }
 
@@ -138,6 +140,29 @@ export namespace scripts {
         function parse(out: string): _completion.Response[] {
             return out.splitLines().map(resp => JSON.parse(resp));
         }
+
+        return [args, parse];
+    }
+
+    //============================
+    // refactor.py
+
+    export function refactor(root: string): [string[], (out: string) => object[]] {
+        const script = path.join(SCRIPTS_DIR, 'refactor.py');
+        const args = [script, root];
+
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: Make the return type more specific, like we did
+        // with completion().
+        function parse(out: string): object[] {
+            // tslint:disable-next-line:no-suspicious-comment
+            // TODO: Also handle "STARTED"?
+            return out
+                .split(/\r?\n/g)
+                .filter(line => line.length > 0)
+                .map(resp => JSON.parse(resp));
+        }
+
         return [args, parse];
     }
 }
