@@ -271,7 +271,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 const view = await WidgetManager.instance.renderWidget(widgetData, element);
                 // Check if we received a new update request (simplem cancellation mechanism).
                 if (renderId !== this.ipyWidgetRenderCount) {
-                    view.dispose();
+                    //view.dispose();
                     return;
                 }
                 // No support for theming of ipywidgets, hence white bg for ipywidgets.

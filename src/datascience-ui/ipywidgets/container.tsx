@@ -9,6 +9,8 @@ import { AllowedIPyWidgetMessages } from '../interactive-common/redux/postOffice
 import { PostOffice } from '../react-common/postOffice';
 import { WidgetManager } from './manager';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 type Props = {
     postOffice: PostOffice;
     widgetContainerId: string;

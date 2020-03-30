@@ -45,6 +45,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
     }
 
     public receiveMessage(message: IPyWidgetMessage): void {
+        console.dir(message.payload);
         switch (message.message) {
             case IPyWidgetMessages.IPyWidgets_ShellSend:
                 this.sendIPythonShellMsg(message.payload);
