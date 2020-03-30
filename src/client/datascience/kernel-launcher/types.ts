@@ -43,8 +43,3 @@ export interface IKernelFinder {
         kernelName?: string
     ): Promise<IJupyterKernelSpec>;
 }
-
-export interface ICachedKernelSpecs {
-    path: string;
-    kernelSpec: IJupyterKernelSpec;
-}
