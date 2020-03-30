@@ -148,9 +148,9 @@ class FakeVSCodeFileSystemAPI {
                                 filetype |= FileType.Directory;
                             }
                         }
-                        return [filename, filetype] as [string, FileType];
+                        return [name, filetype] as [string, FileType];
                     })
-                    .catch(() => [filename, FileType.Unknown] as [string, FileType])
+                    .catch(() => [name, FileType.Unknown] as [string, FileType])
             );
         });
         return Promise.all(promises);
