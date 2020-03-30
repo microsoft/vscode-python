@@ -28,8 +28,8 @@ import {
     IWorkspaceSymbolSettings
 } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
-// import * as Telemetry from '../../../client/telemetry';
-// import { EventName } from '../../../client/telemetry/constants';
+import * as Telemetry from '../../../client/telemetry';
+import { EventName } from '../../../client/telemetry/constants';
 import { EnvFileTelemetry } from '../../../client/telemetry/envFileTelemetry';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 
@@ -278,41 +278,45 @@ suite('Python Settings', async () => {
         config.verifyAll();
     });
 
-    /*
     suite('Config settings - Env file telemetry', async () => {
-        // const defaultEnvFileSettingValue = 'defaultValue';
-        // let sandbox: sinon.SinonSandbox;
+        const defaultEnvFileSettingValue = 'defaultValue';
+        let sandbox: sinon.SinonSandbox;
         let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
 
         setup(() => {
-            // const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-            // const mockSendTelemetryEvent = (
-            //     eventName: EventName,
-            //     _: number | undefined,
-            //     { hasCustomEnvPath }: { hasCustomEnvPath: boolean }
-            // ) => {
-            //     telemetryEvent = {
-            //         eventName,
-            //         hasCustomEnvPath
-            //     };
-            // };
-            // const mockWorkspaceConfig = {
-            //     inspect: () => ({
-            //         defaultValue: defaultEnvFileSettingValue
-            //     })
-            // };
-            // // Undo the stub we've set up for the other tests.
-            // envFileTelemetryStub.restore();
-            // sandbox = sinon.createSandbox();
-            // const telemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent');
-            // telemetryStub.callsFake(mockSendTelemetryEvent);
-            // workspaceService.setup(w => w.getConfiguration('python')).returns(() => mockWorkspaceConfig as any);
-            // settings = new CustomPythonSettings(undefined, new MockAutoSelectionService(), workspaceService.object);
+            const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+            const mockSendTelemetryEvent = (
+                eventName: EventName,
+                _: number | undefined,
+                { hasCustomEnvPath }: { hasCustomEnvPath: boolean }
+            ) => {
+                telemetryEvent = {
+                    eventName,
+                    hasCustomEnvPath
+                };
+            };
+            const mockWorkspaceConfig = {
+                inspect: () => ({
+                    defaultValue: defaultEnvFileSettingValue
+                })
+            };
+
+            // Undo the stub we've set up for the other tests.
+            envFileTelemetryStub.restore();
+            sandbox = sinon.createSandbox();
+            const telemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent');
+            telemetryStub.callsFake(mockSendTelemetryEvent);
+
+            workspaceService.setup(w => w.getConfiguration('python')).returns(() => mockWorkspaceConfig as any);
+
+            settings = new CustomPythonSettings(undefined, new MockAutoSelectionService(), workspaceService.object);
+
+            expected.pythonPath = 'python3';
         });
 
         teardown(() => {
             telemetryEvent = undefined;
-            // sandbox.restore();
+            sandbox.restore();
             EnvFileTelemetry.EnvFileTelemetryTests.resetState();
         });
 
@@ -351,32 +355,32 @@ suite('Python Settings', async () => {
         //     assert.deepEqual(telemetryEvent, undefined);
         // });
     });
-*/
-    test('Send telemetry if the envFile setting is different from the default value', () => {
-        expected.pythonPath = 'python3';
-        expected.envFile = 'foo';
-        console.warn('set expected envFile');
 
-        initializeConfig(expected);
-        console.warn('config initialized');
+    // test('Send telemetry if the envFile setting is different from the default value', () => {
+    //     expected.pythonPath = 'python3';
+    //     expected.envFile = 'foo';
+    //     console.warn('set expected envFile');
 
-        config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
-        console.warn('config is setup with get<string>');
+    //     initializeConfig(expected);
+    //     console.warn('config initialized');
 
-        settings.update(config.object);
-        console.warn('settings updated');
+    //     config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
+    //     console.warn('config is setup with get<string>');
 
-        // console.warn(`telemetryEvent: ${telemetryEvent}`);
+    //     settings.update(config.object);
+    //     console.warn('settings updated');
 
-        expect(true).to.equal(true, 'true should be true');
+    //     // console.warn(`telemetryEvent: ${telemetryEvent}`);
 
-        // expect(telemetryEvent).to.deep.equal(
-        //     { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true },
-        //     'Telemetry event should be sent'
-        // );
-        // assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
-        console.warn('expectation');
-    });
+    //     expect(true).to.equal(true, 'true should be true');
+
+    //     // expect(telemetryEvent).to.deep.equal(
+    //     //     { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true },
+    //     //     'Telemetry event should be sent'
+    //     // );
+    //     // assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
+    //     console.warn('expectation');
+    // });
 
     test('File env variables remain in settings', () => {
         expected.datascience = {
