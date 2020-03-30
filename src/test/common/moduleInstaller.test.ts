@@ -6,7 +6,7 @@ import * as path from 'path';
 import { SemVer } from 'semver';
 import { instance, mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { ApplicationEnvironment } from '../../client/common/application/applicationEnvironment';
@@ -31,6 +31,7 @@ import {
     ILiveShareApi,
     IWorkspaceService
 } from '../../client/common/application/types';
+import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { CryptoUtils } from '../../client/common/crypto';
@@ -222,11 +223,7 @@ suite('Module Installer', () => {
             ioc.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
             ioc.serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
 
-            const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-            ioc.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
-            const http = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-            http.setup(h => h.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isAny())).returns(() => '');
-            workspaceService.setup(w => w.getConfiguration(TypeMoq.It.isValue('http'))).returns(() => http.object);
+            ioc.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, new WorkspaceService());
 
             ioc.registerMockProcessTypes();
             ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
