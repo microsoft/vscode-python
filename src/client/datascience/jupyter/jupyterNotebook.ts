@@ -1183,6 +1183,7 @@ export class JupyterNotebookBase implements INotebook {
                 output_type: 'execute_result',
                 data: msg.content.data,
                 metadata: msg.content.metadata,
+                transient: msg.content.transient,
                 execution_count: msg.content.execution_count
             },
             clearState

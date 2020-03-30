@@ -146,7 +146,7 @@ export namespace CommonEffects {
                 const data: nbformat.ICodeCell = c.cell.data as nbformat.ICodeCell;
                 const changedOutputs = data.outputs.map(o => {
                     if (
-                        o.output_type === 'display_data' &&
+                        (o.output_type === 'display_data' || o.output_type === 'execute_result') &&
                         o.transient &&
                         // tslint:disable-next-line: no-any
                         (o.transient as any).display_id === arg.payload.data.content.transient.display_id
