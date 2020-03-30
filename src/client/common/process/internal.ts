@@ -180,4 +180,45 @@ export namespace scripts {
 
         return [args, parse];
     }
+
+    //============================
+    // symbolProvider.py
+
+    namespace _symbolProvider {
+        type Position = {
+            line: number;
+            character: number;
+        };
+        type RawSymbol = {
+            // If no namespace then ''.
+            namespace: string;
+            name: string;
+            range: {
+                start: Position;
+                end: Position;
+            };
+        };
+        export type Symbols = {
+            classes: RawSymbol[];
+            methods: RawSymbol[];
+            functions: RawSymbol[];
+        };
+    }
+
+    export function symbolProvider(
+        filename: string,
+        text?: string
+    ): [string[], (out: string) => _symbolProvider.Symbols] {
+        const script = path.join(SCRIPTS_DIR, 'symbolProvider.py');
+        const args = [script, filename];
+        if (text) {
+            args.push(text);
+        }
+
+        function parse(out: string): _symbolProvider.Symbols {
+            return JSON.parse(out);
+        }
+
+        return [args, parse];
+    }
 }
