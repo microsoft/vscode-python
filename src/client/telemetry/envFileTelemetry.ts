@@ -25,14 +25,20 @@ export namespace EnvFileTelemetry {
         return !envFileTelemetrySent;
     }
 
-    export function shouldSendSettingTelemetry(workspaceService: IWorkspaceService, envFileSetting?: string): boolean {
+    export function shouldSendSettingTelemetry(
+        _workspaceService: IWorkspaceService,
+        _envFileSetting?: string
+    ): boolean {
+        return false;
+        // tslint:disable-next-line: no-unnecessary-qualifier
+        // return EnvFileTelemetry.shouldSendTelemetry();
         // Trick to force shouldSendTelemetry to use the stubs in the unit tests.
-        return (
-            // tslint:disable-next-line: no-unnecessary-qualifier
-            EnvFileTelemetry.shouldSendTelemetry() &&
-            // tslint:disable-next-line: no-unnecessary-qualifier
-            envFileSetting !== EnvFileTelemetry.defaultEnvFileSetting(workspaceService)
-        );
+        // return (
+        //     // tslint:disable-next-line: no-unnecessary-qualifier
+        //     EnvFileTelemetry.shouldSendTelemetry() &&
+        //     // tslint:disable-next-line: no-unnecessary-qualifier
+        //     envFileSetting !== EnvFileTelemetry.defaultEnvFileSetting(workspaceService)
+        // );
     }
 
     export function defaultEnvFileSetting(workspaceService: IWorkspaceService) {
