@@ -257,4 +257,18 @@ export namespace scripts {
 
         return [args, parse];
     }
+
+    //============================
+    // printEnvVariablesToFile.py
+
+    export function printEnvVariablesToFile(filename: string): [string[], (out: string) => NodeJS.ProcessEnv] {
+        const script = path.join(SCRIPTS_DIR, 'printEnvVariablesToFile.py');
+        const args = [script, filename.fileToCommandArgument()];
+
+        function parse(out: string): NodeJS.ProcessEnv {
+            return JSON.parse(out);
+        }
+
+        return [args, parse];
+    }
 }
