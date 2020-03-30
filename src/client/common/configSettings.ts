@@ -17,7 +17,7 @@ import '../common/extensions';
 import { IInterpreterAutoSeletionProxyService } from '../interpreter/autoSelection/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-// import { EnvFileTelemetry } from '../telemetry/envFileTelemetry';
+import { EnvFileTelemetry } from '../telemetry/envFileTelemetry';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
@@ -205,9 +205,9 @@ export class PythonSettings implements IPythonSettings {
 
         const envFileSetting = pythonSettings.get<string>('envFile');
         this.envFile = systemVariables.resolveAny(envFileSetting)!;
-        // if (EnvFileTelemetry.shouldSendSettingTelemetry(this.workspace, envFileSetting)) {
-        //     EnvFileTelemetry.sendTelemetry(true);
-        // }
+        if (EnvFileTelemetry.shouldSendSettingTelemetry(this.workspace, envFileSetting)) {
+            EnvFileTelemetry.sendTelemetry(true);
+        }
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion no-any
         this.devOptions = systemVariables.resolveAny(pythonSettings.get<any[]>('devOptions'))!;
