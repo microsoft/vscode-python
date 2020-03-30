@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationTokenSource, TextDocument, TextEditor, Uri } from 'vscode';
+import { CancellationTokenSource, EventEmitter, TextDocument, TextEditor, Uri } from 'vscode';
 
 import {
     ICommandManager,
@@ -13,10 +13,10 @@ import {
 } from '../../common/application/types';
 import { JUPYTER_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, Resource } from '../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { Commands, Identifiers, Settings } from '../constants';
-import { IDataScienceErrorHandler, INotebookEditor, INotebookServerOptions } from '../types';
+import { Commands } from '../constants';
+import { IDataScienceErrorHandler, INotebookEditor } from '../types';
 import { NativeEditorProvider } from './nativeEditorProvider';
 
 @injectable()
@@ -88,6 +88,16 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
     }
 
     public async open(file: Uri): Promise<INotebookEditor> {
+        // Save a custom document as we use it to search for the object later.
+        if (!this.customDocuments.has(file.fsPath)) {
+            // Required for old editor
+            this.customDocuments.set(file.fsPath, {
+                uri: file,
+                viewType: NativeEditorProvider.customEditorViewType,
+                onDidDispose: new EventEmitter<void>().event
+            });
+        }
+
         // See if this file is open or not already
         let editor = this.activeEditors.get(file.fsPath);
         if (!editor) {
@@ -106,24 +116,6 @@ export class NativeEditorProviderOld extends NativeEditorProvider {
             await this.showEditor(editor);
         }
         return editor;
-    }
-
-    public async getNotebookOptions(resource: Resource): Promise<INotebookServerOptions> {
-        const settings = this.configuration.getSettings(resource);
-        let serverURI: string | undefined = settings.datascience.jupyterServerURI;
-        const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
-
-        // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-        if (serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-            serverURI = undefined;
-        }
-
-        return {
-            enableDebugging: true,
-            uri: serverURI,
-            useDefaultConfig,
-            purpose: Identifiers.HistoryPurpose // Share the same one as the interactive window. Just need a new session
-        };
     }
 
     protected openedEditor(e: INotebookEditor) {

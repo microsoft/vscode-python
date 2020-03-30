@@ -46,14 +46,17 @@ function getPlugins(isNotebook) {
                 languages: [] // force to empty so onigasm will be used
             }),
             new HtmlWebpackPlugin({
+                template: path.join(__dirname, '/nativeOrInteractivePicker.html'),
+                chunks: [],
+                filename: 'index.html'
+            }),
+            new HtmlWebpackPlugin({
                 template: 'src/datascience-ui/native-editor/index.html',
-                indexUrl: `${constants.ExtensionRootDir}/out/1`,
                 chunks: ['monaco', 'commons', 'nativeEditor'],
                 filename: 'index.nativeEditor.html'
             }),
             new HtmlWebpackPlugin({
                 template: 'src/datascience-ui/history-react/index.html',
-                indexUrl: `${constants.ExtensionRootDir}/out/1`,
                 chunks: ['monaco', 'commons', 'interactiveWindow'],
                 filename: 'index.interactiveWindow.html'
             })
@@ -181,7 +184,15 @@ function buildConfiguration(isNotebook) {
                     { from: './**/*.png', to: '.' },
                     { from: './**/*.svg', to: '.' },
                     { from: './**/*.css', to: '.' },
-                    { from: './**/*theme*.json', to: '.' }
+                    { from: './**/*theme*.json', to: '.' },
+                    {
+                        from: path.join(constants.ExtensionRootDir, 'node_modules/requirejs/require.js'),
+                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                    },
+                    {
+                        from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/dist/ipywidgets.js'),
+                        to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                    }
                 ],
                 { context: 'src' }
             ),

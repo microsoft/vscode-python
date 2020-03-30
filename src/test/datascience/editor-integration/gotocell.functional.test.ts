@@ -88,10 +88,10 @@ suite('DataScience gotocell tests', () => {
             const testDir = '${fileDirname}';
             const server = await jupyterExecution.connectToNotebookServer({
                 usingDarkTheme,
-                useDefaultConfig,
+                skipUsingDefaultConfig: !useDefaultConfig,
                 workingDir: testDir,
                 purpose: purpose ? purpose : Identifiers.HistoryPurpose,
-                enableDebugging: true
+                allowUI: () => false
             });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);

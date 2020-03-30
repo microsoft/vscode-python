@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Event, EventEmitter, Uri } from 'vscode';
@@ -23,15 +24,6 @@ import { ServerStatus } from '../../datascience-ui/interactive-common/mainState'
 import { noop } from '../core';
 
 export class MockJupyterNotebook implements INotebook {
-    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
-        IJupyterKernelSpec | LiveKernelModel
-    >().event;
-    public onDisposed = new EventEmitter<void>().event;
-    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
-    constructor(private owner: INotebookServer) {
-        noop();
-    }
-
     public get server(): INotebookServer {
         return this.owner;
     }
@@ -50,15 +42,30 @@ export class MockJupyterNotebook implements INotebook {
     public get status(): ServerStatus {
         return ServerStatus.Idle;
     }
+
+    public get resource(): Resource {
+        return Uri.file('foo.py');
+    }
+    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
+        IJupyterKernelSpec | LiveKernelModel
+    >().event;
+    public onDisposed = new EventEmitter<void>().event;
+    public onKernelRestarted = new EventEmitter<void>().event;
+    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
+
+    constructor(private owner: INotebookServer) {
+        noop();
+    }
+    public registerIOPubListener(
+        _listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
+    ): void {
+        noop();
+    }
     public getGatherProvider(): IGatherProvider | undefined {
         throw new Error('Method not implemented.');
     }
     public getCellHashProvider(): ICellHashProvider | undefined {
         throw new Error('Method not implemented.');
-    }
-
-    public get resource(): Resource {
-        return Uri.file('foo.py');
     }
 
     public clear(_id: string): void {
@@ -136,5 +143,79 @@ export class MockJupyterNotebook implements INotebook {
 
     public getLoggers(): INotebookExecutionLogger[] {
         return [];
+    }
+
+    public registerCommTarget(
+        _targetName: string,
+        _callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ) {
+        noop();
+    }
+
+    public sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    > {
+        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
+            // tslint:disable-next-line: no-any
+            msgType: 'comm_msg',
+            channel: 'shell',
+            buffers,
+            content,
+            metadata,
+            msgId,
+            session: '1',
+            username: '1'
+        });
+
+        return {
+            done: Promise.resolve(undefined),
+            msg: shellMessage,
+            onReply: noop,
+            onIOPub: noop,
+            onStdin: noop,
+            registerMessageHook: noop,
+            removeMessageHook: noop,
+            sendInputReply: noop,
+            isDisposed: false,
+            dispose: noop
+        };
+    }
+
+    public requestCommInfo(
+        _content: KernelMessage.ICommInfoRequestMsg['content']
+    ): Promise<KernelMessage.ICommInfoReplyMsg> {
+        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommInfoReplyMsg>({
+            msgType: 'comm_info_reply',
+            channel: 'shell',
+            content: {
+                status: 'ok'
+                // tslint:disable-next-line: no-any
+            } as any,
+            metadata: {},
+            session: '1',
+            username: '1'
+        });
+
+        return Promise.resolve(shellMessage);
+    }
+    public registerMessageHook(
+        _msgId: string,
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        noop();
+    }
+    public removeMessageHook(
+        _msgId: string,
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        noop();
     }
 }

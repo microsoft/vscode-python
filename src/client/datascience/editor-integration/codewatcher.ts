@@ -187,7 +187,7 @@ export class CodeWatcher implements ICodeWatcher {
         }
     }
 
-    @captureTelemetry(Telemetry.RunAllCellsAbove)
+    @captureTelemetry(Telemetry.RunCellAndAllBelow)
     public async runCellAndAllBelow(startLine: number, startCharacter: number) {
         const runCellCommands = this.codeLenses.filter(c => c.command && c.command.command === Commands.RunCell);
         const index = runCellCommands.findIndex(

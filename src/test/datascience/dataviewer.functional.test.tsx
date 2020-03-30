@@ -14,13 +14,7 @@ import { Disposable, Uri } from 'vscode';
 
 import { Identifiers } from '../../client/datascience/constants';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
-import {
-    IDataViewer,
-    IDataViewerProvider,
-    IInteractiveWindowProvider,
-    IJupyterExecution,
-    INotebook
-} from '../../client/datascience/types';
+import { IDataViewer, IDataViewerProvider, INotebook, INotebookProvider } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 import { noop } from '../core';
@@ -98,14 +92,10 @@ suite('DataScience DataViewer tests', () => {
     }
 
     async function injectCode(code: string): Promise<void> {
-        const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
-        const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        const server = await exec.connectToNotebookServer(
-            await interactiveWindowProvider.getNotebookOptions(undefined)
-        );
-        notebook = server
-            ? await server.createNotebook(undefined, Uri.parse(Identifiers.InteractiveWindowIdentity))
-            : undefined;
+        const notebookProvider = ioc.get<INotebookProvider>(INotebookProvider);
+        notebook = await notebookProvider.getOrCreateNotebook({
+            identity: Uri.parse(Identifiers.InteractiveWindowIdentity)
+        });
         if (notebook) {
             const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());
             assert.equal(cells.length, 1, `Wrong number of cells returned`);

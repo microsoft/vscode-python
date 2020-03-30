@@ -4,17 +4,19 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
+import * as fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 import '../../client/common/extensions';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
 import { ClassType } from '../../client/ioc/types';
+import { WidgetManager } from '../ipywidgets';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { fixLatexEquations } from './latexManipulation';
 import { ICellViewModel } from './mainState';
-import { getRichestMimetype, getTransform, isMimeTypeSupported } from './transforms';
+import { getRichestMimetype, getTransform, isIPyWidgetOutput, isMimeTypeSupported } from './transforms';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
@@ -52,12 +54,6 @@ interface ICellOutput {
 // tslint:disable: react-this-binding-issue
 export class CellOutput extends React.Component<ICellOutputProps> {
     // tslint:disable-next-line: no-any
-    private static ansiToHtmlClass_ctor: ClassType<any> | undefined;
-    constructor(prop: ICellOutputProps) {
-        super(prop);
-    }
-
-    // tslint:disable-next-line: no-any
     private static get ansiToHtmlClass(): ClassType<any> {
         if (!CellOutput.ansiToHtmlClass_ctor) {
             // ansiToHtml is different between the tests running and webpack. figure out which one
@@ -69,7 +65,17 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
         return CellOutput.ansiToHtmlClass_ctor!;
     }
-
+    // tslint:disable-next-line: no-any
+    private static ansiToHtmlClass_ctor: ClassType<any> | undefined;
+    private ipyWidgetRef: React.RefObject<HTMLDivElement>;
+    private ipyWidgetRenderCount: number = 0;
+    private renderedView: { dispose: Function }[] = [];
+    // tslint:disable-next-line: no-any
+    private ipyWidgetRenderTimeout?: any;
+    constructor(prop: ICellOutputProps) {
+        super(prop);
+        this.ipyWidgetRef = React.createRef<HTMLDivElement>();
+    }
     private static getAnsiToHtmlOptions(): { fg: string; bg: string; colors: string[] } {
         // Here's the default colors for ansiToHtml. We need to use the
         // colors from our current theme.
@@ -122,9 +128,41 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 : 'markdown-cell-output-container';
 
             // Then combine them inside a div
-            return <div className={outputClassNames}>{this.renderResults()}</div>;
+            return (
+                <div className={outputClassNames} ref={this.ipyWidgetRef}>
+                    {this.renderResults()}
+                </div>
+            );
         }
         return null;
+    }
+    public componentWillUnmount() {
+        this.destroyIPyWidgets();
+    }
+    public componentDidMount() {
+        if (!this.isCodeCell() || !this.hasOutput() || !this.getCodeCell().outputs || this.props.hideOutput) {
+            return;
+        }
+        this.renderIPyWidgets(true);
+    }
+    // tslint:disable-next-line: max-func-body-length
+    public componentDidUpdate(prevProps: ICellOutputProps) {
+        if (!this.isCodeCell() || !this.hasOutput() || !this.getCodeCell().outputs || this.props.hideOutput) {
+            return;
+        }
+        if (fastDeepEqual(this.props, prevProps)) {
+            return;
+        }
+        // Check if outupt has changed.
+        if (
+            prevProps.cellVM.cell.data.cell_type === 'code' &&
+            prevProps.cellVM.cell.state === this.getCell()!.state &&
+            prevProps.hideOutput === this.props.hideOutput &&
+            fastDeepEqual(this.props.cellVM.cell.data, prevProps.cellVM.cell.data)
+        ) {
+            return;
+        }
+        this.renderIPyWidgets();
     }
 
     public shouldComponentUpdate(
@@ -173,6 +211,82 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     public getUnknownMimeTypeFormatString() {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
+    private destroyIPyWidgets() {
+        this.renderedView.forEach(view => {
+            try {
+                view.dispose();
+            } catch {
+                //
+            }
+        });
+        this.renderedView = [];
+        if (this.ipyWidgetRenderTimeout) {
+            clearTimeout(this.ipyWidgetRenderTimeout);
+        }
+    }
+    /**
+     * Renders ipywidgets
+     */
+    private renderIPyWidgets(calledFromComponentDidMount: boolean = true) {
+        this.destroyIPyWidgets();
+        // Keep track of current render counter.
+        // If this number changes, then it means this method was invoked again, and we need to cancel current rendering.
+        // I.e. we use this as a simplecancellation token.
+        const renderId = (this.ipyWidgetRenderCount += 1);
+        const outputs = this.getCodeCell().outputs;
+
+        // If we're rendering ipywidgets in the componentDidMount event, then
+        // this means we most likely have all of the data we need to render this output.
+        // Hence, there's no need to throttle the rendering, as we're not waiting for any new output.
+        // If on the other hand this method is called from componentDidUpdate, then output was updated
+        // after control was rendered. However its possible we haven't received all of the output, and it can keep coming through via multiple updates
+        // This happens today because we send output in waves. In such cases we should throttle rendering.
+        // Else, we'll end up rendering some part, then destroying it and rendering again due to updates.
+        // Long story short, if called form compnentDidMount, then just render without any delays, else throttle, (wait for more potential updates).
+
+        const delay = 100;
+        const immediateExecution = (cb: Function, _time: number) => {
+            cb();
+            return undefined;
+        };
+        const delayedRenderCallback = calledFromComponentDidMount ? immediateExecution : setTimeout;
+
+        this.ipyWidgetRenderTimeout = delayedRenderCallback(async () => {
+            // Render the output in order.
+            const itemsToRender = [...outputs];
+            // Render each ipywidget output, one at a time.
+            const renderOutput = async () => {
+                if (itemsToRender.length === 0) {
+                    return;
+                }
+                const output = itemsToRender.shift();
+                // tslint:disable-next-line: no-any
+                const outputData = output && output.data ? (output.data as any) : undefined; // NOSONAR
+                if (!outputData || !outputData['application/vnd.jupyter.widget-view+json']) {
+                    return;
+                }
+                // tslint:disable-next-line: no-any
+                const widgetData: any = outputData['application/vnd.jupyter.widget-view+json'];
+                const element = this.ipyWidgetRef.current!;
+                const view = await WidgetManager.instance.renderWidget(widgetData, element);
+                // Check if we received a new update request (simplem cancellation mechanism).
+                if (renderId !== this.ipyWidgetRenderCount) {
+                    view.dispose();
+                    return;
+                }
+                // No support for theming of ipywidgets, hence white bg for ipywidgets.
+                if (
+                    this.ipyWidgetRef.current &&
+                    !this.ipyWidgetRef.current?.className.includes('cell-output-ipywidget-background')
+                ) {
+                    this.ipyWidgetRef.current.className += ' cell-output-ipywidget-background';
+                }
+                this.renderedView.push(view);
+                delayedRenderCallback(renderOutput, delay);
+            };
+            delayedRenderCallback(renderOutput, delay);
+        }, delay);
+    }
 
     private getCell = () => {
         return this.props.cellVM.cell;
@@ -201,7 +315,12 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private renderResults = (): JSX.Element[] => {
         // Results depend upon the type of cell
         if (this.isCodeCell()) {
-            return this.renderCodeOutputs();
+            return (
+                this.renderCodeOutputs()
+                    .filter(item => !!item)
+                    // tslint:disable-next-line: no-any
+                    .map(item => (item as any) as JSX.Element)
+            );
         } else if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
             return this.renderMarkdownOutputs();
         } else {
@@ -210,12 +329,12 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     };
 
     private renderCodeOutputs = () => {
+        // return [];
         if (this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && !this.props.hideOutput) {
             const trim = this.props.cellVM.cell.data.metadata.tags ? this.props.cellVM.cell.data.metadata.tags[0] : '';
             // Render the outputs
             return this.renderOutputs(this.getCodeCell().outputs, trim);
         }
-
         return [];
     };
 
@@ -418,8 +537,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         transformedList.forEach((transformed, index) => {
             let mimetype = transformed.output.mimeType;
 
-            // If that worked, use the transform
-            if (mimetype && isMimeTypeSupported(mimetype)) {
+            if (isIPyWidgetOutput(transformed.output.mimeBundle)) {
+                return;
+            } else if (mimetype && isMimeTypeSupported(mimetype)) {
+                // If that worked, use the transform
                 // Get the matching React.Component for that mimetype
                 const Transform = getTransform(mimetype);
 

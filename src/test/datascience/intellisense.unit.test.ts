@@ -17,7 +17,7 @@ import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICell, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import { ICell, INotebookProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { createEmptyCell, generateTestCells } from '../../datascience-ui/interactive-common/mainState';
 import { generateReverseChange, IMonacoTextModel } from '../../datascience-ui/react-common/monacoHelpers';
@@ -48,8 +48,7 @@ suite('Data Science Intellisense Unit Tests', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    let jupyterExecution: TypeMoq.IMock<IJupyterExecution>;
-    let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
+    let notebookProvider: TypeMoq.IMock<INotebookProvider>;
     let cells: ICell[] = [createEmptyCell(Identifiers.EditCellId, null)];
     const pythonSettings = new (class extends PythonSettings {
         public fireChangeEvent() {
@@ -63,8 +62,7 @@ suite('Data Science Intellisense Unit Tests', () => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        jupyterExecution = TypeMoq.Mock.ofType<IJupyterExecution>();
-        interactiveWindowProvider = TypeMoq.Mock.ofType<IInteractiveWindowProvider>();
+        notebookProvider = TypeMoq.Mock.ofType<INotebookProvider>();
 
         pythonSettings.jediEnabled = false;
         configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
@@ -73,8 +71,7 @@ suite('Data Science Intellisense Unit Tests', () => {
         intellisenseProvider = new IntellisenseProvider(
             workspaceService.object,
             fileSystem.object,
-            jupyterExecution.object,
-            interactiveWindowProvider.object,
+            notebookProvider.object,
             interpreterService.object,
             languageServerCache
         );

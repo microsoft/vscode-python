@@ -22,6 +22,28 @@
             ]
         },
         {
+            "name": "Extension (DS UI in Browser)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "stopOnEntry": false,
+            "smartStep": true,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*"
+            ],
+            "preLaunchTask": "Inject DS WebBrowser UI",
+            "env": {
+                "VSC_PYTHON_DS_UI_PROMPT": "1"
+            },
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
             "name": "Extension inside container",
             "type": "extensionHost",
             "request": "launch",
@@ -238,6 +260,43 @@
                 "--timeout=300000"
             ],
             "env": {
+                // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
+                "xVSC_PYTHON_DS_UI_BROWSER": "1",
+                // Remove `X` prefix to test with real python (for DS functional tests).
+                "XVSCODE_PYTHON_ROLLING": "1",
+                // Remove 'X' to turn on all logging in the debug output
+                "XVSC_PYTHON_FORCE_LOGGING": "1",
+                // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
+                "XCI_PYTHON_PATH": "<Python Path>",
+            },
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "Compile",
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
+        },
+        {
+            "name": "Functional DS UI Tests (without VS Code, *.ui.functional.test.ts)",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "args": [
+                "./out/test/**/*.ui.functional.test.js",
+                "--require=out/test/unittests.js",
+                "--ui=tdd",
+                "--recursive",
+                "--colors",
+                //"--grep", "<suite>",
+                "--timeout=300000",
+                "--fast"
+            ],
+            "env": {
+                // Remove `X` prefix to test with real browser to host DS ui (for DS functional tests).
+                "XVSC_PYTHON_DS_UI_BROWSER": "1",
                 // Remove `X` prefix to test with real python (for DS functional tests).
                 "XVSCODE_PYTHON_ROLLING": "1",
                 // Remove 'X' to turn on all logging in the debug output

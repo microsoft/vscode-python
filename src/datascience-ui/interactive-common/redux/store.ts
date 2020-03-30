@@ -5,6 +5,7 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import * as path from 'path';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
+
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -219,7 +220,11 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     const updateContext = createSendInfoMiddleware();
 
     // Create the test middle ware. It sends messages that are used for testing only
-    const testMiddleware = testMode ? createTestMiddleware() : undefined;
+    // Or if testing in UI Test.
+    // tslint:disable-next-line: no-any
+    const acquireVsCodeApi = (window as any).acquireVsCodeApi as Function;
+    const isUITest = acquireVsCodeApi && acquireVsCodeApi().handleMessage ? true : false;
+    const testMiddleware = testMode || isUITest ? createTestMiddleware() : undefined;
 
     // Create the logger if we're not in production mode or we're forcing logging
     const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
@@ -260,7 +265,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
             }
             return action;
         },
-        logger: testMode ? createTestLogger() : undefined
+        logger: testMode ? createTestLogger() : window.console
     });
     // On CI we might want to disable logging, as its a big wall of text.
     // TO disable that add the variable `VSC_PYTHON_DS_NO_REDUX_LOGGING=1`
@@ -314,12 +319,9 @@ export function createStore<M>(
     baseTheme: string,
     testMode: boolean,
     editable: boolean,
-    reducerMap: M
+    reducerMap: M,
+    postOffice: PostOffice
 ) {
-    // Create a post office to listen to store dispatches and allow reducers to
-    // send messages
-    const postOffice = new PostOffice();
-
     // Create reducer for the main react UI
     const mainReducer = generateMainReducer(skipDefault, testMode, baseTheme, editable, reducerMap);
 
@@ -368,7 +370,6 @@ export function createStore<M>(
                 }
                 store.dispatch({ type: message, payload: basePayload });
             }
-
             return true;
         }
     });

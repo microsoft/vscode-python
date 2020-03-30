@@ -19,10 +19,9 @@ import {
     ICodeLensFactory,
     IFileHashes,
     IInteractiveWindowListener,
-    IInteractiveWindowProvider,
-    IJupyterExecution,
     INotebook,
-    INotebookExecutionLogger
+    INotebookExecutionLogger,
+    INotebookProvider
 } from '../types';
 
 @injectable()
@@ -39,8 +38,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IFileSystem) private fileSystem: IFileSystem
     ) {}
 
@@ -116,21 +114,13 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         }
 
         // First get the active server
-        const activeServer = await this.jupyterExecution.getServer(
-            await this.interactiveWindowProvider.getNotebookOptions(nbUri)
-        );
+        const nb = await this.notebookProvider.getOrCreateNotebook({ identity: nbUri, getOnly: true });
 
-        let nb: INotebook | undefined;
-        // If that works, see if there's a matching notebook running
-        if (activeServer) {
-            nb = await activeServer.getNotebook(nbUri);
-
-            // If we have an executing notebook, get its cell hash provider service.
-            if (nb) {
-                this.hashProvider = this.getCellHashProvider(nb);
-                if (this.hashProvider) {
-                    this.hashProvider.updated(this.hashesUpdated.bind(this));
-                }
+        // If we have an executing notebook, get its cell hash provider service.
+        if (nb) {
+            this.hashProvider = this.getCellHashProvider(nb);
+            if (this.hashProvider) {
+                this.hashProvider.updated(this.hashesUpdated.bind(this));
             }
         }
     }

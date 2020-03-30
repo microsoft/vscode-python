@@ -78,7 +78,6 @@ export interface INotebookServerLaunchInfo {
     kernelSpec: IJupyterKernelSpec | undefined | LiveKernelModel;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
-    enableDebugging: boolean | undefined; // If we should enable debugging for this server
 }
 
 export interface INotebookCompletion {
@@ -115,6 +114,7 @@ export interface INotebook extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
+    onKernelRestarted: Event<void>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(
@@ -142,18 +142,40 @@ export interface INotebook extends IAsyncDisposable {
     setKernelSpec(spec: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
     setInterpreter(interpeter: PythonInterpreter): void;
     getLoggers(): INotebookExecutionLogger[];
+    registerIOPubListener(listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>): void;
+    registerCommTarget(
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ): void;
+    sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    >;
+    requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
+    registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void;
+    removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
 }
 
 export interface INotebookServerOptions {
-    enableDebugging?: boolean;
     uri?: string;
     usingDarkTheme?: boolean;
-    useDefaultConfig?: boolean;
+    skipUsingDefaultConfig?: boolean;
     workingDir?: string;
     purpose: string;
     metadata?: nbformat.INotebookMetadata;
     disableUI?: boolean;
     skipSearchingForKernel?: boolean;
+    allowUI(): boolean;
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
@@ -236,6 +258,27 @@ export interface IJupyterSession extends IAsyncDisposable {
     ): Promise<KernelMessage.IInspectReplyMsg | undefined>;
     sendInputReply(content: string): void;
     changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
+    registerCommTarget(
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ): void;
+    sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    >;
+    requestCommInfo(content: KernelMessage.ICommInfoRequestMsg['content']): Promise<KernelMessage.ICommInfoReplyMsg>;
+    registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void;
+    removeMessageHook(msgId: string, hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
@@ -313,7 +356,6 @@ export interface IInteractiveWindowProvider {
     onExecutedCode: Event<string>;
     getActive(): IInteractiveWindow | undefined;
     getOrCreateActive(): Promise<IInteractiveWindow>;
-    getNotebookOptions(resource: Resource): Promise<INotebookServerOptions>;
 }
 
 export const IDataScienceErrorHandler = Symbol('IDataScienceErrorHandler');
@@ -372,7 +414,6 @@ export interface INotebookEditorProvider {
     open(file: Uri): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(contents?: string): Promise<INotebookEditor>;
-    getNotebookOptions(resource: Resource): Promise<INotebookServerOptions>;
 }
 
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
@@ -851,11 +892,43 @@ type WebViewViewState = {
 };
 export type WebViewViewChangeEventArgs = { current: WebViewViewState; previous: WebViewViewState };
 
+export const INotebookProvider = Symbol('INotebookProvider');
+
+export type GetServerOptions = {
+    getOnly?: boolean;
+    disableUI?: boolean;
+    localOnly?: boolean;
+};
+
+/**
+ * Options for getting a notebook
+ */
+export type GetNotebookOptions = {
+    identity: Uri;
+    getOnly?: boolean;
+    disableUI?: boolean;
+    metadata?: nbformat.INotebookMetadata;
+};
+
 export interface INotebookProvider {
+    /**
+     * Fired when a notebook has been created for a given Uri/Identity
+     */
+    onNotebookCreated: Event<{ identity: Uri; notebook: INotebook }>;
+
+    /**
+     * List of all notebooks (active and ones that are being constructed).
+     */
+    activeNotebooks: Promise<INotebook>[];
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */
-    getNotebook(server: INotebookServer, resource: Uri, options?: nbformat.INotebookMetadata): Promise<INotebook>;
+    getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
+
+    /**
+     * Gets the server used for starting notebooks
+     */
+    getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined>;
 }
 
 // Connection info to connect to a kernel over JMP

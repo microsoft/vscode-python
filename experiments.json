@@ -45,24 +45,24 @@
         "name": "PtvsdWheels37 - control",
         "salt": "DebugAdapterFactory",
         "min": 0,
-        "max": 50
+        "max": 0
     },
     {
         "name": "PtvsdWheels37 - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 50,
+        "min": 0,
         "max": 100
     },
     {
         "name": "Reload - control",
         "salt": "DebugAdapterFactory",
-        "min": 50,
-        "max": 60
+        "min": 0,
+        "max": 20
     },
     {
         "name": "Reload - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 90,
+        "min": 80,
         "max": 100
     },
     {

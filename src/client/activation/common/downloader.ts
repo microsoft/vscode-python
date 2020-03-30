@@ -53,12 +53,12 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
                 uri = uri.replace(/^https:/, 'http:');
             }
         }
-
-        return [uri, info.version.raw];
+        const lsNameTrimmed = info.package.split('.')[0];
+        return [uri, info.version.raw, lsNameTrimmed];
     }
 
     public async downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void> {
-        const [downloadUri, lsVersion] = await this.getDownloadInfo(resource);
+        const [downloadUri, lsVersion, lsName] = await this.getDownloadInfo(resource);
         const timer: StopWatch = new StopWatch();
         let success: boolean = true;
         let localTempFilePath = '';
@@ -85,7 +85,8 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED, timer.elapsedTime, {
                 success,
                 lsVersion,
-                usedSSL
+                usedSSL,
+                lsName
             });
         }
 
@@ -105,7 +106,11 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             );
             throw new Error(err);
         } finally {
-            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED, timer.elapsedTime, { success, lsVersion });
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED, timer.elapsedTime, {
+                success,
+                lsVersion,
+                lsName
+            });
             await this.fs.deleteFile(localTempFilePath);
         }
     }

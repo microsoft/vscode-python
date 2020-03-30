@@ -1082,6 +1082,11 @@ export interface IEventNamePropertyMapping {
          * Whether download uri starts with `https:` or not
          */
         usedSSL?: boolean;
+
+        /**
+         * Name of LS downloaded
+         */
+        lsName?: string;
     };
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
@@ -1112,6 +1117,10 @@ export interface IEventNamePropertyMapping {
          * Whether download uri starts with `https:` or not
          */
         usedSSL?: boolean;
+        /**
+         * Package name of LS extracted
+         */
+        lsName?: string;
     };
     /**
      * Telemetry event sent if azure blob packages are being listed
@@ -1900,6 +1909,10 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when a gathered notebook has been saved by the user.
      */
     [Telemetry.GatheredNotebookSaved]: undefined | never;
+    /**
+     * Telemetry event sent when the user reports whether Gathered notebook was good or not
+     */
+    [Telemetry.GatherQualityReport]: { result: 'yes' | 'no' };
     /**
      * Telemetry event sent when the ZMQ native binaries do not work.
      */

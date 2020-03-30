@@ -322,7 +322,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             // Try starting a server. Purpose should be unique so we
             // create a brand new one.
             server = await this.jupyterExecution.connectToNotebookServer(
-                { useDefaultConfig, purpose: uuid() },
+                { skipUsingDefaultConfig: !useDefaultConfig, purpose: uuid(), allowUI: () => false },
                 cancelToken
             );
             const notebook = server

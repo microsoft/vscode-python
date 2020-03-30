@@ -130,12 +130,10 @@ steps:
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'))
 
   # On MAC let CONDA update install paths
-  #
-  # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
   - bash: |
       sudo chown -R $USER $CONDA
     displayName: 'Give CONDA permission to its own files'
-    condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Darwin'))
+    condition: and(succeeded(), eq(variables['Agent.Os'], 'Darwin'))
 
   # Create the two anaconda environments
   #

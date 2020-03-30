@@ -27,12 +27,10 @@ import {
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { Commands, Telemetry } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { ProgressReporter } from '../progress/progressReporter';
 import {
     ICodeCssGenerator,
     IDataScienceErrorHandler,
@@ -52,7 +50,6 @@ import {
 import { NativeEditor } from './nativeEditor';
 import { NativeEditorStorage } from './nativeEditorStorage';
 import { NativeEditorSynchronizer } from './nativeEditorSynchronizer';
-import { NativeNotebookProvider } from './notebookProvider';
 
 enum AskForSaveResult {
     Yes,
@@ -76,7 +73,6 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
@@ -96,18 +92,16 @@ export class NativeEditorOldWebView extends NativeEditor {
         @inject(INotebookImporter) importer: INotebookImporter,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(NativeNotebookProvider) notebookProvider: INotebookProvider
+        @inject(INotebookProvider) notebookProvider: INotebookProvider
     ) {
         super(
             listeners,
             liveShare,
             applicationShell,
             documentManager,
-            interpreterService,
             provider,
             disposables,
             cssGenerator,
@@ -127,7 +121,6 @@ export class NativeEditorOldWebView extends NativeEditor {
             importer,
             errorHandler,
             globalStorage,
-            progressReporter,
             experimentsManager,
             asyncRegistry,
             switcher,

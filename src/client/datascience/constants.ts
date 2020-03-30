@@ -81,6 +81,7 @@ export namespace Commands {
     export const SaveNotebookNonCustomEditor = 'python.datascience.notebookeditor.save';
     export const SaveAsNotebookNonCustomEditor = 'python.datascience.notebookeditor.saveAs';
     export const OpenNotebookNonCustomEditor = 'python.datascience.notebookeditor.open';
+    export const GatherQuality = 'python.datascience.gatherquality';
 }
 
 export namespace CodeLensCommands {
@@ -285,6 +286,7 @@ export enum Telemetry {
     KernelInvalid = 'DS_INTERNAL.INVALID_KERNEL_USED',
     GatherCompleted = 'DATASCIENCE.GATHER_COMPLETED',
     GatheredNotebookSaved = 'DATASCIENCE.GATHERED_NOTEBOOK_SAVED',
+    GatherQualityReport = 'DS_INTERNAL.GATHER_QUALITY_REPORT',
     ZMQNotSupported = 'DATASCIENCE.ZMQ_NATIVE_BINARIES_NOT_LOADING'
 }
 

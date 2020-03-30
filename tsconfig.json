@@ -2,12 +2,18 @@
     "compilerOptions": {
         "baseUrl": ".",
         "paths": {
-            "*": ["types/*"]
+            "*": [
+                "types/*"
+            ]
         },
         "module": "commonjs",
         "target": "es2018",
         "outDir": "out",
-        "lib": ["es6", "es2018", "dom"],
+        "lib": [
+            "es6",
+            "es2018",
+            "dom"
+        ],
         "jsx": "react",
         "sourceMap": true,
         "rootDir": "src",
@@ -30,6 +36,9 @@
         "src/client/src/typings",
         "src/ipywidgets",
         "src/smoke",
-        "build"
+        "build",
+        "out",
+        "ipywidgets",
+        "tmp"
     ]
 }

@@ -4,12 +4,12 @@
 'use strict';
 
 import { inject, injectable, multiInject, named, optional } from 'inversify';
-import { CodeLens, Range } from 'vscode';
+import { CodeLens, env, Range, Uri } from 'vscode';
 import { ICommandNameArgumentTypeMapping } from '../../common/application/commands';
 import { ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { IDisposable, IOutputChannel } from '../../common/types';
 import { DataScience } from '../../common/utils/localize';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import {
     ICodeWatcher,
@@ -68,6 +68,7 @@ export class CommandRegistry implements IDisposable {
         this.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor);
         this.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook);
         this.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput);
+        this.registerCommand(Commands.GatherQuality, this.reportGatherQuality);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
                 listener.register(this.commandManager);
@@ -343,5 +344,10 @@ export class CommandRegistry implements IDisposable {
 
         // Ask our code lens provider to find the matching code watcher for the current document
         return this.dataScienceCodeLensProvider.getCodeWatcher(activeEditor.document);
+    }
+
+    private reportGatherQuality(val: string) {
+        sendTelemetryEvent(Telemetry.GatherQualityReport, undefined, { result: val === 'no' ? 'no' : 'yes' });
+        env.openExternal(Uri.parse(`https://aka.ms/gathersurvey?succeed=${val}`));
     }
 }
