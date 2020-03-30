@@ -208,7 +208,6 @@ export abstract class BaseJupyterSession implements IJupyterSession {
         }
     }
 
-
     // Respond to status changes on the session
     protected onStatusChanged(_s: Session.ISession) {
         if (this.onStatusChangedEvent) {
