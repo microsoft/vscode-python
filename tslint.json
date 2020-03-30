@@ -17,7 +17,7 @@
         "triple-equals": true,
         "no-relative-imports": false,
         "max-line-length": false,
-        "max-func-body-length": false, 
+        "max-func-body-length": false,
         "typedef": false,
         "no-string-throw": true,
         "missing-jsdoc": false,
