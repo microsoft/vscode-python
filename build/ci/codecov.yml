@@ -5,7 +5,7 @@ codecov:
 coverage:
   precision: 0
   round: down
-  range: "70...100"
+  range: '70...100'
 
   status:
     project: yes
@@ -22,6 +22,6 @@ parsers:
 
 comment:
   branch: !release*
-  layout: "header, diff, files"
+  layout: 'header, diff, files'
   behavior: default
   require_changes: no

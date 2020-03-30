@@ -25,7 +25,7 @@ would be saved in the `1 Fixes` directory and named `42.md`
 regarding issue #42) and could contain the following:
 
 ```markdown
-[Answer](https://en.wikipedia.org/wiki/42_(number))
+[Answer](<https://en.wikipedia.org/wiki/42_(number)>)
 to the Ultimate Question of Life, the Universe, and Everything!
 (thanks [Don Jaymanne](https://github.com/donjayamanne/))
 ```

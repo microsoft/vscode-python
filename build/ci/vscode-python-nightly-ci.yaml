@@ -9,502 +9,502 @@ trigger: none
 pr: none
 
 schedules:
-- cron: "0 8 * * 1-5"
-  # Daily midnight PST build, runs Monday - Friday always
-  displayName: Nightly build
-  branches:
-    include:
-    - master
-    - release*
-  always: true
+  - cron: '0 8 * * 1-5'
+    # Daily midnight PST build, runs Monday - Friday always
+    displayName: Nightly build
+    branches:
+      include:
+        - master
+        - release*
+    always: true
 
 # Variables that are available for the entire pipeline.
 variables:
-- template: templates/globals.yml
+  - template: templates/globals.yml
 
 stages:
-- stage: Build
-  jobs:
-  - template: templates/jobs/build_compile.yml
+  - stage: Build
+    jobs:
+      - template: templates/jobs/build_compile.yml
 
-# Each item in each matrix has a number of possible values it may
-# define.  They are detailed in templates/test_phases.yml.  The only
-# required value is "TestsToRun".
+  # Each item in each matrix has a number of possible values it may
+  # define.  They are detailed in templates/test_phases.yml.  The only
+  # required value is "TestsToRun".
 
-- stage: Linux
-  dependsOn:
-  - Build
-  jobs:
-  - job: 'Py3x'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        'Venv':
-          TestsToRun: 'venvTests'
-          NeedsPythonTestReqs: true
-          # This is for the venvTests to use, not needed if you don't run venv tests...
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-        'Smoke':
-          TestsToRun: 'testSmoke'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-      maxParallel: 1
-    pool:
-      vmImage: 'ubuntu-16.04'
-    steps:
-      - template: templates/test_phases.yml
+  - stage: Linux
+    dependsOn:
+      - Build
+    jobs:
+      - job: 'Py3x'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            'Venv':
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              # This is for the venvTests to use, not needed if you don't run venv tests...
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+            'Smoke':
+              TestsToRun: 'testSmoke'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+          maxParallel: 1
+        pool:
+          vmImage: 'ubuntu-16.04'
+        steps:
+          - template: templates/test_phases.yml
 
-  - job: 'Py36'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '3.6'
-          # Note: "pythonInternalTools" tests are 3.7+.
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '3.6'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          PythonVersion: '3.6'
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        'Venv':
-          PythonVersion: '3.6'
-          TestsToRun: 'venvTests'
-          NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-        # Note: We only run the smoke tests with the latest Python release.
-      maxParallel: 1
-    pool:
-      vmImage: 'ubuntu-16.04'
-    steps:
-      - template: templates/test_phases.yml
+      - job: 'Py36'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              PythonVersion: '3.6'
+              # Note: "pythonInternalTools" tests are 3.7+.
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              PythonVersion: '3.6'
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              PythonVersion: '3.6'
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              PythonVersion: '3.6'
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              PythonVersion: '3.6'
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            'Venv':
+              PythonVersion: '3.6'
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+            # Note: We only run the smoke tests with the latest Python release.
+          maxParallel: 1
+        pool:
+          vmImage: 'ubuntu-16.04'
+        steps:
+          - template: templates/test_phases.yml
 
-  - job: 'Py35'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '3.5'
-          # Note: "pythonInternalTools" tests are 3.7+.
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '3.5'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '3.5'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '3.5'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          PythonVersion: '3.5'
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        'Venv':
-          PythonVersion: '3.5'
-          TestsToRun: 'venvTests'
-          NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-        # Note: We only run the smoke tests with the latest Python release.
-      maxParallel: 1
-    pool:
-      vmImage: 'ubuntu-16.04'
-    steps:
-      - template: templates/test_phases.yml
+      - job: 'Py35'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              PythonVersion: '3.5'
+              # Note: "pythonInternalTools" tests are 3.7+.
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              PythonVersion: '3.5'
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              PythonVersion: '3.5'
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              PythonVersion: '3.5'
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              PythonVersion: '3.5'
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            'Venv':
+              PythonVersion: '3.5'
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+            # Note: We only run the smoke tests with the latest Python release.
+          maxParallel: 1
+        pool:
+          vmImage: 'ubuntu-16.04'
+        steps:
+          - template: templates/test_phases.yml
 
-  - job: 'Py27'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '2.7'
-          # Note: "pythonInternalTools" tests are 3.7+.
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '2.7'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '2.7'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '2.7'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          PythonVersion: '2.7'
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        # Note: Virtual env tests use `venv` and won't currently work with Python 2.7
-        # Note: We only run the smoke tests with the latest Python release.
-      maxParallel: 1
-    pool:
-      vmImage: 'ubuntu-16.04'
-    steps:
-      - template: templates/test_phases.yml
+      - job: 'Py27'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              PythonVersion: '2.7'
+              # Note: "pythonInternalTools" tests are 3.7+.
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              PythonVersion: '2.7'
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              PythonVersion: '2.7'
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              PythonVersion: '2.7'
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              PythonVersion: '2.7'
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            # Note: Virtual env tests use `venv` and won't currently work with Python 2.7
+            # Note: We only run the smoke tests with the latest Python release.
+          maxParallel: 1
+        pool:
+          vmImage: 'ubuntu-16.04'
+        steps:
+          - template: templates/test_phases.yml
 
-- stage: Mac
-  dependsOn:
-  - Build
-  jobs:
-  - job: 'Py3x'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        'Venv':
-          TestsToRun: 'venvTests'
-          NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-        'Smoke':
-          TestsToRun: 'testSmoke'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-      maxParallel: 1
-    pool:
-      vmImage: '$(vmImageMacOS)'
-    steps:
-      - template: templates/test_phases.yml
+  - stage: Mac
+    dependsOn:
+      - Build
+    jobs:
+      - job: 'Py3x'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            'Venv':
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+            'Smoke':
+              TestsToRun: 'testSmoke'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+          maxParallel: 1
+        pool:
+          vmImage: '$(vmImageMacOS)'
+        steps:
+          - template: templates/test_phases.yml
 
-  - job: 'Py36'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '3.6'
-          # Note: "pythonInternalTools" tests are 3.7+.
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '3.6'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          PythonVersion: '3.6'
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        'Venv':
-          PythonVersion: '3.6'
-          TestsToRun: 'venvTests'
-          NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-        # Note: We only run the smoke tests with the latest Python release.
-      maxParallel: 1
-    pool:
-      vmImage: '$(vmImageMacOS)'
-    steps:
-      - template: templates/test_phases.yml
+      - job: 'Py36'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              PythonVersion: '3.6'
+              # Note: "pythonInternalTools" tests are 3.7+.
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              PythonVersion: '3.6'
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              PythonVersion: '3.6'
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              PythonVersion: '3.6'
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              PythonVersion: '3.6'
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            'Venv':
+              PythonVersion: '3.6'
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+            # Note: We only run the smoke tests with the latest Python release.
+          maxParallel: 1
+        pool:
+          vmImage: '$(vmImageMacOS)'
+        steps:
+          - template: templates/test_phases.yml
 
-  - job: 'Py35'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '3.5'
-          # Note: "pythonInternalTools" tests are 3.7+.
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '3.5'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '3.5'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '3.5'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          PythonVersion: '3.5'
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        'Venv':
-          PythonVersion: '3.5'
-          TestsToRun: 'venvTests'
-          NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-        # Note: We only run the smoke tests with the latest Python release.
-      maxParallel: 1
-    pool:
-      vmImage: '$(vmImageMacOS)'
-    steps:
-      - template: templates/test_phases.yml
+      - job: 'Py35'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              PythonVersion: '3.5'
+              # Note: "pythonInternalTools" tests are 3.7+.
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              PythonVersion: '3.5'
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              PythonVersion: '3.5'
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              PythonVersion: '3.5'
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              PythonVersion: '3.5'
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            'Venv':
+              PythonVersion: '3.5'
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+            # Note: We only run the smoke tests with the latest Python release.
+          maxParallel: 1
+        pool:
+          vmImage: '$(vmImageMacOS)'
+        steps:
+          - template: templates/test_phases.yml
 
-  - job: 'Py27'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '2.7'
-          # Note: "pythonInternalTools" tests are 3.7+.
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '2.7'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '2.7'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '2.7'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          PythonVersion: '2.7'
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        # Note: Virtual env tests use `venv` and won't currently work with Python 2.7
-        # Note: We only run the smoke tests with the latest Python release.
-      maxParallel: 1
-    pool:
-      vmImage: '$(vmImageMacOS)'
-    steps:
-      - template: templates/test_phases.yml
+      - job: 'Py27'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              PythonVersion: '2.7'
+              # Note: "pythonInternalTools" tests are 3.7+.
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              PythonVersion: '2.7'
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              PythonVersion: '2.7'
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              PythonVersion: '2.7'
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              PythonVersion: '2.7'
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            # Note: Virtual env tests use `venv` and won't currently work with Python 2.7
+            # Note: We only run the smoke tests with the latest Python release.
+          maxParallel: 1
+        pool:
+          vmImage: '$(vmImageMacOS)'
+        steps:
+          - template: templates/test_phases.yml
 
-- stage: Windows
-  dependsOn:
-  - Build
-  jobs:
-  - job: 'Py3x'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        'Venv':
-          TestsToRun: 'venvTests'
-          NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-        'Smoke':
-          TestsToRun: 'testSmoke'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-      maxParallel: 1
-    pool:
-      vmImage: 'vs2017-win2016'
-    steps:
-      - template: templates/test_phases.yml
+  - stage: Windows
+    dependsOn:
+      - Build
+    jobs:
+      - job: 'Py3x'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonInternalTools, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            'Venv':
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+            'Smoke':
+              TestsToRun: 'testSmoke'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+          maxParallel: 1
+        pool:
+          vmImage: 'vs2017-win2016'
+        steps:
+          - template: templates/test_phases.yml
 
-  - job: 'Py36'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '3.6'
-          # Note: "pythonInternalTools" tests are 3.7+.
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '3.6'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '3.6'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          PythonVersion: '3.6'
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        'Venv':
-          PythonVersion: '3.6'
-          TestsToRun: 'venvTests'
-          NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-        # Note: We only run the smoke tests with the latest Python release.
-      maxParallel: 1
-    pool:
-      vmImage: 'vs2017-win2016'
-    steps:
-      - template: templates/test_phases.yml
+      - job: 'Py36'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              PythonVersion: '3.6'
+              # Note: "pythonInternalTools" tests are 3.7+.
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              PythonVersion: '3.6'
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              PythonVersion: '3.6'
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              PythonVersion: '3.6'
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              PythonVersion: '3.6'
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            'Venv':
+              PythonVersion: '3.6'
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+            # Note: We only run the smoke tests with the latest Python release.
+          maxParallel: 1
+        pool:
+          vmImage: 'vs2017-win2016'
+        steps:
+          - template: templates/test_phases.yml
 
-  - job: 'Py35'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '3.5'
-          # Note: "pythonInternalTools" tests are 3.7+.
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '3.5'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '3.5'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '3.5'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          PythonVersion: '3.5'
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        'Venv':
-          PythonVersion: '3.5'
-          TestsToRun: 'venvTests'
-          NeedsPythonTestReqs: true
-          PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
-        # Note: We only run the smoke tests with the latest Python release.
-      maxParallel: 1
-    pool:
-      vmImage: 'vs2017-win2016'
-    steps:
-      - template: templates/test_phases.yml
+      - job: 'Py35'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              PythonVersion: '3.5'
+              # Note: "pythonInternalTools" tests are 3.7+.
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              PythonVersion: '3.5'
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              PythonVersion: '3.5'
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              PythonVersion: '3.5'
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              PythonVersion: '3.5'
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            'Venv':
+              PythonVersion: '3.5'
+              TestsToRun: 'venvTests'
+              NeedsPythonTestReqs: true
+              PYTHON_VIRTUAL_ENVS_LOCATION: './src/tmp/envPaths.json'
+            # Note: We only run the smoke tests with the latest Python release.
+          maxParallel: 1
+        pool:
+          vmImage: 'vs2017-win2016'
+        steps:
+          - template: templates/test_phases.yml
 
-  - job: 'Py27'
-    dependsOn: []
-    timeoutInMinutes: 120
-    strategy:
-      matrix:
-        'Unit':
-          PythonVersion: '2.7'
-          # Note: "pythonInternalTools" tests are 3.7+.
-          TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
-          NeedsPythonTestReqs: true
-          NeedsIPythonReqs: true
-        'Functional':
-          PythonVersion: '2.7'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-        'Single Workspace':
-          PythonVersion: '2.7'
-          TestsToRun: 'testSingleWorkspace'
-          NeedsPythonTestReqs: true
-        'Multi Workspace':
-          PythonVersion: '2.7'
-          TestsToRun: 'testMultiWorkspace'
-          NeedsPythonTestReqs: true
-        'Debugger':
-          PythonVersion: '2.7'
-          TestsToRun: 'testDebugger'
-          NeedsPythonTestReqs: true
-        # Note: Virtual env tests use `venv` and won't currently work with Python 2.7
-        # Note: We only run the smoke tests with the latest Python release.
-      maxParallel: 1
-    pool:
-      vmImage: 'vs2017-win2016'
-    steps:
-      - template: templates/test_phases.yml
+      - job: 'Py27'
+        dependsOn: []
+        timeoutInMinutes: 120
+        strategy:
+          matrix:
+            'Unit':
+              PythonVersion: '2.7'
+              # Note: "pythonInternalTools" tests are 3.7+.
+              TestsToRun: 'testUnitTests, pythonUnitTests, pythonIPythonTests'
+              NeedsPythonTestReqs: true
+              NeedsIPythonReqs: true
+            'Functional':
+              PythonVersion: '2.7'
+              TestsToRun: 'testfunctional'
+              NeedsPythonTestReqs: true
+              NeedsPythonFunctionalReqs: true
+            'Single Workspace':
+              PythonVersion: '2.7'
+              TestsToRun: 'testSingleWorkspace'
+              NeedsPythonTestReqs: true
+            'Multi Workspace':
+              PythonVersion: '2.7'
+              TestsToRun: 'testMultiWorkspace'
+              NeedsPythonTestReqs: true
+            'Debugger':
+              PythonVersion: '2.7'
+              TestsToRun: 'testDebugger'
+              NeedsPythonTestReqs: true
+            # Note: Virtual env tests use `venv` and won't currently work with Python 2.7
+            # Note: We only run the smoke tests with the latest Python release.
+          maxParallel: 1
+        pool:
+          vmImage: 'vs2017-win2016'
+        steps:
+          - template: templates/test_phases.yml
 
-- stage: Reports
-  dependsOn:
-  - Linux
-  - Mac
-  - Windows
-  condition: always()
-  jobs:
-  - template: templates/jobs/coverage.yml
+  - stage: Reports
+    dependsOn:
+      - Linux
+      - Mac
+      - Windows
+    condition: always()
+    jobs:
+      - template: templates/jobs/coverage.yml

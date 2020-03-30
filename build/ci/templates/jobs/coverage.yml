@@ -1,8 +1,8 @@
 jobs:
-- job: Coverage
-  pool:
-    vmImage: "ubuntu-16.04"
-  variables:
-    TestsToRun: 'testUnitTests'
-  steps:
-    - template: ../steps/merge_upload_coverage.yml
+  - job: Coverage
+    pool:
+      vmImage: 'ubuntu-16.04'
+    variables:
+      TestsToRun: 'testUnitTests'
+    steps:
+      - template: ../steps/merge_upload_coverage.yml
