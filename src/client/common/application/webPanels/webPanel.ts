@@ -161,7 +161,6 @@ export class WebPanel implements IWebPanel {
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>VS Code Python React UI</title>
                 <base href="${uriBase}${uriBase.endsWith('/') ? '' : '/'}"/>
-                <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
                 </head>
             <body>
                 <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -200,7 +199,6 @@ export class WebPanel implements IWebPanel {
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>VS Code Python React UI</title>
                 <base href="${uriBase}"/>
-                <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
             </head>
             <body>
                 <script type="text/javascript">
