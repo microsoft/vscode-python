@@ -275,10 +275,7 @@ export class RawFileSystem implements IRawFileSystem {
     public async listdir(dirname: string): Promise<[string, FileType][]> {
         const uri = vscode.Uri.file(dirname);
         const files = await this.vscfs.readDirectory(uri);
-        return files.map(([basename, filetype]) => {
-            const filename = this.paths.join(dirname, basename);
-            return [filename, filetype] as [string, FileType];
-        });
+        return files.map(([basename, filetype]) => [basename, filetype] as [string, FileType]);
     }
 
     //****************************
