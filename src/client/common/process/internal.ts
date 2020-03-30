@@ -271,4 +271,30 @@ export namespace scripts {
 
         return [args, parse];
     }
+
+    //============================
+    // shell_exec.py
+
+    export function shell_exec(
+        command: string,
+        lockfile: string,
+        shellArgs: string[]
+    ): [string[], (out: string) => string] {
+        const script = path.join(SCRIPTS_DIR, 'shell_exec.py');
+        const args = [
+            script,
+            command.fileToCommandArgument(),
+            // The shell args must come after the command
+            // but before the lockfile.
+            ...shellArgs,
+            lockfile.fileToCommandArgument()
+        ];
+
+        function parse(out: string): string {
+            // The output is ignored.
+            return out;
+        }
+
+        return [args, parse];
+    }
 }
