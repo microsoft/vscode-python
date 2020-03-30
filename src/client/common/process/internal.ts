@@ -9,6 +9,10 @@ import { PythonVersionInfo } from './types';
 const SCRIPTS_DIR = path.join(EXTENSION_ROOT_DIR, 'pythonFiles');
 
 export namespace scripts {
+    // ignored:
+    // * install_debugoy.py
+    // * ptvsd_launcher.py
+
     //============================
     // interpreterInfo.py
 
@@ -234,6 +238,20 @@ export namespace scripts {
         }
 
         function parse(out: string): _symbolProvider.Symbols {
+            return JSON.parse(out);
+        }
+
+        return [args, parse];
+    }
+
+    //============================
+    // printEnvVariables.py
+
+    export function printEnvVariables(): [string[], (out: string) => NodeJS.ProcessEnv] {
+        const script = path.join(SCRIPTS_DIR, 'printEnvVariables.py').fileToCommandArgument();
+        const args = [script];
+
+        function parse(out: string): NodeJS.ProcessEnv {
             return JSON.parse(out);
         }
 
