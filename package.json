@@ -85,7 +85,20 @@
         "onCommand:python.datascience.selectJupyterInterpreter",
         "onCommand:python.datascience.selectjupytercommandline",
         "onCommand:python.enableSourceMapSupport",
-        "onCustomEditor:NativeEditorProvider.ipynb"
+        "onCustomEditor:NativeEditorProvider.ipynb",
+        "workspaceContains:setup.py",
+        "workspaceContains:setup.cfg",
+        "workspaceContains:MANIFEST.in",
+        "workspaceContains:pyproject.toml",
+        "workspaceContains:requirements.txt",
+        "workspaceContains:manage.py",
+        "workspaceContains:tox.ini",
+        "workspaceContains:pytest.ini",
+        "workspaceContains:anaconda-project.yml",
+        "workspaceContains:.pep8",
+        "workspaceContains:.flake8",
+        "workspaceContains:.pylintrc",
+        "workspaceContains:.pycodestyle"
     ],
     "main": "./out/client/extension",
     "contributes": {
