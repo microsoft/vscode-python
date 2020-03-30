@@ -352,14 +352,18 @@ suite('Python Settings', async () => {
         // });
     });
 */
-    test('Send telemetry if the envFile setting is different from the default value', async () => {
+    test('Send telemetry if the envFile setting is different from the default value', () => {
+        expected.pythonPath = 'python3';
         expected.envFile = 'foo';
         console.warn('set expected envFile');
 
         initializeConfig(expected);
         console.warn('config initialized');
 
-        config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
+        config
+            .setup(c => c.get<string>('envFile'))
+            .returns(() => expected.envFile)
+            .verifiable(TypeMoq.Times.once());
         console.warn('config is setup with get<string>');
 
         settings.update(config.object);
@@ -375,6 +379,7 @@ suite('Python Settings', async () => {
         // );
         // assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
         console.warn('expectation');
+        config.verifyAll();
     });
 
     test('File env variables remain in settings', () => {
