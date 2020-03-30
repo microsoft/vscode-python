@@ -154,6 +154,7 @@ export class PythonSettings implements IPythonSettings {
         const workspaceRoot = this.workspaceRoot.fsPath;
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this.workspace);
 
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
         // If user has defined a custom value, use it else try to get the best interpreter ourselves.
         if (this.pythonPath.length === 0 || this.pythonPath === 'python') {
@@ -168,6 +169,7 @@ export class PythonSettings implements IPythonSettings {
             this.pythonPath = autoSelectedPythonInterpreter ? autoSelectedPythonInterpreter.path : this.pythonPath;
         }
         this.pythonPath = getAbsolutePath(this.pythonPath, workspaceRoot);
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.venvPath = systemVariables.resolveAny(pythonSettings.get<string>('venvPath'))!;
         this.venvFolders = systemVariables.resolveAny(pythonSettings.get<string[]>('venvFolders'))!;
         const condaPath = systemVariables.resolveAny(pythonSettings.get<string>('condaPath'))!;
@@ -185,6 +187,7 @@ export class PythonSettings implements IPythonSettings {
             pythonSettings.get<boolean>('autoUpdateLanguageServer', true)
         )!;
         if (this.jediEnabled) {
+            // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
             this.jediPath = systemVariables.resolveAny(pythonSettings.get<string>('jediPath'))!;
             if (typeof this.jediPath === 'string' && this.jediPath.length > 0) {
                 this.jediPath = getAbsolutePath(systemVariables.resolveAny(this.jediPath), workspaceRoot);
@@ -210,6 +213,7 @@ export class PythonSettings implements IPythonSettings {
         this.devOptions = systemVariables.resolveAny(pythonSettings.get<any[]>('devOptions'))!;
         this.devOptions = Array.isArray(this.devOptions) ? this.devOptions : [];
 
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const lintingSettings = systemVariables.resolveAny(pythonSettings.get<ILintingSettings>('linting'))!;
         if (this.linting) {
             Object.assign<ILintingSettings, ILintingSettings>(this.linting, lintingSettings);
@@ -217,6 +221,7 @@ export class PythonSettings implements IPythonSettings {
             this.linting = lintingSettings;
         }
 
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const analysisSettings = systemVariables.resolveAny(pythonSettings.get<IAnalysisSettings>('analysis'))!;
         if (this.analysis) {
             Object.assign<IAnalysisSettings, IAnalysisSettings>(this.analysis, analysisSettings);
@@ -227,6 +232,7 @@ export class PythonSettings implements IPythonSettings {
         this.disableInstallationChecks = pythonSettings.get<boolean>('disableInstallationCheck') === true;
         this.globalModuleInstallation = pythonSettings.get<boolean>('globalModuleInstallation') === true;
 
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const sortImportSettings = systemVariables.resolveAny(pythonSettings.get<ISortImportSettings>('sortImports'))!;
         if (this.sortImports) {
             Object.assign<ISortImportSettings, ISortImportSettings>(this.sortImports, sortImportSettings);
@@ -310,6 +316,7 @@ export class PythonSettings implements IPythonSettings {
         this.linting.mypyPath = getAbsolutePath(systemVariables.resolveAny(this.linting.mypyPath), workspaceRoot);
         this.linting.banditPath = getAbsolutePath(systemVariables.resolveAny(this.linting.banditPath), workspaceRoot);
 
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const formattingSettings = systemVariables.resolveAny(pythonSettings.get<IFormattingSettings>('formatting'))!;
         if (this.formatting) {
             Object.assign<IFormattingSettings, IFormattingSettings>(this.formatting, formattingSettings);
@@ -338,6 +345,7 @@ export class PythonSettings implements IPythonSettings {
             workspaceRoot
         );
 
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const autoCompleteSettings = systemVariables.resolveAny(
             pythonSettings.get<IAutoCompleteSettings>('autoComplete')
         )!;
@@ -356,6 +364,7 @@ export class PythonSettings implements IPythonSettings {
                   typeshedPaths: []
               };
 
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const workspaceSymbolsSettings = systemVariables.resolveAny(
             pythonSettings.get<IWorkspaceSymbolSettings>('workspaceSymbols')
         )!;
@@ -383,12 +392,14 @@ export class PythonSettings implements IPythonSettings {
             workspaceRoot
         );
 
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const testSettings = systemVariables.resolveAny(pythonSettings.get<ITestingSettings>('testing'))!;
         if (this.testing) {
             Object.assign<ITestingSettings, ITestingSettings>(this.testing, testSettings);
         } else {
             this.testing = testSettings;
             if (isTestExecution() && !this.testing) {
+                // tslint:disable-next-line:prefer-type-cast
                 // tslint:disable-next-line:no-object-literal-type-assertion
                 this.testing = {
                     nosetestArgs: [],
@@ -436,6 +447,7 @@ export class PythonSettings implements IPythonSettings {
         this.testing.pytestArgs = this.testing.pytestArgs.map(arg => systemVariables.resolveAny(arg));
         this.testing.unittestArgs = this.testing.unittestArgs.map(arg => systemVariables.resolveAny(arg));
 
+        // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const terminalSettings = systemVariables.resolveAny(pythonSettings.get<ITerminalSettings>('terminal'))!;
         if (this.terminal) {
             Object.assign<ITerminalSettings, ITerminalSettings>(this.terminal, terminalSettings);
