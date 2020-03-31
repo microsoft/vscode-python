@@ -11,7 +11,6 @@ import { EnvFileTelemetry } from '../../client/telemetry/envFileTelemetry';
 
 suite('Env file telemetry', () => {
     const defaultEnvFileValue = 'someDefaultValue';
-    let sandbox: sinon.SinonSandbox;
     let workspaceService: IWorkspaceService;
 
     setup(() => {
@@ -22,14 +21,12 @@ suite('Env file telemetry', () => {
             })
         };
 
-        sandbox = sinon.createSandbox();
-
         // tslint:disable-next-line: no-any
         when(workspaceService.getConfiguration('python')).thenReturn(mockWorkspaceConfig as any);
     });
 
     teardown(() => {
-        sandbox.restore();
+        sinon.restore();
         EnvFileTelemetry.EnvFileTelemetryTests.resetState();
     });
 
@@ -51,8 +48,8 @@ suite('Env file telemetry', () => {
     });
 
     test('shouldSendSettingTelemetry should return true if the env file setting is different from the default value, and no telemetry event has been sent', () => {
-        sandbox.stub(EnvFileTelemetry, 'shouldSendTelemetry').returns(true);
-        sandbox.stub(EnvFileTelemetry, 'defaultEnvFileSetting').returns(defaultEnvFileValue);
+        sinon.stub(EnvFileTelemetry, 'shouldSendTelemetry').returns(true);
+        sinon.stub(EnvFileTelemetry, 'defaultEnvFileSetting').returns(defaultEnvFileValue);
 
         const result = EnvFileTelemetry.shouldSendSettingTelemetry(instance(workspaceService), 'envFile');
 
@@ -60,8 +57,8 @@ suite('Env file telemetry', () => {
     });
 
     test('shouldSendSettingTelemetry should return false if the env file setting is different from the default value, and a telemetry event has already been sent', () => {
-        sandbox.stub(EnvFileTelemetry, 'shouldSendTelemetry').returns(false);
-        sandbox.stub(EnvFileTelemetry, 'defaultEnvFileSetting').returns(defaultEnvFileValue);
+        sinon.stub(EnvFileTelemetry, 'shouldSendTelemetry').returns(false);
+        sinon.stub(EnvFileTelemetry, 'defaultEnvFileSetting').returns(defaultEnvFileValue);
 
         const result = EnvFileTelemetry.shouldSendSettingTelemetry(instance(workspaceService), 'envFile');
 
@@ -69,7 +66,7 @@ suite('Env file telemetry', () => {
     });
 
     test('shouldSendSettingTelemetry should return false if the env file setting is the same as the default value', () => {
-        sandbox.stub(EnvFileTelemetry, 'defaultEnvFileSetting').returns(defaultEnvFileValue);
+        sinon.stub(EnvFileTelemetry, 'defaultEnvFileSetting').returns(defaultEnvFileValue);
 
         const result = EnvFileTelemetry.shouldSendSettingTelemetry(instance(workspaceService), defaultEnvFileValue);
 

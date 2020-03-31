@@ -280,7 +280,6 @@ suite('Environment Variables Provider - Env file telemetry', () => {
     let currentProcess: ICurrentProcess;
     let settings: IPythonSettings;
     let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
-    let sandbox: sinon.SinonSandbox;
 
     setup(() => {
         const mockSendTelemetryEvent = (
@@ -294,8 +293,7 @@ suite('Environment Variables Provider - Env file telemetry', () => {
             };
         };
 
-        sandbox = sinon.createSandbox();
-        const telemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent');
+        const telemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent');
 
         envVarsService = mock(EnvironmentVariablesService);
         platform = mock(PlatformService);
@@ -323,7 +321,7 @@ suite('Environment Variables Provider - Env file telemetry', () => {
 
     teardown(() => {
         telemetryEvent = undefined;
-        sandbox.restore();
+        sinon.restore();
         EnvFileTelemetry.EnvFileTelemetryTests.resetState();
     });
 

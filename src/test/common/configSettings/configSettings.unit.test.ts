@@ -280,7 +280,6 @@ suite('Python Settings', async () => {
 
     suite('Config settings - Env file telemetry', async () => {
         const defaultEnvFileSettingValue = 'defaultValue';
-        let sandbox: sinon.SinonSandbox;
         let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
 
         setup(() => {
@@ -303,8 +302,7 @@ suite('Python Settings', async () => {
 
             // Undo the stub we've set up for the other tests.
             envFileTelemetryStub.restore();
-            sandbox = sinon.createSandbox();
-            const telemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent');
+            const telemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent');
             telemetryStub.callsFake(mockSendTelemetryEvent);
 
             workspaceService.setup(w => w.getConfiguration('python')).returns(() => mockWorkspaceConfig as any);
@@ -317,7 +315,7 @@ suite('Python Settings', async () => {
 
         teardown(() => {
             telemetryEvent = undefined;
-            sandbox.restore();
+            sinon.restore();
             EnvFileTelemetry.EnvFileTelemetryTests.resetState();
         });
 

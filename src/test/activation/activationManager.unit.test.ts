@@ -362,7 +362,6 @@ suite('Language Server Activation - Env file telemetry', () => {
     let singleActivationService: typemoq.IMock<IExtensionSingleActivationService>;
     let telemetryEvent: { eventName: EventName; hasCustomEnvPath: boolean } | undefined;
     let managerTest: ExtensionActivationManager;
-    let sandbox: sinon.SinonSandbox;
 
     setup(() => {
         const mockSendTelemetryEvent = (
@@ -381,9 +380,8 @@ suite('Language Server Activation - Env file telemetry', () => {
             })
         };
 
-        sandbox = sinon.createSandbox();
-        const telemetryStub = sandbox.stub(Telemetry, 'sendTelemetryEvent');
-        const initializeStub = sandbox.stub(ExtensionActivationManager.prototype, 'initialize');
+        const telemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent');
+        const initializeStub = sinon.stub(ExtensionActivationManager.prototype, 'initialize');
 
         workspaceService = mock(WorkspaceService);
         activeResourceService = mock(ActiveResourceService);
@@ -422,7 +420,7 @@ suite('Language Server Activation - Env file telemetry', () => {
 
     teardown(() => {
         telemetryEvent = undefined;
-        sandbox.restore();
+        sinon.restore();
         EnvFileTelemetry.EnvFileTelemetryTests.resetState();
     });
 
