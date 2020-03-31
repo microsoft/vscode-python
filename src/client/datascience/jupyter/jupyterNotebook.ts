@@ -1183,7 +1183,8 @@ export class JupyterNotebookBase implements INotebook {
                 output_type: 'execute_result',
                 data: msg.content.data,
                 metadata: msg.content.metadata,
-                transient: msg.content.transient,
+                // tslint:disable-next-line: no-any
+                transient: msg.content.transient as any, // NOSONAR
                 execution_count: msg.content.execution_count
             },
             clearState
@@ -1286,7 +1287,8 @@ export class JupyterNotebookBase implements INotebook {
             output_type: 'display_data',
             data: msg.content.data,
             metadata: msg.content.metadata,
-            transient: msg.content.transient
+            // tslint:disable-next-line: no-any
+            transient: msg.content.transient as any // NOSONAR
         };
         this.addToCellData(cell, output, clearState);
     }
