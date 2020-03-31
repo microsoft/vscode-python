@@ -61,12 +61,12 @@ export class PythonExecutionService implements IPythonExecutionService {
     }
 
     public getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo {
-        return {
-            // For vanilla environments the info is simple.
-            command: this.pythonPath,
-            args: pythonArgs ? pythonArgs : [],
-            python: [this.pythonPath]
-        };
+        const python = this.getPythonArgv();
+        const args = python.slice(1);
+        if (pythonArgs) {
+            args.push(...pythonArgs);
+        }
+        return { command: python[0], args, python };
     }
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
@@ -108,6 +108,10 @@ export class PythonExecutionService implements IPythonExecutionService {
         }
 
         return result;
+    }
+
+    protected getPythonArgv(): string[] {
+        return [this.pythonPath];
     }
 
     private async getInterpreterInformationImpl(): Promise<InterpreterInfomation | undefined> {
