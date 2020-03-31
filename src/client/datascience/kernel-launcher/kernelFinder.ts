@@ -54,9 +54,9 @@ export class KernelFinder implements IKernelFinder {
                 return kernelSpec;
             }
 
-            // if (!notebookInterpreter) {
-            kernelSpec = await this.getKernelSpecFromActiveInterpreter(resource, kernelName);
-            // }
+            if (!notebookInterpreter) {
+                kernelSpec = await this.getKernelSpecFromActiveInterpreter(resource, kernelName);
+            }
 
             if (kernelSpec) {
                 return kernelSpec;
@@ -124,7 +124,7 @@ export class KernelFinder implements IKernelFinder {
             const promises = kernels.map(async kernel => {
                 try {
                     const kernelSpec: IJupyterKernelSpec = JSON.parse(
-                        await this.file.readFile(path.join(kernelPath, kernel, '/kernel.json'))
+                        await this.file.readFile(path.join(kernel, '/kernel.json'))
                     );
                     this.cachedKernelSpecs.push(kernelSpec);
                     return kernelSpec;

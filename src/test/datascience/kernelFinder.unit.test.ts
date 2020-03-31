@@ -16,7 +16,6 @@ import { KernelFinder } from '../../client/datascience/kernel-launcher/kernelFin
 import { IKernelFinder } from '../../client/datascience/kernel-launcher/types';
 import { IJupyterKernelSpec } from '../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
-// import { PYTHON_PATH } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 
 suite('Kernel Finder', () => {
@@ -39,16 +38,17 @@ suite('Kernel Finder', () => {
         metadata: {},
         argv: ['<python path>', '-m', 'ipykernel_launcher', '-f', '<connection_file>']
     };
-    // const EXTENSION_ROOT_DIR = EXTENSION_ROOT_DIR.charAt(0).toUpperCase() + EXTENSION_ROOT_DIR.slice(1);
 
     async function putKernelSpecInCache() {
         await fileSystem.writeFile(path.join(EXTENSION_ROOT_DIR, 'kernelSpecCache.json'), JSON.stringify([kernel]));
     }
 
     async function putKernelSpecInActiveInterpreter() {
-        // for (let i = 0; i < 10; i += 1) {
-        //     await fileSystem.createDirectory(path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', `${i.toString()}_kernel`));
-        // }
+        for (let i = 0; i < 10; i += 1) {
+            await fileSystem.createDirectory(
+                path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', `${i.toString()}_kernel`)
+            );
+        }
 
         await fileSystem.createDirectory(path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', kernelName));
         await fileSystem.writeFile(
@@ -58,22 +58,44 @@ suite('Kernel Finder', () => {
     }
 
     async function putKernelSpecInTheLastInterpreter() {
-        // for (let i = 0; i < 10; i += 1) {
-        //     await fileSystem.createDirectory(path.join(`${EXTENSION_ROOT_DIR}_${i}`, 'share/jupyter/kernels'));
-        // }
+        for (let i = 0; i < 10; i += 1) {
+            await fileSystem.createDirectory(path.join(`${EXTENSION_ROOT_DIR}_${i}`, 'share/jupyter/kernels'));
+        }
 
-        // for (let i = 0; i < 10; i += 1) {
-        //     await fileSystem.createDirectory(path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', `${i.toString()}_kernel`));
-        // }
+        for (let i = 0; i < 10; i += 1) {
+            await fileSystem.createDirectory(
+                path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', `${i.toString()}_kernel`)
+            );
+        }
 
         await fileSystem.createDirectory(path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', kernelName));
         await fileSystem.writeFile(
             path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', kernelName, 'kernel.json'),
             JSON.stringify(kernel)
         );
+
+        if (platformService.isWindows) {
+            await fileSystem.createDirectory(path.join(process.env.ALLUSERSPROFILE!, 'jupyter', 'kernels', kernelName));
+            await fileSystem.writeFile(
+                path.join(process.env.ALLUSERSPROFILE!, 'jupyter', 'kernels', kernelName, 'kernel.json'),
+                JSON.stringify(kernel)
+            );
+        } else {
+            await fileSystem.createDirectory(path.join('/usr/share/jupyter/kernels', kernelName));
+            await fileSystem.writeFile(
+                path.join('/usr/share/jupyter/kernels', kernelName, 'kernel.json'),
+                JSON.stringify(kernel)
+            );
+        }
     }
 
     async function putKernelSpecInDisk() {
+        await fileSystem.createDirectory(path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', kernelName));
+        await fileSystem.writeFile(
+            path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', kernelName, 'kernel.json'),
+            JSON.stringify(kernel)
+        );
+
         if (platformService.isWindows) {
             await fileSystem.createDirectory(path.join(process.env.ALLUSERSPROFILE!, 'jupyter', 'kernels', kernelName));
             await fileSystem.writeFile(
@@ -104,16 +126,16 @@ suite('Kernel Finder', () => {
             }
         }
 
-        // for (let i = 0; i < 10; i += 1) {
-        //     const exists = await fileSystem.directoryExists(
-        //         path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', `${i.toString()}_kernel`)
-        //     );
-        //     if (exists) {
-        //         await fileSystem.deleteDirectory(
-        //             path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', `${i.toString()}_kernel`)
-        //         );
-        //     }
-        // }
+        for (let i = 0; i < 10; i += 1) {
+            const exists = await fileSystem.directoryExists(
+                path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', `${i.toString()}_kernel`)
+            );
+            if (exists) {
+                await fileSystem.deleteDirectory(
+                    path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', `${i.toString()}_kernel`)
+                );
+            }
+        }
 
         const interpreterExists = await fileSystem.directoryExists(
             path.join(EXTENSION_ROOT_DIR, 'share/jupyter/kernels', kernelName)
@@ -155,22 +177,24 @@ suite('Kernel Finder', () => {
             architecture: Architecture.x64,
             type: InterpreterType.Unknown
         };
-        console.log(activeInterpreter.path);
-        // for (let i = 0; i < 10; i += 1) {
-        //     interpreters.push({
-        //         path: `${EXTENSION_ROOT_DIR}_${i}`,
-        //         sysPrefix: '1',
-        //         envName: '1',
-        //         sysVersion: '3.1.1.1',
-        //         architecture: Architecture.x64,
-        //         type: InterpreterType.Unknown
-        //     });
-        // }
+        for (let i = 0; i < 10; i += 1) {
+            interpreters.push({
+                path: `${EXTENSION_ROOT_DIR}_${i}`,
+                sysPrefix: '1',
+                envName: '1',
+                sysVersion: '3.1.1.1',
+                architecture: Architecture.x64,
+                type: InterpreterType.Unknown
+            });
+        }
+        interpreters.push(activeInterpreter);
         resource = Uri.file(EXTENSION_ROOT_DIR);
         cancelSource = new CancellationTokenSource();
 
         interpreterService = typemoq.Mock.ofType<IInterpreterService>();
-        interpreterService.setup(is => is.getInterpreters(typemoq.It.isAny())).returns(() => Promise.resolve([]));
+        interpreterService
+            .setup(is => is.getInterpreters(typemoq.It.isAny()))
+            .returns(() => Promise.resolve(interpreters));
         interpreterService
             .setup(is => is.getActiveInterpreter(typemoq.It.isAny()))
             .returns(() => Promise.resolve(activeInterpreter));
@@ -192,6 +216,8 @@ suite('Kernel Finder', () => {
         await deleteAllTestKernelSpecs();
     });
 
+    // The test for searching in the interpreters and on disk are the slowest cases, so they race.
+    // Because of that, the next two tests are prepared to pass in case either of them finishes first (without being undefined).
     test('KernelSpec is in the interpreters', async () => {
         await putKernelSpecInTheLastInterpreter();
         const spec = await kernelFinder.findKernelSpec(activeInterpreter, cancelSource.token, kernelName);
@@ -221,7 +247,7 @@ suite('Kernel Finder', () => {
         assert.ok(spec);
         // get the same kernel, but from cache
         const cache_0 = performance.now();
-        const spec2 = await kernelFinder.findKernelSpec(resource, cancelSource.token, kernelName);
+        const spec2 = await kernelFinder.findKernelSpec(resource, cancelSource.token, spec.name);
         const cache_1 = performance.now();
         assert.deepEqual(spec, spec2);
         // the second search should be faster
