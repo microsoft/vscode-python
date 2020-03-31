@@ -1,5 +1,11 @@
 # Changelog
 
+## 2020.3.1 (30 March 2020)
+
+### Fixes
+
+1. Update `debugpy` to latest. Fixes issue with locale.
+
 ## 2020.3.0 (19 March 2020)
 
 ### Enhancements
