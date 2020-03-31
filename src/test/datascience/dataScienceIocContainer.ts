@@ -178,6 +178,7 @@ import { GatherListener } from '../../client/datascience/gather/gatherListener';
 import { GatherLogger } from '../../client/datascience/gather/gatherLogger';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
 import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
+import { NotebookServerProvider } from '../../client/datascience/interactive-common/notebookServerProvider';
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
@@ -255,6 +256,7 @@ import {
     INotebookImporter,
     INotebookProvider,
     INotebookServer,
+    INotebookServerProvider,
     INotebookStorage,
     IPlotViewer,
     IPlotViewerProvider,
@@ -672,6 +674,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         this.serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
+        this.serviceManager.addSingleton<INotebookServerProvider>(INotebookServerProvider, NotebookServerProvider);
 
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
