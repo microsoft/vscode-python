@@ -19,12 +19,11 @@ import {
     IGatherLogger,
     IGatherProvider,
     IInteractiveWindowListener,
-    IInteractiveWindowProvider,
-    IJupyterExecution,
     INotebook,
     INotebookEditorProvider,
     INotebookExecutionLogger,
-    INotebookExporter
+    INotebookExporter,
+    INotebookProvider
 } from '../types';
 
 @injectable()
@@ -43,8 +42,7 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(INotebookEditorProvider) private ipynbProvider: INotebookEditorProvider,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IFileSystem) private fileSystem: IFileSystem
@@ -98,20 +96,10 @@ export class GatherListener implements IInteractiveWindowListener {
     private async initGather(notebookUri: string) {
         this.notebookUri = Uri.parse(notebookUri);
 
-        // First get the active server
-        const activeServer = await this.jupyterExecution.getServer(
-            await this.interactiveWindowProvider.getNotebookOptions(this.notebookUri)
-        );
-
-        let nb: INotebook | undefined;
-        // If that works, see if there's a matching notebook running
-        if (activeServer) {
-            nb = await activeServer.getNotebook(this.notebookUri);
-
-            // If we have an executing notebook, get its gather execution service.
-            if (nb) {
-                this.gatherProvider = this.getGatherProvider(nb);
-            }
+        const nb = await this.notebookProvider.getOrCreateNotebook({ identity: this.notebookUri, getOnly: true });
+        // If we have an executing notebook, get its gather execution service.
+        if (nb) {
+            this.gatherProvider = this.getGatherProvider(nb);
         }
     }
 

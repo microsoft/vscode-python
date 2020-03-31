@@ -42,7 +42,7 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import {
     EditorContexts,
@@ -60,7 +60,6 @@ import {
     NotebookModelChange,
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
-import { ProgressReporter } from '../progress/progressReporter';
 import {
     CellState,
     ICell,
@@ -79,7 +78,6 @@ import {
     INotebookImporter,
     INotebookModel,
     INotebookProvider,
-    INotebookServerOptions,
     IStatusProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
@@ -91,7 +89,6 @@ import { nbformat } from '@jupyterlab/coreutils';
 import cloneDeep = require('lodash/cloneDeep');
 import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { NativeNotebookProvider } from './notebookProvider';
 
 const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 @injectable()
@@ -155,7 +152,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
         @inject(ICodeCssGenerator) cssGenerator: ICodeCssGenerator,
@@ -175,19 +171,16 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(INotebookImporter) protected readonly importer: INotebookImporter,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(NativeNotebookProvider) notebookProvider: INotebookProvider
+        @inject(INotebookProvider) notebookProvider: INotebookProvider
     ) {
         super(
-            progressReporter,
             listeners,
             liveShare,
             applicationShell,
             documentManager,
-            interpreterService,
             provider,
             disposables,
             cssGenerator,
@@ -206,6 +199,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             globalStorage,
             nativeEditorDir,
             [
+                path.join(nativeEditorDir, 'require.js'),
+                path.join(nativeEditorDir, 'ipywidgets.js'),
                 path.join(nativeEditorDir, 'monaco.bundle.js'),
                 path.join(nativeEditorDir, 'commons.initial.bundle.js'),
                 path.join(nativeEditorDir, 'nativeEditor.js')
@@ -239,22 +234,25 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Sign up for dirty events
         model.changed(this.modelChanged.bind(this));
-
-        // Load our cells, but don't wait for this to finish, otherwise the window won't load.
-        this.sendInitialCellsToWebView(model.cells)
-            .then(() => {
-                // May alread be dirty, if so send a message
-                if (model.isDirty) {
-                    this.postMessage(InteractiveWindowMessages.NotebookDirty).ignoreErrors();
-                }
-            })
-            .catch(exc => traceError('Error loading cells: ', exc));
     }
 
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
         switch (message) {
+            case InteractiveWindowMessages.Started:
+                if (this.model) {
+                    // Load our cells, but don't wait for this to finish, otherwise the window won't load.
+                    this.sendInitialCellsToWebView(this.model.cells)
+                        .then(() => {
+                            // May alread be dirty, if so send a message
+                            if (this.model?.isDirty) {
+                                this.postMessage(InteractiveWindowMessages.NotebookDirty).ignoreErrors();
+                            }
+                        })
+                        .catch(exc => traceError('Error loading cells: ', exc));
+                }
+                break;
             case InteractiveWindowMessages.Sync:
                 this.synchronizer.notifyUserAction(payload, this);
                 break;
@@ -297,17 +295,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    public async getNotebookOptions(): Promise<INotebookServerOptions> {
-        const options = await this.editorProvider.getNotebookOptions(await this.getOwningResource());
+    public async getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined> {
         await this.loadedPromise.promise;
         if (this.model) {
-            const metadata = (await this.model.getJson()).metadata;
-            return {
-                ...options,
-                metadata
-            };
-        } else {
-            return options;
+            return (await this.model.getJson()).metadata;
         }
     }
 

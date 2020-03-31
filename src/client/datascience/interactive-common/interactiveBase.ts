@@ -33,7 +33,7 @@ import {
     IWorkspaceService
 } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
-import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
+import { EXTENSION_ROOT_DIR, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { WebHostNotebook } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -41,7 +41,7 @@ import { IConfigurationService, IDisposableRegistry, IExperimentsManager } from 
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
@@ -61,15 +61,11 @@ import {
     ISubmitNewCell,
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
-import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterInvalidKernelError } from '../jupyter/jupyterInvalidKernelError';
-import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
-import { JupyterZMQBinariesNotFoundError } from '../jupyter/jupyterZMQBinariesNotFoundError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../jupyter/kernels/types';
-import { CssMessages } from '../messages';
-import { ProgressReporter } from '../progress/progressReporter';
+import { CssMessages, SharedMessages } from '../messages';
 import {
     CellState,
     ICell,
@@ -91,7 +87,6 @@ import {
     INotebookExporter,
     INotebookProvider,
     INotebookServer,
-    INotebookServerOptions,
     InterruptResult,
     IStatusProvider,
     IThemeFinder,
@@ -126,12 +121,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private setDarkPromise: Deferred<boolean> | undefined;
 
     constructor(
-        @unmanaged() private readonly progressReporter: ProgressReporter,
         @unmanaged() private readonly listeners: IInteractiveWindowListener[],
         @unmanaged() liveShare: ILiveShareApi,
         @unmanaged() protected applicationShell: IApplicationShell,
         @unmanaged() protected documentManager: IDocumentManager,
-        @unmanaged() private interpreterService: IInterpreterService,
         @unmanaged() provider: IWebPanelProvider,
         @unmanaged() private disposables: IDisposableRegistry,
         @unmanaged() cssGenerator: ICodeCssGenerator,
@@ -209,6 +202,15 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     // tslint:disable-next-line: no-any no-empty cyclomatic-complexity max-func-body-length
     public onMessage(message: string, payload: any) {
         switch (message) {
+            case InteractiveWindowMessages.Started:
+                // Send the first settings message
+                this.onDataScienceSettingsChanged().ignoreErrors();
+
+                // Send the loc strings (skip during testing as it takes up a lot of memory)
+                const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
+                this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
+                break;
+
             case InteractiveWindowMessages.GotoCodeCell:
                 this.handleMessage(message, payload, this.gotoCode);
                 break;
@@ -467,8 +469,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Default is not to do anything. This only works in the native editor
     }
 
-    // Starts a server for this window
-    protected abstract getNotebookOptions(): Promise<INotebookServerOptions>;
+    protected abstract getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined>;
 
     protected abstract updateContexts(info: IInteractiveWindowInfo | undefined): void;
 
@@ -792,7 +793,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Make sure we're loaded first.
         try {
             traceInfo('Waiting for jupyter server and web panel ...');
-            const server = await this.startServer();
+            const server = await this.notebookProvider.getOrCreateServer({ getOnly: false, disableUI: false });
             if (server) {
                 await this.ensureNotebook(server);
             }
@@ -800,10 +801,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             // We should dispose ourselves if the load fails. Othewise the user
             // updates their install and we just fail again because the load promise is the same.
             await this.closeBecauseOfFailure(exc);
-
-            // Also tell jupyter execution to reset its search. Otherwise we've just cached
-            // the failure there too
-            await this.jupyterExecution.refreshCommands();
 
             // Finally throw the exception so the user can do something about it.
             throw exc;
@@ -814,66 +811,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private postMessageToListeners(message: string, payload: any) {
         if (this.listeners) {
             this.listeners.forEach(l => l.onMessage(message, payload));
-        }
-    }
-
-    private async startServer(): Promise<INotebookServer | undefined> {
-        // Status depends upon if we're about to connect to existing server or not.
-        const progressReporter = (await this.jupyterExecution.getServer(await this.getNotebookOptions()))
-            ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
-            : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter());
-
-        // Check to see if we support ipykernel or not
-        try {
-            const usable = await this.checkUsable();
-            if (!usable) {
-                // Indicate failing.
-                throw new JupyterInstallError(
-                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
-                    localize.DataScience.pythonInteractiveHelpLink()
-                );
-            }
-            // Then load the jupyter server
-            return await this.connectToServer(progressReporter.token);
-        } catch (e) {
-            progressReporter.dispose();
-            // If user cancelled, then do nothing.
-            if (progressReporter.token.isCancellationRequested && e instanceof CancellationError) {
-                return;
-            }
-            if (e instanceof JupyterSelfCertsError) {
-                // On a self cert error, warn the user and ask if they want to change the setting
-                const enableOption: string = localize.DataScience.jupyterSelfCertEnable();
-                const closeOption: string = localize.DataScience.jupyterSelfCertClose();
-                this.applicationShell
-                    .showErrorMessage(
-                        localize.DataScience.jupyterSelfCertFail().format(e.message),
-                        enableOption,
-                        closeOption
-                    )
-                    .then(value => {
-                        if (value === enableOption) {
-                            sendTelemetryEvent(Telemetry.SelfCertsMessageEnabled);
-                            this.configuration
-                                .updateSetting(
-                                    'dataScience.allowUnauthorizedRemoteConnection',
-                                    true,
-                                    undefined,
-                                    ConfigurationTarget.Workspace
-                                )
-                                .ignoreErrors();
-                        } else if (value === closeOption) {
-                            sendTelemetryEvent(Telemetry.SelfCertsMessageClose);
-                        }
-                        // Don't leave our Interactive Window open in a non-connected state
-                        this.closeBecauseOfFailure(e).ignoreErrors();
-                    });
-                throw e;
-            } else {
-                throw e;
-            }
-        } finally {
-            progressReporter.dispose();
         }
     }
 
@@ -1056,8 +993,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             await notebook.dispose();
         }
         // If we have a server, dispose of it too. We are requesting total shutdown
-        const options = await this.getNotebookOptions();
-        const server = await this.jupyterExecution.getServer(options);
+        const server = await this.notebookProvider.getOrCreateServer({ getOnly: true });
         if (server) {
             await server.dispose();
         }
@@ -1065,7 +1001,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
     // the same protection to not be called twice
-    private async ensureNotebook(server: INotebookServer): Promise<void> {
+    // tslint:disable-next-line: member-ordering
+    protected async ensureNotebook(server: INotebookServer): Promise<void> {
         if (!this.notebookPromise) {
             this.notebookPromise = this.ensureNotebookImpl(server);
         }
@@ -1082,13 +1019,15 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async createNotebook(server: INotebookServer): Promise<INotebook> {
         let notebook: INotebook | undefined;
         while (!notebook) {
-            const [resource, uri, options] = await Promise.all([
+            const [resource, uri, metadata] = await Promise.all([
                 this.getOwningResource(),
                 this.getNotebookIdentity(),
-                this.getNotebookOptions()
+                this.getNotebookMetadata()
             ]);
             try {
-                notebook = uri ? await this.notebookProvider.getNotebook(server, uri, options?.metadata) : undefined;
+                notebook = uri
+                    ? await this.notebookProvider.getOrCreateNotebook({ identity: uri, metadata })
+                    : undefined;
             } catch (e) {
                 // If we get an invalid kernel error, make sure to ask the user to switch
                 if (e instanceof JupyterInvalidKernelError && server && server.getConnectionInfo()?.localLaunch) {
@@ -1175,9 +1114,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async checkForServerStart(): Promise<void> {
-        // See if the options match
-        const options = await this.getNotebookOptions();
-        const server = await this.jupyterExecution.getServer(options);
+        // See if a server already started or not
+        const server = await this.notebookProvider.getOrCreateServer({ getOnly: true });
 
         // This means a server that matches our options has started already. Use
         // it to ensure we have a notebook to run.
@@ -1301,22 +1239,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private async connectToServer(token?: CancellationToken): Promise<INotebookServer | undefined> {
-        traceInfo('Getting jupyter server options ...');
-
-        // Extract our options
-        const options = await this.getNotebookOptions();
-
-        traceInfo('Connecting to jupyter server ...');
-
-        // Now try to create a notebook server. We should get an event when it finishes.
-        const result = await this.jupyterExecution.connectToNotebookServer(options, token);
-
-        traceInfo('Connected to jupyter server.');
-
-        return result;
-    }
-
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
         // Execute the code 'import sys\r\nsys.version' and 'import sys\r\nsys.executable' to get our
         // version and executable
@@ -1379,38 +1301,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const urlString = `${connInfo.baseUrl}${tokenString}`;
 
         return `${localize.DataScience.sysInfoURILabel()}${urlString}`;
-    }
-
-    private async checkUsable(): Promise<boolean> {
-        let activeInterpreter: PythonInterpreter | undefined;
-        try {
-            const options = await this.getNotebookOptions();
-            if (options && !options.uri) {
-                activeInterpreter = await this.interpreterService.getActiveInterpreter(await this.getOwningResource());
-                const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-                return usableInterpreter ? true : false;
-            } else {
-                return true;
-            }
-        } catch (e) {
-            if (e instanceof JupyterZMQBinariesNotFoundError) {
-                throw e;
-            }
-            // Can't find a usable interpreter, show the error.
-            if (activeInterpreter) {
-                const displayName = activeInterpreter.displayName
-                    ? activeInterpreter.displayName
-                    : activeInterpreter.path;
-                throw new Error(
-                    localize.DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString())
-                );
-            } else {
-                throw new JupyterInstallError(
-                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
-                    localize.DataScience.pythonInteractiveHelpLink()
-                );
-            }
-        }
     }
 
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {

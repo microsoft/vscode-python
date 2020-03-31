@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import { Event, EventEmitter, Uri } from 'vscode';
@@ -33,10 +34,43 @@ import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } fr
 export class GuestJupyterNotebook
     extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
     implements INotebook, ILiveShareParticipant {
+    private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
+        if (!this._jupyterLab) {
+            // tslint:disable-next-line:no-require-imports
+            this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
+        }
+        return this._jupyterLab;
+    }
+
+    public get identity(): Uri {
+        return this._identity;
+    }
+
+    public get resource(): Resource {
+        return this._resource;
+    }
+
+    public get server(): INotebookServer {
+        return this._owner;
+    }
+
+    public get onSessionStatusChanged(): Event<ServerStatus> {
+        if (!this.onStatusChangedEvent) {
+            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
+        }
+        return this.onStatusChangedEvent.event;
+    }
+
+    public get status(): ServerStatus {
+        return ServerStatus.Idle;
+    }
+
     public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<
         IJupyterKernelSpec | LiveKernelModel
     >().event;
+    public onKernelRestarted = new EventEmitter<void>().event;
     public onDisposed = new EventEmitter<void>().event;
+    private _jupyterLab?: typeof import('@jupyterlab/services');
     private responseQueue: ResponseQueue = new ResponseQueue();
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
 
@@ -50,18 +84,6 @@ export class GuestJupyterNotebook
         private startTime: number
     ) {
         super(liveShare);
-    }
-
-    public get identity(): Uri {
-        return this._identity;
-    }
-
-    public get resource(): Resource {
-        return this._resource;
-    }
-
-    public get server(): INotebookServer {
-        return this._owner;
     }
 
     public shutdown(): Promise<void> {
@@ -82,17 +104,6 @@ export class GuestJupyterNotebook
     public clear(_id: string): void {
         // We don't do anything as we don't cache results in this class.
         noop();
-    }
-
-    public get onSessionStatusChanged(): Event<ServerStatus> {
-        if (!this.onStatusChangedEvent) {
-            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
-        }
-        return this.onStatusChangedEvent.event;
-    }
-
-    public get status(): ServerStatus {
-        return ServerStatus.Idle;
     }
 
     public async execute(
@@ -240,6 +251,86 @@ export class GuestJupyterNotebook
     }
     public getLoggers(): INotebookExecutionLogger[] {
         return [];
+    }
+
+    public registerCommTarget(
+        _targetName: string,
+        _callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ) {
+        noop();
+    }
+
+    public sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    > {
+        const shellMessage = this.jupyterLab?.KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
+            // tslint:disable-next-line: no-any
+            msgType: 'comm_msg',
+            channel: 'shell',
+            buffers,
+            content,
+            metadata,
+            msgId,
+            session: '1',
+            username: '1'
+        });
+
+        return {
+            done: Promise.resolve(undefined),
+            msg: shellMessage!, // NOSONAR
+            onReply: noop,
+            onIOPub: noop,
+            onStdin: noop,
+            registerMessageHook: noop,
+            removeMessageHook: noop,
+            sendInputReply: noop,
+            isDisposed: false,
+            dispose: noop
+        };
+    }
+
+    public requestCommInfo(
+        _content: KernelMessage.ICommInfoRequestMsg['content']
+    ): Promise<KernelMessage.ICommInfoReplyMsg> {
+        const shellMessage = KernelMessage.createMessage<KernelMessage.ICommInfoReplyMsg>({
+            msgType: 'comm_info_reply',
+            channel: 'shell',
+            content: {
+                status: 'ok'
+                // tslint:disable-next-line: no-any
+            } as any,
+            metadata: {},
+            session: '1',
+            username: '1'
+        });
+
+        return Promise.resolve(shellMessage);
+    }
+    public registerMessageHook(
+        _msgId: string,
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        noop();
+    }
+    public removeMessageHook(
+        _msgId: string,
+        _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        noop();
+    }
+
+    public registerIOPubListener(
+        _listener: (msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>
+    ): void {
+        noop();
     }
 
     private onServerResponse = (args: Object) => {

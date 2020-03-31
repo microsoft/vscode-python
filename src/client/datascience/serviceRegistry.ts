@@ -30,6 +30,7 @@ import { GatherLogger } from './gather/gatherLogger';
 import { DebugListener } from './interactive-common/debugListener';
 import { IntellisenseProvider } from './interactive-common/intellisense/intellisenseProvider';
 import { LinkProvider } from './interactive-common/linkProvider';
+import { NotebookProvider } from './interactive-common/notebookProvider';
 import { ShowPlotListener } from './interactive-common/showPlotListener';
 import { AutoSaveService } from './interactive-ipynb/autoSaveService';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
@@ -39,11 +40,11 @@ import { NativeEditorProvider } from './interactive-ipynb/nativeEditorProvider';
 import { NativeEditorProviderOld } from './interactive-ipynb/nativeEditorProviderOld';
 import { NativeEditorStorage } from './interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from './interactive-ipynb/nativeEditorSynchronizer';
-import { NativeNotebookProvider } from './interactive-ipynb/notebookProvider';
 import { InteractiveWindow } from './interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from './interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from './interactive-window/interactiveWindowProvider';
-import { InteractiveWindowNotebookProvider } from './interactive-window/notebookProvider';
+import { IPyWidgetHandler } from './ipywidgets/ipywidgetHandler';
+import { IPyWidgetMessageDispatcherFactory } from './ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { JupyterCommandLineSelector } from './jupyter/commandLineSelector';
 import { JupyterCommandFactory } from './jupyter/interpreter/jupyterCommand';
 import { JupyterCommandFinder } from './jupyter/interpreter/jupyterCommandFinder';
@@ -129,7 +130,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ICellHashLogger>(ICellHashLogger, CellHashLogger, undefined, [INotebookExecutionLogger]);
     serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
     serviceManager.add<ICodeWatcher>(ICodeWatcher, CodeWatcher);
-    serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
+    serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.add<IInteractiveWindow>(IInteractiveWindow, InteractiveWindow);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
@@ -138,6 +139,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, LinkProvider);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetHandler);
     serviceManager.add<IJupyterCommandFactory>(IJupyterCommandFactory, JupyterCommandFactory);
     serviceManager.add<INotebookEditor>(INotebookEditor, useCustomEditorApi ? NativeEditor : NativeEditorOldWebView);
     serviceManager.add<INotebookExporter>(INotebookExporter, JupyterExporter);
@@ -191,8 +193,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
     serviceManager.addSingleton<NativeEditorSynchronizer>(NativeEditorSynchronizer, NativeEditorSynchronizer);
-    serviceManager.addSingleton<INotebookProvider>(InteractiveWindowNotebookProvider, InteractiveWindowNotebookProvider);
-    serviceManager.addSingleton<INotebookProvider>(NativeNotebookProvider, NativeNotebookProvider);
+    serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
+    serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(IPyWidgetMessageDispatcherFactory, IPyWidgetMessageDispatcherFactory);
 
     // Temporary code, to allow users to revert to the old behavior.
     const cfg = serviceManager.get<IWorkspaceService>(IWorkspaceService).getConfiguration('python.dataScience', undefined);

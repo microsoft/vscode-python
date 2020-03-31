@@ -5,7 +5,6 @@ import '../../extensions';
 
 import * as uuid from 'uuid/v4';
 import { Uri, Webview, WebviewOptions, WebviewPanel, window } from 'vscode';
-
 import { Identifiers } from '../../../datascience/constants';
 import { InteractiveWindowMessages } from '../../../datascience/interactive-common/interactiveWindowTypes';
 import { SharedMessages } from '../../../datascience/messages';

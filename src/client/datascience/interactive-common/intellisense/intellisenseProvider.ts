@@ -31,14 +31,7 @@ import { HiddenFileFormatString } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryWhenDone } from '../../../telemetry';
 import { Settings, Telemetry } from '../../constants';
-import {
-    ICell,
-    IInteractiveWindowListener,
-    IInteractiveWindowProvider,
-    IJupyterExecution,
-    INotebook,
-    INotebookCompletion
-} from '../../types';
+import { ICell, IInteractiveWindowListener, INotebook, INotebookCompletion, INotebookProvider } from '../../types';
 import {
     ICancelIntellisenseRequest,
     IInteractiveWindowMapping,
@@ -84,8 +77,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     constructor(
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(ILanguageServerCache) private languageServerCache: ILanguageServerCache
     ) {}
@@ -719,16 +711,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     }
 
     private async getNotebook(): Promise<INotebook | undefined> {
-        // First get the active server
-        const activeServer = await this.jupyterExecution.getServer(
-            await this.interactiveWindowProvider.getNotebookOptions(this.potentialResource)
-        );
-
-        // If that works, see if there's a matching notebook running
-        if (activeServer && this.notebookIdentity) {
-            return activeServer.getNotebook(this.notebookIdentity);
-        }
-
-        return undefined;
+        return this.notebookIdentity
+            ? this.notebookProvider.getOrCreateNotebook({ identity: this.notebookIdentity, getOnly: true })
+            : undefined;
     }
 }

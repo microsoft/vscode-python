@@ -177,16 +177,17 @@ import { GatherProvider } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
 import { GatherLogger } from '../../client/datascience/gather/gatherLogger';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
+import { NotebookProvider } from '../../client/datascience/interactive-common/notebookProvider';
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorOldWebView } from '../../client/datascience/interactive-ipynb/nativeEditorOldWebView';
 import { NativeEditorStorage } from '../../client/datascience/interactive-ipynb/nativeEditorStorage';
 import { NativeEditorSynchronizer } from '../../client/datascience/interactive-ipynb/nativeEditorSynchronizer';
-import { NativeNotebookProvider } from '../../client/datascience/interactive-ipynb/notebookProvider';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
-import { InteractiveWindowNotebookProvider } from '../../client/datascience/interactive-window/notebookProvider';
+import { IPyWidgetHandler } from '../../client/datascience/ipywidgets/ipywidgetHandler';
+import { IPyWidgetMessageDispatcherFactory } from '../../client/datascience/ipywidgets/ipyWidgetMessageDispatcherFactory';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
 import { JupyterCommandInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterDependencyService';
@@ -358,10 +359,10 @@ import { MockLanguageServerProxy } from './mockLanguageServerProxy';
 import { MockLiveShareApi } from './mockLiveShare';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { MockWorkspaceFolder } from './mockWorkspaceFolder';
-import { blurWindow, createMessageEvent } from './reactHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 import { TestPersistentStateFactory } from './testPersistentStateFactory';
+import { WebBrowserPanelProvider } from './uiTests/webBrowserPanelProvider';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
     public get workingInterpreter() {
@@ -429,7 +430,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private defaultPythonPath: string | undefined;
     private kernelServiceMock = mock(KernelService);
 
-    constructor() {
+    constructor(private readonly uiTest: boolean = false) {
         super();
         this.useVSCodeAPI = false;
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
@@ -441,8 +442,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         await this.asyncRegistry.dispose();
         await super.dispose();
 
-        // Blur window focus so we don't have editors polling
-        blurWindow();
+        if (!this.uiTest) {
+            // Blur window focus so we don't have editors polling
+            // tslint:disable-next-line: no-require-imports
+            const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
+            reactHelpers.blurWindow();
+        }
 
         if (this.wrapper && this.wrapper.length) {
             this.wrapper.unmount();
@@ -452,25 +457,26 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Bounce this so that our editor has time to shutdown
         await sleep(150);
 
-        // Clear out the monaco global services. Some of these services are preventing shutdown.
-        // tslint:disable: no-require-imports
-        const services = require('monaco-editor/esm/vs/editor/standalone/browser/standaloneServices') as any;
-        if (services.StaticServices) {
-            const keys = Object.keys(services.StaticServices);
-            keys.forEach(k => {
-                const service = services.StaticServices[k] as any;
-                if (service && service._value && service._value.dispose) {
-                    if (typeof service._value.dispose === 'function') {
-                        service._value.dispose();
+        if (!this.uiTest) {
+            // Clear out the monaco global services. Some of these services are preventing shutdown.
+            // tslint:disable: no-require-imports
+            const services = require('monaco-editor/esm/vs/editor/standalone/browser/standaloneServices') as any;
+            if (services.StaticServices) {
+                const keys = Object.keys(services.StaticServices);
+                keys.forEach(k => {
+                    const service = services.StaticServices[k] as any;
+                    if (service && service._value && service._value.dispose) {
+                        if (typeof service._value.dispose === 'function') {
+                            service._value.dispose();
+                        }
                     }
-                }
-            });
-        }
-
-        // This file doesn't have an export so we can't force a dispose. Instead it has a 5 second timeout
-        const config = require('monaco-editor/esm/vs/editor/browser/config/configuration') as any;
-        if (config.getCSSBasedConfiguration) {
-            config.getCSSBasedConfiguration().dispose();
+                });
+            }
+            // This file doesn't have an export so we can't force a dispose. Instead it has a 5 second timeout
+            const config = require('monaco-editor/esm/vs/editor/browser/config/configuration') as any;
+            if (config.getCSSBasedConfiguration) {
+                config.getCSSBasedConfiguration().dispose();
+            }
         }
 
         // Because there are outstanding promises holding onto this object, clear out everything we can
@@ -504,7 +510,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Setup our webpanel provider to create our dummy web panel
         when(this.webPanelProvider.create(anything())).thenCall(this.onCreateWebPanel.bind(this));
-        this.serviceManager.addSingletonInstance<IWebPanelProvider>(IWebPanelProvider, instance(this.webPanelProvider));
+        if (this.uiTest) {
+            this.serviceManager.addSingleton<IWebPanelProvider>(IWebPanelProvider, WebBrowserPanelProvider);
+        } else {
+            this.serviceManager.addSingletonInstance<IWebPanelProvider>(
+                IWebPanelProvider,
+                instance(this.webPanelProvider)
+            );
+        }
 
         this.registerFileSystemTypes();
         this.serviceManager.rebindInstance<IFileSystem>(IFileSystem, new MockFileSystem());
@@ -546,7 +559,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             IDataScienceCommandListener,
             InteractiveWindowCommandListener
         );
-        this.serviceManager.add<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
+        this.serviceManager.addSingleton<IDataScienceErrorHandler>(IDataScienceErrorHandler, DataScienceErrorHandler);
         this.serviceManager.add<IInstallationChannelManager>(IInstallationChannelManager, InstallationChannelManager);
         this.serviceManager.addSingleton<IJupyterVariables>(IJupyterVariables, JupyterVariables);
         this.serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, JupyterDebugger, undefined, [
@@ -656,15 +669,18 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager);
         }
 
-        this.serviceManager.addSingleton<INotebookProvider>(
-            InteractiveWindowNotebookProvider,
-            InteractiveWindowNotebookProvider
-        );
-        this.serviceManager.addSingleton<INotebookProvider>(NativeNotebookProvider, NativeNotebookProvider);
+        this.serviceManager.addSingleton<INotebookProvider>(INotebookProvider, NotebookProvider);
 
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
+        this.serviceManager.addSingleton<IPyWidgetMessageDispatcherFactory>(
+            IPyWidgetMessageDispatcherFactory,
+            IPyWidgetMessageDispatcherFactory
+        );
+        if (this.uiTest) {
+            this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IPyWidgetHandler);
+        }
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
         this.serviceManager.add<ICellHashProvider>(ICellHashProvider, CellHashProvider);
@@ -1263,7 +1279,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private createWebPanel(): IWebPanel {
         const webPanel = mock(WebPanel);
         when(webPanel.postMessage(anything())).thenCall(m => {
-            const message = createMessageEvent(m);
+            // tslint:disable-next-line: no-require-imports
+            const reactHelpers = require('./reactHelpers') as typeof import('./reactHelpers');
+            const message = reactHelpers.createMessageEvent(m);
             if (this.postMessage) {
                 this.postMessage(message);
             }

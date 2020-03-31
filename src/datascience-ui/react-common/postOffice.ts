@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
 import { WebPanelMessage } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
 import { logMessage } from './logger';
@@ -22,14 +25,22 @@ export interface IMessageHandler {
 
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
-
+// tslint:disable-next-line: no-any
+export type PostOfficeMessage = { type: string; payload?: any };
 // tslint:disable-next-line: no-unnecessary-class
 export class PostOffice implements IDisposable {
     private registered: boolean = false;
     private vscodeApi: IVsCodeApi | undefined;
     private handlers: IMessageHandler[] = [];
     private baseHandler = this.handleMessages.bind(this);
-
+    private readonly subject = new Subject<PostOfficeMessage>();
+    private readonly observable: Observable<PostOfficeMessage>;
+    constructor() {
+        this.observable = this.subject.asObservable();
+    }
+    public asObservable(): Observable<PostOfficeMessage> {
+        return this.observable;
+    }
     public dispose() {
         if (this.registered) {
             this.registered = false;
@@ -71,6 +82,19 @@ export class PostOffice implements IDisposable {
         if (!this.registered) {
             this.registered = true;
             window.addEventListener('message', this.baseHandler);
+
+            try {
+                // For testing, we might use a  browser to load  the stuff.
+                // In such instances the `acquireVSCodeApi` will return the event handler to get messages from extension.
+                // See ./src/datascience-ui/native-editor/index.html
+                // tslint:disable-next-line: no-any
+                const api = (this.vscodeApi as any) as { handleMessage?: Function };
+                if (api.handleMessage) {
+                    api.handleMessage(this.handleMessages.bind(this));
+                }
+            } catch {
+                // Ignore.
+            }
         }
 
         return this.vscodeApi;
@@ -80,6 +104,7 @@ export class PostOffice implements IDisposable {
         if (this.handlers) {
             const msg = ev.data as WebPanelMessage;
             if (msg) {
+                this.subject.next({ type: msg.type, payload: msg.payload });
                 this.handlers.forEach((h: IMessageHandler | null) => {
                     if (h) {
                         h.handleMessage(msg.type, msg.payload);

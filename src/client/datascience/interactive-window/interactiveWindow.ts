@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, Memento, Uri, ViewColumn } from 'vscode';
@@ -27,7 +28,7 @@ import {
 } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -38,7 +39,6 @@ import {
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
 import { KernelSwitcher } from '../jupyter/kernels/kernelSwitcher';
-import { ProgressReporter } from '../progress/progressReporter';
 import {
     ICell,
     ICodeCssGenerator,
@@ -54,12 +54,10 @@ import {
     IJupyterVariables,
     INotebookExporter,
     INotebookProvider,
-    INotebookServerOptions,
     IStatusProvider,
     IThemeFinder,
     WebViewViewChangeEventArgs
 } from '../types';
-import { InteractiveWindowNotebookProvider } from './notebookProvider';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'notebook');
 
@@ -89,7 +87,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(IDocumentManager) documentManager: IDocumentManager,
-        @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IStatusProvider) statusProvider: IStatusProvider,
         @inject(IWebPanelProvider) provider: IWebPanelProvider,
         @inject(IDisposableRegistry) disposables: IDisposableRegistry,
@@ -108,18 +105,15 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(ProgressReporter) progressReporter: ProgressReporter,
         @inject(IExperimentsManager) experimentsManager: IExperimentsManager,
         @inject(KernelSwitcher) switcher: KernelSwitcher,
-        @inject(InteractiveWindowNotebookProvider) notebookProvider: INotebookProvider
+        @inject(INotebookProvider) notebookProvider: INotebookProvider
     ) {
         super(
-            progressReporter,
             listeners,
             liveShare,
             applicationShell,
             documentManager,
-            interpreterService,
             provider,
             disposables,
             cssGenerator,
@@ -138,6 +132,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             globalStorage,
             historyReactDir,
             [
+                path.join(historyReactDir, 'require.js'),
+                path.join(historyReactDir, 'ipywidgets.js'),
                 path.join(historyReactDir, 'monaco.bundle.js'),
                 path.join(historyReactDir, 'commons.initial.bundle.js'),
                 path.join(historyReactDir, 'interactiveWindow.js')
@@ -304,8 +300,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         }
     }
 
-    protected async getNotebookOptions(): Promise<INotebookServerOptions> {
-        return this.interactiveWindowProvider.getNotebookOptions(await this.getOwningResource());
+    protected async getNotebookMetadata(): Promise<nbformat.INotebookMetadata | undefined> {
+        return undefined;
     }
 
     protected async updateNotebookOptions(

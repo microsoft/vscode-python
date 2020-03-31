@@ -16,7 +16,7 @@ import { IPythonSettings, Resource } from '../client/common/types';
 import { PythonInterpreter } from '../client/interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
-import { noop } from './core';
+import { noop, sleep } from './core';
 
 const StreamZip = require('node-stream-zip');
 
@@ -496,6 +496,29 @@ export async function waitForCondition(
             resolve();
         }, 10);
     });
+}
+
+/**
+ * Execute a method until it executes without any exceptions.
+ */
+export async function retryIfFail<T>(fn: () => Promise<T>, timeoutMs: number = 60_000): Promise<T> {
+    let lastEx: Error | undefined;
+    const started = new Date().getTime();
+    while (timeoutMs > new Date().getTime() - started) {
+        try {
+            // tslint:disable-next-line: no-unnecessary-local-variable
+            const result = await fn();
+            // Capture result, if no exceptions return that.
+            return result;
+        } catch (ex) {
+            lastEx = ex;
+        }
+        await sleep(10);
+    }
+    if (lastEx) {
+        throw lastEx;
+    }
+    throw new Error('Timeout waiting for function to complete without any errors');
 }
 
 export async function openFile(file: string): Promise<TextDocument> {

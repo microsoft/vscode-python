@@ -65,6 +65,7 @@ export class JupyterSession implements IJupyterSession {
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     private statusHandler: Slot<ISession, Kernel.Status>;
     private connected: boolean = false;
+    private _jupyterLab?: typeof import('@jupyterlab/services');
     constructor(
         private connInfo: IConnection,
         private serverSettings: ServerConnection.ISettings,
@@ -76,7 +77,13 @@ export class JupyterSession implements IJupyterSession {
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
     }
-
+    private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
+        if (!this._jupyterLab) {
+            // tslint:disable-next-line:no-require-imports
+            this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
+        }
+        return this._jupyterLab;
+    }
     public dispose(): Promise<void> {
         return this.shutdown();
     }
@@ -297,6 +304,77 @@ export class JupyterSession implements IJupyterSession {
 
         // Start the restart session promise too.
         this.restartSessionPromise = this.createRestartSession(this.serverSettings, kernel, this.contentsManager);
+    }
+
+    public registerCommTarget(
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ) {
+        if (this.session && this.session.kernel) {
+            this.session.kernel.registerCommTarget(targetName, callback);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+
+    public sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    > {
+        if (this.session && this.session.kernel && this.jupyterLab) {
+            const shellMessage = this.jupyterLab.KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
+                // tslint:disable-next-line: no-any
+                msgType: 'comm_msg',
+                channel: 'shell',
+                buffers,
+                content,
+                metadata,
+                msgId,
+                session: this.session.kernel.clientId,
+                username: this.session.kernel.username
+            });
+
+            return this.session.kernel.sendShellMessage(shellMessage, false, true);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+
+    public requestCommInfo(
+        content: KernelMessage.ICommInfoRequestMsg['content']
+    ): Promise<KernelMessage.ICommInfoReplyMsg> {
+        if (this.session?.kernel) {
+            return this.session.kernel.requestCommInfo(content);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+    public registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        if (this.session?.kernel) {
+            return this.session.kernel.registerMessageHook(msgId, hook);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+    public removeMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        if (this.session?.kernel) {
+            return this.session.kernel.removeMessageHook(msgId, hook);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
     }
 
     private getServerStatus(): ServerStatus {

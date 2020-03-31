@@ -8,7 +8,6 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
-import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { INotebookServer, INotebookServerOptions } from '../../types';
@@ -48,15 +47,6 @@ export class ServerCache implements IAsyncDisposable {
 
         // Check to see if we already have a promise for this key
         data = this.cache.get(key);
-
-        // See if the old options had the same UI setting. If not,
-        // cancel the old
-        if (data && !data.resolved && data.options.disableUI !== fixedOptions.disableUI) {
-            traceInfo('Cancelling server create as UI state has changed');
-            data.cancelSource.cancel();
-            data = undefined;
-            this.cache.delete(key);
-        }
 
         if (!data) {
             // Didn't find one, so start up our promise and cache it
@@ -117,14 +107,13 @@ export class ServerCache implements IAsyncDisposable {
 
     public async generateDefaultOptions(options?: INotebookServerOptions): Promise<INotebookServerOptions> {
         return {
-            enableDebugging: options ? options.enableDebugging : false,
             uri: options ? options.uri : undefined,
-            useDefaultConfig: options ? options.useDefaultConfig : true, // Default for this is true.
+            skipUsingDefaultConfig: options ? options.skipUsingDefaultConfig : false, // Default for this is false
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
             purpose: options ? options.purpose : uuid(),
             workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
             metadata: options?.metadata,
-            disableUI: options?.disableUI
+            allowUI: options?.allowUI ? options.allowUI : () => false
         };
     }
 
@@ -134,9 +123,8 @@ export class ServerCache implements IAsyncDisposable {
         } else {
             // combine all the values together to make a unique key
             const uri = options.uri ? options.uri : '';
-            const useFlag = options.useDefaultConfig ? 'true' : 'false';
-            const debug = options.enableDebugging ? 'true' : 'false';
-            return `${options.purpose}${uri}${useFlag}${options.workingDir}${debug}`;
+            const useFlag = options.skipUsingDefaultConfig ? 'true' : 'false';
+            return `${options.purpose}${uri}${useFlag}${options.workingDir}`;
         }
     }
 

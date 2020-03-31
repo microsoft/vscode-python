@@ -19,23 +19,16 @@ import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
     IConfigurationService,
-    IDisposableRegistry,
-    Resource
+    IDisposableRegistry
 } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Settings, Telemetry } from '../constants';
+import { Telemetry } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import {
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookModel,
-    INotebookServerOptions,
-    INotebookStorage
-} from '../types';
+import { INotebookEditor, INotebookEditorProvider, INotebookModel, INotebookStorage } from '../types';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
 // opening an ipynb file. This class then creates a backing storage, model, and opens a view for the file.
@@ -216,23 +209,6 @@ export class NativeEditorProvider
         return this.open(uri);
     }
 
-    public async getNotebookOptions(resource: Resource): Promise<INotebookServerOptions> {
-        const settings = this.configuration.getSettings(resource);
-        let serverURI: string | undefined = settings.datascience.jupyterServerURI;
-        const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
-
-        // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-        if (serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-            serverURI = undefined;
-        }
-
-        return {
-            enableDebugging: true,
-            uri: serverURI,
-            useDefaultConfig,
-            purpose: Identifiers.HistoryPurpose // Share the same one as the interactive window. Just need a new session
-        };
-    }
     protected async createNotebookEditor(resource: Uri, panel?: WebviewPanel) {
         try {
             // Get the model

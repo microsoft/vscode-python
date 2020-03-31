@@ -23,10 +23,8 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
-import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
-import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import {
     ICell,
     IDataScienceErrorHandler,
@@ -34,7 +32,6 @@ import {
     INotebookEditorProvider,
     INotebookExporter
 } from '../../client/datascience/types';
-import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { ExecutionCount } from '../../datascience-ui/interactive-common/executionCount';
@@ -719,10 +716,10 @@ df.head()`;
                         // Close editor. Should still have the server up
                         await closeNotebook(editor, wrapper);
                         const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-                        const editorProvider = ioc.serviceManager.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const server = await jupyterExecution.getServer(
-                            await editorProvider.getNotebookOptions(undefined)
-                        );
+                        const server = await jupyterExecution.getServer({
+                            allowUI: () => false,
+                            purpose: Identifiers.HistoryPurpose
+                        });
                         assert.ok(server, 'Server was destroyed on notebook shutdown');
 
                         // Reopen, and rerun
@@ -748,25 +745,23 @@ df.head()`;
                 test('Failure', async () => {
                     let fail = true;
                     const errorThrownDeferred = createDeferred<Error>();
-                    // Make a dummy class that will fail during launch
-                    class FailedProcess extends JupyterExecutionFactory {
-                        public getUsableJupyterPython(): Promise<PythonInterpreter | undefined> {
-                            if (fail) {
-                                return Promise.resolve(undefined);
-                            }
-                            return super.getUsableJupyterPython();
-                        }
-                    }
 
-                    class CustomErrorHandler extends DataScienceErrorHandler {
-                        public handleError(exc: Error): Promise<void> {
-                            errorThrownDeferred.resolve(exc);
-                            return Promise.resolve();
+                    // REmap the functions in the execution and error handler. Note, we can't rebind them as
+                    // they've already been injected into the INotebookProvider
+                    const execution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+                    const errorHandler = ioc.serviceManager.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+                    const originalGetUsable = execution.getUsableJupyterPython.bind(execution);
+                    execution.getUsableJupyterPython = () => {
+                        if (fail) {
+                            return Promise.resolve(undefined);
                         }
-                    }
-                    ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
-                    ioc.serviceManager.rebind<IDataScienceErrorHandler>(IDataScienceErrorHandler, CustomErrorHandler);
-                    ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+                        return originalGetUsable();
+                    };
+                    errorHandler.handleError = (exc: Error) => {
+                        errorThrownDeferred.resolve(exc);
+                        return Promise.resolve();
+                    };
+
                     addMockData(ioc, 'a=1\na', 1);
                     const wrapper = mountNativeWebView(ioc);
                     await createNewEditor(ioc);

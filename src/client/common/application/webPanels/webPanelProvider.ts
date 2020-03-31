@@ -25,6 +25,7 @@ export class WebPanelProvider implements IWebPanelProvider {
         const serverData = options.startHttpServer
             ? await this.ensureServerIsRunning()
             : { port: undefined, token: undefined };
+
         return new WebPanel(this.fs, this.disposableRegistry, serverData.port, serverData.token, options);
     }
 

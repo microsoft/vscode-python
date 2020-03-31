@@ -3,9 +3,10 @@
 'use strict';
 
 import * as ReduxCommon from '../../interactive-common/redux/store';
+import { PostOffice } from '../../react-common/postOffice';
 import { reducerMap } from './reducers';
 
 // This special version uses the reducer map from the IInteractiveWindowMapping
-export function createStore(skipDefault: boolean, baseTheme: string, testMode: boolean) {
-    return ReduxCommon.createStore(skipDefault, baseTheme, testMode, false, reducerMap);
+export function createStore(skipDefault: boolean, baseTheme: string, testMode: boolean, postOffice: PostOffice) {
+    return ReduxCommon.createStore(skipDefault, baseTheme, testMode, false, reducerMap, postOffice);
 }

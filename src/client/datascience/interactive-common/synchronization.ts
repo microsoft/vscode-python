@@ -3,7 +3,7 @@ import {
     CommonActionTypeMapping
 } from '../../../datascience-ui/interactive-common/redux/reducers/types';
 import { CssMessages, SharedMessages } from '../messages';
-import { IInteractiveWindowMapping, InteractiveWindowMessages } from './interactiveWindowTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages, IPyWidgetMessages } from './interactiveWindowTypes';
 
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
@@ -175,7 +175,25 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     // Types from Shared Messages
     [SharedMessages.LocInit]: MessageType.other,
     [SharedMessages.Started]: MessageType.other,
-    [SharedMessages.UpdateSettings]: MessageType.other
+    [SharedMessages.UpdateSettings]: MessageType.other,
+    // IpyWidgets
+    // [IPyWidgetMessages.IPyWidgets_ShellCommOpen]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_ShellSend]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_ShellSend_reject]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_ShellSend_reply]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_ShellSend_resolve]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_comm_msg]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_comm_msg_reply]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_comm_open]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_display_data_msg]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_MessageHookCall]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_MessageHookResponse]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_RegisterMessageHook]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_RemoveMessageHook]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_RequestCommInfo_request]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_RequestCommInfo_reply]: MessageType.noIdea
 };
 
 /**
