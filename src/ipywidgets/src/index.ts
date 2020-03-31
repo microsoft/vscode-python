@@ -19,7 +19,7 @@ const azureMLWidgets = require('./azureml/index');
 
 // Export the following for `requirejs`.
 // tslint:disable-next-line: no-any no-function-expression no-empty
-const define = (window as any).define || function () {};
+const define = (window as any).define || function() {};
 define('@jupyter-widgets/controls', () => widgets);
 define('@jupyter-widgets/base', () => base);
 define('@jupyter-widgets/output', () => outputWidgets);
