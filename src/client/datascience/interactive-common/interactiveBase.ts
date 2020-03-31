@@ -4,7 +4,8 @@
 import '../../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import { KernelMessage } from '@jupyterlab/services';
+// tslint:disable-next-line: prettier
+import type { KernelMessage } from '@jupyterlab/services';
 import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
