@@ -297,4 +297,34 @@ export namespace scripts {
 
         return [args, parse];
     }
+
+    //============================
+    // testlauncher.py
+
+    export function testlauncher(testArgs: string[]): [string[], (out: string) => string] {
+        const script = path.join(SCRIPTS_DIR, 'testlauncher.py');
+        const args = [script, ...testArgs];
+
+        function parse(out: string): string {
+            // We don't worry about the output.
+            return out;
+        }
+
+        return [args, parse];
+    }
+
+    //============================
+    // visualstudio_py_testlauncher.py
+
+    export function visualstudio_py_testlauncher(testArgs: string[]): [string[], (out: string) => string] {
+        const script = path.join(SCRIPTS_DIR, 'visualstudio_py_testlauncher.py');
+        const args = [script, ...testArgs];
+
+        function parse(out: string): string {
+            // We don't worry about the output.
+            return out;
+        }
+
+        return [args, parse];
+    }
 }
