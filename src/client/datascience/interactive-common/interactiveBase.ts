@@ -1391,6 +1391,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } else {
             await this.addSysInfo(SysInfoReason.New);
         }
+
+        // Force an update of the kernel metadata
+        const kernelSpec: IJupyterKernelSpec = {
+            path: kernel.path ?? '',
+            name: kernel.name,
+            language: kernel.language ?? 'python',
+            display_name: kernel.display_name ?? kernel.name,
+            argv: kernel.argv ?? []
+        };
+        return this.updateNotebookOptions(kernelSpec, this._notebook?.getMatchingInterpreter());
     }
 
     private openSettings(setting: string | undefined) {
