@@ -16,7 +16,6 @@ import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterSessionStartError } from '../../../../client/datascience/baseJupyterSession';
 import { Commands } from '../../../../client/datascience/constants';
 import { JupyterNotebookBase } from '../../../../client/datascience/jupyter/jupyterNotebook';
-import { JupyterServerWrapper } from '../../../../client/datascience/jupyter/jupyterServerWrapper';
 import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
@@ -25,8 +24,7 @@ import {
     IConnection,
     IJupyterKernelSpec,
     IJupyterSessionManagerFactory,
-    INotebook,
-    INotebookServer
+    INotebook
 } from '../../../../client/datascience/types';
 import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { noop } from '../../../core';
@@ -40,7 +38,6 @@ suite('Data Science - Kernel Switcher', () => {
     let appShell: IApplicationShell;
     let notebook: INotebook;
     let connection: IConnection;
-    let notebookServer: INotebookServer;
     let currentKernel: IJupyterKernelSpec | LiveKernelModel;
     let selectedKernel: LiveKernelModel;
     let selectedKernelSecondTime: LiveKernelModel;
@@ -48,7 +45,6 @@ suite('Data Science - Kernel Switcher', () => {
     let settings: IPythonSettings;
     setup(() => {
         connection = mock<IConnection>();
-        notebookServer = mock(JupyterServerWrapper);
         settings = mock(PythonSettings);
         currentKernel = {
             lastActivityTime: new Date(),
