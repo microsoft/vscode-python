@@ -103,7 +103,7 @@ suite('Data Science - Kernel Switcher', () => {
         // tslint:disable-next-line: max-func-body-length
         suite(isLocalConnection ? 'Local Connection' : 'Remote Connection', () => {
             setup(() => {
-                when(notebookServer.getConnectionInfo()).thenReturn({
+                const jupyterConnection: IConnection = {
                     type: 'jupyter',
                     localLaunch: isLocalConnection,
                     baseUrl: '',
@@ -114,11 +114,12 @@ suite('Data Science - Kernel Switcher', () => {
                     valid: true,
                     displayName: '',
                     dispose: noop
-                });
+                };
+                when(notebook.connection).thenReturn(jupyterConnection);
             });
             teardown(() => {
                 // We should have checked if it was a local connection.
-                verify(notebookServer.getConnectionInfo()).atLeast(1);
+                verify(notebook.connection).atLeast(1);
             });
 
             [
