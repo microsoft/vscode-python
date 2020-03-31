@@ -49,8 +49,12 @@ export interface IDataScienceCommandListener {
 
 // Connection information for talking to a generic notebook provider
 export interface INotebookProviderConnection extends Disposable {
+    // What type of notebook provider are we connected to
     readonly type: 'raw' | 'jupyter';
+    // Was this connection launched locally or not
     readonly localLaunch: boolean;
+    // Is the connection still valid
+    readonly valid: boolean;
     // IANHU: Display Name?
     // IANHU: Do we need disconnected? If not for raw then do we need disposable?
     disconnected: Event<number>;
@@ -72,6 +76,21 @@ export enum InterruptResult {
     Success = 0,
     TimedOut = 1,
     Restarted = 2
+}
+
+// Information used to execute a notebook
+export interface INotebookExecutionInfo {
+    // Connection to what has provided our notebook, such as a jupyter
+    // server or a raw ZMQ kernel
+    connectionInfo: INotebookProviderConnection;
+    /**
+     * The python interpreter associated with the kernel.
+     */
+    interpreter: PythonInterpreter | undefined;
+    uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
+    kernelSpec: IJupyterKernelSpec | undefined | LiveKernelModel;
+    workingDir: string | undefined;
+    purpose: string | undefined; // Purpose this server is for
 }
 
 // Information used to launch a notebook server

@@ -153,6 +153,7 @@ export class HostJupyterExecution
                     hostName: connectionInfo.hostName,
                     localLaunch: false,
                     localProcExitCode: undefined,
+                    valid: true,
                     disconnected: _l => {
                         return { dispose: noop };
                     },

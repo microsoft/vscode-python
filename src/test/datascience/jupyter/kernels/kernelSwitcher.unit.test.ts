@@ -108,6 +108,7 @@ suite('Data Science - Kernel Switcher', () => {
                     hostName: '',
                     token: '',
                     localProcExitCode: 0,
+                    valid: true,
                     dispose: noop
                 });
             });

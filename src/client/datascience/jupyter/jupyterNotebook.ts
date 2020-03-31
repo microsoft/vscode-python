@@ -27,13 +27,14 @@ import { CodeSnippits, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
+    IConnection,
     IJupyterKernelSpec,
     IJupyterSession,
     INotebook,
     INotebookCompletion,
+    INotebookExecutionInfo,
     INotebookExecutionLogger,
     INotebookServer,
-    INotebookServerLaunchInfo,
     InterruptResult
 } from '../types';
 import { expandWorkingDir, modifyTraceback } from './jupyterUtils';
@@ -177,7 +178,7 @@ export class JupyterNotebookBase implements INotebook {
         private configService: IConfigurationService,
         private disposableRegistry: IDisposableRegistry,
         private owner: INotebookServer,
-        private launchInfo: INotebookServerLaunchInfo,
+        private executionInfo: INotebookExecutionInfo,
         private loggers: INotebookExecutionLogger[],
         resource: Resource,
         identity: Uri,
@@ -589,15 +590,15 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public getMatchingInterpreter(): PythonInterpreter | undefined {
-        return this.launchInfo.interpreter;
+        return this.executionInfo.interpreter;
     }
 
     public setInterpreter(interpreter: PythonInterpreter) {
-        this.launchInfo.interpreter = interpreter;
+        this.executionInfo.interpreter = interpreter;
     }
 
     public getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
-        return this.launchInfo.kernelSpec;
+        return this.executionInfo.kernelSpec;
     }
 
     public async setKernelSpec(spec: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void> {
@@ -611,13 +612,13 @@ export class JupyterNotebookBase implements INotebook {
 
             // Change our own kernel spec
             // Only after session was successfully created.
-            this.launchInfo.kernelSpec = spec;
+            this.executionInfo.kernelSpec = spec;
 
             // Rerun our initial setup
             await this.initialize();
         } else {
             // Change our own kernel spec
-            this.launchInfo.kernelSpec = spec;
+            this.executionInfo.kernelSpec = spec;
         }
 
         this.kernelChanged.fire(spec);
@@ -883,16 +884,16 @@ export class JupyterNotebookBase implements INotebook {
     };
 
     private async updateWorkingDirectoryAndPath(launchingFile?: string): Promise<void> {
-        if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && !this._workingDirectory) {
+        if (this.executionInfo && this.executionInfo.connectionInfo.localLaunch && !this._workingDirectory) {
             // See what our working dir is supposed to be
-            const suggested = this.launchInfo.workingDir;
+            const suggested = this.executionInfo.workingDir;
             if (suggested && (await this.fs.directoryExists(suggested))) {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggested;
                 return this.changeDirectoryIfPossible(this._workingDirectory);
             } else if (launchingFile && (await this.fs.fileExists(launchingFile))) {
                 // Combine the working directory with this file if possible.
-                this._workingDirectory = expandWorkingDir(this.launchInfo.workingDir, launchingFile, this.workspace);
+                this._workingDirectory = expandWorkingDir(this.executionInfo.workingDir, launchingFile, this.workspace);
                 if (this._workingDirectory) {
                     return this.changeDirectoryIfPossible(this._workingDirectory);
                 }
@@ -903,8 +904,8 @@ export class JupyterNotebookBase implements INotebook {
     // Update both current working directory and sys.path with the desired directory
     private changeDirectoryIfPossible = async (directory: string): Promise<void> => {
         if (
-            this.launchInfo &&
-            this.launchInfo.connectionInfo.localLaunch &&
+            this.executionInfo &&
+            this.executionInfo.connectionInfo.localLaunch &&
             (await this.fs.directoryExists(directory))
         ) {
             await this.executeSilently(CodeSnippits.UpdateCWDAndPath.format(directory));
@@ -969,11 +970,16 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private checkForExit(): Error | undefined {
-        if (this.launchInfo && this.launchInfo.connectionInfo && this.launchInfo.connectionInfo.localProcExitCode) {
-            // Not running, just exit
-            const exitCode = this.launchInfo.connectionInfo.localProcExitCode;
-            traceError(`Jupyter crashed with code ${exitCode}`);
-            return new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString()));
+        if (this.executionInfo && this.executionInfo.connectionInfo && !this.executionInfo.connectionInfo.valid) {
+            if (this.executionInfo.connectionInfo.type === 'jupyter') {
+                const jupyterConnection = this.executionInfo.connectionInfo as IConnection;
+                // Not running, just exit
+                if (jupyterConnection.localProcExitCode) {
+                    const exitCode = jupyterConnection.localProcExitCode;
+                    traceError(`Jupyter crashed with code ${exitCode}`);
+                    return new Error(localize.DataScience.jupyterServerCrashed().format(exitCode.toString()));
+                }
+            }
         }
 
         return undefined;
@@ -1037,9 +1043,9 @@ export class JupyterNotebookBase implements INotebook {
 
                 // Make sure our connection doesn't go down
                 let exitHandlerDisposable: Disposable | undefined;
-                if (this.launchInfo && this.launchInfo.connectionInfo) {
+                if (this.executionInfo && this.executionInfo.connectionInfo) {
                     // If the server crashes, cancel the current observable
-                    exitHandlerDisposable = this.launchInfo.connectionInfo.disconnected(c => {
+                    exitHandlerDisposable = this.executionInfo.connectionInfo.disconnected(c => {
                         const str = c ? c.toString() : '';
                         // Only do an error if we're not disposed. If we're disposed we already shutdown.
                         if (!this._disposed) {
