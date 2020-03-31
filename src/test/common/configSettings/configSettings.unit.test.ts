@@ -305,7 +305,7 @@ suite('Python Settings', async () => {
             const telemetryStub = sinon.stub(Telemetry, 'sendTelemetryEvent');
             telemetryStub.callsFake(mockSendTelemetryEvent);
 
-            workspaceService.setup(w => w.getConfiguration('python')).returns(() => mockWorkspaceConfig as any);
+            workspaceService.setup((w) => w.getConfiguration('python')).returns(() => mockWorkspaceConfig as any);
 
             settings = new CustomPythonSettings(undefined, new MockAutoSelectionService(), workspaceService.object);
 
@@ -324,7 +324,7 @@ suite('Python Settings', async () => {
 
             initializeConfig(expected);
 
-            config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
+            config.setup((c) => c.get<string>('envFile')).returns(() => expected.envFile);
 
             settings.update(config.object);
 
@@ -336,7 +336,7 @@ suite('Python Settings', async () => {
 
             initializeConfig(expected);
 
-            config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
+            config.setup((c) => c.get<string>('envFile')).returns(() => expected.envFile);
 
             settings.update(config.object);
 

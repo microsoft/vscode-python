@@ -413,9 +413,9 @@ suite('Language Server Activation - Env file telemetry', () => {
         when(interpreterService.getInterpreters(resource)).thenResolve();
         when(activeResourceService.getActiveResource()).thenReturn(resource);
 
-        autoSelection.setup(a => a.autoSelectInterpreter(resource)).returns(() => Promise.resolve());
-        appDiagnostics.setup(a => a.performPreStartupHealthCheck(resource)).returns(() => Promise.resolve());
-        singleActivationService.setup(s => s.activate()).returns(() => Promise.resolve());
+        autoSelection.setup((a) => a.autoSelectInterpreter(resource)).returns(() => Promise.resolve());
+        appDiagnostics.setup((a) => a.performPreStartupHealthCheck(resource)).returns(() => Promise.resolve());
+        singleActivationService.setup((s) => s.activate()).returns(() => Promise.resolve());
     });
 
     teardown(() => {

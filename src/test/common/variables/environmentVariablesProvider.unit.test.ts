@@ -331,7 +331,7 @@ suite('Environment Variables Provider - Env file telemetry', () => {
 
         let onCreated: undefined | ((resource?: Uri) => Function);
 
-        fileSystemWatcher.setup(fs => fs.onDidCreate(typemoq.It.isAny())).callback(cb => (onCreated = cb));
+        fileSystemWatcher.setup((fs) => fs.onDidCreate(typemoq.It.isAny())).callback((cb) => (onCreated = cb));
         when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
 
         provider.createFileWatcher(envFile, workspaceUri);
