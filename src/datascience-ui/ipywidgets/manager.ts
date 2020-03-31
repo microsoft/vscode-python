@@ -150,6 +150,18 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
             return;
         }
         this.proxyKernel = createKernel(this.kernelSocket, options);
+
+        // When a comm target has been regisered, we need to register this in the real kernel in extension side.
+        // Hence send that message to extension.
+        const originalRegisterCommTarget = this.proxyKernel.registerCommTarget.bind(this.proxyKernel);
+        this.proxyKernel.registerCommTarget = (
+            targetName: string,
+            callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+        ) => {
+            this.dispatcher(IPyWidgetMessages.IPyWidgets_registerCommTarget, targetName);
+            return originalRegisterCommTarget(targetName, callback);
+        };
+
         this.manager?.dispose();
         try {
             // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
@@ -238,13 +250,8 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
                 }
             });
 
+            // tslint:disable-next-line: no-any
             (this.proxyKernel as any)._msgChain = msgChain;
         }
     }
-    // private restoreBuffers(msg: KernelMessage.IIOPubMessage) {
-    //     if (!msg || !Array.isArray(msg.buffers) || msg.buffers.length === 0) {
-    //         return;
-    //     }
-    //     msg.buffers = deserializeDataViews(msg.buffers);
-    // }
 }

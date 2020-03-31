@@ -546,7 +546,7 @@ export class JupyterSession implements IJupyterSession {
                 information.socket = socket;
             }
             if (session) {
-                information.options.id = session.id;
+                information.options.id = session.kernel.id;
                 information.options.clientId = session.kernel.clientId;
                 information.options.model = { ...session.kernel.model };
                 information.options.userName = session.kernel.username;
