@@ -129,6 +129,12 @@ steps:
     displayName: 'Downgrade pywin32 on Windows / Python 3.6'
     condition: and(succeeded(), eq(variables['NeedsPythonFunctionalReqs'], 'true'), eq(variables['Agent.Os'], 'Windows_NT'), eq(variables['PythonVersion'], '3.6'))
 
+  # On MAC let CONDA update install paths
+  - bash: |
+      sudo chown -R $USER $CONDA
+    displayName: 'Give CONDA permission to its own files'
+    condition: and(succeeded(), eq(variables['Agent.Os'], 'Darwin'))
+
   # Install the requirements for ipython tests.
   #
   # This task will only run if variable `NeedsIPythonReqs` is true.
