@@ -40,16 +40,19 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
      * @memberof ProxyKernel
      */
     public registerCommTarget(targetName: string, callback: CommTargetCallback): void {
+        this.logOutput(`registerCommTarget: ${targetName}`);
         this.commRegistrationMessagesToSend.push(targetName);
         this.handlers.forEach((handler) => handler(targetName, callback));
         this.commTargetCallbacks.set(targetName, callback);
     }
     public connectToComm(targetName: string, commId: string = uuid()): Kernel.IComm {
+        this.logOutput(`connectToComm: ${targetName}`);
         return this.commsById.get(commId) || this.createComm(targetName, commId);
     }
     public requestCommInfo(
         content: KernelMessage.ICommInfoRequestMsg['content']
     ): Promise<KernelMessage.ICommInfoReplyMsg> {
+        this.logOutput(`requestCommInfo`);
         const promiseHolder = createDeferred<KernelMessage.ICommInfoReplyMsg>();
         const requestId = uuid();
         this.pendingCommInfoResponses.set(requestId, promiseHolder);
@@ -63,6 +66,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         msgId: string,
         hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
+        this.logOutput(`registerMessageHook: ${msgId}`);
         this.messageHooks.set(msgId, hook);
         this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_RegisterMessageHook, msgId);
     }
@@ -70,6 +74,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         msgId: string,
         _hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
     ): void {
+        this.logOutput(`removeMessageHook: ${msgId}`);
         this.messageHooks.delete(msgId);
         this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_RemoveMessageHook, msgId);
     }
@@ -92,6 +97,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                 // These messages must be given to all widgets, to update their states.
                 // The `shell` message was sent using our custom `IComm` component provided to ipywidgets.
                 // ipywidgets uses the `IComm.send` method.
+                this.logObject(`comm_msg`, payload);
 
                 // These messages need to be propagated back on the `onMsg` callback.
                 const commMsg = payload as KernelMessage.ICommMsgMsg;
@@ -102,6 +108,8 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                         if (promise) {
                             await promise;
                         }
+                    } else {
+                        this.logOutput('No handler for comm_msg');
                     }
                 }
 
@@ -127,6 +135,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         }
     }
     protected async onCommOpen(msg: KernelMessage.ICommOpenMsg) {
+        this.logObject('comm_open handler', msg);
         if (!msg.content || !msg.content.comm_id || msg.content.target_name !== 'jupyter.widget') {
             throw new Error('Unknown comm open message');
         }
@@ -183,13 +192,17 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         }
     }
     private handleCommInfo(reply: { requestId: string; msg: KernelMessage.ICommInfoReplyMsg }) {
+        this.logObject(`comm_info`, reply.msg);
         const promise = this.pendingCommInfoResponses.get(reply.requestId);
         if (promise) {
             this.pendingCommInfoResponses.delete(reply.requestId);
             promise.resolve(reply.msg);
+        } else {
+            this.logOutput(`Comm_info response not found`);
         }
     }
     private createComm(targetName: string, commId: string): Kernel.IComm {
+        this.logOutput(`createComm: ${targetName} ${commId}`);
         // Create the IComm object that ipywidgets will use to communicate directly with the kernel.
         const comm = new ClassicComm(commId, targetName, this.messageSender, this.shellCallbackManager);
         // const comm = this.createKernelCommForCommOpenCallback(msg);
@@ -210,6 +223,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         // Happens when a comm is opened (generatelly part of a cell execution).
         // We're only interested in `comm_open` messages.
         if (payload && payload.msg_type === 'comm_open') {
+            this.logObject('Handling Comm Open', payload);
             const commOpenMessage = payload as KernelMessage.ICommOpenMsg;
             try {
                 await this.onCommOpen(commOpenMessage);
@@ -217,6 +231,16 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                 // tslint:disable-next-line: no-console
                 console.error('Failed to exec commTargetCallback', ex);
             }
+        } else {
+            this.logOutput('Comm open message not handled');
         }
+    }
+
+    private logOutput(s: string) {
+        window.console.log(`** Kernel Message: ${s}`);
+    }
+    // tslint:disable-next-line: no-any
+    private logObject(prefix: string, a: any) {
+        window.console.dir({ name: `** Kernel Message: ${prefix}`, object: a });
     }
 }

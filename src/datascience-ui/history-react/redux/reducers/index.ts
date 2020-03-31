@@ -62,5 +62,6 @@ export const reducerMap: Partial<IInteractiveActionMapping> = {
     [InteractiveWindowMessages.StopDebugging]: Execution.stopDebugging,
     [InteractiveWindowMessages.ScrollToCell]: Effects.scrollToCell,
     [InteractiveWindowMessages.UpdateKernel]: Kernel.updateStatus,
-    [SharedMessages.LocInit]: CommonEffects.handleLocInit
+    [SharedMessages.LocInit]: CommonEffects.handleLocInit,
+    [InteractiveWindowMessages.UpdateDisplayData]: CommonEffects.handleUpdateDisplayData
 };

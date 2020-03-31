@@ -142,7 +142,7 @@ export class WebPanelServer {
                 <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http: blob:;">
                 <meta name="theme-color" content="#000000">
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
-                <title>React App</title>
+                <title>VS Code Python React UI</title>
             </head>
             <body class='${query.baseTheme}'>
                 <noscript>You need to enable JavaScript to run this app.</noscript>

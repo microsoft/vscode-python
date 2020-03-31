@@ -11,6 +11,9 @@ import * as embed from './embed';
 import './widgets.css';
 
 // Special case until azure ml is up on unpkg.com, load the azureml widget from local js
+// True source for this is here: https://msdata.visualstudio.com/Vienna/_git/AzureMlCli?path=%2Fsrc%2Fazureml-widgets%2Fazureml%2Fwidgets%2Fjs
+// tslint:disable-next-line: no-var-requires no-require-imports
+// require('expose-loader?jQuery!jquery'); <-- Required for debug bits
 // tslint:disable-next-line: no-var-requires no-require-imports
 const azureMLWidgets = require('./azureml/index');
 
