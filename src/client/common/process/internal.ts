@@ -142,7 +142,7 @@ export namespace scripts {
         }
 
         function parse(out: string): _completion.Response[] {
-            return out.splitLines().map(resp => JSON.parse(resp));
+            return out.splitLines().map((resp) => JSON.parse(resp));
         }
 
         return [args, parse];
@@ -181,8 +181,8 @@ export namespace scripts {
             // TODO: Also handle "STARTED"?
             return out
                 .split(/\r?\n/g)
-                .filter(line => line.length > 0)
-                .map(resp => JSON.parse(resp));
+                .filter((line) => line.length > 0)
+                .map((resp) => JSON.parse(resp));
         }
 
         return [args, parse];
