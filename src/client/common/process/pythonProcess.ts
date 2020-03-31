@@ -82,8 +82,8 @@ export function createPythonProcessService(
     env: IPythonEnvironment
 ) {
     const deps = {
-        exec: procs.exec,
-        execObservable: procs.execObservable
+        exec: async (f: string, a: string[], o: SpawnOptions) => procs.exec(f, a, o),
+        execObservable: (f: string, a: string[], o: SpawnOptions) => procs.execObservable(f, a, o)
     };
     return new PythonProcessService(env, deps);
 }

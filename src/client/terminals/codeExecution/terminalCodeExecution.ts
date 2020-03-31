@@ -60,7 +60,9 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
     public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecutionInfo> {
         const pythonSettings = this.configurationService.getSettings(resource);
-        const command = path.normalize(pythonSettings.pythonPath);
+        const command = this.platformService.isWindows
+            ? pythonSettings.pythonPath.replace(/\\/g, '/')
+            : pythonSettings.pythonPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
         return { command, args: [...launchArgs, ...args], python: [command] };
     }

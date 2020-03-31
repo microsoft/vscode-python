@@ -28,7 +28,7 @@ function createPythonEnvDeps(
     fs: IFileSystem
 ): IPythonEnvironmentDependencies {
     return {
-        fileExists: fs.fileExists,
+        fileExists: (filename: string) => fs.fileExists(filename),
         exec: async (cmd: string, args: string[]) => procs.exec(cmd, args, { throwOnStdErr: true }),
         shellExec: async (text: string, timeout: number) => procs.shellExec(text, { timeout })
     };

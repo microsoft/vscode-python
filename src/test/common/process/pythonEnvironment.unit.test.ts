@@ -218,7 +218,7 @@ suite('PythonEnvironment', () => {
         const result = env.getExecutionInfo(args);
 
         expect(result).to.deep.equal(
-            { command: pythonPath, args },
+            { command: pythonPath, args, python: [pythonPath] },
             'getExecutionInfo should return pythonPath and the command and execution arguments as is'
         );
     });
@@ -245,7 +245,11 @@ suite('CondaEnvironment', () => {
 
         const result = env.getExecutionInfo(args);
 
-        expect(result).to.deep.equal({ command: condaFile, args: ['run', '-n', condaInfo.name, 'python', ...args] });
+        expect(result).to.deep.equal({
+            command: condaFile,
+            args: ['run', '-n', condaInfo.name, 'python', ...args],
+            python: [condaFile, 'run', '-n', condaInfo.name, 'python']
+        });
     });
 
     test('getExecutionInfo with a non-named environment should return execution info using the environment path', async function () {
@@ -257,7 +261,11 @@ suite('CondaEnvironment', () => {
 
         const result = env.getExecutionInfo(args);
 
-        expect(result).to.deep.equal({ command: condaFile, args: ['run', '-p', condaInfo.path, 'python', ...args] });
+        expect(result).to.deep.equal({
+            command: condaFile,
+            args: ['run', '-p', condaInfo.path, 'python', ...args],
+            python: [condaFile, 'run', '-p', condaInfo.path, 'python']
+        });
     });
 });
 
