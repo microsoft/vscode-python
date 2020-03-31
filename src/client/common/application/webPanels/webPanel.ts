@@ -161,6 +161,7 @@ export class WebPanel implements IWebPanel {
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>VS Code Python React UI</title>
                 <base href="${uriBase}${uriBase.endsWith('/') ? '' : '/'}"/>
+                <link rel="stylesheet" href="${rootPath}/../common/node_modules/font-awesome/css/font-awesome.min.css">                
                 </head>
             <body>
                 <noscript>You need to enable JavaScript to run this app.</noscript>
