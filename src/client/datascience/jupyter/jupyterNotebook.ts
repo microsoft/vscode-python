@@ -177,7 +177,6 @@ export class JupyterNotebookBase implements INotebook {
         private session: IJupyterSession,
         private configService: IConfigurationService,
         private disposableRegistry: IDisposableRegistry,
-        private owner: INotebookServer,
         private executionInfo: INotebookExecutionInfo,
         private loggers: INotebookExecutionLogger[],
         resource: Resource,
@@ -201,7 +200,7 @@ export class JupyterNotebookBase implements INotebook {
         // are possible, recompute it.
     }
     public get server(): INotebookServer {
-        return this.owner;
+        throw new Error('Not Impl');
     }
 
     public async dispose(): Promise<void> {

@@ -19,7 +19,6 @@ import {
     INotebook,
     INotebookExecutionInfo,
     INotebookExecutionLogger,
-    INotebookServer,
     InterruptResult
 } from '../../types';
 import { JupyterNotebookBase } from '../jupyterNotebook';
@@ -46,7 +45,6 @@ export class HostJupyterNotebook
         session: IJupyterSession,
         configService: IConfigurationService,
         disposableRegistry: IDisposableRegistry,
-        owner: INotebookServer,
         executionInfo: INotebookExecutionInfo,
         loggers: INotebookExecutionLogger[],
         resource: Resource,
@@ -61,7 +59,6 @@ export class HostJupyterNotebook
             session,
             configService,
             disposableRegistry,
-            owner,
             executionInfo,
             loggers,
             resource,

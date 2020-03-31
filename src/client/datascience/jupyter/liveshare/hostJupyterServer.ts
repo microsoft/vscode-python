@@ -226,7 +226,6 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
                     session,
                     configService,
                     disposableRegistry,
-                    this,
                     info,
                     serviceContainer.getAll<INotebookExecutionLogger>(INotebookExecutionLogger),
                     resource,
