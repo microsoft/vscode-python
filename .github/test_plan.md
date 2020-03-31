@@ -589,4 +589,4 @@ def test_failure():
     1. Input several lines into the Interactive Window terminal
     1. Press up to verify that those previously entered lines show in the Interactive Window terminal history
 -   [ ] Extra themes 1. Try several of the themes that come with VSCode that are not the default Dark+ and Light+
-    </details>
+</details>
