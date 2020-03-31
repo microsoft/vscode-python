@@ -47,6 +47,9 @@ export type DiscoveredTests = {
 
 export function run_adapter(adapterArgs: string[]): [string[], (out: string) => DiscoveredTests[]] {
     const script = path.join(SCRIPTS_DIR, 'run_adapter.py');
+    // Note that we for now we do not run this "isolated".  The
+    // script relies on some magic that conflicts with the
+    // isolated script.
     const args = [script, ...adapterArgs];
 
     function parse(out: string): DiscoveredTests[] {
