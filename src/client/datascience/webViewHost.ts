@@ -342,6 +342,10 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
 
             traceInfo('Web view react rendered');
         }
+
+        // On started, resend our init data.
+        this.sendLocStrings().ignoreErrors();
+        this.onDataScienceSettingsChanged().ignoreErrors();
     }
 
     // Post a message to our webpanel and update our new datascience settings
