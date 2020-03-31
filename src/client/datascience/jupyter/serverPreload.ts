@@ -49,24 +49,25 @@ export class ServerPreload implements IExtensionSingleActivationService {
         }
     }
 
+    // IANHU: Rename?
     private async createServerIfNecessary() {
         try {
             traceInfo(`Attempting to start a server because of preload conditions ...`);
 
-            // May already have this server started.
-            let server = await this.notebookProvider.getOrCreateServer({ getOnly: true, disableUI: true });
+            // Check if we are already connected
+            let providerConnection = await this.notebookProvider.connect({ getOnly: true, disableUI: true });
 
             // If it didn't start, attempt for local and if allowed.
-            if (!server && !this.configService.getSettings(undefined).datascience.disableJupyterAutoStart) {
+            if (!providerConnection && !this.configService.getSettings(undefined).datascience.disableJupyterAutoStart) {
                 // Local case, try creating one
-                server = await this.notebookProvider.getOrCreateServer({
+                providerConnection = await this.notebookProvider.connect({
                     getOnly: false,
                     disableUI: true,
                     localOnly: true
                 });
             }
 
-            if (server) {
+            if (providerConnection) {
                 // Update our date in the storage that indicates it was succesful
                 this.mementoStorage.update(LastServerActiveTimeKey, Date.now());
             }

@@ -147,6 +147,7 @@ export class HostJupyterExecution
             const connectionInfo = localServer.getConnectionInfo();
             if (connectionInfo) {
                 return {
+                    type: 'jupyter',
                     baseUrl: connectionInfo.baseUrl,
                     token: connectionInfo.token,
                     hostName: connectionInfo.hostName,

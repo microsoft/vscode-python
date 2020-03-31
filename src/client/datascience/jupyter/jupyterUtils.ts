@@ -43,6 +43,7 @@ export function createRemoteConnectionInfo(uri: string, settings: IDataScienceSe
         : false;
 
     return {
+        type: 'jupyter',
         allowUnauthorized,
         baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
         token: `${url.searchParams.get('token')}`,

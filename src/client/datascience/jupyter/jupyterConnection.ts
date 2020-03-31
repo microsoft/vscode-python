@@ -217,6 +217,7 @@ export class JupyterConnectionWaiter implements IDisposable {
 // Represents an active connection to a running jupyter notebook
 class JupyterConnection implements IConnection {
     public readonly localLaunch: boolean = true;
+    public readonly type = 'jupyter';
     public localProcExitCode: number | undefined;
     private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
     constructor(

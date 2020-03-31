@@ -47,14 +47,24 @@ export interface IDataScienceCommandListener {
     register(commandManager: ICommandManager): void;
 }
 
-// Connection information for talking to a jupyter notebook process
-export interface IConnection extends Disposable {
+// Connection information for talking to a generic notebook provider
+export interface INotebookProviderConnection extends Disposable {
+    readonly type: 'raw' | 'jupyter';
+    readonly localLaunch: boolean;
+    // IANHU: Display Name?
+    // IANHU: Do we need disconnected? If not for raw then do we need disposable?
+    disconnected: Event<number>;
+}
+
+// Connection information for talking to a raw ZMQ provider
+export interface IRawConnection extends INotebookProviderConnection {}
+
+// Connection information for talking to a jupyter server process
+export interface IConnection extends INotebookProviderConnection {
     readonly baseUrl: string;
     readonly token: string;
     readonly hostName: string;
-    readonly localLaunch: boolean;
     localProcExitCode: number | undefined;
-    disconnected: Event<number>;
     allowUnauthorized?: boolean;
 }
 
@@ -900,6 +910,13 @@ export type GetServerOptions = {
     localOnly?: boolean;
 };
 
+// Options for connecting to a notebook provider
+export type ConnectNotebookProviderOptions = {
+    getOnly?: boolean;
+    disableUI?: boolean;
+    localOnly?: boolean;
+};
+
 /**
  * Options for getting a notebook
  */
@@ -920,11 +937,25 @@ export interface INotebookProvider {
      * List of all notebooks (active and ones that are being constructed).
      */
     activeNotebooks: Promise<INotebook>[];
+
     /**
      * Gets or creates a notebook, and manages the lifetime of notebooks.
      */
     getOrCreateNotebook(options: GetNotebookOptions): Promise<INotebook | undefined>;
 
+    /**
+     * Connect to a notebook provider to prepare its connection and to get connection information
+     */
+    connect(options: ConnectNotebookProviderOptions): Promise<INotebookProviderConnection | undefined>;
+
+    /**
+     * Disconnect from a notebook provider connection
+     */
+    disconnect(options: ConnectNotebookProviderOptions): Promise<void>;
+}
+
+export const INotebookServerProvider = Symbol('INotebookServerProvider');
+export interface INotebookServerProvider {
     /**
      * Gets the server used for starting notebooks
      */

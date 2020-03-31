@@ -86,7 +86,7 @@ import {
     INotebook,
     INotebookExporter,
     INotebookProvider,
-    INotebookServer,
+    INotebookProviderConnection,
     InterruptResult,
     IStatusProvider,
     IThemeFinder,
@@ -794,9 +794,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Make sure we're loaded first.
         try {
             traceInfo('Waiting for jupyter server and web panel ...');
-            const server = await this.notebookProvider.getOrCreateServer({ getOnly: false, disableUI: false });
-            if (server) {
-                await this.ensureNotebook(server);
+            const serverConnection = await this.notebookProvider.connect({ getOnly: false, disableUI: false });
+            if (serverConnection) {
+                await this.ensureNotebook(serverConnection);
             }
         } catch (exc) {
             // We should dispose ourselves if the load fails. Othewise the user
@@ -993,19 +993,17 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             this._notebook = undefined;
             await notebook.dispose();
         }
-        // If we have a server, dispose of it too. We are requesting total shutdown
-        const server = await this.notebookProvider.getOrCreateServer({ getOnly: true });
-        if (server) {
-            await server.dispose();
-        }
+
+        // Disconnect from our notebook provider
+        await this.notebookProvider.disconnect({ getOnly: true });
     }
 
     // ensureNotebook can be called apart from ensureNotebookAndServer and it needs
     // the same protection to not be called twice
     // tslint:disable-next-line: member-ordering
-    protected async ensureNotebook(server: INotebookServer): Promise<void> {
+    protected async ensureNotebook(serverConnection: INotebookProviderConnection): Promise<void> {
         if (!this.notebookPromise) {
-            this.notebookPromise = this.ensureNotebookImpl(server);
+            this.notebookPromise = this.ensureNotebookImpl(serverConnection);
         }
         try {
             await this.notebookPromise;
@@ -1017,7 +1015,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private async createNotebook(server: INotebookServer): Promise<INotebook> {
+    private async createNotebook(serverConnection: INotebookProviderConnection): Promise<INotebook> {
         let notebook: INotebook | undefined;
         while (!notebook) {
             const [resource, uri, metadata] = await Promise.all([
@@ -1031,7 +1029,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     : undefined;
             } catch (e) {
                 // If we get an invalid kernel error, make sure to ask the user to switch
-                if (e instanceof JupyterInvalidKernelError && server && server.getConnectionInfo()?.localLaunch) {
+                if (e instanceof JupyterInvalidKernelError && serverConnection && serverConnection.localLaunch) {
                     // Ask the user for a new local kernel
                     const newKernel = await this.switcher.askForLocalKernel(resource, e.kernelSpec);
                     if (newKernel?.kernelSpec) {
@@ -1046,24 +1044,23 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         return notebook;
     }
 
-    private getServerUri(server: INotebookServer): string {
-        const connectionInfo = server.getConnectionInfo();
+    private getServerUri(serverConnection: INotebookProviderConnection): string {
         let localizedUri = '';
 
         // Determine the connection URI of the connected server to display
-        if (connectionInfo) {
-            if (connectionInfo.localLaunch) {
-                localizedUri = localize.DataScience.localJupyterServer();
+        if (serverConnection.localLaunch) {
+            localizedUri = localize.DataScience.localJupyterServer();
+        } else {
+            // In remote case we are always a jupyter connection
+            const jupyterServerConnection = serverConnection as IConnection;
+            if (jupyterServerConnection.token) {
+                localizedUri = `${jupyterServerConnection.baseUrl}?token=${jupyterServerConnection.token}`;
             } else {
-                if (connectionInfo.token) {
-                    localizedUri = `${connectionInfo.baseUrl}?token=${connectionInfo.token}`;
-                } else {
-                    localizedUri = connectionInfo.baseUrl;
-                }
-
-                // Log this remote URI into our MRU list
-                addToUriList(this.globalStorage, localizedUri, Date.now());
+                localizedUri = jupyterServerConnection.baseUrl;
             }
+
+            // Log this remote URI into our MRU list
+            addToUriList(this.globalStorage, localizedUri, Date.now());
         }
 
         return localizedUri;
@@ -1078,7 +1075,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                 await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                     jupyterServerStatus: status,
-                    localizedUri: this.getServerUri(notebook.server),
+                    // IANHU: Remove bang when we fix server property
+                    localizedUri: this.getServerUri(notebook.server.getConnectionInfo()!),
                     displayName: name
                 });
             }
@@ -1090,17 +1088,17 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         statusChangeHandler(notebook.status).ignoreErrors();
     }
 
-    private async ensureNotebookImpl(server: INotebookServer): Promise<void> {
+    private async ensureNotebookImpl(serverConnection: INotebookProviderConnection): Promise<void> {
         // Create a new notebook if we need to.
         if (!this._notebook) {
             // While waiting make the notebook look busy
             this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                 jupyterServerStatus: ServerStatus.Busy,
-                localizedUri: this.getServerUri(server),
+                localizedUri: this.getServerUri(serverConnection),
                 displayName: ''
             }).ignoreErrors();
 
-            this._notebook = await this.createNotebook(server);
+            this._notebook = await this.createNotebook(serverConnection);
 
             // If that works notify the UI and listen to status changes.
             if (this._notebook && this._notebook.identity) {
@@ -1114,15 +1112,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
+    // IANHU: Rename?
     private async checkForServerStart(): Promise<void> {
-        // See if a server already started or not
-        const server = await this.notebookProvider.getOrCreateServer({ getOnly: true });
+        // Check to see if we are already connected to our provider
+        const providerConnection = await this.notebookProvider.connect({ getOnly: true });
 
-        // This means a server that matches our options has started already. Use
-        // it to ensure we have a notebook to run.
-        if (server) {
+        if (providerConnection) {
             try {
-                await this.ensureNotebook(server);
+                await this.ensureNotebook(providerConnection);
             } catch (e) {
                 this.errorHandler.handleError(e).ignoreErrors();
             }

@@ -101,6 +101,7 @@ suite('Data Science - Kernel Switcher', () => {
         suite(isLocalConnection ? 'Local Connection' : 'Remote Connection', () => {
             setup(() => {
                 when(notebookServer.getConnectionInfo()).thenReturn({
+                    type: 'jupyter',
                     localLaunch: isLocalConnection,
                     baseUrl: '',
                     disconnected: new EventEmitter<number>().event,
