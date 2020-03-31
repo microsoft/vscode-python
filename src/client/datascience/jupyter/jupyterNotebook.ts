@@ -309,7 +309,7 @@ export class JupyterNotebookBase implements INotebook {
             (cells: ICell[]) => {
                 output = cells;
             },
-            error => {
+            (error) => {
                 deferred.reject(error);
             },
             () => {
@@ -340,14 +340,14 @@ export class JupyterNotebookBase implements INotebook {
             // Ask session for inspect result
             this.session
                 .requestInspect({ code, cursor_pos: 0, detail_level: 0 })
-                .then(r => {
+                .then((r) => {
                     if (r && r.content.status === 'ok') {
                         deferred.resolve(r.content.data);
                     } else {
                         deferred.resolve(undefined);
                     }
                 })
-                .catch(ex => {
+                .catch((ex) => {
                     deferred.reject(ex);
                 });
         }
@@ -376,12 +376,12 @@ export class JupyterNotebookBase implements INotebook {
         // Create an observable and wrap the result so we can time it.
         const stopWatch = new StopWatch();
         const result = this.executeObservableImpl(code, file, line, id, silent);
-        return new Observable<ICell[]>(subscriber => {
+        return new Observable<ICell[]>((subscriber) => {
             result.subscribe(
-                cells => {
+                (cells) => {
                     subscriber.next(cells);
                 },
-                error => {
+                (error) => {
                     subscriber.error(error);
                 },
                 () => {
@@ -486,7 +486,7 @@ export class JupyterNotebookBase implements INotebook {
             const restartHandlerToken = this.session.onSessionStatusChanged(restartHandler);
 
             // Start our interrupt. If it fails, indicate a restart
-            this.session.interrupt(timeoutMs).catch(exc => {
+            this.session.interrupt(timeoutMs).catch((exc) => {
                 traceWarning(`Error during interrupt: ${exc}`);
                 restarted.resolve([]);
             });
@@ -712,7 +712,7 @@ export class JupyterNotebookBase implements INotebook {
 
     private finishUncompletedCells() {
         const copyPending = [...this.pendingCellSubscriptions];
-        copyPending.forEach(c => c.cancel());
+        copyPending.forEach((c) => c.cancel());
         this.pendingCellSubscriptions = [];
     }
 
@@ -729,7 +729,7 @@ export class JupyterNotebookBase implements INotebook {
             (cells: ICell[]) => {
                 output = cells;
             },
-            error => {
+            (error) => {
                 deferred.reject(error);
             },
             () => {
@@ -752,7 +752,7 @@ export class JupyterNotebookBase implements INotebook {
         if (cell.state === CellState.error || cell.state === CellState.finished) {
             const outputs = cell.data.outputs as nbformat.IOutput[];
             if (outputs) {
-                outputs.forEach(o => {
+                outputs.forEach((o) => {
                     if (o.output_type === 'stream') {
                         const stream = o as nbformat.IStream;
                         result = result.concat(formatStreamText(concatMultilineStringOutput(stream.text)));
@@ -808,7 +808,7 @@ export class JupyterNotebookBase implements INotebook {
         traceError('No session during execute observable');
 
         // Can't run because no session
-        return new Observable<ICell[]>(subscriber => {
+        return new Observable<ICell[]>((subscriber) => {
             subscriber.error(this.getDisposedError());
             subscriber.complete();
         });
@@ -842,13 +842,13 @@ export class JupyterNotebookBase implements INotebook {
     };
 
     private combineObservables = (...args: Observable<ICell>[]): Observable<ICell[]> => {
-        return new Observable<ICell[]>(subscriber => {
+        return new Observable<ICell[]>((subscriber) => {
             // When all complete, we have our results
             const results: Record<string, ICell> = {};
 
-            args.forEach(o => {
+            args.forEach((o) => {
                 o.subscribe(
-                    c => {
+                    (c) => {
                         results[c.id] = c;
 
                         // Convert to an array
@@ -861,12 +861,12 @@ export class JupyterNotebookBase implements INotebook {
                             subscriber.next(array);
 
                             // Complete when everybody is finished
-                            if (array.every(a => a.state === CellState.finished || a.state === CellState.error)) {
+                            if (array.every((a) => a.state === CellState.finished || a.state === CellState.error)) {
                                 subscriber.complete();
                             }
                         }
                     },
-                    e => {
+                    (e) => {
                         subscriber.error(e);
                     }
                 );
@@ -876,7 +876,7 @@ export class JupyterNotebookBase implements INotebook {
 
     private executeMarkdownObservable = (cell: ICell): Observable<ICell> => {
         // Markdown doesn't need any execution
-        return new Observable<ICell>(subscriber => {
+        return new Observable<ICell>((subscriber) => {
             subscriber.next(cell);
             subscriber.complete();
         });
@@ -956,7 +956,7 @@ export class JupyterNotebookBase implements INotebook {
             // Tell all of the listeners about the event. They can cause this to not return until
             // they are done handling the event.
             // One such example is a comm_msg for ipywidgets. We have to wait for it to finish.
-            result = Promise.all([...this.ioPubListeners].map(l => l(msg, msg.header.msg_id)));
+            result = Promise.all([...this.ioPubListeners].map((l) => l(msg, msg.header.msg_id)));
 
             // Show our update if any new output.
             subscriber.next(this.sessionStartTime);
@@ -988,7 +988,7 @@ export class JupyterNotebookBase implements INotebook {
                     prompt: msg.content.prompt ? msg.content.prompt.toString() : '',
                     password: hasPassword
                 })
-                .then(v => {
+                .then((v) => {
                     this.session.sendInputReply(v || '');
                 });
         }
@@ -1039,7 +1039,7 @@ export class JupyterNotebookBase implements INotebook {
                 let exitHandlerDisposable: Disposable | undefined;
                 if (this.launchInfo && this.launchInfo.connectionInfo) {
                     // If the server crashes, cancel the current observable
-                    exitHandlerDisposable = this.launchInfo.connectionInfo.disconnected(c => {
+                    exitHandlerDisposable = this.launchInfo.connectionInfo.disconnected((c) => {
                         const str = c ? c.toString() : '';
                         // Only do an error if we're not disposed. If we're disposed we already shutdown.
                         if (!this._disposed) {
@@ -1072,7 +1072,7 @@ export class JupyterNotebookBase implements INotebook {
                     // When the request finishes we are done
                     request.done
                         .then(() => subscriber.complete(this.sessionStartTime))
-                        .catch(e => {
+                        .catch((e) => {
                             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
                             // Such an error must be ignored.
                             if (e && e instanceof Error && e.message === 'Canceled') {
@@ -1106,7 +1106,7 @@ export class JupyterNotebookBase implements INotebook {
     };
 
     private executeCodeObservable(cell: ICell, silent?: boolean): Observable<ICell> {
-        return new Observable<ICell>(subscriber => {
+        return new Observable<ICell>((subscriber) => {
             // Tell our listener. NOTE: have to do this asap so that markdown cells don't get
             // run before our cells.
             subscriber.next(cell);
@@ -1116,7 +1116,7 @@ export class JupyterNotebookBase implements INotebook {
             // synchronously so it happens before interruptions.
             const cellSubscriber = new CellSubscriber(cell, subscriber, (self: CellSubscriber) => {
                 // Subscriber completed, remove from subscriptions.
-                this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter(p => p !== self);
+                this.pendingCellSubscriptions = this.pendingCellSubscriptions.filter((p) => p !== self);
 
                 // Indicate success or failure
                 this.logPostCode(cell, isSilent).ignoreErrors();
@@ -1134,11 +1134,11 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private async logPreCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this.loggers.map(l => l.preExecute(cell, silent)));
+        await Promise.all(this.loggers.map((l) => l.preExecute(cell, silent)));
     }
 
     private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this.loggers.map(l => l.postExecute(cloneDeep(cell), silent)));
+        await Promise.all(this.loggers.map((l) => l.postExecute(cloneDeep(cell), silent)));
     }
 
     private addToCellData = (
@@ -1198,7 +1198,7 @@ export class JupyterNotebookBase implements INotebook {
     ) {
         const reply = msg.content as KernelMessage.IExecuteReply;
         if (reply.payload) {
-            reply.payload.forEach(o => {
+            reply.payload.forEach((o) => {
                 if (o.data && o.data.hasOwnProperty('text/plain')) {
                     // tslint:disable-next-line: no-any
                     const str = (o.data as any)['text/plain'].toString();
@@ -1341,7 +1341,7 @@ export class JupyterNotebookBase implements INotebook {
 
         // In the error scenario, we want to stop all other pending cells.
         if (this.configService.getSettings(this.resource).datascience.stopOnError) {
-            this.pendingCellSubscriptions.forEach(c => {
+            this.pendingCellSubscriptions.forEach((c) => {
                 if (c.cell.id !== cell.id) {
                     c.cancel();
                 }

@@ -110,7 +110,7 @@ suite('DataScience Interactive Window output tests', () => {
 
     runMountedTest(
         'Simple text',
-        async wrapper => {
+        async (wrapper) => {
             await addCode(ioc, wrapper, 'a=1\na');
 
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
@@ -122,13 +122,13 @@ suite('DataScience Interactive Window output tests', () => {
 
     runMountedTest(
         'Clear output',
-        async wrapper => {
+        async (wrapper) => {
             const text = `from IPython.display import clear_output
 for i in range(10):
     clear_output()
     print("Hello World {0}!".format(i))
 `;
-            addContinuousMockData(ioc, text, async _c => {
+            addContinuousMockData(ioc, text, async (_c) => {
                 return {
                     result: 'Hello World 9!',
                     haveMore: false
@@ -145,7 +145,7 @@ for i in range(10):
 
     runMountedTest(
         'Hide inputs',
-        async wrapper => {
+        async (wrapper) => {
             await forceSettingsChange({ ...defaultDataScienceSettings(), showCellInputCode: false });
 
             await addCode(ioc, wrapper, 'a=1\na');
@@ -166,7 +166,7 @@ for i in range(10):
 
     runMountedTest(
         'Show inputs',
-        async wrapper => {
+        async (wrapper) => {
             await forceSettingsChange({ ...defaultDataScienceSettings() });
 
             await addCode(ioc, wrapper, 'a=1\na');
@@ -181,7 +181,7 @@ for i in range(10):
 
     runMountedTest(
         'Expand inputs',
-        async wrapper => {
+        async (wrapper) => {
             await forceSettingsChange({ ...defaultDataScienceSettings(), collapseCellInputCodeByDefault: false });
             await addCode(ioc, wrapper, 'a=1\na');
 
@@ -194,7 +194,7 @@ for i in range(10):
 
     runMountedTest(
         'Ctrl + 1/Ctrl + 2',
-        async wrapper => {
+        async (wrapper) => {
             // Create an interactive window so that it listens to the results.
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
@@ -204,10 +204,7 @@ for i in range(10):
             typeCode(editor, 'a=1\na');
 
             // Give focus to a random div
-            const reactDiv = wrapper
-                .find('div')
-                .first()
-                .getDOMNode();
+            const reactDiv = wrapper.find('div').first().getDOMNode();
 
             const domDiv = reactDiv.querySelector('div');
 
@@ -235,7 +232,7 @@ for i in range(10):
 
     runMountedTest(
         'Escape/Ctrl+U',
-        async wrapper => {
+        async (wrapper) => {
             // Create an interactive window so that it listens to the results.
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
@@ -265,7 +262,7 @@ for i in range(10):
 
     runMountedTest(
         'Click outside cells sets focus to input box',
-        async wrapper => {
+        async (wrapper) => {
             // Create an interactive window so that it listens to the results.
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
@@ -275,10 +272,7 @@ for i in range(10):
             typeCode(editor, 'a=1\na');
 
             // Give focus to a random div
-            const reactDiv = wrapper
-                .find('div')
-                .first()
-                .getDOMNode();
+            const reactDiv = wrapper.find('div').first().getDOMNode();
 
             const domDiv = reactDiv.querySelector('div');
 
@@ -286,10 +280,7 @@ for i in range(10):
                 domDiv.tabIndex = -1;
                 domDiv.focus();
 
-                wrapper
-                    .find('section#main-panel-footer')
-                    .first()
-                    .simulate('click');
+                wrapper.find('section#main-panel-footer').first().simulate('click');
 
                 // Then enter press shift + enter on the active element
                 const activeElement = document.activeElement;
@@ -307,7 +298,7 @@ for i in range(10):
 
     runMountedTest(
         'Collapse / expand cell',
-        async wrapper => {
+        async (wrapper) => {
             await forceSettingsChange({ ...defaultDataScienceSettings() });
             await addCode(ioc, wrapper, 'a=1\na');
 
@@ -331,7 +322,7 @@ for i in range(10):
 
     runMountedTest(
         'Hide / show cell',
-        async wrapper => {
+        async (wrapper) => {
             await forceSettingsChange({ ...defaultDataScienceSettings() });
             await addCode(ioc, wrapper, 'a=1\na');
 
@@ -356,7 +347,7 @@ for i in range(10):
 
     runMountedTest(
         'Mime Types',
-        async wrapper => {
+        async (wrapper) => {
             const badPanda = `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`;
@@ -387,7 +378,7 @@ for _ in range(50):
             const cursors = ['|', '/', '-', '\\'];
             let cursorPos = 0;
             let loops = 3;
-            addContinuousMockData(ioc, spinningCursor, async _c => {
+            addContinuousMockData(ioc, spinningCursor, async (_c) => {
                 const result = `${cursors[cursorPos]}\r`;
                 cursorPos += 1;
                 if (cursorPos >= cursors.length) {
@@ -409,7 +400,7 @@ for _ in range(50):
             await addCode(ioc, wrapper, spinningCursor);
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<div>', CellPosition.Last);
 
-            addContinuousMockData(ioc, 'len?', async _c => {
+            addContinuousMockData(ioc, 'len?', async (_c) => {
                 return Promise.resolve({
                     result: `Signature: len(obj, /)
 Docstring: Return the number of items in a container.
@@ -427,7 +418,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Undo/redo commands',
-        async wrapper => {
+        async (wrapper) => {
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
 
             // Get a cell into the list
@@ -474,19 +465,19 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Click buttons',
-        async wrapper => {
+        async (wrapper) => {
             // Goto source should cause the visible editor to be picked as long as its filename matches
             const showedEditor = createDeferred();
             const textEditors: TextEditor[] = [];
             const docManager = TypeMoq.Mock.ofType<IDocumentManager>();
             const visibleEditor = TypeMoq.Mock.ofType<TextEditor>();
             const dummyDocument = TypeMoq.Mock.ofType<TextDocument>();
-            dummyDocument.setup(d => d.fileName).returns(() => Uri.file('foo.py').fsPath);
-            visibleEditor.setup(v => v.show()).returns(() => showedEditor.resolve());
-            visibleEditor.setup(v => v.revealRange(TypeMoq.It.isAny())).returns(noop);
-            visibleEditor.setup(v => v.document).returns(() => dummyDocument.object);
+            dummyDocument.setup((d) => d.fileName).returns(() => Uri.file('foo.py').fsPath);
+            visibleEditor.setup((v) => v.show()).returns(() => showedEditor.resolve());
+            visibleEditor.setup((v) => v.revealRange(TypeMoq.It.isAny())).returns(noop);
+            visibleEditor.setup((v) => v.document).returns(() => dummyDocument.object);
             textEditors.push(visibleEditor.object);
-            docManager.setup(a => a.visibleTextEditors).returns(() => textEditors);
+            docManager.setup((a) => a.visibleTextEditors).returns(() => textEditors);
             ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
 
             // Get a cell into the list
@@ -557,7 +548,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Export',
-        async wrapper => {
+        async (wrapper) => {
             // Export should cause the export dialog to come up. Remap appshell so we can check
             const dummyDisposable = {
                 dispose: () => {
@@ -567,20 +558,20 @@ Type:      builtin_function_or_method`,
             let exportCalled = false;
             const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
             appShell
-                .setup(a => a.showErrorMessage(TypeMoq.It.isAnyString()))
-                .returns(e => {
+                .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                .returns((e) => {
                     throw e;
                 });
             appShell
-                .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(''));
             appShell
-                .setup(a => a.showSaveDialog(TypeMoq.It.isAny()))
+                .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
                 .returns(() => {
                     exportCalled = true;
                     return Promise.resolve(undefined);
                 });
-            appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+            appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
             // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
@@ -647,7 +638,7 @@ Type:      builtin_function_or_method`,
                 ioc.addResourceToFolder(secondUri, path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience2'));
                 ioc.forceSettingsChanged(
                     secondUri,
-                    interpreters.filter(i => i.path !== activeInterpreter?.path)[0].path
+                    interpreters.filter((i) => i.path !== activeInterpreter?.path)[0].path
                 );
 
                 // Then open a second time and make sure it uses this new path
@@ -691,7 +682,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Editor Context',
-        async wrapper => {
+        async (wrapper) => {
             // Before we have any cells, verify our contexts are not set
             assert.equal(
                 ioc.getContext(EditorContexts.HaveInteractive),
@@ -741,7 +732,7 @@ Type:      builtin_function_or_method`,
             // Setup a listener for context change events. We have 3 separate contexts, so we have to wait for all 3.
             let count = 0;
             let deferred = createDeferred<boolean>();
-            const eventDispose = ioc.onContextSet(_a => {
+            const eventDispose = ioc.onContextSet((_a) => {
                 count += 1;
                 if (count >= 3) {
                     deferred.resolve();
@@ -799,7 +790,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Simple input',
-        async wrapper => {
+        async (wrapper) => {
             // Create an interactive window so that it listens to the results.
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
@@ -815,7 +806,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Copy to source input',
-        async wrapper => {
+        async (wrapper) => {
             const showedEditor = createDeferred();
             ioc.addDocument('# No cells here', 'foo.py');
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
@@ -845,7 +836,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Multiple input',
-        async wrapper => {
+        async (wrapper) => {
             // Create an interactive window so that it listens to the results.
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
@@ -883,13 +874,13 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Restart with session failure',
-        async wrapper => {
+        async (wrapper) => {
             // Prime the pump
             await addCode(ioc, wrapper, 'a=1\na');
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
             // Then something that could possibly timeout
-            addContinuousMockData(ioc, 'import time\r\ntime.sleep(1000)', _c => {
+            addContinuousMockData(ioc, 'import time\r\ntime.sleep(1000)', (_c) => {
                 return Promise.resolve({ result: '', haveMore: true });
             });
 
@@ -922,7 +913,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'LiveLossPlot',
-        async wrapper => {
+        async (wrapper) => {
             // Only run this test when not mocking. Too complicated to mimic otherwise
             if (!ioc.mockJupyter) {
                 // Load all of our cells
@@ -958,7 +949,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Gather code run from text editor',
-        async wrapper => {
+        async (wrapper) => {
             ioc.getSettings().datascience.enableGather = true;
             ioc.getSettings().datascience.gatherToScript = true;
             // Enter some code.
@@ -988,7 +979,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Gather code run from input box',
-        async wrapper => {
+        async (wrapper) => {
             ioc.getSettings().datascience.enableGather = true;
             ioc.getSettings().datascience.gatherToScript = true;
             // Create an interactive window so that it listens to the results.
@@ -1021,7 +1012,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Copy back to source',
-        async _wrapper => {
+        async (_wrapper) => {
             ioc.addDocument(`${defaultCellMarker}${os.EOL}print("bar")`, 'foo.py');
             const docManager = ioc.get<IDocumentManager>(IDocumentManager);
             docManager.showTextDocument(docManager.textDocuments[0]);
@@ -1049,7 +1040,7 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Limit text output',
-        async wrapper => {
+        async (wrapper) => {
             ioc.getSettings().datascience.textOutputLimit = 8;
 
             // Output should be trimmed to just two lines of output
@@ -1066,10 +1057,10 @@ Type:      builtin_function_or_method`,
 
     runMountedTest(
         'Type in input',
-        async wrapper => {
+        async (wrapper) => {
             const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
             appShell
-                .setup(a => a.showInputBox(TypeMoq.It.isAny()))
+                .setup((a) => a.showInputBox(TypeMoq.It.isAny()))
                 .returns(() => {
                     return Promise.resolve('typed input');
                 });

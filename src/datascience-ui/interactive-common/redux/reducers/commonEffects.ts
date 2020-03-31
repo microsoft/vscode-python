@@ -144,7 +144,7 @@ export namespace CommonEffects {
             if (c.cell.data.cell_type === 'code') {
                 let isMatch = false;
                 const data: nbformat.ICodeCell = c.cell.data as nbformat.ICodeCell;
-                const changedOutputs = data.outputs.map(o => {
+                const changedOutputs = data.outputs.map((o) => {
                     if (
                         (o.output_type === 'display_data' || o.output_type === 'execute_result') &&
                         o.transient &&
