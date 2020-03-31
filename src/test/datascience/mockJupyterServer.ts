@@ -32,11 +32,11 @@ export class MockJupyterServer implements INotebookServer {
     }
 
     public async createNotebook(_resource: Uri): Promise<INotebook> {
-        return new MockJupyterNotebook(this);
+        return new MockJupyterNotebook(this.getConnectionInfo());
     }
 
     public async getNotebook(_resource: Uri): Promise<INotebook | undefined> {
-        return new MockJupyterNotebook(this);
+        return new MockJupyterNotebook(this.getConnectionInfo());
     }
 
     public async setMatplotLibStyle(_useDark: boolean): Promise<void> {

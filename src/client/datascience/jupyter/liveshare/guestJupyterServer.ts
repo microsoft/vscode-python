@@ -77,7 +77,7 @@ export class GuestJupyterServer
             this.configService,
             resource,
             identity,
-            this,
+            this.launchInfo,
             this.dataScience.activationStartTime
         );
         deferred.resolve(result);

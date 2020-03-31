@@ -138,7 +138,7 @@ export interface INotebookServer extends IAsyncDisposable {
 export interface INotebook extends IAsyncDisposable {
     readonly resource: Resource;
     readonly identity: Uri;
-    readonly server: INotebookServer;
+    readonly connection: INotebookProviderConnection | undefined;
     readonly status: ServerStatus;
     onSessionStatusChanged: Event<ServerStatus>;
     onDisposed: Event<void>;

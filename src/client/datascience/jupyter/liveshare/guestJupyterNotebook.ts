@@ -22,8 +22,9 @@ import {
     IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
+    INotebookExecutionInfo,
     INotebookExecutionLogger,
-    INotebookServer,
+    INotebookProviderConnection,
     InterruptResult
 } from '../../types';
 import { LiveKernelModel } from '../kernels/types';
@@ -50,8 +51,8 @@ export class GuestJupyterNotebook
         return this._resource;
     }
 
-    public get server(): INotebookServer {
-        return this._owner;
+    public get connection(): INotebookProviderConnection | undefined {
+        return this._executionInfo?.connectionInfo;
     }
 
     public get onSessionStatusChanged(): Event<ServerStatus> {
@@ -80,7 +81,7 @@ export class GuestJupyterNotebook
         private configService: IConfigurationService,
         private _resource: Resource,
         private _identity: Uri,
-        private _owner: INotebookServer,
+        private _executionInfo: INotebookExecutionInfo | undefined,
         private startTime: number
     ) {
         super(liveShare);

@@ -199,8 +199,9 @@ export class JupyterNotebookBase implements INotebook {
         // Save our interpreter and don't change it. Later on when kernel changes
         // are possible, recompute it.
     }
-    public get server(): INotebookServer {
-        throw new Error('Not Impl');
+
+    public get connection() {
+        return this.executionInfo.connectionInfo;
     }
 
     public async dispose(): Promise<void> {
