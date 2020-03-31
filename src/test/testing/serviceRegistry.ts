@@ -131,7 +131,7 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerTestManagers() {
-        this.serviceManager.addFactory<ITestManager>(ITestManagerFactory, context => {
+        this.serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
             return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
 
@@ -154,7 +154,7 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerTestManagerService() {
-        this.serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, context => {
+        this.serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, (context) => {
             return (workspaceFolder: Uri) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
                 const testsHelper = context.container.get<ITestsHelper>(ITestsHelper);

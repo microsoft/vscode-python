@@ -17,17 +17,17 @@ suite('Language Server Support', () => {
         service = new LanguageServerCompatibilityService(compatService.object);
     });
     test('Not supported if there are errors ', async () => {
-        compatService.setup(c => c.isSupported()).returns(() => Promise.reject(new Error('kaboom')));
+        compatService.setup((c) => c.isSupported()).returns(() => Promise.reject(new Error('kaboom')));
         const supported = await service.isSupported();
         expect(supported).to.equal(false, 'incorrect');
     });
     test('Not supported if there are not errors ', async () => {
-        compatService.setup(c => c.isSupported()).returns(() => Promise.resolve(false));
+        compatService.setup((c) => c.isSupported()).returns(() => Promise.resolve(false));
         const supported = await service.isSupported();
         expect(supported).to.equal(false, 'incorrect');
     });
     test('Support if there are not errors ', async () => {
-        compatService.setup(c => c.isSupported()).returns(() => Promise.resolve(true));
+        compatService.setup((c) => c.isSupported()).returns(() => Promise.resolve(true));
         const supported = await service.isSupported();
         expect(supported).to.equal(true, 'incorrect');
     });

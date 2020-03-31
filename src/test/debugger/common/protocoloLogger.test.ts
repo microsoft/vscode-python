@@ -31,12 +31,12 @@ suite('Debugging - Protocol Logger', () => {
         const logger = TypeMoq.Mock.ofType<Logger.Logger>();
         protocolLogger.setup(logger.object);
 
-        logger.verify(l => l.verbose('From Client:'), TypeMoq.Times.exactly(3));
-        logger.verify(l => l.verbose('To Client:'), TypeMoq.Times.exactly(3));
+        logger.verify((l) => l.verbose('From Client:'), TypeMoq.Times.exactly(3));
+        logger.verify((l) => l.verbose('To Client:'), TypeMoq.Times.exactly(3));
 
         const expectedLogFileContents = ['A', '1', 'B', 'C', '2', '3'];
         for (const expectedContent of expectedLogFileContents) {
-            logger.verify(l => l.verbose(expectedContent), TypeMoq.Times.once());
+            logger.verify((l) => l.verbose(expectedContent), TypeMoq.Times.once());
         }
     });
     test('Ensure messages are are logged as they arrive', async () => {
@@ -57,12 +57,12 @@ suite('Debugging - Protocol Logger', () => {
         outputStream.write('2');
         outputStream.write('3');
 
-        logger.verify(l => l.verbose('From Client:'), TypeMoq.Times.exactly(3));
-        logger.verify(l => l.verbose('To Client:'), TypeMoq.Times.exactly(3));
+        logger.verify((l) => l.verbose('From Client:'), TypeMoq.Times.exactly(3));
+        logger.verify((l) => l.verbose('To Client:'), TypeMoq.Times.exactly(3));
 
         const expectedLogFileContents = ['A', '1', 'B', 'C', '2', '3'];
         for (const expectedContent of expectedLogFileContents) {
-            logger.verify(l => l.verbose(expectedContent), TypeMoq.Times.once());
+            logger.verify((l) => l.verbose(expectedContent), TypeMoq.Times.once());
         }
     });
     test('Ensure nothing is logged once logging is disabled', async () => {
@@ -84,17 +84,17 @@ suite('Debugging - Protocol Logger', () => {
         outputStream.write('2');
         outputStream.write('3');
 
-        logger.verify(l => l.verbose('From Client:'), TypeMoq.Times.exactly(1));
-        logger.verify(l => l.verbose('To Client:'), TypeMoq.Times.exactly(1));
+        logger.verify((l) => l.verbose('From Client:'), TypeMoq.Times.exactly(1));
+        logger.verify((l) => l.verbose('To Client:'), TypeMoq.Times.exactly(1));
 
         const expectedLogFileContents = ['A', '1'];
         const notExpectedLogFileContents = ['B', 'C', '2', '3'];
 
         for (const expectedContent of expectedLogFileContents) {
-            logger.verify(l => l.verbose(expectedContent), TypeMoq.Times.once());
+            logger.verify((l) => l.verbose(expectedContent), TypeMoq.Times.once());
         }
         for (const notExpectedContent of notExpectedLogFileContents) {
-            logger.verify(l => l.verbose(notExpectedContent), TypeMoq.Times.never());
+            logger.verify((l) => l.verbose(notExpectedContent), TypeMoq.Times.never());
         }
     });
 });

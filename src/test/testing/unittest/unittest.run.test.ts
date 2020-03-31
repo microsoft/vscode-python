@@ -77,8 +77,8 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
 
     function buildTestCliSwitches(): ITestConfiguration[] {
         const switches: ITestConfiguration[] = [];
-        ['-p', '--pattern'].forEach(p => {
-            ['-s', '--start - directory'].forEach(s => {
+        ['-p', '--pattern'].forEach((p) => {
+            ['-s', '--start - directory'].forEach((s) => {
                 switches.push({
                     patternSwitch: p,
                     startDirSwitch: s
@@ -153,7 +153,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
                     // Ensure any spaces added during code formatting or the like are removed
                     out: output
                         .split(/\r?\n/g)
-                        .map(item => item.trim())
+                        .map((item) => item.trim())
                         .join(EOL),
                     source: 'stdout'
                 });
@@ -168,7 +168,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     }
 
     // tslint:disable-next-line:max-func-body-length
-    cliSwitches.forEach(cfg => {
+    cliSwitches.forEach((cfg) => {
         test(`Run Tests [${cfg.startDirSwitch}, ${cfg.patternSwitch}]`, async () => {
             await updateSetting(
                 'testing.unittestArgs',
@@ -396,7 +396,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
             // tslint:disable-next-line:no-non-null-assertion
-            const testFileToTest = tests.testFiles.find(f => f.name === 'test_unittest_one.py')!;
+            const testFileToTest = tests.testFiles.find((f) => f.name === 'test_unittest_one.py')!;
             const testFile: TestsToRun = {
                 testFile: [testFileToTest],
                 testFolder: [],
@@ -463,7 +463,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
             // tslint:disable-next-line:no-non-null-assertion
-            const testSuiteToTest = tests.testSuites.find(s => s.testSuite.name === 'Test_test_one_1')!.testSuite;
+            const testSuiteToTest = tests.testSuites.find((s) => s.testSuite.name === 'Test_test_one_1')!.testSuite;
             const testSuite: TestsToRun = {
                 testFile: [],
                 testFolder: [],

@@ -1,14 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
+import { KernelMessage } from '@jupyterlab/services';
 import { Identifiers } from '../../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
-import { IMainState } from '../../../interactive-common/mainState';
+import { ICell } from '../../../../client/datascience/types';
+import { ICellViewModel, IMainState } from '../../../interactive-common/mainState';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { storeLocStrings } from '../../../react-common/locReactSide';
 import { postActionToExtension } from '../helpers';
+import { Transfer } from './transfer';
 import { CommonActionType, CommonReducerArg, IOpenSettingsAction } from './types';
 
 export namespace CommonEffects {
@@ -127,5 +131,74 @@ export namespace CommonEffects {
     export function openSettings(arg: CommonReducerArg<CommonActionType, IOpenSettingsAction>): IMainState {
         postActionToExtension(arg, InteractiveWindowMessages.OpenSettings, arg.payload.data.setting);
         return arg.prevState;
+    }
+
+    export function handleUpdateDisplayData(
+        arg: CommonReducerArg<CommonActionType, KernelMessage.IUpdateDisplayDataMsg>
+    ): IMainState {
+        const newCells: ICell[] = [];
+        const oldCells: ICell[] = [];
+
+        // Find any cells that have this display_id
+        const newVMs = arg.prevState.cellVMs.map((c: ICellViewModel) => {
+            if (c.cell.data.cell_type === 'code') {
+                let isMatch = false;
+                const data: nbformat.ICodeCell = c.cell.data as nbformat.ICodeCell;
+                const changedOutputs = data.outputs.map((o) => {
+                    if (
+                        (o.output_type === 'display_data' || o.output_type === 'execute_result') &&
+                        o.transient &&
+                        // tslint:disable-next-line: no-any
+                        (o.transient as any).display_id === arg.payload.data.content.transient.display_id
+                    ) {
+                        // Remember this as a match
+                        isMatch = true;
+
+                        // If the output has this display_id, update the output
+                        return {
+                            ...o,
+                            data: arg.payload.data.content.data,
+                            metadata: arg.payload.data.content.metadata
+                        };
+                    } else {
+                        return o;
+                    }
+                });
+
+                // Save in our new cell list so we can tell the extension
+                // about our update
+                const newCell = isMatch
+                    ? Helpers.asCell({
+                          ...c.cell,
+                          data: {
+                              ...c.cell.data,
+                              outputs: changedOutputs
+                          }
+                      })
+                    : c.cell;
+                if (isMatch) {
+                    newCells.push(newCell);
+                } else {
+                    oldCells.push(newCell);
+                }
+                return Helpers.asCellViewModel({
+                    ...c,
+                    cell: newCell
+                });
+            } else {
+                oldCells.push(c.cell);
+                return c;
+            }
+        });
+
+        // If we found the display id, then an update happened. Tell the model about it
+        if (newCells.length) {
+            Transfer.postModelCellUpdate(arg, newCells, oldCells);
+        }
+
+        return {
+            ...arg.prevState,
+            cellVMs: newVMs
+        };
     }
 }

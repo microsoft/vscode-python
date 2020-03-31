@@ -26,43 +26,47 @@ suite('PythonExecutableService', () => {
         procService = TypeMoq.Mock.ofType<IProcessService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        fileSystem.setup(f => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
+        fileSystem.setup((f) => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(false));
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider)))
             .returns(() => envVarsProvider.object);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IProcessServiceFactory)))
             .returns(() => procServiceFactory.object);
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
             .returns(() => configService.object);
         procService.setup((x: any) => x.then).returns(() => undefined);
-        procServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(procService.object));
-        envVarsProvider.setup(v => v.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
+        procServiceFactory
+            .setup((p) => p.create(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(procService.object));
+        envVarsProvider.setup((v) => v.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
 
         const envActivationService = TypeMoq.Mock.ofType<IEnvironmentActivationService>();
         envActivationService
-            .setup(e => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny()))
+            .setup((e) => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined));
         envActivationService
-            .setup(e => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((e) => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(undefined));
         envActivationService
-            .setup(e => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((e) =>
+                e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
+            )
             .returns(() => Promise.resolve(undefined));
         serviceContainer
-            .setup(s => s.get(TypeMoq.It.isValue(IEnvironmentActivationService), TypeMoq.It.isAny()))
+            .setup((s) => s.get(TypeMoq.It.isValue(IEnvironmentActivationService), TypeMoq.It.isAny()))
             .returns(() => envActivationService.object);
     });
     test('Ensure resource is used when getting configuration service settings (undefined resource)', async () => {
         const pythonPath = `Python_Path_${new Date().toString()}`;
         const pythonVersion = `Python_Version_${new Date().toString()}`;
         const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-        pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
-        configService.setup(c => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => pythonSettings.object);
+        pythonSettings.setup((p) => p.pythonPath).returns(() => pythonPath);
+        configService.setup((c) => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => pythonSettings.object);
         procService
-            .setup(p => p.exec(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.exec(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: pythonVersion }));
 
         const versionService = new InterpreterVersionService(procServiceFactory.object);
@@ -75,10 +79,10 @@ suite('PythonExecutableService', () => {
         const pythonPath = `Python_Path_${new Date().toString()}`;
         const pythonVersion = `Python_Version_${new Date().toString()}`;
         const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-        pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
-        configService.setup(c => c.getSettings(TypeMoq.It.isValue(resource))).returns(() => pythonSettings.object);
+        pythonSettings.setup((p) => p.pythonPath).returns(() => pythonPath);
+        configService.setup((c) => c.getSettings(TypeMoq.It.isValue(resource))).returns(() => pythonSettings.object);
         procService
-            .setup(p => p.exec(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.exec(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: pythonVersion }));
 
         const versionService = new InterpreterVersionService(procServiceFactory.object);

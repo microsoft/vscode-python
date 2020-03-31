@@ -11,7 +11,7 @@ export class MockRegistry implements IRegistry {
         private values: { key: string; hive: RegistryHive; arch?: Architecture; value: string; name?: string }[]
     ) {}
     public async getKeys(key: string, hive: RegistryHive, arch?: Architecture): Promise<string[]> {
-        const items = this.keys.find(item => {
+        const items = this.keys.find((item) => {
             if (typeof item.arch === 'number') {
                 return item.key === key && item.hive === hive && item.arch === arch;
             }
@@ -26,7 +26,7 @@ export class MockRegistry implements IRegistry {
         arch?: Architecture,
         name?: string
     ): Promise<string | undefined | null> {
-        const items = this.values.find(item => {
+        const items = this.values.find((item) => {
             if (item.key !== key || item.hive !== hive) {
                 return false;
             }

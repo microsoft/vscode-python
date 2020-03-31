@@ -93,7 +93,7 @@ export class GuestJupyterServer
     public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
         await super.onSessionChange(api);
 
-        this.notebooks.forEach(async notebook => {
+        this.notebooks.forEach(async (notebook) => {
             const guestNotebook = (await notebook) as GuestJupyterNotebook;
             if (guestNotebook) {
                 await guestNotebook.onSessionChange(api);

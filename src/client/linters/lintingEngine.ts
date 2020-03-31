@@ -59,7 +59,7 @@ export class LintingEngine implements ILintingEngine {
 
     public async lintOpenPythonFiles(): Promise<vscode.DiagnosticCollection> {
         this.diagnosticCollection.clear();
-        const promises = this.documents.textDocuments.map(async document => this.lintDocument(document, 'auto'));
+        const promises = this.documents.textDocuments.map(async (document) => this.lintDocument(document, 'auto'));
         await Promise.all(promises);
         return this.diagnosticCollection;
     }
@@ -142,7 +142,7 @@ export class LintingEngine implements ILintingEngine {
     }
 
     private isDocumentOpen(uri: vscode.Uri): boolean {
-        return this.documents.textDocuments.some(document => document.uri.fsPath === uri.fsPath);
+        return this.documents.textDocuments.some((document) => document.uri.fsPath === uri.fsPath);
     }
 
     private createDiagnostics(message: ILintMessage, _document: vscode.TextDocument): vscode.Diagnostic {
@@ -176,8 +176,10 @@ export class LintingEngine implements ILintingEngine {
 
         const settings = this.configurationService.getSettings(document.uri);
         // { dot: true } is important so dirs like `.venv` will be matched by globs
-        const ignoreMinmatches = settings.linting.ignorePatterns.map(pattern => new Minimatch(pattern, { dot: true }));
-        if (ignoreMinmatches.some(matcher => matcher.match(document.fileName) || matcher.match(relativeFileName))) {
+        const ignoreMinmatches = settings.linting.ignorePatterns.map(
+            (pattern) => new Minimatch(pattern, { dot: true })
+        );
+        if (ignoreMinmatches.some((matcher) => matcher.match(document.fileName) || matcher.match(relativeFileName))) {
             return false;
         }
         if (document.uri.scheme !== 'file' || !document.uri.fsPath) {

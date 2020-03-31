@@ -83,7 +83,7 @@ suite('Terminal Service (synchronous)', () => {
             when(fs.readFile(anything())).thenResolve('');
 
             // Send the necessary commands to the terminal.
-            const promise = service.sendCommand('cmd', ['1', '2'], cancel.token).catch(ex => Promise.reject(ex));
+            const promise = service.sendCommand('cmd', ['1', '2'], cancel.token).catch((ex) => Promise.reject(ex));
 
             const deferred = createDeferredFrom(promise);
             // required to shutup node (we must handled exceptions).
@@ -125,7 +125,7 @@ suite('Terminal Service (synchronous)', () => {
             when(fs.readFile(anything())).thenResolve('');
 
             // Send the necessary commands to the terminal.
-            const promise = service.sendCommand('cmd', ['1', '2'], cancel.token).catch(ex => Promise.reject(ex));
+            const promise = service.sendCommand('cmd', ['1', '2'], cancel.token).catch((ex) => Promise.reject(ex));
 
             const deferred = createDeferredFrom(promise);
             // required to shutup node (we must handled exceptions).

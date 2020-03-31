@@ -169,7 +169,7 @@ export class FSFixture extends CleanupFixture {
     public async createSocket(relname: string): Promise<string> {
         const srv = this.ensureSocketServer();
         const filename = await this.resolve(relname);
-        await new Promise(resolve => srv!.listen(filename, 0, resolve));
+        await new Promise((resolve) => srv!.listen(filename, 0, resolve));
         return filename;
     }
 
@@ -242,7 +242,7 @@ export class FSFixture extends CleanupFixture {
         this.sockServer = srv;
         this.addCleanup(async () => {
             try {
-                await new Promise(resolve => srv.close(resolve));
+                await new Promise((resolve) => srv.close(resolve));
             } catch (err) {
                 console.log(`failure while closing socket server: ${err}`);
             }

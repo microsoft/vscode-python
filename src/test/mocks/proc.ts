@@ -37,7 +37,7 @@ export class MockProcessService extends EventEmitter implements IProcessService 
 
         if (valueReturned) {
             const output = value as Output<string>;
-            if (['stderr', 'stdout'].some(source => source === output.source)) {
+            if (['stderr', 'stdout'].some((source) => source === output.source)) {
                 return {
                     // tslint:disable-next-line:no-any
                     proc: {} as any,

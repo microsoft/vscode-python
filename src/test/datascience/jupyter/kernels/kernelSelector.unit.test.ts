@@ -189,7 +189,7 @@ suite('Data Science - KernelSelector', () => {
                     session: {} as any
                 }
             ];
-            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
+            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map((kernelModel) => {
                 return {
                     label: '',
                     selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
@@ -227,7 +227,7 @@ suite('Data Science - KernelSelector', () => {
             const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
             assert.deepEqual(
                 suggestions,
-                quickPickItems.filter(item => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || ''))
+                quickPickItems.filter((item) => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || ''))
             );
         });
         test('Should hide kernel from local sessions', async () => {
@@ -269,7 +269,7 @@ suite('Data Science - KernelSelector', () => {
                     session: {} as any
                 }
             ];
-            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
+            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map((kernelModel) => {
                 return {
                     label: '',
                     selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
@@ -303,7 +303,7 @@ suite('Data Science - KernelSelector', () => {
             const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
             assert.deepEqual(
                 suggestions,
-                quickPickItems.filter(item => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || ''))
+                quickPickItems.filter((item) => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || ''))
             );
         });
     });

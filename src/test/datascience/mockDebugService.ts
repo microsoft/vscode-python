@@ -220,15 +220,15 @@ export class MockDebuggerService implements IDebugService, IDisposable {
 
     private sendBreakpoints(): Promise<void> {
         // Only supporting a single file now
-        const sbs = this._breakpoints.map(b => b as SourceBreakpoint);
+        const sbs = this._breakpoints.map((b) => b as SourceBreakpoint);
         const file = sbs[0].location.uri.fsPath;
         return this.sendMessage('setBreakpoints', {
             source: {
                 name: path.basename(file),
                 path: file
             },
-            lines: sbs.map(sb => sb.location.range.start.line),
-            breakpoints: sbs.map(sb => {
+            lines: sbs.map((sb) => sb.location.range.start.line),
+            breakpoints: sbs.map((sb) => {
                 return { line: sb.location.range.start.line };
             }),
             sourceModified: true
@@ -276,7 +276,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     private async sendMessage(command: string, args?: any): Promise<void> {
         const response = createDeferred();
         this.protocolParser.once(`response_${command}`, () => response.resolve());
-        this.socket!.on('error', err => response.reject(err));
+        this.socket!.on('error', (err) => response.reject(err));
         await this.emitMessage(command, args);
         await response.promise;
     }

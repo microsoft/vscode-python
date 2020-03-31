@@ -175,7 +175,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             };
 
             // Transform columns so they are sortable and stylable
-            const columns = this.props.columns.map(c => {
+            const columns = this.props.columns.map((c) => {
                 c.sortable = true;
                 c.headerCssClass = 'react-grid-header-cell';
                 c.cssClass = 'react-grid-cell';
@@ -220,18 +220,10 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             if (this.containerRef && this.containerRef.current) {
                 // slickgrid creates empty focus sink div elements that capture tab input we don't want that
                 // so unhook their key handlers and remove their tabindex
-                const firstFocus = slickgridJQ('.react-grid-container')
-                    .children()
-                    .first();
-                const lastFocus = slickgridJQ('.react-grid-container')
-                    .children()
-                    .last();
-                slickgridJQ(firstFocus)
-                    .off('keydown')
-                    .removeAttr('tabindex');
-                slickgridJQ(lastFocus)
-                    .off('keydown')
-                    .removeAttr('tabindex');
+                const firstFocus = slickgridJQ('.react-grid-container').children().first();
+                const lastFocus = slickgridJQ('.react-grid-container').children().last();
+                slickgridJQ(firstFocus).off('keydown').removeAttr('tabindex');
+                slickgridJQ(lastFocus).off('keydown').removeAttr('tabindex');
 
                 // Set our key handling on the actual grid viewport
                 slickgridJQ('.react-grid')
@@ -248,7 +240,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
             grid.init();
 
             // Set the initial sort column to our index column
-            const indexColumn = columns.find(c => c.field === this.props.idProperty);
+            const indexColumn = columns.find((c) => c.field === this.props.idProperty);
             if (indexColumn && indexColumn.id) {
                 grid.setSortColumn(indexColumn.id, true);
             }
@@ -435,7 +427,7 @@ export class ReactSlickGrid extends React.Component<ISlickGridProps, ISlickGridS
         if (this.state.grid) {
             const fontString = this.computeFont();
             const columns = this.state.grid.getColumns();
-            columns.forEach(c => {
+            columns.forEach((c) => {
                 let colWidth = MinColumnWidth;
                 rows.forEach((r: any) => {
                     const field = c.field ? r[c.field] : '';

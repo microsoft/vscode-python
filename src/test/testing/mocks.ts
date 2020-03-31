@@ -123,7 +123,7 @@ export class MockUnitTestSocketServer extends EventEmitter implements IUnitTestS
         this.results.push(...results);
     }
     public async start(options: { port: number; host: string } = { port: 0, host: 'localhost' }): Promise<number> {
-        this.results.forEach(result => {
+        this.results.forEach((result) => {
             this.emit('result', result);
         });
         this.results = [];

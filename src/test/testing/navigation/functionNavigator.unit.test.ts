@@ -90,7 +90,7 @@ suite('Unit Tests - Navigation Function', () => {
                 docManager.showTextDocument(doc.object, deepEqual({ preserveFocus: false, selection: range }))
             ).once();
         } else {
-            editor.verify(e => e.revealRange(typemoq.It.isAny(), TextEditorRevealType.Default), typemoq.Times.once());
+            editor.verify((e) => e.revealRange(typemoq.It.isAny(), TextEditorRevealType.Default), typemoq.Times.once());
         }
     }
     test('Ensure we use line number from test function when navigating in file (without focusing code)', async () => {
@@ -111,6 +111,6 @@ suite('Unit Tests - Navigation Function', () => {
 
         verify(helper.openFile(anything())).once();
         expect(capture(helper.openFile).first()[0]!.fsPath).to.equal(filePath.fsPath);
-        editor.verify(e => e.revealRange(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());
+        editor.verify((e) => e.revealRange(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());
     });
 });

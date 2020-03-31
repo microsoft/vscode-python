@@ -40,11 +40,11 @@ export class WorkspaceSymbols implements Disposable {
             new WorkspaceSymbolProvider(this.fs, this.commandMgr, this.generators)
         );
         this.disposables.push(this.workspace.onDidChangeWorkspaceFolders(() => this.initializeGenerators()));
-        this.disposables.push(this.documents.onDidSaveTextDocument(e => this.onDocumentSaved(e)));
+        this.disposables.push(this.documents.onDidSaveTextDocument((e) => this.onDocumentSaved(e)));
         this.buildSymbolsOnStart();
     }
     public dispose() {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
     private initializeGenerators() {
         while (this.generators.length > 0) {
@@ -53,7 +53,7 @@ export class WorkspaceSymbols implements Disposable {
         }
 
         if (Array.isArray(this.workspace.workspaceFolders)) {
-            this.workspace.workspaceFolders.forEach(wkSpc => {
+            this.workspace.workspaceFolders.forEach((wkSpc) => {
                 this.generators.push(
                     new Generator(
                         wkSpc.uri,
@@ -70,7 +70,7 @@ export class WorkspaceSymbols implements Disposable {
 
     private buildSymbolsOnStart() {
         if (Array.isArray(this.workspace.workspaceFolders)) {
-            this.workspace.workspaceFolders.forEach(workspaceFolder => {
+            this.workspace.workspaceFolders.forEach((workspaceFolder) => {
                 const pythonSettings = this.configurationService.getSettings(workspaceFolder.uri);
                 if (pythonSettings.workspaceSymbols.rebuildOnStart) {
                     const promises = this.buildWorkspaceSymbols(true);
@@ -112,7 +112,7 @@ export class WorkspaceSymbols implements Disposable {
 
         let promptPromise: Promise<InstallerResponse>;
         let promptResponse: InstallerResponse;
-        return this.generators.map(async generator => {
+        return this.generators.map(async (generator) => {
             if (!generator.enabled) {
                 return;
             }

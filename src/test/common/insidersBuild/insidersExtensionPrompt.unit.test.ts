@@ -57,7 +57,7 @@ suite('Insiders Extension prompt', () => {
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(ExtensionChannel.daily)).thenResolve();
         hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
+            .setup((u) => u.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         await insidersPrompt.promptToInstallInsiders();
@@ -79,7 +79,7 @@ suite('Insiders Extension prompt', () => {
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(ExtensionChannel.weekly)).thenResolve();
         hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
+            .setup((u) => u.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         await insidersPrompt.promptToInstallInsiders();
@@ -101,7 +101,7 @@ suite('Insiders Extension prompt', () => {
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(anything())).thenResolve();
         hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
+            .setup((u) => u.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         await insidersPrompt.promptToInstallInsiders();
@@ -123,7 +123,7 @@ suite('Insiders Extension prompt', () => {
         when(cmdManager.executeCommand('workbench.action.reloadWindow')).thenResolve();
         when(extensionChannelService.updateChannel(anything())).thenResolve();
         hasUserBeenNotifiedState
-            .setup(u => u.updateValue(true))
+            .setup((u) => u.updateValue(true))
             .returns(() => Promise.resolve(undefined))
             .verifiable(TypeMoq.Times.once());
         await insidersPrompt.promptToInstallInsiders();

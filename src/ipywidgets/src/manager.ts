@@ -34,7 +34,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
             {
                 safe: false,
                 mimeTypes: [WIDGET_MIMETYPE],
-                createRenderer: options => new jupyterlab.WidgetRenderer(options, this)
+                createRenderer: (options) => new jupyterlab.WidgetRenderer(options, this)
             },
             0
         );
@@ -67,7 +67,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
     public _get_comm_info(): Promise<any> {
         return this.kernel
             .requestCommInfo({ target: this.comm_target_name })
-            .then(reply => (reply.content as any).comms);
+            .then((reply) => (reply.content as any).comms);
     }
     public async display_view(msg: any, view: Backbone.View<Backbone.Model>, options: any): Promise<Widget> {
         const widget = await super.display_view(msg, view, options);
@@ -82,7 +82,7 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         // Call the base class to try and load. If that fails, look locally
         window.console.log(`WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);
         // tslint:disable-next-line: no-unnecessary-local-variable
-        const result = await super.loadClass(className, moduleName, moduleVersion).catch(async x => {
+        const result = await super.loadClass(className, moduleName, moduleVersion).catch(async (x) => {
             const m = await requireLoader(moduleName, moduleVersion);
             if (m && m[className]) {
                 return m[className];

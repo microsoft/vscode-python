@@ -22,7 +22,7 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
     }
 
     public async dispose() {
-        await Promise.all(this.activeExplorers.map(d => d.dispose()));
+        await Promise.all(this.activeExplorers.map((d) => d.dispose()));
     }
 
     public async create(variable: IJupyterVariable, notebook: INotebook): Promise<IDataViewer> {

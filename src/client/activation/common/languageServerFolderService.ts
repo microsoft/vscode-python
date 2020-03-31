@@ -87,8 +87,8 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
         const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         const subDirs = await fs.getSubDirectories(EXTENSION_ROOT_DIR);
         return subDirs
-            .filter(dir => path.basename(dir).startsWith(this.languageServerFolder))
-            .map(dir => {
+            .filter((dir) => path.basename(dir).startsWith(this.languageServerFolder))
+            .map((dir) => {
                 return { path: dir, version: this.getFolderVersion(path.basename(dir)) };
             });
     }

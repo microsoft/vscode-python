@@ -245,7 +245,7 @@ export async function deleteFiles(globPattern: string) {
         glob(globPattern, (ex, files) => (ex ? reject(ex) : resolve(files)));
     });
 
-    return Promise.all(items.map(item => fs.remove(item).catch(noop)));
+    return Promise.all(items.map((item) => fs.remove(item).catch(noop)));
 }
 function getPythonPath(): string {
     if (process.env.CI_PYTHON_PATH && fs.existsSync(process.env.CI_PYTHON_PATH)) {
@@ -315,8 +315,8 @@ export async function getPythonSemVer(procService?: IProcessService): Promise<Se
 
     return pythonProcRunner
         .exec(PYTHON_PATH, pyVerArgs)
-        .then(strVersion => new SemVer(strVersion.stdout.trim()))
-        .catch(err => {
+        .then((strVersion) => new SemVer(strVersion.stdout.trim()))
+        .catch((err) => {
             // if the call fails this should make it loudly apparent.
             console.error('Failed to get Python Version in getPythonSemVer', err);
             return undefined;
@@ -343,7 +343,7 @@ export async function getPythonSemVer(procService?: IProcessService): Promise<Se
  */
 export function isVersionInList(version: SemVer, ...searchVersions: string[]): boolean {
     // see if the major/minor version matches any member of the skip-list.
-    const isPresent = searchVersions.findIndex(ver => {
+    const isPresent = searchVersions.findIndex((ver) => {
         const semverChecker = coerce(ver);
         if (semverChecker) {
             if (semverChecker.compare(version) === 0) {
@@ -581,7 +581,7 @@ export class FakeClock {
         while (this.clock.countTimers() === 0) {
             // Relinquish control to event loop, so other timer code will run.
             // We want to wait for `setTimeout` to kick in.
-            await new Promise(resolve => process.nextTick(resolve));
+            await new Promise((resolve) => process.nextTick(resolve));
         }
     }
     /**

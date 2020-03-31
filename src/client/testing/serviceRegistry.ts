@@ -159,7 +159,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     );
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, UpdateTestSettingService);
 
-    serviceManager.addFactory<ITestManager>(ITestManagerFactory, context => {
+    serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
         return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
             const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
 
@@ -180,7 +180,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         };
     });
 
-    serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, context => {
+    serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, (context) => {
         return (workspaceFolder: Uri) => {
             const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
             const testsHelper = context.container.get<ITestsHelper>(ITestsHelper);

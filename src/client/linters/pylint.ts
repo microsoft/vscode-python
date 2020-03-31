@@ -80,7 +80,7 @@ export class Pylint extends BaseLinter {
             uri.fsPath
         ];
         const messages = await this.run(minArgs.concat(args), document, cancellation, REGEX);
-        messages.forEach(msg => {
+        messages.forEach((msg) => {
             msg.severity = this.parseMessagesSeverity(msg.type, settings.linting.pylintCategorySeverity);
         });
 

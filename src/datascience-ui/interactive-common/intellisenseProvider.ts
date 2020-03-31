@@ -173,10 +173,10 @@ export class IntellisenseProvider
 
     public dispose() {
         this.disposed = true;
-        this.registerDisposables.forEach(r => r.dispose());
-        this.completionRequests.forEach(r => r.promise.resolve());
-        this.resolveCompletionRequests.forEach(r => r.promise.resolve());
-        this.hoverRequests.forEach(r => r.promise.resolve());
+        this.registerDisposables.forEach((r) => r.dispose());
+        this.completionRequests.forEach((r) => r.promise.resolve());
+        this.resolveCompletionRequests.forEach((r) => r.promise.resolve());
+        this.hoverRequests.forEach((r) => r.promise.resolve());
 
         this.registerDisposables = [];
         this.completionRequests.clear();

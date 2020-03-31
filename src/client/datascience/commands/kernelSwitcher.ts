@@ -27,7 +27,7 @@ export class KernelSwitcherCommand implements IDisposable {
         );
     }
     public dispose() {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
     private async switchKernel(notebook?: INotebook): Promise<KernelSpecInterpreter | undefined> {
         // If notebook isn't know, then user invoked this command from command palette or similar.

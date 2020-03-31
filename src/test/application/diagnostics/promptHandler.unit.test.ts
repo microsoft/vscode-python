@@ -30,12 +30,12 @@ suite('Application Diagnostics - PromptHandler', () => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         appShell = typemoq.Mock.ofType<IApplicationShell>();
 
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
+        serviceContainer.setup((s) => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
 
         promptHandler = new DiagnosticCommandPromptHandlerService(serviceContainer.object);
     });
 
-    getNamesAndValues<DiagnosticSeverity>(DiagnosticSeverity).forEach(severity => {
+    getNamesAndValues<DiagnosticSeverity>(DiagnosticSeverity).forEach((severity) => {
         test(`Handling a diagnositic of severity '${severity.name}' should display a message without any buttons`, async () => {
             const diagnostic: IDiagnostic = {
                 code: '1' as any,
@@ -48,19 +48,19 @@ suite('Application Diagnostics - PromptHandler', () => {
             switch (severity.value) {
                 case DiagnosticSeverity.Error: {
                     appShell
-                        .setup(a => a.showErrorMessage(typemoq.It.isValue(diagnostic.message)))
+                        .setup((a) => a.showErrorMessage(typemoq.It.isValue(diagnostic.message)))
                         .verifiable(typemoq.Times.once());
                     break;
                 }
                 case DiagnosticSeverity.Warning: {
                     appShell
-                        .setup(a => a.showWarningMessage(typemoq.It.isValue(diagnostic.message)))
+                        .setup((a) => a.showWarningMessage(typemoq.It.isValue(diagnostic.message)))
                         .verifiable(typemoq.Times.once());
                     break;
                 }
                 default: {
                     appShell
-                        .setup(a => a.showInformationMessage(typemoq.It.isValue(diagnostic.message)))
+                        .setup((a) => a.showInformationMessage(typemoq.It.isValue(diagnostic.message)))
                         .verifiable(typemoq.Times.once());
                     break;
                 }
@@ -86,7 +86,7 @@ suite('Application Diagnostics - PromptHandler', () => {
             switch (severity.value) {
                 case DiagnosticSeverity.Error: {
                     appShell
-                        .setup(a =>
+                        .setup((a) =>
                             a.showErrorMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
@@ -98,7 +98,7 @@ suite('Application Diagnostics - PromptHandler', () => {
                 }
                 case DiagnosticSeverity.Warning: {
                     appShell
-                        .setup(a =>
+                        .setup((a) =>
                             a.showWarningMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
@@ -110,7 +110,7 @@ suite('Application Diagnostics - PromptHandler', () => {
                 }
                 default: {
                     appShell
-                        .setup(a =>
+                        .setup((a) =>
                             a.showInformationMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
@@ -142,12 +142,12 @@ suite('Application Diagnostics - PromptHandler', () => {
                 ],
                 message: 'Custom Message'
             };
-            command.setup(c => c.invoke()).verifiable(typemoq.Times.once());
+            command.setup((c) => c.invoke()).verifiable(typemoq.Times.once());
 
             switch (severity.value) {
                 case DiagnosticSeverity.Error: {
                     appShell
-                        .setup(a =>
+                        .setup((a) =>
                             a.showErrorMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
@@ -160,7 +160,7 @@ suite('Application Diagnostics - PromptHandler', () => {
                 }
                 case DiagnosticSeverity.Warning: {
                     appShell
-                        .setup(a =>
+                        .setup((a) =>
                             a.showWarningMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),
@@ -173,7 +173,7 @@ suite('Application Diagnostics - PromptHandler', () => {
                 }
                 default: {
                     appShell
-                        .setup(a =>
+                        .setup((a) =>
                             a.showInformationMessage(
                                 typemoq.It.isValue(options.message!),
                                 typemoq.It.isValue('Yes'),

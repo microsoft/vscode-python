@@ -45,7 +45,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.postOffice = new PostOffice(LiveShare.InteractiveWindowProviderService, liveShare);
 
         // Listen for peer changes
-        this.postOffice.peerCountChanged(n => this.onPeerCountChanged(n));
+        this.postOffice.peerCountChanged((n) => this.onPeerCountChanged(n));
 
         // Listen for messages so we force a create on both sides.
         this.postOffice
@@ -114,7 +114,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     private onPeerCountChanged(newCount: number) {
         // If we're losing peers, resolve all syncs
         if (newCount < this.postOffice.peerCount) {
-            this.pendingSyncs.forEach(v => v.waitable.resolve());
+            this.pendingSyncs.forEach((v) => v.waitable.resolve());
             this.pendingSyncs.clear();
         }
     }

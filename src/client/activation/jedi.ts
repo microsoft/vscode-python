@@ -100,11 +100,11 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         const testManagementService = this.serviceManager.get<ITestManagementService>(ITestManagementService);
         testManagementService
             .activate(this.symbolProvider)
-            .catch(ex => traceError('Failed to activate Unit Tests', ex));
+            .catch((ex) => traceError('Failed to activate Unit Tests', ex));
     }
 
     public deactivate() {
-        this.registrations.forEach(r => r.dispose());
+        this.registrations.forEach((r) => r.dispose());
         this.registrations = [];
     }
 
@@ -243,7 +243,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     }
 
     public dispose(): void {
-        this.registrations.forEach(r => r.dispose());
+        this.registrations.forEach((r) => r.dispose());
         if (this.jediFactory) {
             this.jediFactory.dispose();
         }

@@ -100,7 +100,8 @@ export enum InteractiveWindowMessages {
     SelectJupyterServer = 'select_jupyter_server',
     UpdateModel = 'update_model',
     ReceivedUpdateModel = 'received_update_model',
-    OpenSettings = 'open_settings'
+    OpenSettings = 'open_settings',
+    UpdateDisplayData = 'update_display_data'
 }
 
 export enum IPyWidgetMessages {
@@ -604,4 +605,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ReceivedUpdateModel]: never | undefined;
     public [SharedMessages.UpdateSettings]: string;
     public [SharedMessages.LocInit]: string;
+    public [InteractiveWindowMessages.UpdateDisplayData]: KernelMessage.IUpdateDisplayDataMsg;
 }

@@ -29,7 +29,7 @@ export class TestContextService implements ITestContextService {
         this.busyTests = new ContextKey('busyTests', cmdManager);
     }
     public dispose(): void {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
     public register(): void {
         this.testManager.onDidStatusChange(this.onStatusChange, this, this.disposables);

@@ -114,7 +114,7 @@ export class GatherListener implements IInteractiveWindowListener {
     }
 
     private doGather(payload: ICell): void {
-        this.gatherCodeInternal(payload).catch(err => {
+        this.gatherCodeInternal(payload).catch((err) => {
             this.applicationShell.showErrorMessage(err);
         });
     }
@@ -180,11 +180,11 @@ export class GatherListener implements IInteractiveWindowListener {
     private async showFile(slicedProgram: string, filename: string) {
         // Don't want to open the gathered code on top of the interactive window
         let viewColumn: ViewColumn | undefined;
-        const fileNameMatch = this.documentManager.visibleTextEditors.filter(textEditor =>
+        const fileNameMatch = this.documentManager.visibleTextEditors.filter((textEditor) =>
             this.fileSystem.arePathsSame(textEditor.document.fileName, filename)
         );
         const definedVisibleEditors = this.documentManager.visibleTextEditors.filter(
-            textEditor => textEditor.viewColumn !== undefined
+            (textEditor) => textEditor.viewColumn !== undefined
         );
         if (this.documentManager.visibleTextEditors.length > 0 && fileNameMatch.length > 0) {
             // Original file is visible
@@ -205,7 +205,7 @@ export class GatherListener implements IInteractiveWindowListener {
         const editor = await this.documentManager.showTextDocument(doc, viewColumn);
 
         // Edit the document so that it is dirty (add a space at the end)
-        editor.edit(editBuilder => {
+        editor.edit((editBuilder) => {
             editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
         });
     }

@@ -30,7 +30,7 @@ export type WaitForMessageOptions = {
     numberOfTimes?: number;
 };
 
-const maxWaitTimeForMessage = 15_000;
+const maxWaitTimeForMessage = 75_000;
 /**
  * UI could take a while to update, could be slower on CI server.
  * (500ms is generally enough, but increasing to 3s to avoid flaky CI tests).
@@ -90,7 +90,7 @@ export class BaseWebUI implements IAsyncDisposable {
             : undefined;
         let timesMessageReceived = 0;
         const dispatchedAction = `DISPATCHED_ACTION_${message}`;
-        const disposable = this.webServer.onDidReceiveMessage(msg => {
+        const disposable = this.webServer.onDidReceiveMessage((msg) => {
             const messageType = msg.type;
             if (messageType !== message && messageType !== dispatchedAction) {
                 return;

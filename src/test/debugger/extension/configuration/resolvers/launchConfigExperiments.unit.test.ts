@@ -126,14 +126,14 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
 
     function createTestConfigurations() {
         const testConfigs: TestConfiguration[] = [];
-        newDebuggerExperiment.forEach(newDbgExp => {
-            reloadExperiment.forEach(reloadExp => {
-                subProcessValues.forEach(subProcessValue => {
-                    noReloadSwitches.forEach(noReloadSwitch => {
-                        webFramework.forEach(framework => {
+        newDebuggerExperiment.forEach((newDbgExp) => {
+            reloadExperiment.forEach((reloadExp) => {
+                subProcessValues.forEach((subProcessValue) => {
+                    noReloadSwitches.forEach((noReloadSwitch) => {
+                        webFramework.forEach((framework) => {
                             const usingReloadSwitch = ['run', noReloadSwitch, '--other-switch'];
                             const withoutUsingReloadSwitch = ['run', '--other-switch'];
-                            [usingReloadSwitch, withoutUsingReloadSwitch].forEach(args => {
+                            [usingReloadSwitch, withoutUsingReloadSwitch].forEach((args) => {
                                 testConfigs.push({
                                     newDebuggerExperiment: newDbgExp,
                                     reloadExperiment: reloadExp,

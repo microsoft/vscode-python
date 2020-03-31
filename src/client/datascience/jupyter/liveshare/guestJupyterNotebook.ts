@@ -124,7 +124,7 @@ export class GuestJupyterNotebook
             (cells: ICell[]) => {
                 output = cells;
             },
-            error => {
+            (error) => {
                 deferred.reject(error);
             },
             () => {
@@ -159,7 +159,7 @@ export class GuestJupyterNotebook
     public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
         // Mimic this to the other side and then wait for a response
         this.waitForService()
-            .then(s => {
+            .then((s) => {
                 if (s) {
                     s.notify(LiveShareCommands.executeObservable, { code, file, line, id });
                 }

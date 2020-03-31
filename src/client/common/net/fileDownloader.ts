@@ -27,7 +27,7 @@ export class FileDownloader implements IFileDownloader {
 
         await this.downloadFileWithStatusBarProgress(uri, options.progressMessagePrefix, tempFile.filePath).then(
             noop,
-            ex => {
+            (ex) => {
                 tempFile.dispose();
                 return Promise.reject(ex);
             }
@@ -40,7 +40,7 @@ export class FileDownloader implements IFileDownloader {
         progressMessage: string,
         tmpFilePath: string
     ): Promise<void> {
-        await this.appShell.withProgress({ location: ProgressLocation.Window }, async progress => {
+        await this.appShell.withProgress({ location: ProgressLocation.Window }, async (progress) => {
             const req = await this.httpClient.downloadFile(uri);
             const fileStream = this.fs.createWriteStream(tmpFilePath);
             return this.displayDownloadProgress(uri, progress, req, fileStream, progressMessage);
@@ -54,7 +54,7 @@ export class FileDownloader implements IFileDownloader {
         progressMessagePrefix: string
     ): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            request.on('response', response => {
+            request.on('response', (response) => {
                 if (response.statusCode !== 200) {
                     reject(
                         new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`)

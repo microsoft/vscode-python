@@ -27,14 +27,14 @@ suite('Http Client', () => {
         workSpaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         config = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         config
-            .setup(c => c.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isValue('')))
+            .setup((c) => c.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isValue('')))
             .returns(() => proxy)
             .verifiable(TypeMoq.Times.once());
         workSpaceService
-            .setup(w => w.getConfiguration(TypeMoq.It.isValue('http')))
+            .setup((w) => w.getConfiguration(TypeMoq.It.isValue('http')))
             .returns(() => config.object)
             .verifiable(TypeMoq.Times.once());
-        container.setup(a => a.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workSpaceService.object);
+        container.setup((a) => a.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workSpaceService.object);
 
         httpClient = new HttpClient(container.object);
     });
@@ -63,7 +63,7 @@ suite('Http Client', () => {
                 returnedArgs: [undefined, { statusCode: 200 }, '[{ "strictJSON" : true,, }]'],
                 strict: true
             }
-        ].forEach(async testParams => {
+        ].forEach(async (testParams) => {
             test(testParams.name, async () => {
                 const requestMock = (_uri: any, _requestOptions: any, callBackFn: Function) =>
                     callBackFn(...testParams.returnedArgs);
@@ -109,7 +109,7 @@ suite('Http Client', () => {
                 strict: false,
                 expectedJSON: [{ strictJSON: false }]
             }
-        ].forEach(async testParams => {
+        ].forEach(async (testParams) => {
             test(testParams.name, async () => {
                 const requestMock = (_uri: any, _requestOptions: any, callBackFn: Function) =>
                     callBackFn(...testParams.returnedArgs);

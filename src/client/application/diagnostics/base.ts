@@ -46,7 +46,7 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
         if (diagnostics.length === 0) {
             return;
         }
-        const diagnosticsToHandle = diagnostics.filter(item => {
+        const diagnosticsToHandle = diagnostics.filter((item) => {
             if (item.invokeHandler && item.invokeHandler === 'always') {
                 return true;
             }
@@ -61,7 +61,7 @@ export abstract class BaseDiagnosticsService implements IDiagnosticsService, IDi
     }
     public async canHandle(diagnostic: IDiagnostic): Promise<boolean> {
         sendTelemetryEvent(EventName.DIAGNOSTICS_MESSAGE, undefined, { code: diagnostic.code });
-        return this.supportedDiagnosticCodes.filter(item => item === diagnostic.code).length > 0;
+        return this.supportedDiagnosticCodes.filter((item) => item === diagnostic.code).length > 0;
     }
     protected abstract onHandle(diagnostics: IDiagnostic[]): Promise<void>;
     /**

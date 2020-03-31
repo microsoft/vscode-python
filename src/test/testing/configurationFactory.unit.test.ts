@@ -27,11 +27,11 @@ suite('Unit Tests - ConfigurationManagerFactory', () => {
         const testConfigService = typeMoq.Mock.ofType<ITestConfigSettingsService>();
 
         serviceContainer
-            .setup(c => c.get(typeMoq.It.isValue(IOutputChannel), typeMoq.It.isValue(TEST_OUTPUT_CHANNEL)))
+            .setup((c) => c.get(typeMoq.It.isValue(IOutputChannel), typeMoq.It.isValue(TEST_OUTPUT_CHANNEL)))
             .returns(() => outputChannel.object);
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IInstaller))).returns(() => installer.object);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(IInstaller))).returns(() => installer.object);
         serviceContainer
-            .setup(c => c.get(typeMoq.It.isValue(ITestConfigSettingsService)))
+            .setup((c) => c.get(typeMoq.It.isValue(ITestConfigSettingsService)))
             .returns(() => testConfigService.object);
         factory = new TestConfigurationManagerFactory(serviceContainer.object);
     });

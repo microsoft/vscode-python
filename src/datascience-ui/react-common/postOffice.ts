@@ -70,7 +70,7 @@ export class PostOffice implements IDisposable {
     }
 
     public removeHandler(handler: IMessageHandler) {
-        this.handlers = this.handlers.filter(f => f !== handler);
+        this.handlers = this.handlers.filter((f) => f !== handler);
     }
 
     private acquireApi(): IVsCodeApi | undefined {

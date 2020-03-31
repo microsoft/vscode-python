@@ -204,7 +204,7 @@ export abstract class BaseTestManager implements ITestManager {
         );
         return discoveryService
             .discoverTests(discoveryOptions)
-            .then(tests => {
+            .then((tests) => {
                 const wkspace = this.workspaceService.getWorkspaceFolder(Uri.file(this.rootDirectory))!.uri;
                 const existingTests = this.testCollectionStorage.getTests(wkspace)!;
                 if (clearTestStatus) {
@@ -220,7 +220,7 @@ export abstract class BaseTestManager implements ITestManager {
 
                 // have errors in Discovering
                 let haveErrorsInDiscovering = false;
-                tests.testFiles.forEach(file => {
+                tests.testFiles.forEach((file) => {
                     if (file.errorsWhenDiscovering && file.errorsWhenDiscovering.length > 0) {
                         haveErrorsInDiscovering = true;
                         this.outputChannel.append('_'.repeat(10));
@@ -248,7 +248,7 @@ export abstract class BaseTestManager implements ITestManager {
                 ) {
                     this.installer
                         .promptToInstall(this.product, this.workspaceFolder)
-                        .catch(ex => traceError('isNotInstalledError', ex));
+                        .catch((ex) => traceError('isNotInstalledError', ex));
                 }
 
                 this.tests = undefined;
@@ -286,7 +286,7 @@ export abstract class BaseTestManager implements ITestManager {
             Run_Specific_Function: 'false'
         };
         //Ensure valid values are sent.
-        const validCmdSourceValues = getNamesAndValues<CommandSource>(CommandSource).map(item => item.value);
+        const validCmdSourceValues = getNamesAndValues<CommandSource>(CommandSource).map((item) => item.value);
         const telementryProperties: TestRunTelemetry = {
             tool: this.testProvider,
             scope: 'all',
@@ -341,7 +341,7 @@ export abstract class BaseTestManager implements ITestManager {
                 ? false
                 : true;
         return this.discoverTests(cmdSource, clearDiscoveredTestCache, true, true)
-            .catch(reason => {
+            .catch((reason) => {
                 if (
                     this.testDiscoveryCancellationToken &&
                     this.testDiscoveryCancellationToken.isCancellationRequested
@@ -359,7 +359,7 @@ export abstract class BaseTestManager implements ITestManager {
                     summary: { errors: 0, failures: 0, passed: 0, skipped: 0 }
                 };
             })
-            .then(tests => {
+            .then((tests) => {
                 this.updateStatus(TestStatus.Running);
                 this.createCancellationToken(CancellationTokenType.testRunner);
                 return this.runTestImpl(tests, testsToRun, runFailedTests, debug);
@@ -372,7 +372,7 @@ export abstract class BaseTestManager implements ITestManager {
                 this.testsStatusUpdaterService.triggerUpdatesToTests(this.workspaceFolder, this.tests);
                 return this.tests!;
             })
-            .catch(reason => {
+            .catch((reason) => {
                 this.testsStatusUpdaterService.updateStatusOfRunningTestsAsIdle(this.workspaceFolder, this.tests);
                 this.testsStatusUpdaterService.triggerUpdatesToTests(this.workspaceFolder, this.tests);
                 if (this.testRunnerCancellationToken && this.testRunnerCancellationToken.isCancellationRequested) {
@@ -476,10 +476,12 @@ export abstract class BaseTestManager implements ITestManager {
         this.diagnosticCollection.forEach((diagnosticUri, oldDiagnostics, collection) => {
             const newDiagnostics: Diagnostic[] = [];
             for (const diagnostic of oldDiagnostics) {
-                const matchingMsg = messages.find(msg => msg.code === diagnostic.code);
+                const matchingMsg = messages.find((msg) => msg.code === diagnostic.code);
                 if (matchingMsg === undefined) {
                     // No matching message was found, so this test was not included in the test run.
-                    const matchingTest = tests.testFunctions.find(tf => tf.testFunction.nameToRun === diagnostic.code);
+                    const matchingTest = tests.testFunctions.find(
+                        (tf) => tf.testFunction.nameToRun === diagnostic.code
+                    );
                     if (matchingTest !== undefined) {
                         // Matching test was found, so the diagnostic is still relevant.
                         newDiagnostics.push(diagnostic);

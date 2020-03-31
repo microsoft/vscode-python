@@ -57,7 +57,7 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
             outputChannel: this.output,
             progressMessagePrefix: ExtensionChannels.downloadingInsidersMessage()
         };
-        return this.fileDownloader.downloadFile(developmentBuildUri, downloadOptions).then(file => {
+        return this.fileDownloader.downloadFile(developmentBuildUri, downloadOptions).then((file) => {
             this.output.appendLine(ExtensionChannels.downloadCompletedOutputMessage());
             return file;
         });

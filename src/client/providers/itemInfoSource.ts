@@ -118,7 +118,7 @@ export class ItemInfoSource implements IItemInfoSource {
     private getItemInfoFromHoverResult(data: proxy.IHoverResult, currentWord: string): LanguageItemInfo[] {
         const infos: LanguageItemInfo[] = [];
 
-        data.items.forEach(item => {
+        data.items.forEach((item) => {
             const signature = this.getSignature(item, currentWord);
             let tooltip = new vscode.MarkdownString();
             if (item.docstring) {
@@ -127,7 +127,7 @@ export class ItemInfoSource implements IItemInfoSource {
                 // If the docstring starts with the signature, then remove those lines from the docstring.
                 if (lines.length > 0 && item.signature.indexOf(lines[0]) === 0) {
                     lines.shift();
-                    const endIndex = lines.findIndex(line => item.signature.endsWith(line));
+                    const endIndex = lines.findIndex((line) => item.signature.endsWith(line));
                     if (endIndex >= 0) {
                         lines = lines.filter((_line, index) => index > endIndex);
                     }

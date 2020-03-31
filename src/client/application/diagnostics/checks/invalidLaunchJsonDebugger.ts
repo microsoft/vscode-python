@@ -69,7 +69,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         return this.diagnoseWorkspace(workspaceFolder, resource);
     }
     protected async onHandle(diagnostics: IDiagnostic[]): Promise<void> {
-        diagnostics.forEach(diagnostic => this.handleDiagnostic(diagnostic));
+        diagnostics.forEach((diagnostic) => this.handleDiagnostic(diagnostic));
     }
     protected async fixLaunchJson(code: DiagnosticCodes) {
         if (!this.workspaceService.hasWorkspaceFolders) {
@@ -77,7 +77,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         }
 
         await Promise.all(
-            this.workspaceService.workspaceFolders!.map(workspaceFolder =>
+            this.workspaceService.workspaceFolders!.map((workspaceFolder) =>
                 this.fixLaunchJsonInWorkspace(code, workspaceFolder)
             )
         );

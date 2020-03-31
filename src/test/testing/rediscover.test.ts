@@ -25,7 +25,7 @@ suite('Unit Tests re-discovery', () => {
     suiteSetup(async () => {
         await initialize();
     });
-    setup(async function() {
+    setup(async function () {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(TEST_TIMEOUT * 2); // This hook requires more timeout as we're dealing with files as well
         await fs.copy(testFileWithFewTests, testFile, { overwrite: true });

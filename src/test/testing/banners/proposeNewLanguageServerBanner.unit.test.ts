@@ -34,7 +34,7 @@ suite('Propose New Language Server Banner', () => {
     });
     test('Do not show banner when it is disabled', () => {
         appShell
-            .setup(a =>
+            .setup((a) =>
                 a.showInformationMessage(
                     typemoq.It.isValue(message),
                     typemoq.It.isValue(yes),
@@ -76,26 +76,26 @@ function preparePopup(
 ): ProposeLanguageServerBanner {
     const myfactory: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
     const val: typemoq.IMock<IPersistentState<boolean>> = typemoq.Mock.ofType<IPersistentState<boolean>>();
-    val.setup(a => a.updateValue(typemoq.It.isValue(true))).returns(() => {
+    val.setup((a) => a.updateValue(typemoq.It.isValue(true))).returns(() => {
         enabledValue = true;
         return Promise.resolve();
     });
-    val.setup(a => a.updateValue(typemoq.It.isValue(false))).returns(() => {
+    val.setup((a) => a.updateValue(typemoq.It.isValue(false))).returns(() => {
         enabledValue = false;
         return Promise.resolve();
     });
-    val.setup(a => a.value).returns(() => {
+    val.setup((a) => a.value).returns(() => {
         return enabledValue;
     });
     myfactory
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(true))
         )
         .returns(() => {
             return val.object;
         });
     myfactory
-        .setup(a =>
+        .setup((a) =>
             a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(false))
         )
         .returns(() => {

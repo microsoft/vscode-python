@@ -83,7 +83,7 @@ export function extractVariable(
                 range,
                 textEditor.options
             )
-            .then(response => {
+            .then((response) => {
                 return response.results[0].diff;
             });
 
@@ -124,7 +124,7 @@ export function extractMethod(
                 range,
                 textEditor.options
             )
-            .then(response => {
+            .then((response) => {
                 return response.results[0].diff;
             });
 
@@ -140,7 +140,7 @@ function validateDocumentForRefactor(textEditor: vscode.TextEditor): Promise<any
 
     // tslint:disable-next-line:no-any
     return new Promise<any>((resolve, reject) => {
-        vscode.window.showInformationMessage('Please save changes before refactoring', 'Save').then(item => {
+        vscode.window.showInformationMessage('Please save changes before refactoring', 'Save').then((item) => {
             if (item === 'Save') {
                 textEditor.document.save().then(resolve, reject);
             } else {
@@ -159,15 +159,15 @@ function extractName(
 ): Promise<any> {
     let changeStartsAtLine = -1;
     return renameResponse
-        .then(diff => {
+        .then((diff) => {
             if (diff.length === 0) {
                 return [];
             }
             return getTextEditsFromPatch(textEditor.document.getText(), diff);
         })
-        .then(edits => {
-            return textEditor.edit(editBuilder => {
-                edits.forEach(edit => {
+        .then((edits) => {
+            return textEditor.edit((editBuilder) => {
+                edits.forEach((edit) => {
                     if (changeStartsAtLine === -1 || changeStartsAtLine > edit.range.start.line) {
                         changeStartsAtLine = edit.range.start.line;
                     }
@@ -175,7 +175,7 @@ function extractName(
                 });
             });
         })
-        .then(done => {
+        .then((done) => {
             if (done && changeStartsAtLine >= 0) {
                 let newWordPosition: vscode.Position | undefined;
                 for (let lineNumber = changeStartsAtLine; lineNumber < textEditor.document.lineCount; lineNumber += 1) {
@@ -203,7 +203,7 @@ function extractName(
             }
             return null;
         })
-        .then(newWordPosition => {
+        .then((newWordPosition) => {
             if (newWordPosition) {
                 return textEditor.document.save().then(() => {
                     // Now that we have selected the new variable, lets invoke the rename command
@@ -211,11 +211,11 @@ function extractName(
                 });
             }
         })
-        .catch(error => {
+        .catch((error) => {
             if (error === 'Not installed') {
                 installer
                     .promptToInstall(Product.rope, textEditor.document.uri)
-                    .catch(ex => traceError('Python Extension: simpleRefactorProvider.promptToInstall', ex));
+                    .catch((ex) => traceError('Python Extension: simpleRefactorProvider.promptToInstall', ex));
                 return Promise.reject('');
             }
             let errorMessage = `${error}`;

@@ -104,7 +104,7 @@ export class PostOffice implements IAsyncDisposable {
 
         // For a guest, make sure to register the notification
         if (api && api.session && api.session.role === vsls.Role.Guest && this.guestServer) {
-            this.guestServer.onNotify(this.escapeCommandName(command), a =>
+            this.guestServer.onNotify(this.escapeCommandName(command), (a) =>
                 this.onGuestNotify(command, a as IMessageArgs)
             );
         }
@@ -183,8 +183,8 @@ export class PostOffice implements IAsyncDisposable {
         if (!this.startedPromise) {
             this.startedPromise = createDeferred<vsls.LiveShare | null>();
             this.startCommandServer()
-                .then(v => this.startedPromise!.resolve(v))
-                .catch(e => this.startedPromise!.reject(e));
+                .then((v) => this.startedPromise!.resolve(v))
+                .catch((e) => this.startedPromise!.reject(e));
         }
 
         return this.startedPromise.promise;
@@ -222,7 +222,7 @@ export class PostOffice implements IAsyncDisposable {
 
                 // When we start the host, listen for the broadcast message
                 if (this.hostServer !== null) {
-                    this.hostServer.onNotify(LiveShare.LiveShareBroadcastRequest, a =>
+                    this.hostServer.onNotify(LiveShare.LiveShareBroadcastRequest, (a) =>
                         this.onBroadcastRequest(api, a as IMessageArgs)
                     );
                 }
@@ -269,10 +269,12 @@ export class PostOffice implements IAsyncDisposable {
     private registerGuestCommands(api: vsls.LiveShare) {
         if (api && api.session && api.session.role === vsls.Role.Guest && this.guestServer !== null) {
             const keys = Object.keys(this.commandMap);
-            keys.forEach(k => {
+            keys.forEach((k) => {
                 if (this.guestServer !== null) {
                     // Hygiene is too dumb to recognize the if above
-                    this.guestServer.onNotify(this.escapeCommandName(k), a => this.onGuestNotify(k, a as IMessageArgs));
+                    this.guestServer.onNotify(this.escapeCommandName(k), (a) =>
+                        this.onGuestNotify(k, a as IMessageArgs)
+                    );
                 }
             });
         }

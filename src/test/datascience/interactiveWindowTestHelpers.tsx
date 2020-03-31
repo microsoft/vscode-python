@@ -42,7 +42,7 @@ export function runMountedTest(
     testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, context: Mocha.Context) => Promise<void>,
     getIOC: () => DataScienceIocContainer
 ) {
-    test(name, async function() {
+    test(name, async function () {
         const ioc = getIOC();
         const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
         if (await jupyterExecution.isNotebookSupported()) {

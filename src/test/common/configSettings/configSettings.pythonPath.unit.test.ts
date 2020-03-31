@@ -49,7 +49,7 @@ suite('Python Settings - pythonPath', () => {
         configSettings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
         const pythonPath = 'This is the python Path';
         pythonSettings
-            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
+            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => pythonPath)
             .verifiable(typemoq.Times.atLeast(1));
         configSettings.update(pythonSettings.object);
@@ -60,7 +60,7 @@ suite('Python Settings - pythonPath', () => {
         configSettings = new CustomPythonSettings(undefined, new MockAutoSelectionService());
         const pythonPath = `~${path.sep}This is the python Path`;
         pythonSettings
-            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
+            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => pythonPath)
             .verifiable(typemoq.Times.atLeast(1));
         configSettings.update(pythonSettings.object);
@@ -72,7 +72,7 @@ suite('Python Settings - pythonPath', () => {
         configSettings = new CustomPythonSettings(workspaceFolderUri, new MockAutoSelectionService());
         const pythonPath = `.${path.sep}This is the python Path`;
         pythonSettings
-            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
+            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => pythonPath)
             .verifiable(typemoq.Times.atLeast(1));
 
@@ -86,7 +86,7 @@ suite('Python Settings - pythonPath', () => {
         const workspaceFolderToken = '${workspaceFolder}';
         const pythonPath = `${workspaceFolderToken}${path.sep}This is the python Path`;
         pythonSettings
-            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
+            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => pythonPath)
             .verifiable(typemoq.Times.atLeast(1));
         configSettings.update(pythonSettings.object);
@@ -99,7 +99,7 @@ suite('Python Settings - pythonPath', () => {
         configSettings = new CustomPythonSettings(workspaceFolderUri, instance(selectionService));
         const pythonPath = 'python';
         pythonSettings
-            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
+            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => pythonPath)
             .verifiable(typemoq.Times.atLeast(1));
         configSettings.update(pythonSettings.object);
@@ -115,7 +115,7 @@ suite('Python Settings - pythonPath', () => {
         when(selectionService.setWorkspaceInterpreter(workspaceFolderUri, anything())).thenResolve();
         configSettings = new CustomPythonSettings(workspaceFolderUri, instance(selectionService));
         pythonSettings
-            .setup(p => p.get(typemoq.It.isValue('pythonPath')))
+            .setup((p) => p.get(typemoq.It.isValue('pythonPath')))
             .returns(() => 'python')
             .verifiable(typemoq.Times.atLeast(1));
         configSettings.update(pythonSettings.object);

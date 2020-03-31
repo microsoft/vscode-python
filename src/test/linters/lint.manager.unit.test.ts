@@ -25,8 +25,8 @@ function getServiceContainerMockForLinterManagerTests(): TypeMoq.IMock<IServiceC
     const serviceContainerMock = TypeMoq.Mock.ofType<IServiceContainer>();
     const configMock = TypeMoq.Mock.ofType<IConfigurationService>();
     const pythonSettingsMock = TypeMoq.Mock.ofType<IPythonSettings>();
-    configMock.setup(cm => cm.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettingsMock.object);
-    serviceContainerMock.setup(c => c.get(IConfigurationService)).returns(() => configMock.object);
+    configMock.setup((cm) => cm.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettingsMock.object);
+    serviceContainerMock.setup((c) => c.get(IConfigurationService)).returns(() => configMock.object);
 
     return serviceContainerMock;
 }

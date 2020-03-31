@@ -111,7 +111,7 @@ class TestRunner {
             proc.stdout.pipe(process.stdout);
             proc.stderr.pipe(process.stderr);
             proc.on('error', reject);
-            proc.on('close', code => {
+            proc.on('close', (code) => {
                 if (code === 0) {
                     resolve();
                 } else {
@@ -162,4 +162,4 @@ class TestRunner {
     }
 }
 
-new TestRunner().start().catch(ex => console.error('Error in running Performance Tests', ex));
+new TestRunner().start().catch((ex) => console.error('Error in running Performance Tests', ex));

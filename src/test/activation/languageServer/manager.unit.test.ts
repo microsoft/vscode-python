@@ -56,7 +56,7 @@ suite('Language Server - Manager', () => {
         );
     });
 
-    [undefined, Uri.file(__filename)].forEach(resource => {
+    [undefined, Uri.file(__filename)].forEach((resource) => {
         async function startLanguageServer() {
             let invoked = false;
             const lsExtensionChangeFn = (_handler: Function) => {

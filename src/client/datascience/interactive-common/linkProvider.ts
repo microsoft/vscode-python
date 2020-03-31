@@ -71,7 +71,7 @@ export class LinkProvider implements IInteractiveWindowListener {
                             saveLabel: localize.DataScience.savePngTitle(),
                             filters: filtersObject
                         })
-                        .then(f => {
+                        .then((f) => {
                             if (f) {
                                 const buffer = new Buffer(payload.replace('data:image/png;base64', ''), 'base64');
                                 this.fileSystem.writeFile(f.fsPath, buffer).ignoreErrors();
@@ -100,20 +100,20 @@ export class LinkProvider implements IInteractiveWindowListener {
         }
 
         // Show the matching editor if there is one
-        let editor = this.documentManager.visibleTextEditors.find(e =>
+        let editor = this.documentManager.visibleTextEditors.find((e) =>
             this.fileSystem.arePathsSame(e.document.fileName, uri.fsPath)
         );
         if (editor) {
             this.documentManager
                 .showTextDocument(editor.document, { selection, viewColumn: editor.viewColumn })
-                .then(e => {
+                .then((e) => {
                     e.revealRange(selection, TextEditorRevealType.InCenter);
                 });
         } else {
             // Not a visible editor, try opening otherwise
             this.commandManager.executeCommand('vscode.open', uri).then(() => {
                 // See if that opened a text document
-                editor = this.documentManager.visibleTextEditors.find(e =>
+                editor = this.documentManager.visibleTextEditors.find((e) =>
                     this.fileSystem.arePathsSame(e.document.fileName, uri.fsPath)
                 );
                 if (editor) {

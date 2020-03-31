@@ -103,7 +103,7 @@ export class CompletionSource {
         resource: vscode.Uri
     ): vscode.CompletionItem[] {
         return data && data.items.length > 0
-            ? data.items.map(item => this.toVsCodeCompletion(documentPosition, item, resource))
+            ? data.items.map((item) => this.toVsCodeCompletion(documentPosition, item, resource))
             : [];
     }
 

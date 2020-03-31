@@ -158,7 +158,7 @@ suite('Unit Tests - Track Enablement', () => {
         const affectsConfiguration = sinon.stub().returns(true);
         const getConfigSettings = sinon
             .stub<[string], boolean>()
-            .callsFake(setting => setting.includes(sendForProvider));
+            .callsFake((setting) => setting.includes(sendForProvider));
 
         when(workspaceService.workspaceFolders).thenReturn([]);
         // tslint:disable-next-line: no-any

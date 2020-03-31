@@ -124,7 +124,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Make sure that we have an active debugging session at this point
         if (this.debugService.activeDebugSession) {
             await Promise.all(
-                hashes.map(fileHash => {
+                hashes.map((fileHash) => {
                     return this.debugService.activeDebugSession!.customRequest(
                         'setPydevdSourceMap',
                         this.buildSourceMap(fileHash)
@@ -272,7 +272,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     private buildSourceMap(fileHash: IFileHashes): ISourceMapRequest {
         const sourceMapRequest: ISourceMapRequest = { source: { path: fileHash.file }, pydevdSourceMaps: [] };
 
-        sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map(cellHash => {
+        sourceMapRequest.pydevdSourceMaps = fileHash.hashes.map((cellHash) => {
             return {
                 line: cellHash.line,
                 endLine: cellHash.endLine,

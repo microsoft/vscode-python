@@ -13,7 +13,7 @@ suite('Language.BraceCounter', () => {
         assert.equal(counter.count, 0);
     });
 
-    ['(x)', '[x]', '{x}'].forEach(text => {
+    ['(x)', '[x]', '{x}'].forEach((text) => {
         test(`Brace counting: ${text}`, () => {
             const counter = new BraceCounter();
             const tokens = new Tokenizer().tokenize(text);
@@ -35,7 +35,7 @@ suite('Language.BraceCounter', () => {
         });
     });
 
-    ['(x))', '[x]]', '{x}}'].forEach(text => {
+    ['(x))', '[x]]', '{x}}'].forEach((text) => {
         test(`Brace counting with additional close brace: ${text}`, () => {
             const counter = new BraceCounter();
             const tokens = new Tokenizer().tokenize(text);

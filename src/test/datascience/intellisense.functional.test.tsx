@@ -116,7 +116,7 @@ suite('DataScience Intellisense tests', () => {
 
     runMountedTest(
         'Simple autocomplete',
-        async wrapper => {
+        async (wrapper) => {
             // Create an interactive window so that it listens to the results.
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
@@ -139,7 +139,7 @@ suite('DataScience Intellisense tests', () => {
 
     runMountedTest(
         'Multiple interpreters',
-        async wrapper => {
+        async (wrapper) => {
             // Create an interactive window so that it listens to the results.
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
@@ -161,7 +161,7 @@ suite('DataScience Intellisense tests', () => {
             const oldActive = await interpreterService.getActiveInterpreter(undefined);
             const interpreters = await interpreterService.getInterpreters(undefined);
             if (interpreters.length > 1 && oldActive) {
-                const firstOther = interpreters.filter(i => i.path !== oldActive.path);
+                const firstOther = interpreters.filter((i) => i.path !== oldActive.path);
                 ioc.forceSettingsChanged(undefined, firstOther[0].path);
                 const active = await interpreterService.getActiveInterpreter(undefined);
                 assert.notDeepEqual(active, oldActive, 'Should have changed interpreter');
@@ -185,7 +185,7 @@ suite('DataScience Intellisense tests', () => {
 
     runMountedTest(
         'Jupyter autocomplete',
-        async wrapper => {
+        async (wrapper) => {
             if (ioc.mockJupyter) {
                 // This test only works when mocking.
 
@@ -212,7 +212,7 @@ suite('DataScience Intellisense tests', () => {
 
     runMountedTest(
         'Jupyter autocomplete not timeout',
-        async wrapper => {
+        async (wrapper) => {
             if (ioc.mockJupyter) {
                 // This test only works when mocking.
 
@@ -242,7 +242,7 @@ suite('DataScience Intellisense tests', () => {
 
     runMountedTest(
         'Filtered Jupyter autocomplete, verify magic commands appear',
-        async wrapper => {
+        async (wrapper) => {
             if (ioc.mockJupyter) {
                 // This test only works when mocking.
 
@@ -270,7 +270,7 @@ suite('DataScience Intellisense tests', () => {
 
     runMountedTest(
         'Filtered Jupyter autocomplete, verify magic commands are filtered',
-        async wrapper => {
+        async (wrapper) => {
             if (ioc.mockJupyter) {
                 // This test only works when mocking.
 

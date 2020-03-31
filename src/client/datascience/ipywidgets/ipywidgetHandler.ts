@@ -42,7 +42,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         @inject(IPyWidgetMessageDispatcherFactory) private readonly factory: IPyWidgetMessageDispatcherFactory
     ) {
         disposables.push(
-            notebookProvider.onNotebookCreated(async e => {
+            notebookProvider.onNotebookCreated(async (e) => {
                 if (e.identity.toString() === this.notebookIdentity?.toString()) {
                     await this.initialize();
                 }
@@ -57,7 +57,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     // tslint:disable-next-line: no-any
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.NotebookIdentity) {
-            this.saveIdentity(payload).catch(ex => traceError('Failed to initialize ipywidgetHandler', ex));
+            this.saveIdentity(payload).catch((ex) => traceError('Failed to initialize ipywidgetHandler', ex));
         } else if (this.ipywidgetMessages.includes(message)) {
             // Need a temp variable so SONAR doesn't flip out.
             const ipywidgetMulticaster = this.getIPyWidgetMulticaster();
@@ -80,7 +80,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         const ipywidgetMulticaster = this.getIPyWidgetMulticaster();
 
         this.disposables.push(
-            ipywidgetMulticaster!.postMessage(msg => {
+            ipywidgetMulticaster!.postMessage((msg) => {
                 this.postEmitter.fire(msg);
             })
         );

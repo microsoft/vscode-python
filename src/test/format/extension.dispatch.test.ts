@@ -107,7 +107,7 @@ suite('Formatting - Dispatcher', () => {
     ): TypeMoq.IMock<OnTypeFormattingEditProvider> {
         const provider = TypeMoq.Mock.ofType<OnTypeFormattingEditProvider>();
         provider
-            .setup(p => p.provideOnTypeFormattingEdits(document, position, ch, options, cancellationToken))
+            .setup((p) => p.provideOnTypeFormattingEdits(document, position, ch, options, cancellationToken))
             .returns(() => result)
             .verifiable(TypeMoq.Times.once());
         return provider;

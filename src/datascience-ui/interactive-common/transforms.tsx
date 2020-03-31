@@ -115,8 +115,8 @@ export function getRichestMimetype(data: any): string {
     // Go through the keys of this object and find their index in the map
     let index = mimeTypeToImport.length;
     const keys = Object.keys(data);
-    keys.forEach(k => {
-        const keyIndex = mimeTypeToImport.findIndex(m => m.mimeType === k);
+    keys.forEach((k) => {
+        const keyIndex = mimeTypeToImport.findIndex((m) => m.mimeType === k);
         if (keyIndex >= 0 && keyIndex < index) {
             // If higher up the chain, pick the higher up key
             index = keyIndex;
@@ -135,7 +135,7 @@ export function getRichestMimetype(data: any): string {
 export function getTransform(mimeType: string): LoadableComponent<{ data: any }> {
     return Loadable<{ data: any }>(
         async () => {
-            const match = mimeTypeToImport.find(m => m.mimeType === mimeType);
+            const match = mimeTypeToImport.find((m) => m.mimeType === mimeType);
             if (match) {
                 const transform = await match.getComponent();
                 return transform;
@@ -149,11 +149,11 @@ export function getTransform(mimeType: string): LoadableComponent<{ data: any }>
 
 export async function forceLoad() {
     // Used for tests to make sure we don't end up with 'Loading ...' anywhere in a test
-    await Promise.all(mimeTypeToImport.map(m => m.getComponent()));
+    await Promise.all(mimeTypeToImport.map((m) => m.getComponent()));
 }
 
 export function isMimeTypeSupported(mimeType: string): boolean {
-    const match = mimeTypeToImport.find(m => m.mimeType === mimeType);
+    const match = mimeTypeToImport.find((m) => m.mimeType === mimeType);
     return match ? true : false;
 }
 

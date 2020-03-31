@@ -164,7 +164,7 @@ async function activateLegacy(
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     interpreterManager
         .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
-        .catch(ex => traceError('Python Extension: interpreterManager.refresh', ex));
+        .catch((ex) => traceError('Python Extension: interpreterManager.refresh', ex));
 
     // Activate data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);
@@ -196,7 +196,7 @@ async function activateLegacy(
         })
     );
 
-    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach(debugConfigProvider => {
+    serviceContainer.getAll<DebugConfigurationProvider>(IDebugConfigurationService).forEach((debugConfigProvider) => {
         context.subscriptions.push(debug.registerDebugConfigurationProvider(DebuggerTypeName, debugConfigProvider));
     });
 

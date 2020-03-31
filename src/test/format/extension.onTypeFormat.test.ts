@@ -36,11 +36,11 @@ function testFormatting(
     let textDocument: vscode.TextDocument;
     return vscode.workspace
         .openTextDocument(fileToFormat)
-        .then(document => {
+        .then((document) => {
             textDocument = document;
             return vscode.window.showTextDocument(textDocument);
         })
-        .then(_editor => {
+        .then((_editor) => {
             return provider.provideOnTypeFormattingEdits(
                 textDocument,
                 position,
@@ -50,7 +50,7 @@ function testFormatting(
             );
         })
         .then(
-            edits => {
+            (edits) => {
                 assert.equal(edits.length, expectedEdits.length, 'Number of edits not the same');
                 edits.forEach((edit, index) => {
                     const expectedEdit = expectedEdits[index];
@@ -67,7 +67,7 @@ function testFormatting(
                     );
                 });
             },
-            reason => {
+            (reason) => {
                 assert.fail(reason, undefined, 'Type Formatting failed', '');
             }
         );
@@ -78,7 +78,7 @@ suite('Else block with if in first line of file', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['elseBlocksFirstLine2.py', 'elseBlocksFirstLine4.py', 'elseBlocksFirstLineTab.py'].forEach(file => {
+        ['elseBlocksFirstLine2.py', 'elseBlocksFirstLine4.py', 'elseBlocksFirstLineTab.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -128,7 +128,7 @@ suite('Else block with if in first line of file', () => {
     ];
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(testCase.filePath, pos, testCase.expectedEdits, testCase.formatOptions).then(done, done);
         });
@@ -140,7 +140,7 @@ suite('Try blocks with indentation of 2 spaces', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['tryBlocks2.py'].forEach(file => {
+        ['tryBlocks2.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -226,7 +226,7 @@ suite('Try blocks with indentation of 2 spaces', () => {
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(tryBlock2OutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });
@@ -238,7 +238,7 @@ suite('Try blocks with indentation of 4 spaces', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['tryBlocks4.py'].forEach(file => {
+        ['tryBlocks4.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -324,7 +324,7 @@ suite('Try blocks with indentation of 4 spaces', () => {
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(tryBlock4OutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });
@@ -336,7 +336,7 @@ suite('Try blocks with indentation of Tab', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['tryBlocksTab.py'].forEach(file => {
+        ['tryBlocksTab.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -426,7 +426,7 @@ suite('Try blocks with indentation of Tab', () => {
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(tryBlockTabOutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });
@@ -438,7 +438,7 @@ suite('Else blocks with indentation of 2 spaces', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['elseBlocks2.py'].forEach(file => {
+        ['elseBlocks2.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -549,7 +549,7 @@ suite('Else blocks with indentation of 2 spaces', () => {
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(elseBlock2OutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });
@@ -561,7 +561,7 @@ suite('Else blocks with indentation of 4 spaces', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['elseBlocks4.py'].forEach(file => {
+        ['elseBlocks4.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -665,7 +665,7 @@ suite('Else blocks with indentation of 4 spaces', () => {
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(elseBlock4OutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });
@@ -677,7 +677,7 @@ suite('Else blocks with indentation of Tab', () => {
         await initialize();
         fs.ensureDirSync(path.dirname(outPythoFilesPath));
 
-        ['elseBlocksTab.py'].forEach(file => {
+        ['elseBlocksTab.py'].forEach((file) => {
             const targetFile = path.join(outPythoFilesPath, file);
             if (fs.existsSync(targetFile)) {
                 fs.unlinkSync(targetFile);
@@ -782,7 +782,7 @@ suite('Else blocks with indentation of Tab', () => {
     };
 
     testCases.forEach((testCase, index) => {
-        test(`${index + 1}. ${testCase.title}`, done => {
+        test(`${index + 1}. ${testCase.title}`, (done) => {
             const pos = new vscode.Position(testCase.line, testCase.column);
             testFormatting(elseBlockTabOutFilePath, pos, testCase.expectedEdits, formatOptions).then(done, done);
         });

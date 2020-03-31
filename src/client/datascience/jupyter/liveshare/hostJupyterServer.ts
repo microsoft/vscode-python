@@ -135,7 +135,7 @@ export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBas
     public async onSessionChange(api: vsls.LiveShare | null): Promise<void> {
         await super.onSessionChange(api);
 
-        this.getNotebooks().forEach(async notebook => {
+        this.getNotebooks().forEach(async (notebook) => {
             const hostNotebook = (await notebook) as HostJupyterNotebook;
             if (hostNotebook) {
                 await hostNotebook.onSessionChange(api);

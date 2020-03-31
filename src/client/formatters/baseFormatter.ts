@@ -73,14 +73,14 @@ export abstract class BaseFormatter {
         );
         const promise = pythonToolsExecutionService
             .exec(executionInfo, { cwd, throwOnStdErr: false, token }, document.uri)
-            .then(output => output.stdout)
-            .then(data => {
+            .then((output) => output.stdout)
+            .then((data) => {
                 if (this.checkCancellation(document.fileName, tempFile, token)) {
                     return [] as vscode.TextEdit[];
                 }
                 return getTextEditsFromPatch(document.getText(), data);
             })
-            .catch(error => {
+            .catch((error) => {
                 if (this.checkCancellation(document.fileName, tempFile, token)) {
                     return [] as vscode.TextEdit[];
                 }
@@ -88,7 +88,7 @@ export abstract class BaseFormatter {
                 this.handleError(this.Id, error, document.uri).catch(() => {});
                 return [] as vscode.TextEdit[];
             })
-            .then(edits => {
+            .then((edits) => {
                 this.deleteTempFile(document.fileName, tempFile).ignoreErrors();
                 return edits;
             });
@@ -110,7 +110,7 @@ export abstract class BaseFormatter {
                 customError += `\nYou could either install the '${this.Id}' formatter, turn it off or use another formatter.`;
                 installer
                     .promptToInstall(this.product, resource)
-                    .catch(ex => traceError('Python Extension: promptToInstall', ex));
+                    .catch((ex) => traceError('Python Extension: promptToInstall', ex));
             }
         }
 

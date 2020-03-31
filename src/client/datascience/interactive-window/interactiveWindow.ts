@@ -217,7 +217,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public async debugCode(code: string, file: string, line: number): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, file));
+        const doc = this.documentManager.textDocuments.find((d) => this.fileSystem.arePathsSame(d.fileName, file));
         if (doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
@@ -227,7 +227,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             // If that worked, we have to open the new document. It should be
             // the new entry in the list
             if (saved) {
-                const diff = this.documentManager.textDocuments.filter(f => beforeSave.indexOf(f) === -1);
+                const diff = this.documentManager.textDocuments.filter((f) => beforeSave.indexOf(f) === -1);
                 if (diff && diff.length > 0) {
                     file = diff[0].fileName;
 
@@ -286,7 +286,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             // Activate the other side, and send as if came from a file
             this.interactiveWindowProvider
                 .getOrCreateActive()
-                .then(_v => {
+                .then((_v) => {
                     this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
                         code: info.code,
                         file: Identifiers.EmptyFileName,
@@ -410,7 +410,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private handleReturnAllCells(cells: ICell[]) {
         // See what we're waiting for.
         if (this.waitingForExportCells) {
-            this.export(cells).catch(ex => traceError('Error exporting:', ex));
+            this.export(cells).catch((ex) => traceError('Error exporting:', ex));
         }
     }
 }

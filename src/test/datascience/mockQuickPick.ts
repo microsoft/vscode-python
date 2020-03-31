@@ -60,7 +60,7 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
     public show(): void {
         // After a timeout select the item
         setTimeout(() => {
-            const item = this.items.find(a => a.label === this._pickedItem);
+            const item = this.items.find((a) => a.label === this._pickedItem);
             if (item) {
                 this.didChangeSelectedEmitter.fire([item]);
             } else {

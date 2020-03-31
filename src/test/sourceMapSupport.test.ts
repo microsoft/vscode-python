@@ -56,7 +56,7 @@ suite('Source Map Support', () => {
 
     const disposables: Disposable[] = [];
     teardown(() => {
-        disposables.forEach(disposable => {
+        disposables.forEach((disposable) => {
             try {
                 disposable.dispose();
             } catch {

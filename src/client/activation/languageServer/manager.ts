@@ -49,7 +49,7 @@ export class DotNetLanguageServerManager implements ILanguageServerManager {
         if (this.languageProxy) {
             this.languageProxy.dispose();
         }
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
 
     public get languageProxy() {

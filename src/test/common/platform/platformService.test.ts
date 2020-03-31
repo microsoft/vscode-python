@@ -77,7 +77,7 @@ suite('PlatformService', () => {
         );
     });
 
-    test('getVersion on Mac/Windows', async function() {
+    test('getVersion on Mac/Windows', async function () {
         if (osType === OSType.Linux) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
@@ -88,7 +88,7 @@ suite('PlatformService', () => {
 
         expect(result.compare(expectedVersion)).to.be.equal(0, 'invalid value');
     });
-    test('getVersion on Linux shoud throw an exception', async function() {
+    test('getVersion on Linux shoud throw an exception', async function () {
         if (osType !== OSType.Linux) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();

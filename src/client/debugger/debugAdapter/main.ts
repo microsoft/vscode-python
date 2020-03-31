@@ -111,7 +111,7 @@ export class PythonDebugger extends DebugSession {
         this.debugServer = launcher.CreateDebugServer(this.serviceContainer);
         this.debugServer!.Start()
             .then(() => this.emit('debugger_attached'))
-            .catch(ex => {
+            .catch((ex) => {
                 logger.error('Attach failed');
                 logger.error(`${ex}, ${ex.name}, ${ex.message}, ${ex.stack}`);
                 const message = this.getUserFriendlyAttachErrorMessage(ex) || 'Attach Failed';
@@ -142,7 +142,7 @@ export class PythonDebugger extends DebugSession {
         this.launchPTVSD(args)
             .then(() => this.waitForPTVSDToConnect(args))
             .then(() => this.emit('debugger_launched'))
-            .catch(ex => {
+            .catch((ex) => {
                 const message = this.getUserFriendlyLaunchErrorMessage(args, ex) || 'Debug Error';
                 this.sendErrorResponse(
                     response,
@@ -291,7 +291,7 @@ class DebugManager implements Disposable {
     public dispose() {
         try {
             const disposables = this.serviceContainer.get<IDisposable[]>(IDisposableRegistry);
-            disposables.forEach(d => {
+            disposables.forEach((d) => {
                 try {
                     d.dispose();
                 } catch {
@@ -393,7 +393,7 @@ class DebugManager implements Disposable {
             logger.verbose('disposing');
             await sleep(100);
             // Dispose last, we don't want to dispose the protocol loggers too early.
-            this.disposables.forEach(disposable => disposable.dispose());
+            this.disposables.forEach((disposable) => disposable.dispose());
         }
     };
     private sendMessage(
@@ -468,7 +468,7 @@ class DebugManager implements Disposable {
 
         // Do not pipe. When restarting the debugger, the socket gets closed,
         // In which case, VSC will see this and shutdown the debugger completely.
-        ((this.inputStream as any) as NodeJS.ReadStream).on('data', data => {
+        ((this.inputStream as any) as NodeJS.ReadStream).on('data', (data) => {
             this.socket.write(data);
         });
         this.socket.on('data', (data: string | Buffer) => {
@@ -563,6 +563,6 @@ process.on('uncaughtException', (err: Error) => {
     setTimeout(() => process.exit(-1), 100);
 });
 
-startDebugger().catch(_ex => {
+startDebugger().catch((_ex) => {
     // Not necessary except for debugging and to kill linter warning about unhandled promises.
 });

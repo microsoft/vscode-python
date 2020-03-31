@@ -206,7 +206,7 @@ suite('Daemon - Python Daemon Pool', () => {
     }).timeout(3_000);
     test('If executing python is fast, then use the daemon (for observables)', async () => {
         const execModuleObservable = sinon.stub(PythonDaemonExecutionService.prototype, 'execModuleObservable');
-        const out = new Observable<Output<string>>(s => {
+        const out = new Observable<Output<string>>((s) => {
             s.next({ source: 'stdout', out: '' });
             s.complete();
         });

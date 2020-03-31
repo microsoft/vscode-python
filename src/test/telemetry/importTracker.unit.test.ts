@@ -26,42 +26,15 @@ suite('Import Tracker', () => {
     let savedEventEmitter: EventEmitter<TextDocument>;
     let openedNotebookEmitter: EventEmitter<INotebookEditor>;
     let closedNotebookEmitter: EventEmitter<INotebookEditor>;
-    const pandasHash: string = hashJs
-        .sha256()
-        .update('pandas')
-        .digest('hex');
-    const elephasHash: string = hashJs
-        .sha256()
-        .update('elephas')
-        .digest('hex');
-    const kerasHash: string = hashJs
-        .sha256()
-        .update('keras')
-        .digest('hex');
-    const pysparkHash: string = hashJs
-        .sha256()
-        .update('pyspark')
-        .digest('hex');
-    const sparkdlHash: string = hashJs
-        .sha256()
-        .update('sparkdl')
-        .digest('hex');
-    const numpyHash: string = hashJs
-        .sha256()
-        .update('numpy')
-        .digest('hex');
-    const scipyHash: string = hashJs
-        .sha256()
-        .update('scipy')
-        .digest('hex');
-    const sklearnHash: string = hashJs
-        .sha256()
-        .update('sklearn')
-        .digest('hex');
-    const randomHash: string = hashJs
-        .sha256()
-        .update('random')
-        .digest('hex');
+    const pandasHash: string = hashJs.sha256().update('pandas').digest('hex');
+    const elephasHash: string = hashJs.sha256().update('elephas').digest('hex');
+    const kerasHash: string = hashJs.sha256().update('keras').digest('hex');
+    const pysparkHash: string = hashJs.sha256().update('pyspark').digest('hex');
+    const sparkdlHash: string = hashJs.sha256().update('sparkdl').digest('hex');
+    const numpyHash: string = hashJs.sha256().update('numpy').digest('hex');
+    const scipyHash: string = hashJs.sha256().update('scipy').digest('hex');
+    const sklearnHash: string = hashJs.sha256().update('sklearn').digest('hex');
+    const randomHash: string = hashJs.sha256().update('random').digest('hex');
 
     class Reporter {
         public static eventNames: string[] = [];
@@ -75,7 +48,7 @@ suite('Import Tracker', () => {
             }
 
             Reporter.properties.pop(); // HASHED_PACKAGE_PERF
-            expect(Reporter.properties).to.deep.equal(hashes.map(hash => ({ hashedName: hash })));
+            expect(Reporter.properties).to.deep.equal(hashes.map((hash) => ({ hashedName: hash })));
         }
 
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
@@ -95,13 +68,13 @@ suite('Import Tracker', () => {
         closedNotebookEmitter = new EventEmitter<INotebookEditor>();
 
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
-        documentManager.setup(a => a.onDidOpenTextDocument).returns(() => openedEventEmitter.event);
-        documentManager.setup(a => a.onDidSaveTextDocument).returns(() => savedEventEmitter.event);
+        documentManager.setup((a) => a.onDidOpenTextDocument).returns(() => openedEventEmitter.event);
+        documentManager.setup((a) => a.onDidSaveTextDocument).returns(() => savedEventEmitter.event);
 
         nativeProvider = TypeMoq.Mock.ofType<INotebookEditorProvider>();
-        nativeProvider.setup(n => n.onDidOpenNotebookEditor).returns(() => openedNotebookEmitter.event);
-        nativeProvider.setup(n => n.onDidCloseNotebookEditor).returns(() => closedNotebookEmitter.event);
-        nativeProvider.setup(n => n.editors).returns(() => []);
+        nativeProvider.setup((n) => n.onDidOpenNotebookEditor).returns(() => openedNotebookEmitter.event);
+        nativeProvider.setup((n) => n.onDidCloseNotebookEditor).returns(() => closedNotebookEmitter.event);
+        nativeProvider.setup((n) => n.editors).returns(() => []);
 
         rewiremock.enable();
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
@@ -125,8 +98,8 @@ suite('Import Tracker', () => {
     function emitNotebookEvent(code: string, ev: EventEmitter<INotebookEditor>) {
         const notebook = TypeMoq.Mock.ofType<INotebookEditor>();
         const model = TypeMoq.Mock.ofType<INotebookModel>();
-        notebook.setup(n => n.model).returns(() => model.object);
-        model.setup(m => m.cells).returns(() => generateCells(undefined, code, 'foo.py', 0, false, '1'));
+        notebook.setup((n) => n.model).returns(() => model.object);
+        model.setup((m) => m.cells).returns(() => generateCells(undefined, code, 'foo.py', 0, false, '1'));
         ev.fire(notebook.object);
     }
 
@@ -138,7 +111,7 @@ suite('Import Tracker', () => {
 
     test('Already opened documents', async () => {
         const doc = createDocument('import pandas\r\n', 'foo.py', 1, TypeMoq.Times.atMost(100), true);
-        documentManager.setup(d => d.textDocuments).returns(() => [doc.object]);
+        documentManager.setup((d) => d.textDocuments).returns(() => [doc.object]);
         await importTracker.activate();
 
         Reporter.expectHashes(pandasHash);

@@ -45,9 +45,9 @@ suite('Jedi Symbol Provider', () => {
 
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         doc = TypeMoq.Mock.ofType<TextDocument>();
-        jediFactory.setup(j => j.getJediProxyHandler(TypeMoq.It.isAny())).returns(() => jediHandler.object);
+        jediFactory.setup((j) => j.getJediProxyHandler(TypeMoq.It.isAny())).returns(() => jediHandler.object);
 
-        serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fileSystem.object);
+        serviceContainer.setup((c) => c.get(IFileSystem)).returns(() => fileSystem.object);
     });
 
     async function testDocumentation(
@@ -57,7 +57,7 @@ suite('Jedi Symbol Provider', () => {
         token?: CancellationToken,
         isUntitled = false
     ) {
-        fileSystem.setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
+        fileSystem.setup((fs) => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
         token = token ? token : new CancellationTokenSource().token;
         const symbolResult = TypeMoq.Mock.ofType<ISymbolResult>();
 
@@ -74,15 +74,15 @@ suite('Jedi Symbol Provider', () => {
         ];
 
         uri = Uri.file(fileName);
-        doc.setup(d => d.uri).returns(() => uri);
-        doc.setup(d => d.fileName).returns(() => fileName);
-        doc.setup(d => d.isUntitled).returns(() => isUntitled);
-        doc.setup(d => d.getText(TypeMoq.It.isAny())).returns(() => '');
-        symbolResult.setup(c => c.requestId).returns(() => requestId);
-        symbolResult.setup(c => c.definitions).returns(() => definitions);
+        doc.setup((d) => d.uri).returns(() => uri);
+        doc.setup((d) => d.fileName).returns(() => fileName);
+        doc.setup((d) => d.isUntitled).returns(() => isUntitled);
+        doc.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => '');
+        symbolResult.setup((c) => c.requestId).returns(() => requestId);
+        symbolResult.setup((c) => c.definitions).returns(() => definitions);
         symbolResult.setup((c: any) => c.then).returns(() => undefined);
         jediHandler
-            .setup(j => j.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((j) => j.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(symbolResult.object));
 
         const items = await provider.provideDocumentSymbols(doc.object, token);
@@ -157,34 +157,34 @@ suite('Jedi Symbol Provider', () => {
         ]);
     });
     test('Ensure IFileSystem.arePathsSame is used', async () => {
-        doc.setup(d => d.getText())
+        doc.setup((d) => d.getText())
             .returns(() => '')
             .verifiable(TypeMoq.Times.once());
-        doc.setup(d => d.isDirty)
+        doc.setup((d) => d.isDirty)
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
-        doc.setup(d => d.fileName).returns(() => __filename);
+        doc.setup((d) => d.fileName).returns(() => __filename);
 
         const symbols = TypeMoq.Mock.ofType<ISymbolResult>();
         symbols.setup((s: any) => s.then).returns(() => undefined);
         const definitions: IDefinition[] = [];
         for (let counter = 0; counter < 3; counter += 1) {
             const def = TypeMoq.Mock.ofType<IDefinition>();
-            def.setup(d => d.fileName).returns(() => counter.toString());
+            def.setup((d) => d.fileName).returns(() => counter.toString());
             definitions.push(def.object);
 
             fileSystem
-                .setup(fs => fs.arePathsSame(TypeMoq.It.isValue(counter.toString()), TypeMoq.It.isValue(__filename)))
+                .setup((fs) => fs.arePathsSame(TypeMoq.It.isValue(counter.toString()), TypeMoq.It.isValue(__filename)))
                 .returns(() => false)
                 .verifiable(TypeMoq.Times.exactly(1));
         }
         symbols
-            .setup(s => s.definitions)
+            .setup((s) => s.definitions)
             .returns(() => definitions)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
         jediHandler
-            .setup(j => j.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((j) => j.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(symbols.object))
             .verifiable(TypeMoq.Times.once());
 
@@ -203,7 +203,7 @@ suite('Language Server Symbol Provider', () => {
         const langClient = TypeMoq.Mock.ofType<LanguageClient>(undefined, TypeMoq.MockBehavior.Strict);
         for (const [doc, symbols] of results) {
             langClient
-                .setup(l =>
+                .setup((l) =>
                     l.sendRequest(
                         TypeMoq.It.isValue('textDocument/documentSymbol'),
                         TypeMoq.It.isValue(doc),
@@ -384,16 +384,16 @@ suite('Language Server Symbol Provider', () => {
 function createDoc(uri?: Uri, filename?: string, isUntitled?: boolean, text?: string): TypeMoq.IMock<TextDocument> {
     const doc = TypeMoq.Mock.ofType<TextDocument>(undefined, TypeMoq.MockBehavior.Strict);
     if (uri !== undefined) {
-        doc.setup(d => d.uri).returns(() => uri);
+        doc.setup((d) => d.uri).returns(() => uri);
     }
     if (filename !== undefined) {
-        doc.setup(d => d.fileName).returns(() => filename);
+        doc.setup((d) => d.fileName).returns(() => filename);
     }
     if (isUntitled !== undefined) {
-        doc.setup(d => d.isUntitled).returns(() => isUntitled);
+        doc.setup((d) => d.isUntitled).returns(() => isUntitled);
     }
     if (text !== undefined) {
-        doc.setup(d => d.getText(TypeMoq.It.isAny())).returns(() => text);
+        doc.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => text);
     }
     return doc;
 }

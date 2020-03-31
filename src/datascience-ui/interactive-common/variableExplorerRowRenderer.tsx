@@ -9,6 +9,6 @@ interface IVariableExplorerRowProps {
     renderBaseRow(props: any): JSX.Element;
 }
 
-export const VariableExplorerRowRenderer: React.SFC<IVariableExplorerRowProps & any> = props => {
+export const VariableExplorerRowRenderer: React.SFC<IVariableExplorerRowProps & any> = (props) => {
     return <div role="row">{props.renderBaseRow(props)}</div>;
 };

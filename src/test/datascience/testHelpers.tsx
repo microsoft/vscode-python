@@ -152,8 +152,8 @@ export function runDoubleTest(
 ) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
     test(`${name} (interactive)`, async () =>
-        testInnerLoop(name, ioc => mountWebView(ioc, 'interactive'), testFunc, getIOC));
-    test(`${name} (native)`, async () => testInnerLoop(name, ioc => mountWebView(ioc, 'native'), testFunc, getIOC));
+        testInnerLoop(name, (ioc) => mountWebView(ioc, 'interactive'), testFunc, getIOC));
+    test(`${name} (native)`, async () => testInnerLoop(name, (ioc) => mountWebView(ioc, 'native'), testFunc, getIOC));
 }
 
 export function mountWebView(
@@ -398,10 +398,7 @@ export function verifyCellIndex(
     cellId: string,
     expectedCellIndex: number
 ) {
-    const nativeCell = wrapper
-        .find(cellId)
-        .first()
-        .find('NativeCell');
+    const nativeCell = wrapper.find(cellId).first().find('NativeCell');
     const secondCell = wrapper.find('NativeCell').at(expectedCellIndex);
     assert.equal(nativeCell.html(), secondCell.html());
 }

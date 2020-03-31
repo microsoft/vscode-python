@@ -9,6 +9,8 @@ import { AllowedIPyWidgetMessages } from '../interactive-common/redux/postOffice
 import { PostOffice } from '../react-common/postOffice';
 import { WidgetManager } from './manager';
 
+import 'bootstrap/dist/css/bootstrap.css';
+
 type Props = {
     postOffice: PostOffice;
     widgetContainerId: string;
@@ -25,7 +27,7 @@ export class WidgetManagerComponent extends React.Component<Props> {
             // tslint:disable-next-line: no-any
             handleMessage(message: string, payload?: any): boolean {
                 // Double check this is one of our messages. React will actually post messages here too during development
-                if (AllowedIPyWidgetMessages.find(k => k === message)) {
+                if (AllowedIPyWidgetMessages.find((k) => k === message)) {
                     widgetMessages.next({ type: message, payload });
                 }
                 return true;

@@ -104,14 +104,14 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 }
                 input.buttons = [...(this.steps.length > 1 ? [QuickInputButtons.Back] : []), ...(buttons || [])];
                 disposables.push(
-                    input.onDidTriggerButton(item => {
+                    input.onDidTriggerButton((item) => {
                         if (item === QuickInputButtons.Back) {
                             reject(InputFlowAction.back);
                         } else {
                             resolve(<any>item);
                         }
                     }),
-                    input.onDidChangeSelection(selectedItems => resolve(selectedItems[0])),
+                    input.onDidChangeSelection((selectedItems) => resolve(selectedItems[0])),
                     input.onDidHide(() => {
                         (async () => {
                             reject(
@@ -127,7 +127,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 this.current.show();
             });
         } finally {
-            disposables.forEach(d => d.dispose());
+            disposables.forEach((d) => d.dispose());
         }
     }
 
@@ -154,7 +154,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 input.buttons = [...(this.steps.length > 1 ? [QuickInputButtons.Back] : []), ...(buttons || [])];
                 let validating = validate('');
                 disposables.push(
-                    input.onDidTriggerButton(item => {
+                    input.onDidTriggerButton((item) => {
                         if (item === QuickInputButtons.Back) {
                             reject(InputFlowAction.back);
                         } else {
@@ -171,7 +171,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                         input.enabled = true;
                         input.busy = false;
                     }),
-                    input.onDidChangeValue(async text => {
+                    input.onDidChangeValue(async (text) => {
                         const current = validate(text);
                         validating = current;
                         const validationMessage = await current;
@@ -194,7 +194,7 @@ export class MultiStepInput<S> implements IMultiStepInput<S> {
                 this.current.show();
             });
         } finally {
-            disposables.forEach(d => d.dispose());
+            disposables.forEach((d) => d.dispose());
         }
     }
 

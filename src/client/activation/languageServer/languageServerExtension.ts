@@ -27,7 +27,7 @@ export class LanguageServerExtension implements ILanguageServerExtension {
         if (this.disposable) {
             return;
         }
-        this.disposable = this.commandManager.registerCommand(loadExtensionCommand, args => {
+        this.disposable = this.commandManager.registerCommand(loadExtensionCommand, (args) => {
             this.loadExtensionArgs = args;
             this._invoked.fire();
         });

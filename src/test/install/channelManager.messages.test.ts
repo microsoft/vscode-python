@@ -67,7 +67,7 @@ suite('Installation - channel messages', () => {
     });
 
     test('No installers message: Unknown/Windows', async () => {
-        platform.setup(x => x.isWindows).returns(() => true);
+        platform.setup((x) => x.isWindows).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Unknown, async (message: string, url: string) => {
             verifyMessage(message, ['Pip'], ['Conda']);
             verifyUrl(url, ['Windows', 'Pip']);
@@ -75,7 +75,7 @@ suite('Installation - channel messages', () => {
     });
 
     test('No installers message: Conda/Windows', async () => {
-        platform.setup(x => x.isWindows).returns(() => true);
+        platform.setup((x) => x.isWindows).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Conda, async (message: string, url: string) => {
             verifyMessage(message, ['Pip', 'Conda'], []);
             verifyUrl(url, ['Windows', 'Pip', 'Conda']);
@@ -83,8 +83,8 @@ suite('Installation - channel messages', () => {
     });
 
     test('No installers message: Unknown/Mac', async () => {
-        platform.setup(x => x.isWindows).returns(() => false);
-        platform.setup(x => x.isMac).returns(() => true);
+        platform.setup((x) => x.isWindows).returns(() => false);
+        platform.setup((x) => x.isMac).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Unknown, async (message: string, url: string) => {
             verifyMessage(message, ['Pip'], ['Conda']);
             verifyUrl(url, ['Mac', 'Pip']);
@@ -92,8 +92,8 @@ suite('Installation - channel messages', () => {
     });
 
     test('No installers message: Conda/Mac', async () => {
-        platform.setup(x => x.isWindows).returns(() => false);
-        platform.setup(x => x.isMac).returns(() => true);
+        platform.setup((x) => x.isWindows).returns(() => false);
+        platform.setup((x) => x.isMac).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Conda, async (message: string, url: string) => {
             verifyMessage(message, ['Pip', 'Conda'], []);
             verifyUrl(url, ['Mac', 'Pip', 'Conda']);
@@ -101,9 +101,9 @@ suite('Installation - channel messages', () => {
     });
 
     test('No installers message: Unknown/Linux', async () => {
-        platform.setup(x => x.isWindows).returns(() => false);
-        platform.setup(x => x.isMac).returns(() => false);
-        platform.setup(x => x.isLinux).returns(() => true);
+        platform.setup((x) => x.isWindows).returns(() => false);
+        platform.setup((x) => x.isMac).returns(() => false);
+        platform.setup((x) => x.isLinux).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Unknown, async (message: string, url: string) => {
             verifyMessage(message, ['Pip'], ['Conda']);
             verifyUrl(url, ['Linux', 'Pip']);
@@ -111,9 +111,9 @@ suite('Installation - channel messages', () => {
     });
 
     test('No installers message: Conda/Linux', async () => {
-        platform.setup(x => x.isWindows).returns(() => false);
-        platform.setup(x => x.isMac).returns(() => false);
-        platform.setup(x => x.isLinux).returns(() => true);
+        platform.setup((x) => x.isWindows).returns(() => false);
+        platform.setup((x) => x.isMac).returns(() => false);
+        platform.setup((x) => x.isLinux).returns(() => true);
         await testInstallerMissingMessage(InterpreterType.Conda, async (message: string, url: string) => {
             verifyMessage(message, ['Pip', 'Conda'], []);
             verifyUrl(url, ['Linux', 'Pip', 'Conda']);
@@ -121,7 +121,7 @@ suite('Installation - channel messages', () => {
     });
 
     test('No channels message', async () => {
-        platform.setup(x => x.isWindows).returns(() => true);
+        platform.setup((x) => x.isWindows).returns(() => true);
         await testInstallerMissingMessage(
             InterpreterType.Unknown,
             async (message: string, url: string) => {
@@ -159,7 +159,7 @@ suite('Installation - channel messages', () => {
             path: ''
         };
         interpreters
-            .setup(x => x.getActiveInterpreter(TypeMoq.It.isAny()))
+            .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))
             .returns(
                 () => new Promise<PythonInterpreter>((resolve, _reject) => resolve(activeInterpreter))
             );
@@ -169,7 +169,7 @@ suite('Installation - channel messages', () => {
         let message: string = '';
         let search: string = '';
         appShell
-            .setup(x => x.showErrorMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .setup((x) => x.showErrorMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .callback((m: string, s: string) => {
                 message = m;
                 search = s;
@@ -178,7 +178,7 @@ suite('Installation - channel messages', () => {
                 () => new Promise<string>((resolve, _reject) => resolve(search))
             );
         appShell
-            .setup(x => x.openUrl(TypeMoq.It.isAnyString()))
+            .setup((x) => x.openUrl(TypeMoq.It.isAnyString()))
             .callback((s: string) => {
                 url = s;
             });

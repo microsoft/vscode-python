@@ -27,14 +27,14 @@ suite('Language Server Package Service', () => {
     });
     test('Ensure new Major versions of Language Server is accounted for (azure blob)', async () => {
         const nugetService = new NugetService();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService);
         const platformService = new PlatformService();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
         const workspace = typeMoq.Mock.ofType<IWorkspaceService>();
         const cfg = typeMoq.Mock.ofType<WorkspaceConfiguration>();
-        cfg.setup(c => c.get('proxyStrictSSL', true)).returns(() => true);
-        workspace.setup(w => w.getConfiguration('http', undefined)).returns(() => cfg.object);
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
+        cfg.setup((c) => c.get('proxyStrictSSL', true)).returns(() => true);
+        workspace.setup((w) => w.getConfiguration('http', undefined)).returns(() => cfg.object);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
         const defaultStorageChannel = 'python-language-server-daily';
         const nugetRepo = new AzureBlobStoreNugetRepository(
             serviceContainer.object,
@@ -42,10 +42,10 @@ suite('Language Server Package Service', () => {
             defaultStorageChannel,
             azureCDNBlobStorageAccount
         );
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
         const packageJson = { languageServerVersion: '0.0.1' };
-        appEnv.setup(e => e.packageJson).returns(() => packageJson);
+        appEnv.setup((e) => e.packageJson).returns(() => packageJson);
         const platform = typeMoq.Mock.ofType<IPlatformService>();
         const lsPackageService = new DotNetLanguageServerPackageService(
             serviceContainer.object,
@@ -56,7 +56,7 @@ suite('Language Server Package Service', () => {
         const packages = await nugetRepo.getPackages(packageName, undefined);
 
         const latestReleases = packages
-            .filter(item => nugetService.isReleaseVersion(item.version))
+            .filter((item) => nugetService.isReleaseVersion(item.version))
             .sort((a, b) => a.version.compare(b.version));
         const latestRelease = latestReleases[latestReleases.length - 1];
 

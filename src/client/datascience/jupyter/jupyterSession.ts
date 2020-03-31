@@ -94,7 +94,7 @@ export class JupyterSession implements IJupyterSession {
             try {
                 // Make sure we have a session first and it returns something
                 await this.sessionManager.refreshRunning();
-                await Promise.all(this.notebookFiles.map(f => this.contentsManager!.delete(f.path)));
+                await Promise.all(this.notebookFiles.map((f) => this.contentsManager!.delete(f.path)));
                 this.notebookFiles = [];
             } catch {
                 noop();
@@ -290,7 +290,7 @@ export class JupyterSession implements IJupyterSession {
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
         if (this.session) {
             this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
-            this.restartSessionPromise?.then(r => this.shutdownSession(r, undefined)).ignoreErrors();
+            this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined)).ignoreErrors();
         }
 
         // Update our kernel spec
@@ -440,7 +440,7 @@ export class JupyterSession implements IJupyterSession {
             const statusChangedPromise = new Promise((resolve, reject) =>
                 session.kernelChanged.connect((_, e) => statusHandler(resolve, reject, e.newValue?.status))
             );
-            const checkStatusPromise = new Promise(async resolve => {
+            const checkStatusPromise = new Promise(async (resolve) => {
                 // This function seems to cause CI builds to timeout randomly on
                 // different tests. Waiting for status to go idle doesn't seem to work and
                 // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
@@ -518,13 +518,13 @@ export class JupyterSession implements IJupyterSession {
         return Cancellation.race(
             () =>
                 this.sessionManager!.startNew(options)
-                    .then(s => {
+                    .then((s) => {
                         this.logRemoteOutput(
                             localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, s?.kernel?.id)
                         );
                         return s;
                     })
-                    .catch(ex => Promise.reject(new JupyterSessionStartError(ex))),
+                    .catch((ex) => Promise.reject(new JupyterSessionStartError(ex))),
             cancelToken
         );
     }
@@ -584,7 +584,7 @@ export class JupyterSession implements IJupyterSession {
                         if (defaultKernel && defaultKernel._futures) {
                             const futures = defaultKernel._futures as Map<any, any>;
                             if (futures) {
-                                futures.forEach(f => {
+                                futures.forEach((f) => {
                                     if (f._status !== undefined) {
                                         f._status |= 4;
                                     }

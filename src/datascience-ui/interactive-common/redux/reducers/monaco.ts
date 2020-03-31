@@ -69,7 +69,7 @@ function handleStarted<T>(arg: MonacoReducerArg<T>): IMonacoState {
 }
 
 function finishTokenizer<T>(buffer: ArrayBuffer, tmJson: string, arg: MonacoReducerArg<T>) {
-    initializeTokenizer(buffer, tmJson, e => {
+    initializeTokenizer(buffer, tmJson, (e) => {
         if (e) {
             logMessage(`ERROR from onigasm: ${e}`);
         }

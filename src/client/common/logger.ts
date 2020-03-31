@@ -88,31 +88,31 @@ function initializeConsoleLogger() {
         (console as any)[logMethods.warn] = console.warn;
 
         // tslint:disable-next-line: no-function-expression
-        console.log = function() {
+        console.log = function () {
             const args = Array.prototype.slice.call(arguments);
             logToConsole('log', ...args);
             logToFile(LogLevel.Information, ...args);
         };
         // tslint:disable-next-line: no-function-expression
-        console.info = function() {
+        console.info = function () {
             const args = Array.prototype.slice.call(arguments);
             logToConsole('info', ...args);
             logToFile(LogLevel.Information, ...args);
         };
         // tslint:disable-next-line: no-function-expression
-        console.warn = function() {
+        console.warn = function () {
             const args = Array.prototype.slice.call(arguments);
             logToConsole('warn', ...args);
             logToFile(LogLevel.Warning, ...args);
         };
         // tslint:disable-next-line: no-function-expression
-        console.error = function() {
+        console.error = function () {
             const args = Array.prototype.slice.call(arguments);
             logToConsole('error', ...args);
             logToFile(LogLevel.Error, ...args);
         };
         // tslint:disable-next-line: no-function-expression
-        console.debug = function() {
+        console.debug = function () {
             const args = Array.prototype.slice.call(arguments);
             logToConsole('debug', ...args);
             logToFile(LogLevel.Information, ...args);
@@ -272,10 +272,10 @@ export namespace traceDecorators {
 }
 function trace(message: string, options: LogOptions = LogOptions.None, logLevel?: LogLevel) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function(_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function(...args: any[]) {
+        descriptor.value = function (...args: any[]) {
             const className = _ && _.constructor ? _.constructor.name : '';
             // tslint:disable-next-line:no-any
             function writeSuccess(elapsedTime: number, returnValue: any) {
@@ -317,11 +317,11 @@ function trace(message: string, options: LogOptions = LogOptions.None, logLevel?
                 if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
                     // tslint:disable-next-line:prefer-type-cast
                     (result as Promise<void>)
-                        .then(data => {
+                        .then((data) => {
                             writeSuccess(timer.elapsedTime, data);
                             return data;
                         })
-                        .catch(ex => {
+                        .catch((ex) => {
                             writeError(timer.elapsedTime, ex);
                         });
                 } else {

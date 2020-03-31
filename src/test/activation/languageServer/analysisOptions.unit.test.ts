@@ -67,7 +67,7 @@ suite('Language Server - Analysis Options', () => {
         workspace = mock(WorkspaceService);
         outputChannel = typemoq.Mock.ofType<IOutputChannel>().object;
         lsOutputChannel = typemoq.Mock.ofType<ILanguageServerOutputChannel>();
-        lsOutputChannel.setup(l => l.channel).returns(() => outputChannel);
+        lsOutputChannel.setup((l) => l.channel).returns(() => outputChannel);
         pathUtils = mock(PathUtils);
         lsFolderService = mock(DotNetLanguageServerFolderService);
         analysisOptions = new TestClass(
@@ -91,8 +91,8 @@ suite('Language Server - Analysis Options', () => {
         verify(workspace.onDidChangeConfiguration).once();
         verify(envVarsProvider.onDidEnvironmentVariablesChange).once();
 
-        disposable1.setup(d => d.dispose()).verifiable(typemoq.Times.once());
-        disposable3.setup(d => d.dispose()).verifiable(typemoq.Times.once());
+        disposable1.setup((d) => d.dispose()).verifiable(typemoq.Times.once());
+        disposable3.setup((d) => d.dispose()).verifiable(typemoq.Times.once());
 
         analysisOptions.dispose();
 
@@ -103,7 +103,7 @@ suite('Language Server - Analysis Options', () => {
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
         const disposable3 = typemoq.Mock.ofType<IDisposable>();
         let configChangedHandler!: Function;
-        when(workspace.onDidChangeConfiguration).thenReturn(cb => {
+        when(workspace.onDidChangeConfiguration).thenReturn((cb) => {
             configChangedHandler = cb;
             return disposable1.object;
         });
@@ -174,11 +174,11 @@ suite('Language Server - Analysis Options', () => {
         const disposable3 = typemoq.Mock.ofType<IDisposable>();
         let configChangedHandler!: Function;
         let envVarChangedHandler!: Function;
-        when(workspace.onDidChangeConfiguration).thenReturn(cb => {
+        when(workspace.onDidChangeConfiguration).thenReturn((cb) => {
             configChangedHandler = cb;
             return disposable1.object;
         });
-        when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(cb => {
+        when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn((cb) => {
             envVarChangedHandler = cb;
             return disposable3.object;
         });
@@ -192,7 +192,7 @@ suite('Language Server - Analysis Options', () => {
         for (let i = 0; i < 100; i += 1) {
             const event = typemoq.Mock.ofType<ConfigurationChangeEvent>();
             event
-                .setup(e => e.affectsConfiguration(typemoq.It.isValue('python'), typemoq.It.isValue(uri)))
+                .setup((e) => e.affectsConfiguration(typemoq.It.isValue('python'), typemoq.It.isValue(uri)))
                 .returns(() => true)
                 .verifiable(typemoq.Times.once());
             configChangedHandler.call(analysisOptions, event.object);

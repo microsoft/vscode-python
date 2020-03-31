@@ -95,7 +95,7 @@ suite('Installation - installation channels', () => {
             path: 'pipenv',
             type: InterpreterType.VirtualEnv
         };
-        pipEnv.setup(x => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([interpreter]));
+        pipEnv.setup((x) => x.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([interpreter]));
 
         const cm = new InstallationChannelManager(serviceContainer);
         const channels = await cm.getInstallationChannels();
@@ -113,7 +113,7 @@ suite('Installation - installation channels', () => {
         // tslint:disable-next-line:no-any
         let items: any[] | undefined;
         appShell
-            .setup(x => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((x) => x.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .callback((i: string[], _o: QuickPickOptions) => {
                 items = i;
             })
@@ -121,8 +121,8 @@ suite('Installation - installation channels', () => {
                 () => new Promise<string | undefined>((resolve, _reject) => resolve(undefined))
             );
 
-        installer1.setup(x => x.displayName).returns(() => 'Name 1');
-        installer2.setup(x => x.displayName).returns(() => 'Name 2');
+        installer1.setup((x) => x.displayName).returns(() => 'Name 1');
+        installer2.setup((x) => x.displayName).returns(() => 'Name 2');
 
         const cm = new InstallationChannelManager(serviceContainer);
         await cm.getInstallationChannel(Product.pylint);
@@ -136,11 +136,11 @@ suite('Installation - installation channels', () => {
     function mockInstaller(supported: boolean, name: string, priority?: number): TypeMoq.IMock<IModuleInstaller> {
         const installer = TypeMoq.Mock.ofType<IModuleInstaller>();
         installer
-            .setup(x => x.isSupported(TypeMoq.It.isAny()))
+            .setup((x) => x.isSupported(TypeMoq.It.isAny()))
             .returns(
-                () => new Promise<boolean>(resolve => resolve(supported))
+                () => new Promise<boolean>((resolve) => resolve(supported))
             );
-        installer.setup(x => x.priority).returns(() => (priority ? priority : 0));
+        installer.setup((x) => x.priority).returns(() => (priority ? priority : 0));
         serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, installer.object, name);
         return installer;
     }

@@ -16,7 +16,7 @@ import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 const timeoutForCellToRun = 3 * 60 * 1_000;
 
 suite('Smoke Test: Interactive Window', () => {
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }

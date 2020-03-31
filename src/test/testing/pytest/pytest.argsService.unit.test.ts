@@ -20,7 +20,7 @@ suite('ArgsService: pytest', () => {
         const argsHelper = new ArgumentsHelper();
 
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny()))
             .returns(() => argsHelper);
 
         argumentsService = new PyTestArgumentsService(serviceContainer.object);
@@ -91,14 +91,14 @@ suite('ArgsService: pytest', () => {
     });
     test('Test calling ArgumentsService.getOptionValue with the option followed by the value', () => {
         const knownOptionsWithValues = argumentsService.getKnownOptions().withArgs;
-        knownOptionsWithValues.forEach(option => {
+        knownOptionsWithValues.forEach((option) => {
             const args = ['--foo', '--bar', 'arg1', option, 'value1'];
             expect(argumentsService.getOptionValue(args, option)).to.deep.equal('value1');
         });
     });
     test('Test calling ArgumentsService.getOptionValue with the inline option syntax', () => {
         const knownOptionsWithValues = argumentsService.getKnownOptions().withArgs;
-        knownOptionsWithValues.forEach(option => {
+        knownOptionsWithValues.forEach((option) => {
             const args = ['--foo', '--bar', 'arg1', `${option}=value1`];
             expect(argumentsService.getOptionValue(args, option)).to.deep.equal('value1');
         });

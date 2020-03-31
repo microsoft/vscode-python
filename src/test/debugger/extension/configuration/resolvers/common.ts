@@ -27,7 +27,7 @@ type OSTestInfo = [
 
 // For each supported OS, provide a set of helpers to use in tests.
 export function getInfoPerOS(): OSTestInfo[] {
-    return getNamesAndValues(OSType).map(os => {
+    return getNamesAndValues(OSType).map((os) => {
         const osType = os.value as OSType;
         return [os.name, osType, getPathModuleForOS(osType)];
     });
@@ -48,7 +48,7 @@ function getPathModuleForOS(osType: OSType): IPathModule {
 // Generate the function to use for populating the
 // relevant mocks relative to the target OS.
 export function setUpOSMocks(osType: OSType, platformService: TypeMoq.IMock<IPlatformService>) {
-    platformService.setup(p => p.isWindows).returns(() => osType === OSType.Windows);
-    platformService.setup(p => p.isMac).returns(() => osType === OSType.OSX);
-    platformService.setup(p => p.isLinux).returns(() => osType === OSType.Linux);
+    platformService.setup((p) => p.isWindows).returns(() => osType === OSType.Windows);
+    platformService.setup((p) => p.isMac).returns(() => osType === OSType.OSX);
+    platformService.setup((p) => p.isLinux).returns(() => osType === OSType.Linux);
 }

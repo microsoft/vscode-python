@@ -18,11 +18,11 @@ suite('A/A Testing', () => {
 
     test('Send telemetry corresponding to the experiment user is in', async () => {
         experiments
-            .setup(exp => exp.sendTelemetryIfInExperiment(ValidateABTesting.experiment))
+            .setup((exp) => exp.sendTelemetryIfInExperiment(ValidateABTesting.experiment))
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         experiments
-            .setup(exp => exp.sendTelemetryIfInExperiment(ValidateABTesting.control))
+            .setup((exp) => exp.sendTelemetryIfInExperiment(ValidateABTesting.control))
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
         await aaTesting.activate();

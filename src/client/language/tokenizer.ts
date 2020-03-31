@@ -416,10 +416,7 @@ export class Tokenizer implements ITokenizer {
         }
 
         if (this.cs.lookAhead(2) === Char.SingleQuote || this.cs.lookAhead(2) === Char.DoubleQuote) {
-            const prefix = this.cs
-                .getText()
-                .substr(this.cs.position, 2)
-                .toLowerCase();
+            const prefix = this.cs.getText().substr(this.cs.position, 2).toLowerCase();
             switch (prefix) {
                 case 'rf':
                 case 'ur':

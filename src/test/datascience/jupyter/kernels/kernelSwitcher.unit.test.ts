@@ -96,7 +96,7 @@ suite('Data Science - Kernel Switcher', () => {
         });
     });
 
-    [true, false].forEach(isLocalConnection => {
+    [true, false].forEach((isLocalConnection) => {
         // tslint:disable-next-line: max-func-body-length
         suite(isLocalConnection ? 'Local Connection' : 'Remote Connection', () => {
             setup(() => {
@@ -118,7 +118,7 @@ suite('Data Science - Kernel Switcher', () => {
             [
                 { title: 'Without an existing kernel', currentKernel: undefined },
                 { title: 'With an existing kernel', currentKernel }
-            ].forEach(currentKernelInfo => {
+            ].forEach((currentKernelInfo) => {
                 suite(currentKernelInfo.title, () => {
                     setup(() => {
                         when(notebook.getKernelSpec()).thenReturn(currentKernelInfo.currentKernel);
@@ -226,7 +226,7 @@ suite('Data Science - Kernel Switcher', () => {
                             verify(notebook.setInterpreter(selectedInterpreter)).never();
                         });
                         suite('Display error if `JupyterSessionStartError` is throw and retry', () => {
-                            setup(function() {
+                            setup(function () {
                                 if (!isLocalConnection) {
                                     // tslint:disable-next-line: no-invalid-this
                                     this.skip();

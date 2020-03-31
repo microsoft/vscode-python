@@ -148,12 +148,12 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             } else {
                 this.fileSystem
                     .createTemporaryFile('.py')
-                    .then(t => {
+                    .then((t) => {
                         this.temporaryFile = t;
                         const dummyFilePath = this.temporaryFile.filePath;
                         this.documentPromise!.resolve(new IntellisenseDocument(dummyFilePath));
                     })
-                    .catch(e => {
+                    .catch((e) => {
                         this.documentPromise!.reject(e);
                     });
             }
@@ -397,7 +397,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         };
 
         // Combine all of the results together.
-        this.postTimedResponse([getCompletions()], InteractiveWindowMessages.ProvideCompletionItemsResponse, c => {
+        this.postTimedResponse([getCompletions()], InteractiveWindowMessages.ProvideCompletionItemsResponse, (c) => {
             const list = this.combineCompletions(c);
             return { list, requestId: request.requestId };
         });
@@ -412,7 +412,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         this.postTimedResponse(
             [this.resolveCompletionItem(request.position, request.item, request.cellId, cancelSource.token)],
             InteractiveWindowMessages.ResolveCompletionItemResponse,
-            c => {
+            (c) => {
                 if (c && c[0]) {
                     return { item: c[0], requestId: request.requestId };
                 } else {
@@ -428,7 +428,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         this.postTimedResponse(
             [this.provideHover(request.position, request.cellId, cancelSource.token)],
             InteractiveWindowMessages.ProvideHoverResponse,
-            h => {
+            (h) => {
                 if (h && h[0]) {
                     return { hover: h[0]!, requestId: request.requestId };
                 } else {
@@ -508,7 +508,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         const line = document.lineAt(pos);
         return line.isEmptyOrWhitespace
             ? jupyterResults.matches
-            : jupyterResults.matches.filter(match => !match.startsWith('%'));
+            : jupyterResults.matches.filter((match) => !match.startsWith('%'));
     }
 
     private postTimedResponse<R, M extends IInteractiveWindowMapping, T extends keyof M>(
@@ -518,13 +518,13 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     ) {
         // Time all of the promises to make sure they don't take too long.
         // Even if LS or Jupyter doesn't complete within e.g. 30s, then we should return an empty response (no point waiting that long).
-        const timed = promises.map(p => waitForPromise(p, Settings.MaxIntellisenseTimeout));
+        const timed = promises.map((p) => waitForPromise(p, Settings.MaxIntellisenseTimeout));
 
         // Wait for all of of the timings.
         const all = Promise.all(timed);
-        all.then(r => {
+        all.then((r) => {
             this.postResponse(message, formatResponse(r));
-        }).catch(_e => {
+        }).catch((_e) => {
             this.postResponse(message, formatResponse([null]));
         });
     }
@@ -539,9 +539,9 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             string,
             monacoEditor.languages.CompletionItem
         >();
-        list.forEach(c => {
+        list.forEach((c) => {
             if (c) {
-                c.suggestions.forEach(s => {
+                c.suggestions.forEach((s) => {
                     if (!uniqueSuggestions.has(s.insertText)) {
                         uniqueSuggestions.set(s.insertText, s);
                     }
@@ -561,7 +561,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         this.postTimedResponse(
             [this.provideSignatureHelp(request.position, request.context, request.cellId, cancelSource.token)],
             InteractiveWindowMessages.ProvideSignatureHelpResponse,
-            s => {
+            (s) => {
                 if (s && s[0]) {
                     return { signatureHelp: s[0]!, requestId: request.requestId };
                 } else {
@@ -589,8 +589,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
     private convertToDocCells(cells: ICell[]): { code: string; id: string }[] {
         return cells
-            .filter(c => c.data.cell_type === 'code')
-            .map(c => {
+            .filter((c) => c.data.cell_type === 'code')
+            .map((c) => {
                 return { code: concatMultilineStringInput(c.data.source), id: c.id };
             });
     }
@@ -682,8 +682,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         if (document) {
             const changes = document.loadAllCells(
                 payload.cells
-                    .filter(c => c.data.cell_type === 'code')
-                    .map(cell => {
+                    .filter((c) => c.data.cell_type === 'code')
+                    .map((cell) => {
                         return {
                             code: concatMultilineStringInput(cell.data.source),
                             id: cell.id

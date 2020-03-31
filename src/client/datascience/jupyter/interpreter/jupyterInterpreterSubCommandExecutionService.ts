@@ -157,7 +157,7 @@ export class JupyterInterpreterSubCommandExecutionService
         // stdout contains the generated python code.
         return daemon
             .execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: false, encoding: 'utf8', token })
-            .then(output => output.stdout);
+            .then((output) => output.stdout);
     }
     public async openNotebook(notebookFile: string): Promise<void> {
         const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable();
@@ -190,8 +190,8 @@ export class JupyterInterpreterSubCommandExecutionService
             // Ask for our current list.
             const stdoutFromDaemonPromise = await daemon
                 .execModule('jupyter', ['kernelspec', 'list', '--json'], spawnOptions)
-                .then(output => output.stdout)
-                .catch(daemonEx => {
+                .then((output) => output.stdout)
+                .catch((daemonEx) => {
                     sendTelemetryEvent(Telemetry.KernelSpecNotFound);
                     traceError('Failed to list kernels from daemon', daemonEx);
                     return '';
@@ -209,8 +209,8 @@ export class JupyterInterpreterSubCommandExecutionService
                     ],
                     spawnOptions
                 )
-                .then(output => output.stdout)
-                .catch(fileEx => {
+                .then((output) => output.stdout)
+                .catch((fileEx) => {
                     traceError('Failed to list kernels from getJupyterKernels.py', fileEx);
                     return '';
                 });
@@ -220,7 +220,7 @@ export class JupyterInterpreterSubCommandExecutionService
                 stdoutFromFileExecPromise
             ]);
 
-            return parseKernelSpecs(stdoutFromDaemon || stdoutFromFileExec, this.fs, token).catch(parserError => {
+            return parseKernelSpecs(stdoutFromDaemon || stdoutFromFileExec, this.fs, token).catch((parserError) => {
                 traceError('Failed to parse kernelspecs', parserError);
                 // This is failing for some folks. In that case return nothing
                 return [];

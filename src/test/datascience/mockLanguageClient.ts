@@ -227,7 +227,7 @@ export class MockLanguageClient extends LanguageClient {
 
     private getDocumentCompletions(): CompletionItem[] {
         const lines = this.contents.splitLines();
-        return lines.map(l => {
+        return lines.map((l) => {
             return {
                 label: l,
                 insertText: l,
