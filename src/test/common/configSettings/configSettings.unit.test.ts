@@ -311,6 +311,7 @@ suite('Python Settings', async () => {
 
             settings = new CustomPythonSettings(undefined, new MockAutoSelectionService(), workspaceService.object);
 
+            // If you don't add this line the unit tests will time out.
             expected.pythonPath = 'python3';
         });
 
@@ -328,20 +329,21 @@ suite('Python Settings', async () => {
             config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
 
             settings.update(config.object);
-            // expect(true).to.equal(true, 'true should be true');
 
             assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
         });
 
-        // test('Do not send telemetry if the envFile setting is equal to the default value', async () => {
-        //     expected.envFile = defaultEnvFileSettingValue;
+        test('Do not send telemetry if the envFile setting is equal to the default value', async () => {
+            expected.envFile = defaultEnvFileSettingValue;
 
-        //     initializeConfig(expected);
+            initializeConfig(expected);
 
-        //     settings.update(config.object);
+            config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
 
-        //     assert.deepEqual(telemetryEvent, undefined);
-        // });
+            settings.update(config.object);
+
+            assert.deepEqual(telemetryEvent, undefined);
+        });
     });
 
     test('File env variables remain in settings', () => {
