@@ -599,7 +599,7 @@
             },
             {
                 "command": "python.datascience.gatherquality",
-                "title": "%DataScience.gatherGood%",
+                "title": "DataScience.gatherQuality",
                 "category": "Python"
             }
         ],
@@ -1037,6 +1037,12 @@
                     "title": "%DataScience.selectKernel%",
                     "category": "Python",
                     "when": "python.datascience.isnativeactive"
+                },
+                {
+                    "command": "python.datascience.gatherquality",
+                    "title": "%DataScience.gatherQuality%",
+                    "category": "Python",
+                    "when": "false"
                 }
             ],
             "view/title": [

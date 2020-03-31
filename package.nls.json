@@ -455,5 +455,6 @@
     "DataScience.selectNewServer": "Pick Running Server",
     "DataScience.jupyterSelectURIRemoteLabel":"Existing",
     "DataScience.jupyterSelectURIQuickPickTitleRemoteOnly": "Pick an already running jupyter server",
-    "DataScience.jupyterSelectURIRemoteDetail": "Specify the URI of an existing server"
+    "DataScience.jupyterSelectURIRemoteDetail": "Specify the URI of an existing server",
+    "DataScience.gatherQuality": "Did gather work as desired?"
 }
