@@ -55,7 +55,8 @@ export interface INotebookProviderConnection extends Disposable {
     readonly localLaunch: boolean;
     // Is the connection still valid
     readonly valid: boolean;
-    // IANHU: Display Name?
+    // Display name
+    readonly displayName: string;
     // IANHU: Do we need disconnected? If not for raw then do we need disposable?
     disconnected: Event<number>;
 }

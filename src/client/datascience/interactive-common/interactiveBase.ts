@@ -1044,23 +1044,25 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         return notebook;
     }
 
-    private getServerUri(serverConnection: INotebookProviderConnection): string {
+    private getServerUri(serverConnection: INotebookProviderConnection | undefined): string {
         let localizedUri = '';
 
-        // Determine the connection URI of the connected server to display
-        if (serverConnection.localLaunch) {
-            localizedUri = localize.DataScience.localJupyterServer();
-        } else {
-            // In remote case we are always a jupyter connection
-            const jupyterServerConnection = serverConnection as IConnection;
-            if (jupyterServerConnection.token) {
-                localizedUri = `${jupyterServerConnection.baseUrl}?token=${jupyterServerConnection.token}`;
+        if (serverConnection) {
+            // Determine the connection URI of the connected server to display
+            if (serverConnection.localLaunch) {
+                localizedUri = localize.DataScience.localJupyterServer();
             } else {
-                localizedUri = jupyterServerConnection.baseUrl;
-            }
+                // In remote case we are always a jupyter connection
+                const jupyterServerConnection = serverConnection as IConnection;
+                if (jupyterServerConnection.token) {
+                    localizedUri = `${jupyterServerConnection.baseUrl}?token=${jupyterServerConnection.token}`;
+                } else {
+                    localizedUri = jupyterServerConnection.baseUrl;
+                }
 
-            // Log this remote URI into our MRU list
-            addToUriList(this.globalStorage, localizedUri, Date.now());
+                // Log this remote URI into our MRU list
+                addToUriList(this.globalStorage, localizedUri, Date.now());
+            }
         }
 
         return localizedUri;
@@ -1076,7 +1078,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                     jupyterServerStatus: status,
                     // IANHU: Remove bang when we fix server property
-                    localizedUri: this.getServerUri(notebook.server.getConnectionInfo()!),
+                    localizedUri: this.getServerUri(notebook.connection),
                     displayName: name
                 });
             }
@@ -1249,7 +1251,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // Connection string only for our initial start, not restart or interrupt
                 let connectionString: string = '';
                 if (reason === SysInfoReason.Start) {
-                    connectionString = this.generateConnectionInfoString(this._notebook.server.getConnectionInfo());
+                    connectionString = this.generateConnectionInfoString(this._notebook.connection);
                 }
 
                 // Update our sys info with our locally applied data.
@@ -1290,15 +1292,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private generateConnectionInfoString(connInfo: IConnection | undefined): string {
-        if (!connInfo) {
-            return '';
-        }
-
-        const tokenString = connInfo.token.length > 0 ? `?token=${connInfo.token}` : '';
-        const urlString = `${connInfo.baseUrl}${tokenString}`;
-
-        return `${localize.DataScience.sysInfoURILabel()}${urlString}`;
+    private generateConnectionInfoString(connInfo: INotebookProviderConnection | undefined): string {
+        return connInfo?.displayName || '';
     }
 
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {

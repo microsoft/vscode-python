@@ -1242,7 +1242,8 @@ plt.show()`,
             assert.ok(notebook, 'Server should have started on port 9975');
             const hs = notebook as HostJupyterNotebook;
             // Check port number. Should have at least started with the one specified.
-            assert.ok(hs.server.getConnectionInfo()?.baseUrl.startsWith('http://localhost:99'), 'Port was not used');
+            const jupyterConnectionInfo = hs.connection as IConnection;
+            assert.ok(jupyterConnectionInfo.baseUrl.startsWith('http://localhost:99'), 'Port was not used');
 
             await verifySimple(hs, `a=1${os.EOL}a`, 1);
         }

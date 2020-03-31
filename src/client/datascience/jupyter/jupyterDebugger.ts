@@ -174,9 +174,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
 
         // Connect local or remote based on what type of notebook we're talking to
-        const connectionInfo = notebook.server.getConnectionInfo();
+        const connectionInfo = notebook.connection;
         if (connectionInfo && !connectionInfo.localLaunch) {
-            result = await this.connectToRemote(notebook, connectionInfo);
+            // Remote connections are always jupyter
+            const jupyterConnection = connectionInfo as IConnection;
+            result = await this.connectToRemote(notebook, jupyterConnection);
         } else {
             result = await this.connectToLocal(notebook);
         }
@@ -232,7 +234,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // installed locally by the extension
         // Actually until this is resolved: https://github.com/microsoft/vscode-python/issues/7615, skip adding
         // this path.
-        const connectionInfo = notebook.server.getConnectionInfo();
+        const connectionInfo = notebook.connection;
         if (connectionInfo && connectionInfo.localLaunch) {
             let localPath = await this.getDebuggerPath(notebook);
             if (this.platform.isWindows) {

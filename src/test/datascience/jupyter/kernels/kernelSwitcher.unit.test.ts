@@ -22,6 +22,7 @@ import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/k
 import { KernelSwitcher } from '../../../../client/datascience/jupyter/kernels/kernelSwitcher';
 import { LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
 import {
+    IConnection,
     IJupyterKernelSpec,
     IJupyterSessionManagerFactory,
     INotebook,
@@ -38,6 +39,7 @@ suite('Data Science - Kernel Switcher', () => {
     let kernelSelector: KernelSelector;
     let appShell: IApplicationShell;
     let notebook: INotebook;
+    let connection: IConnection;
     let notebookServer: INotebookServer;
     let currentKernel: IJupyterKernelSpec | LiveKernelModel;
     let selectedKernel: LiveKernelModel;
@@ -45,6 +47,7 @@ suite('Data Science - Kernel Switcher', () => {
     let selectedInterpreter: PythonInterpreter;
     let settings: IPythonSettings;
     setup(() => {
+        connection = mock<IConnection>();
         notebookServer = mock(JupyterServerWrapper);
         settings = mock(PythonSettings);
         currentKernel = {
@@ -83,7 +86,7 @@ suite('Data Science - Kernel Switcher', () => {
 
         // tslint:disable-next-line: no-any
         when(settings.datascience).thenReturn({} as any);
-        when(notebook.server).thenReturn(instance(notebookServer));
+        when(notebook.connection).thenReturn(instance(connection));
         when(configService.getSettings(anything())).thenReturn(instance(settings));
         kernelSwitcher = new KernelSwitcher(
             instance(configService),
@@ -109,6 +112,7 @@ suite('Data Science - Kernel Switcher', () => {
                     token: '',
                     localProcExitCode: 0,
                     valid: true,
+                    displayName: '',
                     dispose: noop
                 });
             });

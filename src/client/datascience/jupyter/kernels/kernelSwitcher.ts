@@ -52,16 +52,18 @@ export class KernelSwitcher {
 
         const settings = this.configService.getSettings(notebook.resource);
         const isLocalConnection =
-            notebook.server.getConnectionInfo()?.localLaunch ??
+            notebook.connection?.localLaunch ??
             settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
 
         if (isLocalConnection) {
             kernel = await this.selectLocalJupyterKernel(notebook.resource, notebook?.getKernelSpec());
         } else if (notebook) {
-            const connInfo = notebook.server.getConnectionInfo();
+            const connInfo = notebook.connection;
             const currentKernel = notebook.getKernelSpec();
             if (connInfo) {
-                kernel = await this.selectRemoteJupyterKernel(notebook.resource, connInfo, currentKernel);
+                // Remote connection is always jupyter connection
+                const jupyterConnInfo = connInfo as IConnection;
+                kernel = await this.selectRemoteJupyterKernel(notebook.resource, jupyterConnInfo, currentKernel);
             }
         }
         return kernel;
@@ -86,7 +88,7 @@ export class KernelSwitcher {
     private async switchKernelWithRetry(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
         const settings = this.configService.getSettings(notebook.resource);
         const isLocalConnection =
-            notebook.server.getConnectionInfo()?.localLaunch ??
+            notebook.connection?.localLaunch ??
             settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
         if (!isLocalConnection) {
             await this.switchToKernel(notebook, kernel);

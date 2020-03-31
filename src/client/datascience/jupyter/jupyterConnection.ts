@@ -240,6 +240,10 @@ class JupyterConnection implements IConnection {
         }
     }
 
+    public get displayName(): string {
+        return getJupyterConnectionDisplayName(this.token, this.baseUrl);
+    }
+
     public get disconnected(): Event<number> {
         return this.eventEmitter.event;
     }
@@ -249,4 +253,9 @@ class JupyterConnection implements IConnection {
             this.disposable.dispose();
         }
     }
+}
+
+export function getJupyterConnectionDisplayName(token: string, baseUrl: string): string {
+    const tokenString = token.length > 0 ? `?token=${token}` : '';
+    return `${baseUrl}${tokenString}`;
 }

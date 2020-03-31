@@ -34,7 +34,6 @@ import {
     INotebookCompletion,
     INotebookExecutionInfo,
     INotebookExecutionLogger,
-    INotebookServer,
     InterruptResult
 } from '../types';
 import { expandWorkingDir, modifyTraceback } from './jupyterUtils';

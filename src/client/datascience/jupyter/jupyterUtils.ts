@@ -11,6 +11,7 @@ import { IDataScienceSettings } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { SystemVariables } from '../../common/variables/systemVariables';
 import { Identifiers } from '../constants';
+import { getJupyterConnectionDisplayName } from '../jupyter/jupyterConnection';
 import { IConnection } from '../types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
@@ -42,15 +43,19 @@ export function createRemoteConnectionInfo(uri: string, settings: IDataScienceSe
         ? settings.allowUnauthorizedRemoteConnection
         : false;
 
+    const baseUrl = `${url.protocol}//${url.host}${url.pathname}`;
+    const token = `${url.searchParams.get('token')}`;
+
     return {
         type: 'jupyter',
         allowUnauthorized,
-        baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
-        token: `${url.searchParams.get('token')}`,
+        baseUrl,
+        token,
         hostName: url.hostname,
         localLaunch: false,
         localProcExitCode: undefined,
         valid: true,
+        displayName: getJupyterConnectionDisplayName(token, baseUrl),
         disconnected: _l => {
             return { dispose: noop };
         },

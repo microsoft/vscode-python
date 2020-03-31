@@ -17,7 +17,6 @@ import {
     INotebookCompletion,
     INotebookExecutionLogger,
     INotebookProviderConnection,
-    INotebookServer,
     InterruptResult
 } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
