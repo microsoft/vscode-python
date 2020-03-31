@@ -14,7 +14,6 @@ import { MessageConnection } from 'vscode-jsonrpc';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
-import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import {
     InterpreterInfomation,
     IProcessLogger,
@@ -41,7 +40,7 @@ suite('Daemon - Python Daemon Pool', () => {
     let logger: IProcessLogger;
     setup(() => {
         logger = instance(mock(ProcessLogger));
-        pythonExecService = mock(PythonExecutionService);
+        pythonExecService = mock<IPythonExecutionService>();
         (instance(pythonExecService) as any).then = undefined;
         sendRequestStub = sinon.stub();
         listenStub = sinon.stub();

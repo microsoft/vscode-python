@@ -9,12 +9,11 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { CondaExecutionService } from '../../../client/common/process/condaExecutionService';
+import { createPythonService } from '../../../client/common/process/pythonExecutionFactory';
 import { IProcessService, IPythonExecutionFactory } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
-import { IServiceContainer } from '../../../client/ioc/types';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { ReplProvider } from '../../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExecution/terminalCodeExecution';
@@ -308,14 +307,12 @@ suite('Terminal - Code Execution', () => {
                 workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
 
                 const condaFile = 'conda';
-                const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const processService = TypeMoq.Mock.ofType<IProcessService>();
-                const condaExecutionService = new CondaExecutionService(
-                    serviceContainer.object,
-                    processService.object,
+                const condaExecutionService = createPythonService(
                     pythonPath,
-                    condaFile,
-                    condaEnv
+                    processService.object,
+                    fileSystem.object,
+                    [condaFile, condaEnv]
                 );
                 pythonExecutionFactory
                     .setup((p) =>
@@ -415,14 +412,12 @@ suite('Terminal - Code Execution', () => {
                 terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
                 const condaFile = 'conda';
-                const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 const processService = TypeMoq.Mock.ofType<IProcessService>();
-                const condaExecutionService = new CondaExecutionService(
-                    serviceContainer.object,
-                    processService.object,
+                const condaExecutionService = createPythonService(
                     pythonPath,
-                    condaFile,
-                    condaEnv
+                    processService.object,
+                    fileSystem.object,
+                    [condaFile, condaEnv]
                 );
                 pythonExecutionFactory
                     .setup((p) =>

@@ -7,8 +7,8 @@ import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
-import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
+import { IFileSystem } from '../../../client/common/platform/types';
+import { createPythonService, PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import {
     ExecutionFactoryCreateWithEnvironmentOptions,
     IBufferDecoder,
@@ -93,7 +93,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
             const procService = (await ioc.serviceContainer
                 .get<IProcessServiceFactory>(IProcessServiceFactory)
                 .create()) as MockProcessService;
-            return new PythonExecutionService(this._serviceContainer, procService, pythonPath);
+            return createPythonService(pythonPath, procService, this._serviceContainer.get<IFileSystem>(IFileSystem));
         }
     }
     suiteSetup(async () => {

@@ -9,7 +9,6 @@ import { Newable } from '../../ioc/types';
 import { ExecutionInfo, IDisposable, Version } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
-import { CondaExecutionService } from './condaExecutionService';
 
 export const IBufferDecoder = Symbol('IBufferDecoder');
 export interface IBufferDecoder {
@@ -127,7 +126,7 @@ export interface IPythonExecutionFactory {
         pythonPath: string,
         processService?: IProcessService,
         resource?: Uri
-    ): Promise<CondaExecutionService | undefined>;
+    ): Promise<IPythonExecutionService | undefined>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];

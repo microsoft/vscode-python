@@ -11,13 +11,15 @@ import { Uri } from 'vscode';
 
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-import { CondaExecutionService } from '../../../client/common/process/condaExecutionService';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
-import { CONDA_RUN_VERSION, PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
-import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
+import {
+    CONDA_RUN_VERSION,
+    PythonExecutionFactory,
+    PythonExecutionService
+} from '../../../client/common/process/pythonExecutionFactory';
 import {
     ExecutionFactoryCreationOptions,
     IBufferDecoder,
@@ -26,7 +28,6 @@ import {
     IProcessServiceFactory,
     IPythonExecutionService
 } from '../../../client/common/process/types';
-import { WindowsStorePythonProcess } from '../../../client/common/process/windowsStorePythonProcess';
 import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
@@ -224,7 +225,7 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
                 verify(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).once();
-                expect(service).instanceOf(WindowsStorePythonProcess);
+                expect(service).instanceOf(PythonExecutionService);
             });
 
             test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
@@ -252,7 +253,7 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
-                expect(service).instanceOf(CondaExecutionService);
+                expect(service).instanceOf(PythonExecutionService);
             });
 
             test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
@@ -308,7 +309,7 @@ suite('Process - PythonExecutionFactory', () => {
                     verify(condaService.getCondaEnvironment(interpreter.path)).once();
                 }
 
-                expect(service).instanceOf(CondaExecutionService);
+                expect(service).instanceOf(PythonExecutionService);
             });
 
             test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
@@ -355,7 +356,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const result = await factory.createCondaExecutionService(pythonPath, processService.object, resource);
 
-                expect(result).instanceOf(CondaExecutionService);
+                expect(result).instanceOf(PythonExecutionService);
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
@@ -373,7 +374,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const result = await factory.createCondaExecutionService(pythonPath, undefined, resource);
 
-                expect(result).instanceOf(CondaExecutionService);
+                expect(result).instanceOf(PythonExecutionService);
                 verify(processFactory.create(resource)).once();
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).once();
