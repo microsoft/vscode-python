@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.3.1 (30 March 2020)
+## 2020.3.1 (31 March 2020)
 
 ### Fixes
 
