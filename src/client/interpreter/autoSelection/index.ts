@@ -102,7 +102,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
             await this.clearWorkspaceStoreIfInvalid(resource);
             await this.userDefinedInterpreter.autoSelectInterpreter(resource, this);
             this.didAutoSelectedInterpreterEmitter.fire();
-            Promise.all(this.rules.map(item => item.autoSelectInterpreter(resource))).ignoreErrors();
+            Promise.all(this.rules.map((item) => item.autoSelectInterpreter(resource))).ignoreErrors();
             deferred.resolve();
         }
         return this.autoSelectedWorkspacePromises.get(key)!.promise;

@@ -163,9 +163,9 @@ export class DebuggerBanner implements IDebuggerBanner {
 
     private addCallback() {
         const debuggerService = this.serviceContainer.get<IDebugService>(IDebugService);
-        const disposable = debuggerService.onDidTerminateDebugSession(async e => {
+        const disposable = debuggerService.onDidTerminateDebugSession(async (e) => {
             if (e.type === DebuggerTypeName) {
-                await this.onDidTerminateDebugSession().catch(ex => traceError('Error in debugger Banner', ex));
+                await this.onDidTerminateDebugSession().catch((ex) => traceError('Error in debugger Banner', ex));
             }
         });
         this.serviceContainer.get<Disposable[]>(IDisposableRegistry).push(disposable);

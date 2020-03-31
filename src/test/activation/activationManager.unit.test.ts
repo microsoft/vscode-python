@@ -75,7 +75,7 @@ suite('Language Server Activation - ActivationManager', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const eventDef = () => disposable2.object;
         documentManager
-            .setup(d => d.onDidOpenTextDocument)
+            .setup((d) => d.onDidOpenTextDocument)
             .returns(() => eventDef)
             .verifiable(typemoq.Times.once());
 
@@ -87,8 +87,8 @@ suite('Language Server Activation - ActivationManager', () => {
 
         documentManager.verifyAll();
 
-        disposable.setup(d => d.dispose()).verifiable(typemoq.Times.once());
-        disposable2.setup(d => d.dispose()).verifiable(typemoq.Times.once());
+        disposable.setup((d) => d.dispose()).verifiable(typemoq.Times.once());
+        disposable2.setup((d) => d.dispose()).verifiable(typemoq.Times.once());
 
         managerTest.dispose();
 
@@ -103,11 +103,11 @@ suite('Language Server Activation - ActivationManager', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const eventDef = () => disposable2.object;
         documentManager
-            .setup(d => d.onDidOpenTextDocument)
+            .setup((d) => d.onDidOpenTextDocument)
             .returns(() => eventDef)
             .verifiable(typemoq.Times.once());
-        disposable.setup(d => d.dispose());
-        disposable2.setup(d => d.dispose());
+        disposable.setup((d) => d.dispose());
+        disposable2.setup((d) => d.dispose());
 
         await managerTest.initialize();
 
@@ -115,8 +115,8 @@ suite('Language Server Activation - ActivationManager', () => {
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(workspaceService.onDidChangeWorkspaceFolders).once();
         documentManager.verifyAll();
-        disposable.verify(d => d.dispose(), typemoq.Times.never());
-        disposable2.verify(d => d.dispose(), typemoq.Times.never());
+        disposable.verify((d) => d.dispose(), typemoq.Times.never());
+        disposable2.verify((d) => d.dispose(), typemoq.Times.never());
 
         when(workspaceService.workspaceFolders).thenReturn([]);
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
@@ -124,13 +124,13 @@ suite('Language Server Activation - ActivationManager', () => {
         await managerTest.initialize();
 
         verify(workspaceService.hasWorkspaceFolders).twice();
-        disposable.verify(d => d.dispose(), typemoq.Times.never());
-        disposable2.verify(d => d.dispose(), typemoq.Times.once());
+        disposable.verify((d) => d.dispose(), typemoq.Times.never());
+        disposable2.verify((d) => d.dispose(), typemoq.Times.once());
 
         managerTest.dispose();
 
-        disposable.verify(d => d.dispose(), typemoq.Times.atLeast(1));
-        disposable2.verify(d => d.dispose(), typemoq.Times.once());
+        disposable.verify((d) => d.dispose(), typemoq.Times.atLeast(1));
+        disposable2.verify((d) => d.dispose(), typemoq.Times.once());
     });
     test('Activate workspace specific to the resource in case of Multiple workspaces when a file is opened', async () => {
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
@@ -139,16 +139,16 @@ suite('Language Server Activation - ActivationManager', () => {
         let workspaceFoldersChangedHandler!: Function;
         const documentUri = Uri.file('a');
         const document = typemoq.Mock.ofType<TextDocument>();
-        document.setup(d => d.uri).returns(() => documentUri);
-        document.setup(d => d.languageId).returns(() => PYTHON_LANGUAGE);
+        document.setup((d) => d.uri).returns(() => documentUri);
+        document.setup((d) => d.languageId).returns(() => PYTHON_LANGUAGE);
 
-        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(cb => {
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn((cb) => {
             workspaceFoldersChangedHandler = cb;
             return disposable1.object;
         });
         documentManager
-            .setup(w => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
-            .callback(cb => (fileOpenedHandler = cb))
+            .setup((w) => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
+            .callback((cb) => (fileOpenedHandler = cb))
             .returns(() => disposable2.object)
             .verifiable(typemoq.Times.once());
 
@@ -165,11 +165,11 @@ suite('Language Server Activation - ActivationManager', () => {
         when(activationService2.activate(resource)).thenResolve();
         when(interpreterService.getInterpreters(anything())).thenResolve();
         autoSelection
-            .setup(a => a.autoSelectInterpreter(resource))
+            .setup((a) => a.autoSelectInterpreter(resource))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         appDiagnostics
-            .setup(a => a.performPreStartupHealthCheck(resource))
+            .setup((a) => a.performPreStartupHealthCheck(resource))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         // Add workspaceFoldersChangedHandler
@@ -198,11 +198,11 @@ suite('Language Server Activation - ActivationManager', () => {
         when(activationService2.activate(resource)).thenResolve();
         when(interpreterService.getInterpreters(anything())).thenResolve();
         autoSelection
-            .setup(a => a.autoSelectInterpreter(resource))
+            .setup((a) => a.autoSelectInterpreter(resource))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         appDiagnostics
-            .setup(a => a.performPreStartupHealthCheck(resource))
+            .setup((a) => a.performPreStartupHealthCheck(resource))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
@@ -218,11 +218,11 @@ suite('Language Server Activation - ActivationManager', () => {
         when(activationService2.activate(resource)).thenResolve();
         when(interpreterService.getInterpreters(anything())).thenResolve();
         autoSelection
-            .setup(a => a.autoSelectInterpreter(resource))
+            .setup((a) => a.autoSelectInterpreter(resource))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         appDiagnostics
-            .setup(a => a.performPreStartupHealthCheck(resource))
+            .setup((a) => a.performPreStartupHealthCheck(resource))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
@@ -280,15 +280,15 @@ suite('Language Server Activation - ActivationManager', () => {
         let workspaceFoldersChangedHandler!: Function;
         const documentUri = Uri.file('a');
         const document = typemoq.Mock.ofType<TextDocument>();
-        document.setup(d => d.uri).returns(() => documentUri);
+        document.setup((d) => d.uri).returns(() => documentUri);
 
-        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(cb => {
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn((cb) => {
             workspaceFoldersChangedHandler = cb;
             return disposable1.object;
         });
         documentManager
-            .setup(w => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
-            .callback(cb => (docOpenedHandler = cb))
+            .setup((w) => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
+            .callback((cb) => (docOpenedHandler = cb))
             .returns(() => disposable2.object)
             .verifiable(typemoq.Times.once());
 
@@ -320,7 +320,7 @@ suite('Language Server Activation - ActivationManager', () => {
         //Removed no. of folders to one
         when(workspaceService.workspaceFolders).thenReturn([folder1]);
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
-        disposable2.setup(d => d.dispose()).verifiable(typemoq.Times.once());
+        disposable2.setup((d) => d.dispose()).verifiable(typemoq.Times.once());
 
         workspaceFoldersChangedHandler.call(managerTest);
 
@@ -378,11 +378,11 @@ suite('Language Server Activation - activate()', () => {
 
     test('Execution goes as expected if there are no errors', async () => {
         singleActivationService
-            .setup(s => s.activate())
+            .setup((s) => s.activate())
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         autoSelection
-            .setup(a => a.autoSelectInterpreter(undefined))
+            .setup((a) => a.autoSelectInterpreter(undefined))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         when(activeResourceService.getActiveResource()).thenReturn(resource);
@@ -395,11 +395,11 @@ suite('Language Server Activation - activate()', () => {
 
     test('Throws error if execution fails', async () => {
         singleActivationService
-            .setup(s => s.activate())
+            .setup((s) => s.activate())
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
         autoSelection
-            .setup(a => a.autoSelectInterpreter(undefined))
+            .setup((a) => a.autoSelectInterpreter(undefined))
             .returns(() => Promise.reject(new Error('Kaboom')))
             .verifiable(typemoq.Times.once());
         when(activeResourceService.getActiveResource()).thenReturn(resource);

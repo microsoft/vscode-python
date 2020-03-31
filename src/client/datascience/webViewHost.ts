@@ -21,6 +21,9 @@ import { ICodeCssGenerator, IDataScienceExtraSettings, IThemeFinder, WebViewView
 
 @injectable() // For some reason this is necessary to get the class hierarchy to work.
 export abstract class WebViewHost<IMapping> implements IDisposable {
+    protected get isDisposed(): boolean {
+        return this.disposed;
+    }
     protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
     private disposed: boolean = false;
     private webPanel: IWebPanel | undefined;
@@ -63,13 +66,6 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
         this.settingsChangeHandler = this.configService
             .getSettings(undefined)
             .onDidChange(this.onDataScienceSettingsChanged.bind(this));
-
-        // Send the first settings message
-        this.onDataScienceSettingsChanged().ignoreErrors();
-
-        // Send the loc strings (skip during testing as it takes up a lot of memory)
-        const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
-        this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
     }
 
     public async show(preserveFocus: boolean): Promise<void> {
@@ -123,10 +119,6 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
     }
 
     protected abstract getOwningResource(): Promise<Resource>;
-
-    protected get isDisposed(): boolean {
-        return this.disposed;
-    }
 
     //tslint:disable-next-line:no-any
     protected onMessage(message: string, payload: any) {
@@ -275,7 +267,25 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
 
             traceInfo('Web view created.');
         }
+
+        // Send the first settings message
+        this.onDataScienceSettingsChanged().ignoreErrors();
+
+        // Send the loc strings (skip during testing as it takes up a lot of memory)
+        this.sendLocStrings().ignoreErrors();
     }
+
+    protected async sendLocStrings() {
+        const locStrings = isTestExecution() ? '{}' : localize.getCollectionJSON();
+        this.postMessageInternal(SharedMessages.LocInit, locStrings).ignoreErrors();
+    }
+
+    // Post a message to our webpanel and update our new datascience settings
+    protected onDataScienceSettingsChanged = async () => {
+        // Stringify our settings to send over to the panel
+        const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
+        this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
+    };
 
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
         if (workspaceConfig) {
@@ -332,6 +342,10 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
 
             traceInfo('Web view react rendered');
         }
+
+        // On started, resend our init data.
+        this.sendLocStrings().ignoreErrors();
+        this.onDataScienceSettingsChanged().ignoreErrors();
     }
 
     // Post a message to our webpanel and update our new datascience settings
@@ -361,12 +375,5 @@ export abstract class WebViewHost<IMapping> implements IDisposable {
                 this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
             }
         }
-    };
-
-    // Post a message to our webpanel and update our new datascience settings
-    private onDataScienceSettingsChanged = async () => {
-        // Stringify our settings to send over to the panel
-        const dsSettings = JSON.stringify(await this.generateDataScienceExtraSettings());
-        this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
     };
 }

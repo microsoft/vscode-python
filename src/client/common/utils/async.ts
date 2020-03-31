@@ -4,7 +4,7 @@
 'use strict';
 
 export async function sleep(timeout: number): Promise<void> {
-    return new Promise<void>(resolve => {
+    return new Promise<void>((resolve) => {
         setTimeout(resolve, timeout);
     });
 }
@@ -14,13 +14,13 @@ export async function waitForPromise<T>(promise: Promise<T>, timeout: number): P
     return new Promise<T | null>((resolve, reject) => {
         const timer = setTimeout(() => resolve(null), timeout);
         promise
-            .then(result => {
+            .then((result) => {
                 // When the promise resolves, make sure to clear the timer or
                 // the timer may stick around causing tests to wait
                 clearTimeout(timer);
                 resolve(result);
             })
-            .catch(e => {
+            .catch((e) => {
                 clearTimeout(timer);
                 reject(e);
             });

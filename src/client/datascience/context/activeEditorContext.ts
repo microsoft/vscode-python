@@ -48,7 +48,7 @@ export class ActiveEditorContextService implements IExtensionSingleActivationSer
         );
     }
     public dispose() {
-        this.disposables.forEach(item => item.dispose());
+        this.disposables.forEach((item) => item.dispose());
     }
     public async activate(): Promise<void> {
         this.docManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditor, this, this.disposables);

@@ -42,15 +42,15 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
             // In case we have pythonPath as '/usr/bin/env python'.
             const parts = pythonPath
                 .split(' ')
-                .map(part => part.trim())
-                .filter(part => part.length > 0);
+                .map((part) => part.trim())
+                .filter((part) => part.length > 0);
             cmdFile = parts.shift()!;
             args = parts.concat(args);
         }
         const processService = await this.processServiceFactory.create(resource);
         return processService
             .exec(cmdFile, args)
-            .then(output => output.stdout.trim())
+            .then((output) => output.stdout.trim())
             .catch(() => '');
     }
     private async createShebangCodeLens(document: TextDocument) {

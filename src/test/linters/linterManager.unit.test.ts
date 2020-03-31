@@ -69,14 +69,14 @@ suite('Linting - Linter Manager', () => {
 
         const productService = new ProductService();
         const linterProducts = getNamesAndValues<Product>(Product)
-            .filter(product => productService.getProductType(product.value) === ProductType.Linter)
-            .map(item => ProductNames.get(item.value));
-        expect(linters.map(item => item.id).sort()).to.be.deep.equal(linterProducts.sort());
+            .filter((product) => productService.getProductType(product.value) === ProductType.Linter)
+            .map((item) => ProductNames.get(item.value));
+        expect(linters.map((item) => item.id).sort()).to.be.deep.equal(linterProducts.sort());
     });
 
     test('Get linter info for non-linter product should throw an exception', () => {
         const productService = new ProductService();
-        getNamesAndValues<Product>(Product).forEach(prod => {
+        getNamesAndValues<Product>(Product).forEach((prod) => {
             if (productService.getProductType(prod.value) === ProductType.Linter) {
                 const info = linterManager.getLinterInfo(prod.value);
                 expect(info.id).to.equal(ProductNames.get(prod.value));
@@ -93,9 +93,9 @@ suite('Linting - Linter Manager', () => {
         assert.notEqual(pylint.configFileNames.indexOf('.pylintrc'), -1, 'Pylint configuration files miss .pylintrc.');
     });
 
-    [undefined, Uri.parse('something')].forEach(resource => {
+    [undefined, Uri.parse('something')].forEach((resource) => {
         const testResourceSuffix = `(${resource ? 'with a resource' : 'without a resource'})`;
-        [true, false].forEach(enabled => {
+        [true, false].forEach((enabled) => {
             const testSuffix = `(${enabled ? 'enable' : 'disable'}) & ${testResourceSuffix}`;
             test(`Enable linting should update config ${testSuffix}`, async () => {
                 when(configService.updateSetting('linting.enabled', enabled, resource)).thenResolve();
@@ -162,15 +162,17 @@ suite('Linting - Linter Manager', () => {
             const linters = new Map<Product, LinterInfo>();
             const linterInstances = new Map<Product, LinterInfo>();
             linterManager.linters = [];
-            [Product.flake8, Product.mypy, Product.prospector, Product.bandit, Product.pydocstyle].forEach(product => {
-                const linterInfo = mock(LinterInfo);
-                const instanceOfLinterInfo = instance(linterInfo);
-                linterManager.linters.push(instanceOfLinterInfo);
-                linters.set(product, linterInfo);
-                linterInstances.set(product, instanceOfLinterInfo);
-                when(linterInfo.product).thenReturn(product);
-                when(linterInfo.enableAsync(anything(), resource)).thenResolve();
-            });
+            [Product.flake8, Product.mypy, Product.prospector, Product.bandit, Product.pydocstyle].forEach(
+                (product) => {
+                    const linterInfo = mock(LinterInfo);
+                    const instanceOfLinterInfo = instance(linterInfo);
+                    linterManager.linters.push(instanceOfLinterInfo);
+                    linters.set(product, linterInfo);
+                    linterInstances.set(product, instanceOfLinterInfo);
+                    when(linterInfo.product).thenReturn(product);
+                    when(linterInfo.enableAsync(anything(), resource)).thenResolve();
+                }
+            );
 
             linterManager.getActiveLinters = () => Promise.resolve(Array.from(linterInstances.values()));
             linterManager.enableLintingAsync = () => Promise.resolve();

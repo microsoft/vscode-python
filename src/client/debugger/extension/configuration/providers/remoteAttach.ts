@@ -42,7 +42,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
             totalSteps: 2,
             value: config.host || defaultHost,
             prompt: DebugConfigStrings.attach.enterRemoteHost.prompt(),
-            validate: value =>
+            validate: (value) =>
                 Promise.resolve(
                     value && value.trim().length > 0 ? undefined : DebugConfigStrings.attach.enterRemoteHost.invalid()
                 )
@@ -56,7 +56,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
             manuallyEnteredAValue: config.host !== defaultHost
         });
         Object.assign(state.config, config);
-        return _ => this.configurePort(input, state.config);
+        return (_) => this.configurePort(input, state.config);
     }
     protected async configurePort(
         input: MultiStepInput<DebugConfigurationState>,
@@ -68,7 +68,7 @@ export class RemoteAttachDebugConfigurationProvider implements IDebugConfigurati
             totalSteps: 2,
             value: (config.port || defaultPort).toString(),
             prompt: DebugConfigStrings.attach.enterRemotePort.prompt(),
-            validate: value =>
+            validate: (value) =>
                 Promise.resolve(
                     value && /^\d+$/.test(value.trim())
                         ? undefined

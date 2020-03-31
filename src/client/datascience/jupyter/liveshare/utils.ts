@@ -30,7 +30,7 @@ async function waitForAvailability<T extends IChangeWatchable>(service: T): Prom
     const deferred = createDeferred<T>();
     let disposable: Disposable | undefined;
     try {
-        disposable = service.onDidChangeIsServiceAvailable(e => {
+        disposable = service.onDidChangeIsServiceAvailable((e) => {
             if (e) {
                 deferred.resolve(service);
             }

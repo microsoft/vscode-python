@@ -256,7 +256,7 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
             const result = await languageClient.sendRequest(vscodeLanguageClient.ReferencesRequest.type, args, token);
             if (result) {
                 // Remove undefined part.
-                return result.map(l => {
+                return result.map((l) => {
                     const r = languageClient!.protocol2CodeConverter.asLocation(l);
                     return r!;
                 });

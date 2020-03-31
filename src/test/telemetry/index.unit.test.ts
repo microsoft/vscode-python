@@ -62,12 +62,12 @@ suite('Telemetry', () => {
     ];
 
     suite('Function isTelemetryDisabled()', () => {
-        testsForisTelemetryDisabled.forEach(testParams => {
+        testsForisTelemetryDisabled.forEach((testParams) => {
             test(testParams.testName, async () => {
                 const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                 when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
                 workspaceConfig
-                    .setup(c => c.inspect<string>('enableTelemetry'))
+                    .setup((c) => c.inspect<string>('enableTelemetry'))
                     .returns(() => testParams.settings as any)
                     .verifiable(TypeMoq.Times.once());
 

@@ -260,7 +260,7 @@ suite('Common Utils - CacheUtils', () => {
                     { index: 0, name: '1', uri: Uri.parse('wkfolder1') },
                     { index: 1, name: '2', uri: Uri.parse('wkfolder2') }
                 ];
-                vsc.workspace.getWorkspaceFolder = res => {
+                vsc.workspace.getWorkspaceFolder = (res) => {
                     const index = res.fsPath === resource.fsPath ? 0 : 1;
                     return vsc.workspace.workspaceFolders![index];
                 };

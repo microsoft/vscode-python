@@ -33,7 +33,7 @@ function extractParamDocString(paramName: string, docString: string): string {
     // In docstring the '*' is escaped with a backslash
     paramName = paramName.replace(new RegExp('\\*', 'g'), '\\\\\\*');
 
-    DOCSTRING_PARAM_PATTERNS.forEach(pattern => {
+    DOCSTRING_PARAM_PATTERNS.forEach((pattern) => {
         if (paramDocString.length > 0) {
             return;
         }
@@ -60,7 +60,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
             const signature = new SignatureHelp();
             signature.activeSignature = 0;
 
-            data.definitions.forEach(def => {
+            data.definitions.forEach((def) => {
                 signature.activeParameter = def.paramindex;
                 // Don't display the documentation, as vs code doesn't format the documentation.
                 // i.e. line feeds are not respected, long content is stripped.
@@ -77,7 +77,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
                     documentation = docLines.join(EOL).trim();
                 } else {
                     if (def.params && def.params.length > 0) {
-                        label = `${def.name}(${def.params.map(p => p.name).join(', ')})`;
+                        label = `${def.name}(${def.params.map((p) => p.name).join(', ')})`;
                         documentation = def.docstring;
                     } else {
                         label = def.description;
@@ -93,7 +93,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
                 };
 
                 if (def.params && def.params.length) {
-                    sig.parameters = def.params.map(arg => {
+                    sig.parameters = def.params.map((arg) => {
                         if (arg.docstring.length === 0) {
                             arg.docstring = extractParamDocString(arg.name, def.docstring);
                         }
@@ -132,7 +132,7 @@ export class PythonSignatureProvider implements SignatureHelpProvider {
         return this.jediFactory
             .getJediProxyHandler<proxy.IArgumentsResult>(document.uri)
             .sendCommand(cmd, token)
-            .then(data => {
+            .then((data) => {
                 return data ? PythonSignatureProvider.parseData(data) : new SignatureHelp();
             });
     }

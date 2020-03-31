@@ -28,7 +28,7 @@ export class TestCodeNavigatorCommandHandler implements ITestCodeNavigatorComman
         disposableRegistry.push(this);
     }
     public dispose() {
-        this.disposables.forEach(item => item.dispose());
+        this.disposables.forEach((item) => item.dispose());
     }
     public register(): void {
         if (this.disposables.length > 0) {

@@ -35,7 +35,7 @@ import { TestDataItem, TestDataItemType, TestWorkspaceFolder } from '../../../cl
 function longestCommonSubstring(strings: string[]): string {
     strings = strings.concat().sort();
     let substr = strings.shift() || '';
-    strings.forEach(str => {
+    strings.forEach((str) => {
         for (const [idx, ch] of [...substr].entries()) {
             if (str[idx] !== ch) {
                 substr = substr.substring(0, idx);
@@ -105,8 +105,8 @@ export function createMockTestDataItem<T extends TestDataItem>(
 }
 
 export function createSubtestParent(funcs: TestFunction[]): SubtestParent {
-    const name = longestCommonSubstring(funcs.map(func => func.name));
-    const nameToRun = longestCommonSubstring(funcs.map(func => func.nameToRun));
+    const name = longestCommonSubstring(funcs.map((func) => func.name));
+    const nameToRun = longestCommonSubstring(funcs.map((func) => func.nameToRun));
     const subtestParent: SubtestParent = {
         name: name,
         nameToRun: nameToRun,
@@ -123,7 +123,7 @@ export function createSubtestParent(funcs: TestFunction[]): SubtestParent {
         },
         time: 0
     };
-    funcs.forEach(func => {
+    funcs.forEach((func) => {
         func.subtestParent = subtestParent;
     });
     return subtestParent;
@@ -141,13 +141,13 @@ export function createTests(
         rootTestFolders: folders.length > 0 ? [folders[0]] : [],
         testFolders: folders,
         testFiles: files,
-        testSuites: suites.map(suite => {
+        testSuites: suites.map((suite) => {
             return {
                 testSuite: suite,
                 xmlClassName: suite.xmlName
             } as any;
         }),
-        testFunctions: funcs.map(func => {
+        testFunctions: funcs.map((func) => {
             return {
                 testFunction: func,
                 xmlClassName: func.name

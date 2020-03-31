@@ -19,10 +19,9 @@ import {
     ICodeLensFactory,
     IFileHashes,
     IInteractiveWindowListener,
-    IInteractiveWindowProvider,
-    IJupyterExecution,
     INotebook,
-    INotebookExecutionLogger
+    INotebookExecutionLogger,
+    INotebookProvider
 } from '../types';
 
 @injectable()
@@ -39,8 +38,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
 
     constructor(
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IFileSystem) private fileSystem: IFileSystem
     ) {}
 
@@ -95,8 +93,8 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         const codeLenses: CodeLens[] = [];
         let firstCell = true;
 
-        ranges.forEach(range => {
-            commands.forEach(c => {
+        ranges.forEach((range) => {
+            commands.forEach((c) => {
                 const codeLens = this.createCodeLens(document, range, c, firstCell);
                 if (codeLens) {
                     codeLenses.push(codeLens);
@@ -116,21 +114,13 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         }
 
         // First get the active server
-        const activeServer = await this.jupyterExecution.getServer(
-            await this.interactiveWindowProvider.getNotebookOptions(nbUri)
-        );
+        const nb = await this.notebookProvider.getOrCreateNotebook({ identity: nbUri, getOnly: true });
 
-        let nb: INotebook | undefined;
-        // If that works, see if there's a matching notebook running
-        if (activeServer) {
-            nb = await activeServer.getNotebook(nbUri);
-
-            // If we have an executing notebook, get its cell hash provider service.
-            if (nb) {
-                this.hashProvider = this.getCellHashProvider(nb);
-                if (this.hashProvider) {
-                    this.hashProvider.updated(this.hashesUpdated.bind(this));
-                }
+        // If we have an executing notebook, get its cell hash provider service.
+        if (nb) {
+            this.hashProvider = this.getCellHashProvider(nb);
+            if (this.hashProvider) {
+                this.hashProvider.updated(this.hashesUpdated.bind(this));
             }
         }
     }
@@ -149,7 +139,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         // Add our non-debug commands
         const commands = this.configService.getSettings(resource).datascience.codeLenses;
         if (commands) {
-            fullCommandList = commands.split(',').map(s => s.trim());
+            fullCommandList = commands.split(',').map((s) => s.trim());
         } else {
             fullCommandList = CodeLensCommands.DefaultDesignLenses;
         }
@@ -157,7 +147,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         // Add our debug commands
         const debugCommands = this.configService.getSettings(resource).datascience.debugCodeLenses;
         if (debugCommands) {
-            fullCommandList = fullCommandList.concat(debugCommands.split(',').map(s => s.trim()));
+            fullCommandList = fullCommandList.concat(debugCommands.split(',').map((s) => s.trim()));
         } else {
             fullCommandList = fullCommandList.concat(CodeLensCommands.DefaultDebuggingLenses);
         }
@@ -293,10 +283,10 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     }
 
     private addExecutionCount(codeLens: CodeLens[], document: TextDocument, range: Range, hashes: IFileHashes[]) {
-        const list = hashes.find(h => this.fileSystem.arePathsSame(h.file, document.fileName));
+        const list = hashes.find((h) => this.fileSystem.arePathsSame(h.file, document.fileName));
         if (list) {
             // Match just the start of the range. Should be - 2 (1 for 1 based numbers and 1 for skipping the comment at the top)
-            const rangeMatches = list.hashes.filter(h => h.line - 2 === range.start.line);
+            const rangeMatches = list.hashes.filter((h) => h.line - 2 === range.start.line);
             if (rangeMatches && rangeMatches.length) {
                 const rangeMatch = rangeMatches[rangeMatches.length - 1];
                 if (this.cellExecutionCounts.has(rangeMatch.id)) {

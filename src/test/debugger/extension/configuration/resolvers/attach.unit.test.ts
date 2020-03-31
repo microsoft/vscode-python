@@ -55,13 +55,13 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
             serviceContainer
-                .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
+                .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
                 .returns(() => platformService.object);
-            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
+            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
             setUpOSMocks(osType, platformService);
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
             experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
-            experimentsManager.setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => true);
+            experimentsManager.setup((e) => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => true);
 
             debugProvider = new AttachConfigurationResolver(
                 workspaceService.object,
@@ -73,29 +73,29 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         });
         function createMoqWorkspaceFolder(folderPath: string) {
             const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
-            folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
+            folder.setup((f) => f.uri).returns(() => Uri.file(folderPath));
             return folder.object;
         }
         function setupActiveEditor(fileName: string | undefined, languageId: string) {
             if (fileName) {
                 const textEditor = TypeMoq.Mock.ofType<TextEditor>();
                 const document = TypeMoq.Mock.ofType<TextDocument>();
-                document.setup(d => d.languageId).returns(() => languageId);
-                document.setup(d => d.fileName).returns(() => fileName);
-                textEditor.setup(t => t.document).returns(() => document.object);
-                documentManager.setup(d => d.activeTextEditor).returns(() => textEditor.object);
+                document.setup((d) => d.languageId).returns(() => languageId);
+                document.setup((d) => d.fileName).returns(() => fileName);
+                textEditor.setup((t) => t.document).returns(() => document.object);
+                documentManager.setup((d) => d.activeTextEditor).returns(() => textEditor.object);
             } else {
-                documentManager.setup(d => d.activeTextEditor).returns(() => undefined);
+                documentManager.setup((d) => d.activeTextEditor).returns(() => undefined);
             }
             serviceContainer
-                .setup(c => c.get(TypeMoq.It.isValue(IDocumentManager)))
+                .setup((c) => c.get(TypeMoq.It.isValue(IDocumentManager)))
                 .returns(() => documentManager.object);
         }
         function setupWorkspaces(folders: string[]) {
             const workspaceFolders = folders.map(createMoqWorkspaceFolder);
-            workspaceService.setup(w => w.workspaceFolders).returns(() => workspaceFolders);
+            workspaceService.setup((w) => w.workspaceFolders).returns(() => workspaceFolders);
             serviceContainer
-                .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService)))
+                .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService)))
                 .returns(() => workspaceService.object);
         }
         test('Defaults should be returned when an empty object is passed with a Workspace Folder and active file', async () => {
@@ -110,9 +110,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.above(3);
             expect(debugConfig).to.have.property('request', 'attach');
-            expect(debugConfig)
-                .to.have.property('debugOptions')
-                .deep.equal(debugOptionsAvailable);
+            expect(debugConfig).to.have.property('debugOptions').deep.equal(debugOptionsAvailable);
         });
         test('Defaults should be returned when an empty object is passed without Workspace Folder, no workspaces and active file', async () => {
             const pythonFile = 'xyz.py';
@@ -126,9 +124,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
             expect(debugConfig).to.have.property('request', 'attach');
-            expect(debugConfig)
-                .to.have.property('debugOptions')
-                .deep.equal(debugOptionsAvailable);
+            expect(debugConfig).to.have.property('debugOptions').deep.equal(debugOptionsAvailable);
             expect(debugConfig).to.have.property('host', 'localhost');
         });
         test('Defaults should be returned when an empty object is passed without Workspace Folder, no workspaces and no active file', async () => {
@@ -141,9 +137,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
             expect(debugConfig).to.have.property('request', 'attach');
-            expect(debugConfig)
-                .to.have.property('debugOptions')
-                .deep.equal(debugOptionsAvailable);
+            expect(debugConfig).to.have.property('debugOptions').deep.equal(debugOptionsAvailable);
             expect(debugConfig).to.have.property('host', 'localhost');
         });
         test('Defaults should be returned when an empty object is passed without Workspace Folder, no workspaces and non python file', async () => {
@@ -158,9 +152,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
             expect(debugConfig).to.have.property('request', 'attach');
-            expect(debugConfig)
-                .to.have.property('debugOptions')
-                .deep.equal(debugOptionsAvailable);
+            expect(debugConfig).to.have.property('debugOptions').deep.equal(debugOptionsAvailable);
             expect(debugConfig).to.not.have.property('localRoot');
             expect(debugConfig).to.have.property('host', 'localhost');
         });
@@ -176,9 +168,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(Object.keys(debugConfig!)).to.have.lengthOf.least(3);
             expect(debugConfig).to.have.property('request', 'attach');
-            expect(debugConfig)
-                .to.have.property('debugOptions')
-                .deep.equal(debugOptionsAvailable);
+            expect(debugConfig).to.have.property('debugOptions').deep.equal(debugOptionsAvailable);
             expect(debugConfig).to.have.property('host', 'localhost');
         });
         test('Default host should not be added if connect is available.', async () => {
@@ -222,7 +212,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             expect(debugConfig).to.have.property('localRoot', localRoot);
         });
-        ['localhost', 'LOCALHOST', '127.0.0.1', '::1'].forEach(host => {
+        ['localhost', 'LOCALHOST', '127.0.0.1', '::1'].forEach((host) => {
             test(`Ensure path mappings are automatically added when host is '${host}'`, async () => {
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
@@ -243,7 +233,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 expect(pathMappings![0].localRoot).to.be.equal(workspaceFolder.uri.fsPath);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
             });
-            test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}'`, async function() {
+            test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}'`, async function () {
                 if (getOSType() !== OSType.Windows || osType !== OSType.Windows) {
                     return this.skip();
                 }
@@ -265,7 +255,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
             });
-            test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}'`, async function() {
+            test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}'`, async function () {
                 if (getOSType() === OSType.Windows || osType === OSType.Windows) {
                     return this.skip();
                 }
@@ -287,7 +277,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
             });
-            test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}' and with existing path mappings`, async function() {
+            test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}' and with existing path mappings`, async function () {
                 if (getOSType() !== OSType.Windows || osType !== OSType.Windows) {
                     return this.skip();
                 }
@@ -313,7 +303,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 expect(pathMappings![0].localRoot).to.be.equal(expected);
                 expect(pathMappings![0].remoteRoot).to.be.equal('/app/');
             });
-            test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}' and with existing path mappings`, async function() {
+            test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}' and with existing path mappings`, async function () {
                 if (getOSType() === OSType.Windows || osType === OSType.Windows) {
                     return this.skip();
                 }
@@ -358,7 +348,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
             });
         });
-        ['192.168.1.123', 'don.debugger.com'].forEach(host => {
+        ['192.168.1.123', 'don.debugger.com'].forEach((host) => {
             test(`Ensure path mappings are not automatically added when host is '${host}'`, async () => {
                 const activeFile = 'xyz.py';
                 const workspaceFolder = createMoqWorkspaceFolder(__dirname);
@@ -458,9 +448,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 request: 'attach'
             } as any) as DebugConfiguration);
 
-            expect(debugConfig)
-                .to.have.property('debugOptions')
-                .to.be.deep.equal(expectedDebugOptions);
+            expect(debugConfig).to.have.property('debugOptions').to.be.deep.equal(expectedDebugOptions);
         });
 
         const testsForJustMyCode = [
@@ -519,7 +507,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             const debugOptions = debugOptionsAvailable.slice().concat(DebugOptions.Jinja, DebugOptions.Sudo);
 
-            testsForJustMyCode.forEach(async testParams => {
+            testsForJustMyCode.forEach(async (testParams) => {
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
                     debugOptions,
                     request: 'attach',
@@ -537,7 +525,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
             experimentsManager.reset();
-            experimentsManager.setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => false);
+            experimentsManager.setup((e) => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => false);
 
             const promise = debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
                 request: 'attach'
@@ -552,7 +540,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
             experimentsManager.reset();
-            experimentsManager.setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => false);
+            experimentsManager.setup((e) => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => false);
 
             const promise = debugProvider.resolveDebugConfiguration!(workspaceFolder, ({
                 request: 'attach',

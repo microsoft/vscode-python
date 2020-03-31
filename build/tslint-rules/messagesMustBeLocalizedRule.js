@@ -26,8 +26,8 @@ class NoStringLiteralsInMessages extends baseRuleWalker.BaseRuleWalker {
     visitCallExpression(node) {
         if (!this.shouldIgnoreNode(node)) {
             node.arguments
-                .filter(arg => ts.isStringLiteral(arg) || ts.isTemplateLiteral(arg))
-                .forEach(arg => {
+                .filter((arg) => ts.isStringLiteral(arg) || ts.isTemplateLiteral(arg))
+                .forEach((arg) => {
                     this.addFailureAtNode(arg, failureMessage);
                 });
         }

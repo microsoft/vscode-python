@@ -94,7 +94,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         if (!tests) {
             return;
         }
-        return tests.testFiles.find(item => this.fileSystem.arePathsSame(item.fullPath, document.uri.fsPath));
+        return tests.testFiles.find((item) => this.fileSystem.arePathsSame(item.fullPath, document.uri.fsPath));
     }
 
     private async getCodeLenses(
@@ -115,12 +115,12 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
             }
             return symbols
                 .filter(
-                    symbol =>
+                    (symbol) =>
                         symbol.kind === SymbolKind.Function ||
                         symbol.kind === SymbolKind.Method ||
                         symbol.kind === SymbolKind.Class
                 )
-                .map(symbol => {
+                .map((symbol) => {
                     // This is bloody crucial, if the start and end columns are the same
                     // then vscode goes bonkers when ever you edit a line (start scrolling magically).
                     const range = new Range(
@@ -138,7 +138,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
                     );
                 })
                 .reduce((previous, current) => previous.concat(current), [])
-                .filter(codeLens => codeLens !== null);
+                .filter((codeLens) => codeLens !== null);
         } catch (reason) {
             if (token.isCancellationRequested) {
                 return [];
@@ -161,7 +161,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
                 return getFunctionCodeLens(file, allFuncsAndSuites, symbolName, range, symbolContainer);
             }
             case SymbolKind.Class: {
-                const cls = allFuncsAndSuites.suites.find(item => item.name === symbolName);
+                const cls = allFuncsAndSuites.suites.find((item) => item.name === symbolName);
                 if (!cls) {
                     return [];
                 }
@@ -207,19 +207,19 @@ function getTestStatusIcon(status?: TestStatus): string {
 
 function getTestStatusIcons(fns: TestFunction[]): string {
     const statuses: string[] = [];
-    let count = fns.filter(fn => fn.status === TestStatus.Pass).length;
+    let count = fns.filter((fn) => fn.status === TestStatus.Pass).length;
     if (count > 0) {
         statuses.push(`${constants.Octicons.Test_Pass} ${count}`);
     }
-    count = fns.filter(fn => fn.status === TestStatus.Skipped).length;
+    count = fns.filter((fn) => fn.status === TestStatus.Skipped).length;
     if (count > 0) {
         statuses.push(`${constants.Octicons.Test_Skip} ${count}`);
     }
-    count = fns.filter(fn => fn.status === TestStatus.Fail).length;
+    count = fns.filter((fn) => fn.status === TestStatus.Fail).length;
     if (count > 0) {
         statuses.push(`${constants.Octicons.Test_Fail} ${count}`);
     }
-    count = fns.filter(fn => fn.status === TestStatus.Error).length;
+    count = fns.filter((fn) => fn.status === TestStatus.Error).length;
     if (count > 0) {
         statuses.push(`${constants.Octicons.Test_Error} ${count}`);
     }
@@ -235,13 +235,13 @@ function getFunctionCodeLens(
 ): CodeLens[] {
     let fn: TestFunction | undefined;
     if (symbolContainer.length === 0) {
-        fn = functionsAndSuites.functions.find(func => func.name === symbolName);
+        fn = functionsAndSuites.functions.find((func) => func.name === symbolName);
     } else {
         // Assume single levels for now.
         functionsAndSuites.suites
-            .filter(s => s.name === symbolContainer)
-            .forEach(s => {
-                const f = s.functions.find(item => item.name === symbolName);
+            .filter((s) => s.name === symbolContainer)
+            .forEach((s) => {
+                const f = s.functions.find((item) => item.name === symbolName);
                 if (f) {
                     fn = f;
                 }
@@ -266,7 +266,7 @@ function getFunctionCodeLens(
     // Ok, possible we're dealing with parameterized unit tests.
     // If we have [ in the name, then this is a parameterized function.
     const functions = functionsAndSuites.functions.filter(
-        func => func.name.startsWith(`${symbolName}[`) && func.name.endsWith(']')
+        (func) => func.name.startsWith(`${symbolName}[`) && func.name.endsWith(']')
     );
     if (functions.length === 0) {
         return [];
@@ -290,7 +290,7 @@ function getFunctionCodeLens(
 function getAllTestSuitesAndFunctionsPerFile(testFile: TestFile): FunctionsAndSuites {
     // tslint:disable-next-line:prefer-type-cast
     const all = { functions: [...testFile.functions], suites: [] as TestSuite[] };
-    testFile.suites.forEach(suite => {
+    testFile.suites.forEach((suite) => {
         all.suites.push(suite);
 
         const allChildItems = getAllTestSuitesAndFunctions(suite);
@@ -301,10 +301,10 @@ function getAllTestSuitesAndFunctionsPerFile(testFile: TestFile): FunctionsAndSu
 }
 function getAllTestSuitesAndFunctions(testSuite: TestSuite): FunctionsAndSuites {
     const all: { functions: TestFunction[]; suites: TestSuite[] } = { functions: [], suites: [] };
-    testSuite.functions.forEach(fn => {
+    testSuite.functions.forEach((fn) => {
         all.functions.push(fn);
     });
-    testSuite.suites.forEach(suite => {
+    testSuite.suites.forEach((suite) => {
         all.suites.push(suite);
 
         const allChildItems = getAllTestSuitesAndFunctions(suite);

@@ -20,7 +20,7 @@ suite('ArgsService: unittest', () => {
         const argsHelper = new ArgumentsHelper();
 
         serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny()))
+            .setup((s) => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny()))
             .returns(() => argsHelper);
 
         argumentsService = new UnittestArgumentsService(serviceContainer.object);

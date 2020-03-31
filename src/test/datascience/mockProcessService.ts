@@ -24,7 +24,7 @@ export class MockProcessService implements IProcessService {
     private timeDelay: number | undefined;
 
     public execObservable(file: string, args: string[], _options: SpawnOptions): ObservableExecutionResult<string> {
-        const match = this.execObservableResults.find(f => this.argsMatch(f.args, args) && f.file === file);
+        const match = this.execObservableResults.find((f) => this.argsMatch(f.args, args) && f.file === file);
         if (match) {
             return match.result();
         }
@@ -33,13 +33,13 @@ export class MockProcessService implements IProcessService {
     }
 
     public async exec(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        const match = this.execResults.find(f => this.argsMatch(f.args, args) && f.file === file);
+        const match = this.execResults.find((f) => this.argsMatch(f.args, args) && f.file === file);
         if (match) {
             // Might need a delay before executing to mimic it taking a while.
             if (this.timeDelay) {
                 try {
                     const localTime = this.timeDelay;
-                    await Cancellation.race(_t => sleep(localTime), options.token);
+                    await Cancellation.race((_t) => sleep(localTime), options.token);
                 } catch (exc) {
                     if (exc instanceof CancellationError) {
                         return this.defaultExecutionResult([file, ...args]);
@@ -92,7 +92,7 @@ export class MockProcessService implements IProcessService {
     }
 
     private defaultObservable(args: string[]): ObservableExecutionResult<string> {
-        const output = new Observable<Output<string>>(subscriber => {
+        const output = new Observable<Output<string>>((subscriber) => {
             subscriber.next({ out: `Invalid call to ${args.join(' ')}`, source: 'stderr' });
         });
         return {

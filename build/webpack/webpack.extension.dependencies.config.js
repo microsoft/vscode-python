@@ -8,7 +8,7 @@ const path = require('path');
 const constants = require('../constants');
 const common = require('./common');
 const entryItems = {};
-common.nodeModulesToExternalize.forEach(moduleName => {
+common.nodeModulesToExternalize.forEach((moduleName) => {
     entryItems[`node_modules/${moduleName}`] = `./node_modules/${moduleName}`;
 });
 const config = {

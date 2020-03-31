@@ -24,13 +24,13 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
     const benchmarkJson = JSON.parse(benchmark);
     const performanceJson = JSON.parse(performanceData);
 
-    performanceJson.forEach(result => {
-        const cleanTimes = result.times.filter(x => x !== -1);
+    performanceJson.forEach((result) => {
+        const cleanTimes = result.times.filter((x) => x !== -1);
         const avg =
             cleanTimes.length === 0
                 ? 999
                 : cleanTimes.reduce((a, b) => parseFloat(a) + parseFloat(b)) / cleanTimes.length;
-        const testcase = benchmarkJson.find(x => x.name === result.name);
+        const testcase = benchmarkJson.find((x) => x.name === result.name);
 
         // compare the average result to the base JSON
         if (testcase && testcase.time !== -1 && avg > parseFloat(testcase.time) + errorMargin) {
@@ -46,7 +46,7 @@ fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, perfor
     });
 
     // Delete performance-results.json
-    fs.unlink(performanceResultsFile, deleteError => {
+    fs.unlink(performanceResultsFile, (deleteError) => {
         if (deleteError) {
             if (failedTests.length > 0) {
                 console.log(failedTests);

@@ -44,8 +44,8 @@ export class InteractiveWindowMessageListener implements IWebPanelMessageListene
         this.interactiveWindowMessages = this.getInteractiveWindowMessages();
 
         // We need to register callbacks for all interactive window messages.
-        this.interactiveWindowMessages.forEach(m => {
-            this.postOffice.registerCallback(m, a => callback(m, a)).ignoreErrors();
+        this.interactiveWindowMessages.forEach((m) => {
+            this.postOffice.registerCallback(m, (a) => callback(m, a)).ignoreErrors();
         });
     }
 
@@ -72,7 +72,7 @@ export class InteractiveWindowMessageListener implements IWebPanelMessageListene
     }
 
     private getInteractiveWindowMessages(): string[] {
-        return Object.keys(InteractiveWindowMessages).map(k => (InteractiveWindowMessages as any)[k].toString());
+        return Object.keys(InteractiveWindowMessages).map((k) => (InteractiveWindowMessages as any)[k].toString());
     }
 
     private translateHostArgs(api: vsls.LiveShare | null, role: vsls.Role, args: any[]) {
@@ -83,7 +83,7 @@ export class InteractiveWindowMessageListener implements IWebPanelMessageListene
             // See if the trueArg has a 'file' name or not
             if (trueArg) {
                 const keys = Object.keys(trueArg);
-                keys.forEach(k => {
+                keys.forEach((k) => {
                     if (k.includes('file')) {
                         if (typeof trueArg[k] === 'string') {
                             // Pull out the string. We need to convert it to a file or vsls uri based on our role

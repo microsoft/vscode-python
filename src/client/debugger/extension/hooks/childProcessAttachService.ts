@@ -79,7 +79,7 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         if (!this.workspaceService.hasWorkspaceFolders || !workspaceFolder) {
             return;
         }
-        return this.workspaceService.workspaceFolders!.find(ws => ws.uri.fsPath === workspaceFolder);
+        return this.workspaceService.workspaceFolders!.find((ws) => ws.uri.fsPath === workspaceFolder);
     }
     private getAttachConfiguration(data: ChildProcessLaunchData): AttachRequestArguments & DebugConfiguration {
         const args = data.rootStartRequest.arguments;

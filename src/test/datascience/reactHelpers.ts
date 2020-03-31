@@ -9,12 +9,12 @@
 // tslint:disable:no-var-requires no-require-imports no-any no-function-expression
 const Module = require('module');
 
-(function() {
+(function () {
     const origRequire = Module.prototype.require;
     const _require = (context: any, filepath: any) => {
         return origRequire.call(context, filepath);
     };
-    Module.prototype.require = function(filepath: string) {
+    Module.prototype.require = function (filepath: string) {
         if (filepath === 'canvas') {
             try {
                 // Make sure we aren't inside of vscode. The nodejs version of Canvas won't match. At least sometimes.
@@ -317,7 +317,7 @@ export function setUpDomEnvironment() {
     }
 
     // tslint:disable-next-line: no-function-expression
-    window.HTMLCanvasElement.prototype.toDataURL = function() {
+    window.HTMLCanvasElement.prototype.toDataURL = function () {
         return '';
     };
 
@@ -409,7 +409,7 @@ export function setUpDomEnvironment() {
     const configurationRegex = /.*(\\|\/)node_modules(\\|\/)monaco-editor(\\|\/)esm(\\|\/)vs(\\|\/)editor(\\|\/)browser(\\|\/)config(\\|\/)configuration\.js/g;
     const _oldLoader = require.extensions['.js'];
     // tslint:disable-next-line:no-function-expression
-    require.extensions['.js'] = function(mod: any, filename) {
+    require.extensions['.js'] = function (mod: any, filename) {
         if (configurationRegex.test(filename)) {
             let content = require('fs').readFileSync(filename, 'utf8');
             content += 'export function getCSSBasedConfiguration() { return CSSBasedConfiguration.INSTANCE; };\n';
@@ -432,7 +432,7 @@ export function setupTranspile() {
 }
 
 function copyProps(src: any, target: any) {
-    const props = Object.getOwnPropertyNames(src).filter(prop => typeof target[prop] === undefined);
+    const props = Object.getOwnPropertyNames(src).filter((prop) => typeof target[prop] === undefined);
     props.forEach((p: string) => {
         target[p] = src[p];
     });

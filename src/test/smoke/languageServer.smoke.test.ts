@@ -24,7 +24,7 @@ const fileDefinitions = path.join(
 );
 
 suite('Smoke Test: Language Server', () => {
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }

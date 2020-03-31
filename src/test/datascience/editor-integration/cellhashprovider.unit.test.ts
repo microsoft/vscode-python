@@ -42,11 +42,11 @@ suite('CellHashProvider Unit Tests', () => {
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        dataScienceSettings.setup(d => d.enabled).returns(() => true);
-        pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
-        configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
-        debugService.setup(d => d.activeDebugSession).returns(() => undefined);
-        fileSystem.setup(d => d.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
+        dataScienceSettings.setup((d) => d.enabled).returns(() => true);
+        pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
+        configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        debugService.setup((d) => d.activeDebugSession).returns(() => undefined);
+        fileSystem.setup((d) => d.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
         documentManager = new MockDocumentManager();
         hashProvider = new CellHashProvider(
             documentManager,
@@ -287,8 +287,8 @@ suite('CellHashProvider Unit Tests', () => {
         // Execution count should go up, but still only have two cells.
         const hashes = hashProvider.getHashes();
         assert.equal(hashes.length, 2, 'Wrong number of hashes');
-        const fooHash = hashes.find(h => h.file === Uri.file('foo.py').fsPath);
-        const barHash = hashes.find(h => h.file === Uri.file('bar.py').fsPath);
+        const fooHash = hashes.find((h) => h.file === Uri.file('foo.py').fsPath);
+        const barHash = hashes.find((h) => h.file === Uri.file('bar.py').fsPath);
         assert.ok(fooHash, 'No hash for foo.py');
         assert.ok(barHash, 'No hash for bar.py');
         assert.equal(fooHash!.hashes.length, 2, 'Not enough hashes found');

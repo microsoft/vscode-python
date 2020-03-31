@@ -71,8 +71,8 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
         );
     });
 
-    getNamesAndValues<OSType>(OSType).forEach(osType => {
-        test(`Invoke next rule if platform is not windows (${osType.name})`, async function() {
+    getNamesAndValues<OSType>(OSType).forEach((osType) => {
+        test(`Invoke next rule if platform is not windows (${osType.name})`, async function () {
             const manager = mock(InterpreterAutoSelectionService);
             if (osType.value === OSType.Windows) {
                 return this.skip();

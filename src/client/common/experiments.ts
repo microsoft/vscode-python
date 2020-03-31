@@ -139,7 +139,7 @@ export class ExperimentsManager implements IExperimentsManager {
             return false;
         }
         this.sendTelemetryIfInExperiment(experimentName);
-        return this.userExperiments.find(exp => exp.name === experimentName) ? true : false;
+        return this.userExperiments.find((exp) => exp.name === experimentName) ? true : false;
     }
 
     /**
@@ -180,7 +180,7 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @traceDecorators.error('Failed to send telemetry when user is in experiment')
     public sendTelemetryIfInExperiment(experimentName: string): void {
-        if (this.userExperiments.find(exp => exp.name === experimentName)) {
+        if (this.userExperiments.find((exp) => exp.name === experimentName)) {
             sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS, undefined, { expName: experimentName });
         }
     }
@@ -223,7 +223,7 @@ export class ExperimentsManager implements IExperimentsManager {
             throw new Error('Machine ID should be a string');
         }
         let hash: number;
-        if (oldExperimentSalts.find(oldSalt => oldSalt === salt)) {
+        if (oldExperimentSalts.find((oldSalt) => oldSalt === salt)) {
             hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number', 'SHA512');
         } else {
             hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number', 'FNV');
@@ -333,7 +333,7 @@ export class ExperimentsManager implements IExperimentsManager {
                 this._experimentsOptedOutFrom[i] = '';
             }
         }
-        this._experimentsOptedInto = this._experimentsOptedInto.filter(exp => exp !== '');
-        this._experimentsOptedOutFrom = this._experimentsOptedOutFrom.filter(exp => exp !== '');
+        this._experimentsOptedInto = this._experimentsOptedInto.filter((exp) => exp !== '');
+        this._experimentsOptedOutFrom = this._experimentsOptedOutFrom.filter((exp) => exp !== '');
     }
 }

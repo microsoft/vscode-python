@@ -29,7 +29,7 @@ export class DiagnosticCommandPromptHandlerService implements IDiagnosticHandler
         diagnostic: IDiagnostic,
         options: MessageCommandPrompt = { commandPrompts: [] }
     ): Promise<void> {
-        const prompts = options.commandPrompts.map(option => option.prompt);
+        const prompts = options.commandPrompts.map((option) => option.prompt);
         const response = await this.displayMessage(
             options.message ? options.message : diagnostic.message,
             diagnostic.severity,
@@ -38,7 +38,7 @@ export class DiagnosticCommandPromptHandlerService implements IDiagnosticHandler
         if (!response) {
             return;
         }
-        const selectedOption = options.commandPrompts.find(option => option.prompt === response);
+        const selectedOption = options.commandPrompts.find((option) => option.prompt === response);
         if (selectedOption && selectedOption.command) {
             await selectedOption.command.invoke();
         }

@@ -10,7 +10,7 @@ export class PythonDefinitionProvider implements vscode.DefinitionProvider {
     public constructor(private jediFactory: JediFactory) {}
     private static parseData(data: proxy.IDefinitionResult, possibleWord: string): vscode.Definition | undefined {
         if (data && Array.isArray(data.definitions) && data.definitions.length > 0) {
-            const definitions = data.definitions.filter(d => d.text === possibleWord);
+            const definitions = data.definitions.filter((d) => d.text === possibleWord);
             const definition = definitions.length > 0 ? definitions[0] : data.definitions[data.definitions.length - 1];
             const definitionResource = vscode.Uri.file(definition.fileName);
             const range = new vscode.Range(

@@ -94,7 +94,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         }
 
         const interpreters = await this.interpreterService.getInterpreters(resource);
-        if (interpreters.filter(i => !this.helper.isMacDefaultPythonPath(i.path)).length === 0) {
+        if (interpreters.filter((i) => !this.helper.isMacDefaultPythonPath(i.path)).length === 0) {
             return [
                 new InvalidMacPythonInterpreterDiagnostic(
                     DiagnosticCodes.MacInterpreterSelectedAndNoOtherInterpretersDiagnostic,
@@ -119,7 +119,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             DiagnosticCommandPromptHandlerServiceId
         );
         await Promise.all(
-            diagnostics.map(async diagnostic => {
+            diagnostics.map(async (diagnostic) => {
                 const canHandle = await this.canHandle(diagnostic);
                 const shouldIgnore = await this.filterService.shouldIgnoreDiagnostic(diagnostic.code);
                 if (!canHandle || shouldIgnore) {
@@ -138,9 +138,11 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
     protected async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const workspacesUris: (Uri | undefined)[] = workspaceService.hasWorkspaceFolders
-            ? workspaceService.workspaceFolders!.map(workspace => workspace.uri)
+            ? workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
             : [undefined];
-        const workspaceUriIndex = workspacesUris.findIndex(uri => event.affectsConfiguration('python.pythonPath', uri));
+        const workspaceUriIndex = workspacesUris.findIndex((uri) =>
+            event.affectsConfiguration('python.pythonPath', uri)
+        );
         if (workspaceUriIndex === -1) {
             return;
         }
@@ -153,7 +155,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
         this.timeOut = setTimeout(() => {
             this.timeOut = undefined;
             this.diagnose(workspacesUris[workspaceUriIndex])
-                .then(diagnostics => this.handle(diagnostics))
+                .then((diagnostics) => this.handle(diagnostics))
                 .ignoreErrors();
         }, this.changeThrottleTimeout);
     }

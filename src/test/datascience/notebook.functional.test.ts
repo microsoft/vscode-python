@@ -224,7 +224,7 @@ suite('DataScience notebook tests', () => {
     ) {
         runTest('MimeTypes', async () => {
             // Prefill with the output (This is only necessary for mocking)
-            types.forEach(t => {
+            types.forEach((t) => {
                 addMockData(t.code, t.result, t.mimeType, t.cellType);
             });
 
@@ -261,7 +261,7 @@ suite('DataScience notebook tests', () => {
         _notebookProc?: ChildProcess,
         rebindFunc?: () => void
     ) {
-        test(name, async function() {
+        test(name, async function () {
             // Give tests a chance to rebind IOC services before we fetch jupyterExecution and processFactory
             if (rebindFunc) {
                 rebindFunc();
@@ -291,9 +291,10 @@ suite('DataScience notebook tests', () => {
         try {
             const server = await jupyterExecution.connectToNotebookServer({
                 usingDarkTheme,
-                useDefaultConfig,
+                skipUsingDefaultConfig: !useDefaultConfig,
                 workingDir: workingDir ? workingDir : ioc.getSettings().datascience.notebookFileRoot,
-                purpose: purpose ? purpose : '1'
+                purpose: purpose ? purpose : '1',
+                allowUI: () => false
             });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
@@ -420,7 +421,11 @@ suite('DataScience notebook tests', () => {
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
+            const server = await jupyterExecution.connectToNotebookServer({
+                uri,
+                purpose: '',
+                allowUI: () => false
+            });
             const notebook = server
                 ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
                 : undefined;
@@ -474,8 +479,8 @@ suite('DataScience notebook tests', () => {
                 // We have a connection string here, so try to connect jupyterExecution to the notebook server
                 const server = await jupyterExecution.connectToNotebookServer({
                     uri,
-                    useDefaultConfig: true,
-                    purpose: ''
+                    purpose: '',
+                    allowUI: () => false
                 });
                 const notebook = server
                     ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
@@ -498,18 +503,18 @@ suite('DataScience notebook tests', () => {
             };
             const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
             appShell
-                .setup(a => a.showErrorMessage(TypeMoq.It.isAnyString()))
-                .returns(e => {
+                .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                .returns((e) => {
                     throw e;
                 });
             appShell
-                .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(''));
             appShell
-                .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
             appShell
-                .setup(a =>
+                .setup((a) =>
                     a.showInformationMessage(
                         TypeMoq.It.isAny(),
                         TypeMoq.It.isAny(),
@@ -518,8 +523,8 @@ suite('DataScience notebook tests', () => {
                     )
                 )
                 .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
-            appShell.setup(a => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
-            appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+            appShell.setup((a) => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+            appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
         }
     );
@@ -554,7 +559,11 @@ suite('DataScience notebook tests', () => {
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
+            const server = await jupyterExecution.connectToNotebookServer({
+                uri,
+                purpose: '',
+                allowUI: () => false
+            });
             const notebook = server
                 ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
                 : undefined;
@@ -598,7 +607,11 @@ suite('DataScience notebook tests', () => {
             const uri = connString as string;
 
             // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
+            const server = await jupyterExecution.connectToNotebookServer({
+                uri,
+                purpose: '',
+                allowUI: () => false
+            });
             const notebook = server
                 ? await server.createNotebook(baseUri, Uri.parse(Identifiers.InteractiveWindowIdentity))
                 : undefined;
@@ -857,7 +870,7 @@ suite('DataScience notebook tests', () => {
     ): Promise<boolean> {
         const tokenSource = new TaggedCancellationTokenSource(messageFormat.format(timeout.toString()));
         const disp = setTimeout(
-            _s => {
+            (_s) => {
                 tokenSource.cancel();
             },
             timeout,
@@ -964,7 +977,7 @@ suite('DataScience notebook tests', () => {
         let error;
         const observable = notebook!.executeObservable(code, Uri.file('foo.py').fsPath, 0, uuid(), false);
         observable.subscribe(
-            c => {
+            (c) => {
                 if (c.length > 0 && c[0].state === CellState.error) {
                     finishedBefore = !interrupted;
                     finishedPromise.resolve();
@@ -974,7 +987,7 @@ suite('DataScience notebook tests', () => {
                     finishedPromise.resolve();
                 }
             },
-            err => {
+            (err) => {
                 error = err;
                 finishedPromise.resolve();
             },
@@ -1035,7 +1048,7 @@ while keep_going:
             // This one goes forever until a cancellation happens
             let haveMore = true;
             try {
-                await Cancellation.race(_t => sleep(100), cancelToken);
+                await Cancellation.race((_t) => sleep(100), cancelToken);
             } catch {
                 haveMore = false;
             }
@@ -1050,7 +1063,7 @@ while keep_going:
             // This one goes forever until a cancellation happens
             let haveMore = true;
             try {
-                await Cancellation.race(_t => sleep(100), cancelToken);
+                await Cancellation.race((_t) => sleep(100), cancelToken);
             } catch {
                 haveMore = false;
             }
@@ -1085,7 +1098,7 @@ a`,
             mimeType: 'text/plain',
             cellType: 'code',
             result: 1,
-            verifyValue: d => assert.equal(d, 1, 'Plain text invalid')
+            verifyValue: (d) => assert.equal(d, 1, 'Plain text invalid')
         },
         {
             markdownRegEx: undefined,
@@ -1096,7 +1109,7 @@ df.head()`,
             result: `pd has no attribute 'read'`,
             cellType: 'error',
             // tslint:disable-next-line:quotemark
-            verifyValue: d => assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
+            verifyValue: (d) => assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
         },
         {
             markdownRegEx: undefined,
@@ -1106,7 +1119,7 @@ df.head()`,
             mimeType: 'text/html',
             result: `<td>A table</td>`,
             cellType: 'code',
-            verifyValue: d => assert.ok(d.toString().includes('</td>'), 'Table not found')
+            verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
         },
         {
             markdownRegEx: undefined,
@@ -1115,7 +1128,7 @@ df.head()`,
             mimeType: 'text/plain',
             cellType: 'markdown',
             result: '#HEADER',
-            verifyValue: d => assert.equal(d, ' #HEADER', 'Markdown incorrect')
+            verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect')
         },
         {
             markdownRegEx: '\\s*#\\s*<markdowncell>',
@@ -1124,7 +1137,7 @@ df.head()`,
             mimeType: 'text/plain',
             cellType: 'markdown',
             result: '#HEADER',
-            verifyValue: d => assert.equal(d, ' #HEADER', 'Markdown incorrect')
+            verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect')
         },
         {
             // Test relative directories too.
@@ -1135,7 +1148,7 @@ df.head()`,
             mimeType: 'text/html',
             cellType: 'code',
             result: `<td>A table</td>`,
-            verifyValue: d => assert.ok(d.toString().includes('</td>'), 'Table not found')
+            verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
         },
         {
             // Important to test as multiline cell magics only work if they are the first item in the cell
@@ -1146,7 +1159,7 @@ echo 'hello'`,
             mimeType: 'text/plain',
             cellType: 'code',
             result: 'hello',
-            verifyValue: _d => noop() // Anything is fine as long as it tries it.
+            verifyValue: (_d) => noop() // Anything is fine as long as it tries it.
         },
         {
             // Test shell command should work on PC / Mac / Linux
@@ -1155,7 +1168,7 @@ echo 'hello'`,
             mimeType: 'text/plain',
             cellType: 'code',
             result: 'world',
-            verifyValue: d => assert.ok(d.includes('world'), 'Cell command incorrect')
+            verifyValue: (d) => assert.ok(d.includes('world'), 'Cell command incorrect')
         },
         {
             // Plotly
@@ -1170,7 +1183,7 @@ plt.show()`,
             result: `00000`,
             mimeType: 'image/svg+xml',
             cellType: 'code',
-            verifyValue: _d => {
+            verifyValue: (_d) => {
                 return;
             }
         }
@@ -1429,7 +1442,7 @@ plt.show()`,
         when(ioc.mockJupyter?.productInstaller.isInstalled(Product.notebook, anything())).thenResolve(false as any);
     }
 
-    test('Notebook launch failure', async function() {
+    test('Notebook launch failure', async function () {
         if (!ioc.mockJupyter) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
@@ -1452,9 +1465,9 @@ plt.show()`,
                 const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
                 await jupyterExecution.connectToNotebookServer({
                     usingDarkTheme: false,
-                    useDefaultConfig: true,
                     workingDir: testDir,
-                    purpose: '1'
+                    purpose: '1',
+                    allowUI: () => false
                 });
             } catch (e) {
                 threw = true;
@@ -1475,7 +1488,7 @@ plt.show()`,
         }
     });
 
-    test('Notebook launch with PYTHONWARNINGS', async function() {
+    test('Notebook launch with PYTHONWARNINGS', async function () {
         if (ioc.mockJupyter) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
@@ -1491,7 +1504,7 @@ plt.show()`,
     });
 
     // tslint:disable-next-line: no-function-expression
-    runTest('Notebook launch retry', async function(_this: Mocha.Context) {
+    runTest('Notebook launch retry', async function (_this: Mocha.Context) {
         // Skipping for now. Renable to test idle timeouts
         _this.skip();
         ioc.getSettings().datascience.jupyterLaunchRetries = 1;

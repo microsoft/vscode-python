@@ -79,7 +79,7 @@ suite('Process - PythonExecutionFactory', () => {
         { resource: undefined, interpreter: pythonInterpreter },
         { resource: Uri.parse('x'), interpreter: undefined },
         { resource: Uri.parse('x'), interpreter: pythonInterpreter }
-    ].forEach(item => {
+    ].forEach((item) => {
         const resource = item.resource;
         const interpreter = item.interpreter;
         suite(title(resource, interpreter), () => {
@@ -107,7 +107,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = typemoq.Mock.ofType<IProcessService>();
                 processService
-                    .setup(p =>
+                    .setup((p) =>
                         p.on('exec', () => {
                             return;
                         })
@@ -227,7 +227,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(service).instanceOf(WindowsStorePythonProcess);
             });
 
-            test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function() {
+            test('Ensure `create` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
@@ -255,7 +255,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(service).instanceOf(CondaExecutionService);
             });
 
-            test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function() {
+            test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
@@ -277,7 +277,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(service).instanceOf(PythonExecutionService);
             });
 
-            test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function() {
+            test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
@@ -311,7 +311,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(service).instanceOf(CondaExecutionService);
             });
 
-            test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function() {
+            test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 

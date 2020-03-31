@@ -53,7 +53,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
             traceVerbose(`Create file systemwatcher with pattern ${pattern}`);
 
             const fsWatcher = this.workspaceService.createFileSystemWatcher(globPatern);
-            fsWatcher.onDidCreate(e => this.createHandler(e), this, this.disposableRegistry);
+            fsWatcher.onDidCreate((e) => this.createHandler(e), this, this.disposableRegistry);
 
             this.disposableRegistry.push(fsWatcher);
             this.fsWatchers.push(fsWatcher);
@@ -90,7 +90,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
     }
     private clearTimers() {
         // tslint:disable-next-line: no-any
-        this.timers.forEach(item => clearTimeout(item.timer as any));
+        this.timers.forEach((item) => clearTimeout(item.timer as any));
         this.timers.clear();
     }
     private async isValidExecutable(pythonPath: string): Promise<boolean> {

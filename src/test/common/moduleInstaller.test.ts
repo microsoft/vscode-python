@@ -69,7 +69,7 @@ const info: PythonInterpreter = {
 };
 
 suite('Module Installer', () => {
-    [undefined, Uri.file(__filename)].forEach(resource => {
+    [undefined, Uri.file(__filename)].forEach((resource) => {
         let ioc: UnitTestIocContainer;
         let mockTerminalService: TypeMoq.IMock<ITerminalService>;
         let condaService: TypeMoq.IMock<ICondaService>;
@@ -106,13 +106,13 @@ suite('Module Installer', () => {
             mockTerminalService = TypeMoq.Mock.ofType<ITerminalService>();
             mockTerminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
             mockTerminalFactory
-                .setup(t => t.getTerminalService(TypeMoq.It.isValue(resource)))
+                .setup((t) => t.getTerminalService(TypeMoq.It.isValue(resource)))
                 .returns(() => mockTerminalService.object)
                 .verifiable(TypeMoq.Times.atLeastOnce());
             // If resource is provided, then ensure we do not invoke without the resource.
             mockTerminalFactory
-                .setup(t => t.getTerminalService(TypeMoq.It.isAny()))
-                .callback(passedInResource => expect(passedInResource).to.be.equal(resource))
+                .setup((t) => t.getTerminalService(TypeMoq.It.isAny()))
+                .callback((passedInResource) => expect(passedInResource).to.be.equal(resource))
                 .returns(() => mockTerminalService.object);
             ioc.serviceManager.addSingletonInstance<ITerminalServiceFactory>(
                 ITerminalServiceFactory,
@@ -140,8 +140,8 @@ suite('Module Installer', () => {
             const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
             ioc.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, workspaceService.object);
             const http = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-            http.setup(h => h.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isAny())).returns(() => '');
-            workspaceService.setup(w => w.getConfiguration(TypeMoq.It.isValue('http'))).returns(() => http.object);
+            http.setup((h) => h.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isAny())).returns(() => '');
+            workspaceService.setup((w) => w.getConfiguration(TypeMoq.It.isValue('http'))).returns(() => http.object);
 
             ioc.registerMockProcessTypes();
             ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
@@ -180,7 +180,9 @@ suite('Module Installer', () => {
                 new MockModuleInstaller('mock', true)
             );
             const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
-            mockInterpreterLocator.setup(p => p.getInterpreters(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
+            mockInterpreterLocator
+                .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve([]));
             ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
                 mockInterpreterLocator.object,
@@ -207,15 +209,15 @@ suite('Module Installer', () => {
             const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
             expect(moduleInstallers).length(4, 'Incorrect number of installers');
 
-            const pipInstaller = moduleInstallers.find(item => item.displayName === 'Pip')!;
+            const pipInstaller = moduleInstallers.find((item) => item.displayName === 'Pip')!;
             expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
             await expect(pipInstaller.isSupported()).to.eventually.equal(true, 'Pip is not supported');
 
-            const condaInstaller = moduleInstallers.find(item => item.displayName === 'Conda')!;
+            const condaInstaller = moduleInstallers.find((item) => item.displayName === 'Conda')!;
             expect(condaInstaller).not.to.be.an('undefined', 'Conda installer not found');
             await expect(condaInstaller.isSupported()).to.eventually.equal(false, 'Conda is supported');
 
-            const mockInstaller = moduleInstallers.find(item => item.displayName === 'mock')!;
+            const mockInstaller = moduleInstallers.find((item) => item.displayName === 'mock')!;
             expect(mockInstaller).not.to.be.an('undefined', 'mock installer not found');
             await expect(mockInstaller.isSupported()).to.eventually.equal(true, 'mock is not supported');
         });
@@ -228,7 +230,7 @@ suite('Module Installer', () => {
             const pythonPath = await getCurrentPythonPath();
             const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
             mockInterpreterLocator
-                .setup(p => p.getInterpreters(TypeMoq.It.isAny()))
+                .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() =>
                     Promise.resolve([
                         {
@@ -269,7 +271,7 @@ suite('Module Installer', () => {
             const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
             expect(moduleInstallers).length(4, 'Incorrect number of installers');
 
-            const pipInstaller = moduleInstallers.find(item => item.displayName === 'Pip')!;
+            const pipInstaller = moduleInstallers.find((item) => item.displayName === 'Pip')!;
             expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
             await expect(pipInstaller.isSupported()).to.eventually.equal(true, 'Pip is not supported');
         });
@@ -278,16 +280,16 @@ suite('Module Installer', () => {
 
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             serviceContainer
-                .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+                .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
                 .returns(() => configService.object);
             const settings = TypeMoq.Mock.ofType<IPythonSettings>();
             const pythonPath = 'pythonABC';
-            settings.setup(s => s.pythonPath).returns(() => pythonPath);
-            configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
-            condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(true));
+            settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+            configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
+            condaService.setup((c) => c.isCondaAvailable()).returns(() => Promise.resolve(true));
             condaService
-                .setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
+                .setup((c) => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(true));
 
             const condaInstaller = new CondaInstaller(serviceContainer.object);
@@ -298,16 +300,16 @@ suite('Module Installer', () => {
 
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             serviceContainer
-                .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService)))
+                .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService)))
                 .returns(() => configService.object);
             const settings = TypeMoq.Mock.ofType<IPythonSettings>();
             const pythonPath = 'pythonABC';
-            settings.setup(s => s.pythonPath).returns(() => pythonPath);
-            configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
-            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
-            condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(true));
+            settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+            configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICondaService))).returns(() => condaService.object);
+            condaService.setup((c) => c.isCondaAvailable()).returns(() => Promise.resolve(true));
             condaService
-                .setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
+                .setup((c) => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(false));
 
             const condaInstaller = new CondaInstaller(serviceContainer.object);
@@ -319,7 +321,7 @@ suite('Module Installer', () => {
             const interpreterPath = await getCurrentPythonPath();
             const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
             mockInterpreterLocator
-                .setup(p => p.getInterpreters(TypeMoq.It.isAny()))
+                .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([{ ...info, path: interpreterPath, type: InterpreterType.Unknown }]));
             ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
@@ -338,25 +340,25 @@ suite('Module Installer', () => {
                 path: PYTHON_PATH
             };
             interpreterService
-                .setup(x => x.getActiveInterpreter(TypeMoq.It.isAny()))
+                .setup((x) => x.getActiveInterpreter(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(interpreter));
 
             const moduleName = 'xyz';
 
             const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
-            const pipInstaller = moduleInstallers.find(item => item.displayName === 'Pip')!;
+            const pipInstaller = moduleInstallers.find((item) => item.displayName === 'Pip')!;
 
             expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
 
             let argsSent: string[] = [];
             mockTerminalService
-                .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((t) => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((_cmd: string, args: string[]) => {
                     argsSent = args;
                     return Promise.resolve(void 0);
                 });
             interpreterService
-                .setup(i => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
                 // tslint:disable-next-line:no-any
                 .returns(() => Promise.resolve({ type: InterpreterType.Unknown } as any));
 
@@ -373,7 +375,7 @@ suite('Module Installer', () => {
             const interpreterPath = await getCurrentPythonPath();
             const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
             mockInterpreterLocator
-                .setup(p => p.getInterpreters(TypeMoq.It.isAny()))
+                .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve([{ ...info, path: interpreterPath, type: InterpreterType.Conda }]));
             ioc.serviceManager.addSingletonInstance<IInterpreterLocatorService>(
                 IInterpreterLocatorService,
@@ -389,13 +391,13 @@ suite('Module Installer', () => {
             const moduleName = 'xyz';
 
             const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
-            const pipInstaller = moduleInstallers.find(item => item.displayName === 'Pip')!;
+            const pipInstaller = moduleInstallers.find((item) => item.displayName === 'Pip')!;
 
             expect(pipInstaller).not.to.be.an('undefined', 'Pip installer not found');
 
             let argsSent: string[] = [];
             mockTerminalService
-                .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((t) => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((_cmd: string, args: string[]) => {
                     argsSent = args;
                     return Promise.resolve(void 0);
@@ -413,7 +415,7 @@ suite('Module Installer', () => {
         test(`Validate pipenv install arguments ${resourceTestNameSuffix}`, async () => {
             const mockInterpreterLocator = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
             mockInterpreterLocator
-                .setup(p => p.getInterpreters(TypeMoq.It.isAny()))
+                .setup((p) => p.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() =>
                     Promise.resolve([{ ...info, path: 'interpreterPath', type: InterpreterType.VirtualEnv }])
                 );
@@ -425,14 +427,14 @@ suite('Module Installer', () => {
 
             const moduleName = 'xyz';
             const moduleInstallers = ioc.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
-            const pipInstaller = moduleInstallers.find(item => item.displayName === 'pipenv')!;
+            const pipInstaller = moduleInstallers.find((item) => item.displayName === 'pipenv')!;
 
             expect(pipInstaller).not.to.be.an('undefined', 'pipenv installer not found');
 
             let argsSent: string[] = [];
             let command: string | undefined;
             mockTerminalService
-                .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((t) => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((cmd: string, args: string[]) => {
                     argsSent = args;
                     command = cmd;

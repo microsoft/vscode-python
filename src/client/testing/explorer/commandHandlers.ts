@@ -40,7 +40,7 @@ export class TestExplorerCommandHandler implements ITestExplorerCommandHandler {
         );
     }
     public dispose(): void {
-        this.disposables.forEach(item => item.dispose());
+        this.disposables.forEach((item) => item.dispose());
     }
     @swallowExceptions('Run test node')
     @traceDecorators.error('Run test node failed')

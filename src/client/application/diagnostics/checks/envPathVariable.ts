@@ -89,6 +89,6 @@ export class EnvironmentPathVariableDiagnosticsService extends BaseDiagnosticsSe
         const pathValue = currentProc.env[this.platform.pathVariableName];
         const pathSeparator = this.serviceContainer.get<IPathUtils>(IPathUtils).delimiter;
         const paths = (pathValue || '').split(pathSeparator);
-        return paths.filter(item => item.indexOf('"') >= 0).length > 0;
+        return paths.filter((item) => item.indexOf('"') >= 0).length > 0;
     }
 }

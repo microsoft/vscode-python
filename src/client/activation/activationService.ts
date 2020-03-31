@@ -116,7 +116,7 @@ export class LanguageServerExtensionActivationService
             this.cache.set(key, result);
         } else {
             // Increment ref count if already exists.
-            result = result.then(r => {
+            result = result.then((r) => {
                 r.increment();
                 return r;
             });
@@ -188,10 +188,10 @@ export class LanguageServerExtensionActivationService
     protected async onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, dispose its activator
         const workspaceKeys = await Promise.all(
-            this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getKey(workspaceFolder.uri))
+            this.workspaceService.workspaceFolders!.map((workspaceFolder) => this.getKey(workspaceFolder.uri))
         );
         const activatedWkspcKeys = Array.from(this.cache.keys());
-        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
+        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter((item) => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
             for (const folder of activatedWkspcFoldersRemoved) {
                 const server = await this.cache.get(folder);
@@ -293,11 +293,11 @@ export class LanguageServerExtensionActivationService
 
     private async onDidChangeConfiguration(event: ConfigurationChangeEvent) {
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
-            ? this.workspaceService.workspaceFolders!.map(workspace => workspace.uri)
+            ? this.workspaceService.workspaceFolders!.map((workspace) => workspace.uri)
             : [undefined];
         if (
-            workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1 &&
-            workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1
+            workspacesUris.findIndex((uri) => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1 &&
+            workspacesUris.findIndex((uri) => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1
         ) {
             return;
         }
@@ -333,6 +333,6 @@ export class LanguageServerExtensionActivationService
 
     private async onClearAnalysisCaches() {
         const values = await Promise.all([...this.cache.values()]);
-        values.forEach(v => (v.clearAnalysisCache ? v.clearAnalysisCache() : noop()));
+        values.forEach((v) => (v.clearAnalysisCache ? v.clearAnalysisCache() : noop()));
     }
 }

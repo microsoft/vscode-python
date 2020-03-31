@@ -22,14 +22,14 @@ suite('LaunchJson CodeAction Provider', () => {
         range = TypeMoq.Mock.ofType<Range>();
         context = TypeMoq.Mock.ofType<CodeActionContext>();
         diagnostic = TypeMoq.Mock.ofType<Diagnostic>();
-        document.setup(d => d.getText(TypeMoq.It.isAny())).returns(() => 'Diagnostic text');
-        document.setup(d => d.uri).returns(() => documentUri);
-        context.setup(c => c.diagnostics).returns(() => [diagnostic.object]);
+        document.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => 'Diagnostic text');
+        document.setup((d) => d.uri).returns(() => documentUri);
+        context.setup((c) => c.diagnostics).returns(() => [diagnostic.object]);
     });
 
     test('Ensure correct code action is returned if diagnostic message equals `Incorrect type. Expected "string".`', async () => {
-        diagnostic.setup(d => d.message).returns(() => 'Incorrect type. Expected "string".');
-        diagnostic.setup(d => d.range).returns(() => new Range(2, 0, 7, 8));
+        diagnostic.setup((d) => d.message).returns(() => 'Incorrect type. Expected "string".');
+        diagnostic.setup((d) => d.range).returns(() => new Range(2, 0, 7, 8));
 
         const codeActions = codeActionsProvider.provideCodeActions(document.object, range.object, context.object);
 
@@ -50,7 +50,7 @@ suite('LaunchJson CodeAction Provider', () => {
     });
 
     test('Ensure no code action is returned if diagnostic message does not equal `Incorrect type. Expected "string".`', async () => {
-        diagnostic.setup(d => d.message).returns(() => 'Random diagnostic message');
+        diagnostic.setup((d) => d.message).returns(() => 'Random diagnostic message');
 
         const codeActions = codeActionsProvider.provideCodeActions(document.object, range.object, context.object);
 

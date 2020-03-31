@@ -107,18 +107,18 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
         tests: testing.Tests
     ) {
         const folders = discoveredTests.parents
-            .filter(child => child.kind === 'folder' && child.parentid === parentFolder.nameToRun)
-            .map(folder => createTestFolder(rootFolder, folder as discovery.TestFolder));
-        folders.forEach(folder => {
+            .filter((child) => child.kind === 'folder' && child.parentid === parentFolder.nameToRun)
+            .map((folder) => createTestFolder(rootFolder, folder as discovery.TestFolder));
+        folders.forEach((folder) => {
             parentFolder.folders.push(folder);
             tests.testFolders.push(folder);
             this.buildChildren(rootFolder, folder, discoveredTests, tests);
         });
 
         const files = discoveredTests.parents
-            .filter(child => child.kind === 'file' && child.parentid === parentFolder.nameToRun)
-            .map(file => createTestFile(rootFolder, file as discovery.TestFile));
-        files.forEach(file => {
+            .filter((child) => child.kind === 'file' && child.parentid === parentFolder.nameToRun)
+            .map((file) => createTestFile(rootFolder, file as discovery.TestFile));
+        files.forEach((file) => {
             parentFolder.testFiles.push(file);
             tests.testFiles.push(file);
             this.buildChildren(rootFolder, file, discoveredTests, tests);
@@ -144,26 +144,26 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
         tests: testing.Tests
     ) {
         const suites = discoveredTests.parents
-            .filter(child => child.kind === 'suite' && child.parentid === parentFile.nameToRun)
-            .map(suite => createTestSuite(parentFile, rootFolder.resource, suite as discovery.TestSuite));
-        suites.forEach(suite => {
+            .filter((child) => child.kind === 'suite' && child.parentid === parentFile.nameToRun)
+            .map((suite) => createTestSuite(parentFile, rootFolder.resource, suite as discovery.TestSuite));
+        suites.forEach((suite) => {
             parentFile.suites.push(suite);
             tests.testSuites.push(createFlattenedSuite(tests, suite));
             this.buildChildren(rootFolder, suite, discoveredTests, tests);
         });
 
         const functions = discoveredTests.tests
-            .filter(test => test.parentid === parentFile.nameToRun)
-            .map(test => createTestFunction(rootFolder, test));
-        functions.forEach(func => {
+            .filter((test) => test.parentid === parentFile.nameToRun)
+            .map((test) => createTestFunction(rootFolder, test));
+        functions.forEach((func) => {
             parentFile.functions.push(func);
             tests.testFunctions.push(createFlattenedFunction(tests, func));
         });
 
         const parameterizedFunctions = discoveredTests.parents
-            .filter(child => child.kind === 'function' && child.parentid === parentFile.nameToRun)
-            .map(func => createParameterizedTestFunction(rootFolder, func as discovery.TestFunction));
-        parameterizedFunctions.forEach(func =>
+            .filter((child) => child.kind === 'function' && child.parentid === parentFile.nameToRun)
+            .map((func) => createParameterizedTestFunction(rootFolder, func as discovery.TestFunction));
+        parameterizedFunctions.forEach((func) =>
             this.processParameterizedFunction(rootFolder, parentFile, func, discoveredTests, tests)
         );
     }
@@ -187,26 +187,26 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
         tests: testing.Tests
     ) {
         const suites = discoveredTests.parents
-            .filter(child => child.kind === 'suite' && child.parentid === parentSuite.nameToRun)
-            .map(suite => createTestSuite(parentSuite, rootFolder.resource, suite as discovery.TestSuite));
-        suites.forEach(suite => {
+            .filter((child) => child.kind === 'suite' && child.parentid === parentSuite.nameToRun)
+            .map((suite) => createTestSuite(parentSuite, rootFolder.resource, suite as discovery.TestSuite));
+        suites.forEach((suite) => {
             parentSuite.suites.push(suite);
             tests.testSuites.push(createFlattenedSuite(tests, suite));
             this.buildChildren(rootFolder, suite, discoveredTests, tests);
         });
 
         const functions = discoveredTests.tests
-            .filter(test => test.parentid === parentSuite.nameToRun)
-            .map(test => createTestFunction(rootFolder, test));
-        functions.forEach(func => {
+            .filter((test) => test.parentid === parentSuite.nameToRun)
+            .map((test) => createTestFunction(rootFolder, test));
+        functions.forEach((func) => {
             parentSuite.functions.push(func);
             tests.testFunctions.push(createFlattenedFunction(tests, func));
         });
 
         const parameterizedFunctions = discoveredTests.parents
-            .filter(child => child.kind === 'function' && child.parentid === parentSuite.nameToRun)
-            .map(func => createParameterizedTestFunction(rootFolder, func as discovery.TestFunction));
-        parameterizedFunctions.forEach(func =>
+            .filter((child) => child.kind === 'function' && child.parentid === parentSuite.nameToRun)
+            .map((func) => createParameterizedTestFunction(rootFolder, func as discovery.TestFunction));
+        parameterizedFunctions.forEach((func) =>
             this.processParameterizedFunction(rootFolder, parentSuite, func, discoveredTests, tests)
         );
     }
@@ -235,9 +235,9 @@ export class TestDiscoveredTestParser implements discovery.ITestDiscoveredTestPa
             return;
         }
         const functions = discoveredTests.tests
-            .filter(test => test.parentid === parentFunction.nameToRun)
-            .map(test => createTestFunction(rootFolder, test));
-        functions.forEach(func => {
+            .filter((test) => test.parentid === parentFunction.nameToRun)
+            .map((test) => createTestFunction(rootFolder, test));
+        functions.forEach((func) => {
             func.subtestParent = parentFunction;
             parentFunction.asSuite.functions.push(func);
             parent.functions.push(func);

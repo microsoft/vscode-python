@@ -102,7 +102,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
                 ? workspaceFolder.uri.fsPath.toUpperCase()
                 : workspaceFolder.uri.fsPath;
 
-        return interpreters.filter(interpreter => {
+        return interpreters.filter((interpreter) => {
             const fsPath = Uri.file(interpreter.path).fsPath;
             const fsPathToCompare = this.platform.osType === OSType.Windows ? fsPath.toUpperCase() : fsPath;
             return fsPathToCompare.startsWith(workspacePath);

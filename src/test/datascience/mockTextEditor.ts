@@ -75,7 +75,7 @@ export class MockEditor implements TextEditor {
         callback: (editBuilder: TextEditorEdit) => void,
         _options?: { undoStopBefore: boolean; undoStopAfter: boolean } | undefined
     ): Thenable<boolean> {
-        return new Promise(r => {
+        return new Promise((r) => {
             const editor = new MockEditorEdit(this._documentManager, this._document);
             callback(editor);
             r(true);

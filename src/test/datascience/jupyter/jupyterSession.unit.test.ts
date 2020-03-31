@@ -1,8 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
+import {
+    ContentsManager,
+    Kernel,
+    KernelMessage,
+    ServerConnection,
+    Session,
+    SessionManager
+} from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
-import { KernelFutureHandler } from '@jupyterlab/services/lib/kernel/future';
 import { DefaultSession } from '@jupyterlab/services/lib/session/default';
 import { ISignal, Signal } from '@phosphor/commands/node_modules/@phosphor/signaling';
 import { assert } from 'chai';
@@ -86,7 +92,7 @@ suite('Data Science - JupyterSession', () => {
         // tslint:disable-next-line: no-any
         when(contentsManager.newUntitled(deepEqual({ type: 'notebook' }))).thenResolve({ path: nbFile } as any);
         when(sessionManager.startNew(anything())).thenResolve(instance(session));
-        kernelSpec.setup(k => k.name).returns(() => 'some name');
+        kernelSpec.setup((k) => k.name).returns(() => 'some name');
 
         await jupyterSession.connect();
 
@@ -121,7 +127,7 @@ suite('Data Science - JupyterSession', () => {
         });
         suite('Shutdown', () => {
             test('Remote', async () => {
-                connection.setup(c => c.localLaunch).returns(() => false);
+                connection.setup((c) => c.localLaunch).returns(() => false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(contentsManager.delete(anything())).thenResolve();
 
@@ -131,7 +137,7 @@ suite('Data Science - JupyterSession', () => {
                 verify(contentsManager.delete(anything())).once();
             });
             test('Remote sessions', async () => {
-                connection.setup(c => c.localLaunch).returns(() => true);
+                connection.setup((c) => c.localLaunch).returns(() => true);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(contentsManager.delete(anything())).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
@@ -150,7 +156,7 @@ suite('Data Science - JupyterSession', () => {
             test('Local', async () => {
                 verify(statusChangedSignal.connect(anything())).once();
 
-                connection.setup(c => c.localLaunch).returns(() => true);
+                connection.setup((c) => c.localLaunch).returns(() => true);
                 when(session.isRemoteSession).thenReturn(false);
                 when(session.isDisposed).thenReturn(false);
                 when(session.shutdown()).thenResolve();
@@ -321,7 +327,9 @@ suite('Data Science - JupyterSession', () => {
                 setup(executeUserCode);
 
                 async function executeUserCode() {
-                    const future = mock(KernelFutureHandler);
+                    const future = mock<
+                        Kernel.IFuture<KernelMessage.IShellControlMessage, KernelMessage.IShellControlMessage>
+                    >();
                     // tslint:disable-next-line: no-any
                     when(future.done).thenReturn(Promise.resolve(undefined as any));
                     // tslint:disable-next-line: no-any
@@ -335,7 +343,7 @@ suite('Data Science - JupyterSession', () => {
 
                 test('Restart should create a new session & kill old session', async () => {
                     const oldSessionShutDown = createDeferred();
-                    connection.setup(c => c.localLaunch).returns(() => true);
+                    connection.setup((c) => c.localLaunch).returns(() => true);
                     when(session.isRemoteSession).thenReturn(false);
                     when(session.isDisposed).thenReturn(false);
                     when(session.shutdown()).thenCall(() => {

@@ -143,10 +143,10 @@ export function getTestHelperInstance(): TestsHelper {
     const serviceContainerMoq = typemoq.Mock.ofType<IServiceContainer>();
 
     serviceContainerMoq
-        .setup(a => a.get(typemoq.It.isValue(IApplicationShell), typemoq.It.isAny()))
+        .setup((a) => a.get(typemoq.It.isValue(IApplicationShell), typemoq.It.isAny()))
         .returns(() => appShellMoq.object);
     serviceContainerMoq
-        .setup(a => a.get(typemoq.It.isValue(ICommandManager), typemoq.It.isAny()))
+        .setup((a) => a.get(typemoq.It.isValue(ICommandManager), typemoq.It.isAny()))
         .returns(() => commMgrMoq.object);
 
     return new TestsHelper(new TestFlatteningVisitor(), serviceContainerMoq.object);
@@ -175,7 +175,7 @@ export function createMockTestStorageService(testData?: Tests): typemoq.IMock<IT
         testData = createMockTestsData();
     }
 
-    testStoreMoq.setup(t => t.getTests(typemoq.It.isAny())).returns(() => testData);
+    testStoreMoq.setup((t) => t.getTests(typemoq.It.isAny())).returns(() => testData);
 
     return testStoreMoq;
 }
@@ -187,7 +187,9 @@ export function createMockTestStorageService(testData?: Tests): typemoq.IMock<IT
  */
 export function createMockUnitTestMgmtService(): typemoq.IMock<ITestManagementService> {
     const unitTestMgmtSrvMoq = typemoq.Mock.ofType<ITestManagementService>();
-    unitTestMgmtSrvMoq.setup(u => u.onDidStatusChange(typemoq.It.isAny())).returns(() => new ExplorerTestsDisposable());
+    unitTestMgmtSrvMoq
+        .setup((u) => u.onDidStatusChange(typemoq.It.isAny()))
+        .returns(() => new ExplorerTestsDisposable());
     return unitTestMgmtSrvMoq;
 }
 
@@ -210,7 +212,7 @@ export function createMockWorkspaceService(): typemoq.IMock<IWorkspaceService> {
             return 0;
         }
     }
-    workspcSrvMoq.setup(w => w.workspaceFolders).returns(() => [new ExplorerTestsWorkspaceFolder()]);
+    workspcSrvMoq.setup((w) => w.workspaceFolders).returns(() => [new ExplorerTestsWorkspaceFolder()]);
     return workspcSrvMoq;
 }
 
@@ -246,7 +248,7 @@ export function createMockTestExplorer(
     }
 
     const dispRegMoq = typemoq.Mock.ofType<IDisposableRegistry>();
-    dispRegMoq.setup(d => d.push(typemoq.It.isAny()));
+    dispRegMoq.setup((d) => d.push(typemoq.It.isAny()));
 
     return new TestTreeViewProvider(
         testStore,

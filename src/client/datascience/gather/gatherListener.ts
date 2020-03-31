@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify';
+import { IDisposable } from 'monaco-editor';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Position, Uri, ViewColumn } from 'vscode';
 import { createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
@@ -18,12 +19,11 @@ import {
     IGatherLogger,
     IGatherProvider,
     IInteractiveWindowListener,
-    IInteractiveWindowProvider,
-    IJupyterExecution,
     INotebook,
     INotebookEditorProvider,
     INotebookExecutionLogger,
-    INotebookExporter
+    INotebookExporter,
+    INotebookProvider
 } from '../types';
 
 @injectable()
@@ -42,8 +42,7 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(INotebookExporter) private jupyterExporter: INotebookExporter,
         @inject(INotebookEditorProvider) private ipynbProvider: INotebookEditorProvider,
-        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IFileSystem) private fileSystem: IFileSystem
@@ -97,20 +96,10 @@ export class GatherListener implements IInteractiveWindowListener {
     private async initGather(notebookUri: string) {
         this.notebookUri = Uri.parse(notebookUri);
 
-        // First get the active server
-        const activeServer = await this.jupyterExecution.getServer(
-            await this.interactiveWindowProvider.getNotebookOptions(this.notebookUri)
-        );
-
-        let nb: INotebook | undefined;
-        // If that works, see if there's a matching notebook running
-        if (activeServer) {
-            nb = await activeServer.getNotebook(this.notebookUri);
-
-            // If we have an executing notebook, get its gather execution service.
-            if (nb) {
-                this.gatherProvider = this.getGatherProvider(nb);
-            }
+        const nb = await this.notebookProvider.getOrCreateNotebook({ identity: this.notebookUri, getOnly: true });
+        // If we have an executing notebook, get its gather execution service.
+        if (nb) {
+            this.gatherProvider = this.getGatherProvider(nb);
         }
     }
 
@@ -125,7 +114,7 @@ export class GatherListener implements IInteractiveWindowListener {
     }
 
     private doGather(payload: ICell): void {
-        this.gatherCodeInternal(payload).catch(err => {
+        this.gatherCodeInternal(payload).catch((err) => {
             this.applicationShell.showErrorMessage(err);
         });
     }
@@ -173,9 +162,17 @@ export class GatherListener implements IInteractiveWindowListener {
 
             const notebook = await this.jupyterExporter.translateToNotebook(cells);
             if (notebook) {
-                notebook.metadata.gatheredNotebook = true;
                 const contents = JSON.stringify(notebook);
-                await this.ipynbProvider.createNew(contents);
+                const editor = await this.ipynbProvider.createNew(contents);
+
+                let disposable: IDisposable;
+                const handler = () => {
+                    sendTelemetryEvent(Telemetry.GatheredNotebookSaved);
+                    if (disposable) {
+                        disposable.dispose();
+                    }
+                };
+                disposable = editor.saved(handler);
             }
         }
     }
@@ -183,11 +180,11 @@ export class GatherListener implements IInteractiveWindowListener {
     private async showFile(slicedProgram: string, filename: string) {
         // Don't want to open the gathered code on top of the interactive window
         let viewColumn: ViewColumn | undefined;
-        const fileNameMatch = this.documentManager.visibleTextEditors.filter(textEditor =>
+        const fileNameMatch = this.documentManager.visibleTextEditors.filter((textEditor) =>
             this.fileSystem.arePathsSame(textEditor.document.fileName, filename)
         );
         const definedVisibleEditors = this.documentManager.visibleTextEditors.filter(
-            textEditor => textEditor.viewColumn !== undefined
+            (textEditor) => textEditor.viewColumn !== undefined
         );
         if (this.documentManager.visibleTextEditors.length > 0 && fileNameMatch.length > 0) {
             // Original file is visible
@@ -208,7 +205,7 @@ export class GatherListener implements IInteractiveWindowListener {
         const editor = await this.documentManager.showTextDocument(doc, viewColumn);
 
         // Edit the document so that it is dirty (add a space at the end)
-        editor.edit(editBuilder => {
+        editor.edit((editBuilder) => {
             editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
         });
     }

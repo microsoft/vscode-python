@@ -60,12 +60,12 @@ export function combineReducers<S, M>(defaultState: S, map: M): Reducer<S, Queua
 // Careful when using the queueAction though. Don't store it past the point of a reducer as
 // the local state inside of this middleware function will be wrong.
 export function createQueueableActionMiddleware(): Middleware {
-    return store => next => action => {
+    return (store) => (next) => (action) => {
         let pendingActions: Action[] = [];
         let complete = false;
 
         function flush() {
-            pendingActions.forEach(a => store.dispatch(a));
+            pendingActions.forEach((a) => store.dispatch(a));
             pendingActions = [];
         }
 

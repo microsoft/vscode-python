@@ -79,7 +79,7 @@ suite('Virtual Environment Prompt', () => {
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object
         );
-        notificationPromptEnabled.setup(n => n.value).returns(() => true);
+        notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve();
 
         await environmentPrompt.handleNewEnvironment(resource);
@@ -102,7 +102,7 @@ suite('Virtual Environment Prompt', () => {
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object
         );
-        notificationPromptEnabled.setup(n => n.value).returns(() => true);
+        notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as any);
         when(
             pythonPathUpdaterService.updatePythonPath(
@@ -139,7 +139,7 @@ suite('Virtual Environment Prompt', () => {
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object
         );
-        notificationPromptEnabled.setup(n => n.value).returns(() => true);
+        notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[1] as any);
         when(
             pythonPathUpdaterService.updatePythonPath(
@@ -150,7 +150,7 @@ suite('Virtual Environment Prompt', () => {
             )
         ).thenResolve();
         notificationPromptEnabled
-            .setup(n => n.updateValue(false))
+            .setup((n) => n.updateValue(false))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.never());
 
@@ -181,10 +181,10 @@ suite('Virtual Environment Prompt', () => {
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object
         );
-        notificationPromptEnabled.setup(n => n.value).returns(() => true);
+        notificationPromptEnabled.setup((n) => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[2] as any);
         notificationPromptEnabled
-            .setup(n => n.updateValue(false))
+            .setup((n) => n.updateValue(false))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 
@@ -207,7 +207,7 @@ suite('Virtual Environment Prompt', () => {
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(
             notificationPromptEnabled.object
         );
-        notificationPromptEnabled.setup(n => n.value).returns(() => false);
+        notificationPromptEnabled.setup((n) => n.value).returns(() => false);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[0] as any);
 
         await environmentPrompt.notifyUser(interpreter1 as any, resource);

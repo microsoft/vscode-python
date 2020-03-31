@@ -71,7 +71,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
 
     test('Local pick server uri', async () => {
         let value = '';
-        const ds = createDataScienceObject('$(zap) Default', '', v => (value = v));
+        const ds = createDataScienceObject('$(zap) Default', '', (v) => (value = v));
         await ds.selectJupyterURI(true);
         assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
 
@@ -150,21 +150,21 @@ suite('Data Science - Jupyter Server URI Selector', () => {
 
     test('Remote server uri', async () => {
         let value = '';
-        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', v => (value = v));
+        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', (v) => (value = v));
         await ds.selectJupyterURI(true);
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
     });
 
     test('Remote server uri no local', async () => {
         let value = '';
-        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', v => (value = v));
+        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', (v) => (value = v));
         await ds.selectJupyterURI(false);
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
     });
 
     test('Remote server uri (reload VSCode if there is a change in settings)', async () => {
         let value = '';
-        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', v => (value = v));
+        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', (v) => (value = v));
         await ds.selectJupyterURI(true);
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
         verify(cmdManager.executeCommand(anything(), anything())).once();
@@ -172,7 +172,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
 
     test('Remote server uri (do not reload VSCode if there is no change in settings)', async () => {
         let value = '';
-        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', v => (value = v));
+        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', (v) => (value = v));
         dsSettings.jupyterServerURI = 'http://localhost:1111';
         await ds.selectJupyterURI(true);
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
@@ -181,7 +181,7 @@ suite('Data Science - Jupyter Server URI Selector', () => {
 
     test('Invalid server uri', async () => {
         let value = '';
-        const ds = createDataScienceObject('$(server) Existing', 'httx://localhost:1111', v => (value = v));
+        const ds = createDataScienceObject('$(server) Existing', 'httx://localhost:1111', (v) => (value = v));
         await ds.selectJupyterURI(true);
         assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
         assert.equal(value, '', 'Validation failed');

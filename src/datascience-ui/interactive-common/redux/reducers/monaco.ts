@@ -69,7 +69,7 @@ function handleStarted<T>(arg: MonacoReducerArg<T>): IMonacoState {
 }
 
 function finishTokenizer<T>(buffer: ArrayBuffer, tmJson: string, arg: MonacoReducerArg<T>) {
-    initializeTokenizer(buffer, tmJson, e => {
+    initializeTokenizer(buffer, tmJson, (e) => {
         if (e) {
             logMessage(`ERROR from onigasm: ${e}`);
         }
@@ -79,12 +79,18 @@ function finishTokenizer<T>(buffer: ArrayBuffer, tmJson: string, arg: MonacoRedu
 
 function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState {
     // Have to convert the buffer into an ArrayBuffer for the tokenizer to load it.
-    // tslint:disable-next-line: no-any
-    const typedArray = new Uint8Array((arg.payload.data as any).data);
-
+    let typedArray = new Uint8Array(arg.payload.data);
     if (arg.prevState.tmLanguageData && !arg.prevState.onigasmData && typedArray.length > 0) {
         // Monaco is ready. Initialize the tokenizer
         finishTokenizer(typedArray.buffer, arg.prevState.tmLanguageData, arg);
+    } else {
+        // tslint:disable-next-line: no-any
+        typedArray = new Uint8Array((arg.payload.data as any).data);
+        // Monaco is ready. Initialize the tokenizer
+        if (arg.prevState.tmLanguageData && !arg.prevState.onigasmData && typedArray.length > 0) {
+            // Monaco is ready. Initialize the tokenizer
+            finishTokenizer(typedArray.buffer, arg.prevState.tmLanguageData, arg);
+        }
     }
 
     // Make sure we start the intellisense provider

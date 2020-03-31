@@ -147,7 +147,7 @@ suite('Data Science - KernelSelections', () => {
     });
     test('Should return a list with the proper details in the quick pick for remote connections (excluding non-python kernels)', async () => {
         const activeKernels: IJupyterKernel[] = [activePython1KernelModel, activeJuliaKernelModel];
-        const sessions = activeKernels.map(item => {
+        const sessions = activeKernels.map((item) => {
             return {
                 id: 'sessionId',
                 name: 'someSession',
@@ -215,7 +215,7 @@ suite('Data Science - KernelSelections', () => {
         // - selection = kernel model + kernel spec
         // - description = last activity and # of connections.
         const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(
-            item => {
+            (item) => {
                 return {
                     label: item.display_name,
                     detail: '<user friendly path>',
@@ -223,7 +223,7 @@ suite('Data Science - KernelSelections', () => {
                 };
             }
         );
-        const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map(item => {
+        const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map((item) => {
             return {
                 ...item,
                 label: item.label,

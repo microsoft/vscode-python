@@ -7,16 +7,16 @@ import { ITestResultsService, ITestVisitor, Tests, TestStatus } from '../types';
 export class TestResultsService implements ITestResultsService {
     constructor(@inject(ITestVisitor) @named('TestResultResetVisitor') private resultResetVisitor: ITestVisitor) {}
     public resetResults(tests: Tests): void {
-        tests.testFolders.forEach(f => this.resultResetVisitor.visitTestFolder(f));
-        tests.testFunctions.forEach(fn => this.resultResetVisitor.visitTestFunction(fn.testFunction));
-        tests.testSuites.forEach(suite => this.resultResetVisitor.visitTestSuite(suite.testSuite));
-        tests.testFiles.forEach(testFile => this.resultResetVisitor.visitTestFile(testFile));
+        tests.testFolders.forEach((f) => this.resultResetVisitor.visitTestFolder(f));
+        tests.testFunctions.forEach((fn) => this.resultResetVisitor.visitTestFunction(fn.testFunction));
+        tests.testSuites.forEach((suite) => this.resultResetVisitor.visitTestSuite(suite.testSuite));
+        tests.testFiles.forEach((testFile) => this.resultResetVisitor.visitTestFile(testFile));
     }
     public updateResults(tests: Tests): void {
         // Update Test tree bottom to top
         const testQueue: TestDataItem[] = [];
         const testStack: TestDataItem[] = [];
-        tests.rootTestFolders.forEach(folder => testQueue.push(folder));
+        tests.rootTestFolders.forEach((folder) => testQueue.push(folder));
 
         while (testQueue.length > 0) {
             const item = testQueue.shift();
@@ -25,7 +25,7 @@ export class TestResultsService implements ITestResultsService {
             }
             testStack.push(item);
             const children = getChildren(item);
-            children.forEach(child => testQueue.push(child));
+            children.forEach((child) => testQueue.push(child));
         }
         while (testStack.length > 0) {
             const item = testStack.pop();
@@ -41,7 +41,7 @@ export class TestResultsService implements ITestResultsService {
         test.functionsPassed = test.functionsFailed = test.functionsDidNotRun = 0;
 
         const children = getChildren(test);
-        children.forEach(child => {
+        children.forEach((child) => {
             if (getTestDataItemType(child) === TestDataItemType.function) {
                 if (typeof child.passed === 'boolean') {
                     noChildrenRan = false;

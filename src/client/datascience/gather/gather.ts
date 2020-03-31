@@ -7,7 +7,8 @@ import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 // tslint:disable-next-line: no-duplicate-imports
 import { Common } from '../../common/utils/localize';
-import { Identifiers } from '../constants';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Identifiers, Telemetry } from '../constants';
 import { CellState, ICell as IVscCell, IGatherProvider } from '../types';
 
 /**
@@ -42,11 +43,13 @@ export class GatherProvider implements IGatherProvider {
                     this._executionSlicer = new ppa.ExecutionLogSlicer(this.dataflowAnalyzer);
 
                     this.disposables.push(
-                        this.configService.getSettings(undefined).onDidChange(e => this.updateEnableGather(e))
+                        this.configService.getSettings(undefined).onDidChange((e) => this.updateEnableGather(e))
                     );
                 }
             } catch (ex) {
-                traceInfo('Gathering tools could not be activated. Indicates build of VSIX was not');
+                traceInfo(
+                    'Gathering tools could not be activated. Indicates build of VSIX could not find @msrvida/python-program-analysis'
+                );
             }
         }
     }
@@ -72,6 +75,7 @@ export class GatherProvider implements IGatherProvider {
      */
     public gatherCode(vscCell: IVscCell): string {
         if (!this._executionSlicer) {
+            sendTelemetryEvent(Telemetry.GatherCompleted, undefined, { result: 'unavailable' });
             return '# %% [markdown]\n## Gather not available';
         }
 

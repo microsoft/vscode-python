@@ -6,18 +6,18 @@ import { Memento } from 'vscode';
 import { IExtensionSingleActivationService } from '../../activation/types';
 import { traceError, traceInfo } from '../../common/logger';
 import { IConfigurationService, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
-import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution, INotebookEditorProvider } from '../types';
+import { IInteractiveWindow, IInteractiveWindowProvider, INotebookEditorProvider, INotebookProvider } from '../types';
 
 const LastServerActiveTimeKey = 'last-notebook-start-time';
 
 @injectable()
 export class ServerPreload implements IExtensionSingleActivationService {
     constructor(
-        @inject(IJupyterExecution) private execution: IJupyterExecution,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private mementoStorage: Memento,
         @inject(INotebookEditorProvider) private notebookEditorProvider: INotebookEditorProvider,
         @inject(IInteractiveWindowProvider) private interactiveProvider: IInteractiveWindowProvider,
-        @inject(IConfigurationService) private configService: IConfigurationService
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(INotebookProvider) private notebookProvider: INotebookProvider
     ) {
         this.notebookEditorProvider.onDidOpenNotebookEditor(this.onDidOpenNotebook.bind(this));
         this.interactiveProvider.onDidChangeActiveInteractiveWindow(this.onDidOpenOrCloseInteractive.bind(this));
@@ -52,23 +52,18 @@ export class ServerPreload implements IExtensionSingleActivationService {
     private async createServerIfNecessary() {
         try {
             traceInfo(`Attempting to start a server because of preload conditions ...`);
-            const options = await this.interactiveProvider.getNotebookOptions(undefined);
-
-            // Turn off any UI display
-            const optionsCopy = { ...options };
-            optionsCopy.disableUI = true;
 
             // May already have this server started.
-            let server = await this.execution.getServer(optionsCopy);
+            let server = await this.notebookProvider.getOrCreateServer({ getOnly: true, disableUI: true });
 
             // If it didn't start, attempt for local and if allowed.
-            if (
-                !server &&
-                !optionsCopy.uri &&
-                !this.configService.getSettings(undefined).datascience.disableJupyterAutoStart
-            ) {
+            if (!server && !this.configService.getSettings(undefined).datascience.disableJupyterAutoStart) {
                 // Local case, try creating one
-                server = await this.execution.connectToNotebookServer(optionsCopy);
+                server = await this.notebookProvider.getOrCreateServer({
+                    getOnly: false,
+                    disableUI: true,
+                    localOnly: true
+                });
             }
 
             if (server) {

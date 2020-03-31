@@ -102,7 +102,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
             () => {
                 return configMgr.enable();
             },
-            reason => {
+            (reason) => {
                 return configMgr.enable().then(() => Promise.reject(reason));
             }
         );
@@ -139,7 +139,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 await configMgr
                     .configure(wkspace)
                     .then(() => this._enableTest(wkspace, configMgr))
-                    .catch(reason => {
+                    .catch((reason) => {
                         return this._enableTest(wkspace, configMgr).then(() => Promise.reject(reason));
                     });
             }

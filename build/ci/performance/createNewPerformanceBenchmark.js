@@ -21,7 +21,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
         };
         const jsonObj = fastXmlParser.parse(xmlData, defaultOptions);
 
-        jsonObj.testsuite.testcase.forEach(testcase => {
+        jsonObj.testsuite.testcase.forEach((testcase) => {
             const test = {
                 name: testcase.classname + ' ' + testcase.name,
                 time: testcase.failure || testcase.skipped === '' ? -1 : parseFloat(testcase.time)
@@ -33,7 +33,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
         fs.writeFile(
             path.join(constants.ExtensionRootDir, 'build', 'ci', 'performance', 'DS_test_benchmark.json'),
             JSON.stringify(performanceData, null, 2),
-            writeResultsError => {
+            (writeResultsError) => {
                 if (writeResultsError) {
                     throw writeResultsError;
                 }

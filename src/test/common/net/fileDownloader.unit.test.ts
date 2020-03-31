@@ -122,9 +122,7 @@ suite('File Downloader', () => {
         });
         test('Error is throw for http Status !== 200', async () => {
             // When downloading a uri, throw status 500 error.
-            nock('https://python.extension')
-                .get('/package.json')
-                .reply(500);
+            nock('https://python.extension').get('/package.json').reply(500);
             const progressReportStub = sinon.stub();
             const progressReporter: Progress<ProgressReporterData> = { report: progressReportStub };
             when(appShell.withProgress(anything(), anything())).thenCall((_, cb) => cb(progressReporter));

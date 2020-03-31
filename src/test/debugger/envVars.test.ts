@@ -26,7 +26,7 @@ suite('Resolving Environment Variables when Debugging', () => {
     let pathVariableName: string;
     let mockProcess: ICurrentProcess;
 
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
@@ -209,7 +209,7 @@ suite('Resolving Environment Variables when Debugging', () => {
                 Object.keys(mockProcess.env).length,
                 'Variables is not a subset'
             );
-            Object.keys(mockProcess.env).forEach(key => {
+            Object.keys(mockProcess.env).forEach((key) => {
                 if (key === pathVariableName || key === 'PYTHONPATH') {
                     return;
                 }
@@ -221,7 +221,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         }
     }
 
-    test('Confirm paths get appended correctly when using json variables and launched in external terminal', async function() {
+    test('Confirm paths get appended correctly when using json variables and launched in external terminal', async function () {
         // test is flakey on windows, path separator problems. GH issue #4758
         if (isOs(OSType.Windows)) {
             // tslint:disable-next-line:no-invalid-this
@@ -230,7 +230,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         await testAppendingOfPaths('externalTerminal', 6, false);
     });
 
-    test('Confirm paths get appended correctly when using json variables and launched in integrated terminal', async function() {
+    test('Confirm paths get appended correctly when using json variables and launched in integrated terminal', async function () {
         // test is flakey on windows, path separator problems. GH issue #4758
         if (isOs(OSType.Windows)) {
             // tslint:disable-next-line:no-invalid-this
@@ -239,7 +239,7 @@ suite('Resolving Environment Variables when Debugging', () => {
         await testAppendingOfPaths('integratedTerminal', 6, false);
     });
 
-    test('Confirm paths get appended correctly when using json variables and launched in debug console', async function() {
+    test('Confirm paths get appended correctly when using json variables and launched in debug console', async function () {
         // test is flakey on windows, path separator problems. GH issue #4758
         if (isOs(OSType.Windows)) {
             // tslint:disable-next-line:no-invalid-this

@@ -24,7 +24,7 @@ suite('PipEnv installer', async () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         locatorService = TypeMoq.Mock.ofType<IInterpreterLocatorService>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(PIPENV_SERVICE)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(PIPENV_SERVICE)))
             .returns(() => locatorService.object);
         pipEnvInstaller = new PipEnvInstaller(serviceContainer.object);
     });
@@ -58,7 +58,7 @@ suite('PipEnv installer', async () => {
     test('If InterpreterUri is Resource, and if resource contains pipEnv interpreters, return true', async () => {
         const resource = Uri.parse('a');
         locatorService
-            .setup(p => p.getInterpreters(resource))
+            .setup((p) => p.getInterpreters(resource))
             .returns(() =>
                 Promise.resolve([
                     TypeMoq.Mock.ofType<PythonInterpreter>().object,
@@ -71,7 +71,7 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Resource, and if resource does not contain pipEnv interpreters, return false', async () => {
         const resource = Uri.parse('a');
-        locatorService.setup(p => p.getInterpreters(resource)).returns(() => Promise.resolve([]));
+        locatorService.setup((p) => p.getInterpreters(resource)).returns(() => Promise.resolve([]));
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(false, 'Should be false');
     });

@@ -67,7 +67,7 @@ export class JupyterServerBase implements INotebookServer {
 
         // Listen to the process going down
         if (this.launchInfo && this.launchInfo.connectionInfo) {
-            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected(c => {
+            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected((c) => {
                 try {
                     this.serverExitCode = c;
                     traceError(localize.DataScience.jupyterServerCrashed().format(c.toString()));
@@ -118,7 +118,7 @@ export class JupyterServerBase implements INotebookServer {
             this.serviceContainer,
             notebookMetadata,
             cancelToken
-        ).then(r => {
+        ).then((r) => {
             const baseUrl = this.launchInfo?.connectionInfo.baseUrl || '';
             this.logRemoteOutput(localize.DataScience.createdNewNotebook().format(baseUrl));
             return r;
@@ -148,7 +148,7 @@ export class JupyterServerBase implements INotebookServer {
 
         traceInfo(`Shutting down notebooks for ${this.id}`);
         const notebooks = await Promise.all([...this.notebooks.values()]);
-        await Promise.all(notebooks.map(n => n?.dispose()));
+        await Promise.all(notebooks.map((n) => n?.dispose()));
         traceInfo(`Shut down session manager`);
         if (this.sessionManager) {
             await this.sessionManager.dispose();
@@ -214,7 +214,7 @@ export class JupyterServerBase implements INotebookServer {
         };
 
         notebook
-            .then(nb => {
+            .then((nb) => {
                 const oldDispose = nb.dispose;
                 nb.dispose = () => {
                     this.notebooks.delete(identity.toString());

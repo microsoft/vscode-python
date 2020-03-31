@@ -33,7 +33,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             return;
         }
         const settingsNotToMerge = ['PYTHONPATH', this.pathVariable];
-        Object.keys(source).forEach(setting => {
+        Object.keys(source).forEach((setting) => {
             if (settingsNotToMerge.indexOf(setting) >= 0) {
                 return;
             }
@@ -64,8 +64,8 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         ...pathsToAppend: string[]
     ) {
         const valueToAppend = pathsToAppend
-            .filter(item => typeof item === 'string' && item.trim().length > 0)
-            .map(item => item.trim())
+            .filter((item) => typeof item === 'string' && item.trim().length > 0)
+            .map((item) => item.trim())
             .join(path.delimiter);
         if (valueToAppend.length === 0) {
             return vars;

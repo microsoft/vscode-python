@@ -80,7 +80,7 @@ export class PowerShellActivationHackDiagnosticsService extends BaseDiagnosticsS
                         sendTelemetryEvent(EventName.DIAGNOSTICS_ACTION, undefined, {
                             action: 'switchToCommandPrompt'
                         });
-                        useCommandPromptAsDefaultShell(currentProcess, configurationService).catch(ex =>
+                        useCommandPromptAsDefaultShell(currentProcess, configurationService).catch((ex) =>
                             traceError('Use Command Prompt as default shell', ex)
                         );
                     }

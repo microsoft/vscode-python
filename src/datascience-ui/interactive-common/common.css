@@ -186,6 +186,10 @@ body, html {
     margin: 3px;
 }
 
+.cell-output-ipywidget-background {
+    background:white !important;
+}
+
 .cell-output-plot-background * {
     margin: 0px;
 }

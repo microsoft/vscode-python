@@ -34,7 +34,7 @@ suite('Shell Detector', () => {
     setup(() => (platformService = mock(PlatformService)));
     teardown(() => sandbox.restore());
 
-    getNamesAndValues<OSType>(OSType).forEach(os => {
+    getNamesAndValues<OSType>(OSType).forEach((os) => {
         const testSuffix = `(OS ${os.name})`;
         test('Test identification of Terminal Shells in order of priority', async () => {
             const callOrder: string[] = [];

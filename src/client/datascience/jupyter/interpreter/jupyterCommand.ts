@@ -39,7 +39,7 @@ class ProcessJupyterCommand implements IJupyterCommand {
         this.requiredArgs = args;
         this.launcherPromise = processServiceFactory.create();
         this.activationHelper = activationHelper;
-        this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch(_e => undefined);
+        this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch((_e) => undefined);
     }
 
     public interpreter(): Promise<PythonInterpreter | undefined> {
@@ -83,7 +83,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
         isActiveInterpreter: boolean
     ) {
         this.interpreterPromise = Promise.resolve(this._interpreter);
-        this.pythonLauncher = this.interpreterPromise.then(async interpreter => {
+        this.pythonLauncher = this.interpreterPromise.then(async (interpreter) => {
             // Create a daemon only if the interpreter is the same as the current interpreter.
             // We don't want too many daemons (we don't want one for each of the users interpreter on their machine).
             if (isActiveInterpreter) {
@@ -95,15 +95,8 @@ class InterpreterJupyterCommand implements IJupyterCommand {
                 // If we're using this command to start notebook, then ensure the daemon can start a notebook inside it.
                 if (
                     (moduleName.toLowerCase() === 'jupyter' &&
-                        args
-                            .join(' ')
-                            .toLowerCase()
-                            .startsWith('-m jupyter notebook')) ||
-                    (moduleName.toLowerCase() === 'notebook' &&
-                        args
-                            .join(' ')
-                            .toLowerCase()
-                            .startsWith('-m notebook'))
+                        args.join(' ').toLowerCase().startsWith('-m jupyter notebook')) ||
+                    (moduleName.toLowerCase() === 'notebook' && args.join(' ').toLowerCase().startsWith('-m notebook'))
                 ) {
                     try {
                         const output = await svc.exec(

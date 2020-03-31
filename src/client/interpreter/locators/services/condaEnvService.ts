@@ -54,8 +54,8 @@ export class CondaEnvService extends CacheableLocatorService {
             this._hasInterpreters.resolve(interpreters.length > 0);
             const environments = await this.condaService.getCondaEnvironments(true);
             if (Array.isArray(environments) && environments.length > 0) {
-                interpreters.forEach(interpreter => {
-                    const environment = environments.find(item =>
+                interpreters.forEach((interpreter) => {
+                    const environment = environments.find((item) =>
                         this.fileSystem.arePathsSame(item.path, interpreter!.envPath!)
                     );
                     if (environment) {
@@ -93,7 +93,7 @@ export async function parseCondaInfo(
         envs.push(info.default_prefix);
     }
 
-    const promises = envs.map(async envPath => {
+    const promises = envs.map(async (envPath) => {
         const pythonPath = condaService.getInterpreterPath(envPath);
 
         if (!(await fileSystem.fileExists(pythonPath))) {
@@ -115,8 +115,10 @@ export async function parseCondaInfo(
 
     return (
         Promise.all(promises)
-            .then(interpreters => interpreters.filter(interpreter => interpreter !== null && interpreter !== undefined))
+            .then((interpreters) =>
+                interpreters.filter((interpreter) => interpreter !== null && interpreter !== undefined)
+            )
             // tslint:disable-next-line:no-non-null-assertion
-            .then(interpreters => interpreters.map(interpreter => interpreter!))
+            .then((interpreters) => interpreters.map((interpreter) => interpreter!))
     );
 }

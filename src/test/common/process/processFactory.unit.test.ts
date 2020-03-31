@@ -43,10 +43,10 @@ suite('Process - ProcessServiceFactory', () => {
     });
 
     teardown(() => {
-        (disposableRegistry as Disposable[]).forEach(d => d.dispose());
+        (disposableRegistry as Disposable[]).forEach((d) => d.dispose());
     });
 
-    [Uri.parse('test'), undefined].forEach(resource => {
+    [Uri.parse('test'), undefined].forEach((resource) => {
         test(`Ensure ProcessService is created with an ${resource ? 'existing' : 'undefined'} resource`, async () => {
             when(envVariablesProvider.getEnvironmentVariables(resource)).thenResolve({ x: 'test' });
 

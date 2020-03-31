@@ -26,7 +26,7 @@ suite('PythonExecutionService', () => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
 
-        serviceContainer.setup(s => s.get<IFileSystem>(IFileSystem)).returns(() => fileSystem.object);
+        serviceContainer.setup((s) => s.get<IFileSystem>(IFileSystem)).returns(() => fileSystem.object);
 
         executionService = new PythonExecutionService(serviceContainer.object, processService.object, pythonPath);
     });
@@ -40,7 +40,7 @@ suite('PythonExecutionService', () => {
         };
 
         processService
-            .setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
 
         const result = await executionService.getInterpreterInformation();
@@ -64,7 +64,7 @@ suite('PythonExecutionService', () => {
         };
 
         processService
-            .setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
 
         const result = await executionService.getInterpreterInformation();
@@ -91,7 +91,7 @@ suite('PythonExecutionService', () => {
         };
 
         processService
-            .setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
 
         const result = await executionService.getInterpreterInformation();
@@ -111,7 +111,7 @@ suite('PythonExecutionService', () => {
 
     test('getInterpreterInformation should error out if interpreterInfo.py times out', async () => {
         processService
-            .setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             // tslint:disable-next-line: no-any
             .returns(() => Promise.resolve(undefined as any));
 
@@ -125,7 +125,7 @@ suite('PythonExecutionService', () => {
 
     test('getInterpreterInformation should return undefined if the json value returned by interpreterInfo.py is not valid', async () => {
         processService
-            .setup(p => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.shellExec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'bad json' }));
 
         const result = await executionService.getInterpreterInformation();
@@ -134,7 +134,7 @@ suite('PythonExecutionService', () => {
     });
 
     test('getExecutablePath should return pythonPath if pythonPath is a file', async () => {
-        fileSystem.setup(f => f.fileExists(pythonPath)).returns(() => Promise.resolve(true));
+        fileSystem.setup((f) => f.fileExists(pythonPath)).returns(() => Promise.resolve(true));
 
         const result = await executionService.getExecutablePath();
 
@@ -143,9 +143,9 @@ suite('PythonExecutionService', () => {
 
     test('getExecutablePath should not return pythonPath if pythonPath is not a file', async () => {
         const executablePath = 'path/to/dummy/executable';
-        fileSystem.setup(f => f.fileExists(pythonPath)).returns(() => Promise.resolve(false));
+        fileSystem.setup((f) => f.fileExists(pythonPath)).returns(() => Promise.resolve(false));
         processService
-            .setup(p => p.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: executablePath }));
 
         const result = await executionService.getExecutablePath();
@@ -155,9 +155,9 @@ suite('PythonExecutionService', () => {
 
     test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {
         const stderr = 'bar';
-        fileSystem.setup(f => f.fileExists(pythonPath)).returns(() => Promise.resolve(false));
+        fileSystem.setup((f) => f.fileExists(pythonPath)).returns(() => Promise.resolve(false));
         processService
-            .setup(p => p.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError(stderr)));
 
         const result = executionService.getExecutablePath();
@@ -168,13 +168,13 @@ suite('PythonExecutionService', () => {
     test('isModuleInstalled should call processService.exec()', async () => {
         const moduleName = 'foo';
         processService
-            .setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: '' }));
 
         await executionService.isModuleInstalled(moduleName);
 
         processService.verify(
-            async p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }),
+            async (p) => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }),
             TypeMoq.Times.once()
         );
     });
@@ -182,7 +182,7 @@ suite('PythonExecutionService', () => {
     test('isModuleInstalled should return true when processService.exec() succeeds', async () => {
         const moduleName = 'foo';
         processService
-            .setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
             .returns(() => Promise.resolve({ stdout: '' }));
 
         const result = await executionService.isModuleInstalled(moduleName);
@@ -193,7 +193,7 @@ suite('PythonExecutionService', () => {
     test('isModuleInstalled should return false when processService.exec() throws', async () => {
         const moduleName = 'foo';
         processService
-            .setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError('bar')));
 
         const result = await executionService.isModuleInstalled(moduleName);
@@ -212,11 +212,11 @@ suite('PythonExecutionService', () => {
                 noop();
             }
         };
-        processService.setup(p => p.execObservable(pythonPath, args, options)).returns(() => observable);
+        processService.setup((p) => p.execObservable(pythonPath, args, options)).returns(() => observable);
 
         const result = executionService.execObservable(args, options);
 
-        processService.verify(p => p.execObservable(pythonPath, args, options), TypeMoq.Times.once());
+        processService.verify((p) => p.execObservable(pythonPath, args, options), TypeMoq.Times.once());
         expect(result).to.be.equal(observable, 'execObservable should return an observable');
     });
 
@@ -233,11 +233,11 @@ suite('PythonExecutionService', () => {
                 noop();
             }
         };
-        processService.setup(p => p.execObservable(pythonPath, expectedArgs, options)).returns(() => observable);
+        processService.setup((p) => p.execObservable(pythonPath, expectedArgs, options)).returns(() => observable);
 
         const result = executionService.execModuleObservable(moduleName, args, options);
 
-        processService.verify(p => p.execObservable(pythonPath, expectedArgs, options), TypeMoq.Times.once());
+        processService.verify((p) => p.execObservable(pythonPath, expectedArgs, options), TypeMoq.Times.once());
         expect(result).to.be.equal(observable, 'execModuleObservable should return an observable');
     });
 
@@ -245,11 +245,11 @@ suite('PythonExecutionService', () => {
         const args = ['-a', 'b', '-c'];
         const options = {};
         const stdout = 'foo';
-        processService.setup(p => p.exec(pythonPath, args, options)).returns(() => Promise.resolve({ stdout }));
+        processService.setup((p) => p.exec(pythonPath, args, options)).returns(() => Promise.resolve({ stdout }));
 
         const result = await executionService.exec(args, options);
 
-        processService.verify(p => p.exec(pythonPath, args, options), TypeMoq.Times.once());
+        processService.verify((p) => p.exec(pythonPath, args, options), TypeMoq.Times.once());
         expect(result.stdout).to.be.equal(stdout, 'exec should return the content of stdout');
     });
 
@@ -259,11 +259,13 @@ suite('PythonExecutionService', () => {
         const expectedArgs = ['-m', moduleName, ...args];
         const options = {};
         const stdout = 'bar';
-        processService.setup(p => p.exec(pythonPath, expectedArgs, options)).returns(() => Promise.resolve({ stdout }));
+        processService
+            .setup((p) => p.exec(pythonPath, expectedArgs, options))
+            .returns(() => Promise.resolve({ stdout }));
 
         const result = await executionService.execModule(moduleName, args, options);
 
-        processService.verify(p => p.exec(pythonPath, expectedArgs, options), TypeMoq.Times.once());
+        processService.verify((p) => p.exec(pythonPath, expectedArgs, options), TypeMoq.Times.once());
         expect(result.stdout).to.be.equal(stdout, 'exec should return the content of stdout');
     });
 
@@ -273,10 +275,10 @@ suite('PythonExecutionService', () => {
         const expectedArgs = ['-m', moduleName, ...args];
         const options = {};
         processService
-            .setup(p => p.exec(pythonPath, expectedArgs, options))
+            .setup((p) => p.exec(pythonPath, expectedArgs, options))
             .returns(() => Promise.resolve({ stdout: 'bar', stderr: `Error: No module named ${moduleName}` }));
         processService
-            .setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
+            .setup((p) => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true }))
             .returns(() => Promise.reject(new StdErrError('not installed')));
 
         const result = executionService.execModule(moduleName, args, options);

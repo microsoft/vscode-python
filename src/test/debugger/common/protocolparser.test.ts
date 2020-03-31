@@ -15,13 +15,13 @@ suite('Debugging - Protocol Parser', () => {
         protocolParser.connect(stream);
         let messagesDetected = 0;
         protocolParser.on('data', () => (messagesDetected += 1));
-        const requestDetected = new Promise<boolean>(resolve => {
+        const requestDetected = new Promise<boolean>((resolve) => {
             protocolParser.on('request_initialize', () => resolve(true));
         });
-        const responseDetected = new Promise<boolean>(resolve => {
+        const responseDetected = new Promise<boolean>((resolve) => {
             protocolParser.on('response_initialize', () => resolve(true));
         });
-        const eventDetected = new Promise<boolean>(resolve => {
+        const eventDetected = new Promise<boolean>((resolve) => {
             protocolParser.on('event_initialized', () => resolve(true));
         });
 
@@ -47,7 +47,7 @@ suite('Debugging - Protocol Parser', () => {
         protocolParser.connect(stream);
         let messagesDetected = 0;
         protocolParser.on('data', () => (messagesDetected += 1));
-        const requestDetected = new Promise<boolean>(resolve => {
+        const requestDetected = new Promise<boolean>((resolve) => {
             protocolParser.on('request_initialize', () => resolve(true));
         });
         stream.write(

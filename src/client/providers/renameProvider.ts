@@ -69,17 +69,17 @@ export class PythonRenameProvider implements RenameProvider {
         const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings, workspaceRoot, this.serviceContainer);
         return proxy
             .rename<RenameResponse>(document, newName, document.uri.fsPath, range)
-            .then(response => {
-                const fileDiffs = response.results.map(fileChanges => fileChanges.diff);
+            .then((response) => {
+                const fileDiffs = response.results.map((fileChanges) => fileChanges.diff);
                 const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
                 return getWorkspaceEditsFromPatch(fileDiffs, workspaceRoot, fs);
             })
-            .catch(reason => {
+            .catch((reason) => {
                 if (reason === 'Not installed') {
                     const installer = this.serviceContainer.get<IInstaller>(IInstaller);
                     installer
                         .promptToInstall(Product.rope, document.uri)
-                        .catch(ex => traceError('Python Extension: promptToInstall', ex));
+                        .catch((ex) => traceError('Python Extension: promptToInstall', ex));
                     return Promise.reject('');
                 } else {
                     window.showErrorMessage(reason);

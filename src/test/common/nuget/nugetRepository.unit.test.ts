@@ -17,7 +17,7 @@ suite('Nuget on Nuget Repo', () => {
     setup(() => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         httpClient = typeMoq.Mock.ofType<IHttpClient>();
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IHttpClient))).returns(() => httpClient.object);
+        serviceContainer.setup((c) => c.get(typeMoq.It.isValue(IHttpClient))).returns(() => httpClient.object);
 
         nugetRepo = new NugetRepository(serviceContainer.object);
     });
@@ -29,7 +29,7 @@ suite('Nuget on Nuget Repo', () => {
         const expectedUri = `${packageBaseAddress}/${packageName.toLowerCase().trim()}/index.json`;
 
         httpClient
-            .setup(h => h.getJSON(typeMoq.It.isValue(expectedUri)))
+            .setup((h) => h.getJSON(typeMoq.It.isValue(expectedUri)))
             .returns(() => Promise.resolve(resp))
             .verifiable(typeMoq.Times.once());
 
@@ -37,7 +37,7 @@ suite('Nuget on Nuget Repo', () => {
 
         httpClient.verifyAll();
         expect(versions).to.be.lengthOf(2);
-        expect(versions.map(item => item.raw)).to.deep.equal(resp.versions);
+        expect(versions.map((item) => item.raw)).to.deep.equal(resp.versions);
     });
 
     test('Get package uri', async () => {
@@ -54,14 +54,14 @@ suite('Nuget on Nuget Repo', () => {
 
     test('Get packages', async () => {
         const versions = ['1.1.1', '1.2.1', '2.2.2', '2.5.4', '2.9.5-release', '2.7.4-beta', '2.0.2', '3.5.4'];
-        nugetRepo.getVersions = () => Promise.resolve(versions.map(v => new SemVer(v)));
+        nugetRepo.getVersions = () => Promise.resolve(versions.map((v) => new SemVer(v)));
         nugetRepo.getNugetPackageUri = () => 'uri';
 
         const packages = await nugetRepo.getPackages('packageName');
 
         expect(packages).to.be.lengthOf(versions.length);
-        expect(packages.map(item => item.version.raw)).to.be.deep.equal(versions);
-        expect(packages.map(item => item.uri)).to.be.deep.equal(versions.map(() => 'uri'));
-        expect(packages.map(item => item.package)).to.be.deep.equal(versions.map(() => 'packageName'));
+        expect(packages.map((item) => item.version.raw)).to.be.deep.equal(versions);
+        expect(packages.map((item) => item.uri)).to.be.deep.equal(versions.map(() => 'uri'));
+        expect(packages.map((item) => item.package)).to.be.deep.equal(versions.map(() => 'packageName'));
     });
 });

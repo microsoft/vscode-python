@@ -47,7 +47,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     ) {}
 
     public dispose() {
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach((disposable) => disposable.dispose());
     }
 
     public initialize() {
@@ -56,7 +56,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
 
     public registerDeprecation(deprecatedInfo: DeprecatedFeatureInfo): void {
         if (Array.isArray(deprecatedInfo.commands)) {
-            deprecatedInfo.commands.forEach(cmd => {
+            deprecatedInfo.commands.forEach((cmd) => {
                 this.disposables.push(
                     this.cmdMgr.registerCommand(cmd, () => this.notifyDeprecation(deprecatedInfo), this)
                 );
@@ -100,7 +100,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
     public checkAndNotifyDeprecatedSetting(deprecatedInfo: DeprecatedFeatureInfo) {
         let notify = false;
         if (Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0) {
-            this.workspace.workspaceFolders.forEach(workspaceFolder => {
+            this.workspace.workspaceFolders.forEach((workspaceFolder) => {
                 if (notify) {
                     return;
                 }
@@ -117,7 +117,9 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         }
 
         if (notify) {
-            this.notifyDeprecation(deprecatedInfo).catch(ex => traceVerbose('Python Extension: notifyDeprecation', ex));
+            this.notifyDeprecation(deprecatedInfo).catch((ex) =>
+                traceVerbose('Python Extension: notifyDeprecation', ex)
+            );
         }
     }
 

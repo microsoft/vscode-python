@@ -33,7 +33,7 @@ suite('Debugger - Launcher Script Provider', () => {
         }
     ];
 
-    testsForLaunchProvider.forEach(testParams => {
+    testsForLaunchProvider.forEach((testParams) => {
         suite(testParams.testName, async () => {
             test('Test debug launcher args', async () => {
                 const args = new DebuggerLauncherScriptProvider(testParams.path).getLauncherArgs({
@@ -118,7 +118,7 @@ suite('Debugger - Launcher Script Provider', () => {
                 path: path.join('path', 'to', 'ptvsd_launcher', 'with spaces'),
                 expectedPath: '"path/to/ptvsd_launcher/with spaces"'
             }
-        ].forEach(testParams => {
+        ].forEach((testParams) => {
             suite(testParams.testName, async () => {
                 test('Test remote debug launcher args (and do not wait for debugger to attach)', async () => {
                     const args = new RemoteDebuggerExternalLauncherScriptProvider(testParams.path).getLauncherArgs({

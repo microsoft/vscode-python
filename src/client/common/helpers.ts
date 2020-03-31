@@ -23,10 +23,10 @@ export function isNotInstalledError(error: Error): boolean {
 
 export function skipIfTest(isAsyncFunction: boolean) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function(_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (_: Object, __: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function(...args: any[]) {
+        descriptor.value = function (...args: any[]) {
             if (isTestExecution()) {
                 return isAsyncFunction ? Promise.resolve() : undefined;
             }

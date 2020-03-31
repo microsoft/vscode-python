@@ -63,7 +63,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
      * Called by VS Code to indicate it is done with the resource.
      */
     public dispose() {
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach((disposable) => disposable.dispose());
     }
 
     /**
@@ -75,10 +75,10 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
     @traceDecorators.verbose('Get Interpreters')
     public async getInterpreters(resource?: Uri): Promise<PythonInterpreter[]> {
         const locators = this.getLocators();
-        const promises = locators.map(async provider => provider.getInterpreters(resource));
-        locators.forEach(locator => {
+        const promises = locators.map(async (provider) => provider.getInterpreters(resource));
+        locators.forEach((locator) => {
             locator.hasInterpreters
-                .then(found => {
+                .then((found) => {
                     if (found) {
                         this._hasInterpreters.resolve(true);
                     }
@@ -88,9 +88,9 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         const listOfInterpreters = await Promise.all(promises);
 
         const items = flatten(listOfInterpreters)
-            .filter(item => !!item)
-            .map(item => item!)
-            .filter(item => !this.interpreterFilter.isHiddenInterpreter(item));
+            .filter((item) => !!item)
+            .map((item) => item!)
+            .filter((item) => !this.interpreterFilter.isHiddenInterpreter(item));
         this._hasInterpreters.resolve(items.length > 0);
         return this.interpreterLocatorHelper.mergeInterpreters(items);
     }
@@ -116,7 +116,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
             [CURRENT_PATH_SERVICE, undefined]
         ];
         return keys
-            .filter(item => item[1] === undefined || item[1] === this.platform.osType)
-            .map(item => this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, item[0]));
+            .filter((item) => item[1] === undefined || item[1] === this.platform.osType)
+            .map((item) => this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, item[0]));
     }
 }

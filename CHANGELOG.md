@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.3.0-rc (9 March 2020)
+## 2020.3.0 (19 March 2020)
 
 ### Enhancements
 
@@ -25,6 +25,8 @@
 
 ### Fixes
 
+1. Jupyter autocompletion will only show magic commands on empty lines, preventing them of appearing in functions.
+   ([#10023](https://github.com/Microsoft/vscode-python/issues/10023))
 1. Remove extra lines at the end of the file when formatting with Black.
    ([#1877](https://github.com/Microsoft/vscode-python/issues/1877))
 1. Capitalize `Activate.ps1` in code for PowerShell Core on Linux.
@@ -112,6 +114,8 @@
    ([#10311](https://github.com/Microsoft/vscode-python/issues/10311))
 1. When you install missing dependencies for Jupyter successfully in an active interpreter also set that interpreter as the Jupyter selected interpreter.
    ([#10359](https://github.com/Microsoft/vscode-python/issues/10359))
+1. Ensure default `host` is not set, if `connect` or `listen` settings are available.
+   ([#10597](https://github.com/Microsoft/vscode-python/issues/10597))
 
 ### Code Health
 
@@ -133,8 +137,6 @@
    ([#10182](https://github.com/Microsoft/vscode-python/issues/10182))
 1. Use debugpy in the core extension instead of ptvsd.
    ([#10184](https://github.com/Microsoft/vscode-python/issues/10184))
-1. Remove UI Tests.
-   ([#10192](https://github.com/Microsoft/vscode-python/issues/10192))
 1. Add telemetry for imports in notebooks.
    ([#10209](https://github.com/Microsoft/vscode-python/issues/10209))
 1. Update data science component to use `debugpy`.

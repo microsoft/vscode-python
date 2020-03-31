@@ -30,8 +30,8 @@ export namespace Helpers {
     }
 
     export function firstCodeCellAbove(state: IMainState, cellId: string | undefined) {
-        const codeCells = state.cellVMs.filter(c => c.cell.data.cell_type === 'code');
-        const index = codeCells.findIndex(c => c.cell.id === cellId);
+        const codeCells = state.cellVMs.filter((c) => c.cell.data.cell_type === 'code');
+        const index = codeCells.findIndex((c) => c.cell.id === cellId);
         if (index > 0) {
             return codeCells[index - 1].cell.id;
         }

@@ -17,7 +17,7 @@ import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICell, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import { ICell, INotebookProvider } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { createEmptyCell, generateTestCells } from '../../datascience-ui/interactive-common/mainState';
 import { generateReverseChange, IMonacoTextModel } from '../../datascience-ui/react-common/monacoHelpers';
@@ -48,8 +48,7 @@ suite('Data Science Intellisense Unit Tests', () => {
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let configService: TypeMoq.IMock<IConfigurationService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
-    let jupyterExecution: TypeMoq.IMock<IJupyterExecution>;
-    let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
+    let notebookProvider: TypeMoq.IMock<INotebookProvider>;
     let cells: ICell[] = [createEmptyCell(Identifiers.EditCellId, null)];
     const pythonSettings = new (class extends PythonSettings {
         public fireChangeEvent() {
@@ -63,18 +62,16 @@ suite('Data Science Intellisense Unit Tests', () => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        jupyterExecution = TypeMoq.Mock.ofType<IJupyterExecution>();
-        interactiveWindowProvider = TypeMoq.Mock.ofType<IInteractiveWindowProvider>();
+        notebookProvider = TypeMoq.Mock.ofType<INotebookProvider>();
 
         pythonSettings.jediEnabled = false;
-        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
-        workspaceService.setup(w => w.rootPath).returns(() => '/foo/bar');
+        configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings);
+        workspaceService.setup((w) => w.rootPath).returns(() => '/foo/bar');
 
         intellisenseProvider = new IntellisenseProvider(
             workspaceService.object,
             fileSystem.object,
-            jupyterExecution.object,
-            interactiveWindowProvider.object,
+            notebookProvider.object,
             interpreterService.object,
             languageServerCache
         );
@@ -225,7 +222,7 @@ suite('Data Science Intellisense Unit Tests', () => {
         source: 'user' | 'undo' | 'redo' = 'user'
     ): Promise<number> {
         if (cell) {
-            let index = cells.findIndex(c => c.id === cell.id);
+            let index = cells.findIndex((c) => c.id === cell.id);
             if (index < 0) {
                 index = oldIndex;
             } else {
@@ -275,9 +272,9 @@ suite('Data Science Intellisense Unit Tests', () => {
     ): Promise<void> {
         const cell = createEmptyCell(id, null);
         cell.data.source = code;
-        const index = codeCellAbove ? cells.findIndex(c => c.id === codeCellAbove) : end ? cells.length : 0;
+        const index = codeCellAbove ? cells.findIndex((c) => c.id === codeCellAbove) : end ? cells.length : 0;
         if (source === 'undo') {
-            cells = cells.filter(c => c.id !== id);
+            cells = cells.filter((c) => c.id !== id);
         } else {
             cells.splice(index, 0, cell);
         }
@@ -425,13 +422,13 @@ suite('Data Science Intellisense Unit Tests', () => {
         await addCode('y', 1, 2, 1);
         await addCode('s', 1, 3, 2);
         expect(getDocumentContents()).to.be.eq('import sys\nsys', 'Document not set after edit');
-        await removeCell(cells.find(c => c.id === '1'));
+        await removeCell(cells.find((c) => c.id === '1'));
         expect(getDocumentContents()).to.be.eq('import sys\nsys', 'Removing a cell broken');
         await addCell('import sys', '2');
         expect(getDocumentContents()).to.be.eq('import sys\nimport sys\nsys', 'Adding a cell broken');
         await addCell('import bar', '3');
         expect(getDocumentContents()).to.be.eq('import sys\nimport sys\nimport bar\nsys', 'Adding a cell broken');
-        await removeCell(cells.find(c => c.id === '1'));
+        await removeCell(cells.find((c) => c.id === '1'));
         expect(getDocumentContents()).to.be.eq('import sys\nimport sys\nimport bar\nsys', 'Removing a cell broken');
     });
 
@@ -528,7 +525,7 @@ df
 df
 `;
         expect(getDocumentContents()).to.be.eq(afterInsert2, 'Insert2 cell failed');
-        await removeCell(cells.find(c => c.id === '7'));
+        await removeCell(cells.find((c) => c.id === '7'));
         expect(getDocumentContents()).to.be.eq(afterInsert, 'Remove 2 cell failed');
         await swapCells('0', '2');
         const afterSwap = `foo
@@ -594,7 +591,7 @@ c
         expect(getDocumentContents()).to.be.eq('', 'Remove all failed');
         await removeAllCells('undo', oldCells);
         expect(getDocumentContents()).to.be.eq(startContent, 'Remove all undo failed');
-        const cell = cells.find(c => c.id === '1');
+        const cell = cells.find((c) => c.id === '1');
         const oldIndex = await removeCell(cell);
         const afterRemove = `a=1
 a

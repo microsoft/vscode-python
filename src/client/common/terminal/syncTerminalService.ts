@@ -160,7 +160,7 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
     }
 
     private createLockFile(): Promise<TemporaryFile> {
-        return this.fs.createTemporaryFile('.log').then(l => {
+        return this.fs.createTemporaryFile('.log').then((l) => {
             this.disposables.push(l);
             return l;
         });

@@ -35,7 +35,7 @@ stages:
   dependsOn:
   - Build
   jobs:
-  - job: 'Py3x Linux'
+  - job: 'Py3x_Linux'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -54,7 +54,7 @@ stages:
   dependsOn:
   - Build
   jobs:
-  - job: 'Py3x Mac'
+  - job: 'Py3x_Mac'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:
@@ -73,7 +73,7 @@ stages:
   dependsOn:
   - Build
   jobs:
-  - job: 'Py3x Windows'
+  - job: 'Py3x_Windows'
     dependsOn: []
     timeoutInMinutes: 120
     strategy:

@@ -65,6 +65,7 @@ export class JupyterSession implements IJupyterSession {
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     private statusHandler: Slot<ISession, Kernel.Status>;
     private connected: boolean = false;
+    private _jupyterLab?: typeof import('@jupyterlab/services');
     constructor(
         private connInfo: IConnection,
         private serverSettings: ServerConnection.ISettings,
@@ -76,7 +77,13 @@ export class JupyterSession implements IJupyterSession {
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
     }
-
+    private get jupyterLab(): undefined | typeof import('@jupyterlab/services') {
+        if (!this._jupyterLab) {
+            // tslint:disable-next-line:no-require-imports
+            this._jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
+        }
+        return this._jupyterLab;
+    }
     public dispose(): Promise<void> {
         return this.shutdown();
     }
@@ -87,7 +94,7 @@ export class JupyterSession implements IJupyterSession {
             try {
                 // Make sure we have a session first and it returns something
                 await this.sessionManager.refreshRunning();
-                await Promise.all(this.notebookFiles.map(f => this.contentsManager!.delete(f.path)));
+                await Promise.all(this.notebookFiles.map((f) => this.contentsManager!.delete(f.path)));
                 this.notebookFiles = [];
             } catch {
                 noop();
@@ -283,7 +290,7 @@ export class JupyterSession implements IJupyterSession {
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
         if (this.session) {
             this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
-            this.restartSessionPromise?.then(r => this.shutdownSession(r, undefined)).ignoreErrors();
+            this.restartSessionPromise?.then((r) => this.shutdownSession(r, undefined)).ignoreErrors();
         }
 
         // Update our kernel spec
@@ -297,6 +304,77 @@ export class JupyterSession implements IJupyterSession {
 
         // Start the restart session promise too.
         this.restartSessionPromise = this.createRestartSession(this.serverSettings, kernel, this.contentsManager);
+    }
+
+    public registerCommTarget(
+        targetName: string,
+        callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
+    ) {
+        if (this.session && this.session.kernel) {
+            this.session.kernel.registerCommTarget(targetName, callback);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+
+    public sendCommMessage(
+        buffers: (ArrayBuffer | ArrayBufferView)[],
+        content: { comm_id: string; data: JSONObject; target_name: string | undefined },
+        // tslint:disable-next-line: no-any
+        metadata: any,
+        // tslint:disable-next-line: no-any
+        msgId: any
+    ): Kernel.IShellFuture<
+        KernelMessage.IShellMessage<'comm_msg'>,
+        KernelMessage.IShellMessage<KernelMessage.ShellMessageType>
+    > {
+        if (this.session && this.session.kernel && this.jupyterLab) {
+            const shellMessage = this.jupyterLab.KernelMessage.createMessage<KernelMessage.ICommMsgMsg<'shell'>>({
+                // tslint:disable-next-line: no-any
+                msgType: 'comm_msg',
+                channel: 'shell',
+                buffers,
+                content,
+                metadata,
+                msgId,
+                session: this.session.kernel.clientId,
+                username: this.session.kernel.username
+            });
+
+            return this.session.kernel.sendShellMessage(shellMessage, false, true);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+
+    public requestCommInfo(
+        content: KernelMessage.ICommInfoRequestMsg['content']
+    ): Promise<KernelMessage.ICommInfoReplyMsg> {
+        if (this.session?.kernel) {
+            return this.session.kernel.requestCommInfo(content);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+    public registerMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        if (this.session?.kernel) {
+            return this.session.kernel.registerMessageHook(msgId, hook);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
+    }
+    public removeMessageHook(
+        msgId: string,
+        hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>
+    ): void {
+        if (this.session?.kernel) {
+            return this.session.kernel.removeMessageHook(msgId, hook);
+        } else {
+            throw new Error(localize.DataScience.sessionDisposed());
+        }
     }
 
     private getServerStatus(): ServerStatus {
@@ -362,7 +440,7 @@ export class JupyterSession implements IJupyterSession {
             const statusChangedPromise = new Promise((resolve, reject) =>
                 session.kernelChanged.connect((_, e) => statusHandler(resolve, reject, e.newValue?.status))
             );
-            const checkStatusPromise = new Promise(async resolve => {
+            const checkStatusPromise = new Promise(async (resolve) => {
                 // This function seems to cause CI builds to timeout randomly on
                 // different tests. Waiting for status to go idle doesn't seem to work and
                 // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
@@ -440,13 +518,13 @@ export class JupyterSession implements IJupyterSession {
         return Cancellation.race(
             () =>
                 this.sessionManager!.startNew(options)
-                    .then(s => {
+                    .then((s) => {
                         this.logRemoteOutput(
                             localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, s?.kernel?.id)
                         );
                         return s;
                     })
-                    .catch(ex => Promise.reject(new JupyterSessionStartError(ex))),
+                    .catch((ex) => Promise.reject(new JupyterSessionStartError(ex))),
             cancelToken
         );
     }
@@ -506,7 +584,7 @@ export class JupyterSession implements IJupyterSession {
                         if (defaultKernel && defaultKernel._futures) {
                             const futures = defaultKernel._futures as Map<any, any>;
                             if (futures) {
-                                futures.forEach(f => {
+                                futures.forEach((f) => {
                                     if (f._status !== undefined) {
                                         f._status |= 4;
                                     }

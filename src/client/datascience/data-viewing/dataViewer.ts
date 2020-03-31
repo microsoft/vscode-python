@@ -166,7 +166,7 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             if (e instanceof JupyterDataRateLimitError) {
                 traceError(e);
                 const actionTitle = localize.DataScience.pythonInteractiveHelpLink();
-                this.applicationShell.showErrorMessage(e.toString(), actionTitle).then(v => {
+                this.applicationShell.showErrorMessage(e.toString(), actionTitle).then((v) => {
                     // User clicked on the link, open it.
                     if (v === actionTitle) {
                         this.applicationShell.openUrl(HelpLinks.JupyterDataRateHelpLink);

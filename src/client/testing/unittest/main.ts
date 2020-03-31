@@ -43,10 +43,10 @@ export class TestManager extends BaseTestManager {
         if (runFailedTests === true && this.tests) {
             testsToRun = { testFile: [], testFolder: [], testSuite: [], testFunction: [] };
             testsToRun.testFunction = this.tests.testFunctions
-                .filter(fn => {
+                .filter((fn) => {
                     return fn.testFunction.status === TestStatus.Error || fn.testFunction.status === TestStatus.Fail;
                 })
-                .map(fn => fn.testFunction);
+                .map((fn) => fn.testFunction);
         }
         return super.runTest(cmdSource, testsToRun, runFailedTests, debug);
     }

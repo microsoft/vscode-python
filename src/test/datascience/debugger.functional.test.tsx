@@ -38,7 +38,7 @@ suite('DataScience Debugger tests', () => {
     let lastErrorMessage: string | undefined;
     let mockDebuggerService: MockDebuggerService | undefined;
 
-    suiteSetup(function() {
+    suiteSetup(function () {
         // Debugger tests require jupyter to run. Othewrise can't not really testing them
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
 
@@ -100,17 +100,17 @@ suite('DataScience Debugger tests', () => {
             }
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(e => (lastErrorMessage = e));
+        appShell.setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => (lastErrorMessage = e));
         appShell
-            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(''));
         appShell
-            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
         appShell
-            .setup(a => a.showSaveDialog(TypeMoq.It.isAny()))
+            .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(Uri.file('test.ipynb')));
-        appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+        appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
 
         result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
@@ -199,7 +199,7 @@ suite('DataScience Debugger tests', () => {
 
         if (expectedBreakLine) {
             assert.equal(codeLenses.length, 3, 'Incorrect number of debug code lenses stop');
-            codeLenses.forEach(codeLens => {
+            codeLenses.forEach((codeLens) => {
                 assert.ok(codeLens.range.contains(new Position(expectedBreakLine - 1, 0)));
             });
         } else {

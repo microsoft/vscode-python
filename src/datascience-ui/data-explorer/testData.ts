@@ -34,7 +34,7 @@ export function generateTestData(_numberOfRows: number): ITestData {
         columns,
         primaryKeys: keys,
         rows,
-        loadingRows: titanicData.map(_t => {
+        loadingRows: titanicData.map((_t) => {
             return {};
         })
     };

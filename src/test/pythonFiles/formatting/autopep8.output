@@ -1,11 +1,11 @@
---- original//Users/donjayamanne/.vscode/extensions/pythonVSCode/src/test/pythonFiles/formatting/autoPep8FileToFormat.py
-+++ fixed//Users/donjayamanne/.vscode/extensions/pythonVSCode/src/test/pythonFiles/formatting/autoPep8FileToFormat.py
+--- original/.\src\test\pythonFiles\formatting\autoPep8FileToFormat.py
++++ fixed/.\src\test\pythonFiles\formatting\autoPep8FileToFormat.py
 @@ -1,21 +1,31 @@
 -import math, sys;
 +import math
 +import sys
 +
-
+ 
  def example1():
 -    ####This is a long comment. This should be wrapped to fit within 72 characters.
 -    some_tuple=(   1,2, 3,'a'  );
@@ -30,7 +30,7 @@
 +
 +
 +def example2(): return {'has_key() is deprecated': True}.has_key(
-+    {'f': 2}.has_key(''));
++    {'f': 2}.has_key(''))
 +
 +
 +class Example3(object):

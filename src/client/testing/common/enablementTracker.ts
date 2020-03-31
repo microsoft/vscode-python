@@ -27,13 +27,13 @@ export class EnablementTracker implements IExtensionSingleActivationService {
     public onDidChangeConfiguration(args: ConfigurationChangeEvent) {
         const resourcesToCheck: Resource[] = [undefined];
         if (Array.isArray(this.workspaceService.workspaceFolders)) {
-            this.workspaceService.workspaceFolders.forEach(item => resourcesToCheck.push(item.uri));
+            this.workspaceService.workspaceFolders.forEach((item) => resourcesToCheck.push(item.uri));
         }
 
         const testProviders: TestProvider[] = ['nosetest', 'pytest', 'unittest'];
-        resourcesToCheck.forEach(resource => {
+        resourcesToCheck.forEach((resource) => {
             const telemetry: Partial<Record<TestProvider, undefined | boolean>> = {};
-            testProviders.forEach(item => {
+            testProviders.forEach((item) => {
                 const product = this.testsHelper.parseProduct(item);
                 const testingSetting = this.testConfig.getTestEnablingSetting(product);
                 const settingToCheck = `python.${testingSetting}`;

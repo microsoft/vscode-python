@@ -80,7 +80,7 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
         // If the session changes, tell the listener
         if (api && this.firstTime) {
             this.firstTime = false;
-            api.onDidChangeSession(_a => {
+            api.onDidChangeSession((_a) => {
                 // Dispose the object if the role changes
                 const newRole =
                     api !== null && api.session && api.session.role === vsls.Role.Guest
@@ -100,7 +100,7 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
                     this.sessionChangedEmitter.fire();
                 }
             });
-            api.onDidChangePeers(e => {
+            api.onDidChangePeers((e) => {
                 if (!objDisposed) {
                     obj.onPeerChange(e).ignoreErrors();
                 }

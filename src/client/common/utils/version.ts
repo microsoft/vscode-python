@@ -22,8 +22,8 @@ export function parsePythonVersion(version: string): Version | undefined {
     }
     const versionParts = (version || '')
         .split('.')
-        .map(item => item.trim())
-        .filter(item => item.length > 0)
+        .map((item) => item.trim())
+        .filter((item) => item.length > 0)
         .filter((_, index) => index < 4);
 
     if (versionParts.length > 0 && versionParts[versionParts.length - 1].indexOf('-') > 0) {

@@ -19,23 +19,16 @@ import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
     IConfigurationService,
-    IDisposableRegistry,
-    Resource
+    IDisposableRegistry
 } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Settings, Telemetry } from '../constants';
+import { Telemetry } from '../constants';
 import { NotebookModelChange } from '../interactive-common/interactiveWindowTypes';
-import {
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookModel,
-    INotebookServerOptions,
-    INotebookStorage
-} from '../types';
+import { INotebookEditor, INotebookEditorProvider, INotebookModel, INotebookStorage } from '../types';
 
 // Class that is registered as the custom editor provider for notebooks. VS code will call into this class when
 // opening an ipynb file. This class then creates a backing storage, model, and opens a view for the file.
@@ -56,7 +49,7 @@ export class NativeEditorProvider
         return this._onDidOpenNotebookEditor.event;
     }
     public get activeEditor(): INotebookEditor | undefined {
-        return this.editors.find(e => e.visible && e.active);
+        return this.editors.find((e) => e.visible && e.active);
     }
     public get editingDelegate(): CustomEditorEditingDelegate<NotebookModelChange> {
         return this;
@@ -97,7 +90,7 @@ export class NativeEditorProvider
         // on this though.
         const findFilesPromise = workspace.findFiles('**/*.ipynb');
         if (findFilesPromise && findFilesPromise.then) {
-            findFilesPromise.then(r => (this.notebookCount += r.length));
+            findFilesPromise.then((r) => (this.notebookCount += r.length));
         }
 
         // Register for the custom editor service.
@@ -108,30 +101,30 @@ export class NativeEditorProvider
     }
 
     public save(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
-        return this.loadStorage(document.uri).then(async s => {
+        return this.loadStorage(document.uri).then(async (s) => {
             if (s) {
                 await s.save(cancellation);
             }
         });
     }
     public saveAs(document: CustomDocument, targetResource: Uri): Promise<void> {
-        return this.loadStorage(document.uri).then(async s => {
+        return this.loadStorage(document.uri).then(async (s) => {
             if (s) {
                 await s.saveAs(targetResource);
             }
         });
     }
     public applyEdits(document: CustomDocument, edits: readonly NotebookModelChange[]): Promise<void> {
-        return this.loadModel(document.uri).then(s => {
+        return this.loadModel(document.uri).then((s) => {
             if (s) {
-                edits.forEach(e => s.update({ ...e, source: 'redo' }));
+                edits.forEach((e) => s.update({ ...e, source: 'redo' }));
             }
         });
     }
     public undoEdits(document: CustomDocument, edits: readonly NotebookModelChange[]): Promise<void> {
-        return this.loadModel(document.uri).then(s => {
+        return this.loadModel(document.uri).then((s) => {
             if (s) {
-                edits.forEach(e => s.update({ ...e, source: 'undo' }));
+                edits.forEach((e) => s.update({ ...e, source: 'undo' }));
             }
         });
     }
@@ -139,7 +132,7 @@ export class NativeEditorProvider
         noop();
     }
     public async backup(document: CustomDocument, cancellation: CancellationToken): Promise<void> {
-        return this.loadStorage(document.uri).then(async s => {
+        return this.loadStorage(document.uri).then(async (s) => {
             if (s) {
                 await s.backup(cancellation);
             }
@@ -216,23 +209,6 @@ export class NativeEditorProvider
         return this.open(uri);
     }
 
-    public async getNotebookOptions(resource: Resource): Promise<INotebookServerOptions> {
-        const settings = this.configuration.getSettings(resource);
-        let serverURI: string | undefined = settings.datascience.jupyterServerURI;
-        const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
-
-        // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-        if (serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-            serverURI = undefined;
-        }
-
-        return {
-            enableDebugging: true,
-            uri: serverURI,
-            useDefaultConfig,
-            purpose: Identifiers.HistoryPurpose // Share the same one as the interactive window. Just need a new session
-        };
-    }
     protected async createNotebookEditor(resource: Uri, panel?: WebviewPanel) {
         try {
             // Get the model
@@ -268,7 +244,7 @@ export class NativeEditorProvider
         this.openedEditors.delete(editor);
         // If last editor, dispose of the storage
         const key = editor.file.toString();
-        if (![...this.openedEditors].find(e => e.file.toString() === key)) {
+        if (![...this.openedEditors].find((e) => e.file.toString() === key)) {
             this.storageAndModels.delete(key);
         }
         this._onDidCloseNotebookEditor.fire(editor);
@@ -316,7 +292,7 @@ export class NativeEditorProvider
         let modelPromise = this.storageAndModels.get(key);
         if (!modelPromise) {
             const storage = this.serviceContainer.get<INotebookStorage>(INotebookStorage);
-            modelPromise = storage.load(file, contents).then(m => {
+            modelPromise = storage.load(file, contents).then((m) => {
                 if (!this.models.has(m)) {
                     this.models.add(m);
                     this.disposables.push(m.changed(this.modelChanged.bind(this)));
@@ -331,7 +307,7 @@ export class NativeEditorProvider
 
     private async getNextNewNotebookUri(): Promise<Uri> {
         // See if we have any untitled storage already
-        const untitledStorage = [...this.storageAndModels.keys()].filter(k => Uri.parse(k).scheme === 'untitled');
+        const untitledStorage = [...this.storageAndModels.keys()].filter((k) => Uri.parse(k).scheme === 'untitled');
 
         // Just use the length (don't bother trying to fill in holes). We never remove storage objects from
         // our map, so we'll keep creating new untitled notebooks.

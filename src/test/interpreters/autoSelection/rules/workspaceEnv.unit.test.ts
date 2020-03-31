@@ -126,7 +126,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const pythonPathInConfig = typemoq.Mock.ofType<PythonPathInConfig>();
         const pythonPathValue = 'Hello there.exe';
         pythonPathInConfig
-            .setup(p => p.workspaceFolderValue)
+            .setup((p) => p.workspaceFolderValue)
             .returns(() => pythonPathValue)
             .verifiable(typemoq.Times.once());
 
@@ -222,7 +222,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const envs = await rule.getWorkspaceVirtualEnvInterpreters(resource);
         expect(envs).to.be.deep.equal([interpreter2, interpreter3]);
     });
-    [OSType.OSX, OSType.Linux].forEach(osType => {
+    [OSType.OSX, OSType.Linux].forEach((osType) => {
         test(`getWorkspaceVirtualEnvInterpreters will not return any interpreters if interpreters are not in workspace folder (${osType})`, async () => {
             const folderPath = path.join('one', 'two', 'three');
             const interpreter1 = { path: path.join('one', 'two', 'bin', 'python.exe') };
@@ -291,7 +291,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const pythonPathInConfig = typemoq.Mock.ofType<PythonPathInConfig>();
         const pythonPath = { inspect: () => pythonPathInConfig.object };
         pythonPathInConfig
-            .setup(p => p.workspaceFolderValue)
+            .setup((p) => p.workspaceFolderValue)
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
@@ -322,7 +322,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const pythonPathInConfig = typemoq.Mock.ofType<PythonPathInConfig>();
         const pythonPath = { inspect: () => pythonPathInConfig.object };
         pythonPathInConfig
-            .setup(p => p.workspaceFolderValue)
+            .setup((p) => p.workspaceFolderValue)
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
@@ -353,7 +353,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const pythonPathInConfig = typemoq.Mock.ofType<PythonPathInConfig>();
         const pythonPath = { inspect: () => pythonPathInConfig.object };
         pythonPathInConfig
-            .setup(p => p.workspaceFolderValue)
+            .setup((p) => p.workspaceFolderValue)
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);
@@ -384,7 +384,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const pythonPathInConfig = typemoq.Mock.ofType<PythonPathInConfig>();
         const pythonPath = { inspect: () => pythonPathInConfig.object };
         pythonPathInConfig
-            .setup(p => p.workspaceFolderValue)
+            .setup((p) => p.workspaceFolderValue)
             .returns(() => undefined as any)
             .verifiable(typemoq.Times.once());
         when(helper.getActiveWorkspaceUri(anything())).thenReturn({ folderUri } as any);

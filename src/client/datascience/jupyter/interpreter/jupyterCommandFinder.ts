@@ -83,7 +83,7 @@ export class JupyterCommandFinderImpl {
         this.processServicePromise = this.processServiceFactory.create();
         disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(async () => this.clearCache()));
         if (workspace) {
-            const disposable = workspace.onDidChangeConfiguration(async e => {
+            const disposable = workspace.onDidChangeConfiguration(async (e) => {
                 if (e.affectsConfiguration('python.dataScience.searchForJupyter', undefined)) {
                     // When config changes happen, recreate our commands.
                     await this.clearCache();
@@ -193,7 +193,7 @@ export class JupyterCommandFinderImpl {
     private async lookForJupyterInDirectory(pathToCheck: string): Promise<string[]> {
         try {
             const files = await this.fileSystem.getFiles(pathToCheck);
-            return files ? files.filter(s => RegExpValues.CheckJupyterRegEx.test(path.basename(s))) : [];
+            return files ? files.filter((s) => RegExpValues.CheckJupyterRegEx.test(path.basename(s))) : [];
         } catch (err) {
             traceWarning('Python Extension (fileSystem.getFiles):', err);
         }
@@ -369,7 +369,9 @@ export class JupyterCommandFinderImpl {
             cancelAction: 'resolve',
             token: cancelToken
         });
-        const promises = all.filter(i => i !== current).map(i => this.findInterpreterCommand(command, i, cancelToken));
+        const promises = all
+            .filter((i) => i !== current)
+            .map((i) => this.findInterpreterCommand(command, i, cancelToken));
         const foundList = await Promise.race([Promise.all(promises), cancelFind]);
 
         if (isCommandFinderCancelled(command, cancelToken)) {
@@ -415,7 +417,7 @@ export class JupyterCommandFinderImpl {
             }
         } else {
             // Just pick the first one
-            found = foundList.find(f => f.status !== ModuleExistsStatus.NotFound) || found;
+            found = foundList.find((f) => f.status !== ModuleExistsStatus.NotFound) || found;
         }
 
         return found;
@@ -591,11 +593,11 @@ export class JupyterCommandFinder extends JupyterCommandFinderImpl {
             // Otherwise wrap the result so we can check for a failure.
             this.findNotebookCommandPromise = createDeferred<IFindCommandResult>();
             return this.findBestNotebookCommand(token)
-                .then(r => {
+                .then((r) => {
                     this.findNotebookCommandPromise?.resolve(r);
                     return r;
                 })
-                .catch(e => {
+                .catch((e) => {
                     this.findNotebookCommandPromise?.reject(e);
                     throw e;
                 });
@@ -620,8 +622,8 @@ export class JupyterCommandFinder extends JupyterCommandFinderImpl {
 
         const cancellationTokenSource = new CancellationTokenSource();
         const wrappedToken = wrapCancellationTokens(token, cancellationTokenSource.token);
-        const searchPromise = super.findBestCommand(command, wrappedToken).then(cmd => ({ cmd, source: 'search' }));
-        const cachePromise = this.getCachedNotebookInterpreter(wrappedToken).then(cmd => ({ cmd, source: 'cache' }));
+        const searchPromise = super.findBestCommand(command, wrappedToken).then((cmd) => ({ cmd, source: 'search' }));
+        const cachePromise = this.getCachedNotebookInterpreter(wrappedToken).then((cmd) => ({ cmd, source: 'cache' }));
 
         // Take which ever comes first.
         // Searching cache will certainly be faster, use that.
@@ -661,7 +663,7 @@ export class JupyterCommandFinder extends JupyterCommandFinderImpl {
 
         // Cache for other VS Code sessions.
         // i.e. make it available when new VS Code instance is opened.
-        new Promise(async resolve => {
+        new Promise(async (resolve) => {
             try {
                 const interpreter = await result.command!.interpreter();
                 if (!interpreter || (cancelToken && cancelToken.isCancellationRequested)) {

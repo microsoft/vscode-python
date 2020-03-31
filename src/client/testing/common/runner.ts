@@ -53,12 +53,12 @@ export async function run(
         promise = serviceContainer
             .get<IPythonExecutionFactory>(IPythonExecutionFactory)
             .createActivatedEnvironment({ resource: options.workspaceFolder })
-            .then(executionService => executionService.execObservable(options.args, { ...spawnOptions }));
+            .then((executionService) => executionService.execObservable(options.args, { ...spawnOptions }));
     } else if (typeof executionInfo.moduleName === 'string' && executionInfo.moduleName.length > 0) {
         pythonExecutionServicePromise = serviceContainer
             .get<IPythonExecutionFactory>(IPythonExecutionFactory)
             .createActivatedEnvironment({ resource: options.workspaceFolder });
-        promise = pythonExecutionServicePromise.then(executionService =>
+        promise = pythonExecutionServicePromise.then((executionService) =>
             executionService.execModuleObservable(executionInfo.moduleName!, executionInfo.args, options)
         );
     } else {
@@ -68,12 +68,12 @@ export async function run(
         promise = pythonToolsExecutionService.execObservable(executionInfo, spawnOptions, options.workspaceFolder);
     }
 
-    return promise.then(result => {
+    return promise.then((result) => {
         return new Promise<string>((resolve, reject) => {
             let stdOut = '';
             let stdErr = '';
             result.out.subscribe(
-                output => {
+                (output) => {
                     stdOut += output.out;
                     // If the test runner python module is not installed we'll have something in stderr.
                     // Hence track that separately and check at the end.

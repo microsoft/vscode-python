@@ -89,7 +89,7 @@ function LiveShareParticipantMixin<T extends ClassType<IAsyncDisposable>, S>(
                 const liveShare = rest[0] as ILiveShareApi;
                 this.api = liveShare.getApi();
                 this.api
-                    .then(a => {
+                    .then((a) => {
                         this.finishedApi = a;
                         this.onSessionChange(a).ignoreErrors();
                     })

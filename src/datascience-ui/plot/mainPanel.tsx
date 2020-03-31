@@ -60,8 +60,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const images = !props.skipDefault ? [TestSvg, TestSvg, TestSvg] : [];
         const thumbnails = images.map(this.generateThumbnail);
         const sizes = images.map(this.extractSize);
-        const values = images.map(_i => undefined);
-        const ids = images.map(_i => uuid());
+        const values = images.map((_i) => undefined);
+        const ids = images.map((_i) => uuid());
 
         this.state = {
             images,

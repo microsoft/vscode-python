@@ -23,10 +23,8 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
-import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor as NativeEditorWebView } from '../../client/datascience/interactive-ipynb/nativeEditor';
-import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import {
     ICell,
     IDataScienceErrorHandler,
@@ -34,7 +32,6 @@ import {
     INotebookEditorProvider,
     INotebookExporter
 } from '../../client/datascience/types';
-import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { ExecutionCount } from '../../datascience-ui/interactive-common/executionCount';
@@ -101,7 +98,7 @@ suite('DataScience Native Editor', () => {
         })(originalPlatform)
     );
 
-    [false, true].forEach(useCustomEditorApi => {
+    [false, true].forEach((useCustomEditorApi) => {
         //import { asyncDump } from '../common/asyncDump';
         suite(`${useCustomEditorApi ? 'With' : 'Without'} Custom Editor API`, () => {
             function createFileCell(cell: any, data: any): ICell {
@@ -140,18 +137,18 @@ suite('DataScience Native Editor', () => {
 
                     const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                     appShell
-                        .setup(a => a.showErrorMessage(TypeMoq.It.isAnyString()))
-                        .returns(_e => Promise.resolve(''));
+                        .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                        .returns((_e) => Promise.resolve(''));
                     appShell
-                        .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                         .returns(() => Promise.resolve(''));
                     appShell
-                        .setup(a =>
+                        .setup((a) =>
                             a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
                         )
                         .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
                     appShell
-                        .setup(a =>
+                        .setup((a) =>
                             a.showInformationMessage(
                                 TypeMoq.It.isAny(),
                                 TypeMoq.It.isAny(),
@@ -161,7 +158,7 @@ suite('DataScience Native Editor', () => {
                         )
                         .returns((_a1: string, _a2: any, _a3: string, a4: string) => Promise.resolve(a4));
                     appShell
-                        .setup(a => a.showSaveDialog(TypeMoq.It.isAny()))
+                        .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
                         .returns(() => Promise.resolve(Uri.file('foo.ipynb')));
                     ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
                     tempNotebookFile = await createTemporaryFile('.ipynb');
@@ -193,7 +190,7 @@ suite('DataScience Native Editor', () => {
 
                 runMountedTest(
                     'Simple text',
-                    async wrapper => {
+                    async (wrapper) => {
                         // Create an editor so something is listening to messages
                         await createNewEditor(ioc);
 
@@ -282,7 +279,7 @@ suite('DataScience Native Editor', () => {
 
                 runMountedTest(
                     'Mime Types',
-                    async wrapper => {
+                    async (wrapper) => {
                         // Create an editor so something is listening to messages
                         await createNewEditor(ioc);
 
@@ -332,7 +329,7 @@ df.head()`;
                         const cursors = ['|', '/', '-', '\\'];
                         let cursorPos = 0;
                         let loops = 3;
-                        addContinuousMockData(ioc, spinningCursor, async _c => {
+                        addContinuousMockData(ioc, spinningCursor, async (_c) => {
                             const result = `${cursors[cursorPos]}\r`;
                             cursorPos += 1;
                             if (cursorPos >= cursors.length) {
@@ -366,19 +363,19 @@ df.head()`;
 
                 runMountedTest(
                     'Click buttons',
-                    async wrapper => {
+                    async (wrapper) => {
                         // Goto source should cause the visible editor to be picked as long as its filename matches
                         const showedEditor = createDeferred();
                         const textEditors: TextEditor[] = [];
                         const docManager = TypeMoq.Mock.ofType<IDocumentManager>();
                         const visibleEditor = TypeMoq.Mock.ofType<TextEditor>();
                         const dummyDocument = TypeMoq.Mock.ofType<TextDocument>();
-                        dummyDocument.setup(d => d.fileName).returns(() => Uri.file('foo.py').fsPath);
-                        visibleEditor.setup(v => v.show()).returns(() => showedEditor.resolve());
-                        visibleEditor.setup(v => v.revealRange(TypeMoq.It.isAny())).returns(noop);
-                        visibleEditor.setup(v => v.document).returns(() => dummyDocument.object);
+                        dummyDocument.setup((d) => d.fileName).returns(() => Uri.file('foo.py').fsPath);
+                        visibleEditor.setup((v) => v.show()).returns(() => showedEditor.resolve());
+                        visibleEditor.setup((v) => v.revealRange(TypeMoq.It.isAny())).returns(noop);
+                        visibleEditor.setup((v) => v.document).returns(() => dummyDocument.object);
                         textEditors.push(visibleEditor.object);
-                        docManager.setup(a => a.visibleTextEditors).returns(() => textEditors);
+                        docManager.setup((a) => a.visibleTextEditors).returns(() => textEditors);
                         ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
                         // Create an editor so something is listening to messages
                         await createNewEditor(ioc);
@@ -424,7 +421,7 @@ df.head()`;
 
                 runMountedTest(
                     'Select Jupyter Server',
-                    async _wrapper => {
+                    async (_wrapper) => {
                         // tslint:disable-next-line: no-console
                         console.log('Test skipped until user can change jupyter server selection again');
                         // let selectorCalled = false;
@@ -449,7 +446,7 @@ df.head()`;
 
                 runMountedTest(
                     'Select Jupyter Kernel',
-                    async _wrapper => {
+                    async (_wrapper) => {
                         // tslint:disable-next-line: no-console
                         console.log('Tests skipped, as we need better tests');
                         // let selectorCalled = false;
@@ -532,7 +529,7 @@ df.head()`;
 
                 runMountedTest(
                     'Convert to python',
-                    async wrapper => {
+                    async (wrapper) => {
                         // Export should cause the export dialog to come up. Remap appshell so we can check
                         const dummyDisposable = {
                             dispose: () => {
@@ -541,19 +538,19 @@ df.head()`;
                         };
                         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                         appShell
-                            .setup(a => a.showErrorMessage(TypeMoq.It.isAnyString()))
-                            .returns(e => {
+                            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                            .returns((e) => {
                                 throw e;
                             });
                         appShell
-                            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(''));
                         appShell
-                            .setup(a => a.showSaveDialog(TypeMoq.It.isAny()))
+                            .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
                             .returns(() => {
                                 return Promise.resolve(Uri.file(tempNotebookFile.filePath));
                             });
-                        appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+                        appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
                         ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
                         // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
@@ -590,7 +587,7 @@ df.head()`;
 
                 runMountedTest(
                     'Save As',
-                    async wrapper => {
+                    async (wrapper) => {
                         if (useCustomEditorApi) {
                             return;
                         }
@@ -603,19 +600,19 @@ df.head()`;
                         };
                         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                         appShell
-                            .setup(a => a.showErrorMessage(TypeMoq.It.isAnyString()))
-                            .returns(e => {
+                            .setup((a) => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                            .returns((e) => {
                                 throw e;
                             });
                         appShell
-                            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(''));
                         appShell
-                            .setup(a => a.showSaveDialog(TypeMoq.It.isAny()))
+                            .setup((a) => a.showSaveDialog(TypeMoq.It.isAny()))
                             .returns(() => {
                                 return Promise.resolve(Uri.file(tempNotebookFile.filePath));
                             });
-                        appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+                        appShell.setup((a) => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
                         ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
                         // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
@@ -644,7 +641,7 @@ df.head()`;
 
                 runMountedTest(
                     'RunAllCells',
-                    async wrapper => {
+                    async (wrapper) => {
                         addMockData(ioc, 'print(1)\na=1', 1);
                         addMockData(ioc, 'a=a+1\nprint(a)', 2);
                         addMockData(ioc, 'print(a+1)', 3);
@@ -654,7 +651,7 @@ df.head()`;
                             { id: 'NotebookImport#1', data: { source: 'a=a+1\nprint(a)' } },
                             { id: 'NotebookImport#2', data: { source: 'print(a+1)' } }
                         ];
-                        const runAllCells = baseFile.map(cell => {
+                        const runAllCells = baseFile.map((cell) => {
                             return createFileCell(cell, cell.data);
                         });
                         const notebook = await ioc
@@ -681,7 +678,7 @@ df.head()`;
 
                 runMountedTest(
                     'Startup and shutdown',
-                    async wrapper => {
+                    async (wrapper) => {
                         // Stub the `stat` method to return a dummy value.
                         try {
                             sinon
@@ -700,7 +697,7 @@ df.head()`;
                             { id: 'NotebookImport#1', data: { source: 'b=2\nb' } },
                             { id: 'NotebookImport#2', data: { source: 'c=3\nc' } }
                         ];
-                        const runAllCells = baseFile.map(cell => {
+                        const runAllCells = baseFile.map((cell) => {
                             return createFileCell(cell, cell.data);
                         });
                         const notebook = await ioc
@@ -719,10 +716,10 @@ df.head()`;
                         // Close editor. Should still have the server up
                         await closeNotebook(editor, wrapper);
                         const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-                        const editorProvider = ioc.serviceManager.get<INotebookEditorProvider>(INotebookEditorProvider);
-                        const server = await jupyterExecution.getServer(
-                            await editorProvider.getNotebookOptions(undefined)
-                        );
+                        const server = await jupyterExecution.getServer({
+                            allowUI: () => false,
+                            purpose: Identifiers.HistoryPurpose
+                        });
                         assert.ok(server, 'Server was destroyed on notebook shutdown');
 
                         // Reopen, and rerun
@@ -748,25 +745,23 @@ df.head()`;
                 test('Failure', async () => {
                     let fail = true;
                     const errorThrownDeferred = createDeferred<Error>();
-                    // Make a dummy class that will fail during launch
-                    class FailedProcess extends JupyterExecutionFactory {
-                        public getUsableJupyterPython(): Promise<PythonInterpreter | undefined> {
-                            if (fail) {
-                                return Promise.resolve(undefined);
-                            }
-                            return super.getUsableJupyterPython();
-                        }
-                    }
 
-                    class CustomErrorHandler extends DataScienceErrorHandler {
-                        public handleError(exc: Error): Promise<void> {
-                            errorThrownDeferred.resolve(exc);
-                            return Promise.resolve();
+                    // REmap the functions in the execution and error handler. Note, we can't rebind them as
+                    // they've already been injected into the INotebookProvider
+                    const execution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+                    const errorHandler = ioc.serviceManager.get<IDataScienceErrorHandler>(IDataScienceErrorHandler);
+                    const originalGetUsable = execution.getUsableJupyterPython.bind(execution);
+                    execution.getUsableJupyterPython = () => {
+                        if (fail) {
+                            return Promise.resolve(undefined);
                         }
-                    }
-                    ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
-                    ioc.serviceManager.rebind<IDataScienceErrorHandler>(IDataScienceErrorHandler, CustomErrorHandler);
-                    ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+                        return originalGetUsable();
+                    };
+                    errorHandler.handleError = (exc: Error) => {
+                        errorThrownDeferred.resolve(exc);
+                        return Promise.resolve();
+                    };
+
                     addMockData(ioc, 'a=1\na', 1);
                     const wrapper = mountNativeWebView(ioc);
                     await createNewEditor(ioc);
@@ -783,7 +778,7 @@ df.head()`;
                     assert.ok(cell, 'Cannot find the first cell');
                     const imageButtons = cell!.find(ImageButton);
                     assert.equal(imageButtons.length, 6, 'Cell buttons not found');
-                    const runButton = imageButtons.findWhere(w => w.props().tooltip === 'Run cell');
+                    const runButton = imageButtons.findWhere((w) => w.props().tooltip === 'Run cell');
                     assert.equal(runButton.length, 1, 'No run button found');
                     const update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, {
                         numberOfTimes: 3
@@ -958,10 +953,7 @@ df.head()`;
 
                 function clickCell(cellIndex: number) {
                     wrapper.update();
-                    wrapper
-                        .find(NativeCell)
-                        .at(cellIndex)
-                        .simulate('click');
+                    wrapper.find(NativeCell).at(cellIndex).simulate('click');
                     wrapper.update();
                 }
 
@@ -1053,7 +1045,7 @@ df.head()`;
                 }
 
                 suite('Selection/Focus', () => {
-                    setup(async function() {
+                    setup(async function () {
                         await initIoc();
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this);
@@ -1106,13 +1098,7 @@ df.head()`;
                         await update;
 
                         assert.ok(isCellFocused(wrapper, 'NativeCell', 0));
-                        assert.equal(
-                            wrapper
-                                .find(NativeCell)
-                                .at(0)
-                                .find(MonacoEditor).length,
-                            1
-                        );
+                        assert.equal(wrapper.find(NativeCell).at(0).find(MonacoEditor).length, 1);
 
                         // Verify cell content
                         const currentEditor = getNativeFocusedEditor(wrapper);
@@ -1150,7 +1136,7 @@ df.head()`;
                 });
 
                 suite('Model updates', () => {
-                    setup(async function() {
+                    setup(async function () {
                         await initIoc();
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this);
@@ -1296,12 +1282,12 @@ df.head()`;
                         // Lets create deferreds that we can await on, and each will be resolved with the edit it received.
                         // For first edit, we'll expect `H`, then `i`, then `!`
                         const modelEditsInExtension = stringToType.split('').map(createDeferred);
-                        model?.changed(e => {
+                        model?.changed((e) => {
                             if (e.kind === 'edit') {
                                 // Find the first deferred that's no completed.
-                                const deferred = modelEditsInExtension.find(d => !d.completed);
+                                const deferred = modelEditsInExtension.find((d) => !d.completed);
                                 // Resolve promise with the character/string it received as edit.
-                                deferred?.resolve(e.forward.map(m => m.text).join(''));
+                                deferred?.resolve(e.forward.map((m) => m.text).join(''));
                             }
                         });
 
@@ -1353,9 +1339,9 @@ df.head()`;
                         const modelEditsInExtension = createDeferred();
                         // Create deferred to detect changes to cellType.
                         const modelCellChangedInExtension = createDeferred();
-                        model?.changed(e => {
+                        model?.changed((e) => {
                             // Resolve promise when we receive last edit (the last character `!`).
-                            if (e.kind === 'edit' && e.forward.map(m => m.text).join('') === '!') {
+                            if (e.kind === 'edit' && e.forward.map((m) => m.text).join('') === '!') {
                                 modelEditsInExtension.resolve();
                             }
                             if (e.kind === 'changeCellType') {
@@ -1411,7 +1397,7 @@ df.head()`;
                 });
 
                 suite('Keyboard Shortcuts', () => {
-                    setup(async function() {
+                    setup(async function () {
                         (window.navigator as any).platform = originalPlatform;
                         await initIoc();
                         // tslint:disable-next-line: no-invalid-this
@@ -1482,11 +1468,7 @@ df.head()`;
                         // For some reason we cannot allow setting focus to monaco editor.
                         // Tests are known to fall over if allowed.
                         wrapper.update();
-                        const editor = wrapper
-                            .find(NativeCell)
-                            .at(1)
-                            .find(Editor)
-                            .first();
+                        const editor = wrapper.find(NativeCell).at(1).find(Editor).first();
                         (editor.instance() as Editor).giveFocus = () => editor.props().focused!();
 
                         const update = waitForUpdate(wrapper, NativeEditor, 1);
@@ -1824,11 +1806,7 @@ df.head()`;
                     test("Toggle line numbers using the 'l' key", async () => {
                         clickCell(1);
 
-                        const monacoEditorComponent = wrapper
-                            .find(NativeCell)
-                            .at(1)
-                            .find(MonacoEditor)
-                            .first();
+                        const monacoEditorComponent = wrapper.find(NativeCell).at(1).find(MonacoEditor).first();
                         const editor = (monacoEditorComponent.instance().state as IMonacoEditorState).editor!;
                         const optionsUpdated = sinon.spy(editor, 'updateOptions');
 
@@ -1880,13 +1858,7 @@ df.head()`;
                         await update;
 
                         assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
-                        assert.equal(
-                            wrapper
-                                .find(NativeCell)
-                                .at(1)
-                                .find(MonacoEditor).length,
-                            1
-                        );
+                        assert.equal(wrapper.find(NativeCell).at(1).find(MonacoEditor).length, 1);
 
                         // Change the markdown
                         let editor = getNativeFocusedEditor(wrapper);
@@ -1901,13 +1873,7 @@ df.head()`;
                         // Confirm markdown output is rendered
                         assert.ok(!isCellFocused(wrapper, 'NativeCell', 1), '1st cell is focused');
                         assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1), '1st cell is not markdown');
-                        assert.equal(
-                            wrapper
-                                .find(NativeCell)
-                                .at(1)
-                                .find(MonacoEditor).length,
-                            0
-                        );
+                        assert.equal(wrapper.find(NativeCell).at(1).find(MonacoEditor).length, 0);
 
                         // Switch to code
                         update = waitForMessage(ioc, CommonActionType.CHANGE_CELL_TYPE);
@@ -1928,7 +1894,7 @@ df.head()`;
                         assert.equal('foo', monacoEditor.state.editor!.getValue(), 'Changing cell type lost input');
                     });
 
-                    test("Test undo using the key 'z'", async function() {
+                    test("Test undo using the key 'z'", async function () {
                         if (useCustomEditorApi) {
                             // tslint:disable-next-line: no-invalid-this
                             return this.skip();
@@ -2005,7 +1971,7 @@ df.head()`;
                         }
                     });
 
-                    test("Test save using the key 'ctrl+s' on Windows", async function() {
+                    test("Test save using the key 'ctrl+s' on Windows", async function () {
                         if (useCustomEditorApi) {
                             // tslint:disable-next-line: no-invalid-this
                             return this.skip();
@@ -2034,7 +2000,7 @@ df.head()`;
                         assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
                     });
 
-                    test("Test save using the key 'ctrl+s' on Mac", async function() {
+                    test("Test save using the key 'ctrl+s' on Mac", async function () {
                         if (useCustomEditorApi) {
                             // tslint:disable-next-line: no-invalid-this
                             return this.skip();
@@ -2065,7 +2031,7 @@ df.head()`;
                         assert.ok(editor!.isDirty, 'Editor be dirty as nothing got saved');
                     });
 
-                    test("Test save using the key 'cmd+s' on a Mac", async function() {
+                    test("Test save using the key 'cmd+s' on a Mac", async function () {
                         if (useCustomEditorApi) {
                             // tslint:disable-next-line: no-invalid-this
                             return this.skip();
@@ -2096,7 +2062,7 @@ df.head()`;
 
                         assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
                     });
-                    test("Test save using the key 'cmd+s' on a Windows", async function() {
+                    test("Test save using the key 'cmd+s' on a Windows", async function () {
                         if (useCustomEditorApi) {
                             // tslint:disable-next-line: no-invalid-this
                             return this.skip();
@@ -2130,7 +2096,7 @@ df.head()`;
 
                 suite('Auto Save', () => {
                     let windowStateChangeHandlers: ((e: WindowState) => any)[] = [];
-                    setup(async function() {
+                    setup(async function () {
                         if (useCustomEditorApi) {
                             // tslint:disable-next-line: no-invalid-this
                             return this.skip();
@@ -2140,8 +2106,8 @@ df.head()`;
                         windowStateChangeHandlers = [];
                         // Keep track of all handlers for the onDidChangeWindowState event.
                         ioc.applicationShell
-                            .setup(app => app.onDidChangeWindowState(TypeMoq.It.isAny()))
-                            .callback(cb => windowStateChangeHandlers.push(cb));
+                            .setup((app) => app.onDidChangeWindowState(TypeMoq.It.isAny()))
+                            .callback((cb) => windowStateChangeHandlers.push(cb));
 
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this);
@@ -2249,8 +2215,8 @@ df.head()`;
                         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
                         docManager.didChangeActiveTextEditorEmitter.fire();
                         // Also, send notification about changes to window state.
-                        windowStateChangeHandlers.forEach(item => item({ focused: false }));
-                        windowStateChangeHandlers.forEach(item => item({ focused: true }));
+                        windowStateChangeHandlers.forEach((item) => item({ focused: false }));
+                        windowStateChangeHandlers.forEach((item) => item({ focused: true }));
 
                         // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
                         await expect(cleanPromise).to.eventually.be.rejected;
@@ -2326,7 +2292,7 @@ df.head()`;
                         ioc.forceSettingsChanged(undefined, ioc.getSettings().pythonPath);
 
                         // Now that the notebook is dirty, send notification about changes to window state.
-                        windowStateChangeHandlers.forEach(item => item({ focused }));
+                        windowStateChangeHandlers.forEach((item) => item({ focused }));
 
                         // At this point a message should be sent to extension asking it to save.
                         // After the save, the extension should send a message to react letting it know that it was saved successfully.
@@ -2357,8 +2323,8 @@ df.head()`;
 
                         // Now that the notebook is dirty, change window state.
                         // This should not trigger a save of notebook (as its configured to save only when focus is changed).
-                        windowStateChangeHandlers.forEach(item => item({ focused: false }));
-                        windowStateChangeHandlers.forEach(item => item({ focused: true }));
+                        windowStateChangeHandlers.forEach((item) => item({ focused: false }));
+                        windowStateChangeHandlers.forEach((item) => item({ focused: true }));
 
                         // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
                         await expect(cleanPromise).to.eventually.be.rejected;
@@ -2436,7 +2402,7 @@ df.head()`;
                 };
 
                 suite('Update Metadata', () => {
-                    setup(async function() {
+                    setup(async function () {
                         await initIoc();
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this, JSON.stringify(oldJson));
@@ -2482,20 +2448,14 @@ df.head()`;
                 });
 
                 suite('Clear Outputs', () => {
-                    setup(async function() {
+                    setup(async function () {
                         await initIoc();
                         // tslint:disable-next-line: no-invalid-this
                         await setupFunction.call(this, JSON.stringify(oldJson));
                     });
 
                     function verifyExecutionCount(cellIndex: number, executionCountContent: string) {
-                        assert.equal(
-                            wrapper
-                                .find(ExecutionCount)
-                                .at(cellIndex)
-                                .props().count,
-                            executionCountContent
-                        );
+                        assert.equal(wrapper.find(ExecutionCount).at(cellIndex).props().count, executionCountContent);
                     }
 
                     test('Clear Outputs in WebView', async () => {

@@ -127,13 +127,13 @@ class FakeVSCodeFileSystemAPI {
     }
     public async readDirectory(uri: Uri): Promise<[string, FileType][]> {
         const names: string[] = await fsextra.readdir(uri.fsPath);
-        const promises = names.map(name => {
+        const promises = names.map((name) => {
             const filename = path.join(uri.fsPath, name);
             return (
                 fsextra
                     // Get the lstat info and deal with symlinks if necessary.
                     .lstat(filename)
-                    .then(async stat => {
+                    .then(async (stat) => {
                         let filetype = FileType.Unknown;
                         if (stat.isFile()) {
                             filetype = FileType.File;
@@ -163,13 +163,13 @@ class FakeVSCodeFileSystemAPI {
         const rs = fsextra
             // Set an error handler on the stream.
             .createReadStream(src.fsPath)
-            .on('error', err => {
+            .on('error', (err) => {
                 deferred.reject(err);
             });
         const ws = fsextra
             .createWriteStream(dest.fsPath)
             // Set an error & close handler on the stream.
-            .on('error', err => {
+            .on('error', (err) => {
                 deferred.reject(err);
             })
             .on('close', () => {
@@ -306,7 +306,7 @@ export class IocContainer {
         const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
         // tslint:disable-next-line:no-any
         const processService = new MockProcessService(new ProcessService(new BufferDecoder(), process.env as any));
-        processServiceFactory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService));
+        processServiceFactory.setup((f) => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService));
         this.serviceManager.addSingletonInstance<IProcessServiceFactory>(
             IProcessServiceFactory,
             processServiceFactory.object

@@ -19,7 +19,7 @@ suite('Pip installer', async () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
+            .setup((c) => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
             .returns(() => pythonExecutionFactory.object);
         pipInstaller = new PipInstaller(serviceContainer.object);
     });
@@ -38,15 +38,15 @@ suite('Pip installer', async () => {
             path: 'pythonPath'
         };
         pythonExecutionFactory
-            .setup(p => p.create(TypeMoq.It.isAny()))
-            .callback(options => {
+            .setup((p) => p.create(TypeMoq.It.isAny()))
+            .callback((options) => {
                 assert.deepEqual(options, { resource: undefined, pythonPath: interpreter.path });
             })
             .returns(() => Promise.resolve(pythonExecutionService.object))
             .verifiable(TypeMoq.Times.once());
         pythonExecutionService
             // tslint:disable-next-line: no-any
-            .setup(p => (p as any).then)
+            .setup((p) => (p as any).then)
             .returns(() => undefined);
 
         // tslint:disable-next-line: no-any
@@ -59,15 +59,15 @@ suite('Pip installer', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const resource = Uri.parse('a');
         pythonExecutionFactory
-            .setup(p => p.create(TypeMoq.It.isAny()))
-            .callback(options => {
+            .setup((p) => p.create(TypeMoq.It.isAny()))
+            .callback((options) => {
                 assert.deepEqual(options, { resource, pythonPath: undefined });
             })
             .returns(() => Promise.resolve(pythonExecutionService.object))
             .verifiable(TypeMoq.Times.once());
         pythonExecutionService
             // tslint:disable-next-line: no-any
-            .setup(p => (p as any).then)
+            .setup((p) => (p as any).then)
             .returns(() => undefined);
 
         await pipInstaller.isSupported(resource);
@@ -79,13 +79,13 @@ suite('Pip installer', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const resource = Uri.parse('a');
         pythonExecutionFactory
-            .setup(p => p.create(TypeMoq.It.isAny()))
+            .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(pythonExecutionService.object));
         pythonExecutionService
             // tslint:disable-next-line: no-any
-            .setup(p => (p as any).then)
+            .setup((p) => (p as any).then)
             .returns(() => undefined);
-        pythonExecutionService.setup(p => p.isModuleInstalled('pip')).returns(() => Promise.resolve(true));
+        pythonExecutionService.setup((p) => p.isModuleInstalled('pip')).returns(() => Promise.resolve(true));
 
         const expected = await pipInstaller.isSupported(resource);
 
@@ -96,13 +96,13 @@ suite('Pip installer', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const resource = Uri.parse('a');
         pythonExecutionFactory
-            .setup(p => p.create(TypeMoq.It.isAny()))
+            .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(pythonExecutionService.object));
         pythonExecutionService
             // tslint:disable-next-line: no-any
-            .setup(p => (p as any).then)
+            .setup((p) => (p as any).then)
             .returns(() => undefined);
-        pythonExecutionService.setup(p => p.isModuleInstalled('pip')).returns(() => Promise.resolve(false));
+        pythonExecutionService.setup((p) => p.isModuleInstalled('pip')).returns(() => Promise.resolve(false));
 
         const expected = await pipInstaller.isSupported(resource);
 
@@ -113,14 +113,14 @@ suite('Pip installer', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const resource = Uri.parse('a');
         pythonExecutionFactory
-            .setup(p => p.create(TypeMoq.It.isAny()))
+            .setup((p) => p.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(pythonExecutionService.object));
         pythonExecutionService
             // tslint:disable-next-line: no-any
-            .setup(p => (p as any).then)
+            .setup((p) => (p as any).then)
             .returns(() => undefined);
         pythonExecutionService
-            .setup(p => p.isModuleInstalled('pip'))
+            .setup((p) => p.isModuleInstalled('pip'))
             .returns(() => Promise.reject('Unable to check if module is installed'));
 
         const expected = await pipInstaller.isSupported(resource);

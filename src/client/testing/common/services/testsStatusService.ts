@@ -20,7 +20,7 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
             item.status = TestStatus.Discovering;
             this.storage.update(resource, item);
         };
-        tests.rootTestFolders.forEach(item => visitRecursive(tests, item, visitor));
+        tests.rootTestFolders.forEach((item) => visitRecursive(tests, item, visitor));
     }
     public updateStatusAsUnknown(resource: Uri, tests?: Tests): void {
         if (!tests) {
@@ -30,7 +30,7 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
             item.status = TestStatus.Unknown;
             this.storage.update(resource, item);
         };
-        tests.rootTestFolders.forEach(item => visitRecursive(tests, item, visitor));
+        tests.rootTestFolders.forEach((item) => visitRecursive(tests, item, visitor));
     }
     public updateStatusAsRunning(resource: Uri, tests?: Tests): void {
         if (!tests) {
@@ -40,7 +40,7 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
             item.status = TestStatus.Running;
             this.storage.update(resource, item);
         };
-        tests.rootTestFolders.forEach(item => visitRecursive(tests, item, visitor));
+        tests.rootTestFolders.forEach((item) => visitRecursive(tests, item, visitor));
     }
     public updateStatusAsRunningFailedTests(resource: Uri, tests?: Tests): void {
         if (!tests) {
@@ -54,10 +54,10 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
             }
         };
         const failedItems = [
-            ...tests.testFunctions.map(f => f.testFunction).filter(predicate),
-            ...tests.testSuites.map(f => f.testSuite).filter(predicate)
+            ...tests.testFunctions.map((f) => f.testFunction).filter(predicate),
+            ...tests.testSuites.map((f) => f.testSuite).filter(predicate)
         ];
-        failedItems.forEach(failedItem => visitRecursive(tests, failedItem, visitor));
+        failedItems.forEach((failedItem) => visitRecursive(tests, failedItem, visitor));
     }
     public updateStatusAsRunningSpecificTests(resource: Uri, testsToRun: TestsToRun, tests?: Tests): void {
         if (!tests) {
@@ -72,7 +72,7 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
             item.status = TestStatus.Running;
             this.storage.update(resource, item);
         };
-        itemsRunning.forEach(item => visitRecursive(tests, item, visitor));
+        itemsRunning.forEach((item) => visitRecursive(tests, item, visitor));
     }
     public updateStatusOfRunningTestsAsIdle(resource: Uri, tests?: Tests): void {
         if (!tests) {
@@ -84,13 +84,13 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
                 this.storage.update(resource, item);
             }
         };
-        tests.rootTestFolders.forEach(item => visitRecursive(tests, item, visitor));
+        tests.rootTestFolders.forEach((item) => visitRecursive(tests, item, visitor));
     }
     public triggerUpdatesToTests(resource: Uri, tests?: Tests): void {
         if (!tests) {
             return;
         }
         const visitor = (item: TestDataItem) => this.storage.update(resource, item);
-        tests.rootTestFolders.forEach(item => visitRecursive(tests, item, visitor));
+        tests.rootTestFolders.forEach((item) => visitRecursive(tests, item, visitor));
     }
 }

@@ -111,7 +111,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             promise = start();
             this.daemonsPerPythonService.set(daemonPoolKey, promise);
         }
-        return promise.catch(ex => {
+        return promise.catch((ex) => {
             // Ok, we failed to create the daemon (or failed to start).
             // What ever the cause, we need to log this & give a standard IPythonExecutionService
             traceError('Failed to create the daemon service, defaulting to activated environment', ex);

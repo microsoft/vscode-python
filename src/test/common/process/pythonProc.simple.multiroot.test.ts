@@ -76,7 +76,7 @@ suite('PythonExecutableService', () => {
     let configService: IConfigurationService;
     let pythonExecFactory: IPythonExecutionFactory;
 
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -179,7 +179,7 @@ suite('PythonExecutableService', () => {
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
     });
 
-    test('Importing with a valid PYTHONPATH from .env file should succeed', async function() {
+    test('Importing with a valid PYTHONPATH from .env file should succeed', async function () {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2547.
         if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
@@ -221,7 +221,7 @@ suite('PythonExecutableService', () => {
         if (await fs.pathExists(pythonPath)) {
             expectedExecutablePath = pythonPath;
         } else {
-            expectedExecutablePath = await new Promise<string>(resolve => {
+            expectedExecutablePath = await new Promise<string>((resolve) => {
                 execFile(pythonPath, ['-c', 'import sys;print(sys.executable)'], (_error, stdout, _stdErr) => {
                     resolve(stdout.trim());
                 });

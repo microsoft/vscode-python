@@ -46,7 +46,7 @@ const PYTEST_RESULTS_PATH = path.join(
     'results'
 );
 
-const filterdTestScenarios = testScenarios.filter(ts => {
+const filterdTestScenarios = testScenarios.filter((ts) => {
     return !ts.shouldRunFailed;
 });
 
@@ -164,7 +164,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
         );
     }
     // Build tests for the test data that is relevant for this platform.
-    filterdTestScenarios.forEach(scenario => {
+    filterdTestScenarios.forEach((scenario) => {
         suite(scenario.scenarioName, async () => {
             let testMessages: IPythonTestMessage[];
             suiteSetup(async () => {
@@ -174,7 +174,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 const testVisitor = typeMoq.Mock.ofType<ITestVisitor>();
                 const outChannel = typeMoq.Mock.ofType<vscode.OutputChannel>();
                 const cancelToken = typeMoq.Mock.ofType<vscode.CancellationToken>();
-                cancelToken.setup(c => c.isCancellationRequested).returns(() => false);
+                cancelToken.setup((c) => c.isCancellationRequested).returns(() => false);
                 const options: TestDiscoveryOptions = {
                     args: [],
                     cwd: UNITTEST_TEST_FILES_PATH,
@@ -210,7 +210,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 await ioc.dispose();
                 await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
             });
-            scenario.testDetails!.forEach(td => {
+            scenario.testDetails!.forEach((td) => {
                 suite(td.nameToRun, () => {
                     let testMessage: IPythonTestMessage;
                     let expectedMessage: IPythonTestMessage;
@@ -234,7 +234,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                             locationStack: expectedLocationStack,
                             testFilePath: path.join(UNITTEST_TEST_FILES_PATH, td.fileName)
                         };
-                        testMessage = testMessages.find(tm => tm.code === td.nameToRun)!;
+                        testMessage = testMessages.find((tm) => tm.code === td.nameToRun)!;
                     });
                     test('Message', async () => {
                         await testMessageProperties(testMessage, expectedMessage, td.imported, td.status);

@@ -29,7 +29,7 @@ export class Bandit extends BaseLinter {
             cancellation
         );
 
-        messages.forEach(msg => {
+        messages.forEach((msg) => {
             msg.severity = severityMapping[msg.type];
         });
         return messages;

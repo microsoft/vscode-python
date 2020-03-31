@@ -116,7 +116,11 @@ gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies()
 
 const webpackEnv = { NODE_OPTIONS: '--max_old_space_size=9096' };
 
+async function buildIPyWidgets() {
+    await spawnAsync('npm', ['run', 'build-ipywidgets'], webpackEnv);
+}
 async function buildDataScienceUI() {
+    await buildIPyWidgets();
     await spawnAsync(
         'npm',
         [
@@ -158,6 +162,7 @@ gulp.task('webpack', async () => {
     );
     // Build DS stuff (separately as it uses far too much memory and slows down CI).
     // Individually is faster on CI.
+    await buildIPyWidgets();
     await buildWebPack(
         'production',
         ['--config', './build/webpack/webpack.datascience-ui-notebooks.config.js'],

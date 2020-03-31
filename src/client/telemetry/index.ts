@@ -104,7 +104,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
     if (properties) {
         // tslint:disable-next-line:prefer-type-cast no-any
         const data = properties as any;
-        Object.getOwnPropertyNames(data).forEach(prop => {
+        Object.getOwnPropertyNames(data).forEach((prop) => {
             if (data[prop] === undefined || data[prop] === null) {
                 return;
             }
@@ -141,10 +141,10 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
     failureEventName?: E
 ) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function(_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function(...args: any[]) {
+        descriptor.value = function (...args: any[]) {
             if (!captureDuration) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // tslint:disable-next-line:no-invalid-this
@@ -160,12 +160,12 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
             if (result && typeof result.then === 'function' && typeof result.catch === 'function') {
                 // tslint:disable-next-line:prefer-type-cast
                 (result as Promise<void>)
-                    .then(data => {
+                    .then((data) => {
                         sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
                         return data;
                     })
                     // tslint:disable-next-line:promise-function-async
-                    .catch(ex => {
+                    .catch((ex) => {
                         // tslint:disable-next-line:no-any
                         properties = properties || ({} as any);
                         (properties as any).failed = true;
@@ -198,13 +198,13 @@ export function sendTelemetryWhenDone<P extends IEventNamePropertyMapping, E ext
     if (typeof promise.then === 'function') {
         // tslint:disable-next-line:prefer-type-cast no-any
         (promise as Promise<any>).then(
-            data => {
+            (data) => {
                 // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties);
                 return data;
                 // tslint:disable-next-line:promise-function-async
             },
-            ex => {
+            (ex) => {
                 // tslint:disable-next-line:no-non-null-assertion
                 sendTelemetryEvent(eventName, stopWatch!.elapsedTime, properties, ex);
                 return Promise.reject(ex);
@@ -1082,6 +1082,11 @@ export interface IEventNamePropertyMapping {
          * Whether download uri starts with `https:` or not
          */
         usedSSL?: boolean;
+
+        /**
+         * Name of LS downloaded
+         */
+        lsName?: string;
     };
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
@@ -1112,6 +1117,10 @@ export interface IEventNamePropertyMapping {
          * Whether download uri starts with `https:` or not
          */
         usedSSL?: boolean;
+        /**
+         * Package name of LS extracted
+         */
+        lsName?: string;
     };
     /**
      * Telemetry event sent if azure blob packages are being listed
@@ -1894,8 +1903,16 @@ export interface IEventNamePropertyMapping {
         /**
          * result indicates whether the gather was completed to a script, notebook or suffered an internal error.
          */
-        result: 'err' | 'script' | 'notebook';
+        result: 'err' | 'script' | 'notebook' | 'unavailable';
     };
+    /**
+     * Telemetry event sent when a gathered notebook has been saved by the user.
+     */
+    [Telemetry.GatheredNotebookSaved]: undefined | never;
+    /**
+     * Telemetry event sent when the user reports whether Gathered notebook was good or not
+     */
+    [Telemetry.GatherQualityReport]: { result: 'yes' | 'no' };
     /**
      * Telemetry event sent when the ZMQ native binaries do not work.
      */

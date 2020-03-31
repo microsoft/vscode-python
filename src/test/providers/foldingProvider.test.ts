@@ -69,15 +69,15 @@ suite('Provider - Folding Provider', () => {
         }
     ];
 
-    docStringFileAndExpectedFoldingRanges.forEach(item => {
+    docStringFileAndExpectedFoldingRanges.forEach((item) => {
         test(`Test Docstring folding regions '${path.basename(item.file)}'`, async () => {
             const document = await workspace.openTextDocument(item.file);
             const provider = new DocStringFoldingProvider();
             const ranges = await provider.provideFoldingRanges(document, {}, new CancellationTokenSource().token);
             expect(ranges).to.be.lengthOf(item.ranges.length);
-            ranges!.forEach(range => {
+            ranges!.forEach((range) => {
                 const index = item.ranges.findIndex(
-                    searchItem => searchItem.start === range.start && searchItem.end === range.end
+                    (searchItem) => searchItem.start === range.start && searchItem.end === range.end
                 );
                 expect(index).to.be.greaterThan(-1, `${range.start}, ${range.end} not found`);
             });

@@ -30,7 +30,7 @@ suite('Multiroot Linting', () => {
     const flake8Setting = 'linting.flake8Enabled';
 
     let ioc: UnitTestIocContainer;
-    suiteSetup(function() {
+    suiteSetup(function () {
         if (!IS_MULTI_ROOT_TEST) {
             this.skip();
         }
@@ -138,7 +138,7 @@ suite('Multiroot Linting', () => {
         ]);
         await testLinterInWorkspaceFolder(product, 'workspace1', wks);
         await Promise.all(
-            [ConfigurationTarget.Global, ConfigurationTarget.Workspace].map(configTarget =>
+            [ConfigurationTarget.Global, ConfigurationTarget.Workspace].map((configTarget) =>
                 config.updateSetting(setting, undefined, Uri.file(multirootPath), configTarget)
             )
         );

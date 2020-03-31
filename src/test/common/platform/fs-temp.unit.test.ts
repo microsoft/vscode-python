@@ -30,7 +30,7 @@ suite('FileSystem - temp files', () => {
     suite('createFile', () => {
         test(`fails if the raw call fails`, async () => {
             const failure = new Error('oops');
-            deps.setup(d => d.file({ postfix: '.tmp' }, TypeMoq.It.isAny()))
+            deps.setup((d) => d.file({ postfix: '.tmp' }, TypeMoq.It.isAny()))
                 // fail with an arbitrary error
                 .throws(failure);
 
@@ -42,7 +42,7 @@ suite('FileSystem - temp files', () => {
 
         test(`fails if the raw call "returns" an error`, async () => {
             const failure = new Error('oops');
-            deps.setup(d => d.file({ postfix: '.tmp' }, TypeMoq.It.isAny()))
+            deps.setup((d) => d.file({ postfix: '.tmp' }, TypeMoq.It.isAny()))
                 // tslint:disable-next-line:no-empty
                 .callback((_cfg, cb) => cb(failure, '...', -1, () => {}));
 

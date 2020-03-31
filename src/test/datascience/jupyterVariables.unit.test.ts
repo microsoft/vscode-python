@@ -105,8 +105,8 @@ suite('JupyterVariables', () => {
         const config = createTypeMoq<IConfigurationService>('Config ');
 
         fileSystem = typemoq.Mock.ofType<IFileSystem>();
-        fileSystem.setup(fs => fs.readFile(typemoq.It.isAnyString())).returns(() => Promise.resolve('test'));
-        config.setup(s => s.getSettings(typemoq.It.isAny())).returns(() => pythonSettings);
+        fileSystem.setup((fs) => fs.readFile(typemoq.It.isAnyString())).returns(() => Promise.resolve('test'));
+        config.setup((s) => s.getSettings(typemoq.It.isAny())).returns(() => pythonSettings);
 
         jupyterVariables = new JupyterVariables(fileSystem.object, config.object);
     });
@@ -114,7 +114,7 @@ suite('JupyterVariables', () => {
     // No cells, no output, no text/plain
     test('getVariables no cells', async () => {
         fakeNotebook
-            .setup(fs =>
+            .setup((fs) =>
                 fs.execute(
                     typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
@@ -146,7 +146,7 @@ suite('JupyterVariables', () => {
 
     test('getVariables no output', async () => {
         fakeNotebook
-            .setup(fs =>
+            .setup((fs) =>
                 fs.execute(
                     typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
@@ -178,7 +178,7 @@ suite('JupyterVariables', () => {
 
     test('getVariables bad output type', async () => {
         fakeNotebook
-            .setup(fs =>
+            .setup((fs) =>
                 fs.execute(
                     typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
@@ -210,7 +210,7 @@ suite('JupyterVariables', () => {
 
     test('getVariables fake data', async () => {
         fakeNotebook
-            .setup(fs =>
+            .setup((fs) =>
                 fs.execute(
                     typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
@@ -230,7 +230,7 @@ suite('JupyterVariables', () => {
             )
             .verifiable(typemoq.Times.once());
         fakeNotebook
-            .setup(fs => fs.inspect(typemoq.It.isAny()))
+            .setup((fs) => fs.inspect(typemoq.It.isAny()))
             .returns(() =>
                 Promise.resolve({
                     'text/plain': `\u001b[1;31mType:\u001b[0m        complex
@@ -268,7 +268,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
     // getValue failure paths are shared with getVariables, so no need to test them here
     test('getValue fake data', async () => {
         fakeNotebook
-            .setup(fs =>
+            .setup((fs) =>
                 fs.execute(
                     typemoq.It.isAny(),
                     typemoq.It.isValue(Identifiers.EmptyFileName),
@@ -281,7 +281,7 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
             .returns(() => Promise.resolve(generateCells(`['big_complex']`, 'execute_result')))
             .verifiable(typemoq.Times.once());
         fakeNotebook
-            .setup(fs => fs.inspect(typemoq.It.isValue('big_complex')))
+            .setup((fs) => fs.inspect(typemoq.It.isValue('big_complex')))
             .returns(() =>
                 Promise.resolve({
                     'text/plain': `\u001b[1;31mType:\u001b[0m        complex

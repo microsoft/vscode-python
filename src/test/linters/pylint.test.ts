@@ -39,11 +39,11 @@ suite('Linting - Pylint', () => {
     setup(() => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         fileSystem
-            .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
+            .setup((x) => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .returns((a, b) => a === b);
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
-        platformService.setup(x => x.isWindows).returns(() => false);
+        platformService.setup((x) => x.isWindows).returns(() => false);
 
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         execService = TypeMoq.Mock.ofType<IPythonToolExecutionService>();
@@ -76,11 +76,11 @@ suite('Linting - Pylint', () => {
     });
 
     test('pylintrc in the file folder', async () => {
-        fileSystem.setup(x => x.fileExists(path.join(basePath, pylintrc))).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(path.join(basePath, pylintrc))).returns(() => Promise.resolve(true));
         let result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the file folder.`);
 
-        fileSystem.setup(x => x.fileExists(path.join(basePath, dotPylintrc))).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(path.join(basePath, dotPylintrc))).returns(() => Promise.resolve(true));
         result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the file folder.`);
     });
@@ -90,10 +90,10 @@ suite('Linting - Pylint', () => {
         const module3 = path.join('/user/a/b', '__init__.py');
         const rc = path.join('/user/a/b/c', pylintrc);
 
-        fileSystem.setup(x => x.fileExists(module1)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExists(module2)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExists(module3)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExists(rc)).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(module1)).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(module2)).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(module3)).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(rc)).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the module tree.`);
@@ -105,10 +105,10 @@ suite('Linting - Pylint', () => {
         const module3 = path.join('/user/a/b', '__init__.py');
         const rc = path.join('/user/a/b/c', pylintrc);
 
-        fileSystem.setup(x => x.fileExists(module1)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExists(module2)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExists(module3)).returns(() => Promise.resolve(true));
-        fileSystem.setup(x => x.fileExists(rc)).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(module1)).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(module2)).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(module3)).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(rc)).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the module tree.`);
@@ -116,7 +116,7 @@ suite('Linting - Pylint', () => {
     test('.pylintrc up the ~ folder', async () => {
         const home = os.homedir();
         const rc = path.join(home, dotPylintrc);
-        fileSystem.setup(x => x.fileExists(rc)).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(rc)).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${dotPylintrc}' not detected in the ~ folder.`);
@@ -124,14 +124,14 @@ suite('Linting - Pylint', () => {
     test('pylintrc up the ~/.config folder', async () => {
         const home = os.homedir();
         const rc = path.join(home, '.config', pylintrc);
-        fileSystem.setup(x => x.fileExists(rc)).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(rc)).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the  ~/.config folder.`);
     });
     test('pylintrc in the /etc folder', async () => {
         const rc = path.join('/etc', pylintrc);
-        fileSystem.setup(x => x.fileExists(rc)).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(rc)).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFile(fileSystem.object, basePath, platformService.object);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the /etc folder.`);
@@ -139,14 +139,14 @@ suite('Linting - Pylint', () => {
     test('pylintrc between file and workspace root', async () => {
         const root = '/user/a';
         const midFolder = '/user/a/b';
-        fileSystem.setup(x => x.fileExists(path.join(midFolder, pylintrc))).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(path.join(midFolder, pylintrc))).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFileInWorkspace(fileSystem.object, basePath, root);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the workspace tree.`);
     });
 
     test('minArgs - pylintrc between the file and the workspace root', async () => {
-        fileSystem.setup(x => x.fileExists(path.join('/user/a/b', pylintrc))).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(path.join('/user/a/b', pylintrc))).returns(() => Promise.resolve(true));
 
         await testPylintArguments('/user/a/b/c', '/user/a', false);
     });
@@ -157,14 +157,14 @@ suite('Linting - Pylint', () => {
 
     test('minArgs - pylintrc next to the file', async () => {
         const fileFolder = '/user/a/b/c';
-        fileSystem.setup(x => x.fileExists(path.join(fileFolder, pylintrc))).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(path.join(fileFolder, pylintrc))).returns(() => Promise.resolve(true));
 
         await testPylintArguments(fileFolder, '/user/a', false);
     });
 
     test('minArgs - pylintrc at the workspace root', async () => {
         const root = '/user/a';
-        fileSystem.setup(x => x.fileExists(path.join(root, pylintrc))).returns(() => Promise.resolve(true));
+        fileSystem.setup((x) => x.fileExists(path.join(root, pylintrc))).returns(() => Promise.resolve(true));
 
         await testPylintArguments('/user/a/b/c', root, false);
     });
@@ -174,16 +174,16 @@ suite('Linting - Pylint', () => {
         const pylinter = new Pylint(outputChannel.object, serviceContainer);
 
         const document = TypeMoq.Mock.ofType<TextDocument>();
-        document.setup(x => x.uri).returns(() => Uri.file(path.join(fileFolder, 'test.py')));
+        document.setup((x) => x.uri).returns(() => Uri.file(path.join(fileFolder, 'test.py')));
 
         const wsf = TypeMoq.Mock.ofType<WorkspaceFolder>();
-        wsf.setup(x => x.uri).returns(() => Uri.file(wsRoot));
+        wsf.setup((x) => x.uri).returns(() => Uri.file(wsRoot));
 
-        workspace.setup(x => x.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => wsf.object);
+        workspace.setup((x) => x.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => wsf.object);
 
         let execInfo: ExecutionInfo | undefined;
         execService
-            .setup(x => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((x) => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .callback((e: ExecutionInfo, _b, _c) => {
                 execInfo = e;
             })
@@ -197,12 +197,12 @@ suite('Linting - Pylint', () => {
         lintSettings['pylintEnabled'] = true;
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-        settings.setup(x => x.linting).returns(() => lintSettings);
-        config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+        settings.setup((x) => x.linting).returns(() => lintSettings);
+        config.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
         await pylinter.lint(document.object, new CancellationTokenSource().token);
         expect(
-            execInfo!.args.findIndex(x => x.indexOf('--disable=all') >= 0),
+            execInfo!.args.findIndex((x) => x.indexOf('--disable=all') >= 0),
             'Minimal args passed to pylint while pylintrc exists.'
         ).to.be.eq(expectedMinArgs ? 0 : -1);
     }
@@ -212,12 +212,12 @@ suite('Linting - Pylint', () => {
         const pylinter = new Pylint(outputChannel.object, serviceContainer);
 
         const document = TypeMoq.Mock.ofType<TextDocument>();
-        document.setup(x => x.uri).returns(() => Uri.file(path.join(fileFolder, 'test.py')));
+        document.setup((x) => x.uri).returns(() => Uri.file(path.join(fileFolder, 'test.py')));
 
         const wsf = TypeMoq.Mock.ofType<WorkspaceFolder>();
-        wsf.setup(x => x.uri).returns(() => Uri.file(fileFolder));
+        wsf.setup((x) => x.uri).returns(() => Uri.file(fileFolder));
 
-        workspace.setup(x => x.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => wsf.object);
+        workspace.setup((x) => x.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => wsf.object);
 
         const linterOutput = [
             'No config file found, using default configuration',
@@ -226,7 +226,7 @@ suite('Linting - Pylint', () => {
             '3,-1,error,E1305:Too many arguments for format string'
         ].join(os.EOL);
         execService
-            .setup(x => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((x) => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: linterOutput, stderr: '' }));
 
         const lintSettings = new MockLintingSettings();
@@ -243,8 +243,8 @@ suite('Linting - Pylint', () => {
         };
 
         const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-        settings.setup(x => x.linting).returns(() => lintSettings);
-        config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+        settings.setup((x) => x.linting).returns(() => lintSettings);
+        config.setup((x) => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
         const messages = await pylinter.lint(document.object, new CancellationTokenSource().token);
         expect(messages).to.be.lengthOf(2);

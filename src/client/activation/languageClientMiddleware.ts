@@ -372,11 +372,11 @@ export class LanguageClientMiddleware implements Middleware {
 
 function captureTelemetryForLSPMethod(method: string, debounceMilliseconds: number) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function(_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
 
         // tslint:disable-next-line:no-any
-        descriptor.value = function(this: LanguageClientMiddleware, ...args: any[]) {
+        descriptor.value = function (this: LanguageClientMiddleware, ...args: any[]) {
             const eventName = this.eventName;
             if (!eventName) {
                 return originalMethod.apply(this, args);

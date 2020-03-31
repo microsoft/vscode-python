@@ -22,9 +22,11 @@ import * as NativeStore from '../../datascience-ui/native-editor/redux/store';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
+import { PostOffice } from '../../datascience-ui/react-common/postOffice';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent } from './reactHelpers';
+export * from './testHelpersCore';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {
@@ -150,8 +152,8 @@ export function runDoubleTest(
 ) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
     test(`${name} (interactive)`, async () =>
-        testInnerLoop(name, ioc => mountWebView(ioc, 'interactive'), testFunc, getIOC));
-    test(`${name} (native)`, async () => testInnerLoop(name, ioc => mountWebView(ioc, 'native'), testFunc, getIOC));
+        testInnerLoop(name, (ioc) => mountWebView(ioc, 'interactive'), testFunc, getIOC));
+    test(`${name} (native)`, async () => testInnerLoop(name, (ioc) => mountWebView(ioc, 'native'), testFunc, getIOC));
 }
 
 export function mountWebView(
@@ -396,10 +398,7 @@ export function verifyCellIndex(
     cellId: string,
     expectedCellIndex: number
 ) {
-    const nativeCell = wrapper
-        .find(cellId)
-        .first()
-        .find('NativeCell');
+    const nativeCell = wrapper.find(cellId).first().find('NativeCell');
     const secondCell = wrapper.find('NativeCell').at(expectedCellIndex);
     assert.equal(nativeCell.html(), secondCell.html());
 }
@@ -760,7 +759,7 @@ export function mountConnectedMainPanel(type: 'native' | 'interactive') {
 
     // Create the redux store in test mode.
     const createStore = type === 'native' ? NativeStore.createStore : InteractiveStore.createStore;
-    const store = createStore(true, 'vs-light', true);
+    const store = createStore(true, 'vs-light', true, new PostOffice());
 
     // Mount this with a react redux provider
     return mount(
@@ -773,7 +772,7 @@ export function mountConnectedMainPanel(type: 'native' | 'interactive') {
 export function mountComponent<P>(type: 'native' | 'interactive', Component: React.ReactElement<P>) {
     // Create the redux store in test mode.
     const createStore = type === 'native' ? NativeStore.createStore : InteractiveStore.createStore;
-    const store = createStore(true, 'vs-light', true);
+    const store = createStore(true, 'vs-light', true, new PostOffice());
 
     // Mount this with a react redux provider
     return mount(<Provider store={store}>{Component}</Provider>);

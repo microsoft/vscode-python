@@ -154,7 +154,7 @@ export class JupyterServerSelector {
 
         // Get our list of recent server connections and display that as well
         const savedURIList = getSavedUriList(this.globalState);
-        savedURIList.forEach(uriItem => {
+        savedURIList.forEach((uriItem) => {
             if (uriItem.uri) {
                 const uriDate = new Date(uriItem.time);
                 items.push({
