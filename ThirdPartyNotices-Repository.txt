@@ -1096,6 +1096,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 END OF vscode-cpptools NOTICES, INFORMATION, AND LICENSE
 %% font-awesome NOTICES, INFORMATION, AND LICENSE BEGIN HERE
 =========================================
+Font Name - FontAwesome
+
 Font Awesome Free License
 -------------------------
 
