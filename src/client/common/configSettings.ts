@@ -209,6 +209,7 @@ export class PythonSettings implements IPythonSettings {
             EnvFileTelemetry.sendTelemetry(true);
         }
 
+        // tslint:disable-next-line:no-any
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion no-any
         this.devOptions = systemVariables.resolveAny(pythonSettings.get<any[]>('devOptions'))!;
         this.devOptions = Array.isArray(this.devOptions) ? this.devOptions : [];
