@@ -212,7 +212,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
     private destroyIPyWidgets() {
-        this.renderedView.forEach(view => {
+        this.renderedView.forEach((view) => {
             try {
                 view.dispose();
             } catch {
@@ -317,9 +317,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         if (this.isCodeCell()) {
             return (
                 this.renderCodeOutputs()
-                    .filter(item => !!item)
+                    .filter((item) => !!item)
                     // tslint:disable-next-line: no-any
-                    .map(item => (item as any) as JSX.Element)
+                    .map((item) => (item as any) as JSX.Element)
             );
         } else if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
             return this.renderMarkdownOutputs();
@@ -594,7 +594,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         const style: React.CSSProperties = {};
 
         // Create a scrollbar style if necessary
-        if (transformedList.some(transformed => transformed.output.renderWithScrollbars) && this.props.maxTextSize) {
+        if (transformedList.some((transformed) => transformed.output.renderWithScrollbars) && this.props.maxTextSize) {
             style.overflowY = 'auto';
             style.maxHeight = `${this.props.maxTextSize}px`;
         }

@@ -52,7 +52,7 @@ export class ArgumentsHelper implements IArgumentsHelper {
                 nonPositionalIndexes.push(index);
                 // Cuz the next item is the value.
                 nonPositionalIndexes.push(index + 1);
-            } else if (optionsWithArguments.findIndex(item => arg.startsWith(`${item}=`)) !== -1) {
+            } else if (optionsWithArguments.findIndex((item) => arg.startsWith(`${item}=`)) !== -1) {
                 nonPositionalIndexes.push(index);
                 return;
             } else if (arg.startsWith('-')) {
@@ -85,7 +85,7 @@ export class ArgumentsHelper implements IArgumentsHelper {
             // Options can use willd cards (with trailing '*')
             if (
                 optionsWithoutArguments.indexOf(arg) >= 0 ||
-                optionsWithoutArguments.filter(option => option.endsWith('*') && arg.startsWith(option.slice(0, -1)))
+                optionsWithoutArguments.filter((option) => option.endsWith('*') && arg.startsWith(option.slice(0, -1)))
                     .length > 0
             ) {
                 return false;
@@ -96,14 +96,14 @@ export class ArgumentsHelper implements IArgumentsHelper {
                 return false;
             }
             // Ignore args that match exactly with wild cards & do not have inline values.
-            if (optionsWithArguments.filter(option => arg.startsWith(`${option}=`)).length > 0) {
+            if (optionsWithArguments.filter((option) => arg.startsWith(`${option}=`)).length > 0) {
                 return false;
             }
             // Ignore args that match a wild card (ending with *) and no ineline values.
             // Eg. arg='--log-cli-level' and optionsArguments=['--log-*']
             if (
                 arg.indexOf('=') === -1 &&
-                optionsWithoutArguments.filter(option => option.endsWith('*') && arg.startsWith(option.slice(0, -1)))
+                optionsWithoutArguments.filter((option) => option.endsWith('*') && arg.startsWith(option.slice(0, -1)))
                     .length > 0
             ) {
                 ignoreIndex = index + 1;
@@ -113,7 +113,7 @@ export class ArgumentsHelper implements IArgumentsHelper {
             // Eg. arg='--log-cli-level=XYZ' and optionsArguments=['--log-*']
             if (
                 arg.indexOf('=') >= 0 &&
-                optionsWithoutArguments.filter(option => option.endsWith('*') && arg.startsWith(option.slice(0, -1)))
+                optionsWithoutArguments.filter((option) => option.endsWith('*') && arg.startsWith(option.slice(0, -1)))
                     .length > 0
             ) {
                 return false;

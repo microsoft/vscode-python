@@ -63,7 +63,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         this.disposableRegistry.push(this);
 
         if (workspace) {
-            const disposable = workspace.onDidChangeConfiguration(e => {
+            const disposable = workspace.onDidChangeConfiguration((e) => {
                 if (e.affectsConfiguration('python.dataScience', undefined)) {
                     // When config changes happen, recreate our commands.
                     this.onSettingsChanged();
@@ -311,7 +311,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             if (allowUI) {
                 this.appShell
                     .showErrorMessage(localize.DataScience.jupyterStartTimedout(), localize.Common.openOutputPanel())
-                    .then(selection => {
+                    .then((selection) => {
                         if (selection === localize.Common.openOutputPanel()) {
                             this.jupyterOutputChannel.show();
                         }

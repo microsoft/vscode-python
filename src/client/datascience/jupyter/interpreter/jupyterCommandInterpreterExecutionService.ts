@@ -128,7 +128,7 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
             : [file, '--to', 'python', '--stdout'];
         return convert.command
             .exec(args, { throwOnStdErr: false, encoding: 'utf8', token })
-            .then(output => output.stdout);
+            .then((output) => output.stdout);
     }
     public async openNotebook(notebookFile: string): Promise<void> {
         // First we find a way to start a notebook server
@@ -162,7 +162,7 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
                 encoding: 'utf8'
             });
 
-            return parseKernelSpecs(output.stdout, this.fs, token).catch(parserError => {
+            return parseKernelSpecs(output.stdout, this.fs, token).catch((parserError) => {
                 traceError('Failed to parse kernelspecs', parserError);
                 // This is failing for some folks. In that case return nothing
                 return [];

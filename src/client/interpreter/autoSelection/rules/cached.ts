@@ -36,9 +36,9 @@ export class CachedInterpretersAutoSelectionRule extends BaseRuleService {
         manager?: IInterpreterAutoSelectionService
     ): Promise<NextAction> {
         const cachedInterpreters = this.rules
-            .map(item => item.getPreviouslyAutoSelectedInterpreter(resource))
-            .filter(item => !!item)
-            .map(item => item!);
+            .map((item) => item.getPreviouslyAutoSelectedInterpreter(resource))
+            .filter((item) => !!item)
+            .map((item) => item!);
         const bestInterpreter = this.helper.getBestInterpreter(cachedInterpreters);
         traceVerbose(
             `Selected Interpreter from ${this.ruleName}, ${

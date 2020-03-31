@@ -81,7 +81,7 @@ export class ServerCache implements IAsyncDisposable {
 
                 return server;
             })
-            .catch(e => {
+            .catch((e) => {
                 this.cache.delete(key);
                 throw e;
             });
@@ -97,7 +97,7 @@ export class ServerCache implements IAsyncDisposable {
 
     public async dispose(): Promise<void> {
         await Promise.all(
-            [...this.cache.values()].map(async d => {
+            [...this.cache.values()].map(async (d) => {
                 const server = await d.promise;
                 await server?.dispose();
             })

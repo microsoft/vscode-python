@@ -176,7 +176,7 @@ suite('Interpreters - Service Registry', () => {
             [WindowsStoreInterpreter, WindowsStoreInterpreter],
             [InterpreterHashProvider, InterpreterHashProvider],
             [InterpeterHashProviderFactory, InterpeterHashProviderFactory]
-        ].forEach(mapping => {
+        ].forEach((mapping) => {
             verify(serviceManager.addSingleton.apply(serviceManager, mapping as any)).once();
         });
         verify(

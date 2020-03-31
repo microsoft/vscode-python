@@ -76,7 +76,7 @@ class Venvs {
 }
 
 const timeoutMs = IS_CI_SERVER ? 60_000 : 15_000;
-suite('Interpreters - Workspace VirtualEnv Service', function() {
+suite('Interpreters - Workspace VirtualEnv Service', function () {
     this.timeout(timeoutMs);
     this.retries(0);
 
@@ -108,7 +108,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function() {
         const envNameToLookFor = path.basename(venvRoot);
         const predicate = async () => {
             const items = await locator.getInterpreters(workspaceUri);
-            return items.some(item => item.envName === envNameToLookFor);
+            return items.some((item) => item.envName === envNameToLookFor);
         };
         const promise = waitForCondition(
             predicate,
@@ -123,7 +123,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function() {
         return venvs.create(envSuffix);
     }
 
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         // skip for Python < 3, no venv support
         if (await isPythonVersionInProcess(undefined, '2')) {
             return this.skip();
@@ -157,7 +157,7 @@ suite('Interpreters - Workspace VirtualEnv Service', function() {
         await waitForInterpreterToBeDetected(env2);
     });
 
-    test('Detect a new Virtual Environment, and other workspace folder must not be affected (multiroot)', async function() {
+    test('Detect a new Virtual Environment, and other workspace folder must not be affected (multiroot)', async function () {
         if (!IS_MULTI_ROOT_TEST) {
             return this.skip();
         }

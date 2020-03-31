@@ -88,10 +88,10 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     }
 
     public async applyEdits(edits: readonly NotebookModelChange[]): Promise<void> {
-        edits.forEach(e => this.update({ ...e, source: 'redo' }));
+        edits.forEach((e) => this.update({ ...e, source: 'redo' }));
     }
     public async undoEdits(edits: readonly NotebookModelChange[]): Promise<void> {
-        edits.forEach(e => this.update({ ...e, source: 'undo' }));
+        edits.forEach((e) => this.update({ ...e, source: 'undo' }));
     }
     public save(): Promise<void> {
         return this.saveAs(this.file);
@@ -311,7 +311,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         const normalized = change.text.replace(/\r/g, '');
 
         // Figure out which cell we're editing.
-        const index = this.cells.findIndex(c => c.id === id);
+        const index = this.cells.findIndex((c) => c.id === id);
         if (index >= 0) {
             // This is an actual edit.
             const contents = concatMultilineStringInput(this.cells[index].data.source);
@@ -333,15 +333,15 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     private editCell(changes: IEditorContentChange[], id: string): boolean {
         // Apply the changes to the visible cell list
         if (changes && changes.length) {
-            return changes.map(c => this.applyCellContentChange(c, id)).reduce((p, c) => p || c, false);
+            return changes.map((c) => this.applyCellContentChange(c, id)).reduce((p, c) => p || c, false);
         }
 
         return false;
     }
 
     private swapCells(firstCellId: string, secondCellId: string) {
-        const first = this.cells.findIndex(v => v.id === firstCellId);
-        const second = this.cells.findIndex(v => v.id === secondCellId);
+        const first = this.cells.findIndex((v) => v.id === firstCellId);
+        const second = this.cells.findIndex((v) => v.id === secondCellId);
         if (first >= 0 && second >= 0 && first !== second) {
             const temp = { ...this.cells[first] };
             this._state.cells[first] = this.asCell(this.cells[second]);
@@ -353,8 +353,8 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
 
     private modifyCells(cells: ICell[]): boolean {
         // Update these cells in our list
-        cells.forEach(c => {
-            const index = this.cells.findIndex(v => v.id === c.id);
+        cells.forEach((c) => {
+            const index = this.cells.findIndex((v) => v.id === c.id);
             this._state.cells[index] = this.asCell(c);
         });
         return true;
@@ -362,13 +362,13 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
 
     private changeCellType(cell: ICell): boolean {
         // Update the cell in our list.
-        const index = this.cells.findIndex(v => v.id === cell.id);
+        const index = this.cells.findIndex((v) => v.id === cell.id);
         this._state.cells[index] = this.asCell(cell);
         return true;
     }
 
     private removeCell(cell: ICell): boolean {
-        const index = this.cells.findIndex(c => c.id === cell.id);
+        const index = this.cells.findIndex((c) => c.id === cell.id);
         if (index >= 0) {
             this._state.cells.splice(index, 1);
             return true;
@@ -377,7 +377,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
     }
 
     private clearOutputs(): boolean {
-        const newCells = this.cells.map(c =>
+        const newCells = this.cells.map((c) =>
             this.asCell({ ...c, data: { ...c.data, execution_count: null, outputs: [] } })
         );
         const result = !fastDeepEqual(newCells, this.cells);
@@ -572,7 +572,7 @@ export class NativeEditorStorage implements INotebookModel, INotebookStorage {
         // Reuse our original json except for the cells.
         const json = {
             ...(this._state.notebookJson as nbformat.INotebookContent),
-            cells: cells.map(c => this.fixupCell(c.data))
+            cells: cells.map((c) => this.fixupCell(c.data))
         };
         return JSON.stringify(json, null, this.indentAmount);
     }

@@ -30,14 +30,14 @@ export class TestFlatteningVisitor implements ITestVisitor {
         // sample test_three (file name without extension and all / replaced with ., meaning this is the package)
         const packageName = convertFileToPackage(testFile.name);
 
-        testFile.functions.forEach(fn => this.addTestFunction(fn, testFile, packageName));
-        testFile.suites.forEach(suite => this.visitTestSuiteOfAFile(suite, testFile));
+        testFile.functions.forEach((fn) => this.addTestFunction(fn, testFile, packageName));
+        testFile.suites.forEach((suite) => this.visitTestSuiteOfAFile(suite, testFile));
     }
     // tslint:disable-next-line:no-empty
     public visitTestFolder(_testFile: TestFolder) {}
     private visitTestSuiteOfAFile(testSuite: TestSuite, parentTestFile: TestFile): void {
-        testSuite.functions.forEach(fn => this.visitTestFunctionOfASuite(fn, testSuite, parentTestFile));
-        testSuite.suites.forEach(suite => this.visitTestSuiteOfAFile(suite, parentTestFile));
+        testSuite.functions.forEach((fn) => this.visitTestFunctionOfASuite(fn, testSuite, parentTestFile));
+        testSuite.suites.forEach((suite) => this.visitTestSuiteOfAFile(suite, parentTestFile));
         this.addTestSuite(testSuite, parentTestFile);
     }
     private visitTestFunctionOfASuite(

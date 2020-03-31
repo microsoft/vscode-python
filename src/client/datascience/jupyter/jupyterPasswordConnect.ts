@@ -177,7 +177,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         const cookies: string | null = response.headers.get('set-cookie');
 
         if (cookies) {
-            cookies.split(';').forEach(value => {
+            cookies.split(';').forEach((value) => {
                 const cookieKey = value.substring(0, value.indexOf('='));
                 const cookieVal = value.substring(value.indexOf('=') + 1);
                 cookieList.set(cookieKey, cookieVal);

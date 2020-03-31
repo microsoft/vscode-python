@@ -140,12 +140,12 @@ export class PythonSettings implements IPythonSettings {
             throw new Error('Dispose can only be called from unit tests');
         }
         // tslint:disable-next-line:no-void-expression
-        PythonSettings.pythonSettings.forEach(item => item && item.dispose());
+        PythonSettings.pythonSettings.forEach((item) => item && item.dispose());
         PythonSettings.pythonSettings.clear();
     }
     public dispose() {
         // tslint:disable-next-line:no-unsafe-any
-        this.disposables.forEach(disposable => disposable && disposable.dispose());
+        this.disposables.forEach((disposable) => disposable && disposable.dispose());
         this.disposables = [];
     }
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
@@ -439,9 +439,9 @@ export class PythonSettings implements IPythonSettings {
         }
 
         // Resolve any variables found in the test arguments.
-        this.testing.nosetestArgs = this.testing.nosetestArgs.map(arg => systemVariables.resolveAny(arg));
-        this.testing.pytestArgs = this.testing.pytestArgs.map(arg => systemVariables.resolveAny(arg));
-        this.testing.unittestArgs = this.testing.unittestArgs.map(arg => systemVariables.resolveAny(arg));
+        this.testing.nosetestArgs = this.testing.nosetestArgs.map((arg) => systemVariables.resolveAny(arg));
+        this.testing.pytestArgs = this.testing.pytestArgs.map((arg) => systemVariables.resolveAny(arg));
+        this.testing.unittestArgs = this.testing.unittestArgs.map((arg) => systemVariables.resolveAny(arg));
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         const terminalSettings = systemVariables.resolveAny(pythonSettings.get<ITerminalSettings>('terminal'))!;
@@ -511,9 +511,9 @@ export class PythonSettings implements IPythonSettings {
     }
     protected onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, delete its key
-        const workspaceKeys = this.workspace.workspaceFolders!.map(workspaceFolder => workspaceFolder.uri.fsPath);
+        const workspaceKeys = this.workspace.workspaceFolders!.map((workspaceFolder) => workspaceFolder.uri.fsPath);
         const activatedWkspcKeys = Array.from(PythonSettings.pythonSettings.keys());
-        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
+        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter((item) => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
             for (const folder of activatedWkspcFoldersRemoved) {
                 PythonSettings.pythonSettings.delete(folder);

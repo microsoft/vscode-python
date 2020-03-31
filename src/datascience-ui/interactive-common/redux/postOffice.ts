@@ -16,7 +16,7 @@ export const AllowedIPyWidgetMessages = [...Object.values(IPyWidgetMessages)];
 
 export function generatePostOfficeSendReducer(postOffice: PostOffice): Redux.Reducer<{}, Redux.AnyAction> {
     // tslint:disable-next-line: no-function-expression
-    return function(_state: {} | undefined, action: Redux.AnyAction): {} {
+    return function (_state: {} | undefined, action: Redux.AnyAction): {} {
         if (isAllowedAction(action)) {
             // Make sure a valid message
             if (action.type === CommonActionType.PostOutgoingMessage) {

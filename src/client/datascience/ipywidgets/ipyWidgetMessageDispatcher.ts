@@ -101,7 +101,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             );
             const requestId = payload.requestId;
             future.done
-                .then(reply => {
+                .then((reply) => {
                     this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ShellSend_resolve, {
                         requestId,
                         msg: reply
@@ -109,7 +109,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
                     this.pendingShellMessages.delete(requestId);
                     future.dispose();
                 })
-                .catch(ex => {
+                .catch((ex) => {
                     this.raisePostMessage(IPyWidgetMessages.IPyWidgets_ShellSend_reject, { requestId, msg: ex });
                 });
             future.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
@@ -220,7 +220,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             return;
         }
         // Ensure we re-register the comm targets.
-        Array.from(this.commTargetsRegistered.keys()).forEach(targetName => {
+        Array.from(this.commTargetsRegistered.keys()).forEach((targetName) => {
             this.commTargetsRegistered.delete(targetName);
             this.pendingTargetNames.add(targetName);
         });

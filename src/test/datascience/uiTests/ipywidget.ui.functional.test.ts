@@ -31,20 +31,20 @@ const retryIfFail = <T>(fn: () => Promise<T>) => retryIfFailOriginal<T>(fn, wait
 
 use(chaiAsPromised);
 
-[false].forEach(useCustomEditorApi => {
+[false].forEach((useCustomEditorApi) => {
     //import { asyncDump } from '../common/asyncDump';
     suite(`DataScience IPyWidgets (${useCustomEditorApi ? 'With' : 'Without'} Custom Editor API)`, () => {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
 
-        suiteSetup(function() {
+        suiteSetup(function () {
             // These are UI tests, hence nothing to do with platforms.
             UseCustomEditor.enabled = useCustomEditorApi;
             this.timeout(30_000); // UI Tests, need time to start jupyter.
             this.retries(3); // UI Tests can be flaky.
         });
         let testRecorder: TestRecorder;
-        setup(async function() {
+        setup(async function () {
             const testFileName = path.join(
                 EXTENSION_ROOT_DIR,
                 `src/test/datascience/uiTests/recordedTests/test_log_${sanitize(this.currentTest?.title)}.log`
@@ -96,7 +96,7 @@ use(chaiAsPromised);
             mockedVSCodeNamespaces.window?.reset();
         });
         let notebookUi: NotebookEditorUI;
-        teardown(async function() {
+        teardown(async function () {
             if (this.test && this.test.state === 'failed') {
                 const imageName = `${sanitize(this.currentTest?.title)}.png`;
                 await notebookUi.captureScreenshot(path.join(os.tmpdir(), 'tmp', 'screenshots', imageName));
@@ -113,7 +113,7 @@ use(chaiAsPromised);
                 delete nb.metadata.kernelspec;
             }
             // Clear all output (from previous executions).
-            nb.cells.forEach(cell => {
+            nb.cells.forEach((cell) => {
                 if (Array.isArray(cell.outputs)) {
                     cell.outputs = [];
                 }
@@ -255,7 +255,7 @@ use(chaiAsPromised);
             });
         });
         suite('With real Jupyter', () => {
-            setup(function() {
+            setup(function () {
                 if (ioc.mockJupyter) {
                     return this.skip();
                 }
@@ -386,7 +386,7 @@ use(chaiAsPromised);
 
                 // Confirm slider lable reads `0`.
                 await retryIfFail(async () => {
-                    const sliderValue = await notebookUI.page?.evaluate(ele => ele.innerHTML.trim(), sliderLabel);
+                    const sliderValue = await notebookUI.page?.evaluate((ele) => ele.innerHTML.trim(), sliderLabel);
                     assert.equal(sliderValue || '', '0');
                 });
 
@@ -396,7 +396,7 @@ use(chaiAsPromised);
                     const textboxes = await cellOutput.$$('input[type=number]');
                     assert.equal(textboxes.length, 1);
 
-                    const value = await notebookUI.page?.evaluate(el => (el as HTMLInputElement).value, textboxes[0]);
+                    const value = await notebookUI.page?.evaluate((el) => (el as HTMLInputElement).value, textboxes[0]);
                     assert.equal(value || '', '0');
 
                     return textboxes[0];
@@ -417,7 +417,7 @@ use(chaiAsPromised);
 
                 // Confirm slider label reads `50`.
                 await retryIfFail(async () => {
-                    const sliderValue = await notebookUI.page?.evaluate(ele => ele.innerHTML.trim(), sliderLabel);
+                    const sliderValue = await notebookUI.page?.evaluate((ele) => ele.innerHTML.trim(), sliderLabel);
                     assert.equal(sliderValue || '', '50');
                 });
 
@@ -553,7 +553,7 @@ use(chaiAsPromised);
                     const cellOutput = await notebookUI.getCellOutput(4);
                     const dots = await cellOutput.$$('path.dot');
                     assert.isAtLeast(dots.length, 1);
-                    const dotHtml = await notebookUI.page?.evaluate(ele => ele.outerHTML, dots[0]);
+                    const dotHtml = await notebookUI.page?.evaluate((ele) => ele.outerHTML, dots[0]);
                     // Confirm color of dot is red.
                     assert.include(dotHtml || '', 'red');
                 });
@@ -564,7 +564,7 @@ use(chaiAsPromised);
                     const cellOutput = await notebookUI.getCellOutput(4);
                     const dots = await cellOutput.$$('path.dot');
                     assert.isAtLeast(dots.length, 1);
-                    const dotHtml = await notebookUI.page?.evaluate(ele => ele.outerHTML, dots[0]);
+                    const dotHtml = await notebookUI.page?.evaluate((ele) => ele.outerHTML, dots[0]);
                     // Confirm color of dot is red.
                     assert.include(dotHtml || '', 'yellow');
                 });

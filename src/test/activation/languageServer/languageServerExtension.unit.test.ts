@@ -44,6 +44,6 @@ suite('Language Server - Language Server Extension', () => {
         await extension.register();
         verify(cmdManager.registerCommand(loadExtensionCommand, anything())).once();
         extension.dispose();
-        commandRegistrationDisposable.verify(d => d.dispose(), typemoq.Times.once());
+        commandRegistrationDisposable.verify((d) => d.dispose(), typemoq.Times.once());
     });
 });

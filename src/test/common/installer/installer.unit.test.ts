@@ -61,12 +61,12 @@ import { sleep } from '../../common';
 use(chaiAsPromised);
 
 suite('Module Installer only', () => {
-    [undefined, Uri.file('resource')].forEach(resource => {
+    [undefined, Uri.file('resource')].forEach((resource) => {
         // tslint:disable-next-line: cyclomatic-complexity
         getNamesAndValues<Product>(Product)
             .concat([{ name: 'Unkown product', value: 404 }])
             // tslint:disable-next-line: cyclomatic-complexity
-            .forEach(product => {
+            .forEach((product) => {
                 let disposables: Disposable[] = [];
                 let installer: ProductInstaller;
                 let installationChannel: TypeMoq.IMock<IInstallationChannelManager>;
@@ -88,64 +88,64 @@ suite('Module Installer only', () => {
 
                     disposables = [];
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
+                        .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
                         .returns(() => disposables);
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IProductService), TypeMoq.It.isAny()))
+                        .setup((c) => c.get(TypeMoq.It.isValue(IProductService), TypeMoq.It.isAny()))
                         .returns(() => productService);
                     installationChannel = TypeMoq.Mock.ofType<IInstallationChannelManager>();
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IInstallationChannelManager), TypeMoq.It.isAny()))
+                        .setup((c) => c.get(TypeMoq.It.isValue(IInstallationChannelManager), TypeMoq.It.isAny()))
                         .returns(() => installationChannel.object);
                     app = TypeMoq.Mock.ofType<IApplicationShell>();
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny()))
+                        .setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny()))
                         .returns(() => app.object);
                     workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
+                        .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
                         .returns(() => workspaceService.object);
                     persistentStore = TypeMoq.Mock.ofType<IPersistentStateFactory>();
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny()))
+                        .setup((c) => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny()))
                         .returns(() => persistentStore.object);
 
                     moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
                     // tslint:disable-next-line:no-any
                     moduleInstaller.setup((x: any) => x.then).returns(() => undefined);
                     installationChannel
-                        .setup(i => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .setup((i) => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                         .returns(() => Promise.resolve(moduleInstaller.object));
                     installationChannel
-                        .setup(i => i.getInstallationChannel(TypeMoq.It.isAny()))
+                        .setup((i) => i.getInstallationChannel(TypeMoq.It.isAny()))
                         .returns(() => Promise.resolve(moduleInstaller.object));
 
                     productPathService = TypeMoq.Mock.ofType<IProductPathService>();
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IProductPathService), TypeMoq.It.isAny()))
+                        .setup((c) => c.get(TypeMoq.It.isValue(IProductPathService), TypeMoq.It.isAny()))
                         .returns(() => productPathService.object);
                     productPathService
-                        .setup(p => p.getExecutableNameFromSettings(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
+                        .setup((p) => p.getExecutableNameFromSettings(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
                         .returns(() => 'xyz');
                     productPathService
-                        .setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
+                        .setup((p) => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
                         .returns(() => true);
                     interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
                     const pythonInterpreter = TypeMoq.Mock.ofType<PythonInterpreter>();
                     // tslint:disable-next-line:no-any
-                    pythonInterpreter.setup(i => (i as any).then).returns(() => undefined);
+                    pythonInterpreter.setup((i) => (i as any).then).returns(() => undefined);
                     interpreterService
-                        .setup(i => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                        .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
                         .returns(() => Promise.resolve(pythonInterpreter.object));
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
+                        .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
                         .returns(() => interpreterService.object);
                     installer = new ProductInstaller(serviceContainer.object, outputChannel.object);
                 });
                 teardown(() => {
                     // This must be resolved, else all subsequent tests will fail (as this same promise will be used for other tests).
                     promptDeferred.resolve();
-                    disposables.forEach(disposable => {
+                    disposables.forEach((disposable) => {
                         if (disposable) {
                             disposable.dispose();
                         }
@@ -158,7 +158,7 @@ suite('Module Installer only', () => {
                         test(`If product type is not recognized, throw error (${
                             resource ? 'With a resource' : 'without a resource'
                         })`, async () => {
-                            app.setup(a =>
+                            app.setup((a) =>
                                 a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
                             ).verifiable(TypeMoq.Times.never());
                             const getProductType = sinon.stub(ProductService.prototype, 'getProductType');
@@ -180,12 +180,12 @@ suite('Module Installer only', () => {
                         }), print the instructions to install Ctags into the output channel`, async () => {
                             const platformService = TypeMoq.Mock.ofType<IPlatformService>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
+                                .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
                                 .returns(() => platformService.object);
-                            platformService.setup(p => p.isWindows).returns(() => true);
-                            outputChannel.setup(o => o.appendLine(TypeMoq.It.isAny())).returns(() => undefined);
+                            platformService.setup((p) => p.isWindows).returns(() => true);
+                            outputChannel.setup((o) => o.appendLine(TypeMoq.It.isAny())).returns(() => undefined);
                             outputChannel
-                                .setup(o =>
+                                .setup((o) =>
                                     o.appendLine(
                                         'Install Universal Ctags Win32 to enable support for Workspace Symbols'
                                     )
@@ -193,7 +193,7 @@ suite('Module Installer only', () => {
                                 .returns(() => undefined)
                                 .verifiable(TypeMoq.Times.once());
                             outputChannel
-                                .setup(o => o.show())
+                                .setup((o) => o.show())
                                 .returns(() => undefined)
                                 .verifiable(TypeMoq.Times.once());
                             const response = await installer.install(product.value, resource);
@@ -205,19 +205,19 @@ suite('Module Installer only', () => {
                         }), install Ctags using the corresponding script`, async () => {
                             const platformService = TypeMoq.Mock.ofType<IPlatformService>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
+                                .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
                                 .returns(() => platformService.object);
-                            platformService.setup(p => p.isWindows).returns(() => false);
+                            platformService.setup((p) => p.isWindows).returns(() => false);
                             const termianlService = TypeMoq.Mock.ofType<ITerminalService>();
                             const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
+                                .setup((c) => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
                                 .returns(() => terminalServiceFactory.object);
                             terminalServiceFactory
-                                .setup(p => p.getTerminalService(resource))
+                                .setup((p) => p.getTerminalService(resource))
                                 .returns(() => termianlService.object);
                             termianlService
-                                .setup(t => t.sendCommand(CTagsInsllationScript, []))
+                                .setup((t) => t.sendCommand(CTagsInsllationScript, []))
                                 .returns(() => Promise.resolve())
                                 .verifiable(TypeMoq.Times.once());
                             const response = await installer.install(product.value, resource);
@@ -229,19 +229,19 @@ suite('Module Installer only', () => {
                         }), but installing Ctags fails with Error, log error and return`, async () => {
                             const platformService = TypeMoq.Mock.ofType<IPlatformService>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
+                                .setup((c) => c.get(TypeMoq.It.isValue(IPlatformService)))
                                 .returns(() => platformService.object);
-                            platformService.setup(p => p.isWindows).returns(() => false);
+                            platformService.setup((p) => p.isWindows).returns(() => false);
                             const termianlService = TypeMoq.Mock.ofType<ITerminalService>();
                             const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
+                                .setup((c) => c.get(TypeMoq.It.isValue(ITerminalServiceFactory)))
                                 .returns(() => terminalServiceFactory.object);
                             terminalServiceFactory
-                                .setup(p => p.getTerminalService(resource))
+                                .setup((p) => p.getTerminalService(resource))
                                 .returns(() => termianlService.object);
                             termianlService
-                                .setup(t => t.sendCommand(CTagsInsllationScript, []))
+                                .setup((t) => t.sendCommand(CTagsInsllationScript, []))
                                 .returns(() => Promise.reject('Kaboom'))
                                 .verifiable(TypeMoq.Times.once());
                             const response = await installer.install(product.value, resource);
@@ -253,7 +253,7 @@ suite('Module Installer only', () => {
                         } (${
                             resource ? 'With a resource' : 'without a resource'
                         }), install module and return response`, async () => {
-                            app.setup(a =>
+                            app.setup((a) =>
                                 a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
                             )
                                 .returns(() => Promise.resolve('Yes'))
@@ -268,7 +268,7 @@ suite('Module Installer only', () => {
                         test(`If 'No' is selected on the install prompt for the module installer ${product.name} (${
                             resource ? 'With a resource' : 'without a resource'
                         }), return ignore response`, async () => {
-                            app.setup(a =>
+                            app.setup((a) =>
                                 a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
                             )
                                 .returns(() => Promise.resolve('No'))
@@ -303,10 +303,10 @@ suite('Module Installer only', () => {
                                 product.name
                             } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                                 workspaceService
-                                    .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                                    .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
                                     .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
                                     .verifiable(TypeMoq.Times.exactly(resource ? 5 : 0));
-                                app.setup(a =>
+                                app.setup((a) =>
                                     a.showErrorMessage(
                                         TypeMoq.It.isAny(),
                                         TypeMoq.It.isAny(),
@@ -323,10 +323,10 @@ suite('Module Installer only', () => {
                                     })
                                     .verifiable(TypeMoq.Times.once());
                                 const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-                                persistVal.setup(p => p.value).returns(() => false);
-                                persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
+                                persistVal.setup((p) => p.value).returns(() => false);
+                                persistVal.setup((p) => p.updateValue(TypeMoq.It.isValue(true)));
                                 persistentStore
-                                    .setup(ps =>
+                                    .setup((ps) =>
                                         ps.createGlobalPersistentState<boolean>(
                                             TypeMoq.It.isAnyString(),
                                             TypeMoq.It.isValue(undefined)
@@ -355,10 +355,10 @@ suite('Module Installer only', () => {
                                 product.name
                             } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                                 workspaceService
-                                    .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                                    .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
                                     .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
                                     .verifiable(TypeMoq.Times.exactly(resource ? 3 : 0));
-                                app.setup(a =>
+                                app.setup((a) =>
                                     a.showErrorMessage(
                                         TypeMoq.It.isAny(),
                                         TypeMoq.It.isAny(),
@@ -373,10 +373,10 @@ suite('Module Installer only', () => {
                                     .returns(() => Promise.resolve(undefined))
                                     .verifiable(TypeMoq.Times.exactly(3));
                                 const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-                                persistVal.setup(p => p.value).returns(() => false);
-                                persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
+                                persistVal.setup((p) => p.value).returns(() => false);
+                                persistVal.setup((p) => p.updateValue(TypeMoq.It.isValue(true)));
                                 persistentStore
-                                    .setup(ps =>
+                                    .setup((ps) =>
                                         ps.createGlobalPersistentState<boolean>(
                                             TypeMoq.It.isAnyString(),
                                             TypeMoq.It.isValue(undefined)
@@ -397,10 +397,10 @@ suite('Module Installer only', () => {
                                     product.name
                                 } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                                     workspaceService
-                                        .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                                        .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
                                         .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
                                         .verifiable(TypeMoq.Times.exactly(resource ? 2 : 0));
-                                    app.setup(a =>
+                                    app.setup((a) =>
                                         a.showErrorMessage(
                                             TypeMoq.It.isAnyString(),
                                             TypeMoq.It.isValue('Install'),
@@ -415,19 +415,19 @@ suite('Module Installer only', () => {
                                     const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
                                     let mockPersistVal = false;
                                     persistVal
-                                        .setup(p => p.value)
+                                        .setup((p) => p.value)
                                         .returns(() => {
                                             return mockPersistVal;
                                         });
                                     persistVal
-                                        .setup(p => p.updateValue(TypeMoq.It.isValue(true)))
+                                        .setup((p) => p.updateValue(TypeMoq.It.isValue(true)))
                                         .returns(() => {
                                             mockPersistVal = true;
                                             return Promise.resolve();
                                         })
                                         .verifiable(TypeMoq.Times.once());
                                     persistentStore
-                                        .setup(ps =>
+                                        .setup((ps) =>
                                             ps.createGlobalPersistentState<boolean>(
                                                 TypeMoq.It.isAnyString(),
                                                 TypeMoq.It.isValue(undefined)
@@ -457,9 +457,9 @@ suite('Module Installer only', () => {
                                     product.name
                                 } (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                                     workspaceService
-                                        .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                                        .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
                                         .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object);
-                                    app.setup(a =>
+                                    app.setup((a) =>
                                         a.showErrorMessage(
                                             TypeMoq.It.isAnyString(),
                                             TypeMoq.It.isValue('Install'),
@@ -470,7 +470,7 @@ suite('Module Installer only', () => {
                                             return undefined;
                                         })
                                         .verifiable(TypeMoq.Times.once());
-                                    app.setup(a =>
+                                    app.setup((a) =>
                                         a.showErrorMessage(
                                             TypeMoq.It.isAnyString(),
                                             TypeMoq.It.isValue('Install'),
@@ -485,18 +485,18 @@ suite('Module Installer only', () => {
                                     const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
                                     let mockPersistVal = false;
                                     persistVal
-                                        .setup(p => p.value)
+                                        .setup((p) => p.value)
                                         .returns(() => {
                                             return mockPersistVal;
                                         });
                                     persistVal
-                                        .setup(p => p.updateValue(TypeMoq.It.isValue(true)))
+                                        .setup((p) => p.updateValue(TypeMoq.It.isValue(true)))
                                         .returns(() => {
                                             mockPersistVal = true;
                                             return Promise.resolve();
                                         });
                                     persistentStore
-                                        .setup(ps =>
+                                        .setup((ps) =>
                                             ps.createGlobalPersistentState<boolean>(
                                                 TypeMoq.It.isAnyString(),
                                                 TypeMoq.It.isValue(undefined)
@@ -524,7 +524,7 @@ suite('Module Installer only', () => {
                             );
 
                             moduleInstaller
-                                .setup(m =>
+                                .setup((m) =>
                                     m.installModule(
                                         TypeMoq.It.isValue(moduleName),
                                         TypeMoq.It.isValue(resource),
@@ -537,7 +537,7 @@ suite('Module Installer only', () => {
                                 await installer.install(product.value, resource);
                             } catch (ex) {
                                 moduleInstaller.verify(
-                                    m =>
+                                    (m) =>
                                         m.installModule(
                                             TypeMoq.It.isValue(moduleName),
                                             TypeMoq.It.isValue(resource),
@@ -556,7 +556,7 @@ suite('Module Installer only', () => {
                             );
 
                             moduleInstaller
-                                .setup(m =>
+                                .setup((m) =>
                                     m.installModule(
                                         TypeMoq.It.isValue(moduleName),
                                         TypeMoq.It.isValue(resource),
@@ -566,7 +566,7 @@ suite('Module Installer only', () => {
                                 .returns(() => Promise.reject(new Error('UnitTesting')));
                             installationChannel.reset();
                             installationChannel
-                                .setup(i => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                                .setup((i) => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                                 .returns(() => Promise.resolve(undefined));
                             try {
                                 const response = await installer.install(product.value, resource);
@@ -584,7 +584,7 @@ suite('Module Installer only', () => {
                             );
 
                             moduleInstaller
-                                .setup(m =>
+                                .setup((m) =>
                                     m.installModule(
                                         TypeMoq.It.isValue(moduleName),
                                         TypeMoq.It.isValue(resource),
@@ -597,7 +597,7 @@ suite('Module Installer only', () => {
                                 await installer.install(product.value, resource);
                             } catch (ex) {
                                 moduleInstaller.verify(
-                                    m =>
+                                    (m) =>
                                         m.installModule(
                                             TypeMoq.It.isValue(moduleName),
                                             TypeMoq.It.isValue(resource),
@@ -623,17 +623,17 @@ suite('Module Installer only', () => {
                         const pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
                         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
                         serviceContainer
-                            .setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
+                            .setup((c) => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
                             .returns(() => pythonExecutionFactory.object);
                         pythonExecutionFactory
-                            .setup(p => p.createActivatedEnvironment(TypeMoq.It.isAny()))
+                            .setup((p) => p.createActivatedEnvironment(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(pythonExecutionService.object));
                         pythonExecutionService
                             // tslint:disable-next-line: no-any
-                            .setup(p => (p as any).then)
+                            .setup((p) => (p as any).then)
                             .returns(() => undefined);
                         pythonExecutionService
-                            .setup(p => p.isModuleInstalled(TypeMoq.It.isAny()))
+                            .setup((p) => p.isModuleInstalled(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(true))
                             .verifiable(TypeMoq.Times.once());
 
@@ -647,17 +647,17 @@ suite('Module Installer only', () => {
                         const pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
                         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
                         serviceContainer
-                            .setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
+                            .setup((c) => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
                             .returns(() => pythonExecutionFactory.object);
                         pythonExecutionFactory
-                            .setup(p => p.createActivatedEnvironment(TypeMoq.It.isAny()))
+                            .setup((p) => p.createActivatedEnvironment(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(pythonExecutionService.object));
                         pythonExecutionService
                             // tslint:disable-next-line: no-any
-                            .setup(p => (p as any).then)
+                            .setup((p) => (p as any).then)
                             .returns(() => undefined);
                         pythonExecutionService
-                            .setup(p => p.isModuleInstalled(TypeMoq.It.isAny()))
+                            .setup((p) => p.isModuleInstalled(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(false))
                             .verifiable(TypeMoq.Times.once());
 
@@ -672,26 +672,26 @@ suite('Module Installer only', () => {
                         const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
                         const processService = TypeMoq.Mock.ofType<IProcessService>();
                         serviceContainer
-                            .setup(c => c.get<IProcessServiceFactory>(IProcessServiceFactory))
+                            .setup((c) => c.get<IProcessServiceFactory>(IProcessServiceFactory))
                             .returns(() => processServiceFactory.object);
                         processServiceFactory
-                            .setup(p => p.create(TypeMoq.It.isAny()))
+                            .setup((p) => p.create(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(processService.object));
                         processService
                             // tslint:disable-next-line: no-any
-                            .setup(p => (p as any).then)
+                            .setup((p) => (p as any).then)
                             .returns(() => undefined);
                         const executionResult: ExecutionResult<string> = {
                             stdout: 'output'
                         };
                         processService
-                            .setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            .setup((p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(executionResult))
                             .verifiable(TypeMoq.Times.once());
 
                         productPathService.reset();
                         productPathService
-                            .setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
+                            .setup((p) => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
                             .returns(() => false);
 
                         const response = await installer.isInstalled(product.value, resource);
@@ -705,23 +705,23 @@ suite('Module Installer only', () => {
                         const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
                         const processService = TypeMoq.Mock.ofType<IProcessService>();
                         serviceContainer
-                            .setup(c => c.get<IProcessServiceFactory>(IProcessServiceFactory))
+                            .setup((c) => c.get<IProcessServiceFactory>(IProcessServiceFactory))
                             .returns(() => processServiceFactory.object);
                         processServiceFactory
-                            .setup(p => p.create(TypeMoq.It.isAny()))
+                            .setup((p) => p.create(TypeMoq.It.isAny()))
                             .returns(() => Promise.resolve(processService.object));
                         processService
                             // tslint:disable-next-line: no-any
-                            .setup(p => (p as any).then)
+                            .setup((p) => (p as any).then)
                             .returns(() => undefined);
                         processService
-                            .setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            .setup((p) => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                             .returns(() => Promise.reject('Kaboom'))
                             .verifiable(TypeMoq.Times.once());
 
                         productPathService.reset();
                         productPathService
-                            .setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
+                            .setup((p) => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
                             .returns(() => false);
 
                         const response = await installer.isInstalled(product.value, resource);
@@ -736,10 +736,10 @@ suite('Module Installer only', () => {
                     resource ? 'With a resource' : 'without a resource'
                 })`, async () => {
                     workspaceService
-                        .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                        .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
                         .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
                         .verifiable(TypeMoq.Times.never());
-                    app.setup(a =>
+                    app.setup((a) =>
                         a.showErrorMessage(
                             TypeMoq.It.isAny(),
                             TypeMoq.It.isAny(),
@@ -754,10 +754,10 @@ suite('Module Installer only', () => {
                         .returns(() => Promise.resolve(undefined))
                         .verifiable(TypeMoq.Times.never());
                     const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
-                    persistVal.setup(p => p.value).returns(() => false);
-                    persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
+                    persistVal.setup((p) => p.value).returns(() => false);
+                    persistVal.setup((p) => p.updateValue(TypeMoq.It.isValue(true)));
                     persistentStore
-                        .setup(ps =>
+                        .setup((ps) =>
                             ps.createGlobalPersistentState<boolean>(
                                 TypeMoq.It.isAnyString(),
                                 TypeMoq.It.isValue(undefined)
@@ -767,7 +767,7 @@ suite('Module Installer only', () => {
 
                     interpreterService.reset();
                     interpreterService
-                        .setup(i => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                        .setup((i) => i.getActiveInterpreter(TypeMoq.It.isAny()))
                         .returns(() => Promise.resolve(undefined))
                         .verifiable(TypeMoq.Times.once());
                     await installer.promptToInstall(product.value, resource);

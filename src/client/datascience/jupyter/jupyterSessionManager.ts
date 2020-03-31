@@ -106,7 +106,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // Remove duplicates.
         const dup = new Set<string>();
         return models
-            .map(m => {
+            .map((m) => {
                 return {
                     id: m.id,
                     name: m.name,
@@ -114,7 +114,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                     numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0
                 };
             })
-            .filter(item => {
+            .filter((item) => {
                 if (dup.has(item.id)) {
                     return false;
                 }
@@ -164,7 +164,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                     ? this.sessionManager.specs.kernelspecs
                     : {};
             const keys = Object.keys(kernelspecs);
-            return keys.map(k => {
+            return keys.map((k) => {
                 const spec = kernelspecs[k];
                 return new JupyterKernelSpec(spec) as IJupyterKernelSpec;
             });

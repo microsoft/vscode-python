@@ -132,13 +132,13 @@ suite('DataScience code gathering unit tests', () => {
         }
     ];
 
-    dataScienceSettings.setup(d => d.gatherRules).returns(() => gatherRules);
-    dataScienceSettings.setup(d => d.enabled).returns(() => true);
-    dataScienceSettings.setup(d => d.defaultCellMarker).returns(() => '# %%');
-    pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
-    configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+    dataScienceSettings.setup((d) => d.gatherRules).returns(() => gatherRules);
+    dataScienceSettings.setup((d) => d.enabled).returns(() => true);
+    dataScienceSettings.setup((d) => d.defaultCellMarker).returns(() => '# %%');
+    pythonSettings.setup((p) => p.datascience).returns(() => dataScienceSettings.object);
+    configurationService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
     appShell
-        .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+        .setup((a) => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
         .returns(() => Promise.resolve(''));
     const gatherProvider = new GatherProvider(
         configurationService.object,

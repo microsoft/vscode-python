@@ -97,10 +97,10 @@ export function generateChangeEvent(
 
     // Combine position and change to create result
     return {
-        forward: ev.changes.map(c => {
+        forward: ev.changes.map((c) => {
             return { ...c, position: currentPosition! };
         }),
-        reverse: reverseChanges.map(r => {
+        reverse: reverseChanges.map((r) => {
             return { ...r, position: oldPosition! };
         }),
         eol: ev.eol,

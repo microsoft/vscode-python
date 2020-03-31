@@ -56,6 +56,6 @@ exports.getDefaultPlugins = getDefaultPlugins;
 function getListOfExistingModulesInOutDir() {
     const outDir = path.join(constants.ExtensionRootDir, 'out', 'client');
     const files = glob.sync('**/*.js', { sync: true, cwd: outDir });
-    return files.map(filePath => `./${filePath.slice(0, -3)}`);
+    return files.map((filePath) => `./${filePath.slice(0, -3)}`);
 }
 exports.getListOfExistingModulesInOutDir = getListOfExistingModulesInOutDir;

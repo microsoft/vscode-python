@@ -45,7 +45,7 @@ export function isString(str: any): str is string {
  * @returns whether the provided parameter is a JavaScript Array and each element in the array is a string.
  */
 export function isStringArray(value: any): value is string[] {
-    return isArray(value) && (<any[]>value).every(elem => isString(elem));
+    return isArray(value) && (<any[]>value).every((elem) => isString(elem));
 }
 
 /**

@@ -21,6 +21,6 @@ export class Signal<T, S> implements ISignal<T, S> {
     }
 
     public fire(sender: T, args: S): void {
-        this.slots.forEach(s => s(sender, args));
+        this.slots.forEach((s) => s(sender, args));
     }
 }

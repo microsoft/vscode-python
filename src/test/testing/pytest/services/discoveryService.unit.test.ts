@@ -80,7 +80,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         const args = ['1', '2', '3'];
         discoveryService.buildTestCollectionArgs = () => args;
         const directories = ['a', 'b'];
-        discoveryService.discoverTestsInTestDirectory = async opts => {
+        discoveryService.discoverTestsInTestDirectory = async (opts) => {
             const dir = opts.args[opts.args.length - 1];
             if (dir === 'a') {
                 return ('Result A' as any) as Tests;

@@ -16,12 +16,12 @@ interface IProcData {
     exited: Deferred<Boolean>;
 }
 
-suite('Process - Process Service', function() {
+suite('Process - Process Service', function () {
     // tslint:disable-next-line:no-invalid-this
     this.timeout(5000);
     const procsToKill: IProcData[] = [];
     teardown(() => {
-        procsToKill.forEach(p => {
+        procsToKill.forEach((p) => {
             if (!p.exited.resolved) {
                 p.proc.kill();
             }

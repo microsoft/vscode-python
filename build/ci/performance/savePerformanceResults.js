@@ -25,7 +25,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
         fs.readFile(jsonFile, 'utf8', (jsonReadError, data) => {
             if (jsonReadError) {
                 // File doesn't exist, so we create it
-                jsonObj.testsuite.testcase.forEach(testcase => {
+                jsonObj.testsuite.testcase.forEach((testcase) => {
                     const test = {
                         name: testcase.classname + ' ' + testcase.name,
                         times: [testcase.failure || testcase.skipped === '' ? -1 : parseFloat(testcase.time)]
@@ -36,8 +36,8 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
             } else {
                 performanceData = JSON.parse(data);
 
-                jsonObj.testsuite.testcase.forEach(testcase => {
-                    let test = performanceData.find(x => x.name === testcase.classname + ' ' + testcase.name);
+                jsonObj.testsuite.testcase.forEach((testcase) => {
+                    let test = performanceData.find((x) => x.name === testcase.classname + ' ' + testcase.name);
                     let time = testcase.failure || testcase.skipped === '' ? -1 : parseFloat(testcase.time);
 
                     if (test) {
@@ -58,7 +58,7 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
             fs.writeFile(
                 path.join(constants.ExtensionRootDir, 'build', 'ci', 'performance', 'performance-results.json'),
                 JSON.stringify(performanceData, null, 2),
-                writeResultsError => {
+                (writeResultsError) => {
                     if (writeResultsError) {
                         throw writeResultsError;
                     }

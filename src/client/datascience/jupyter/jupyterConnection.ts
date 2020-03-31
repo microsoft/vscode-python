@@ -70,7 +70,7 @@ export class JupyterConnectionWaiter implements IDisposable {
         // Listen for crashes
         let exitCode = '0';
         if (launchResult.proc) {
-            launchResult.proc.on('exit', c => (exitCode = c ? c.toString() : '0'));
+            launchResult.proc.on('exit', (c) => (exitCode = c ? c.toString() : '0'));
         }
         let stderr = '';
         // Listen on stderr for its connection information
@@ -84,7 +84,7 @@ export class JupyterConnectionWaiter implements IDisposable {
                     this.output(output.out);
                 }
             },
-            e => this.rejectStartPromise(e.message),
+            (e) => this.rejectStartPromise(e.message),
             // If the process dies, we can't extract connection information.
             () => this.rejectStartPromise(localize.DataScience.jupyterServerCrashed().format(exitCode))
         );
@@ -114,7 +114,7 @@ export class JupyterConnectionWaiter implements IDisposable {
     // tslint:disable-next-line:no-any
     private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
         if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
-            const matchInfo = serverInfos.find(info =>
+            const matchInfo = serverInfos.find((info) =>
                 this.fileSystem.arePathsSame(this.notebookDir, info.notebook_dir)
             );
             if (matchInfo) {
@@ -171,8 +171,8 @@ export class JupyterConnectionWaiter implements IDisposable {
         if (httpMatch && this.notebookDir && this.startPromise && !this.startPromise.completed && this.getServerInfo) {
             // .then so that we can keep from pushing aync up to the subscribed observable function
             this.getServerInfo(this.cancelToken)
-                .then(serverInfos => this.getJupyterURL(serverInfos, data))
-                .catch(ex => traceWarning('Failed to get server info', ex));
+                .then((serverInfos) => this.getJupyterURL(serverInfos, data))
+                .catch((ex) => traceWarning('Failed to get server info', ex));
         }
 
         // Sometimes jupyter will return a 403 error. Not sure why. We used
@@ -228,7 +228,7 @@ class JupyterConnection implements IConnection {
     ) {
         // If the local process exits, set our exit code and fire our event
         if (childProc) {
-            childProc.on('exit', c => {
+            childProc.on('exit', (c) => {
                 // Our code expects the exit code to be of type `number` or `undefined`.
                 const code = typeof c === 'number' ? c : undefined;
                 this.localProcExitCode = code;

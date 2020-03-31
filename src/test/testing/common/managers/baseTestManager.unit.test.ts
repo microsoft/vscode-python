@@ -56,7 +56,7 @@ suite('Unit Tests - Base Test Manager', () => {
         { name: 'nose', class: NoseTestManager },
         { name: 'pytest', class: PyTestTestManager },
         { name: 'unittest', class: UnitTestTestManager }
-    ].forEach(item => {
+    ].forEach((item) => {
         suite(item.name, () => {
             let testManager: ITestManager;
             const workspaceFolder = Uri.file(__dirname);
@@ -147,7 +147,7 @@ suite('Unit Tests - Base Test Manager', () => {
 
                 verify(commandManager.executeCommand('setContext', 'testsDiscovered', true)).once();
             });
-            test('When failing to discover tests prompt to install test framework', async function() {
+            test('When failing to discover tests prompt to install test framework', async function () {
                 if (item.name === 'unittest') {
                     // tslint:disable-next-line: no-invalid-this
                     return this.skip();
@@ -164,7 +164,7 @@ suite('Unit Tests - Base Test Manager', () => {
                 verify(installer.isInstalled(anything(), anything())).once();
                 verify(installer.promptToInstall(anything(), anything())).once();
             });
-            test('When failing to discover tests do not prompt to install test framework', async function() {
+            test('When failing to discover tests do not prompt to install test framework', async function () {
                 if (item.name === 'unittest') {
                     // tslint:disable-next-line: no-invalid-this
                     return this.skip();
@@ -181,7 +181,7 @@ suite('Unit Tests - Base Test Manager', () => {
                 verify(installer.isInstalled(anything(), anything())).never();
                 verify(installer.promptToInstall(anything(), anything())).never();
             });
-            test('When failing to discover tests do not prompt to install test framework if installed', async function() {
+            test('When failing to discover tests do not prompt to install test framework if installed', async function () {
                 if (item.name === 'unittest') {
                     // tslint:disable-next-line: no-invalid-this
                     return this.skip();

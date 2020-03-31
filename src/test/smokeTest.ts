@@ -69,7 +69,7 @@ class TestRunner {
             proc.stdout.pipe(process.stdout);
             proc.stderr.pipe(process.stderr);
             proc.on('error', reject);
-            proc.on('exit', code => {
+            proc.on('exit', (code) => {
                 console.log(`Tests Exited with code ${code}`);
                 if (code === 0) {
                     resolve();
@@ -88,7 +88,7 @@ class TestRunner {
     }
 }
 
-new TestRunner().start().catch(ex => {
+new TestRunner().start().catch((ex) => {
     console.error('Error in running Smoke Tests', ex);
     // Exit with non zero exit code, so CI fails.
     process.exit(1);

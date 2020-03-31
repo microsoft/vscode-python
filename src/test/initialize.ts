@@ -73,7 +73,7 @@ export async function closeActiveWindows(): Promise<void> {
                 clearTimeout(timer);
                 resolve();
             },
-            ex => {
+            (ex) => {
                 clearTimeout(timer);
                 reject(ex);
             }

@@ -84,7 +84,7 @@ function generateMainReducer<M>(
 }
 
 function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
-    return store => next => action => {
+    return (store) => (next) => (action) => {
         const prevState = store.getState();
         const res = next(action);
         const afterState = store.getState();
@@ -135,7 +135,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
     // Make sure all dynamic imports are loaded.
     const transformPromise = forceLoad();
 
-    return store => next => action => {
+    return (store) => (next) => (action) => {
         const prevState = store.getState();
         const res = next(action);
         const afterState = store.getState();
@@ -189,17 +189,17 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
 
         // Special case for rendering complete
         const prevFinished = prevState.main.cellVMs
-            .filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-            .map(c => c.cell.id);
+            .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+            .map((c) => c.cell.id);
         const afterFinished = afterState.main.cellVMs
-            .filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error)
-            .map(c => c.cell.id);
+            .filter((c) => c.cell.state === CellState.finished || c.cell.state === CellState.error)
+            .map((c) => c.cell.id);
         if (
             afterFinished.length > prevFinished.length ||
             (afterFinished.length !== prevFinished.length &&
                 afterState.main.cellVMs.length !== prevState.main.cellVMs.length)
         ) {
-            const diff = afterFinished.filter(r => prevFinished.indexOf(r) < 0);
+            const diff = afterFinished.filter((r) => prevFinished.indexOf(r) < 0);
             // Send async so happens after the render is actually finished.
             sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
         }
@@ -302,7 +302,7 @@ export interface IMainWithVariables extends IMainState {
 /**
  * Middleware that will ensure all actions have `messageDirection` property.
  */
-const addMessageDirectionMiddleware: Redux.Middleware = _store => next => (action: Redux.AnyAction) => {
+const addMessageDirectionMiddleware: Redux.Middleware = (_store) => (next) => (action: Redux.AnyAction) => {
     if (isAllowedAction(action)) {
         // Ensure all dispatched messages have been flagged as `incoming`.
         const payload: BaseReduxActionPayload<{}> = action.payload || {};

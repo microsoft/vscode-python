@@ -176,13 +176,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.jupyterExecution.sessionChanged(() => this.reloadAfterShutdown());
 
         // For each listener sign up for their post events
-        this.listeners.forEach(l => l.postMessage(e => this.postMessageInternal(e.message, e.payload)));
+        this.listeners.forEach((l) => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
 
         // Tell each listener our identity. Can't do it here though as were in the constructor for the base class
         setTimeout(() => {
             this.getNotebookIdentity()
-                .then(uri =>
-                    this.listeners.forEach(l =>
+                .then((uri) =>
+                    this.listeners.forEach((l) =>
                         l.onMessage(InteractiveWindowMessages.NotebookIdentity, { resource: uri.toString() })
                     )
                 )
@@ -318,7 +318,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 // Update the notebook if we have one:
                 if (this._notebook) {
                     this.isDark()
-                        .then(d => (this._notebook ? this._notebook.setMatplotLibStyle(d) : Promise.resolve()))
+                        .then((d) => (this._notebook ? this._notebook.setMatplotLibStyle(d) : Promise.resolve()))
                         .ignoreErrors();
                 }
                 break;
@@ -330,7 +330,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     public dispose() {
         super.dispose();
-        this.listeners.forEach(l => l.dispose());
+        this.listeners.forEach((l) => l.dispose());
         this.updateContexts(undefined);
     }
 
@@ -426,7 +426,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     @captureTelemetry(Telemetry.CopySourceCode, undefined, false)
     public copyCode(args: ICopyCode) {
-        return this.copyCodeInternal(args.source).catch(err => {
+        return this.copyCodeInternal(args.source).catch((err) => {
             this.applicationShell.showErrorMessage(err);
         });
     }
@@ -584,7 +584,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 if (stopWatch && !this.perceivedJupyterStartupTelemetryCaptured) {
                     this.perceivedJupyterStartupTelemetryCaptured = true;
                     sendTelemetryEvent(Telemetry.PerceivedJupyterStartupNotebook, stopWatch?.elapsedTime);
-                    const disposable = this._notebook.onSessionStatusChanged(e => {
+                    const disposable = this._notebook.onSessionStatusChanged((e) => {
                         if (e === ServerStatus.Busy) {
                             sendTelemetryEvent(Telemetry.StartExecuteNotebookCellPerceivedCold, stopWatch?.elapsedTime);
                             disposable.dispose();
@@ -608,10 +608,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                         // Any errors will move our result to false (if allowed)
                         if (this.configuration.getSettings(owningResource).datascience.stopOnError) {
-                            result = result && cells.find(c => c.state === CellState.error) === undefined;
+                            result = result && cells.find((c) => c.state === CellState.error) === undefined;
                         }
                     },
-                    error => {
+                    (error) => {
                         status.dispose();
                         if (!(error instanceof CancellationError)) {
                             this.applicationShell.showErrorMessage(error.toString());
@@ -681,7 +681,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     this.postMessage(InteractiveWindowMessages.FinishCell, cell).ignoreErrors();
 
                     // Remove from the list of unfinished cells
-                    this.unfinishedCells = this.unfinishedCells.filter(c => c.id !== cell.id);
+                    this.unfinishedCells = this.unfinishedCells.filter((c) => c.id !== cell.id);
                     break;
 
                 default:
@@ -812,7 +812,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     // tslint:disable-next-line: no-any
     private postMessageToListeners(message: string, payload: any) {
         if (this.listeners) {
-            this.listeners.forEach(l => l.onMessage(message, payload));
+            this.listeners.forEach((l) => l.onMessage(message, payload));
         }
     }
 
@@ -920,12 +920,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private finishOutstandingCells() {
-        this.unfinishedCells.forEach(c => {
+        this.unfinishedCells.forEach((c) => {
             c.state = CellState.error;
             this.postMessage(InteractiveWindowMessages.FinishCell, c).ignoreErrors();
         });
         this.unfinishedCells = [];
-        this.potentiallyUnfinishedStatus.forEach(s => s.dispose());
+        this.potentiallyUnfinishedStatus.forEach((s) => s.dispose());
         this.potentiallyUnfinishedStatus = [];
     }
 
@@ -1149,7 +1149,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     @captureTelemetry(Telemetry.GotoSourceCode, undefined, false)
     private gotoCode(args: IGotoCode) {
-        this.gotoCodeInternal(args.file, args.line).catch(err => {
+        this.gotoCodeInternal(args.file, args.line).catch((err) => {
             this.applicationShell.showErrorMessage(err);
         });
     }
@@ -1161,7 +1161,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             editor = await this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One });
         } else {
             // File URI isn't going to work. Look through the active text documents
-            editor = this.documentManager.visibleTextEditors.find(te => te.document.fileName === file);
+            editor = this.documentManager.visibleTextEditors.find((te) => te.document.fileName === file);
             if (editor) {
                 editor.show();
             }
@@ -1179,7 +1179,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
             // Find the first visible python editor
             const pythonEditors = this.documentManager.visibleTextEditors.filter(
-                e => e.document.languageId === PYTHON_LANGUAGE || e.document.isUntitled
+                (e) => e.document.languageId === PYTHON_LANGUAGE || e.document.isUntitled
             );
 
             if (pythonEditors.length > 0) {
@@ -1201,7 +1201,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             let newCode = `${source}${os.EOL}`;
             if (hasCellsAlready) {
                 // See if inside of a range or not.
-                const matchingRange = ranges.find(r => r.range.start.line <= line && r.range.end.line >= line);
+                const matchingRange = ranges.find((r) => r.range.start.line <= line && r.range.end.line >= line);
 
                 // If in the middle, wrap the new code
                 if (matchingRange && matchingRange.range.start.line < line && line < editor.document.lineCount - 1) {
@@ -1214,7 +1214,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 newCode = `${defaultCellMarker}${os.EOL}${source}${os.EOL}`;
             }
 
-            await editor.edit(editBuilder => {
+            await editor.edit((editBuilder) => {
                 editBuilder.insert(new Position(line, 0), newCode);
             });
             editor.revealRange(new Range(revealLine, 0, revealLine + source.split('\n').length + 3, 0));
@@ -1339,10 +1339,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         traceInfo('Request for tmlanguage file.');
         this.themeFinder
             .findTmLanguage(PYTHON_LANGUAGE)
-            .then(s => {
+            .then((s) => {
                 this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, s).ignoreErrors();
             })
-            .catch(_e => {
+            .catch((_e) => {
                 this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse).ignoreErrors();
             });
     }

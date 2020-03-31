@@ -115,7 +115,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
 
     public dispose(): void {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
     @traceDecorators.verbose('getActivatedEnvironmentVariables', LogOptions.Arguments)
     @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
@@ -135,7 +135,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
         // Cache only if successful, else keep trying & failing if necessary.
         const cache = new InMemoryCache<NodeJS.ProcessEnv | undefined>(cacheDuration, '');
-        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions).then(vars => {
+        return this.getActivatedEnvironmentVariablesImpl(resource, interpreter, allowExceptions).then((vars) => {
             cache.data = vars;
             this.activatedEnvVariablesCache.set(cacheKey, cache);
             return vars;
@@ -162,10 +162,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
                 return;
             }
-            isPossiblyCondaEnv = activationCommands
-                .join(' ')
-                .toLowerCase()
-                .includes('conda');
+            isPossiblyCondaEnv = activationCommands.join(' ').toLowerCase().includes('conda');
             // Run the activate command collect the environment from it.
             const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
             const processService = await this.processServiceFactory.create(resource);
@@ -211,7 +208,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
                     // Special case. Conda for some versions will state a file is in use. If
                     // that's the case, wait and try again. This happens especially on AzDo
                     const excString = exc.toString();
-                    if (condaRetryMessages.find(m => excString.includes(m)) && tryCount < 10) {
+                    if (condaRetryMessages.find((m) => excString.includes(m)) && tryCount < 10) {
                         traceInfo(`Conda is busy, attempting to retry ...`);
                         result = undefined;
                         tryCount += 1;
@@ -246,7 +243,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
     protected fixActivationCommands(commands: string[]): string[] {
         // Replace 'source ' with '. ' as that works in shell exec
-        return commands.map(cmd => cmd.replace(/^source\s+/, '. '));
+        return commands.map((cmd) => cmd.replace(/^source\s+/, '. '));
     }
     @traceDecorators.error('Failed to parse Environment variables')
     @traceDecorators.verbose('parseEnvironmentOutput', LogOptions.None)

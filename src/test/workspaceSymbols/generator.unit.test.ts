@@ -39,7 +39,7 @@ suite('Workspace Symbols Generator', () => {
         shell = mock(ApplicationShell);
         fs = mock(FileSystem);
         processService = mock(ProcessService);
-        factory.setup(f => f.create(typemoq.It.isAny())).returns(() => Promise.resolve(instance(processService)));
+        factory.setup((f) => f.create(typemoq.It.isAny())).returns(() => Promise.resolve(instance(processService)));
         when(configurationService.getSettings(anything())).thenReturn(pythonSettings.object);
         const outputChannel = typemoq.Mock.ofType<IOutputChannel>();
         generator = new Generator(
@@ -53,19 +53,19 @@ suite('Workspace Symbols Generator', () => {
     });
     test('should be disabled', () => {
         const workspaceSymbols = { enabled: false } as any;
-        pythonSettings.setup(p => p.workspaceSymbols).returns(() => workspaceSymbols);
+        pythonSettings.setup((p) => p.workspaceSymbols).returns(() => workspaceSymbols);
 
         expect(generator.enabled).to.be.equal(false, 'not disabled');
     });
     test('should be enabled', () => {
         const workspaceSymbols = { enabled: true } as any;
-        pythonSettings.setup(p => p.workspaceSymbols).returns(() => workspaceSymbols);
+        pythonSettings.setup((p) => p.workspaceSymbols).returns(() => workspaceSymbols);
 
         expect(generator.enabled).to.be.equal(true, 'not enabled');
     });
     test('Check tagFilePath', () => {
         const workspaceSymbols = { tagFilePath: '1234' } as any;
-        pythonSettings.setup(p => p.workspaceSymbols).returns(() => workspaceSymbols);
+        pythonSettings.setup((p) => p.workspaceSymbols).returns(() => workspaceSymbols);
 
         expect(generator.tagFilePath).to.be.equal('1234');
     });
@@ -77,7 +77,7 @@ suite('Workspace Symbols Generator', () => {
             exclusionPatterns: [],
             ctagsPath
         } as any;
-        pythonSettings.setup(p => p.workspaceSymbols).returns(() => workspaceSymbols);
+        pythonSettings.setup((p) => p.workspaceSymbols).returns(() => workspaceSymbols);
         when(fs.directoryExists(anything())).thenResolve(true);
         const observable = {
             out: {
@@ -101,7 +101,7 @@ suite('Workspace Symbols Generator', () => {
             exclusionPatterns: [],
             ctagsPath
         } as any;
-        pythonSettings.setup(p => p.workspaceSymbols).returns(() => workspaceSymbols);
+        pythonSettings.setup((p) => p.workspaceSymbols).returns(() => workspaceSymbols);
         when(fs.directoryExists(anything())).thenResolve(true);
         const observable = {
             out: {

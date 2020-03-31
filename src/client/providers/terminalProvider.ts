@@ -35,7 +35,7 @@ export class TerminalProvider implements Disposable {
         }
     }
     public dispose() {
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach((disposable) => disposable.dispose());
     }
     private registerCommands() {
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);

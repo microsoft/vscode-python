@@ -23,7 +23,7 @@ suite('Signature Provider unit tests', () => {
     setup(() => {
         const jediFactory = TypeMoq.Mock.ofType(JediFactory);
         jediHandler = TypeMoq.Mock.ofType<JediProxyHandler<IArgumentsResult>>();
-        jediFactory.setup(j => j.getJediProxyHandler(TypeMoq.It.isAny())).returns(() => jediHandler.object);
+        jediFactory.setup((j) => j.getJediProxyHandler(TypeMoq.It.isAny())).returns(() => jediHandler.object);
         pySignatureProvider = new PythonSignatureProvider(jediFactory.object);
         argResultItems = {
             definitions: [
@@ -52,21 +52,21 @@ suite('Signature Provider unit tests', () => {
         const lineText = TypeMoq.Mock.ofType<TextLine>();
         const argsResult = TypeMoq.Mock.ofType<IArgumentsResult>();
         const cancelToken = TypeMoq.Mock.ofType<CancellationToken>();
-        cancelToken.setup(ct => ct.isCancellationRequested).returns(() => false);
+        cancelToken.setup((ct) => ct.isCancellationRequested).returns(() => false);
 
-        doc.setup(d => d.fileName).returns(() => '');
-        doc.setup(d => d.getText(TypeMoq.It.isAny())).returns(() => source);
-        doc.setup(d => d.lineAt(TypeMoq.It.isAny())).returns(() => lineText.object);
-        doc.setup(d => d.offsetAt(TypeMoq.It.isAny())).returns(() => pos - 1); // pos is 1-based
+        doc.setup((d) => d.fileName).returns(() => '');
+        doc.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => source);
+        doc.setup((d) => d.lineAt(TypeMoq.It.isAny())).returns(() => lineText.object);
+        doc.setup((d) => d.offsetAt(TypeMoq.It.isAny())).returns(() => pos - 1); // pos is 1-based
         const docUri = TypeMoq.Mock.ofType<Uri>();
-        docUri.setup(u => u.scheme).returns(() => 'http');
-        doc.setup(d => d.uri).returns(() => docUri.object);
-        lineText.setup(l => l.text).returns(() => source);
-        argsResult.setup(c => c.requestId).returns(() => 1);
+        docUri.setup((u) => u.scheme).returns(() => 'http');
+        doc.setup((d) => d.uri).returns(() => docUri.object);
+        lineText.setup((l) => l.text).returns(() => source);
+        argsResult.setup((c) => c.requestId).returns(() => 1);
         // tslint:disable-next-line:no-any
-        argsResult.setup(c => c.definitions).returns(() => (argResultItems as any)[0].definitions);
+        argsResult.setup((c) => c.definitions).returns(() => (argResultItems as any)[0].definitions);
         jediHandler
-            .setup(j => j.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((j) => j.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
                 return Promise.resolve(argResultItems);
             });
@@ -76,14 +76,14 @@ suite('Signature Provider unit tests', () => {
 
     function testIsInsideStringOrComment(sourceLine: string, sourcePos: number): boolean {
         const textLine: TypeMoq.IMock<TextLine> = TypeMoq.Mock.ofType<TextLine>();
-        textLine.setup(t => t.text).returns(() => sourceLine);
+        textLine.setup((t) => t.text).returns(() => sourceLine);
         const doc: TypeMoq.IMock<TextDocument> = TypeMoq.Mock.ofType<TextDocument>();
         const pos: Position = new Position(1, sourcePos);
 
-        doc.setup(d => d.fileName).returns(() => '');
-        doc.setup(d => d.getText(TypeMoq.It.isAny())).returns(() => sourceLine);
-        doc.setup(d => d.lineAt(TypeMoq.It.isAny())).returns(() => textLine.object);
-        doc.setup(d => d.offsetAt(TypeMoq.It.isAny())).returns(() => sourcePos);
+        doc.setup((d) => d.fileName).returns(() => '');
+        doc.setup((d) => d.getText(TypeMoq.It.isAny())).returns(() => sourceLine);
+        doc.setup((d) => d.lineAt(TypeMoq.It.isAny())).returns(() => textLine.object);
+        doc.setup((d) => d.offsetAt(TypeMoq.It.isAny())).returns(() => sourcePos);
 
         return isPositionInsideStringOrComment(doc.object, pos);
     }

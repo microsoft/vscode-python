@@ -12,8 +12,8 @@ export class InterpreterVersionService implements IInterpreterVersionService {
         const processService = await this.processServiceFactory.create();
         return processService
             .exec(pythonPath, ['--version'], { mergeStdOutErr: true })
-            .then(output => output.stdout.splitLines()[0])
-            .then(version => (version.length === 0 ? defaultValue : version))
+            .then((output) => output.stdout.splitLines()[0])
+            .then((version) => (version.length === 0 ? defaultValue : version))
             .catch(() => defaultValue);
     }
     public async getPipVersion(pythonPath: string): Promise<string> {

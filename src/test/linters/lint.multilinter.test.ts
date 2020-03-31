@@ -78,7 +78,7 @@ suite('Linting - Multiple Linters Enabled Test', () => {
         await configService.updateSetting('linting.lintOnSave', false, rootWorkspaceUri, target);
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
 
-        linterManager.getAllLinterInfos().forEach(async x => {
+        linterManager.getAllLinterInfos().forEach(async (x) => {
             await configService.updateSetting(makeSettingKey(x.product), false, rootWorkspaceUri, target);
         });
     }
@@ -103,7 +103,7 @@ suite('Linting - Multiple Linters Enabled Test', () => {
 
         const messages = collection!.get(document.uri);
         assert.notEqual(messages!.length, 0, 'No diagnostic messages.');
-        assert.notEqual(messages!.filter(x => x.source === 'pylint').length, 0, 'No pylint messages.');
-        assert.notEqual(messages!.filter(x => x.source === 'flake8').length, 0, 'No flake8 messages.');
+        assert.notEqual(messages!.filter((x) => x.source === 'pylint').length, 0, 'No pylint messages.');
+        assert.notEqual(messages!.filter((x) => x.source === 'flake8').length, 0, 'No flake8 messages.');
     });
 });

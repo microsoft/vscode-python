@@ -127,9 +127,9 @@ suite('Variable Extraction', () => {
             const textEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
             assert.equal(response.results.length, 1, 'Invalid number of items in response');
             assert.equal(textEdits.length, expectedTextEdits.length, 'Invalid number of Text Edits');
-            textEdits.forEach(edit => {
+            textEdits.forEach((edit) => {
                 const foundEdit = expectedTextEdits.filter(
-                    item => item.newText === edit.newText && item.range.isEqual(edit.range)
+                    (item) => item.newText === edit.newText && item.range.isEqual(edit.range)
                 );
                 assert.equal(foundEdit.length, 1, 'Edit not found');
             });
@@ -141,7 +141,7 @@ suite('Variable Extraction', () => {
     }
 
     // tslint:disable-next-line:no-function-expression
-    test('Extract Variable', async function() {
+    test('Extract Variable', async function () {
         if (isPythonVersion('3.7')) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();

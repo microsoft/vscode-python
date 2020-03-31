@@ -47,7 +47,7 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
             packageName
         );
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
-        return results.map(item => {
+        return results.map((item) => {
             return {
                 package: item.name,
                 uri: `${azureCDNBlobStorageAccount}/${azureBlobStorageContainer}/${item.name}`,

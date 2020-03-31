@@ -14,7 +14,7 @@ export class ReplProvider implements Disposable {
         this.registerCommand();
     }
     public dispose() {
-        this.disposables.forEach(disposable => disposable.dispose());
+        this.disposables.forEach((disposable) => disposable.dispose());
     }
     private registerCommand() {
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);

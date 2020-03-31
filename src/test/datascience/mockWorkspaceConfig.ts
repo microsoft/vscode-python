@@ -12,7 +12,7 @@ export class MockWorkspaceConfiguration implements WorkspaceConfiguration {
     constructor(defaultSettings?: any) {
         if (defaultSettings) {
             const keys = [...Object.keys(defaultSettings)];
-            keys.forEach(k => this.values.set(k, defaultSettings[k]));
+            keys.forEach((k) => this.values.set(k, defaultSettings[k]));
         }
 
         // Special case python path (not in the object)

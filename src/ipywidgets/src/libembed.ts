@@ -32,7 +32,9 @@ export async function renderWidgets(
     element: HTMLElement = document.documentElement
 ): Promise<void> {
     const tags = element.querySelectorAll('script[type="application/vnd.jupyter.widget-state+json"]');
-    await Promise.all(Array.from(tags).map(async t => renderManager(element, JSON.parse(t.innerHTML), managerFactory)));
+    await Promise.all(
+        Array.from(tags).map(async (t) => renderManager(element, JSON.parse(t.innerHTML), managerFactory))
+    );
 }
 
 /**
@@ -62,14 +64,14 @@ async function renderManager(
     const models = await manager.set_state(widgetState);
     const tags = element.querySelectorAll('script[type="application/vnd.jupyter.widget-view+json"]');
     await Promise.all(
-        Array.from(tags).map(async viewtag => {
+        Array.from(tags).map(async (viewtag) => {
             const widgetViewObject = JSON.parse(viewtag.innerHTML);
             const valid2 = view_validate(widgetViewObject);
             if (!valid2) {
                 throw new Error(`View state has errors: ${view_validate.errors}`);
             }
             const model_id: string = widgetViewObject.model_id;
-            const model = models.find(item => item.model_id === model_id);
+            const model = models.find((item) => item.model_id === model_id);
             if (model !== undefined && viewtag.parentElement !== null) {
                 const prev = viewtag.previousElementSibling;
                 if (prev && prev.tagName === 'img' && prev.classList.contains('jupyter-widget')) {
@@ -79,7 +81,7 @@ async function renderManager(
                 widgetTag.className = 'widget-subarea';
                 viewtag.parentElement.insertBefore(widgetTag, viewtag);
                 const view = await manager.create_view(model, { node: widgetTag });
-                manager.display_view('display_view', view, {}).catch(x => {
+                manager.display_view('display_view', view, {}).catch((x) => {
                     window.console.error(x);
                 });
             }

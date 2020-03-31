@@ -22,7 +22,7 @@ export class CellHashLogger implements ICellHashLogger {
             if (!silent) {
                 // Don't log empty cells
                 const stripped = providerObj.extractExecutableLines(cell);
-                if (stripped.length > 0 && stripped.find(s => s.trim().length > 0)) {
+                if (stripped.length > 0 && stripped.find((s) => s.trim().length > 0)) {
                     // When the user adds new code, we know the execution count is increasing
                     providerObj.incExecutionCount();
 

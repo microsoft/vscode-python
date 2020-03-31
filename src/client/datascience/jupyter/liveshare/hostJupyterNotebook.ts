@@ -138,8 +138,8 @@ export class HostJupyterNotebook
 
         // Keep track of the number of guests that need to do a catchup request
         this.catchupPendingCount +=
-            ev.added.filter(e => e.role === vsls.Role.Guest).length -
-            ev.removed.filter(e => e.role === vsls.Role.Guest).length;
+            ev.added.filter((e) => e.role === vsls.Role.Guest).length -
+            ev.removed.filter((e) => e.role === vsls.Role.Guest).length;
     }
 
     public clear(id: string): void {
@@ -203,7 +203,7 @@ export class HostJupyterNotebook
             (cells: ICell[]) => {
                 output = cells;
             },
-            error => {
+            (error) => {
                 deferred.reject(error);
             },
             () => {
@@ -316,12 +316,12 @@ export class HostJupyterNotebook
         id: string,
         responseQueues: ResponseQueue[]
     ): Observable<ICell[]> {
-        return new Observable(subscriber => {
+        return new Observable((subscriber) => {
             let pos = 0;
 
             // Listen to all of the events on the observable passed in.
             observable.subscribe(
-                cells => {
+                (cells) => {
                     // Forward to the next listener
                     subscriber.next(cells);
 
@@ -334,7 +334,7 @@ export class HostJupyterNotebook
                         this.postException(e, responseQueues);
                     }
                 },
-                e => {
+                (e) => {
                     subscriber.error(e);
                     this.postException(e, responseQueues);
                 },
@@ -377,7 +377,7 @@ export class HostJupyterNotebook
         this.postResult(
             ServerResponseType.Exception,
             { type: ServerResponseType.Exception, time: Date.now(), message: exc.toString() },
-            r => r,
+            (r) => r,
             responseQueues
         );
     }
@@ -394,7 +394,7 @@ export class HostJupyterNotebook
                 // Make a deep copy before we send. Don't want local copies being modified
                 const deepCopy = cloneDeep(typedResult);
                 this.waitForService()
-                    .then(s => {
+                    .then((s) => {
                         if (s) {
                             s.notify(LiveShareCommands.serverResponse, guestTranslator(deepCopy));
                         }
@@ -402,7 +402,7 @@ export class HostJupyterNotebook
                     .ignoreErrors();
 
                 // Need to also save in memory for those guests that are in the middle of starting up
-                responseQueues.forEach(r => r.push(deepCopy));
+                responseQueues.forEach((r) => r.push(deepCopy));
             } catch (exc) {
                 traceError(exc);
             }

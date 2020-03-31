@@ -623,12 +623,12 @@ class TestFixture extends BaseTestFixture {
         const configService = TypeMoq.Mock.ofType<IConfigurationService>(undefined, TypeMoq.MockBehavior.Strict);
         const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
         processLogger
-            .setup(p => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
                 return;
             });
         serviceContainer
-            .setup(s => s.get(TypeMoq.It.isValue(IProcessLogger), TypeMoq.It.isAny()))
+            .setup((s) => s.get(TypeMoq.It.isValue(IProcessLogger), TypeMoq.It.isAny()))
             .returns(() => processLogger.object);
 
         const platformService = new PlatformService();
@@ -646,7 +646,7 @@ class TestFixture extends BaseTestFixture {
             printLogs
         );
 
-        this.pythonSettings.setup(s => s.pythonPath).returns(() => PYTHON_PATH);
+        this.pythonSettings.setup((s) => s.pythonPath).returns(() => PYTHON_PATH);
     }
 
     private static newPythonToolExecService(serviceContainer: IServiceContainer): IPythonToolExecutionService {
@@ -664,14 +664,14 @@ class TestFixture extends BaseTestFixture {
             TypeMoq.MockBehavior.Strict
         );
         envVarsService
-            .setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny()))
+            .setup((e) => e.getEnvironmentVariables(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(process.env));
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny()))
             .returns(() => envVarsService.object);
         const disposableRegistry: IDisposableRegistry = [];
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
             .returns(() => disposableRegistry);
 
         const envActivationService = TypeMoq.Mock.ofType<IEnvironmentActivationService>(
@@ -681,25 +681,25 @@ class TestFixture extends BaseTestFixture {
 
         const decoder = new BufferDecoder();
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IBufferDecoder), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IBufferDecoder), TypeMoq.It.isAny()))
             .returns(() => decoder);
 
         const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>(undefined, TypeMoq.MockBehavior.Strict);
-        interpreterService.setup(i => i.hasInterpreters).returns(() => Promise.resolve(true));
+        interpreterService.setup((i) => i.hasInterpreters).returns(() => Promise.resolve(true));
         serviceContainer
-            .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
+            .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
             .returns(() => interpreterService.object);
 
         const condaService = TypeMoq.Mock.ofType<ICondaService>(undefined, TypeMoq.MockBehavior.Strict);
         condaService
-            .setup(c => c.getCondaEnvironment(TypeMoq.It.isAnyString()))
+            .setup((c) => c.getCondaEnvironment(TypeMoq.It.isAnyString()))
             .returns(() => Promise.resolve(undefined));
-        condaService.setup(c => c.getCondaVersion()).returns(() => Promise.resolve(undefined));
-        condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
+        condaService.setup((c) => c.getCondaVersion()).returns(() => Promise.resolve(undefined));
+        condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve('conda'));
 
         const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
         processLogger
-            .setup(p => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
                 return;
             });
@@ -723,13 +723,10 @@ class TestFixture extends BaseTestFixture {
 
     public makeDocument(filename: string): TextDocument {
         const doc = newMockDocument(filename);
-        doc.setup(d => d.lineAt(TypeMoq.It.isAny())).returns(lno => {
-            const lines = fs
-                .readFileSync(filename)
-                .toString()
-                .split(os.EOL);
+        doc.setup((d) => d.lineAt(TypeMoq.It.isAny())).returns((lno) => {
+            const lines = fs.readFileSync(filename).toString().split(os.EOL);
             const textline = TypeMoq.Mock.ofType<TextLine>(undefined, TypeMoq.MockBehavior.Strict);
-            textline.setup(t => t.text).returns(() => lines[lno]);
+            textline.setup((t) => t.text).returns(() => lines[lno]);
             return textline.object;
         });
         return doc.object;
@@ -772,8 +769,8 @@ suite('Linting Functional Tests', () => {
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
-        test(getProductName(product), async function() {
-            if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
+        test(getProductName(product), async function () {
+            if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some((p) => p === product)) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
@@ -785,8 +782,8 @@ suite('Linting Functional Tests', () => {
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
         // tslint:disable-next-line:max-func-body-length
-        test(`${getProductName(product)} with config in root`, async function() {
-            if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
+        test(`${getProductName(product)} with config in root`, async function () {
+            if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some((p) => p === product)) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }

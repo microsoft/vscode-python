@@ -170,7 +170,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     private matchTokenColor(tokenColors: JSONArray, scope: string): number {
         return tokenColors.findIndex((entry: any) => {
             const scopeArray = this.getScopes(entry);
-            if (scopeArray.find(v => v !== null && v !== undefined && v.toString().trim() === scope)) {
+            if (scopeArray.find((v) => v !== null && v !== undefined && v.toString().trim() === scope)) {
                 return true;
             }
             return false;
@@ -258,7 +258,7 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
                 const scopes = this.getScopes(t);
                 const settings = t && t.settings ? t.settings : undefined;
                 if (scopes && settings) {
-                    scopes.forEach(s => {
+                    scopes.forEach((s) => {
                         const token = s ? s.toString() : '';
                         if (!tokenSet.has(token)) {
                             tokenSet.add(token);
@@ -342,7 +342,7 @@ ${args.defaultStyle ? DefaultCssVars[args.defaultStyle] : ''}
         // If we have base colors enumerate them and add them to the colors
         if (args.baseColors) {
             const keys = Object.keys(args.baseColors);
-            keys.forEach(k => {
+            keys.forEach((k) => {
                 const color = args.baseColors && args.baseColors[k] ? args.baseColors[k] : '#000000';
                 result.colors[k] = color ? color.toString() : '#000000';
             });

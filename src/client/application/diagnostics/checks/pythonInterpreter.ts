@@ -86,7 +86,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
             DiagnosticCommandPromptHandlerServiceId
         );
         await Promise.all(
-            diagnostics.map(async diagnostic => {
+            diagnostics.map(async (diagnostic) => {
                 if (!this.canHandle(diagnostic)) {
                     return;
                 }

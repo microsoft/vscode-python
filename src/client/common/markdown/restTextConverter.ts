@@ -33,11 +33,7 @@ export class RestTextConverter {
     public escapeMarkdown(text: string): string {
         // Not complete escape list so it does not interfere
         // with subsequent code highlighting (see above).
-        return text
-            .replace(/\#/g, '\\#')
-            .replace(/\*/g, '\\*')
-            .replace(/\ _/g, ' \\_')
-            .replace(/^_/, '\\_');
+        return text.replace(/\#/g, '\\#').replace(/\*/g, '\\*').replace(/\ _/g, ' \\_').replace(/^_/, '\\_');
     }
 
     private transformLines(docstring: string): string {

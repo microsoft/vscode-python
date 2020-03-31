@@ -548,14 +548,16 @@ class TestFixture extends BaseTestFixture {
         this.pythonExecService = TypeMoq.Mock.ofType<IPythonExecutionService>(undefined, TypeMoq.MockBehavior.Strict);
         this.pythonExecFactory = pythonExecFactory;
 
-        this.filesystem.setup(f => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
+        this.filesystem.setup((f) => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
 
         // tslint:disable-next-line:no-any
         this.pythonExecService.setup((s: any) => s.then).returns(() => undefined);
-        this.pythonExecService.setup(s => s.isModuleInstalled(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
+        this.pythonExecService
+            .setup((s) => s.isModuleInstalled(TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true));
 
         this.pythonExecFactory
-            .setup(f => f.create(TypeMoq.It.isAny()))
+            .setup((f) => f.create(TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(this.pythonExecService.object));
     }
 
@@ -563,8 +565,8 @@ class TestFixture extends BaseTestFixture {
         const doc = this.newMockDocument(filename);
         if (product === Product.pydocstyle) {
             const dummyLine = TypeMoq.Mock.ofType<TextLine>(undefined, TypeMoq.MockBehavior.Strict);
-            dummyLine.setup(d => d.text).returns(() => '    ...');
-            doc.setup(s => s.lineAt(TypeMoq.It.isAny())).returns(() => dummyLine.object);
+            dummyLine.setup((d) => d.text).returns(() => '    ...');
+            doc.setup((s) => s.lineAt(TypeMoq.It.isAny())).returns(() => dummyLine.object);
         }
         return doc.object;
     }
@@ -616,7 +618,7 @@ class TestFixture extends BaseTestFixture {
 
     public setStdout(stdout: string) {
         this.pythonToolExecService
-            .setup(s => s.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((s) => s.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: stdout }));
     }
 }
@@ -694,10 +696,10 @@ suite('Linting Scenarios', () => {
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
         for (const enabled of [false, true]) {
-            test(`${enabled ? 'Enable' : 'Disable'} ${getProductName(product)} and run linter`, async function() {
+            test(`${enabled ? 'Enable' : 'Disable'} ${getProductName(product)} and run linter`, async function () {
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: Add coverage for these linters.
-                if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
+                if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some((p) => p === product)) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();
                 }
@@ -739,10 +741,10 @@ suite('Linting Scenarios', () => {
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
-        test(`Check ${getProductName(product)} messages`, async function() {
+        test(`Check ${getProductName(product)} messages`, async function () {
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: Add coverage for these linters.
-            if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
+            if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some((p) => p === product)) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
             }
@@ -778,9 +780,9 @@ suite('Linting Scenarios', () => {
 
 const PRODUCTS = Object.keys(Product)
     // tslint:disable-next-line:no-any
-    .filter(key => !isNaN(Number(Product[key as any])))
+    .filter((key) => !isNaN(Number(Product[key as any])))
     // tslint:disable-next-line:no-any
-    .map(key => Product[key as any]);
+    .map((key) => Product[key as any]);
 
 // tslint:disable-next-line:max-func-body-length
 suite('Linting Products', () => {

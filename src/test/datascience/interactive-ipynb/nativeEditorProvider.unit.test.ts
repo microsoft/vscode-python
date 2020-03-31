@@ -40,48 +40,48 @@ suite('Data Science - Native Editor Provider', () => {
         storage = typemoq.Mock.ofType<INotebookStorage & INotebookModel>();
         customEditorService = typemoq.Mock.ofType<ICustomEditorService>();
         panel = typemoq.Mock.ofType<WebviewPanel>();
-        panel.setup(e => (e as any).then).returns(() => undefined);
+        panel.setup((e) => (e as any).then).returns(() => undefined);
     });
 
     function createNotebookProvider() {
         editor = typemoq.Mock.ofType<INotebookEditor>();
         when(configService.getSettings(anything())).thenReturn({ datascience: { useNotebookEditor: true } } as any);
-        editor.setup(e => e.closed).returns(() => new EventEmitter<INotebookEditor>().event);
-        editor.setup(e => e.executed).returns(() => new EventEmitter<INotebookEditor>().event);
-        editor.setup(e => (e as any).then).returns(() => undefined);
-        storage.setup(e => (e as any).then).returns(() => undefined);
+        editor.setup((e) => e.closed).returns(() => new EventEmitter<INotebookEditor>().event);
+        editor.setup((e) => e.executed).returns(() => new EventEmitter<INotebookEditor>().event);
+        editor.setup((e) => (e as any).then).returns(() => undefined);
+        storage.setup((e) => (e as any).then).returns(() => undefined);
         storage
-            .setup(s => s.load(typemoq.It.isAny(), typemoq.It.isAny()))
-            .returns(f => {
+            .setup((s) => s.load(typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns((f) => {
                 storageFile = f;
                 return Promise.resolve(storage.object);
             });
-        storage.setup(s => s.file).returns(() => storageFile);
+        storage.setup((s) => s.file).returns(() => storageFile);
         when(svcContainer.get<INotebookEditor>(INotebookEditor)).thenReturn(editor.object);
         when(svcContainer.get<INotebookStorage>(INotebookStorage)).thenReturn(storage.object);
-        customEditorService.setup(e => (e as any).then).returns(() => undefined);
+        customEditorService.setup((e) => (e as any).then).returns(() => undefined);
         customEditorService
-            .setup(c => c.registerCustomEditorProvider(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((c) => c.registerCustomEditorProvider(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
             .returns((_a1, _a2, _a3) => {
                 return { dispose: noop };
             });
 
         customEditorService
-            .setup(c => c.openEditor(typemoq.It.isAny()))
-            .returns(async f => {
+            .setup((c) => c.openEditor(typemoq.It.isAny()))
+            .returns(async (f) => {
                 const doc = typemoq.Mock.ofType<CustomDocument>();
-                doc.setup(d => d.uri).returns(() => f);
+                doc.setup((d) => d.uri).returns(() => f);
                 return registeredProvider.resolveCustomEditor(doc.object, panel.object);
             });
 
         editor
-            .setup(e => e.load(typemoq.It.isAny(), typemoq.It.isAny()))
+            .setup((e) => e.load(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns((s, _p) => {
                 file = s.file;
                 return Promise.resolve();
             });
-        editor.setup(e => e.show()).returns(() => Promise.resolve());
-        editor.setup(e => e.file).returns(() => file);
+        editor.setup((e) => e.show()).returns(() => Promise.resolve());
+        editor.setup((e) => e.file).returns(() => file);
 
         registeredProvider = new NativeEditorProvider(
             instance(svcContainer),

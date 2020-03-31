@@ -18,7 +18,7 @@ export class Pycodestyle extends BaseLinter {
             document,
             cancellation
         );
-        messages.forEach(msg => {
+        messages.forEach((msg) => {
             msg.severity = this.parseMessagesSeverity(
                 msg.type,
                 this.pythonSettings.linting.pycodestyleCategorySeverity

@@ -43,7 +43,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     }
 
     public async getDownloadInfo(resource: Resource) {
-        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource).then(item => item!);
+        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource).then((item) => item!);
 
         let uri = info.uri;
         if (uri.startsWith('https:')) {
@@ -129,7 +129,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             outputChannel: this.output,
             progressMessagePrefix: title
         };
-        return this.fileDownloader.downloadFile(uri, downloadOptions).then(file => {
+        return this.fileDownloader.downloadFile(uri, downloadOptions).then((file) => {
             this.output.appendLine(LanguageService.extractionCompletedOutputMessage());
             return file;
         });
@@ -145,7 +145,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             {
                 location: ProgressLocation.Window
             },
-            progress => {
+            (progress) => {
                 // tslint:disable-next-line:no-require-imports no-var-requires
                 const StreamZip = require('node-stream-zip');
                 const zip = new StreamZip({

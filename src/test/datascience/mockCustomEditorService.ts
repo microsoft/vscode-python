@@ -63,9 +63,9 @@ export class MockCustomEditorService implements ICustomEditorService {
     }
 
     public undo(file: Uri) {
-        this.popAndApply(file, this.undoStack, this.redoStack, e => {
+        this.popAndApply(file, this.undoStack, this.redoStack, (e) => {
             this.getModel(file)
-                .then(m => {
+                .then((m) => {
                     if (m) {
                         m.undoEdits([e as NotebookModelChange]);
                     }
@@ -75,9 +75,9 @@ export class MockCustomEditorService implements ICustomEditorService {
     }
 
     public redo(file: Uri) {
-        this.popAndApply(file, this.redoStack, this.undoStack, e => {
+        this.popAndApply(file, this.redoStack, this.undoStack, (e) => {
             this.getModel(file)
-                .then(m => {
+                .then((m) => {
                     if (m) {
                         m.applyEdits([e as NotebookModelChange]);
                     }
@@ -145,7 +145,7 @@ export class MockCustomEditorService implements ICustomEditorService {
     private openedEditor(editor: INotebookEditor) {
         // Listen for model changes
         this.getModel(editor.file)
-            .then(m => {
+            .then((m) => {
                 if (m) {
                     m.onDidEdit(this.onEditChange.bind(this, editor.file));
                 }

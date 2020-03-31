@@ -35,7 +35,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspace
-            .setup(c => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((c) => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
                 return {
                     dispose: () => void 0
@@ -57,14 +57,14 @@ suite('Terminal - Django Shell Code Execution', () => {
             disposables
         );
 
-        terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);
+        terminalFactory.setup((f) => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);
 
         settings = TypeMoq.Mock.ofType<IPythonSettings>();
-        settings.setup(s => s.terminal).returns(() => terminalSettings.object);
-        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+        settings.setup((s) => s.terminal).returns(() => terminalSettings.object);
+        configService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
     });
     teardown(() => {
-        disposables.forEach(disposable => {
+        disposables.forEach((disposable) => {
             if (disposable) {
                 disposable.dispose();
             }
@@ -81,9 +81,9 @@ suite('Terminal - Django Shell Code Execution', () => {
         expectedTerminalArgs: string[],
         resource?: Uri
     ) {
-        platform.setup(p => p.isWindows).returns(() => isWindows);
-        settings.setup(s => s.pythonPath).returns(() => pythonPath);
-        terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
+        platform.setup((p) => p.isWindows).returns(() => isWindows);
+        settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+        terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
         const replCommandArgs = await (executor as DjangoShellCodeExecutionProvider).getExecutableInfo(resource);
         expect(replCommandArgs).not.to.be.an('undefined', 'Command args is undefined');
@@ -142,7 +142,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         const terminalArgs = ['-a', 'b', 'c'];
         const workspaceUri = Uri.file(path.join('c', 'usr', 'program files'));
         const workspaceFolder: WorkspaceFolder = { index: 0, name: 'blah', uri: workspaceUri };
-        workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
+        workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
         const expectedTerminalArgs = terminalArgs.concat(
             `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`,
             'shell'
@@ -156,7 +156,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         const terminalArgs = ['-a', 'b', 'c'];
         const workspaceUri = Uri.file(path.join('c', 'usr', 'programfiles'));
         const workspaceFolder: WorkspaceFolder = { index: 0, name: 'blah', uri: workspaceUri };
-        workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
+        workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder);
         const expectedTerminalArgs = terminalArgs.concat(
             path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(),
             'shell'
@@ -170,8 +170,8 @@ suite('Terminal - Django Shell Code Execution', () => {
         const terminalArgs = ['-a', 'b', 'c'];
         const workspaceUri = Uri.file(path.join('c', 'usr', 'program files'));
         const workspaceFolder: WorkspaceFolder = { index: 0, name: 'blah', uri: workspaceUri };
-        workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
-        workspace.setup(w => w.workspaceFolders).returns(() => [workspaceFolder]);
+        workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
+        workspace.setup((w) => w.workspaceFolders).returns(() => [workspaceFolder]);
         const expectedTerminalArgs = terminalArgs.concat(
             `${path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument()}`,
             'shell'
@@ -185,8 +185,8 @@ suite('Terminal - Django Shell Code Execution', () => {
         const terminalArgs = ['-a', 'b', 'c'];
         const workspaceUri = Uri.file(path.join('c', 'usr', 'programfiles'));
         const workspaceFolder: WorkspaceFolder = { index: 0, name: 'blah', uri: workspaceUri };
-        workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
-        workspace.setup(w => w.workspaceFolders).returns(() => [workspaceFolder]);
+        workspace.setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
+        workspace.setup((w) => w.workspaceFolders).returns(() => [workspaceFolder]);
         const expectedTerminalArgs = terminalArgs.concat(
             path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(),
             'shell'
@@ -201,8 +201,8 @@ suite('Terminal - Django Shell Code Execution', () => {
         condaEnv: { name: string; path: string },
         resource?: Uri
     ) {
-        settings.setup(s => s.pythonPath).returns(() => pythonPath);
-        terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
+        settings.setup((s) => s.pythonPath).returns(() => pythonPath);
+        terminalSettings.setup((t) => t.launchArgs).returns(() => terminalArgs);
 
         const condaFile = 'conda';
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -216,7 +216,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         );
         const expectedTerminalArgs = [...terminalArgs, 'manage.py', 'shell'];
         pythonExecutionFactory
-            .setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((p) => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(condaExecutionService));
 
         const replCommandArgs = await (executor as DjangoShellCodeExecutionProvider).getExecutableInfo(resource);

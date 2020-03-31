@@ -19,7 +19,7 @@ export function disposeRegisteredReporters() {
 
 function report(progress: Progress) {
     try {
-        _reporters.forEach(item => item.report(progress));
+        _reporters.forEach((item) => item.report(progress));
     } catch (ex) {
         traceError('Failed to report progress', ex);
     }
@@ -34,10 +34,10 @@ function report(progress: Progress) {
  * @returns
  */
 export function reportAction(action: ReportableAction) {
-    return function(_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
+    return function (_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
         const originalMethod = descriptor.value!;
         // tslint:disable-next-line:no-any no-function-expression
-        descriptor.value = async function(...args: any[]) {
+        descriptor.value = async function (...args: any[]) {
             report({ action, phase: 'started' });
             // tslint:disable-next-line:no-invalid-this
             return originalMethod.apply(this, args).finally(() => {

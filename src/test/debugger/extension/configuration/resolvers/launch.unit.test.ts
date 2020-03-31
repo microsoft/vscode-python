@@ -41,7 +41,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let configExperiment: TypeMoq.IMock<ILaunchDebugConfigurationResolverExperiment>;
         function createMoqWorkspaceFolder(folderPath: string) {
             const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
-            folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
+            folder.setup((f) => f.uri).returns(() => Uri.file(folderPath));
             return folder.object;
         }
         function setupIoc(pythonPath: string, workspaceFolder?: WorkspaceFolder) {
@@ -59,23 +59,25 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             pythonExecutionService.setup((x: any) => x.then).returns(() => undefined);
             const factory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
             factory
-                .setup(f => f.create(TypeMoq.It.isAny()))
+                .setup((f) => f.create(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(pythonExecutionService.object));
-            helper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
+            helper.setup((h) => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
             diagnosticsService
-                .setup(h => h.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .setup((h) => h.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve(true));
 
             const settings = TypeMoq.Mock.ofType<IPythonSettings>();
-            settings.setup(s => s.pythonPath).returns(() => pythonPath);
+            settings.setup((s) => s.pythonPath).returns(() => pythonPath);
             if (workspaceFolder) {
-                settings.setup(s => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
+                settings.setup((s) => s.envFile).returns(() => path.join(workspaceFolder!.uri.fsPath, '.env2'));
             }
-            confgService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
+            confgService.setup((c) => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
             setUpOSMocks(osType, platformService);
-            debugEnvHelper.setup(x => x.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
+            debugEnvHelper
+                .setup((x) => x.getEnvironmentVariables(TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve({}));
             configExperiment
-                .setup(c => c.modifyConfigurationBasedOnExperiment(TypeMoq.It.isAny()))
+                .setup((c) => c.modifyConfigurationBasedOnExperiment(TypeMoq.It.isAny()))
                 .returns(() => {
                     return;
                 });
@@ -94,17 +96,17 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             if (fileName) {
                 const textEditor = TypeMoq.Mock.ofType<TextEditor>();
                 const document = TypeMoq.Mock.ofType<TextDocument>();
-                document.setup(d => d.languageId).returns(() => languageId);
-                document.setup(d => d.fileName).returns(() => fileName);
-                textEditor.setup(t => t.document).returns(() => document.object);
-                documentManager.setup(d => d.activeTextEditor).returns(() => textEditor.object);
+                document.setup((d) => d.languageId).returns(() => languageId);
+                document.setup((d) => d.fileName).returns(() => fileName);
+                textEditor.setup((t) => t.document).returns(() => document.object);
+                documentManager.setup((d) => d.activeTextEditor).returns(() => textEditor.object);
             } else {
-                documentManager.setup(d => d.activeTextEditor).returns(() => undefined);
+                documentManager.setup((d) => d.activeTextEditor).returns(() => undefined);
             }
         }
         function setupWorkspaces(folders: string[]) {
             const workspaceFolders = folders.map(createMoqWorkspaceFolder);
-            workspaceService.setup(w => w.workspaceFolders).returns(() => workspaceFolders);
+            workspaceService.setup((w) => w.workspaceFolders).returns(() => workspaceFolders);
         }
         test('Defaults should be returned when an empty object is passed with a Workspace Folder and active file', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
@@ -400,7 +402,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 }
             ]);
         });
-        test('Ensure drive letter is lower cased for local path mappings on Windows when with existing path mappings', async function() {
+        test('Ensure drive letter is lower cased for local path mappings on Windows when with existing path mappings', async function () {
             if (getOSType() !== OSType.Windows || osType !== OSType.Windows) {
                 // tslint:disable-next-line: no-invalid-this
                 return this.skip();
@@ -430,7 +432,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 }
             ]);
         });
-        test('Ensure drive letter is not lower cased for local path mappings on non-Windows when with existing path mappings', async function() {
+        test('Ensure drive letter is not lower cased for local path mappings on non-Windows when with existing path mappings', async function () {
             if (getOSType() === OSType.Windows || osType === OSType.Windows) {
                 // tslint:disable-next-line: no-invalid-this
                 return this.skip();
@@ -637,7 +639,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const pythonFile = 'xyz.py';
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
-            testsForJustMyCode.forEach(async testParams => {
+            testsForJustMyCode.forEach(async (testParams) => {
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
                     debugStdLib: testParams.debugStdLib,
                     justMyCode: testParams.justMyCode
@@ -698,7 +700,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const pythonFile = 'xyz.py';
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
-            testsForRedirectOutput.forEach(async testParams => {
+            testsForRedirectOutput.forEach(async (testParams) => {
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, {
                     console: testParams.console,
                     redirectOutput: testParams.redirectOutput
@@ -722,13 +724,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 {} as DebugConfiguration
             );
             if (osType === OSType.Windows) {
-                expect(debugConfig)
-                    .to.have.property('debugOptions')
-                    .contains(DebugOptions.FixFilePathCase);
+                expect(debugConfig).to.have.property('debugOptions').contains(DebugOptions.FixFilePathCase);
             } else {
-                expect(debugConfig)
-                    .to.have.property('debugOptions')
-                    .not.contains(DebugOptions.FixFilePathCase);
+                expect(debugConfig).to.have.property('debugOptions').not.contains(DebugOptions.FixFilePathCase);
             }
         });
         test('Jinja added for Pyramid', async () => {
@@ -772,7 +770,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             diagnosticsService.reset();
             diagnosticsService
-                .setup(h =>
+                .setup((h) =>
                     h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())
                 )
                 .returns(() => Promise.resolve(false))
@@ -795,7 +793,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             diagnosticsService.reset();
             diagnosticsService
-                .setup(h =>
+                .setup((h) =>
                     h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())
                 )
                 .returns(() => Promise.resolve(true))
@@ -821,7 +819,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
 
             diagnosticsService.reset();
             diagnosticsService
-                .setup(h =>
+                .setup((h) =>
                     h.validatePythonPath(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isAny(), TypeMoq.It.isAny())
                 )
                 .returns(() => Promise.resolve(true));
@@ -858,7 +856,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         }
         type LaunchOrAttach = 'launch' | 'attach';
         const items: LaunchOrAttach[] = ['launch', 'attach'];
-        items.forEach(requestType => {
+        items.forEach((requestType) => {
             test(`Must not contain Sub Process when not specified (${requestType})`, async () => {
                 await testSetting(requestType, {}, DebugOptions.SubProcess, false);
             });

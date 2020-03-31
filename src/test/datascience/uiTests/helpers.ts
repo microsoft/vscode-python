@@ -90,7 +90,7 @@ export class BaseWebUI implements IAsyncDisposable {
             : undefined;
         let timesMessageReceived = 0;
         const dispatchedAction = `DISPATCHED_ACTION_${message}`;
-        const disposable = this.webServer.onDidReceiveMessage(msg => {
+        const disposable = this.webServer.onDidReceiveMessage((msg) => {
             const messageType = msg.type;
             if (messageType !== message && messageType !== dispatchedAction) {
                 return;

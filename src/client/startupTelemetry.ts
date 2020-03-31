@@ -111,7 +111,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const [condaVersion, interpreter, interpreters] = await Promise.all([
         condaLocator
             .getCondaVersion()
-            .then(ver => (ver ? ver.raw : ''))
+            .then((ver) => (ver ? ver.raw : ''))
             .catch<string>(() => ''),
         interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
         interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
@@ -126,7 +126,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
         ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer)
         : false;
     const hasPython3 =
-        interpreters!.filter(item => (item && item.version ? item.version.major === 3 : false)).length > 0;
+        interpreters!.filter((item) => (item && item.version ? item.version.major === 3 : false)).length > 0;
 
     return {
         condaVersion,

@@ -21,12 +21,12 @@ export async function updateSetting(setting: string, value: any) {
 }
 export async function removeLanguageServerFiles() {
     const folders = await getLanaguageServerFolders();
-    await Promise.all(folders.map(item => fs.remove(item).catch(noop)));
+    await Promise.all(folders.map((item) => fs.remove(item).catch(noop)));
 }
 async function getLanaguageServerFolders(): Promise<string[]> {
     return new Promise<string[]>((resolve, reject) => {
         glob('languageServer.*', { cwd: SMOKE_TEST_EXTENSIONS_DIR }, (ex, matches) => {
-            ex ? reject(ex) : resolve(matches.map(item => path.join(SMOKE_TEST_EXTENSIONS_DIR, item)));
+            ex ? reject(ex) : resolve(matches.map((item) => path.join(SMOKE_TEST_EXTENSIONS_DIR, item)));
         });
     });
 }

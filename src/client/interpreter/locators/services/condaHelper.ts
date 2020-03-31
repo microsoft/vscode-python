@@ -58,13 +58,13 @@ export class CondaHelper {
      */
     public parseCondaEnvironmentNames(condaEnvironmentList: string): { name: string; path: string }[] | undefined {
         const environments = condaEnvironmentList.splitLines({ trim: false });
-        const baseEnvironmentLine = environments.filter(line => line.indexOf('*') > 0);
+        const baseEnvironmentLine = environments.filter((line) => line.indexOf('*') > 0);
         if (baseEnvironmentLine.length === 0) {
             return;
         }
         const pathStartIndex = baseEnvironmentLine[0].indexOf(baseEnvironmentLine[0].split('*')[1].trim());
         const envs: { name: string; path: string }[] = [];
-        environments.forEach(line => {
+        environments.forEach((line) => {
             if (line.length <= pathStartIndex) {
                 return;
             }
@@ -86,6 +86,6 @@ export class CondaHelper {
      */
     private isIdentifiableAsAnaconda(value: string) {
         const valueToSearch = value.toLowerCase();
-        return AnacondaIdentifiers.some(item => valueToSearch.indexOf(item.toLowerCase()) !== -1);
+        return AnacondaIdentifiers.some((item) => valueToSearch.indexOf(item.toLowerCase()) !== -1);
     }
 }

@@ -63,8 +63,8 @@ export abstract class LanguageServerPackageService implements ILanguageServerPac
     protected getValidPackage(packages: NugetPackage[], minimumVersion?: string): NugetPackage {
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         const validPackages = packages
-            .filter(item => item.version.major === this.maxMajorVersion)
-            .filter(item => nugetService.isReleaseVersion(item.version))
+            .filter((item) => item.version.major === this.maxMajorVersion)
+            .filter((item) => nugetService.isReleaseVersion(item.version))
             .sort((a, b) => a.version.compare(b.version));
 
         const pkg = validPackages[validPackages.length - 1];

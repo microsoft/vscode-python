@@ -48,7 +48,7 @@ export class Editor extends React.Component<IEditorProps> {
     }
 
     public componentWillUnmount = () => {
-        this.subscriptions.forEach(d => d.dispose());
+        this.subscriptions.forEach((d) => d.dispose());
     };
 
     public render() {

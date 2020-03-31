@@ -196,16 +196,18 @@ suite('Formatting - line formatter', () => {
 
         const document = TypeMoq.Mock.ofType<TextDocument>();
         document
-            .setup(x => x.lineAt(TypeMoq.It.isAnyNumber()))
-            .returns(n => {
+            .setup((x) => x.lineAt(TypeMoq.It.isAnyNumber()))
+            .returns((n) => {
                 const line = TypeMoq.Mock.ofType<TextLine>();
-                line.setup(x => x.text).returns(() => lines[n]);
-                line.setup(x => x.range).returns(() => new Range(new Position(n, 0), new Position(n, lines[n].length)));
+                line.setup((x) => x.text).returns(() => lines[n]);
+                line.setup((x) => x.range).returns(
+                    () => new Range(new Position(n, 0), new Position(n, lines[n].length))
+                );
                 return line.object;
             });
         document
-            .setup(x => x.getText(TypeMoq.It.isAny()))
-            .returns(o => {
+            .setup((x) => x.getText(TypeMoq.It.isAny()))
+            .returns((o) => {
                 const r = o as Range;
                 const bits: string[] = [];
 
@@ -221,8 +223,8 @@ suite('Formatting - line formatter', () => {
                 return bits.join('\n');
             });
         document
-            .setup(x => x.offsetAt(TypeMoq.It.isAny()))
-            .returns(o => {
+            .setup((x) => x.offsetAt(TypeMoq.It.isAny()))
+            .returns((o) => {
                 const p = o as Position;
                 let offset = 0;
                 for (let i = 0; i < p.line; i += 1) {
@@ -236,10 +238,10 @@ suite('Formatting - line formatter', () => {
 
     function formatLine(text: string): string {
         const line = TypeMoq.Mock.ofType<TextLine>();
-        line.setup(x => x.text).returns(() => text);
+        line.setup((x) => x.text).returns(() => text);
 
         const document = TypeMoq.Mock.ofType<TextDocument>();
-        document.setup(x => x.lineAt(TypeMoq.It.isAnyNumber())).returns(() => line.object);
+        document.setup((x) => x.lineAt(TypeMoq.It.isAnyNumber())).returns(() => line.object);
 
         return formatter.formatLine(document.object, 0);
     }

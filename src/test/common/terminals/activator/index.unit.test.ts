@@ -31,11 +31,11 @@ suite('Terminal Activator', () => {
     });
     async function testActivationAndHandlers(activationSuccessful: boolean) {
         baseActivator
-            .setup(b => b.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((b) => b.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(activationSuccessful))
             .verifiable(TypeMoq.Times.once());
         handler1
-            .setup(h =>
+            .setup((h) =>
                 h.handleActivation(
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny(),
@@ -46,7 +46,7 @@ suite('Terminal Activator', () => {
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
         handler2
-            .setup(h =>
+            .setup((h) =>
                 h.handleActivation(
                     TypeMoq.It.isAny(),
                     TypeMoq.It.isAny(),

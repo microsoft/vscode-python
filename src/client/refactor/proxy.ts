@@ -141,7 +141,7 @@ export class RefactorProxy extends Disposable {
         const result = pythonProc.execObservable(args, { cwd });
         this._process = result.proc;
         result.out.subscribe(
-            output => {
+            (output) => {
                 if (output.source === 'stdout') {
                     if (!this._startedSuccessfully && output.out.startsWith('STARTED')) {
                         this._startedSuccessfully = true;
@@ -152,7 +152,7 @@ export class RefactorProxy extends Disposable {
                     this.handleStdError(output.out);
                 }
             },
-            error => this.handleError(error)
+            (error) => this.handleError(error)
         );
 
         return this.initialized.promise;
@@ -165,8 +165,8 @@ export class RefactorProxy extends Disposable {
         try {
             errorResponse = dataStr
                 .split(/\r?\n/g)
-                .filter(line => line.length > 0)
-                .map(resp => JSON.parse(resp));
+                .filter((line) => line.length > 0)
+                .map((resp) => JSON.parse(resp));
             this._previousStdErrData = '';
         } catch (ex) {
             traceError(ex);
@@ -207,8 +207,8 @@ export class RefactorProxy extends Disposable {
         try {
             response = dataStr
                 .split(/\r?\n/g)
-                .filter(line => line.length > 0)
-                .map(resp => JSON.parse(resp));
+                .filter((line) => line.length > 0)
+                .map((resp) => JSON.parse(resp));
             this._previousOutData = '';
         } catch (ex) {
             // Possible we've only received part of the data, hence don't clear previousData

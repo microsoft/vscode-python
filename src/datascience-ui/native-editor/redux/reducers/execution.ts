@@ -35,8 +35,8 @@ export namespace Execution {
     ): IMainState {
         const newVMs = [...prevState.cellVMs];
         const cellIdsToExecute: string[] = [];
-        cellIds.forEach(cellId => {
-            const index = prevState.cellVMs.findIndex(cell => cell.cell.id === cellId);
+        cellIds.forEach((cellId) => {
+            const index = prevState.cellVMs.findIndex((cell) => cell.cell.id === cellId);
             if (index === -1) {
                 return;
             }
@@ -70,10 +70,10 @@ export namespace Execution {
     }
 
     export function executeAbove(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index > 0) {
             // Get all cellIds until `index`.
-            const cellIds = arg.prevState.cellVMs.slice(0, index).map(cellVm => cellVm.cell.id);
+            const cellIds = arg.prevState.cellVMs.slice(0, index).map((cellVm) => cellVm.cell.id);
             return executeRange(arg.prevState, cellIds, arg);
         }
         return arg.prevState;
@@ -99,7 +99,7 @@ export namespace Execution {
     }
 
     export function executeCell(arg: NativeEditorReducerArg<IExecuteAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0 && arg.payload.data.cellId) {
             // Start executing this cell.
             const executeResult = executeRange(arg.prevState, [arg.payload.data.cellId], arg);
@@ -136,10 +136,10 @@ export namespace Execution {
     }
 
     export function executeCellAndBelow(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             // Get all cellIds starting from `index`.
-            const cellIds = arg.prevState.cellVMs.slice(index).map(cellVm => cellVm.cell.id);
+            const cellIds = arg.prevState.cellVMs.slice(index).map((cellVm) => cellVm.cell.id);
             return executeRange(arg.prevState, cellIds, arg);
         }
         return arg.prevState;
@@ -147,7 +147,7 @@ export namespace Execution {
 
     export function executeAllCells(arg: NativeEditorReducerArg): IMainState {
         if (arg.prevState.cellVMs.length > 0) {
-            const cellIds = arg.prevState.cellVMs.map(cellVm => cellVm.cell.id);
+            const cellIds = arg.prevState.cellVMs.map((cellVm) => cellVm.cell.id);
             return executeRange(arg.prevState, cellIds, arg);
         }
         return arg.prevState;
@@ -156,7 +156,7 @@ export namespace Execution {
     export function executeSelectedCell(arg: NativeEditorReducerArg): IMainState {
         // This is the same thing as executing the selected cell
         const selectionInfo = getSelectedAndFocusedInfo(arg.prevState);
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === selectionInfo.selectedCellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === selectionInfo.selectedCellId);
         if (selectionInfo.selectedCellId && index >= 0) {
             return executeCell({
                 ...arg,
@@ -174,7 +174,7 @@ export namespace Execution {
     }
 
     export function clearAllOutputs(arg: NativeEditorReducerArg): IMainState {
-        const newList = arg.prevState.cellVMs.map(cellVM => {
+        const newList = arg.prevState.cellVMs.map((cellVM) => {
             return Helpers.asCellViewModel({
                 ...cellVM,
                 cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } }
@@ -190,7 +190,7 @@ export namespace Execution {
     }
 
     export function changeCellType(arg: NativeEditorReducerArg<IChangeCellTypeAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0) {
             const cellVMs = [...arg.prevState.cellVMs];
             const current = arg.prevState.cellVMs[index];

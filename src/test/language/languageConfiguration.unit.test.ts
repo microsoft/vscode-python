@@ -198,7 +198,7 @@ suite('Language Configuration', () => {
             '',
             ' ',
             '  '
-        ].forEach(base => {
+        ].forEach((base) => {
             [
                 ['', '', '', ''],
                 // leading
@@ -215,7 +215,7 @@ suite('Language Configuration', () => {
                 ['', '', '', ' '],
                 ['', '', '', '# a comment'],
                 ['', '', '', ' # ...']
-            ].forEach(whitespace => {
+            ].forEach((whitespace) => {
                 const [leading, postKeyword, preColon, trailing] = whitespace;
                 const [_example, invalid, ignored] = resolveExample(base, leading, postKeyword, preColon, trailing);
                 if (ignored) {

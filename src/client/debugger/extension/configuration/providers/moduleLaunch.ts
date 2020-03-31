@@ -26,7 +26,7 @@ export class ModuleLaunchDebugConfigurationProvider implements IDebugConfigurati
             title: DebugConfigStrings.module.enterModule.title(),
             value: config.module || DebugConfigStrings.module.enterModule.default(),
             prompt: DebugConfigStrings.module.enterModule.prompt(),
-            validate: value =>
+            validate: (value) =>
                 Promise.resolve(
                     value && value.trim().length > 0 ? undefined : DebugConfigStrings.module.enterModule.invalid()
                 )

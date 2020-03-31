@@ -27,12 +27,12 @@ suite('Virtual environment manager', () => {
     test('Use environment folder as env name', async () => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer
-            .setup(s => s.get(TypeMoq.It.isValue(IPipEnvService)))
+            .setup((s) => s.get(TypeMoq.It.isValue(IPipEnvService)))
             .returns(() => TypeMoq.Mock.ofType<IPipEnvService>().object);
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => false);
+        workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
         serviceContainer
-            .setup(s => s.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .setup((s) => s.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
 
         const venvManager = new VirtualEnvironmentManager(serviceContainer.object);
@@ -45,23 +45,23 @@ suite('Virtual environment manager', () => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const pipEnvService = TypeMoq.Mock.ofType<IPipEnvService>();
         pipEnvService
-            .setup(p => p.isRelatedPipEnvironment(TypeMoq.It.isAny(), TypeMoq.It.isValue(pythonPath)))
+            .setup((p) => p.isRelatedPipEnvironment(TypeMoq.It.isAny(), TypeMoq.It.isValue(pythonPath)))
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
         serviceContainer
-            .setup(s => s.get(TypeMoq.It.isValue(IProcessServiceFactory)))
+            .setup((s) => s.get(TypeMoq.It.isValue(IProcessServiceFactory)))
             .returns(() => TypeMoq.Mock.ofType<IProcessServiceFactory>().object);
-        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IPipEnvService))).returns(() => pipEnvService.object);
+        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(IPipEnvService))).returns(() => pipEnvService.object);
         serviceContainer
-            .setup(s => s.get(TypeMoq.It.isValue(IFileSystem)))
+            .setup((s) => s.get(TypeMoq.It.isValue(IFileSystem)))
             .returns(() => TypeMoq.Mock.ofType<IFileSystem>().object);
         const workspaceUri = Uri.file(path.join('root', 'sub', 'wkspace folder'));
         const workspaceFolder: WorkspaceFolder = { name: 'wkspace folder', index: 0, uri: workspaceUri };
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => true);
-        workspaceService.setup(w => w.workspaceFolders).returns(() => [workspaceFolder]);
+        workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => true);
+        workspaceService.setup((w) => w.workspaceFolders).returns(() => [workspaceFolder]);
         serviceContainer
-            .setup(s => s.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .setup((s) => s.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
 
         const venvManager = new VirtualEnvironmentManager(serviceContainer.object);
@@ -74,25 +74,27 @@ suite('Virtual environment manager', () => {
     async function testSuffix(expectedEnvName: string, isPipEnvironment: boolean = false, resource?: Uri) {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer
-            .setup(s => s.get(TypeMoq.It.isValue(IProcessServiceFactory)))
+            .setup((s) => s.get(TypeMoq.It.isValue(IProcessServiceFactory)))
             .returns(() => TypeMoq.Mock.ofType<IProcessServiceFactory>().object);
         serviceContainer
-            .setup(s => s.get(TypeMoq.It.isValue(IFileSystem)))
+            .setup((s) => s.get(TypeMoq.It.isValue(IFileSystem)))
             .returns(() => TypeMoq.Mock.ofType<IFileSystem>().object);
         const pipEnvService = TypeMoq.Mock.ofType<IPipEnvService>();
         pipEnvService
-            .setup(w => w.isRelatedPipEnvironment(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup((w) => w.isRelatedPipEnvironment(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(isPipEnvironment));
-        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IPipEnvService))).returns(() => pipEnvService.object);
+        serviceContainer.setup((s) => s.get(TypeMoq.It.isValue(IPipEnvService))).returns(() => pipEnvService.object);
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => false);
+        workspaceService.setup((w) => w.hasWorkspaceFolders).returns(() => false);
         if (resource) {
             const workspaceFolder = TypeMoq.Mock.ofType<WorkspaceFolder>();
-            workspaceFolder.setup(w => w.uri).returns(() => resource);
-            workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => workspaceFolder.object);
+            workspaceFolder.setup((w) => w.uri).returns(() => resource);
+            workspaceService
+                .setup((w) => w.getWorkspaceFolder(TypeMoq.It.isAny()))
+                .returns(() => workspaceFolder.object);
         }
         serviceContainer
-            .setup(s => s.get(TypeMoq.It.isValue(IWorkspaceService)))
+            .setup((s) => s.get(TypeMoq.It.isValue(IWorkspaceService)))
             .returns(() => workspaceService.object);
 
         const venvManager = new VirtualEnvironmentManager(serviceContainer.object);

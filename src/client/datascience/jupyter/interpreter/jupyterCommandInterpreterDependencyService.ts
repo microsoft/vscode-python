@@ -36,7 +36,7 @@ export class JupyterCommandInterpreterDependencyService implements IJupyterInter
             const installers = await this.channels.getInstallationChannels();
             if (installers) {
                 // If Conda is available, always pick it as the user must have a Conda Environment
-                const installer = installers.find(ins => ins.name === 'Conda');
+                const installer = installers.find((ins) => ins.name === 'Conda');
                 const product = ProductNames.get(Product.jupyter);
                 const stopWatch = new StopWatch();
 
@@ -46,7 +46,7 @@ export class JupyterCommandInterpreterDependencyService implements IJupyterInter
                         .then(() => {
                             sendTelemetryEvent(Telemetry.UserInstalledJupyter, stopWatch.elapsedTime);
                         })
-                        .catch(e => {
+                        .catch((e) => {
                             sendTelemetryEvent(Telemetry.JupyterInstallFailed, undefined, { product });
                             this.applicationShell.showErrorMessage(e.message, DataScience.pythonInteractiveHelpLink());
                         });
@@ -56,7 +56,7 @@ export class JupyterCommandInterpreterDependencyService implements IJupyterInter
                         .then(() => {
                             sendTelemetryEvent(Telemetry.UserInstalledJupyter, stopWatch.elapsedTime);
                         })
-                        .catch(e => {
+                        .catch((e) => {
                             sendTelemetryEvent(Telemetry.JupyterInstallFailed, undefined, { product });
                             this.applicationShell.showErrorMessage(e.message, DataScience.pythonInteractiveHelpLink());
                         });

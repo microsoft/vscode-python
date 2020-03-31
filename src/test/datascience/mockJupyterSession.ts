@@ -57,7 +57,7 @@ export class MockJupyterSession implements IJupyterSession {
     public async restart(_timeout: number): Promise<void> {
         // For every outstanding request, switch them to fail mode
         const requests = [...this.outstandingRequestTokenSources];
-        requests.forEach(r => r.cancel());
+        requests.forEach((r) => r.cancel());
 
         if (this.forceRestartTimeout) {
             throw new JupyterKernelPromiseFailedError('Forcing restart timeout');
@@ -67,7 +67,7 @@ export class MockJupyterSession implements IJupyterSession {
     }
     public interrupt(_timeout: number): Promise<void> {
         const requests = [...this.outstandingRequestTokenSources];
-        requests.forEach(r => r.cancel());
+        requests.forEach((r) => r.cancel());
         return sleep(this.timedelay);
     }
     public waitForIdle(_timeout: number): Promise<void> {
@@ -100,7 +100,7 @@ export class MockJupyterSession implements IJupyterSession {
 
         // When it finishes, it should not be an outstanding request anymore
         const removeHandler = () => {
-            this.outstandingRequestTokenSources = this.outstandingRequestTokenSources.filter(f => f !== tokenSource);
+            this.outstandingRequestTokenSources = this.outstandingRequestTokenSources.filter((f) => f !== tokenSource);
             if (this.lastRequest === request) {
                 this.lastRequest = undefined;
             }

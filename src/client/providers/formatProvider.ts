@@ -42,7 +42,7 @@ export class PythonFormattingEditProvider
         this.config = serviceContainer.get<IConfigurationService>(IConfigurationService);
         const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.disposables.push(
-            this.documentManager.onDidSaveTextDocument(async document => this.onSaveDocument(document))
+            this.documentManager.onDidSaveTextDocument(async (document) => this.onSaveDocument(document))
         );
         this.disposables.push(
             interpreterService.onDidChangeInterpreter(async () => {
@@ -54,7 +54,7 @@ export class PythonFormattingEditProvider
     }
 
     public dispose() {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
 
     public provideDocumentFormattingEdits(

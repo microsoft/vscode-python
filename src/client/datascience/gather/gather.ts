@@ -43,7 +43,7 @@ export class GatherProvider implements IGatherProvider {
                     this._executionSlicer = new ppa.ExecutionLogSlicer(this.dataflowAnalyzer);
 
                     this.disposables.push(
-                        this.configService.getSettings(undefined).onDidChange(e => this.updateEnableGather(e))
+                        this.configService.getSettings(undefined).onDidChange((e) => this.updateEnableGather(e))
                     );
                 }
             } catch (ex) {

@@ -76,7 +76,7 @@ export class TerminalService implements ITerminalService, Disposable {
         });
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
 
         await this.terminalActivator.activateEnvironmentInTerminal(this.terminal!, {
             resource: this.options?.resource,

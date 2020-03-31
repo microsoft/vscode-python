@@ -99,10 +99,10 @@ suite('Module Installer', () => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
             serviceContainer
-                .setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
+                .setup((c) => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
                 .returns(() => outputChannel.object);
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
+            serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
             installer = new TestModuleInstaller(serviceContainer.object);
         });
         teardown(() => {
@@ -117,12 +117,12 @@ suite('Module Installer', () => {
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
             appShell
-                .setup(a => a.showErrorMessage(error))
+                .setup((a) => a.showErrorMessage(error))
                 .returns(() => Promise.resolve(undefined))
                 .verifiable(TypeMoq.Times.once());
             outputChannel
                 // tslint:disable-next-line: messages-must-be-localized
-                .setup(o => o.appendLine(`[Elevated] ${command}`))
+                .setup((o) => o.appendLine(`[Elevated] ${command}`))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
@@ -138,16 +138,16 @@ suite('Module Installer', () => {
             rewiremock.enable();
             rewiremock('sudo-prompt').with(sudoPromptMock);
             outputChannel
-                .setup(o => o.show())
+                .setup((o) => o.show())
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             outputChannel
                 // tslint:disable-next-line: messages-must-be-localized
-                .setup(o => o.appendLine(`[Elevated] ${command}`))
+                .setup((o) => o.appendLine(`[Elevated] ${command}`))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             outputChannel
-                .setup(o => o.append(stdout))
+                .setup((o) => o.append(stdout))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
@@ -163,16 +163,16 @@ suite('Module Installer', () => {
             rewiremock('sudo-prompt').with(sudoPromptMock);
             outputChannel
                 // tslint:disable-next-line: messages-must-be-localized
-                .setup(o => o.appendLine(`[Elevated] ${command}`))
+                .setup((o) => o.appendLine(`[Elevated] ${command}`))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             outputChannel
-                .setup(o => o.show())
+                .setup((o) => o.show())
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             outputChannel
                 // tslint:disable-next-line: messages-must-be-localized
-                .setup(o => o.append(`Warning: ${stderr}`))
+                .setup((o) => o.append(`Warning: ${stderr}`))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
@@ -180,11 +180,11 @@ suite('Module Installer', () => {
         });
     });
 
-    [CondaInstaller, PipInstaller, PipEnvInstaller, TestModuleInstaller].forEach(installerClass => {
+    [CondaInstaller, PipInstaller, PipEnvInstaller, TestModuleInstaller].forEach((installerClass) => {
         // Proxy info is relevant only for PipInstaller.
         const proxyServers = installerClass === PipInstaller ? ['', 'proxy:1234'] : [''];
-        proxyServers.forEach(proxyServer => {
-            [undefined, Uri.file('/users/dev/xyz')].forEach(resource => {
+        proxyServers.forEach((proxyServer) => {
+            [undefined, Uri.file('/users/dev/xyz')].forEach((resource) => {
                 // Conda info is relevant only for CondaInstaller.
                 const condaEnvs =
                     installerClass === CondaInstaller
@@ -195,14 +195,14 @@ suite('Module Installer', () => {
                               { name: '', path: path.join('conda with spaces', 'path') }
                           ]
                         : [];
-                [undefined, ...condaEnvs].forEach(condaEnvInfo => {
+                [undefined, ...condaEnvs].forEach((condaEnvInfo) => {
                     const testProxySuffix = proxyServer.length === 0 ? 'without proxy info' : 'with proxy info';
                     const testCondaEnv = condaEnvInfo
                         ? condaEnvInfo.name
                             ? 'without conda name'
                             : 'with conda path'
                         : 'without conda';
-                    const testSuite = [testProxySuffix, testCondaEnv].filter(item => item.length > 0).join(', ');
+                    const testSuite = [testProxySuffix, testCondaEnv].filter((item) => item.length > 0).join(', ');
                     suite(`${installerClass.name} (${testSuite})`, () => {
                         let disposables: Disposable[] = [];
                         let installationChannel: TypeMoq.IMock<IInstallationChannelManager>;
@@ -218,73 +218,75 @@ suite('Module Installer', () => {
 
                             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IApplicationShell)))
+                                .setup((c) => c.get(TypeMoq.It.isValue(IApplicationShell)))
                                 .returns(() => appShell.object);
 
                             fs = TypeMoq.Mock.ofType<IFileSystem>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IFileSystem)))
+                                .setup((c) => c.get(TypeMoq.It.isValue(IFileSystem)))
                                 .returns(() => fs.object);
 
                             disposables = [];
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
+                                .setup((c) => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny()))
                                 .returns(() => disposables);
 
                             installationChannel = TypeMoq.Mock.ofType<IInstallationChannelManager>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IInstallationChannelManager), TypeMoq.It.isAny()))
+                                .setup((c) =>
+                                    c.get(TypeMoq.It.isValue(IInstallationChannelManager), TypeMoq.It.isAny())
+                                )
                                 .returns(() => installationChannel.object);
 
                             const condaService = TypeMoq.Mock.ofType<ICondaService>();
-                            condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve(condaExecutable));
+                            condaService.setup((c) => c.getCondaFile()).returns(() => Promise.resolve(condaExecutable));
                             condaService
-                                .setup(c => c.getCondaEnvironment(TypeMoq.It.isAny()))
+                                .setup((c) => c.getCondaEnvironment(TypeMoq.It.isAny()))
                                 .returns(() => Promise.resolve(condaEnvInfo));
 
                             configService = TypeMoq.Mock.ofType<IConfigurationService>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
+                                .setup((c) => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny()))
                                 .returns(() => configService.object);
                             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-                            pythonSettings.setup(p => p.pythonPath).returns(() => pythonPath);
+                            pythonSettings.setup((p) => p.pythonPath).returns(() => pythonPath);
                             configService
-                                .setup(c => c.getSettings(TypeMoq.It.isAny()))
+                                .setup((c) => c.getSettings(TypeMoq.It.isAny()))
                                 .returns(() => pythonSettings.object);
 
                             terminalService = TypeMoq.Mock.ofType<ITerminalService>();
                             const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
                             terminalServiceFactory
-                                .setup(f => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                                .setup((f) => f.getTerminalService(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                                 .returns(() => terminalService.object);
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory), TypeMoq.It.isAny()))
+                                .setup((c) => c.get(TypeMoq.It.isValue(ITerminalServiceFactory), TypeMoq.It.isAny()))
                                 .returns(() => terminalServiceFactory.object);
 
                             interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
+                                .setup((c) => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny()))
                                 .returns(() => interpreterService.object);
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(ICondaService), TypeMoq.It.isAny()))
+                                .setup((c) => c.get(TypeMoq.It.isValue(ICondaService), TypeMoq.It.isAny()))
                                 .returns(() => condaService.object);
 
                             const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
                             serviceContainer
-                                .setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
+                                .setup((c) => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny()))
                                 .returns(() => workspaceService.object);
                             const http = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-                            http.setup(h => h.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isAny())).returns(
+                            http.setup((h) => h.get(TypeMoq.It.isValue('proxy'), TypeMoq.It.isAny())).returns(
                                 () => proxyServer
                             );
                             workspaceService
-                                .setup(w => w.getConfiguration(TypeMoq.It.isValue('http')))
+                                .setup((w) => w.getConfiguration(TypeMoq.It.isValue('http')))
                                 .returns(() => http.object);
 
                             installer = new installerClass(serviceContainer.object);
                         });
                         teardown(() => {
-                            disposables.forEach(disposable => {
+                            disposables.forEach((disposable) => {
                                 if (disposable) {
                                     disposable.dispose();
                                 }
@@ -293,15 +295,15 @@ suite('Module Installer', () => {
                         });
                         function setActiveInterpreter(activeInterpreter?: PythonInterpreter) {
                             interpreterService
-                                .setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(resource)))
+                                .setup((i) => i.getActiveInterpreter(TypeMoq.It.isValue(resource)))
                                 .returns(() => Promise.resolve(activeInterpreter))
                                 .verifiable(TypeMoq.Times.atLeastOnce());
                         }
-                        getModuleNamesForTesting().forEach(product => {
+                        getModuleNamesForTesting().forEach((product) => {
                             const moduleName = product.moduleName;
                             async function installModuleAndVerifyCommand(command: string, expectedArgs: string[]) {
                                 terminalService
-                                    .setup(t =>
+                                    .setup((t) =>
                                         t.sendCommand(
                                             TypeMoq.It.isValue(command),
                                             TypeMoq.It.isValue(expectedArgs),
@@ -317,7 +319,7 @@ suite('Module Installer', () => {
 
                             if (product.value === Product.pylint) {
                                 // tslint:disable-next-line:no-shadowed-variable
-                                generatePythonInterpreterVersions().forEach(interpreterInfo => {
+                                generatePythonInterpreterVersions().forEach((interpreterInfo) => {
                                     const majorVersion = interpreterInfo.version ? interpreterInfo.version.major : 0;
                                     if (majorVersion === 2) {
                                         const testTitle = `Ensure install arg is \'pylint<2.0.0\' in ${
@@ -415,16 +417,16 @@ suite('Module Installer', () => {
                                     test(`If 'python.globalModuleInstallation' is set to true and pythonPath directory is read only, do an elevated install`, async () => {
                                         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
                                         info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup(t => t.type).returns(() => InterpreterType.Unknown);
-                                        info.setup(t => t.version).returns(() => new SemVer('3.5.0-final'));
+                                        info.setup((t) => t.type).returns(() => InterpreterType.Unknown);
+                                        info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
-                                        pythonSettings.setup(p => p.globalModuleInstallation).returns(() => true);
+                                        pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
                                         const elevatedInstall = sinon.stub(
                                             TestModuleInstaller.prototype,
                                             'elevatedInstall'
                                         );
                                         elevatedInstall.returns();
-                                        fs.setup(f => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
+                                        fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
                                             Promise.resolve(true)
                                         );
                                         try {
@@ -438,15 +440,15 @@ suite('Module Installer', () => {
                                     test(`If 'python.globalModuleInstallation' is set to true and pythonPath directory is not read only, send command to terminal`, async () => {
                                         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
                                         info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup(t => t.type).returns(() => InterpreterType.Unknown);
-                                        info.setup(t => t.version).returns(() => new SemVer('3.5.0-final'));
+                                        info.setup((t) => t.type).returns(() => InterpreterType.Unknown);
+                                        info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
-                                        pythonSettings.setup(p => p.globalModuleInstallation).returns(() => true);
-                                        fs.setup(f => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
+                                        pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
+                                        fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
                                             Promise.resolve(false)
                                         );
                                         terminalService
-                                            .setup(t => t.sendCommand(pythonPath, ['-m', 'executionInfo'], undefined))
+                                            .setup((t) => t.sendCommand(pythonPath, ['-m', 'executionInfo'], undefined))
                                             .returns(() => Promise.resolve())
                                             .verifiable(TypeMoq.Times.once());
                                         try {
@@ -460,12 +462,12 @@ suite('Module Installer', () => {
                                     test(`If 'python.globalModuleInstallation' is not set to true, concanate arguments with '--user' flag and send command to terminal`, async () => {
                                         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
                                         info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup(t => t.type).returns(() => InterpreterType.Unknown);
-                                        info.setup(t => t.version).returns(() => new SemVer('3.5.0-final'));
+                                        info.setup((t) => t.type).returns(() => InterpreterType.Unknown);
+                                        info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
-                                        pythonSettings.setup(p => p.globalModuleInstallation).returns(() => false);
+                                        pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => false);
                                         terminalService
-                                            .setup(t =>
+                                            .setup((t) =>
                                                 t.sendCommand(pythonPath, ['-m', 'executionInfo', '--user'], undefined)
                                             )
                                             .returns(() => Promise.resolve())
@@ -481,17 +483,17 @@ suite('Module Installer', () => {
                                     test(`ignores failures in IFileSystem.isDirReadonly()`, async () => {
                                         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
                                         info.setup((t: any) => t.then).returns(() => undefined);
-                                        info.setup(t => t.type).returns(() => InterpreterType.Unknown);
-                                        info.setup(t => t.version).returns(() => new SemVer('3.5.0-final'));
+                                        info.setup((t) => t.type).returns(() => InterpreterType.Unknown);
+                                        info.setup((t) => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
-                                        pythonSettings.setup(p => p.globalModuleInstallation).returns(() => true);
+                                        pythonSettings.setup((p) => p.globalModuleInstallation).returns(() => true);
                                         const elevatedInstall = sinon.stub(
                                             TestModuleInstaller.prototype,
                                             'elevatedInstall'
                                         );
                                         elevatedInstall.returns();
                                         const err = new Error('oops!');
-                                        fs.setup(f => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
+                                        fs.setup((f) => f.isDirReadonly(path.dirname(pythonPath))).returns(() =>
                                             Promise.reject(err)
                                         );
                                         try {
@@ -509,7 +511,7 @@ suite('Module Installer', () => {
                                             title: Products.installingModule().format(product.name)
                                         };
                                         appShell
-                                            .setup(a => a.withProgress(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                                            .setup((a) => a.withProgress(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                                             .callback((expected, _) => assert.deepEqual(expected, options))
                                             .returns(() => Promise.resolve())
                                             .verifiable(TypeMoq.Times.once());
@@ -584,20 +586,20 @@ suite('Module Installer', () => {
 
 function generatePythonInterpreterVersions() {
     const versions: SemVer[] = ['2.7.0-final', '3.4.0-final', '3.5.0-final', '3.6.0-final', '3.7.0-final'].map(
-        ver => new SemVer(ver)
+        (ver) => new SemVer(ver)
     );
-    return versions.map(version => {
+    return versions.map((version) => {
         const info = TypeMoq.Mock.ofType<PythonInterpreter>();
         info.setup((t: any) => t.then).returns(() => undefined);
-        info.setup(t => t.type).returns(() => InterpreterType.VirtualEnv);
-        info.setup(t => t.version).returns(() => version);
+        info.setup((t) => t.type).returns(() => InterpreterType.VirtualEnv);
+        info.setup((t) => t.version).returns(() => version);
         return info.object;
     });
 }
 
 function getModuleNamesForTesting(): { name: string; value: Product; moduleName: string }[] {
     return getNamesAndValues<Product>(Product)
-        .map(product => {
+        .map((product) => {
             let moduleName = '';
             const mockSvc = TypeMoq.Mock.ofType<IServiceContainer>().object;
             const mockOutChnl = TypeMoq.Mock.ofType<OutputChannel>().object;
@@ -609,5 +611,5 @@ function getModuleNamesForTesting(): { name: string; value: Product; moduleName:
                 return;
             }
         })
-        .filter(item => item !== undefined) as { name: string; value: Product; moduleName: string }[];
+        .filter((item) => item !== undefined) as { name: string; value: Product; moduleName: string }[];
 }

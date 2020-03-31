@@ -57,15 +57,15 @@ export class CurrentPathService extends CacheableLocatorService {
             .getSettings(resource);
         const pathsToCheck = [...this.pythonCommandProvider.getCommands(), { command: configSettings.pythonPath }];
 
-        const pythonPaths = Promise.all(pathsToCheck.map(item => this.getInterpreter(item)));
+        const pythonPaths = Promise.all(pathsToCheck.map((item) => this.getInterpreter(item)));
         return (
             pythonPaths
-                .then(interpreters => interpreters.filter(item => item.length > 0))
+                .then((interpreters) => interpreters.filter((item) => item.length > 0))
                 // tslint:disable-next-line:promise-function-async
-                .then(interpreters =>
-                    Promise.all(interpreters.map(interpreter => this.getInterpreterDetails(interpreter)))
+                .then((interpreters) =>
+                    Promise.all(interpreters.map((interpreter) => this.getInterpreterDetails(interpreter)))
                 )
-                .then(interpreters => interpreters.filter(item => !!item).map(item => item!))
+                .then((interpreters) => interpreters.filter((item) => !!item).map((item) => item!))
         );
     }
 
@@ -73,7 +73,7 @@ export class CurrentPathService extends CacheableLocatorService {
      * Return the information about the identified interpreter binary.
      */
     private async getInterpreterDetails(pythonPath: string): Promise<PythonInterpreter | undefined> {
-        return this.helper.getInterpreterInformation(pythonPath).then(details => {
+        return this.helper.getInterpreterInformation(pythonPath).then((details) => {
             if (!details) {
                 return;
             }
@@ -95,8 +95,8 @@ export class CurrentPathService extends CacheableLocatorService {
             const args = Array.isArray(options.args) ? options.args : [];
             return processService
                 .exec(options.command, args.concat(['-c', 'import sys;print(sys.executable)']), {})
-                .then(output => output.stdout.trim())
-                .then(async value => {
+                .then((output) => output.stdout.trim())
+                .then(async (value) => {
                     if (value.length > 0 && (await this.fs.fileExists(value))) {
                         return value;
                     }
@@ -107,7 +107,7 @@ export class CurrentPathService extends CacheableLocatorService {
                     );
                     return '';
                 })
-                .catch(_ex => {
+                .catch((_ex) => {
                     traceInfo(
                         `Detection of Python Interpreter for Command ${options.command} and args ${args.join(
                             ' '
@@ -126,7 +126,7 @@ export class CurrentPathService extends CacheableLocatorService {
 export class PythonInPathCommandProvider implements IPythonInPathCommandProvider {
     constructor(@inject(IPlatformService) private readonly platform: IPlatformService) {}
     public getCommands(): { command: string; args?: string[] }[] {
-        const paths = ['python3.7', 'python3.6', 'python3', 'python2', 'python'].map(item => {
+        const paths = ['python3.7', 'python3.6', 'python3', 'python2', 'python'].map((item) => {
             return { command: item };
         });
         if (this.platform.osType !== OSType.Windows) {
@@ -135,7 +135,7 @@ export class PythonInPathCommandProvider implements IPythonInPathCommandProvider
 
         const versions = ['3.7', '3.6', '3', '2'];
         return paths.concat(
-            versions.map(version => {
+            versions.map((version) => {
                 return { command: 'py', args: [`-${version}`] };
             })
         );

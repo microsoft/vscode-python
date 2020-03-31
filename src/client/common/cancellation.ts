@@ -95,12 +95,12 @@ export namespace Cancellation {
                 // Not canceled yet. When the work finishes
                 // either resolve our promise or cancel.
                 work(token)
-                    .then(v => {
+                    .then((v) => {
                         if (!deferred.completed) {
                             deferred.resolve(v);
                         }
                     })
-                    .catch(e => {
+                    .catch((e) => {
                         if (!deferred.completed) {
                             deferred.reject(e);
                         }

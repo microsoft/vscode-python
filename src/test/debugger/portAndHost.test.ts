@@ -25,24 +25,24 @@ const debuggerType = DebuggerTypeName;
 // tslint:disable-next-line:max-func-body-length
 suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
     let debugClient: DebugClient;
-    suiteSetup(async function() {
+    suiteSetup(async function () {
         // https://github.com/microsoft/vscode-python/issues/9383
         // tslint:disable-next-line:no-invalid-this
         return this.skip();
     });
-    setup(async function() {
+    setup(async function () {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
         }
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         debugClient = new DebugClient(process.env.NODE_PATH || 'node', testAdapterFilePath, debuggerType);
         debugClient.defaultTimeout = DEBUGGER_TIMEOUT;
         await debugClient.start();
     });
     teardown(async () => {
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         try {
             debugClient.stop().catch(noop);
             // tslint:disable-next-line:no-empty
@@ -117,7 +117,7 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
     });
     test('Confirm debuggig fails when provided port is in use', async () => {
         const server = net.createServer(noop);
-        const port = await new Promise<number>(resolve =>
+        const port = await new Promise<number>((resolve) =>
             server.listen({ host: 'localhost', port: 0 }, () => resolve((server.address() as net.AddressInfo).port))
         );
         let exception: Error | undefined;

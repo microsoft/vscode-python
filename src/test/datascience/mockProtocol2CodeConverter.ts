@@ -312,7 +312,7 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     }
 
     private isStringArray(value: any): value is string[] {
-        return Array.isArray(value) && (<any[]>value).every(elem => typeof elem === 'string');
+        return Array.isArray(value) && (<any[]>value).every((elem) => typeof elem === 'string');
     }
 
     private asCompletionInsertText(

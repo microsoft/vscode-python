@@ -101,7 +101,7 @@ export class KernelSelector {
             session,
             cancelToken
         );
-        suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
+        suggestions = suggestions.filter((item) => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(
             resource,
             stopWatch,
@@ -132,7 +132,7 @@ export class KernelSelector {
             session,
             cancelToken
         );
-        suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
+        suggestions = suggestions.filter((item) => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(
             resource,
             stopWatch,

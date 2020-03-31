@@ -28,7 +28,7 @@ const nodeFetchFile = constants.isWindows ? nodeFetchIndexFile.replace(/\\/g, '\
  * @param {string} source
  * @returns
  */
-exports.default = function(source) {
+exports.default = function (source) {
     if (source.indexOf("require('node-fetch')") > 0) {
         source = source.replace(/require\('node-fetch'\)/g, `require('${nodeFetchFile}')`);
     }

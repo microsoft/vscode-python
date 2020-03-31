@@ -86,7 +86,7 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
 
         const moq = typemoq.Mock.ofInstance(rule, typemoq.MockBehavior.Loose, true);
         moq.callBase = true;
-        moq.setup(m => m.setGlobalInterpreter(typemoq.It.isAny(), typemoq.It.isAny()))
+        moq.setup((m) => m.setGlobalInterpreter(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve(false))
             .verifiable(typemoq.Times.once());
 
@@ -105,7 +105,7 @@ suite('Interpreters - Auto Selection - Current Path Rule', () => {
 
         const moq = typemoq.Mock.ofInstance(rule, typemoq.MockBehavior.Loose, true);
         moq.callBase = true;
-        moq.setup(m => m.setGlobalInterpreter(typemoq.It.isAny(), typemoq.It.isAny()))
+        moq.setup((m) => m.setGlobalInterpreter(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(() => Promise.resolve(true))
             .verifiable(typemoq.Times.once());
 

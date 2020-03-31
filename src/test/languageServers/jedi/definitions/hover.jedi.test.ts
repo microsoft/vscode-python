@@ -32,15 +32,15 @@ suite('Hover Definition (Jedi)', () => {
     suiteTeardown(closeActiveWindows);
     teardown(closeActiveWindows);
 
-    test('Method', done => {
+    test('Method', (done) => {
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileOne)
-            .then(document => {
+            .then((document) => {
                 textDocument = document;
                 return vscode.window.showTextDocument(textDocument);
             })
-            .then(_editor => {
+            .then((_editor) => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(30, 5);
                 return vscode.commands.executeCommand<vscode.Hover[]>(
@@ -49,7 +49,7 @@ suite('Hover Definition (Jedi)', () => {
                     position
                 );
             })
-            .then(result => {
+            .then((result) => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
                 assert.equal(
@@ -74,7 +74,7 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Across files', function(done) {
+    test('Across files', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO (GH-10399) Fix this test.
         if (isOs(OSType.Windows) && isPy38) {
@@ -84,11 +84,11 @@ suite('Hover Definition (Jedi)', () => {
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileThree)
-            .then(document => {
+            .then((document) => {
                 textDocument = document;
                 return vscode.window.showTextDocument(textDocument);
             })
-            .then(_editor => {
+            .then((_editor) => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(1, 12);
                 return vscode.commands.executeCommand<vscode.Hover[]>(
@@ -97,7 +97,7 @@ suite('Hover Definition (Jedi)', () => {
                     position
                 );
             })
-            .then(result => {
+            .then((result) => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
                 assert.equal(
@@ -120,15 +120,15 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('With Unicode Characters', done => {
+    test('With Unicode Characters', (done) => {
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileEncoding)
-            .then(document => {
+            .then((document) => {
                 textDocument = document;
                 return vscode.window.showTextDocument(textDocument);
             })
-            .then(_editor => {
+            .then((_editor) => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(25, 6);
                 return vscode.commands.executeCommand<vscode.Hover[]>(
@@ -137,7 +137,7 @@ suite('Hover Definition (Jedi)', () => {
                     position
                 );
             })
-            .then(result => {
+            .then((result) => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
                 assert.equal(
@@ -170,7 +170,7 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Across files with Unicode Characters', function(done) {
+    test('Across files with Unicode Characters', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO (GH-10399) Fix this test.
         if (isOs(OSType.Windows) && isPy38) {
@@ -180,11 +180,11 @@ suite('Hover Definition (Jedi)', () => {
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileEncodingUsed)
-            .then(document => {
+            .then((document) => {
                 textDocument = document;
                 return vscode.window.showTextDocument(textDocument);
             })
-            .then(_editor => {
+            .then((_editor) => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(1, 11);
                 return vscode.commands.executeCommand<vscode.Hover[]>(
@@ -193,7 +193,7 @@ suite('Hover Definition (Jedi)', () => {
                     position
                 );
             })
-            .then(result => {
+            .then((result) => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
                 assert.equal(
@@ -224,15 +224,15 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Nothing for keywords (class)', done => {
+    test('Nothing for keywords (class)', (done) => {
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileOne)
-            .then(document => {
+            .then((document) => {
                 textDocument = document;
                 return vscode.window.showTextDocument(textDocument);
             })
-            .then(_editor => {
+            .then((_editor) => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(5, 1);
                 return vscode.commands.executeCommand<vscode.Hover[]>(
@@ -241,21 +241,21 @@ suite('Hover Definition (Jedi)', () => {
                     position
                 );
             })
-            .then(def => {
+            .then((def) => {
                 assert.equal(def!.length, 0, 'Definition length is incorrect');
             })
             .then(done, done);
     });
 
-    test('Nothing for keywords (for)', done => {
+    test('Nothing for keywords (for)', (done) => {
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileHover)
-            .then(document => {
+            .then((document) => {
                 textDocument = document;
                 return vscode.window.showTextDocument(textDocument);
             })
-            .then(_editor => {
+            .then((_editor) => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(3, 1);
                 return vscode.commands.executeCommand<vscode.Hover[]>(
@@ -264,13 +264,13 @@ suite('Hover Definition (Jedi)', () => {
                     position
                 );
             })
-            .then(def => {
+            .then((def) => {
                 assert.equal(def!.length, 0, 'Definition length is incorrect');
             })
             .then(done, done);
     });
 
-    test('Highlighting Class', function(done) {
+    test('Highlighting Class', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO (GH-10399) Fix this test.
         if (isOs(OSType.Windows) && isPy38) {
@@ -280,11 +280,11 @@ suite('Hover Definition (Jedi)', () => {
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileHover)
-            .then(document => {
+            .then((document) => {
                 textDocument = document;
                 return vscode.window.showTextDocument(textDocument);
             })
-            .then(_editor => {
+            .then((_editor) => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(11, 15);
                 return vscode.commands.executeCommand<vscode.Hover[]>(
@@ -293,7 +293,7 @@ suite('Hover Definition (Jedi)', () => {
                     position
                 );
             })
-            .then(result => {
+            .then((result) => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
                 assert.equal(
@@ -339,7 +339,7 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Highlight Method', function(done) {
+    test('Highlight Method', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO (GH-10399) Fix this test.
         if (isOs(OSType.Windows) && isPy38) {
@@ -349,11 +349,11 @@ suite('Hover Definition (Jedi)', () => {
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileHover)
-            .then(document => {
+            .then((document) => {
                 textDocument = document;
                 return vscode.window.showTextDocument(textDocument);
             })
-            .then(_editor => {
+            .then((_editor) => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(12, 10);
                 return vscode.commands.executeCommand<vscode.Hover[]>(
@@ -362,7 +362,7 @@ suite('Hover Definition (Jedi)', () => {
                     position
                 );
             })
-            .then(result => {
+            .then((result) => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
                 assert.equal(
@@ -391,15 +391,15 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Highlight Function', done => {
+    test('Highlight Function', (done) => {
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileHover)
-            .then(document => {
+            .then((document) => {
                 textDocument = document;
                 return vscode.window.showTextDocument(textDocument);
             })
-            .then(_editor => {
+            .then((_editor) => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(8, 14);
                 return vscode.commands.executeCommand<vscode.Hover[]>(
@@ -408,7 +408,7 @@ suite('Hover Definition (Jedi)', () => {
                     position
                 );
             })
-            .then(result => {
+            .then((result) => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
                 assert.equal(
@@ -437,7 +437,7 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Highlight Multiline Method Signature', function(done) {
+    test('Highlight Multiline Method Signature', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO (GH-10399) Fix this test.
         if (isOs(OSType.Windows) && isPy38) {
@@ -447,11 +447,11 @@ suite('Hover Definition (Jedi)', () => {
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileHover)
-            .then(document => {
+            .then((document) => {
                 textDocument = document;
                 return vscode.window.showTextDocument(textDocument);
             })
-            .then(_editor => {
+            .then((_editor) => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(14, 14);
                 return vscode.commands.executeCommand<vscode.Hover[]>(
@@ -460,7 +460,7 @@ suite('Hover Definition (Jedi)', () => {
                     position
                 );
             })
-            .then(result => {
+            .then((result) => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
                 assert.equal(
@@ -493,15 +493,15 @@ suite('Hover Definition (Jedi)', () => {
             .then(done, done);
     });
 
-    test('Variable', done => {
+    test('Variable', (done) => {
         let textDocument: vscode.TextDocument;
         vscode.workspace
             .openTextDocument(fileHover)
-            .then(document => {
+            .then((document) => {
                 textDocument = document;
                 return vscode.window.showTextDocument(textDocument);
             })
-            .then(_editor => {
+            .then((_editor) => {
                 assert(vscode.window.activeTextEditor, 'No active editor');
                 const position = new vscode.Position(6, 2);
                 return vscode.commands.executeCommand<vscode.Hover[]>(
@@ -510,7 +510,7 @@ suite('Hover Definition (Jedi)', () => {
                     position
                 );
             })
-            .then(result => {
+            .then((result) => {
                 const def = result!;
                 assert.equal(def.length, 1, 'Definition length is incorrect');
                 assert.equal(def[0].contents.length, 1, 'Only expected one result');

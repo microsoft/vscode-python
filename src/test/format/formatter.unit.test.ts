@@ -72,10 +72,10 @@ suite('Formatting - Test Arguments', () => {
         workspace = mock(WorkspaceService);
         settings = mock(PythonSettings);
         document = typemoq.Mock.ofType<TextDocument>();
-        document.setup(doc => doc.getText(typemoq.It.isAny())).returns(() => '');
-        document.setup(doc => doc.isDirty).returns(() => false);
-        document.setup(doc => doc.fileName).returns(() => docUri.fsPath);
-        document.setup(doc => doc.uri).returns(() => docUri);
+        document.setup((doc) => doc.getText(typemoq.It.isAny())).returns(() => '');
+        document.setup((doc) => doc.isDirty).returns(() => false);
+        document.setup((doc) => doc.fileName).returns(() => docUri.fsPath);
+        document.setup((doc) => doc.uri).returns(() => docUri);
         pythonToolExecutionService = mock(PythonToolExecutionService);
 
         const configService = mock(ConfigurationService);

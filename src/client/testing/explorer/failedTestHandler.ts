@@ -27,7 +27,7 @@ export class FailedTestHandler implements IExtensionSingleActivationService, IDi
         disposableRegistry.push(this);
     }
     public dispose() {
-        this.disposables.forEach(d => d.dispose());
+        this.disposables.forEach((d) => d.dispose());
     }
     public async activate(): Promise<void> {
         this.storage.onDidChange(this.onDidChangeTestData, this, this.disposables);

@@ -100,7 +100,7 @@ export class ProgressReporter implements IProgressReporter {
         }
         const message = getUserMessageForAction(this.currentAction);
         if (message) {
-            this.progressReporters.forEach(item => item.report({ message }));
+            this.progressReporters.forEach((item) => item.report({ message }));
         }
     }
 }

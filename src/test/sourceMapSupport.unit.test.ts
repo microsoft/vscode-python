@@ -60,7 +60,7 @@ suite('Source Map Support', () => {
     const disposables: Disposable[] = [];
     teardown(() => {
         rewiremock.disable();
-        disposables.forEach(disposable => {
+        disposables.forEach((disposable) => {
             try {
                 disposable.dispose();
             } catch {

@@ -72,11 +72,11 @@ export class ClassicComm implements Kernel.IComm {
         _metadata?: JSONObject,
         _buffers?: (ArrayBuffer | ArrayBufferView)[] | undefined
     ): Kernel.IShellFuture {
-        this.registeredFutures.forEach(item => this.callbackManager.unregisterFuture(item));
+        this.registeredFutures.forEach((item) => this.callbackManager.unregisterFuture(item));
         throw new Error('VSCPython.IClassicComm.Close method not implemented!');
     }
     public dispose(): void {
-        this.registeredFutures.forEach(item => this.callbackManager.unregisterFuture(item));
+        this.registeredFutures.forEach((item) => this.callbackManager.unregisterFuture(item));
     }
     // tslint:disable-next-line: no-any
     public send(

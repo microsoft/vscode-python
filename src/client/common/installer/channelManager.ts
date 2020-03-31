@@ -34,7 +34,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         }
 
         const placeHolder = `Select an option to install ${productName}`;
-        const options = channels.map(installer => {
+        const options = channels.map((installer) => {
             return {
                 label: `Install using ${installer.displayName}`,
                 description: '',

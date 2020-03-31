@@ -138,7 +138,7 @@ export class JupyterVariables implements IJupyterVariables {
         const regexPattern =
             extraReplacements.length === 0
                 ? '_VSCode_JupyterTestValue'
-                : ['_VSCode_JupyterTestValue', ...extraReplacements.map(v => v.key)].join('|');
+                : ['_VSCode_JupyterTestValue', ...extraReplacements.map((v) => v.key)].join('|');
         const replaceRegex = new RegExp(regexPattern, 'g');
 
         // Replace the test value with our current value. Replace start and end as well
@@ -146,7 +146,7 @@ export class JupyterVariables implements IJupyterVariables {
             if (match === '_VSCode_JupyterTestValue') {
                 return variableString;
             } else {
-                const index = extraReplacements.findIndex(v => v.key === match);
+                const index = extraReplacements.findIndex((v) => v.key === match);
                 if (index >= 0) {
                     return extraReplacements[index].value;
                 }
@@ -234,7 +234,7 @@ export class JupyterVariables implements IJupyterVariables {
         if (!result) {
             let query = this.configService
                 .getSettings(notebook.resource)
-                .datascience.variableQueries.find(v => v.language === language);
+                .datascience.variableQueries.find((v) => v.language === language);
             if (!query) {
                 query = Settings.DefaultVariableQuery;
             }
@@ -277,7 +277,7 @@ export class JupyterVariables implements IJupyterVariables {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
                 currentExecutionCount: request.executionCount,
-                variables: (await this.getVariableNamesFromKernel(notebook)).map(n => {
+                variables: (await this.getVariableNamesFromKernel(notebook)).map((n) => {
                     return {
                         name: n,
                         value: undefined,

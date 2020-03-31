@@ -40,7 +40,7 @@ export class WebServer implements IWebServer {
         this.server?.close();
         this.io?.close();
         this.disposed = true;
-        this.socketPromise.promise.then(s => s.disconnect()).catch(noop);
+        this.socketPromise.promise.then((s) => s.disconnect()).catch(noop);
     }
     public postMessage(message: {}) {
         if (this.disposed) {
@@ -50,7 +50,7 @@ export class WebServer implements IWebServer {
             .then(() => {
                 this.socket?.emit('fromServer', message);
             })
-            .catch(ex => {
+            .catch((ex) => {
                 console.error('Failed to connect to socket', ex);
             });
     }
@@ -70,11 +70,11 @@ export class WebServer implements IWebServer {
         this.app.use(nocache());
         this.app.disable('view cache');
 
-        this.io.on('connection', socket => {
+        this.io.on('connection', (socket) => {
             // Possible we close browser and reconnect, or hit refresh button.
             this.socket = socket;
             this.socketPromise.resolve(socket);
-            socket.on('fromClient', data => {
+            socket.on('fromClient', (data) => {
                 this._onDidReceiveMessage.fire(data);
             });
         });
@@ -97,7 +97,7 @@ export class WebServer implements IWebServer {
             window
                 // tslint:disable-next-line: messages-must-be-localized
                 .showInformationMessage(`Open browser to '${url}'`, 'Copy')
-                .then(selection => {
+                .then((selection) => {
                     if (selection === 'Copy') {
                         env.clipboard.writeText(url).then(noop, noop);
                     }
@@ -150,7 +150,7 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
             })
         );
 
-        this.launchServer(this.options.cwd, this.options.rootPath).catch(ex =>
+        this.launchServer(this.options.cwd, this.options.rootPath).catch((ex) =>
             // tslint:disable-next-line: no-console
             console.error('Failed to start Web Browser Panel', ex)
         );
@@ -194,7 +194,7 @@ export class WebBrowserPanel implements IWebPanel, IDisposable {
         const portToUse = isNaN(dsUIPort) ? 0 : dsUIPort;
 
         this.server = WebServer.create();
-        this.server.onDidReceiveMessage(data => {
+        this.server.onDidReceiveMessage((data) => {
             this.options.listener.onMessage(data.type, data.payload);
         });
 

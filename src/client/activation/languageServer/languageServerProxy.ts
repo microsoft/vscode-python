@@ -37,7 +37,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
     public dispose() {
         if (this.languageClient) {
             // Do not await on this.
-            this.languageClient.stop().then(noop, ex => traceError('Stopping language client failed', ex));
+            this.languageClient.stop().then(noop, (ex) => traceError('Stopping language client failed', ex));
             this.languageClient = undefined;
         }
         while (this.disposables.length > 0) {
@@ -71,7 +71,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
 
             const settings = this.configurationService.getSettings(resource);
             if (settings.downloadLanguageServer) {
-                this.languageClient.onTelemetry(telemetryEvent => {
+                this.languageClient.onTelemetry((telemetryEvent) => {
                     const eventName = telemetryEvent.EventName || EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY;
                     sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
                 });
@@ -89,7 +89,7 @@ export class DotNetLanguageServerProxy implements ILanguageServerProxy {
         this.extensionLoadedArgs.add(args || '');
         this.startupCompleted.promise
             .then(() =>
-                this.languageClient!.sendRequest('python/loadExtension', args).then(noop, ex =>
+                this.languageClient!.sendRequest('python/loadExtension', args).then(noop, (ex) =>
                     traceError('Request python/loadExtension failed', ex)
                 )
             )

@@ -434,7 +434,7 @@ export const testScenarios: ITestScenarioDetails[] = [
             testFunction: [],
             testSuite: []
         },
-        testDetails: allTestDetails.filter(td => {
+        testDetails: allTestDetails.filter((td) => {
             return td.fileName === path.join('tests', 'test_another_pytest.py');
         })
     },
@@ -444,7 +444,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         runOutput: 'four.xml',
         testsToRun: undefined as any,
         testSuiteIndex: 0,
-        testDetails: allTestDetails.filter(td => {
+        testDetails: allTestDetails.filter((td) => {
             return td.className === 'test_root.Test_Root_test1';
         })
     },
@@ -454,7 +454,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         runOutput: 'five.xml',
         testsToRun: undefined as any,
         testFunctionIndex: 0,
-        testDetails: allTestDetails.filter(td => {
+        testDetails: allTestDetails.filter((td) => {
             return td.testName === 'test_Root_A';
         })
     },
@@ -463,7 +463,7 @@ export const testScenarios: ITestScenarioDetails[] = [
         discoveryOutput: 'two.output',
         runOutput: 'two.xml',
         testsToRun: undefined as any,
-        testDetails: allTestDetails.filter(_td => {
+        testDetails: allTestDetails.filter((_td) => {
             return true;
         }),
         shouldRunFailed: true,

@@ -27,7 +27,7 @@ export namespace vscMockExtHostedTypes {
 
     export class Disposable {
         static from(...disposables: { dispose(): any }[]): Disposable {
-            return new Disposable(function() {
+            return new Disposable(function () {
                 if (disposables) {
                     for (let disposable of disposables) {
                         if (disposable && typeof disposable.dispose === 'function') {
@@ -614,7 +614,7 @@ export namespace vscMockExtHostedTypes {
 
         entries(): [vscUri.URI, TextEdit[]][] {
             const res: [vscUri.URI, TextEdit[]][] = [];
-            this._textEdits.forEach(value => res.push([value.uri, value.edits]));
+            this._textEdits.forEach((value) => res.push([value.uri, value.edits]));
             return res.slice();
         }
 

@@ -75,7 +75,7 @@ suite('Linter Info - Pylint', () => {
     ];
 
     suite('Test is enabled when using Language Server and Pylint is configured', () => {
-        testsForisEnabled.forEach(testParams => {
+        testsForisEnabled.forEach((testParams) => {
             test(testParams.testName, async () => {
                 const config = mock(ConfigurationService);
                 const workspaceService = mock(WorkspaceService);

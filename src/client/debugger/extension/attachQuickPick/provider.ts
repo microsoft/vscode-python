@@ -19,7 +19,7 @@ export class AttachProcessProvider implements IAttachProcessProvider {
     ) {}
 
     public getAttachItems(): Promise<IAttachItem[]> {
-        return this._getInternalProcessEntries().then(processEntries => {
+        return this._getInternalProcessEntries().then((processEntries) => {
             processEntries.sort(
                 (
                     { processName: aprocessName, commandLine: aCommandLine },

@@ -12,7 +12,7 @@ export class TestManagerService implements ITestManagerService {
         disposables.push(this);
     }
     public dispose() {
-        this.cachedTestManagers.forEach(info => {
+        this.cachedTestManagers.forEach((info) => {
             info.dispose();
         });
     }

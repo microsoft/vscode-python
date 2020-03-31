@@ -20,7 +20,7 @@ Array.prototype.forEach.call(scripts, (script: HTMLScriptElement) => {
  * @param pkg Package name or names to load
  */
 // tslint:disable-next-line: no-function-expression
-const requirePromise = function(pkg: string | string[]): Promise<any> {
+const requirePromise = function (pkg: string | string[]): Promise<any> {
     return new Promise((resolve, reject) => {
         const require = (window as any).requirejs;
         if (require === undefined) {
@@ -78,12 +78,12 @@ export function requireLoader(moduleName: string, moduleVersion: string): Promis
         window.console.log(`Loading from ${cdn} for ${moduleName}@${moduleVersion}`);
         return loadFromCDN();
     }
-    return requirePromise([`${moduleName}`]).catch(err => {
+    return requirePromise([`${moduleName}`]).catch((err) => {
         const failedId = err.requireModules && err.requireModules[0];
         if (failedId) {
             require.undef(failedId);
             window.console.log(`Falling back to ${cdn} for ${moduleName}@${moduleVersion}`);
-            loadFromCDN().catch(x => {
+            loadFromCDN().catch((x) => {
                 window.console.error(x);
             });
         }
@@ -101,7 +101,7 @@ export function renderWidgets(element = document.documentElement): void {
     const managerFactory = (): any => {
         return new wm.WidgetManager(undefined, element);
     };
-    libembed.renderWidgets(managerFactory, element).catch(x => {
+    libembed.renderWidgets(managerFactory, element).catch((x) => {
         window.console.error(x);
     });
 }

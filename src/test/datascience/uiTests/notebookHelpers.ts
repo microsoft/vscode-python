@@ -62,7 +62,7 @@ function createWebViewPanel(): WebviewPanel {
     };
 
     mockedVSCodeNamespaces.window
-        ?.setup(w =>
+        ?.setup((w) =>
             w.createWebviewPanel(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())
         )
         // tslint:disable-next-line: no-any
@@ -90,7 +90,7 @@ export async function openNotebook(
     // I.e. wait until we open the notebook react ui in browser.
     const originalWaitForConnection = WebServer.prototype.waitForConnection;
     const waitForConnection = sinon.stub(WebServer.prototype, 'waitForConnection');
-    waitForConnection.callsFake(async function(this: WebServer) {
+    waitForConnection.callsFake(async function (this: WebServer) {
         waitForConnection.restore();
         // Hook up the message service with the notebook class.
         // Used to send/receive messages (postOffice) via webSockets in webserver.

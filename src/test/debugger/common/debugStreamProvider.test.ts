@@ -21,7 +21,7 @@ suite('Debugging - Stream Provider', () => {
     });
     test('Process is returned as is if there is no port number if args', async () => {
         const mockProcess = { argv: [], env: [], stdin: '1234', stdout: '5678' };
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => mockProcess);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => mockProcess);
 
         const streams = await streamProvider.getInputAndOutputStreams();
         expect(streams.input).to.be.equal(mockProcess.stdin);
@@ -30,12 +30,12 @@ suite('Debugging - Stream Provider', () => {
     test('Starts a socketserver on the port provided and returns the client socket', async () => {
         const port = await getFreePort({ host: 'localhost', port: 3000 });
         const mockProcess = { argv: ['node', 'index.js', `--server=${port}`], env: [], stdin: '1234', stdout: '5678' };
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => mockProcess);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => mockProcess);
 
         const streamsPromise = streamProvider.getInputAndOutputStreams();
         await sleep(1);
 
-        await new Promise<net.Socket>(resolve => {
+        await new Promise<net.Socket>((resolve) => {
             net.connect({ port, host: 'localhost' }, resolve);
         });
 
@@ -46,14 +46,14 @@ suite('Debugging - Stream Provider', () => {
     test('Ensure existence of port is identified', async () => {
         const port = await getFreePort({ host: 'localhost', port: 3000 });
         const mockProcess = { argv: ['node', 'index.js', `--server=${port}`], env: [], stdin: '1234', stdout: '5678' };
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => mockProcess);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => mockProcess);
 
         expect(streamProvider.useDebugSocketStream).to.be.equal(true, 'incorrect');
     });
     test('Ensure non-existence of port is identified', async () => {
         const port = await getFreePort({ host: 'localhost', port: 3000 });
         const mockProcess = { argv: ['node', 'index.js', `--other=${port}`], env: [], stdin: '1234', stdout: '5678' };
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => mockProcess);
+        serviceContainer.setup((c) => c.get(TypeMoq.It.isValue(ICurrentProcess))).returns(() => mockProcess);
 
         expect(streamProvider.useDebugSocketStream).to.not.be.equal(true, 'incorrect');
     });

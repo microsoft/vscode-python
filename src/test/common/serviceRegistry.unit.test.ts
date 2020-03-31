@@ -156,19 +156,19 @@ suite('Common - Service Registry', () => {
             [IExtensionChannelRule, ExtensionInsidersOffChannelRule, ExtensionChannel.off],
             [IExtensionChannelRule, ExtensionInsidersDailyChannelRule, ExtensionChannel.daily],
             [IExtensionChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionChannel.weekly]
-        ].forEach(mapping => {
+        ].forEach((mapping) => {
             if (mapping.length === 2) {
                 serviceManager
-                    .setup(s =>
+                    .setup((s) =>
                         s.addSingleton(
                             typemoq.It.isValue(mapping[0] as any),
-                            typemoq.It.is(value => mapping[1] === value)
+                            typemoq.It.is((value) => mapping[1] === value)
                         )
                     )
                     .verifiable(typemoq.Times.atLeastOnce());
             } else {
                 serviceManager
-                    .setup(s =>
+                    .setup((s) =>
                         s.addSingleton(
                             typemoq.It.isValue(mapping[0] as any),
                             typemoq.It.isAny(),

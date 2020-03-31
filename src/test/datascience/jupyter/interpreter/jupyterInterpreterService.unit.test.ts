@@ -68,7 +68,7 @@ suite('Data Science - Jupyter Interpreter Service', () => {
             secondPythonInterpreter
         );
         when(memento.update(anything(), anything())).thenResolve();
-        jupyterInterpreterService.onDidChangeInterpreter(e => (selectedInterpreterEventArgs = e));
+        jupyterInterpreterService.onDidChangeInterpreter((e) => (selectedInterpreterEventArgs = e));
         when(interpreterSelector.selectInterpreter()).thenResolve(pythonInterpreter);
     });
 

@@ -18,10 +18,10 @@ suite('Feature Deprecation Manager Tests', () => {
         const persistentBool: TypeMoq.IMock<IPersistentState<boolean>> = TypeMoq.Mock.ofType<
             IPersistentState<boolean>
         >();
-        persistentBool.setup(a => a.value).returns(() => true);
-        persistentBool.setup(a => a.updateValue(TypeMoq.It.isValue(false))).returns(() => Promise.resolve());
+        persistentBool.setup((a) => a.value).returns(() => true);
+        persistentBool.setup((a) => a.updateValue(TypeMoq.It.isValue(false))).returns(() => Promise.resolve());
         persistentState
-            .setup(a =>
+            .setup((a) =>
                 a.createGlobalPersistentState(
                     TypeMoq.It.isValue('SHOW_DEPRECATED_FEATURE_PROMPT_BUILD_WORKSPACE_SYMBOLS'),
                     TypeMoq.It.isValue(true)
@@ -31,11 +31,11 @@ suite('Feature Deprecation Manager Tests', () => {
             .verifiable(TypeMoq.Times.once());
         const popupMgr: TypeMoq.IMock<IApplicationShell> = TypeMoq.Mock.ofType<IApplicationShell>();
         popupMgr
-            .setup(p =>
+            .setup((p) =>
                 p.showInformationMessage(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())
             )
             .returns(
-                _val =>
+                (_val) =>
                     new Promise<string>((resolve, _reject) => {
                         resolve('Learn More');
                     })
@@ -43,7 +43,7 @@ suite('Feature Deprecation Manager Tests', () => {
         const cmdDisposable: TypeMoq.IMock<Disposable> = TypeMoq.Mock.ofType<Disposable>();
         const cmdManager: TypeMoq.IMock<ICommandManager> = TypeMoq.Mock.ofType<ICommandManager>();
         cmdManager
-            .setup(c =>
+            .setup((c) =>
                 c.registerCommand(
                     TypeMoq.It.isValue('python.buildWorkspaceSymbols'),
                     TypeMoq.It.isAny(),
@@ -54,12 +54,12 @@ suite('Feature Deprecation Manager Tests', () => {
             .verifiable(TypeMoq.Times.atLeastOnce());
         const workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration> = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         workspaceConfig
-            .setup(ws => ws.has(TypeMoq.It.isAnyString()))
+            .setup((ws) => ws.has(TypeMoq.It.isAnyString()))
             .returns(() => false)
             .verifiable(TypeMoq.Times.atLeastOnce());
         const workspace: TypeMoq.IMock<IWorkspaceService> = TypeMoq.Mock.ofType<IWorkspaceService>();
         workspace
-            .setup(w => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isAny()))
+            .setup((w) => w.getConfiguration(TypeMoq.It.isValue('python'), TypeMoq.It.isAny()))
             .returns(() => workspaceConfig.object);
         const featureDepMgr: FeatureDeprecationManager = new FeatureDeprecationManager(
             persistentState.object,
@@ -78,7 +78,7 @@ suite('Feature Deprecation Manager Tests', () => {
         const featureDepMgr = new FeatureDeprecationManager(_, _, _, _);
 
         pythonConfig
-            .setup(p => p.has(TypeMoq.It.isValue(deprecatedSetting.setting)))
+            .setup((p) => p.has(TypeMoq.It.isValue(deprecatedSetting.setting)))
             .returns(() => false)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -97,11 +97,11 @@ suite('Feature Deprecation Manager Tests', () => {
         for (const config of testConfigs) {
             pythonConfig.reset();
             pythonConfig
-                .setup(p => p.has(TypeMoq.It.isValue(deprecatedSetting.setting)))
+                .setup((p) => p.has(TypeMoq.It.isValue(deprecatedSetting.setting)))
                 .returns(() => true)
                 .verifiable(TypeMoq.Times.atLeastOnce());
             pythonConfig
-                .setup(p => p.get(TypeMoq.It.isValue(deprecatedSetting.setting)))
+                .setup((p) => p.get(TypeMoq.It.isValue(deprecatedSetting.setting)))
                 .returns(() => config.valueInSetting);
 
             isUsed = featureDepMgr.isDeprecatedSettingAndValueUsed(pythonConfig.object, deprecatedSetting);
@@ -120,11 +120,11 @@ suite('Feature Deprecation Manager Tests', () => {
         for (const config of testConfigs) {
             pythonConfig.reset();
             pythonConfig
-                .setup(p => p.has(TypeMoq.It.isValue(deprecatedSetting.setting)))
+                .setup((p) => p.has(TypeMoq.It.isValue(deprecatedSetting.setting)))
                 .returns(() => true)
                 .verifiable(TypeMoq.Times.atLeastOnce());
             pythonConfig
-                .setup(p => p.get(TypeMoq.It.isValue(deprecatedSetting.setting)))
+                .setup((p) => p.get(TypeMoq.It.isValue(deprecatedSetting.setting)))
                 .returns(() => config.valueInSetting);
 
             deprecatedSetting.values = config.valuesToLookFor;

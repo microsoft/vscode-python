@@ -104,7 +104,7 @@ suite('Signatures (Jedi)', () => {
         }
     });
 
-    test('For ellipsis', async function() {
+    test('For ellipsis', async function () {
         if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();

@@ -232,7 +232,7 @@ export namespace vscMockArrays {
             const element = array[i];
             if (compare(element, result[n - 1]) < 0) {
                 result.pop();
-                const j = findFirst(result, e => compare(element, e) < 0);
+                const j = findFirst(result, (e) => compare(element, e) < 0);
                 result.splice(j, 0, element);
             }
         }
@@ -246,7 +246,7 @@ export namespace vscMockArrays {
             return array;
         }
 
-        return array.filter(e => !!e);
+        return array.filter((e) => !!e);
     }
 
     /**
@@ -276,7 +276,7 @@ export namespace vscMockArrays {
         }
 
         const seen: Record<string, boolean> = Object.create(null);
-        return array.filter(elem => {
+        return array.filter((elem) => {
             const key = keyFn(elem);
             if (seen[key]) {
                 return false;
@@ -291,7 +291,7 @@ export namespace vscMockArrays {
     export function uniqueFilter<T>(keyFn: (t: T) => string): (t: T) => boolean {
         const seen: Record<string, boolean> = Object.create(null);
 
-        return element => {
+        return (element) => {
             const key = keyFn(element);
 
             if (seen[key]) {
@@ -379,7 +379,7 @@ export namespace vscMockArrays {
     export function index<T, R>(
         array: T[],
         indexer: (t: T) => string,
-        merger: (t: T, r: R) => R = t => t as any
+        merger: (t: T, r: R) => R = (t) => t as any
     ): Record<string, R> {
         return array.reduce((r, t) => {
             const key = indexer(t);

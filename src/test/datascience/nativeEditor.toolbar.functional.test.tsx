@@ -167,7 +167,7 @@ suite('DataScience Native Toolbar', () => {
         });
     });
     suite('Restart & Interrupt Kernel', () => {
-        getNamesAndValues<ServerStatus>(ServerStatus).forEach(status => {
+        getNamesAndValues<ServerStatus>(ServerStatus).forEach((status) => {
             // Should always be disabled if busy.
             test(`If Kernel status is ${status.name} and busy, both are disabled`, () => {
                 props.kernel.jupyterServerStatus = status.name as any;

@@ -235,14 +235,14 @@ export function convertToMonacoCompletionList(
         if (result.hasOwnProperty('items')) {
             const list = result as vscodeLanguageClient.CompletionList;
             return {
-                suggestions: list.items.map(l => convertToMonacoCompletionItem(l, requiresKindConversion)),
+                suggestions: list.items.map((l) => convertToMonacoCompletionItem(l, requiresKindConversion)),
                 incomplete: list.isIncomplete
             };
         } else {
             // Must be one of the two array types since there's no items property.
             const array = result as vscodeLanguageClient.CompletionItem[];
             return {
-                suggestions: array.map(l => convertToMonacoCompletionItem(l, requiresKindConversion)),
+                suggestions: array.map((l) => convertToMonacoCompletionItem(l, requiresKindConversion)),
                 incomplete: false
             };
         }
@@ -285,7 +285,7 @@ function convertToMonacoMarkdown(
         ];
     } else if (Array.isArray(strings)) {
         const array = strings as vscodeLanguageClient.MarkedString[];
-        return array.map(a => convertToMonacoMarkdown(a)[0]);
+        return array.map((a) => convertToMonacoMarkdown(a)[0]);
     }
 
     return [];

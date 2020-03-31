@@ -51,7 +51,7 @@ suite('Testing - parse JUnit XML file', () => {
             `);
         fixResult(expected.testFunctions[0].testFunction, 'test_spam.py', 3);
         const filename = 'x/y/z/results.xml';
-        fs.setup(f => f.readFile(filename)).returns(() =>
+        fs.setup((f) => f.readFile(filename)).returns(() =>
             Promise.resolve(`
                 <?xml version="1.0" encoding="utf-8"?>
                 <testsuite errors="0" failures="0" hostname="linux-desktop" name="pytest" skipped="0" tests="1" time="1.011" timestamp="2019-08-29T15:59:08.757654">
@@ -82,7 +82,7 @@ suite('Testing - parse JUnit XML file', () => {
             `);
         fixResult(expected.testFunctions[0].testFunction, 'test_spam.py', 3);
         const filename = 'x/y/z/results.xml';
-        fs.setup(f => f.readFile(filename)).returns(() =>
+        fs.setup((f) => f.readFile(filename)).returns(() =>
             Promise.resolve(`
                 <?xml version="1.0" encoding="utf-8"?>
                 <testsuites>
@@ -105,7 +105,7 @@ suite('Testing - parse JUnit XML file', () => {
         const expected: Tests = createEmptyResults();
         expected.summary.passed = 1; // That's a little strange...
         const filename = 'x/y/z/results.xml';
-        fs.setup(f => f.readFile(filename)).returns(() =>
+        fs.setup((f) => f.readFile(filename)).returns(() =>
             Promise.resolve(`
                 <?xml version="1.0" encoding="utf-8"?>
                 <testsuite errors="0" failures="0" hostname="linux-desktop" name="pytest" skipped="0" tests="1" time="0.011" timestamp="2019-08-29T15:59:08.757654">
@@ -125,7 +125,7 @@ suite('Testing - parse JUnit XML file', () => {
         const tests: Tests = createEmptyResults();
         const expected: Tests = createEmptyResults();
         const filename = 'x/y/z/results.xml';
-        fs.setup(f => f.readFile(filename)).returns(() =>
+        fs.setup((f) => f.readFile(filename)).returns(() =>
             Promise.resolve(`
                 <?xml version="1.0" encoding="utf-8"?>
                 <testsuite errors="0" failures="0" hostname="linux-desktop" name="pytest" skipped="0" tests="0" time="0.011" timestamp="2019-08-29T15:59:08.757654">

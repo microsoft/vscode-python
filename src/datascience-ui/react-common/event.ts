@@ -22,7 +22,7 @@ export class EventEmitter<T> {
     }
 
     public fire(data?: T): void {
-        this._listeners.forEach(c => c(data));
+        this._listeners.forEach((c) => c(data));
     }
 
     public dispose(): void {

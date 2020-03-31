@@ -191,7 +191,7 @@ suite('Debugging - Outdated Debugger Prompt tests.', () => {
         body: { category: 'stdout', output: 'ptvsd' }
     };
 
-    [someRequest, someEvent, someOutputEvent].forEach(message => {
+    [someRequest, someEvent, someOutputEvent].forEach((message) => {
         test(`Don't show prompt when in new debugger experiment and debugger telemetry event: ${JSON.stringify(
             message
         )}`, async () => {

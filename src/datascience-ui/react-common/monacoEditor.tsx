@@ -193,7 +193,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
             this.subscriptions.push(
-                editor.onContextMenu(e => {
+                editor.onContextMenu((e) => {
                     if (this.state.editor) {
                         const domNode = this.state.editor.getDomNode();
                         const contextMenuElement = domNode
@@ -294,7 +294,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.widgetParent.remove();
         }
 
-        this.subscriptions.forEach(d => d.dispose());
+        this.subscriptions.forEach((d) => d.dispose());
         if (this.state.editor) {
             this.state.editor.dispose();
         }
@@ -770,13 +770,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         const parameterWidgetClasses = ['editor-widget', 'parameter-hints-widget', 'visible'];
 
         // Find the parameter widget the user is currently hovering over.
-        this.parameterWidget = hoverElements.find(item => {
+        this.parameterWidget = hoverElements.find((item) => {
             if (typeof item.className !== 'string') {
                 return false;
             }
             // Check if user is hovering over a parameter widget.
             const classes = item.className.split(' ');
-            if (!parameterWidgetClasses.every(cls => classes.indexOf(cls) >= 0)) {
+            if (!parameterWidgetClasses.every((cls) => classes.indexOf(cls) >= 0)) {
                 // Not all classes required in a parameter hint widget are in this element.
                 // Hence this is not a parameter widget.
                 return false;
@@ -786,7 +786,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // Next, check whether this parameter widget belongs to this monaco editor.
             // We have a list of parameter widgets that belong to this editor, hence a simple lookup.
-            return knownParameterHintsWidgets.some(widget => widget === item);
+            return knownParameterHintsWidgets.some((widget) => widget === item);
         });
 
         if (this.parameterWidget) {
@@ -860,8 +860,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             root.querySelectorAll('div.monaco-editor-pretend-parent')
         );
         widgetParents
-            .filter(widgetParent => widgetParent !== this.widgetParent)
-            .forEach(widgetParent =>
+            .filter((widgetParent) => widgetParent !== this.widgetParent)
+            .forEach((widgetParent) =>
                 this.hideWidgets(widgetParent, [WidgetCSSSelector.Parameters, WidgetCSSSelector.Hover])
             );
     }

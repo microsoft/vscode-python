@@ -161,7 +161,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
     public registerPostOffice(): void {
         // Process all messages sequentially.
         this.messages
-            .concatMap(async msg => {
+            .concatMap(async (msg) => {
                 this.restoreBuffers(msg.payload);
                 await this.proxyKernel.handleMessageAsync(msg.type, msg.payload);
                 await this.handleMessageAsync(msg.type, msg.payload);

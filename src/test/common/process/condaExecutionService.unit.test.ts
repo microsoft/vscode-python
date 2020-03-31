@@ -21,10 +21,10 @@ suite('CondaExecutionService', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
 
-        serviceContainer.setup(s => s.get<IFileSystem>(IFileSystem)).returns(() => fileSystem.object);
+        serviceContainer.setup((s) => s.get<IFileSystem>(IFileSystem)).returns(() => fileSystem.object);
     });
 
-    test('getExecutionInfo with a named environment should return execution info using the environment name', function() {
+    test('getExecutionInfo with a named environment should return execution info using the environment name', function () {
         // tslint:disable-next-line:no-invalid-this
         return this.skip();
 
@@ -42,7 +42,7 @@ suite('CondaExecutionService', () => {
         expect(result).to.deep.equal({ command: condaFile, args: ['run', '-n', environment.name, 'python', ...args] });
     });
 
-    test('getExecutionInfo with a non-named environment should return execution info using the environment path', async function() {
+    test('getExecutionInfo with a non-named environment should return execution info using the environment path', async function () {
         // tslint:disable-next-line:no-invalid-this
         return this.skip();
 

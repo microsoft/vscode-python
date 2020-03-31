@@ -28,12 +28,12 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
         public static telemetrySent: [string, Record<string, string>][] = [];
         public static expectHashes(props: {}[]) {
             const mimeTypeTelemetry = Reporter.telemetrySent.filter(
-                item => item[0] === Telemetry.HashedCellOutputMimeType
+                (item) => item[0] === Telemetry.HashedCellOutputMimeType
             );
             expect(mimeTypeTelemetry).to.be.lengthOf(props.length, 'Incorrect number of telemetry messages sent');
 
             expect(mimeTypeTelemetry).to.deep.equal(
-                props.map(prop => [Telemetry.HashedCellOutputMimeType, prop]),
+                props.map((prop) => [Telemetry.HashedCellOutputMimeType, prop]),
                 'Contents in telemetry do not match'
             );
         }
@@ -113,9 +113,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
         return { data: { 'application/vnd.plotly.v1+json': '', 'text/html': '' }, output_type };
     }
     function generateTelemetry(mimeType: string) {
-        const hashedName = sha256()
-            .update(mimeType)
-            .digest('hex');
+        const hashedName = sha256().update(mimeType).digest('hex');
 
         const lowerMimeType = mimeType.toLowerCase();
         return {
@@ -189,9 +187,9 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
             await fakeTimer.wait();
             Reporter.expectHashes([]);
         });
-        [CellState.editing, CellState.error, CellState.executing].forEach(cellState => {
+        [CellState.editing, CellState.error, CellState.executing].forEach((cellState) => {
             const cellStateValues = getNamesAndValues(CellState);
-            test(`If cell state is '${cellStateValues.find(item => item.value === cellState)?.name}'`, async () => {
+            test(`If cell state is '${cellStateValues.find((item) => item.value === cellState)?.name}'`, async () => {
                 const cellTextOutput = generateCellWithOutput([generateStreamedOutput()]);
                 cellTextOutput.state = cellState;
 
@@ -224,7 +222,7 @@ suite('Data Science - Cell Output Mimetype Tracker', () => {
         await fakeTimer.wait();
         Reporter.expectHashes(expectedTelemetry);
     });
-    ['display_data', 'update_display_data', 'execute_result'].forEach(outputType => {
+    ['display_data', 'update_display_data', 'execute_result'].forEach((outputType) => {
         suite(`Send Telemetry for Output Type = ${outputType}`, () => {
             test('MimeType text/html', async () => {
                 const expectedTelemetry = generateTelemetry('text/html');

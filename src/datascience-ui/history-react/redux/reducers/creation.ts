@@ -151,7 +151,7 @@ export namespace Creation {
     }
 
     export function deleteCell(arg: InteractiveReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.data.cellId);
+        const index = arg.prevState.cellVMs.findIndex((c) => c.cell.id === arg.payload.data.cellId);
         if (index >= 0 && arg.payload.data.cellId) {
             // Send messages to other side to indicate the delete
             postActionToExtension(arg, InteractiveWindowMessages.UpdateModel, {

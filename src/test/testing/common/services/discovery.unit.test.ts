@@ -80,7 +80,7 @@ suite('Unit Tests - Common Discovery', () => {
         when(executionFactory.createActivatedEnvironment(deepEqual(creationOptions))).thenResolve(execService.object);
         const executionResult = { stdout: discoveredTests };
         execService
-            .setup(e => e.exec(typemoq.It.isValue([pythonFile, ...options.args]), typemoq.It.isValue(spawnOptions)))
+            .setup((e) => e.exec(typemoq.It.isValue([pythonFile, ...options.args]), typemoq.It.isValue(spawnOptions)))
             .returns(() => Promise.resolve(executionResult));
 
         const result = await discovery.exec(options);

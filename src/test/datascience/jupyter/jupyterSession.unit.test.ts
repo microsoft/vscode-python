@@ -92,7 +92,7 @@ suite('Data Science - JupyterSession', () => {
         // tslint:disable-next-line: no-any
         when(contentsManager.newUntitled(deepEqual({ type: 'notebook' }))).thenResolve({ path: nbFile } as any);
         when(sessionManager.startNew(anything())).thenResolve(instance(session));
-        kernelSpec.setup(k => k.name).returns(() => 'some name');
+        kernelSpec.setup((k) => k.name).returns(() => 'some name');
 
         await jupyterSession.connect();
 
@@ -127,7 +127,7 @@ suite('Data Science - JupyterSession', () => {
         });
         suite('Shutdown', () => {
             test('Remote', async () => {
-                connection.setup(c => c.localLaunch).returns(() => false);
+                connection.setup((c) => c.localLaunch).returns(() => false);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(contentsManager.delete(anything())).thenResolve();
 
@@ -137,7 +137,7 @@ suite('Data Science - JupyterSession', () => {
                 verify(contentsManager.delete(anything())).once();
             });
             test('Remote sessions', async () => {
-                connection.setup(c => c.localLaunch).returns(() => true);
+                connection.setup((c) => c.localLaunch).returns(() => true);
                 when(sessionManager.refreshRunning()).thenResolve();
                 when(contentsManager.delete(anything())).thenResolve();
                 when(session.isRemoteSession).thenReturn(true);
@@ -156,7 +156,7 @@ suite('Data Science - JupyterSession', () => {
             test('Local', async () => {
                 verify(statusChangedSignal.connect(anything())).once();
 
-                connection.setup(c => c.localLaunch).returns(() => true);
+                connection.setup((c) => c.localLaunch).returns(() => true);
                 when(session.isRemoteSession).thenReturn(false);
                 when(session.isDisposed).thenReturn(false);
                 when(session.shutdown()).thenResolve();
@@ -343,7 +343,7 @@ suite('Data Science - JupyterSession', () => {
 
                 test('Restart should create a new session & kill old session', async () => {
                     const oldSessionShutDown = createDeferred();
-                    connection.setup(c => c.localLaunch).returns(() => true);
+                    connection.setup((c) => c.localLaunch).returns(() => true);
                     when(session.isRemoteSession).thenReturn(false);
                     when(session.isDisposed).thenReturn(false);
                     when(session.shutdown()).thenCall(() => {

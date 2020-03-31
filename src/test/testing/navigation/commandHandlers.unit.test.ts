@@ -91,9 +91,9 @@ suite('Unit Tests - Navigation Command Handler', () => {
         commandHandler.register();
         commandHandler.dispose();
 
-        disposable1.verify(d => d.dispose(), typemoq.Times.once());
-        disposable2.verify(d => d.dispose(), typemoq.Times.once());
-        disposable3.verify(d => d.dispose(), typemoq.Times.once());
+        disposable1.verify((d) => d.dispose(), typemoq.Times.once());
+        disposable2.verify((d) => d.dispose(), typemoq.Times.once());
+        disposable3.verify((d) => d.dispose(), typemoq.Times.once());
     });
     test('Ensure command handler is reigstered to be disposed', async () => {
         commandHandler.register();

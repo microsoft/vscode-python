@@ -41,7 +41,7 @@ suite('Services - Discovered test parser', () => {
         const buildChildren = sinon.stub(TestDiscoveredTestParser.prototype, 'buildChildren');
         buildChildren.callsFake(() => undefined);
         workspaceService
-            .setup(w => w.getWorkspaceFolder(typemoq.It.isAny()))
+            .setup((w) => w.getWorkspaceFolder(typemoq.It.isAny()))
             .returns(() => undefined)
             .verifiable(typemoq.Times.once());
         parser = new TestDiscoveredTestParser(workspaceService.object);
@@ -109,7 +109,7 @@ suite('Services - Discovered test parser', () => {
         const buildChildren = sinon.stub(TestDiscoveredTestParser.prototype, 'buildChildren');
         buildChildren.callsFake(() => undefined);
         workspaceService
-            .setup(w => w.getWorkspaceFolder(typemoq.It.isAny()))
+            .setup((w) => w.getWorkspaceFolder(typemoq.It.isAny()))
             .returns(() => workspace as any)
             .verifiable(typemoq.Times.once());
         parser = new TestDiscoveredTestParser(workspaceService.object);
