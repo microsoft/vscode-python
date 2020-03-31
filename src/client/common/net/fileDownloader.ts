@@ -26,12 +26,14 @@ export class FileDownloader implements IFileDownloader {
             options.outputChannel.appendLine(Http.downloadingFile().format(uri));
         }
         const tempFile = await this.fs.createTemporaryFile(options.extension);
-        const progressMessageWithIcon = `${Octicons.Downloading} ${options.progressMessagePrefix}`;
 
-        await this.downloadFileWithStatusBarProgress(uri, progressMessageWithIcon, tempFile.filePath).then(noop, ex => {
-            tempFile.dispose();
-            return Promise.reject(ex);
-        });
+        await this.downloadFileWithStatusBarProgress(uri, options.progressMessagePrefix, tempFile.filePath).then(
+            noop,
+            ex => {
+                tempFile.dispose();
+                return Promise.reject(ex);
+            }
+        );
 
         return tempFile.filePath;
     }
@@ -43,9 +45,10 @@ export class FileDownloader implements IFileDownloader {
         const statusBarProgress = this.appShell.createStatusBarItem(StatusBarAlignment.Left);
         const req = await this.httpClient.downloadFile(uri);
         const fileStream = this.fs.createWriteStream(tmpFilePath);
+        const progressMessageWithIcon = `${Octicons.Downloading} ${progressMessage}`;
         statusBarProgress.show();
         try {
-            await this.displayDownloadProgress(uri, statusBarProgress, req, fileStream, progressMessage);
+            await this.displayDownloadProgress(uri, statusBarProgress, req, fileStream, progressMessageWithIcon);
         } finally {
             statusBarProgress.dispose();
         }
