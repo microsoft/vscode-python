@@ -6,7 +6,6 @@
 import { ServerConnection } from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
 import { KernelSocketOptions } from '../../client/datascience/types';
-// import type { Data as WebSocketData } from 'ws';
 
 // tslint:disable: no-any
 export interface IKernelSocket {
@@ -61,26 +60,11 @@ export function create(socket: IKernelSocket, options: KernelSocketOptions) {
     // This is kind of the hand shake.
     // As soon as websocket opens up, the kernel sends a request to check if it is alive.
     // If it gets a response, then it is deemed ready.
-    // This can optionally be disabled.
     const originalRequestKernelInfo = kernel.requestKernelInfo.bind(kernel);
     kernel.requestKernelInfo = () => {
         kernel.requestKernelInfo = originalRequestKernelInfo;
         return Promise.resolve() as any;
     };
-
-    // // When a comm target has been regisered, we need to register this in the real kernel in extension side.
-    // // Hence send that message to extension.
-    // const originalRegisterCommTarget = kernel.registerCommTarget.bind(kernel);
-    // kernel.registerCommTarget = (
-    //     targetName: string,
-    //     callback: (comm: Kernel.IComm, msg: KernelMessage.ICommOpenMsg) => void | PromiseLike<void>
-    // ) => {
-    //     console.error('Hello');
-    //     // socket.postMessage({ targetName });
-    //     commtargetRegistered(targetName);
-    //     return originalRegisterCommTarget(targetName, callback);
-    // };
-
     if (proxySocketInstance?.onopen) {
         proxySocketInstance.onopen();
     }

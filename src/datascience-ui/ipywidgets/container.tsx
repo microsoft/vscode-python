@@ -4,12 +4,12 @@
 'use strict';
 
 import * as React from 'react';
-import { Subject } from 'rxjs/Subject';
-import { AllowedIPyWidgetMessages } from '../interactive-common/redux/postOffice';
 import { PostOffice } from '../react-common/postOffice';
 import { WidgetManager } from './manager';
 
 import 'bootstrap/dist/css/bootstrap.css';
+import { Subject } from 'rxjs/Subject';
+import { AllowedIPyWidgetMessages } from '../interactive-common/redux/postOffice';
 
 type Props = {
     postOffice: PostOffice;
@@ -37,7 +37,8 @@ export class WidgetManagerComponent extends React.Component<Props> {
         this.widgetManager = new WidgetManager(
             document.getElementById(this.props.widgetContainerId)!,
             widgetMessages.asObservable(),
-            this.props.postOffice.sendMessage.bind(this.props.postOffice)
+            this.props.postOffice.sendMessage.bind(this.props.postOffice),
+            this.props.postOffice
         );
     }
     public render() {

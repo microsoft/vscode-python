@@ -18,6 +18,7 @@ import {
     IPyWidgetMessages
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { KernelSocketOptions } from '../../client/datascience/types';
+import { PostOffice } from '../react-common/postOffice';
 import { create as createKernel, IKernelSocket } from './kernelFactory';
 import { IIPyWidgetManager, IJupyterLabWidgetManager, IJupyterLabWidgetManagerCtor, IMessageSender } from './types';
 
@@ -48,39 +49,27 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
         private readonly dispatcher: <M extends IInteractiveWindowMapping, T extends keyof M>(
             type: T,
             payload?: M[T]
-        ) => void
+        ) => void,
+        private readonly postOffice: PostOffice
     ) {
+        // Dummy socket.
         this.kernelSocket = {
             onMessage: noop,
-            postMessage: (data) => {
-                console.log('OUTGOING', data);
-                if (data.targetName && Object.keys(data).length === 1) {
-                    dispatcher(IPyWidgetMessages.IPyWidgets_registerCommTarget, data.targetName);
-                } else {
-                    dispatcher(IPyWidgetMessages.IPyWidgets_msg, data as any);
-                }
-            }
+            postMessage: (data: string) => dispatcher(IPyWidgetMessages.IPyWidgets_msg, data)
         };
-        this.registerPostOffice();
+        this.postOffice.addHandler({
+            // tslint:disable-next-line: no-any
+            handleMessage: (messageType: any, payload: any) => {
+                if (messageType === IPyWidgetMessages.IPyWidgets_kernelOptions) {
+                    this.initializeKernelAndWidgetManager(payload);
+                }
+                return true;
+            },
+            dispose: noop
+        });
+
         // Handshake.
         dispatcher(IPyWidgetMessages.IPyWidgets_Ready, '');
-        // this.proxyKernel = createKernel(this.kernelSocket);
-        // try {
-        //     // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
-        //     // tslint:disable-next-line: no-any
-        //     const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
-        //     if (!JupyterLabWidgetManager) {
-        //         throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
-        //     }
-        //     // tslint:disable-next-line: no-any
-        //     const kernel = (this.proxyKernel as any) as Kernel.IKernel;
-        //     this.manager = new JupyterLabWidgetManager(kernel, widgetContainer);
-        //     WidgetManager._instance.resolve(this);
-        //     this.registerPostOffice();
-        // } catch (ex) {
-        //     // tslint:disable-next-line: no-console
-        //     console.error('Failed to initialize WidgetManager', ex);
-        // }
     }
     public dispose(): void {
         this.proxyKernel?.dispose();
@@ -168,11 +157,12 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
             // tslint:disable-next-line: no-any
             const JupyterLabWidgetManager = (window as any).vscIPyWidgets.WidgetManager as IJupyterLabWidgetManagerCtor;
             if (!JupyterLabWidgetManager) {
-                throw new Error('JupyterLabWidgetManager not defined. Please include/check ipywidgets.js file');
+                throw new Error('JupyterLabWidgetManadger not defined. Please include/check ipywidgets.js file');
             }
-            // tslint:disable-next-line: no-any
-            const kernel = (this.proxyKernel as any) as Kernel.IKernel;
-            this.manager = new JupyterLabWidgetManager(kernel, this.widgetContainer);
+            // When ever there is a display data message, ensure we build the model.
+            // this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
+
+            this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer);
             if (WidgetManager._instance.completed) {
                 WidgetManager._instance = createDeferred<WidgetManager>();
             }
@@ -181,77 +171,73 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
             // tslint:disable-next-line: no-console
             console.error('Failed to initialize WidgetManager', ex);
         }
+        this.registerPostOffice();
     }
     private registerPostOffice(): void {
         // Process all messages sequentially.
         this.messages
             .concatMap(async (msg) => {
                 try {
-                    if (msg.type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
-                        this.initializeKernelAndWidgetManager(msg.payload);
-                    }
+                    // if (msg.type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
+                    //     this.initializeKernelAndWidgetManager(msg.payload);
+                    // }
                     if (msg.type === IPyWidgetMessages.IPyWidgets_msg) {
-                        // msg.payload = deserialize(msg.payload);
                         if (this.kernelSocket.onMessage) {
                             this.kernelSocket.onMessage(msg.payload);
                         }
-                        // await this.handleMessageAsync(msg.type, msg.payload);
+                        const message = deserialize(msg.payload);
                         // tslint:disable-next-line: no-any
-                        await this.handleMessageAsync(msg.type, deserialize(msg.payload) as any);
+                        // (this.proxyKernel as any)._onWSMessage2(message);
+                        // tslint:disable-next-line: no-any
+                        await this.handleDisplayDataMessage(undefined, message as any);
                     }
-                    // this.restoreBuffers(msg.payload);
-                    // await this.proxyKernel.handleMessageAsync(msg.type, msg.payload);
                 } catch (ex) {
-                    console.error(ex);
+                    // tslint:disable-next-line: no-console
+                    console.error('Failed to handle Widget message', ex);
+                    // tslint:disable-next-line: no-console
+                    console.log(this.handleDisplayDataMessage.length);
+                    // tslint:disable-next-line: no-console
+                    console.log(deserialize.length);
                 }
             })
             .subscribe();
-        // this.proxyKernel.initialize();
     }
-    /**
-     * This is the handler for all kernel messages.
-     * All messages must be processed sequentially (even when processed asynchronously).
-     *
-     * @param {string} msg
-     * @param {*} [payload]
-     * @returns {Promise<void>}
-     * @memberof WidgetManager
-     */
     // tslint:disable-next-line: no-any
-    private async handleMessageAsync(_msg: string, payload: KernelMessage.IIOPubMessage): Promise<void> {
-        // if (msg === IPyWidgetMessages.IPyWidgets_display_data_msg) {
-        if (KernelMessage.isDisplayDataMsg(payload)) {
-            let msgChain = (this.proxyKernel as any)._msgChain as Promise<void>;
-            msgChain = msgChain.then(async () => {
-                // General IOPub message
-                const displayMsg = payload as KernelMessage.IDisplayDataMsg;
-
-                if (
-                    displayMsg.content &&
-                    displayMsg.content.data &&
-                    displayMsg.content.data['application/vnd.jupyter.widget-view+json']
-                ) {
-                    // tslint:disable-next-line: no-any
-                    const data = displayMsg.content.data['application/vnd.jupyter.widget-view+json'] as any;
-                    const modelId = data.model_id;
-
-                    if (!this.modelIdsToBeDisplayed.has(modelId)) {
-                        this.modelIdsToBeDisplayed.set(modelId, createDeferred());
-                    }
-                    if (!this.manager) {
-                        throw new Error('DS IPyWidgetManager not initialized');
-                    }
-                    const modelPromise = this.manager.get_model(data.model_id);
-                    if (modelPromise) {
-                        await modelPromise;
-                    }
-                    // Mark it as completed (i.e. ready to display).
-                    this.modelIdsToBeDisplayed.get(modelId)!.resolve();
-                }
-            });
-
-            // tslint:disable-next-line: no-any
-            (this.proxyKernel as any)._msgChain = msgChain;
+    private async handleDisplayDataMessage(_sender: any, payload: KernelMessage.IIOPubMessage): Promise<void> {
+        if (!KernelMessage.isDisplayDataMsg(payload)) {
+            return;
         }
+        // tslint:disable-next-line: no-any
+        let msgChain = (this.proxyKernel as any)._msgChain as Promise<void>;
+        msgChain = msgChain.then(async () => {
+            // General IOPub message
+            const displayMsg = payload as KernelMessage.IDisplayDataMsg;
+
+            if (
+                displayMsg.content &&
+                displayMsg.content.data &&
+                displayMsg.content.data['application/vnd.jupyter.widget-view+json']
+            ) {
+                // tslint:disable-next-line: no-any
+                const data = displayMsg.content.data['application/vnd.jupyter.widget-view+json'] as any;
+                const modelId = data.model_id;
+
+                if (!this.modelIdsToBeDisplayed.has(modelId)) {
+                    this.modelIdsToBeDisplayed.set(modelId, createDeferred());
+                }
+                if (!this.manager) {
+                    throw new Error('DS IPyWidgetManager not initialized');
+                }
+                const modelPromise = this.manager.get_model(data.model_id);
+                if (modelPromise) {
+                    await modelPromise;
+                }
+                // Mark it as completed (i.e. ready to display).
+                this.modelIdsToBeDisplayed.get(modelId)!.resolve();
+            }
+        });
+
+        // tslint:disable-next-line: no-any
+        (this.proxyKernel as any)._msgChain = msgChain;
     }
 }
