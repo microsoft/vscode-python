@@ -271,6 +271,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     // TO disable that add the variable `VSC_PYTHON_DS_NO_REDUX_LOGGING=1`
     const loggerMiddleware =
         !process.env.VSC_PYTHON_DS_NO_REDUX_LOGGING &&
+        process.env.VSC_PYTHON_DS_NO_REDUX_LOGGING1234 &&
         (process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode))
             ? logger
             : undefined;

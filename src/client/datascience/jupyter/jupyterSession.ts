@@ -20,14 +20,14 @@ import { Cancellation } from '../../common/cancellation';
 import { isTestExecution } from '../../common/constants';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IOutputChannel } from '../../common/types';
-import { sleep, waitForPromise } from '../../common/utils/async';
+import { createDeferred, sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { reportAction } from '../progress/decorator';
 import { ReportableAction } from '../progress/types';
-import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
+import { IConnection, IJupyterKernelSpec, IJupyterSession, IKernelSocket, KernelSocketInformation } from '../types';
 import { JupyterInvalidKernelError } from './jupyterInvalidKernelError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
@@ -59,9 +59,13 @@ export class JupyterSessionStartError extends Error {
 }
 
 export class JupyterSession implements IJupyterSession {
-    private session: ISession | undefined;
+    public session: ISession | undefined;
     private restartSessionPromise: Promise<ISession | undefined> | undefined;
     private notebookFiles: Contents.IModel[] = [];
+    private _kernelSocket = createDeferred<KernelSocketInformation>();
+    public get kernelSocket(): Promise<KernelSocketInformation> {
+        return this._kernelSocket.promise;
+    }
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     private statusHandler: Slot<ISession, Kernel.Status>;
     private connected: boolean = false;
@@ -170,11 +174,11 @@ export class JupyterSession implements IJupyterSession {
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createRestartSession(
-                oldSession.serverSettings,
-                this.kernelSpec,
-                this.contentsManager
-            );
+            // this.restartSessionPromise = this.createRestartSession(
+            //     oldSession.serverSettings,
+            //     this.kernelSpec,
+            //     this.contentsManager
+            // );
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
@@ -303,7 +307,7 @@ export class JupyterSession implements IJupyterSession {
         this.session.statusChanged.connect(this.statusHandler);
 
         // Start the restart session promise too.
-        this.restartSessionPromise = this.createRestartSession(this.serverSettings, kernel, this.contentsManager);
+        // this.restartSessionPromise = this.createRestartSession(this.serverSettings, kernel, this.contentsManager);
     }
 
     public registerCommTarget(
@@ -470,32 +474,34 @@ export class JupyterSession implements IJupyterSession {
     }
 
     private async createRestartSession(
-        serverSettings: ServerConnection.ISettings,
-        kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
-        contentsManager: ContentsManager,
-        cancelToken?: CancellationToken
+        _serverSettings: ServerConnection.ISettings,
+        _kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
+        _contentsManager: ContentsManager,
+        _cancelToken?: CancellationToken
     ): Promise<ISession> {
-        let result: ISession | undefined;
-        let tryCount = 0;
+        // let result: ISession | undefined;
+        // let tryCount = 0;
+        // // tslint:disable-next-line: no-any
+        // let exception: any;
+        // while (tryCount < 3) {
+        //     try {
+        //         result = await this.createSession(serverSettings, kernelSpec, contentsManager, cancelToken);
+        //         await this.waitForIdleOnSession(result, 30000);
+        //         this.kernelSelector.addKernelToIgnoreList(result.kernel);
+        //         return result;
+        //     } catch (exc) {
+        //         traceInfo(`Error waiting for restart session: ${exc}`);
+        //         tryCount += 1;
+        //         if (result) {
+        //             this.shutdownSession(result, undefined).ignoreErrors();
+        //         }
+        //         result = undefined;
+        //         exception = exc;
+        //     }
+        // }
+        // throw exception;
         // tslint:disable-next-line: no-any
-        let exception: any;
-        while (tryCount < 3) {
-            try {
-                result = await this.createSession(serverSettings, kernelSpec, contentsManager, cancelToken);
-                await this.waitForIdleOnSession(result, 30000);
-                this.kernelSelector.addKernelToIgnoreList(result.kernel);
-                return result;
-            } catch (exc) {
-                traceInfo(`Error waiting for restart session: ${exc}`);
-                tryCount += 1;
-                if (result) {
-                    this.shutdownSession(result, undefined).ignoreErrors();
-                }
-                result = undefined;
-                exception = exc;
-            }
-        }
-        throw exception;
+        return Promise.resolve(undefined as any);
     }
 
     private async createSession(
@@ -514,14 +520,52 @@ export class JupyterSession implements IJupyterSession {
             name: uuid(), // This is crucial to distinguish this session from any other.
             serverSettings: serverSettings
         };
+        // Always create a new promise, when creating a new session.
+        if (this._kernelSocket.completed) {
+            this._kernelSocket = createDeferred<KernelSocketInformation>();
+        }
+        // tslint:disable-next-line: no-any
+        const instancePromise: Promise<IKernelSocket> = (serverSettings.WebSocket as any)?.instance;
+        // This should never happen, if it does then don't allow code to run.
+        if (!serverSettings.WebSocket || !instancePromise) {
+            throw new Error(`Static property 'instance' not found in WebSocket`);
+        }
 
+        const information = {
+            options: {
+                clientId: '',
+                id: '',
+                model: { name: '', id: '' },
+                userName: ''
+            },
+            // tslint:disable-next-line: no-any
+            socket: {} as any
+        };
+        const initializeKernelInformation = (socket?: IKernelSocket, session?: Session.ISession) => {
+            if (socket) {
+                information.socket = socket;
+            }
+            if (session) {
+                information.options.id = session.id;
+                information.options.clientId = session.kernel.clientId;
+                information.options.model = { ...session.kernel.model };
+                information.options.userName = session.kernel.username;
+            }
+            if (information.socket && information.options.id) {
+                this._kernelSocket.resolve(information);
+            }
+        };
+        instancePromise
+            .then(initializeKernelInformation)
+            .catch((ex) => traceError('Failed to initialize WebSocket.instance', ex));
         return Cancellation.race(
             () =>
                 this.sessionManager!.startNew(options)
                     .then((s) => {
                         this.logRemoteOutput(
-                            localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, s?.kernel?.id)
+                            localize.DataScience.createdNewKernel().format(this.connInfo.baseUrl, s.kernel.id)
                         );
+                        initializeKernelInformation(undefined, s);
                         return s;
                     })
                     .catch((ex) => Promise.reject(new JupyterSessionStartError(ex))),

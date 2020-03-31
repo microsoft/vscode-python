@@ -19,6 +19,7 @@ import {
     Uri,
     WebviewPanel
 } from 'vscode';
+import type { Data as WebSocketData } from 'ws';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -108,6 +109,7 @@ export interface INotebookServer extends IAsyncDisposable {
 
 export interface INotebook extends IAsyncDisposable {
     readonly resource: Resource;
+    kernelSocket: Promise<KernelSocketInformation>;
     readonly identity: Uri;
     readonly server: INotebookServer;
     readonly status: ServerStatus;
@@ -242,6 +244,7 @@ export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
     onSessionStatusChanged: Event<ServerStatus>;
     readonly status: ServerStatus;
+    readonly kernelSocket: Promise<KernelSocketInformation>;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
@@ -930,3 +933,31 @@ export interface INotebookProvider {
      */
     getOrCreateServer(options: GetServerOptions): Promise<INotebookServer | undefined>;
 }
+
+export interface IKernelSocket {
+    // tslint:disable-next-line: no-any
+    send(data: any, cb?: (err?: Error) => void): void;
+    on(event: 'message', listener: (this: IKernelSocket, data: WebSocketData) => void): this;
+    addListener(event: 'message', listener: (data: WebSocketData) => void): this;
+    removeListener(event: 'message', listener: (data: WebSocketData) => void): this;
+}
+
+export type KernelSocketOptions = {
+    readonly id: string;
+    readonly clientId: string;
+    readonly userName: string;
+    readonly model: {
+        /**
+         * Unique identifier of the kernel server session.
+         */
+        readonly id: string;
+        /**
+         * The name of the kernel.
+         */
+        readonly name: string;
+    };
+};
+export type KernelSocketInformation = {
+    readonly socket: IKernelSocket;
+    readonly options: KernelSocketOptions;
+};

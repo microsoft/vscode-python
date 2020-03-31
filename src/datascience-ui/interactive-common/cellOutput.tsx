@@ -268,7 +268,8 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 // tslint:disable-next-line: no-any
                 const widgetData: any = outputData['application/vnd.jupyter.widget-view+json'];
                 const element = this.ipyWidgetRef.current!;
-                const view = await WidgetManager.instance.renderWidget(widgetData, element);
+                const widgetInstance = await WidgetManager.instance;
+                const view = await widgetInstance.renderWidget(widgetData, element);
                 // Check if we received a new update request (simplem cancellation mechanism).
                 if (renderId !== this.ipyWidgetRenderCount) {
                     view.dispose();

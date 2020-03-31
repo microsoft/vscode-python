@@ -34,7 +34,8 @@ import {
     INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo,
-    InterruptResult
+    InterruptResult,
+    KernelSocketInformation
 } from '../types';
 import { expandWorkingDir, modifyTraceback } from './jupyterUtils';
 import { LiveKernelModel } from './kernels/types';
@@ -170,10 +171,13 @@ export class JupyterNotebookBase implements INotebook {
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
     private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>>();
+    public get kernelSocket(): Promise<KernelSocketInformation> {
+        return this.session.kernelSocket;
+    }
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
-        private session: IJupyterSession,
+        public session: IJupyterSession,
         private configService: IConfigurationService,
         private disposableRegistry: IDisposableRegistry,
         private owner: INotebookServer,

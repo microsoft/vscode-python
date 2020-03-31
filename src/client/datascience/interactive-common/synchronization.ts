@@ -179,6 +179,8 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [SharedMessages.UpdateSettings]: MessageType.other,
     // IpyWidgets
     // [IPyWidgetMessages.IPyWidgets_ShellCommOpen]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_kernelOptions]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_Ready]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_ShellSend]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_ShellSend_reject]: MessageType.noIdea,
@@ -187,6 +189,7 @@ const messageWithMessageTypes: MessageMapping<IInteractiveWindowMapping> & Messa
     [IPyWidgetMessages.IPyWidgets_comm_msg]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_comm_msg_reply]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_comm_open]: MessageType.noIdea,
+    [IPyWidgetMessages.IPyWidgets_msg]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_display_data_msg]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_registerCommTarget]: MessageType.noIdea,
     [IPyWidgetMessages.IPyWidgets_MessageHookCall]: MessageType.noIdea,

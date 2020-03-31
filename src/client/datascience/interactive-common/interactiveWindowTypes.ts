@@ -17,7 +17,8 @@ import {
     IJupyterKernelSpec,
     IJupyterVariable,
     IJupyterVariablesRequest,
-    IJupyterVariablesResponse
+    IJupyterVariablesResponse,
+    KernelSocketOptions
 } from '../types';
 import { BaseReduxActionPayload } from './types';
 
@@ -109,6 +110,9 @@ export enum IPyWidgetMessages {
     IPyWidgets_comm_msg = 'IPyWidgets_comm_msg',
     IPyWidgets_comm_msg_reply = 'IPyWidgets_comm_msg_reply',
     IPyWidgets_comm_open = 'IPyWidgets_comm_open',
+    IPyWidgets_Ready = 'IPyWidgets_Ready',
+    IPyWidgets_msg = 'IPyWidgets_msg',
+    IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
     IPyWidgets_ShellSend = 'IPyWidgets_ShellSend',
     IPyWidgets_ShellCommOpen = 'IPyWidgets_ShellCommOpen',
     IPyWidgets_registerCommTarget = 'IPyWidgets_registerCommTarget',
@@ -484,6 +488,8 @@ export class IInteractiveWindowMapping {
         targetName?: string;
         msgType: string;
     };
+    public [IPyWidgetMessages.IPyWidgets_kernelOptions]: KernelSocketOptions;
+    public [IPyWidgetMessages.IPyWidgets_Ready]: string;
     // tslint:disable-next-line: no-any
     public [IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub]: { requestId: string; msg: KernelMessage.IIOPubMessage };
     public [IPyWidgetMessages.IPyWidgets_ShellSend_reply]: { requestId: string; msg: KernelMessage.IShellMessage };
@@ -492,6 +498,7 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_ShellSend_reject]: { requestId: string; msg?: any };
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
     public [IPyWidgetMessages.IPyWidgets_comm_open]: KernelMessage.ICommOpenMsg;
+    public [IPyWidgetMessages.IPyWidgets_msg]: string;
     public [IPyWidgetMessages.IPyWidgets_comm_msg]: KernelMessage.ICommMsgMsg;
     public [IPyWidgetMessages.IPyWidgets_comm_msg_reply]: string;
     public [IPyWidgetMessages.IPyWidgets_display_data_msg]: KernelMessage.IDisplayDataMsg;

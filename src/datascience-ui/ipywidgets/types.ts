@@ -21,6 +21,7 @@ export type IJupyterLabWidgetManagerCtor = new (
 ) => IJupyterLabWidgetManager;
 
 export interface IJupyterLabWidgetManager {
+    dispose(): void;
     /**
      * Close all widgets and empty the widget state.
      * @return Promise that resolves when the widget state is cleared.
