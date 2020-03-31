@@ -46,7 +46,7 @@ suite('Kernel Launcher', () => {
         kernelName = 'Python 3';
     });
 
-    test('Launch from resource', async function() {
+    test('Launch from resource', async function () {
         if (!process.env.VSCODE_PYTHON_ROLLING) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
@@ -60,7 +60,7 @@ suite('Kernel Launcher', () => {
         }
     });
 
-    test('Launch from PythonInterpreter', async function() {
+    test('Launch from PythonInterpreter', async function () {
         if (!process.env.VSCODE_PYTHON_ROLLING) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
@@ -74,7 +74,7 @@ suite('Kernel Launcher', () => {
         }
     });
 
-    test('Bind with ZMQ', async function() {
+    test('Bind with ZMQ', async function () {
         if (!process.env.VSCODE_PYTHON_ROLLING) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();

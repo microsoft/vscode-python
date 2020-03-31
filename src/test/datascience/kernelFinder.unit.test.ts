@@ -193,10 +193,10 @@ suite('Kernel Finder', () => {
 
         interpreterService = typemoq.Mock.ofType<IInterpreterService>();
         interpreterService
-            .setup(is => is.getInterpreters(typemoq.It.isAny()))
+            .setup((is) => is.getInterpreters(typemoq.It.isAny()))
             .returns(() => Promise.resolve(interpreters));
         interpreterService
-            .setup(is => is.getActiveInterpreter(typemoq.It.isAny()))
+            .setup((is) => is.getActiveInterpreter(typemoq.It.isAny()))
             .returns(() => Promise.resolve(activeInterpreter));
 
         kernelFinder = new KernelFinder(interpreterService.object, platformService, fileSystem, pathUtils);
