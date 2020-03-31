@@ -322,27 +322,15 @@ suite('Python Settings', async () => {
 
         test('Send telemetry if the envFile setting is different from the default value', async () => {
             expected.envFile = 'foo';
-            console.warn('set expected envFile');
 
             initializeConfig(expected);
-            console.warn('config initialized');
 
             config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
-            console.warn('config is setup with get<string>');
 
             settings.update(config.object);
-            console.warn('settings updated');
+            // expect(true).to.equal(true, 'true should be true');
 
-            console.warn(`telemetryEvent: ${telemetryEvent}`);
-
-            expect(true).to.equal(true, 'true should be true');
-
-            // expect(telemetryEvent).to.deep.equal(
-            //     { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true },
-            //     'Telemetry event should be sent'
-            // );
-            // assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
-            console.warn('expectation');
+            assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
         });
 
         // test('Do not send telemetry if the envFile setting is equal to the default value', async () => {
@@ -355,32 +343,6 @@ suite('Python Settings', async () => {
         //     assert.deepEqual(telemetryEvent, undefined);
         // });
     });
-
-    // test('Send telemetry if the envFile setting is different from the default value', () => {
-    //     expected.pythonPath = 'python3';
-    //     expected.envFile = 'foo';
-    //     console.warn('set expected envFile');
-
-    //     initializeConfig(expected);
-    //     console.warn('config initialized');
-
-    //     config.setup(c => c.get<string>('envFile')).returns(() => expected.envFile);
-    //     console.warn('config is setup with get<string>');
-
-    //     settings.update(config.object);
-    //     console.warn('settings updated');
-
-    //     // console.warn(`telemetryEvent: ${telemetryEvent}`);
-
-    //     expect(true).to.equal(true, 'true should be true');
-
-    //     // expect(telemetryEvent).to.deep.equal(
-    //     //     { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true },
-    //     //     'Telemetry event should be sent'
-    //     // );
-    //     // assert.deepEqual(telemetryEvent, { eventName: EventName.ENVFILE_WORKSPACE, hasCustomEnvPath: true });
-    //     console.warn('expectation');
-    // });
 
     test('File env variables remain in settings', () => {
         expected.datascience = {
