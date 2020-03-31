@@ -3,6 +3,7 @@
 
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
+import * as internalPython from './internal/python';
 import {
     ExecutionResult,
     IProcessService,
@@ -33,11 +34,12 @@ class PythonProcessService {
 
     public execModuleObservable(
         moduleName: string,
-        args: string[],
+        moduleArgs: string[],
         options: SpawnOptions
     ): ObservableExecutionResult<string> {
+        const args = internalPython.execModule(moduleName, moduleArgs);
         const opts: SpawnOptions = { ...options };
-        const executable = this.deps.getExecutionObservableInfo(['-m', moduleName, ...args]);
+        const executable = this.deps.getExecutionObservableInfo(args);
         return this.deps.execObservable(executable.command, executable.args, opts);
     }
 
@@ -49,11 +51,12 @@ class PythonProcessService {
 
     public async execModule(
         moduleName: string,
-        args: string[],
+        moduleArgs: string[],
         options: SpawnOptions
     ): Promise<ExecutionResult<string>> {
+        const args = internalPython.execModule(moduleName, moduleArgs);
         const opts: SpawnOptions = { ...options };
-        const executable = this.deps.getExecutionInfo(['-m', moduleName, ...args]);
+        const executable = this.deps.getExecutionInfo(args);
         const result = await this.deps.exec(executable.command, executable.args, opts);
 
         // If a module is not installed we'll have something in stderr.

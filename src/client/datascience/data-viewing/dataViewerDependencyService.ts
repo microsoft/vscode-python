@@ -4,11 +4,12 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { parse, SemVer } from 'semver';
+import { parse as parseSemVer, SemVer } from 'semver';
 import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
 import { traceWarning } from '../../common/logger';
+import * as internalPython from '../../common/process/internal/python';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../../common/types';
 import { Common, DataScience } from '../../common/utils/localize';
@@ -100,16 +101,14 @@ export class DataViewerDependencyService {
             bypassCondaExecution: true
         });
         try {
-            const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], {
-                throwOnStdErr: true,
-                token
-            });
+            const args = internalPython.execCode('import pandas;print(pandas.__version__)');
+            const result = await launcher.exec(args, { throwOnStdErr: true, token });
             const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(result.stdout);
             if (versionMatch && versionMatch.length > 2) {
                 const major = parseInt(versionMatch[1], 10);
                 const minor = parseInt(versionMatch[2], 10);
                 const build = parseInt(versionMatch[3], 10);
-                return parse(`${major}.${minor}.${build}`, true) ?? undefined;
+                return parseSemVer(`${major}.${minor}.${build}`, true) ?? undefined;
             }
         } catch (ex) {
             traceWarning('Failed to get version of Pandas to use Data Viewer', ex);

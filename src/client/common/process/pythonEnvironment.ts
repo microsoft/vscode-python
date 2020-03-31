@@ -6,6 +6,7 @@ import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
+import * as internalPython from './internal/python';
 import * as internalScripts from './internal/scripts';
 import {
     ExecutionResult,
@@ -61,15 +62,19 @@ class PythonEnvironment {
             return this.pythonPath;
         }
 
-        const { command, args } = this.getExecutionInfo(['-c', 'import sys;print(sys.executable)']);
-        const proc = await this.deps.exec(command, args);
-        return proc.stdout.trim();
+        const [args, parse] = internalPython.getExecutable();
+        const info = this.getExecutionInfo(args);
+        const proc = await this.deps.exec(info.command, info.args);
+        return parse(proc.stdout);
     }
 
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
-        const { command, args } = this.getExecutionInfo(['-c', `import ${moduleName}`]);
+        const [args, _parse] = internalPython.isModuleInstalled(moduleName);
+        // tslint:disable-next-line:no-unused-expression
+        _parse; // Silence the compiler.
+        const info = this.getExecutionInfo(args);
         try {
-            await this.deps.exec(command, args);
+            await this.deps.exec(info.command, info.args);
         } catch {
             return false;
         }
