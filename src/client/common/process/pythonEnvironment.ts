@@ -47,12 +47,10 @@ export class PythonEnvironment {
         protected readonly deps: IPythonEnvironmentDependencies
     ) {}
 
-    public getExecutionInfo(pythonArgs?: string[]): PythonExecutionInfo {
+    public getExecutionInfo(pythonArgs: string[] = []): PythonExecutionInfo {
         const python = this.getPythonArgv();
         const args = python.slice(1);
-        if (pythonArgs) {
-            args.push(...pythonArgs);
-        }
+        args.push(...pythonArgs);
         return { command: python[0], args, python };
     }
 
