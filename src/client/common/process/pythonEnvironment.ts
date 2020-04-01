@@ -23,7 +23,7 @@ interface IPythonEnvironmentDependencies {
 }
 
 function createPythonEnvDeps(
-    // These are wrapped in various simple ways.
+    // These are very lightly wrapped.
     procs: IProcessService,
     fs: IFileSystem
 ): IPythonEnvironmentDependencies {
