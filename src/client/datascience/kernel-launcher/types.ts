@@ -4,13 +4,12 @@
 
 import { ChildProcess } from 'child_process';
 import { IDisposable } from 'monaco-editor';
-import { CancellationToken } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
 import { IJupyterKernelSpec } from '../types';
 
 export const IKernelLauncher = Symbol('IKernelLauncher');
 export interface IKernelLauncher {
-    launch(interpreterUri: InterpreterUri, token: CancellationToken, kernelName: string): Promise<IKernelProcess>;
+    launch(interpreterUri: InterpreterUri, kernelName: string): Promise<IKernelProcess>;
 }
 
 export interface IKernelConnection {
@@ -37,9 +36,5 @@ export interface IKernelProcess extends IDisposable {
 
 export const IKernelFinder = Symbol('IKernelFinder');
 export interface IKernelFinder {
-    findKernelSpec(
-        interpreterUri: InterpreterUri,
-        token: CancellationToken,
-        kernelName?: string
-    ): Promise<IJupyterKernelSpec>;
+    findKernelSpec(interpreterUri: InterpreterUri, kernelName?: string): Promise<IJupyterKernelSpec>;
 }

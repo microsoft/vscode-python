@@ -3,7 +3,7 @@
 'use strict';
 
 import { assert } from 'chai';
-import { CancellationTokenSource, Uri } from 'vscode';
+import { Uri } from 'vscode';
 
 import { ChildProcess } from 'child_process';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -20,7 +20,6 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 suite('Kernel Launcher', () => {
     let ioc: DataScienceIocContainer;
     let kernelLauncher: KernelLauncher;
-    let cancelSource: CancellationTokenSource;
     let pythonInterpreter: PythonInterpreter;
     let resource: Resource;
     let kernelName: string;
@@ -33,7 +32,6 @@ suite('Kernel Launcher', () => {
         const file = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
         kernelLauncher = new KernelLauncher(finder, executionFactory, file);
 
-        cancelSource = new CancellationTokenSource();
         pythonInterpreter = {
             path: PYTHON_PATH,
             sysPrefix: '1',
@@ -51,7 +49,7 @@ suite('Kernel Launcher', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            const kernel = await kernelLauncher.launch(resource, cancelSource.token, kernelName);
+            const kernel = await kernelLauncher.launch(resource, kernelName);
 
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
             assert.isOk<ChildProcess | undefined>(kernel.process, 'Child Process not found');
@@ -65,7 +63,7 @@ suite('Kernel Launcher', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            const kernel = await kernelLauncher.launch(pythonInterpreter, cancelSource.token, kernelName);
+            const kernel = await kernelLauncher.launch(pythonInterpreter, kernelName);
 
             assert.isOk<IKernelConnection | undefined>(kernel.connection, 'Connection not found');
             assert.isOk<ChildProcess | undefined>(kernel.process, 'Child Process not found');
@@ -79,7 +77,7 @@ suite('Kernel Launcher', () => {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
-            const kernel = await kernelLauncher.launch(resource, cancelSource.token, kernelName);
+            const kernel = await kernelLauncher.launch(resource, kernelName);
 
             try {
                 const zmq = await import('zeromq');

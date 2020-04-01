@@ -4,14 +4,11 @@
 
 import { ChildProcess } from 'child_process';
 import { inject, injectable } from 'inversify';
-import * as os from 'os';
-import * as path from 'path';
 import * as portfinder from 'portfinder';
 import { promisify } from 'util';
 import * as uuid from 'uuid/v4';
-import { CancellationToken } from 'vscode';
 import { InterpreterUri } from '../../common/installer/types';
-import { IFileSystem } from '../../common/platform/types';
+import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { IPythonExecutionFactory } from '../../common/process/types';
 import { isResource, noop } from '../../common/utils/misc';
 import { IJupyterKernelSpec } from '../types';
@@ -22,7 +19,7 @@ import { IKernelConnection, IKernelFinder, IKernelLauncher, IKernelProcess } fro
 class KernelProcess implements IKernelProcess {
     private _process?: ChildProcess;
     private _connection?: IKernelConnection;
-    private connectionFile: string;
+    private connectionFile?: TemporaryFile;
     public get process(): ChildProcess | undefined {
         return this._process;
     }
@@ -33,23 +30,23 @@ class KernelProcess implements IKernelProcess {
     constructor(
         @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
         @inject(IFileSystem) private file: IFileSystem
-    ) {
-        this.connectionFile = path.join(os.tmpdir(), `tmp_${Date.now()}_k.json`);
-    }
+    ) {}
 
     public async launch(interpreter: InterpreterUri, kernelSpec: IJupyterKernelSpec): Promise<void> {
+        this.connectionFile = await this.file.createTemporaryFile('json');
+
         const resource = isResource(interpreter) ? interpreter : undefined;
         const pythonPath = isResource(interpreter) ? undefined : interpreter.path;
 
         const args = [...kernelSpec.argv];
         this._connection = await this.getKernelConnection();
-        await this.file.writeFile(this.connectionFile, JSON.stringify(this._connection), {
+        await this.file.writeFile(this.connectionFile.filePath, JSON.stringify(this._connection), {
             encoding: 'utf-8',
             flag: 'w'
         });
 
         // Inclide the conenction file in the arguments and remove the first argument which should be python
-        args[4] = this.connectionFile;
+        args[4] = this.connectionFile.filePath;
         args.splice(0, 1);
 
         const executionService = await this.executionFactory.create({ resource, pythonPath });
@@ -59,8 +56,7 @@ class KernelProcess implements IKernelProcess {
     public dispose() {
         try {
             this._process?.kill();
-            // tslint:disable-next-line: no-floating-promises
-            this.file.deleteFile(this.connectionFile);
+            this.connectionFile?.dispose();
         } catch {
             noop();
         }
@@ -96,12 +92,8 @@ export class KernelLauncher implements IKernelLauncher {
         @inject(IFileSystem) private file: IFileSystem
     ) {}
 
-    public async launch(
-        interpreterUri: InterpreterUri,
-        token: CancellationToken,
-        kernelName?: string
-    ): Promise<IKernelProcess> {
-        const kernelSpec = await this.kernelFinder.findKernelSpec(interpreterUri, token, kernelName);
+    public async launch(interpreterUri: InterpreterUri, kernelName?: string): Promise<IKernelProcess> {
+        const kernelSpec = await this.kernelFinder.findKernelSpec(interpreterUri, kernelName);
         const kernelProcess = new KernelProcess(this.executionFactory, this.file);
         await kernelProcess.launch(interpreterUri, kernelSpec);
         return kernelProcess;
