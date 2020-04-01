@@ -94,7 +94,7 @@ export interface INotebookExecutionInfo {
     purpose: string | undefined; // Purpose this server is for
 }
 
-// Information used to launch a notebook server
+// Information used to launch a jupyter notebook server
 export interface INotebookServerLaunchInfo {
     connectionInfo: IConnection;
     /**
