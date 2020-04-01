@@ -13,7 +13,11 @@ import sys
 del sys.path[0]
 del sys.argv[0]
 module = sys.argv[0]
-if module.startswith("-"):
+if module == "-c":
+    ns = {}
+    for code in sys.argv[1:]:
+        exec(code, ns, ns)
+elif module.startswith("-"):
     raise NotImplementedError(sys.argv)
 elif module.endswith(".py"):
     runpy.run_path(module, run_name="__main__")
