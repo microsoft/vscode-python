@@ -84,7 +84,6 @@ module.exports = [
             libraryTarget: 'window'
         },
         plugins: [...common.getDefaultPlugins('ipywidgets')],
-        externals: ['react-dom', 'codemirror'],
         module: {
             rules: [
                 {
