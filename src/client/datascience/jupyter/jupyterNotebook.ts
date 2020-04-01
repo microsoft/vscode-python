@@ -34,7 +34,8 @@ import {
     INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo,
-    InterruptResult
+    InterruptResult,
+    KernelSocketInformation
 } from '../types';
 import { expandWorkingDir, modifyTraceback } from './jupyterUtils';
 import { LiveKernelModel } from './kernels/types';
@@ -170,6 +171,9 @@ export class JupyterNotebookBase implements INotebook {
     private sessionStatusChanged: Disposable | undefined;
     private initializedMatplotlib = false;
     private ioPubListeners = new Set<(msg: KernelMessage.IIOPubMessage, requestId: string) => Promise<void>>();
+    public get kernelSocket(): Observable<KernelSocketInformation | undefined> {
+        return this.session.kernelSocket;
+    }
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -944,6 +948,12 @@ export class JupyterNotebookBase implements INotebook {
                 this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState, subscriber.cell);
             } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
                 this.handleError(msg as KernelMessage.IErrorMsg, clearState, subscriber.cell);
+            } else if (jupyterLab.KernelMessage.isCommOpenMsg(msg)) {
+                // Ignore this
+            } else if (jupyterLab.KernelMessage.isCommMsgMsg(msg)) {
+                // Ignore this
+            } else if (jupyterLab.KernelMessage.isCommCloseMsg(msg)) {
+                // Ignore this
             } else {
                 traceWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
             }

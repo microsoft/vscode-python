@@ -42,6 +42,7 @@ use(chaiAsPromised);
             UseCustomEditor.enabled = useCustomEditorApi;
             this.timeout(30_000); // UI Tests, need time to start jupyter.
             this.retries(3); // UI Tests can be flaky.
+            this.skip();
         });
         let testRecorder: TestRecorder;
         setup(async function () {

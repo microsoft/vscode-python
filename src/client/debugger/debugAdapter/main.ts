@@ -535,7 +535,6 @@ async function startDebugger() {
     const serviceContainer = initializeIoc();
     const protocolMessageWriter = serviceContainer.get<IProtocolMessageWriter>(IProtocolMessageWriter);
     try {
-        // debugger;
         const debugManager = new DebugManager(serviceContainer);
         await debugManager.start();
     } catch (err) {

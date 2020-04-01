@@ -10,11 +10,7 @@ import { traceError } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import {
-    INotebookIdentity,
-    InteractiveWindowMessages,
-    IPyWidgetMessages
-} from '../interactive-common/interactiveWindowTypes';
+import { INotebookIdentity, InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { IInteractiveWindowListener, INotebookProvider } from '../types';
 import { IPyWidgetMessageDispatcherFactory } from './ipyWidgetMessageDispatcherFactory';
 import { IIPyWidgetMessageDispatcher } from './types';
@@ -31,8 +27,6 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     }
     private ipyWidgetMessageDispatcher?: IIPyWidgetMessageDispatcher;
     private notebookIdentity: Uri | undefined;
-    private ipywidgetMessages = Object.keys(IPyWidgetMessages);
-
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{
         message: string;
@@ -64,14 +58,11 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     public onMessage(message: string, payload?: any): void {
         if (message === InteractiveWindowMessages.NotebookIdentity) {
             this.saveIdentity(payload).catch((ex) => traceError('Failed to initialize ipywidgetHandler', ex));
-        } else if (this.ipywidgetMessages.includes(message)) {
-            // Need a temp variable so SONAR doesn't flip out.
-            const ipywidgetMulticaster = this.getIPyWidgetMulticaster();
-            // tslint:disable-next-line: no-any
-            ipywidgetMulticaster!.receiveMessage({ message: message as any, payload });
         } else if (message === InteractiveWindowMessages.IPyWidgetLoadFailure) {
             this.sendLoadFailureTelemetry(payload);
         }
+        // tslint:disable-next-line: no-any
+        this.getIPyWidgetMessageDispatcher()?.receiveMessage({ message: message as any, payload }); // NOSONAR
     }
 
     private sendLoadFailureTelemetry(payload: ILoadIPyWidgetClassFailureAction) {
@@ -85,7 +76,7 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
             // do nothing on failure
         }
     }
-    private getIPyWidgetMulticaster() {
+    private getIPyWidgetMessageDispatcher() {
         if (!this.notebookIdentity) {
             return;
         }
@@ -96,13 +87,10 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
     private async saveIdentity(args: INotebookIdentity) {
         this.notebookIdentity = Uri.parse(args.resource);
 
-        const ipywidgetMulticaster = this.getIPyWidgetMulticaster();
-
-        this.disposables.push(
-            ipywidgetMulticaster!.postMessage((msg) => {
-                this.postEmitter.fire(msg);
-            })
-        );
+        const dispatcher = this.getIPyWidgetMessageDispatcher();
+        if (dispatcher) {
+            this.disposables.push(dispatcher.postMessage((msg) => this.postEmitter.fire(msg)));
+        }
 
         await this.initialize();
     }
@@ -111,9 +99,9 @@ export class IPyWidgetHandler implements IInteractiveWindowListener {
         if (!this.notebookIdentity) {
             return;
         }
-        const ipywidgetMulticaster = this.getIPyWidgetMulticaster();
-        if (ipywidgetMulticaster) {
-            await ipywidgetMulticaster.initialize();
+        const dispatcher = this.getIPyWidgetMessageDispatcher();
+        if (dispatcher) {
+            await dispatcher.initialize();
         }
     }
 }
