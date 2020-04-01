@@ -4,8 +4,8 @@
 'use strict';
 
 import * as jupyterlab from '@jupyter-widgets/base/lib';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
 import { Widget } from '@phosphor/widgets';
 import { IInteractiveWindowMapping } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
@@ -17,7 +17,9 @@ export type CommTargetCallback = (comm: Kernel.IComm, msg: KernelMessage.ICommOp
 
 export type IJupyterLabWidgetManagerCtor = new (
     kernel: Kernel.IKernelConnection,
-    el: HTMLElement
+    el: HTMLElement,
+    // tslint:disable-next-line: no-any
+    loadErrorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) => void
 ) => IJupyterLabWidgetManager;
 
 export interface IJupyterLabWidgetManager {

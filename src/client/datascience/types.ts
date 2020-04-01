@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-import { Session } from '@jupyterlab/services';
-import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
+import type { Session } from '@jupyterlab/services';
+import type { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
 import {

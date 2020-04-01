@@ -1917,4 +1917,8 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when the ZMQ native binaries do not work.
      */
     [Telemetry.ZMQNotSupported]: undefined | never;
+    /**
+     * Telemetry event sent when an ipywidget module fails to load. Module name is hashed.
+     */
+    [Telemetry.IPyWidgetLoadFailure]: { isOnline: boolean; moduleHash: string; moduleVersion: string };
 }

@@ -456,5 +456,6 @@
     "DataScience.jupyterSelectURIRemoteLabel": "Existing",
     "DataScience.jupyterSelectURIQuickPickTitleRemoteOnly": "Pick an already running jupyter server",
     "DataScience.jupyterSelectURIRemoteDetail": "Specify the URI of an existing server",
-    "DataScience.gatherQuality": "Did gather work as desired?"
+    "DataScience.gatherQuality": "Did gather work as desired?",
+    "DataScience.loadClassFailedWithNoInternet": "Error loading {0}:{1}. Internet connection required for loading 3rd party widgets."
 }

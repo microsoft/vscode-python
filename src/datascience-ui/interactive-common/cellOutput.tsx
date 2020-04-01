@@ -407,7 +407,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             const error = output as nbformat.IError; // NOSONAR
             try {
                 const converter = new CellOutput.ansiToHtmlClass(CellOutput.getAnsiToHtmlOptions());
-                const trace = converter.toHtml(error.traceback.join('\n'));
+                const trace = error.traceback.length ? converter.toHtml(error.traceback.join('\n')) : error.evalue;
                 input = {
                     'text/html': trace
                 };
@@ -542,7 +542,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         const transformedList = outputs.map(this.transformOutput.bind(this));
 
         transformedList.forEach((transformed, index) => {
-            let mimetype = transformed.output.mimeType;
+            const mimetype = transformed.output.mimeType;
 
             if (isIPyWidgetOutput(transformed.output.mimeBundle)) {
                 return;
@@ -586,12 +586,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 // Silently skip rendering of these mime types, render an empty div so the user sees the cell was executed.
                 buffer.push(<div key={index}></div>);
             } else {
-                if (transformed.output.data) {
-                    const keys = Object.keys(transformed.output.data);
-                    mimetype = keys.length > 0 ? keys[0] : 'unknown';
-                } else {
-                    mimetype = 'unknown';
-                }
                 const str: string = this.getUnknownMimeTypeFormatString().format(mimetype);
                 buffer.push(<div key={index}>{str}</div>);
             }

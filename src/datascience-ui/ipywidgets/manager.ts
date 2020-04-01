@@ -4,8 +4,9 @@
 'use strict';
 
 import '@jupyter-widgets/controls/css/labvariables.css';
-import { Kernel, KernelMessage } from '@jupyterlab/services';
-import { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
+
+import type { Kernel, KernelMessage } from '@jupyterlab/services';
+import type { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
 import * as fastDeepEqual from 'fast-deep-equal';
 import 'rxjs/add/operator/concatMap';
 import { Observable } from 'rxjs/Observable';
@@ -51,7 +52,12 @@ export class WidgetManager implements IIPyWidgetManager {
      */
     private readonly messages: ReplaySubject<{ type: string; payload?: any }>;
     private startedProcessingMessages = false;
-    constructor(private readonly widgetContainer: HTMLElement, private readonly postOffice: PostOffice) {
+    constructor(
+        private readonly widgetContainer: HTMLElement,
+        private readonly postOffice: PostOffice,
+        // tslint:disable-next-line: no-any
+        private loadErrorHandler: (className: string, moduleName: string, moduleVersion: string, error: any) => void
+    ) {
         // Create an observable with list of messages to be processed by the kernel in ipywidgets.
         // Use an observable so that messages are buffered until it is ready to process them.
         // tslint:disable-next-line: no-any
@@ -191,7 +197,7 @@ export class WidgetManager implements IIPyWidgetManager {
             // When ever there is a display data message, ensure we build the model.
             this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
 
-            this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer);
+            this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer, this.loadErrorHandler);
             WidgetManager._instance.next(this);
         } catch (ex) {
             // tslint:disable-next-line: no-console
@@ -230,7 +236,10 @@ export class WidgetManager implements IIPyWidgetManager {
      * Ensure we create the model for the display data.
      */
     private async handleDisplayDataMessage(_sender: any, payload: KernelMessage.IIOPubMessage): Promise<void> {
-        if (!KernelMessage.isDisplayDataMsg(payload)) {
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services'); // NOSONAR
+
+        if (!jupyterLab.KernelMessage.isDisplayDataMsg(payload)) {
             return;
         }
         // tslint:disable-next-line: no-any
