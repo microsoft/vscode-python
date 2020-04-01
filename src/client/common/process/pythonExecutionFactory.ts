@@ -175,8 +175,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             }
             return createPythonService(
                 pythonPath,
-                processService!,
+                procService,
                 this.serviceContainer.get<IFileSystem>(IFileSystem),
+                // This is what causes a CondaEnvironment to be returned:
                 [condaFile, condaEnvironment]
             );
         }
