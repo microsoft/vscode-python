@@ -315,6 +315,7 @@ export class JupyterSession implements IJupyterSession {
             // Make sure it is idle before we return
             await this.waitForIdleOnSession(newSession, timeoutMS);
         } catch (exc) {
+            traceError('Failed to change kernel', exc);
             // Throw a new exception indicating we cannot change.
             throw new JupyterInvalidKernelError(kernel);
         }
@@ -495,10 +496,10 @@ export class JupyterSession implements IJupyterSession {
             await Promise.race([kernelStatusChangedPromise, statusChangedPromise, checkStatusPromise]);
             traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-            if (statusChangeHandler) {
+            if (statusChangeHandler && session && session.statusChanged) {
                 session.statusChanged.disconnect(statusChangeHandler);
             }
-            if (kernelChangedHandler) {
+            if (kernelChangedHandler && session && session.kernelChanged) {
                 session.kernelChanged.disconnect(kernelChangedHandler);
             }
 

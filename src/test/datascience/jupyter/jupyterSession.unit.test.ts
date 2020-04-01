@@ -199,10 +199,12 @@ suite('Data Science - JupyterSession', () => {
                 numberOfConnections: 1,
                 session: {
                     statusChanged: {
-                        connect: noop
+                        connect: noop,
+                        disconnect: noop
                     },
                     kernelChanged: {
-                        connect: noop
+                        connect: noop,
+                        disconnect: noop
                     },
                     kernel: {
                         status: 'idle',
