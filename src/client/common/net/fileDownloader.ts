@@ -12,7 +12,6 @@ import { IFileSystem, WriteStream } from '../platform/types';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
 import { Http } from '../utils/localize';
 import { noop } from '../utils/misc';
-import { RequestProgressState } from './types';
 
 @injectable()
 export class FileDownloader implements IFileDownloader {
@@ -29,7 +28,7 @@ export class FileDownloader implements IFileDownloader {
 
         await this.downloadFileWithStatusBarProgress(uri, options.progressMessagePrefix, tempFile.filePath).then(
             noop,
-            ex => {
+            (ex) => {
                 tempFile.dispose();
                 return Promise.reject(ex);
             }
@@ -62,7 +61,7 @@ export class FileDownloader implements IFileDownloader {
         progressMessagePrefix: string
     ): Promise<void> {
         return new Promise<void>((resolve, reject) => {
-            request.on('response', response => {
+            request.on('response', (response) => {
                 if (response.statusCode !== 200) {
                     reject(
                         new Error(`Failed with status ${response.statusCode}, ${response.statusMessage}, Uri ${uri}`)
@@ -73,7 +72,7 @@ export class FileDownloader implements IFileDownloader {
             const requestProgress = require('request-progress');
             requestProgress(request)
                 .on('progress', (state: RequestProgressState) => {
-                    statusBarProgress.text = this.formatProgressMessageWithState(progressMessagePrefix, state);
+                    statusBarProgress.text = formatProgressMessageWithState(progressMessagePrefix, state);
                 })
                 // Handle errors from download.
                 .on('error', reject)
@@ -83,17 +82,30 @@ export class FileDownloader implements IFileDownloader {
                 .on('close', resolve);
         });
     }
+}
 
-    private formatProgressMessageWithState(progressMessagePrefix: string, state: RequestProgressState): string {
-        const received = Math.round(state.size.transferred / 1024);
-        const total = Math.round(state.size.total / 1024);
-        const percentage = Math.round(100 * state.percent);
+type RequestProgressState = {
+    percent: number;
+    speed: number;
+    size: {
+        total: number;
+        transferred: number;
+    };
+    time: {
+        elapsed: number;
+        remaining: number;
+    };
+};
 
-        return Http.downloadingFileProgress().format(
-            progressMessagePrefix,
-            received.toString(),
-            total.toString(),
-            percentage.toString()
-        );
-    }
+function formatProgressMessageWithState(progressMessagePrefix: string, state: RequestProgressState): string {
+    const received = Math.round(state.size.transferred / 1024);
+    const total = Math.round(state.size.total / 1024);
+    const percentage = Math.round(100 * state.percent);
+
+    return Http.downloadingFileProgress().format(
+        progressMessagePrefix,
+        received.toString(),
+        total.toString(),
+        percentage.toString()
+    );
 }
