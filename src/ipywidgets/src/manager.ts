@@ -78,6 +78,10 @@ export class WidgetManager extends jupyterlab.WidgetManager {
         }
         return widget;
     }
+    public async restoreWidgets(): Promise<void> {
+        // Disabled for now.
+        // This throws errors if enabled, can be added later.
+    }
     protected async loadClass(className: string, moduleName: string, moduleVersion: string): Promise<any> {
         // Call the base class to try and load. If that fails, look locally
         window.console.log(`WidgetManager: Loading class ${className}:${moduleName}:${moduleVersion}`);

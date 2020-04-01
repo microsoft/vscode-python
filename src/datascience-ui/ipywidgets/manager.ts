@@ -13,6 +13,7 @@ import { Observable } from 'rxjs/Observable';
 import { IDisposable } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { deserializeDataViews, serializeDataViews } from '../../client/common/utils/serializers';
 import {
     IInteractiveWindowMapping,
     IPyWidgetMessages
@@ -56,7 +57,14 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
         // Dummy socket.
         this.kernelSocket = {
             onMessage: noop,
-            postMessage: (data: string) => dispatcher(IPyWidgetMessages.IPyWidgets_msg, data)
+            postMessage: (data: string) => {
+                if (typeof data === 'string') {
+                    dispatcher(IPyWidgetMessages.IPyWidgets_msg, data);
+                } else {
+                    // Binary data.
+                    dispatcher(IPyWidgetMessages.IPyWidgets_binary_msg, serializeDataViews([data]));
+                }
+            }
         };
         this.postOffice.addHandler({
             // tslint:disable-next-line: no-any
@@ -161,7 +169,7 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
                 throw new Error('JupyterLabWidgetManadger not defined. Please include/check ipywidgets.js file');
             }
             // When ever there is a display data message, ensure we build the model.
-            // this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
+            this.proxyKernel.iopubMessage.connect(this.handleDisplayDataMessage.bind(this));
 
             this.manager = new JupyterLabWidgetManager(this.proxyKernel, this.widgetContainer);
             if (WidgetManager._instance.completed) {
@@ -190,16 +198,21 @@ export class WidgetManager implements IIPyWidgetManager, IMessageSender {
                     // if (msg.type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
                     //     this.initializeKernelAndWidgetManager(msg.payload);
                     // }
-                    if (msg.type === IPyWidgetMessages.IPyWidgets_msg) {
-                        if (this.kernelSocket.onMessage) {
-                            this.kernelSocket.onMessage(msg.payload);
-                        }
-                        const message = deserialize(msg.payload);
-                        // tslint:disable-next-line: no-any
-                        // (this.proxyKernel as any)._onWSMessage2(message);
-                        // tslint:disable-next-line: no-any
-                        await this.handleDisplayDataMessage(undefined, message as any);
+                    if (!this.kernelSocket.onMessage) {
+                        return;
                     }
+
+                    if (msg.type === IPyWidgetMessages.IPyWidgets_kernelOptions) {
+                        return;
+                    } else if (msg.type === IPyWidgetMessages.IPyWidgets_msg) {
+                        this.kernelSocket.onMessage(new MessageEvent('', { data: msg.payload }));
+                    } else if (msg.type === IPyWidgetMessages.IPyWidgets_binary_msg) {
+                        const payload = deserializeDataViews(msg.payload)![0];
+                        this.kernelSocket.onMessage(new MessageEvent('', { data: payload }));
+                    }
+                    // const message = deserialize(msg.payload);
+                    // tslint:disable-next-line: no-any
+                    // await this.handleDisplayDataMessage(undefined, message as any);
                 } catch (ex) {
                     // tslint:disable-next-line: no-console
                     console.error('Failed to handle Widget message', ex);

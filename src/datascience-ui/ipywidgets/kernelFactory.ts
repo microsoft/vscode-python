@@ -29,7 +29,7 @@ export function create(socket: IKernelSocket, options: KernelSocketOptions) {
                 // Today jupyter labs uses `onmessage` instead of `on/addListener/addEventListener`.
                 // We can if required use `EventEmitter` to make it bullet proof.
                 if (this.onmessage) {
-                    this.onmessage({ data: msg } as any);
+                    this.onmessage(msg);
                 }
             };
         }

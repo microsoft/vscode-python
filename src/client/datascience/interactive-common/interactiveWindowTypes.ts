@@ -112,6 +112,7 @@ export enum IPyWidgetMessages {
     IPyWidgets_comm_open = 'IPyWidgets_comm_open',
     IPyWidgets_Ready = 'IPyWidgets_Ready',
     IPyWidgets_msg = 'IPyWidgets_msg',
+    IPyWidgets_binary_msg = 'IPyWidgets_binary_msg',
     IPyWidgets_kernelOptions = 'IPyWidgets_kernelOptions',
     IPyWidgets_ShellSend = 'IPyWidgets_ShellSend',
     IPyWidgets_ShellCommOpen = 'IPyWidgets_ShellCommOpen',
@@ -498,6 +499,8 @@ export class IInteractiveWindowMapping {
     public [IPyWidgetMessages.IPyWidgets_ShellSend_reject]: { requestId: string; msg?: any };
     public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
     public [IPyWidgetMessages.IPyWidgets_comm_open]: KernelMessage.ICommOpenMsg;
+    // tslint:disable-next-line: no-any
+    public [IPyWidgetMessages.IPyWidgets_binary_msg]: any;
     public [IPyWidgetMessages.IPyWidgets_msg]: string;
     public [IPyWidgetMessages.IPyWidgets_comm_msg]: KernelMessage.ICommMsgMsg;
     public [IPyWidgetMessages.IPyWidgets_comm_msg_reply]: string;

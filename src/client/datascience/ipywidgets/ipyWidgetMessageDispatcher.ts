@@ -3,16 +3,16 @@
 
 'use strict';
 
-import { deserialize } from '@jupyterlab/services/lib/kernel/serialize';
 import * as util from 'util';
 import { Event, EventEmitter, Uri } from 'vscode';
 import { traceInfo } from '../../common/logger';
 import { IDisposable } from '../../common/types';
+import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
+import { deserializeDataViews, serializeDataViews } from '../../common/utils/serializers';
 import { IInteractiveWindowMapping, IPyWidgetMessages } from '../interactive-common/interactiveWindowTypes';
 import { INotebook, INotebookProvider, KernelSocketInformation } from '../types';
 import { IIPyWidgetMessageDispatcher, IPyWidgetMessage } from './types';
-import { createDeferred } from '../../common/utils/async';
 
 // tslint:disable: no-any
 /**
@@ -23,7 +23,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         return this._postMessageEmitter.event;
     }
     private readonly commTargetsRegistered = new Set<string>();
-    // private initialized: boolean = false;
     private jupyterLab?: typeof import('@jupyterlab/services');
     private pendingTargetNames = new Set<string>();
     private notebook?: INotebook;
@@ -31,7 +30,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
     private readonly disposables: IDisposable[] = [];
     private kernelRestartHandlerAttached = false;
-    // private kernel!: Kernel.IKernel;
     private kernelSocketInfo?: KernelSocketInformation;
     private disposed = false;
     private queuedMessages: string[] = [];
@@ -65,6 +63,9 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
             case IPyWidgetMessages.IPyWidgets_msg:
                 this.sendRawPayloadToKernelSocket(message.payload);
                 break;
+            case IPyWidgetMessages.IPyWidgets_binary_msg:
+                this.sendRawPayloadToKernelSocket(deserializeDataViews(message.payload)![0]);
+                break;
             case IPyWidgetMessages.IPyWidgets_registerCommTarget:
                 this.uiIsReady.resolve();
                 this.registerCommTarget(message.payload).ignoreErrors();
@@ -76,25 +77,8 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
     }
     public sendRawPayloadToKernelSocket(payload?: any) {
-        if (this.notebook && this.kernelSocketInfo) {
-            try {
-                const deserializedPayload = payload ? deserialize(payload) : undefined;
-                // tslint:disable-next-line: prefer-template
-                console.log('OK' + deserializedPayload?.buffers?.length);
-            } catch (ex) {
-                console.error('Ooops', ex);
-            }
-            // const ws = (this.kernel as any)._ws as WebSocket;
-            // ws.send(payload);
-            // console.log(ws, payload);
-            this.queuedMessages.push(payload);
-            this.sendPendingMessages();
-        } else {
-            this.queuedMessages.push(payload);
-            this.initialize()
-                .then(() => this.queuedMessages.push(payload))
-                .ignoreErrors();
-        }
+        this.queuedMessages.push(payload);
+        this.sendPendingMessages();
     }
     public async registerCommTarget(targetName: string) {
         this.pendingTargetNames.add(targetName);
@@ -113,17 +97,6 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         if (notebook) {
             this.initilizeKernelSocket(notebook);
             this.registerCommTargets(notebook);
-            // this.kernel = ((notebook as JupyterNotebookBase).session as JupyterSession).session!.kernel as any;
-
-            // if (this.kernel && !this.initialized) {
-            //     this.initialized = true;
-            //     this.kernel.anyMessage.connect((_sender, msg) => {
-            //         if (msg.direction === 'recv') {
-            //             console.log('INCOMING', msg);
-            //             this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, serialize(msg.msg));
-            //         }
-            //     });
-            // }
         }
     }
     protected raisePostMessage<M extends IInteractiveWindowMapping, T extends keyof IInteractiveWindowMapping>(
@@ -162,7 +135,11 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         this.raisePostMessage(IPyWidgetMessages.IPyWidgets_kernelOptions, this.kernelSocketInfo.options);
     }
     private onKernelSocketMessage(message: any) {
-        this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, message);
+        if (typeof message === 'string') {
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_msg, message);
+        } else {
+            this.raisePostMessage(IPyWidgetMessages.IPyWidgets_binary_msg, serializeDataViews([message]));
+        }
     }
     private sendPendingMessages() {
         if (!this.notebook || !this.kernelSocketInfo) {
