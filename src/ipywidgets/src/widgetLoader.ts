@@ -44,14 +44,15 @@ async function requirePromise(pkg: string | string[]): Promise<any> {
 }
 
 export function requireLoader(moduleName: string, moduleVersion: string) {
-    // tslint:disable-next-line: no-any
-    const requirejs = (window as any).requirejs;
-    if (requirejs === undefined) {
-        throw new Error('Requirejs is needed, please ensure it is loaded on the page.');
+    if (moduleName !== 'azureml_widgets') {
+        // tslint:disable-next-line: no-any
+        const requirejs = (window as any).requirejs;
+        if (requirejs === undefined) {
+            throw new Error('Requirejs is needed, please ensure it is loaded on the page.');
+        }
+        const conf: { paths: { [key: string]: string } } = { paths: {} };
+        conf.paths[moduleName] = moduleNameToCDNUrl(moduleName, moduleVersion);
+        requirejs.config(conf);
     }
-    const conf: { paths: { [key: string]: string } } = { paths: {} };
-    conf.paths[moduleName] = moduleNameToCDNUrl(moduleName, moduleVersion);
-    requirejs.config(conf);
-
     return requirePromise([`${moduleName}`]);
 }

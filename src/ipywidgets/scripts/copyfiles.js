@@ -16,3 +16,4 @@ if (!fs.existsSync(azureMLDir)) {
 }
 fs.copyFileSync(path.join(__dirname, '../src/widgets.css'), path.join(outputDir, 'widgets.css'));
 fs.copyFileSync(path.join(__dirname, '../src/azureml/index.js'), path.join(azureMLDir, 'azuremlindex.js'));
+fs.copyFileSync(path.join(__dirname, '../src/azureml/registration.js'), path.join(azureMLDir, 'azuremlregistration.js'));

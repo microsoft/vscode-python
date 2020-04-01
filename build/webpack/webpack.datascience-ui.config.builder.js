@@ -109,6 +109,10 @@ function buildConfiguration(isNotebook) {
                 {
                     from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/azureml/azuremlindex.js'),
                     to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
+                },
+                {
+                    from: path.join(constants.ExtensionRootDir, 'out/ipywidgets/azureml/azuremlregistration.js'),
+                    to: path.join(constants.ExtensionRootDir, 'out', 'datascience-ui', bundleFolder)
                 }
             ]
         );
