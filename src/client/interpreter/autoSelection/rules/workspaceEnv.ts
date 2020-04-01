@@ -12,7 +12,6 @@ import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IExperimentsManager, IInterpreterPathService, IPersistentStateFactory, Resource } from '../../../common/types';
 import { createDeferredFromPromise } from '../../../common/utils/async';
 import { OSType } from '../../../common/utils/platform';
-import { IPythonPathUpdaterServiceManager } from '../../configuration/types';
 import {
     IInterpreterHelper,
     IInterpreterLocatorService,
@@ -31,8 +30,6 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IPythonPathUpdaterServiceManager)
-        private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IInterpreterLocatorService)
         @named(PIPENV_SERVICE)
         private readonly pipEnvInterpreterLocator: IInterpreterLocatorService,
@@ -59,7 +56,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
             : pythonConfig.inspect<string>('pythonPath')!;
         this.experiments.sendTelemetryIfInExperiment(DeprecatePythonPath.control);
         // If user has defined custom values in settings for this workspace folder, then use that.
-        if (pythonPathInConfig.workspaceFolderValue) {
+        if (pythonPathInConfig.workspaceFolderValue || pythonPathInConfig.workspaceValue) {
             return NextAction.runNextRule;
         }
         const pipEnvPromise = createDeferredFromPromise(
@@ -82,7 +79,7 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
             bestInterpreter = this.helper.getBestInterpreter(pipEnvList.concat(virtualEnvList));
         }
         if (bestInterpreter && manager) {
-            await this.cacheSelectedInterpreter(workspacePath.folderUri, bestInterpreter);
+            await super.cacheSelectedInterpreter(workspacePath.folderUri, bestInterpreter);
             await manager.setWorkspaceInterpreter(workspacePath.folderUri!, bestInterpreter);
         }
 
@@ -113,23 +110,5 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
             const fsPathToCompare = this.platform.osType === OSType.Windows ? fsPath.toUpperCase() : fsPath;
             return fsPathToCompare.startsWith(workspacePath);
         });
-    }
-    protected async cacheSelectedInterpreter(resource: Resource, interpreter: PythonInterpreter | undefined) {
-        // We should never clear settings in user settings.json.
-        if (!interpreter) {
-            await super.cacheSelectedInterpreter(resource, interpreter);
-            return;
-        }
-        const activeWorkspace = this.helper.getActiveWorkspaceUri(resource);
-        if (!activeWorkspace) {
-            return;
-        }
-        await this.pythonPathUpdaterService.updatePythonPath(
-            interpreter.path,
-            activeWorkspace.configTarget,
-            'load',
-            activeWorkspace.folderUri
-        );
-        await super.cacheSelectedInterpreter(resource, interpreter);
     }
 }

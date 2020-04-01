@@ -29,6 +29,7 @@ export const IInterpreterAutoSelectionService = Symbol('IInterpreterAutoSelectio
 export interface IInterpreterAutoSelectionService extends IInterpreterAutoSeletionProxyService {
     readonly onDidChangeAutoSelectedInterpreter: Event<void>;
     autoSelectInterpreter(resource: Resource): Promise<void>;
+    getAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined;
     setGlobalInterpreter(interpreter: PythonInterpreter | undefined): Promise<void>;
 }
 
@@ -47,4 +48,22 @@ export interface IInterpreterAutoSelectionRule {
     setNextRule(rule: IInterpreterAutoSelectionRule): void;
     autoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void>;
     getPreviouslyAutoSelectedInterpreter(resource: Resource): PythonInterpreter | undefined;
+}
+
+export const IInterpreterSecurityService = Symbol('IInterpreterSecurityService');
+export interface IInterpreterSecurityService {
+    readonly onDidChangeSafeInterpreters: Event<void>;
+    evaluateInterpreterSafety(interpreter: PythonInterpreter, resource: Resource): Promise<void>;
+    isSafe(interpreter: PythonInterpreter, resource?: Resource): boolean | undefined;
+}
+
+export const IInterpreterSecurityCommands = Symbol('IInterpreterSecurityCommands');
+export interface IInterpreterSecurityCommands {
+    getKeyForWorkspace(resource: Uri): string;
+}
+
+export const IInterpreterEvaluation = Symbol('IInterpreterEvaluation');
+export interface IInterpreterEvaluation {
+    evaluateIfInterpreterIsSafe(interpreter: PythonInterpreter, resource: Resource): Promise<boolean>;
+    inferValueUsingStorage(interpreter: PythonInterpreter, resource: Resource): boolean | undefined;
 }

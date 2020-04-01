@@ -64,6 +64,7 @@ export namespace Commands {
     export const SwitchToInsidersWeekly = 'python.switchToWeeklyChannel';
     export const PickLocalProcess = 'python.pickLocalProcess';
     export const ResetPythonInterpreter = 'python.resetPythonInterpreter';
+    export const ResetUnsafePythonInterpretersList = 'python.resetUnsafePythonInterpretersList';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';

@@ -3,12 +3,18 @@
 
 'use strict';
 
+import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { ConfigurationTarget, Uri, WorkspaceConfiguration } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
+import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { DeprecatePythonPath } from '../../../client/common/experimentGroups';
 import { IExperimentsManager, IInterpreterPathService } from '../../../client/common/types';
+import {
+    IInterpreterAutoSeletionProxyService,
+    IInterpreterSecurityService
+} from '../../../client/interpreter/autoSelection/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Configuration Service', () => {
@@ -17,9 +23,11 @@ suite('Configuration Service', () => {
     let interpreterPathService: TypeMoq.IMock<IInterpreterPathService>;
     let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+    let interpreterSecurityService: TypeMoq.IMock<IInterpreterSecurityService>;
     let configService: ConfigurationService;
     setup(() => {
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
+        interpreterSecurityService = TypeMoq.Mock.ofType<IInterpreterSecurityService>();
         workspaceService
             .setup(w => w.getWorkspaceFolder(resource))
             .returns(() => ({
@@ -46,6 +54,20 @@ suite('Configuration Service', () => {
             .returns(() => workspaceConfig.object);
         return workspaceConfig;
     }
+
+    test('Fetching settings goes as expected', () => {
+        const interpreterAutoSelectionProxyService = TypeMoq.Mock.ofType<IInterpreterAutoSeletionProxyService>();
+        serviceContainer
+            .setup(s => s.get(IInterpreterSecurityService))
+            .returns(() => interpreterSecurityService.object)
+            .verifiable(TypeMoq.Times.once());
+        serviceContainer
+            .setup(s => s.get(IInterpreterAutoSeletionProxyService))
+            .returns(() => interpreterAutoSelectionProxyService.object)
+            .verifiable(TypeMoq.Times.once());
+        const settings = configService.getSettings();
+        expect(settings).to.be.instanceOf(PythonSettings);
+    });
 
     test('Do not update global settings if global value is already equal to the new value', async () => {
         experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);

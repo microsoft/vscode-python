@@ -11,6 +11,9 @@ import { EnvironmentActivationService } from '../../client/interpreter/activatio
 import { TerminalEnvironmentActivationService } from '../../client/interpreter/activation/terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
+import { InterpreterEvaluation } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterEvaluation';
+import { InterpreterSecurityCommands } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityCommands';
+import { InterpreterSecurityService } from '../../client/interpreter/autoSelection/interpreterSecurity/interpreterSecurityService';
 import { InterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/cached';
 import { CurrentPathInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/currentPath';
@@ -22,7 +25,10 @@ import {
     AutoSelectionRule,
     IInterpreterAutoSelectionRule,
     IInterpreterAutoSelectionService,
-    IInterpreterAutoSeletionProxyService
+    IInterpreterAutoSeletionProxyService,
+    IInterpreterEvaluation,
+    IInterpreterSecurityCommands,
+    IInterpreterSecurityService
 } from '../../client/interpreter/autoSelection/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
@@ -111,6 +117,9 @@ suite('Interpreters - Service Registry', () => {
         registerTypes(instance(serviceManager));
 
         [
+            [IInterpreterEvaluation, InterpreterEvaluation],
+            [IInterpreterSecurityCommands, InterpreterSecurityCommands],
+            [IInterpreterSecurityService, InterpreterSecurityService],
             [IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters],
             [IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global'],
             [IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace'],

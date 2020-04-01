@@ -1,10 +1,12 @@
 import { inject, injectable } from 'inversify';
+import * as path from 'path';
 import { compare } from 'semver';
-import { ConfigurationTarget } from 'vscode';
+import { ConfigurationTarget, Uri } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { traceError } from '../common/logger';
 import { InterpreterInfomation, IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
+import { getOSType, OSType } from '../common/utils/platform';
 import { IServiceContainer } from '../ioc/types';
 import { IInterpreterHelper, InterpreterType, PythonInterpreter, WorkspacePythonPath } from './contracts';
 import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
@@ -22,6 +24,18 @@ export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
         .map(line => line.trim())
         .filter(line => line.length > 0);
     return lines.length > 0 ? lines[0] : '';
+}
+
+export function isInterpreterStoredInWorkspace(interpreter: PythonInterpreter, activeWorkspaceUri: Uri) {
+    const resourcePath =
+        getOSType() === OSType.Windows
+            ? path.normalize(activeWorkspaceUri.fsPath).toUpperCase()
+            : path.normalize(activeWorkspaceUri.fsPath);
+    const interpreterPath =
+        getOSType() === OSType.Windows
+            ? path.normalize(interpreter.path).toUpperCase()
+            : path.normalize(interpreter.path);
+    return interpreterPath.startsWith(resourcePath);
 }
 
 @injectable()

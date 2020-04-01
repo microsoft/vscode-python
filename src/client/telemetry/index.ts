@@ -1015,6 +1015,19 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes' | 'No' | 'More Info' | undefined;
     };
     /**
+     * Telemetry event sent with details when user clicks the prompt with the following message
+     * `Prompt message` :- 'We found a Python environment in this workspace. Do you want to select it to start up the features in the Python extension? Only accept if you trust this environment.'
+     */
+    [EventName.UNSAFE_INTERPRETER_PROMPT]: {
+        /**
+         * `Yes` When 'Yes' option is selected
+         * `No` When 'No' option is selected
+         * `Learn more` When 'More Info' option is selected
+         * `Do not show again` When 'Do not show again' option is selected
+         */
+        selection: 'Yes' | 'No' | 'Learn more' | 'Do not show again' | undefined;
+    };
+    /**
      * Telemetry event sent with details when user clicks a button in the virtual environment prompt.
      * `Prompt message` :- 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?'
      */
