@@ -99,7 +99,7 @@ export class WidgetManager implements IIPyWidgetManager {
         this.postOffice.sendMessage<IInteractiveWindowMapping>(IPyWidgetMessages.IPyWidgets_Ready);
     }
     public dispose(): void {
-        this.proxyKernel?.dispose();
+        this.proxyKernel?.dispose(); // NOSONAR
     }
     public async clear(): Promise<void> {
         await this.manager?.clear_state();
@@ -162,7 +162,7 @@ export class WidgetManager implements IIPyWidgetManager {
         if (this.proxyKernel && fastDeepEqual(options, this.options)) {
             return;
         }
-        this.proxyKernel?.dispose();
+        this.proxyKernel?.dispose(); // NOSONAR
         this.proxyKernel = createKernel(this.kernelSocket, options);
 
         // When a comm target has been regisered, we need to register this in the real kernel in extension side.
@@ -180,7 +180,7 @@ export class WidgetManager implements IIPyWidgetManager {
         };
 
         // Dispose any existing managers.
-        this.manager?.dispose();
+        this.manager?.dispose(); // NOSONAR
         try {
             // The JupyterLabWidgetManager will be exposed in the global variable `window.ipywidgets.main` (check webpack config - src/ipywidgets/webpack.config.js).
             // tslint:disable-next-line: no-any

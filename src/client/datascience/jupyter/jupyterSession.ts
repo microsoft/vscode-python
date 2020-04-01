@@ -284,7 +284,7 @@ export class JupyterSession implements IJupyterSession {
         );
 
         // Listen for session status changes
-        this.session?.statusChanged.connect(this.statusHandler);
+        this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
 
         // Made it this far, we're connected now
         this.connected = true;
@@ -332,7 +332,7 @@ export class JupyterSession implements IJupyterSession {
         this.session = newSession;
 
         // Listen for session status changes
-        this.session?.statusChanged.connect(this.statusHandler);
+        this.session?.statusChanged.connect(this.statusHandler); // NOSONAR
 
         // Start the restart session promise too.
         this.restartSessionPromise = this.createRestartSession(this.serverSettings, kernel, this.contentsManager);

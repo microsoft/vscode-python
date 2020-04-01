@@ -128,7 +128,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         // Listen to changes to kernel socket (e.g. restarts or changes to kernel).
         notebook.kernelSocket.subscribe((info) => {
             // Remove old handlers.
-            this.kernelSocketInfo?.socket?.removeListener('message', this.onKernelSocketMessage.bind(this));
+            this.kernelSocketInfo?.socket?.removeListener('message', this.onKernelSocketMessage.bind(this)); // NOSONAR
 
             if (this.kernelWasConnectedAtleastOnce) {
                 // this means we restarted the kernel and we now have new information.
@@ -147,7 +147,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
 
             this.kernelWasConnectedAtleastOnce = true;
             this.kernelSocketInfo = info;
-            this.kernelSocketInfo.socket?.addListener('message', this.onKernelSocketMessage.bind(this));
+            this.kernelSocketInfo.socket?.addListener('message', this.onKernelSocketMessage.bind(this)); // NOSONAR
             this.sendKernelOptions();
             // Since we have connected to a kernel, send any pending messages.
             this.registerCommTargets(notebook);
@@ -177,7 +177,7 @@ export class IPyWidgetMessageDispatcher implements IIPyWidgetMessageDispatcher {
         }
         while (this.pendingMessages.length) {
             try {
-                this.kernelSocketInfo.socket?.send(this.pendingMessages[0]);
+                this.kernelSocketInfo.socket?.send(this.pendingMessages[0]); // NOSONAR
                 this.pendingMessages.shift();
             } catch (ex) {
                 traceError('Failed to send message to Kernel', ex);
