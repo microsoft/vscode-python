@@ -74,7 +74,7 @@ export class InterpreterDisplay implements IInterpreterDisplay {
                     Interpreters.pythonInterpreterPath().format(
                         this.pathUtils.getDisplayName(
                             interpreter.path,
-                            workspaceFolder ? workspaceFolder.fsPath : undefined
+                            workspaceFolder?.fsPath
                         )
                     )
                 );

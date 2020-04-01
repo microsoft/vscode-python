@@ -114,17 +114,13 @@ export class InterpreterPathService implements IInterpreterPathService {
     ): string {
         let settingKey: string;
         const folderKey = this.workspaceService.getWorkspaceFolderIdentifier(resource);
-        switch (configTarget) {
-            case ConfigurationTarget.WorkspaceFolder: {
-                settingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${folderKey}`;
-                break;
-            }
-            default: {
-                settingKey = this.workspaceService.workspaceFile
-                    ? `WORKSPACE_INTERPRETER_PATH_${this.workspaceService.workspaceFile.fsPath}`
-                    : // Only a single folder is opened, use fsPath of the folder as key
-                      `WORKSPACE_FOLDER_INTERPRETER_PATH_${folderKey}`;
-            }
+        if (configTarget === ConfigurationTarget.WorkspaceFolder) {
+            settingKey = `WORKSPACE_FOLDER_INTERPRETER_PATH_${folderKey}`;
+        } else {
+            settingKey = this.workspaceService.workspaceFile
+                ? `WORKSPACE_INTERPRETER_PATH_${this.workspaceService.workspaceFile.fsPath}`
+                : // Only a single folder is opened, use fsPath of the folder as key
+                  `WORKSPACE_FOLDER_INTERPRETER_PATH_${folderKey}`;
         }
         return settingKey;
     }

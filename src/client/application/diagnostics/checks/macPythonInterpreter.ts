@@ -170,7 +170,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
             workspaceUri = interpreterConfigurationScope.uri;
         } else {
             throw new Error(
-                'One of `interpreterConfigurationScope` & `event` should be defined when calling the method'
+                'One of `interpreterConfigurationScope` or `event` should be defined when calling `onDidChangeConfiguration`.'
             );
         }
         // Lets wait, for more changes, dirty simple throttling.

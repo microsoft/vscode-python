@@ -132,7 +132,6 @@ suite('Configuration Service', () => {
     test('Update workspace folder settings if workspace folder value is not equal to the new value', async () => {
         experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => false);
         const workspaceConfig = setupConfigProvider();
-        // tslint:disable-next-line: no-any
         workspaceConfig
             .setup(w => w.inspect('setting'))
             // tslint:disable-next-line: no-any
@@ -152,9 +151,8 @@ suite('Configuration Service', () => {
         workspaceConfig.verifyAll();
     });
 
-    test('xIf in Deprecate PythonPath experiment & setting to update is `python.pythonPath`, update settings using new API if stored value is not equal to the new value', async () => {
+    test('If in Deprecate PythonPath experiment & setting to update is `python.pythonPath`, update settings using new API if stored value is not equal to the new value', async () => {
         experimentsManager.setup(e => e.inExperiment(DeprecatePythonPath.experiment)).returns(() => true);
-        // tslint:disable-next-line: no-any
         interpreterPathService
             .setup(w => w.inspect(resource))
             // tslint:disable-next-line: no-any

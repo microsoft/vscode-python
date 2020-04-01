@@ -8,6 +8,7 @@
 import { Uri } from 'vscode';
 import '../../common/extensions';
 import { IServiceContainer } from '../../ioc/types';
+import { DEFAULT_INTERPRETER_SETTING } from '../constants';
 import { DeprecatePythonPath } from '../experimentGroups';
 import { IExperimentsManager, IInterpreterPathService, Resource } from '../types';
 
@@ -46,8 +47,8 @@ function getCacheKey(
     }
     const globalPythonPath =
         inExperiment && interpreterPathService
-            ? interpreterPathService.inspect(vscode.Uri.file(__filename)).globalValue || 'python'
-            : section.inspect<string>('pythonPath')!.globalValue || 'python';
+            ? interpreterPathService.inspect(vscode.Uri.file(__filename)).globalValue || DEFAULT_INTERPRETER_SETTING
+            : section.inspect<string>('pythonPath')!.globalValue || DEFAULT_INTERPRETER_SETTING;
     // Get the workspace related to this resource.
     if (
         !resource ||
@@ -63,7 +64,8 @@ function getCacheKey(
     const workspacePythonPath =
         inExperiment && interpreterPathService
             ? interpreterPathService.get(resource)
-            : vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') || 'python';
+            : vscode.workspace.getConfiguration('python', resource).get<string>('pythonPath') ||
+              DEFAULT_INTERPRETER_SETTING;
     return `${folder.uri.fsPath}-${workspacePythonPath}`;
 }
 /**
