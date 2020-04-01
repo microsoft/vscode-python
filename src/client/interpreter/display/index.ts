@@ -64,18 +64,12 @@ export class InterpreterDisplay implements IInterpreterDisplay {
         this.currentlySelectedWorkspaceFolder = workspaceFolder;
         if (interpreter) {
             this.statusBar.color = '';
-            this.statusBar.tooltip = this.pathUtils.getDisplayName(
-                interpreter.path,
-                workspaceFolder ? workspaceFolder.fsPath : undefined
-            );
+            this.statusBar.tooltip = this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath);
             if (this.interpreterPath !== interpreter.path) {
                 const output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
                 output.appendLine(
                     Interpreters.pythonInterpreterPath().format(
-                        this.pathUtils.getDisplayName(
-                            interpreter.path,
-                            workspaceFolder?.fsPath
-                        )
+                        this.pathUtils.getDisplayName(interpreter.path, workspaceFolder?.fsPath)
                     )
                 );
                 this.interpreterPath = interpreter.path;
